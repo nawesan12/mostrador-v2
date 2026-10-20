@@ -105,6 +105,26 @@ describe('contrato: tienda', () => {
 	});
 });
 
+describe('demo elegida por plantilla', () => {
+	it('usa la tienda y la plantilla elegidas, si son del rubro', async () => {
+		const db = nueva();
+		const sb = (await crear(db, 'moda', Date.now(), 'pampa'))!;
+		const t = await new DatosSandbox(db, sb).tienda();
+		expect(t).toMatchObject({
+			rubro: 'moda',
+			plantilla: 'pampa',
+			nombre: 'PMPA Store',
+			slug: 'pmpa-store'
+		});
+	});
+
+	it('rechaza una plantilla de otro rubro o inexistente', async () => {
+		const db = nueva();
+		expect(await crear(db, 'moda', Date.now(), 'mostaza')).toBeNull();
+		expect(await crear(db, 'moda', Date.now(), 'inventada')).toBeNull();
+	});
+});
+
 describe('slugDe', () => {
 	it('saca tildes, símbolos y espacios', () => {
 		expect(slugDe('Café Bruma')).toBe('cafe-bruma');
