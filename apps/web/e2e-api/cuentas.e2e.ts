@@ -26,7 +26,7 @@ test('registro, salir, recuperar por mail, contraseña nueva e ingreso', async (
 	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
 	const email = `lucia+${Date.now()}@laesquina.com.ar`;
 
-	// Registro: crea cuenta y tienda, y entra al panel.
+	// Registro: crea cuenta y tienda y sigue en el onboarding, que se guarda en la API.
 	await page.goto('/ingresar?m=registro');
 	await listo(page);
 	await page.getByRole('textbox', { name: 'Tu nombre' }).fill('Lucía');
@@ -35,6 +35,13 @@ test('registro, salir, recuperar por mail, contraseña nueva e ingreso', async (
 	await page.getByLabel('Contraseña', { exact: true }).fill('Abcdefghijk1');
 	await page.locator('label.terminos .caja-check').click();
 	await page.getByRole('button', { name: 'Crear mi tienda' }).click();
+	await expect(page).toHaveURL(/\/onboarding\?paso=1$/);
+	await listo(page);
+	await expect(page.getByRole('heading', { name: /Encontramos tu negocio/ })).toBeVisible();
+	// Del paso 2 al 8 sin elegir nada nuevo, y al panel.
+	for (let i = 0; i < 6; i++) await page.locator('.pie .seguir').click();
+	await expect(page.getByRole('heading', { name: 'Tu mostrador está 94% listo.' })).toBeVisible();
+	await page.getByRole('button', { name: /Ir a mi panel/ }).click();
 	await expect(page).toHaveURL(/\/panel$/);
 	await expect(page.getByText('Hola, La Esquina')).toBeVisible();
 	const cookie = (await context.cookies()).find((c) => c.name.endsWith('mostrador_sesion'));
