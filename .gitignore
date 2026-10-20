@@ -1,0 +1,25 @@
+# Credenciales: nunca al repo
+CREDENCIALES.md
+.dev.vars
+.env
+.env.*
+!.env.example
+
+# Dependencias y builds
+node_modules
+.svelte-kit
+.wrangler
+build
+/apps/api/bin
+vite.config.ts.timestamp-*
+
+# Playwright
+test-results
+playwright-report
+.playwright-mcp/
+
+# Varios
+.DS_Store
+*.zip
+/scratchpad/
+.claude/worktrees/
