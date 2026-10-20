@@ -64,3 +64,11 @@ módulo: sus rubros son una tabla propia que un test compara contra `rubros.json
 `datosDe(locals)` devuelve la implementación de `DATA_SOURCE`: el sandbox (D1) o la API Go (BFF:
 el navegador nunca habla con Go). Los hooks sólo leen el sandbox en `/demo` y `/panel`, para que
 la landing no gaste lecturas de D1.
+
+## 12. La demo no tiene cuentas (PR #7)
+En `DATA_SOURCE=sandbox`, `/ingresar` funciona entero (validación, errores, modos, medidor de fuerza,
+recuperar) pero no crea cuentas: ingresar, registrarse o entrar con Google/WhatsApp llevan a la
+demo, y "recuperar" muestra "Revisá tu email" sin mandar nada. Las cuentas reales viven en la API Go
+(Postgres): hashear contraseñas en Workers Free pasaría el tope de 10 ms de CPU, y una demo pública
+no necesita guardar datos personales. El destino de "recuperar" vuelve en la respuesta, no en la
+URL, para que no quede en el historial ni en logs.
