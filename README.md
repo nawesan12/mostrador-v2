@@ -21,8 +21,11 @@ infra/       Postgres y buzón de mails para desarrollo
 ```bash
 bun install
 bun run dev              # app en http://localhost:5173
-bun run db:up            # Postgres 17 en :5433 y Mailpit en :8025
+bun run db:up            # Postgres 17 en :5440 y Mailpit en :8026
+bun run api:bootstrap    # roles y base mostrador_dev (una vez)
+bun run api:migrar       # migraciones
 bun run api:dev          # API Go en :4000
+bun run api:worker       # worker del outbox
 ```
 
 ## Verificar
