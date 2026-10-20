@@ -62,7 +62,8 @@
 		['#seguridad', I.phShieldCheckFill, 'Seguridad', 'Copias, permisos y 2FA', '#F1E9DF', '#6B5244']
 	] as const;
 
-	const registro = `${resolve('/ingresar')}?m=registro`;
+	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Mostrador.dc.html).
+	const registro = resolve('/onboarding');
 	const sombra = $derived(scrolled || l.menu);
 
 	function entrar(el: HTMLElement, i: number) {
@@ -96,7 +97,6 @@
 		</nav>
 		<a class="ingresar" href={resolve('/ingresar')}>Ingresar</a>
 		<span class="esp"></span>
-		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- registro es /ingresar con query (resolve adentro) -->
 		<a class="cta" href={registro}
 			><span class="largo">Crear mi tienda</span><span class="corto">Empezar</span></a
 		>
@@ -143,7 +143,6 @@
 			</a>
 			<div class="botones" use:entrar={MENU.length + 1}>
 				<a class="b-ing" href={resolve('/ingresar')}>Ingresar</a>
-				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- registro es /ingresar con query (resolve adentro) -->
 				<a class="b-cta" href={registro}
 					>Crear tienda <Icon icon={I.phArrowRightBold} size={14} /></a
 				>

@@ -204,6 +204,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/onboarding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Guarda lo elegido en el onboarding (y si terminó). La plantilla pasa a ser la de la tienda. */
+        put: operations["guardarOnboarding"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/tienda": {
         parameters: {
             query?: never;
@@ -225,6 +242,15 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        Onboarding: {
+            /** @description Una de las 16 del handoff */
+            plantilla?: string;
+            /** @description Objetivos, canales, secciones, cobros y envíos, tono, equipo (hasta 16 KB) */
+            elecciones: {
+                [key: string]: unknown;
+            };
+            terminado?: boolean;
+        };
         Consulta: {
             nombre: string;
             email: string;
@@ -626,6 +652,30 @@ export interface operations {
                 content?: never;
             };
             422: components["responses"]["Problema"];
+        };
+    };
+    guardarOnboarding: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Onboarding"];
+            };
+        };
+        responses: {
+            /** @description Guardado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
+            401: components["responses"]["Problema"];
         };
     };
     obtenerTienda: {

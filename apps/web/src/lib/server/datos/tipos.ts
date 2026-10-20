@@ -9,8 +9,12 @@ export type Rubro = components['schemas']['Rubro'];
 export type Tienda = components['schemas']['Tienda'];
 export type Plan = components['schemas']['Plan'];
 
+export type Onboarding = components['schemas']['Onboarding'];
+
 export interface Datos {
 	rubros(): Promise<Rubro[]>;
 	/** La tienda de la sesión. */
 	tienda(): Promise<Tienda>;
+	/** Lo elegido en el onboarding (y si terminó). */
+	guardarOnboarding(o: Onboarding): Promise<void>;
 }

@@ -9,7 +9,8 @@
 
 	/** Sección "Plantillas" de la landing (handoff): rubros destacados, paletas y la vitrina. */
 	const l = getLanding();
-	const registro = `${resolve('/ingresar')}?m=registro`;
+	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Mostrador.dc.html).
+	const registro = resolve('/onboarding');
 
 	// Los primeros 4 rubros, con la primera plantilla de cada uno (handoff: tplFeat).
 	const DESTACADAS = PLANTILLAS.filter(
@@ -121,7 +122,6 @@
 		</div>
 		<div class="armar" use:anim={'reveal'}>
 			<span>¿Ninguna te convence? Hornero arma una a medida con tu Instagram.</span>
-			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- registro es /ingresar con query (resolve adentro) -->
 			<a href={registro}
 				><Icon icon={phSparkleFill} size={15} style="color:#D2582F" />Armar la mía</a
 			>

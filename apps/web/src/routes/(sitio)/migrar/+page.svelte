@@ -11,7 +11,7 @@
 
 	/**
 	 * Migrar (design/Mostrador Migrar.dc.html), con la pestaña de cada plataforma (?desde=). El campo y
-	 * "Empezar" llevan al registro con el origen; la importación la hace el onboarding.
+	 * "Empezar" llevan al onboarding con el origen (?desde=, ?origen=); la importación la hace ese flujo.
 	 */
 	const ORIGENES = [
 		{
@@ -173,8 +173,7 @@
 					<span class="c-ico"><Icon icon={o.ico} size={26} style="color:#F0A58A" /></span>
 					<div class="c-t">{o.t}</div>
 					<p>{o.d}</p>
-					<form action="/ingresar" method="GET">
-						<input type="hidden" name="m" value="registro" />
+					<form action="/onboarding" method="GET">
 						<input type="hidden" name="desde" value={o.id} />
 						{#if o.id === 'empretienda'}
 							<!-- El archivo se sube en el paso de importación del onboarding. -->

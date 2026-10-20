@@ -57,7 +57,5 @@ test('migrar: la pestaña sale de ?desde= y el botón lleva al registro con el o
 	await expect(page).toHaveURL(/desde=tiendanube/);
 	await page.getByLabel('Link de tu tienda en Tiendanube').fill('lucia.mitiendanube.com');
 	await page.getByRole('button', { name: 'Empezar' }).click();
-	await expect(page).toHaveURL(
-		/\/ingresar\?m=registro&desde=tiendanube&origen=lucia\.mitiendanube\.com$/
-	);
+	await expect(page).toHaveURL(/\/onboarding\?desde=tiendanube&origen=lucia\.mitiendanube\.com$/);
 });

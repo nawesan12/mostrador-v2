@@ -155,6 +155,19 @@ paths:
       responses:
         '204': { description: Dado de baja }
         '422': { $ref: '#/components/responses/Problema' }
+  /v1/panel/onboarding:
+    put:
+      operationId: guardarOnboarding
+      summary: Guarda lo elegido en el onboarding (y si terminó). La plantilla pasa a ser la de la tienda.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Onboarding' }
+      responses:
+        '204': { description: Guardado }
+        '400': { $ref: '#/components/responses/Problema' }
+        '401': { $ref: '#/components/responses/Problema' }
   /v1/panel/tienda:
     get:
       operationId: obtenerTienda
@@ -178,6 +191,13 @@ components:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problema' }
   schemas:
+    Onboarding:
+      type: object
+      required: [elecciones]
+      properties:
+        plantilla: { type: string, description: 'Una de las 16 del handoff' }
+        elecciones: { type: object, additionalProperties: true, description: 'Objetivos, canales, secciones, cobros y envíos, tono, equipo (hasta 16 KB)' }
+        terminado: { type: boolean }
     Consulta:
       type: object
       required: [nombre, email]

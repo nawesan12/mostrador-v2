@@ -104,7 +104,7 @@
 						podés crear tu tienda gratis.
 					</p>
 					<div class="ex-acc">
-						<a href="/ingresar?m=registro">Crear mi tienda</a>
+						<a href="/onboarding">Crear mi tienda</a>
 						<button type="button" onclick={() => (otra = true)}>Enviar otra consulta</button>
 					</div>
 				</div>

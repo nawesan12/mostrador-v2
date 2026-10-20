@@ -40,7 +40,7 @@ test('el CTA lleva al registro', async ({ page }) => {
 		.getByRole('link', { name: /Crear mi tienda|Empezar/ })
 		.first()
 		.click();
-	await expect(page).toHaveURL(/\/ingresar\?m=registro$/);
+	await expect(page).toHaveURL(/\/onboarding$/);
 });
 
 test('el chat de Hornero avanza solo y los controles se pueden tocar', async ({ page }) => {
@@ -137,7 +137,7 @@ test('el modal de plantillas recorre, elige y lleva al registro con la plantilla
 		.getByRole('dialog')
 		.getByRole('link', { name: /Usar esta plantilla/ })
 		.click();
-	await expect(page).toHaveURL(/\/ingresar\?m=registro$/);
+	await expect(page).toHaveURL(/\/onboarding$/);
 	expect(await page.evaluate(() => localStorage.getItem('ob-tpl'))).toBeTruthy();
 });
 

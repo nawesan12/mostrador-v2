@@ -29,7 +29,7 @@
 			{/each}
 		</nav>
 		<a class="ingresar" href="/ingresar">Ingresar</a>
-		<a class="crear" href="/ingresar?m=registro">Crear mi tienda</a>
+		<a class="crear" href="/onboarding">Crear mi tienda</a>
 	</div>
 </header>
 
