@@ -108,10 +108,9 @@ Dónde: con clave fiscal → "Administración de certificados digitales" (homolo
 - ⬜ `CAJA_WEBHOOK_SECRET=`
 - ⬜ URL base de la API de Caja: `CAJA_API_URL=https://caja.iamnaw.dev`
 
-## 14. Monitoreo para /estado (PR 7)
-Elegí uno:
-- ⬜ UptimeRobot (uptimerobot.com → Integrations & API → Main API key read-only): `UPTIMEROBOT_API_KEY=`
-- ⬜ o Cloudflare Health Checks (necesita plan Pro de la zona). En ese caso uso el token de Cloudflare.
+## 14. Monitoreo para /estado
+- ✅ No hace falta: el monitor es propio (mostrador-jobs, una vez por hora, base D1 `mostrador-estado`).
+- ⬜ Opcional: `RESEND_API_KEY` también en el worker `mostrador-jobs`, para mandar los avisos de incidentes por mail.
 
 ## 15. Datos que no son credenciales pero necesito
 - ⬜ Razón social, CUIT y domicilio legal de Mostrador para los legales, el pie y la Data Fiscal: ______

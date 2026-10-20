@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "sh -c 'set -a; [ -f .dev.vars ] && . ./.dev.vars; set +a; exec \"$0\" \"$@\"' vite dev --port 5173",
 		"build": "vite build",
-		"preview": "wrangler d1 migrations apply mostrador-sandbox --local >/dev/null && wrangler dev .svelte-kit/cloudflare/_worker.js --port 4173",
+		"preview": "wrangler d1 migrations apply mostrador-sandbox --local >/dev/null && wrangler d1 migrations apply mostrador-estado --local >/dev/null && wrangler dev .svelte-kit/cloudflare/_worker.js --port 4173",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"gen": "wrangler types && sed -i.bak '/mainModule: typeof import/d' worker-configuration.d.ts && rm -f worker-configuration.d.ts.bak",
@@ -16,8 +16,8 @@
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
 		"deploy": "bun run build && wrangler deploy",
-		"db:migrar": "CI=true wrangler d1 migrations apply mostrador-sandbox --remote",
-		"db:migrar:local": "wrangler d1 migrations apply mostrador-sandbox --local",
+		"db:migrar": "CI=true wrangler d1 migrations apply mostrador-sandbox --remote && CI=true wrangler d1 migrations apply mostrador-estado --remote",
+		"db:migrar:local": "wrangler d1 migrations apply mostrador-sandbox --local && wrangler d1 migrations apply mostrador-estado --local",
 		"test:e2e:api": "playwright test -c playwright.api.config.ts"
 	},
 	"imports": {

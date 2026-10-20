@@ -9,5 +9,13 @@
 	"workers_dev": false,
 	"triggers": { "crons": ["17 * * * *"] },
 	"services": [{ "binding": "APP", "service": "mostrador" }],
+	// /estado: el monitor escribe acá (el sitio sólo lee).
+	"d1_databases": [
+		{
+			"binding": "ESTADO",
+			"database_name": "mostrador-estado",
+			"database_id": "4d1f0082-f683-4f1c-83f5-cdbbdc0b97d2"
+		}
+	],
 	"observability": { "enabled": true }
 }

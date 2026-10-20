@@ -22,6 +22,12 @@
 			"database_name": "mostrador-sandbox",
 			"database_id": "9efb42e6-6750-4f05-9a89-00731e798113",
 			"migrations_dir": "migraciones-sandbox"
+		},
+		{
+			"binding": "ESTADO",
+			"database_name": "mostrador-estado",
+			"database_id": "4d1f0082-f683-4f1c-83f5-cdbbdc0b97d2",
+			"migrations_dir": "migraciones-estado"
 		}
 	],
 	"vars": {

@@ -32,7 +32,13 @@ const files = readdirSync(design).filter(
 	(f) => f.endsWith('.dc.html') || f === 'templates-data.js'
 );
 // Íconos que no aparecen en el handoff pero se usan (reemplazos de logos que no existen en Iconify).
-const EXTRA = ['simple-icons:googlesheets', 'simple-icons:microsoftexcel'];
+const EXTRA = [
+	'simple-icons:googlesheets',
+	'simple-icons:microsoftexcel',
+	// /estado cuando algo falla o todavía no hay datos (el handoff sólo dibuja "todo funciona").
+	'ph:warning-bold',
+	'ph:hourglass-bold'
+];
 const names = new Set<string>([...EXTRA, ...process.argv.slice(2)]);
 for (const f of files)
 	for (const m of readFileSync(join(design, f), 'utf8').matchAll(

@@ -178,7 +178,7 @@ jobs:
         run: bun install --frozen-lockfile
       - if: steps.cf.outputs.ok == 'true'
         working-directory: apps/web
-        run: bunx wrangler d1 migrations apply mostrador-sandbox --remote
+        run: bun run db:migrar
       - if: steps.cf.outputs.ok == 'true'
         working-directory: apps/web
         run: bun run build && bunx wrangler deploy

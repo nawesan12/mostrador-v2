@@ -116,3 +116,18 @@ URL, para que no quede en el historial ni en logs.
   clientes de correo que previsualizan links no desuscriben a nadie.
 - En la demo los formularios validan igual que Go y muestran el éxito, sin guardar ni mandar nada.
 - Los montos usan espacio duro entre "$" y el número (nunca se parten en dos renglones).
+
+## 16. /estado con monitor propio (PR #16)
+
+- El monitor corre en `mostrador-jobs` (el cron horario que ya existía): un chequeo por componente,
+  unos 170 pedidos por día. Vive fuera del sistema que mide y no necesita UptimeRobot ni el plan
+  Pro de Cloudflare.
+- Guarda en su propia base D1 (`mostrador-estado`): resumen por día, último resultado e incidentes.
+  El sitio sólo la lee, también en modo API, porque el estado tiene que verse aunque lo demás falle.
+- Al propio sitio lo chequea por service binding (un worker no puede pedirle por URL pública a otro
+  de la misma zona); a los proveedores, que respondan (sin credenciales, un 401 también dice "arriba").
+  La API Go se chequea sólo si `API_URL` está configurada.
+- Un incidente se abre con dos fallas seguidas y se cierra solo cuando vuelve; los días sin chequeos
+  se ven grises ("Sin datos"), nunca verdes inventados.
+- Avisos a suscriptos por mail con Resend si `mostrador-jobs` tiene `RESEND_API_KEY`; por WhatsApp,
+  cuando esté WhatsApp Cloud. La baja es un POST con token, como en novedades.
