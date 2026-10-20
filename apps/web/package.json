@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "sh -c 'set -a; [ -f .dev.vars ] && . ./.dev.vars; set +a; exec \"$0\" \"$@\"' vite dev --port 5173",
 		"build": "vite build",
-		"preview": "wrangler dev .svelte-kit/cloudflare/_worker.js --port 4173",
+		"preview": "wrangler d1 migrations apply mostrador-sandbox --local >/dev/null && wrangler dev .svelte-kit/cloudflare/_worker.js --port 4173",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"gen": "wrangler types && sed -i.bak '/mainModule: typeof import/d' worker-configuration.d.ts && rm -f worker-configuration.d.ts.bak",
@@ -15,7 +15,9 @@
 		"test:e2e": "playwright test",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
-		"deploy": "bun run build && wrangler deploy"
+		"deploy": "bun run build && wrangler deploy",
+		"db:migrar": "wrangler d1 migrations apply mostrador-sandbox --remote",
+		"db:migrar:local": "wrangler d1 migrations apply mostrador-sandbox --local"
 	},
 	"imports": {
 		"#lib": "./src/lib/index.ts",
@@ -31,10 +33,12 @@
 		"@sveltejs/kit": "^3.1.0",
 		"@sveltejs/vite-plugin-svelte": "^7.2.0",
 		"@types/node": "^24",
+		"drizzle-kit": "^0.31.11",
 		"eslint": "^10.4.1",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.19.0",
 		"globals": "^17.6.0",
+		"openapi-typescript": "^7.13.0",
 		"prettier": "^3.8.3",
 		"prettier-plugin-svelte": "^4.1.0",
 		"svelte": "^5.57.2",
@@ -48,6 +52,8 @@
 	"dependencies": {
 		"@fontsource-variable/instrument-sans": "^5.3.0",
 		"bits-ui": "^2.19.5",
-		"valibot": "^1.5.0"
+		"drizzle-orm": "^0.45.4",
+		"valibot": "^1.5.0",
+		"@mostrador/contrato": "workspace:*"
 	}
 }

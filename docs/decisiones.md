@@ -45,3 +45,22 @@ otro cuerpo es 422. Un 5xx libera la clave para poder reintentar.
 ## 8. Errores como problem+json
 Todos los errores salen como `application/problem+json` con `code` estable y un `detail` que le
 sirve a una persona. Un panic en un handler es un 500 con ese formato, no un proceso caído.
+
+## 9. El sandbox de la demo es "copia al escribir" (PR #5)
+El cupo gratis de D1 son 100.000 escrituras por día. Si cada visitante copiara su tienda de ejemplo
+(el handoff muestra 2.400 pedidos), 40 visitas lo agotarían. Por eso los datos de ejemplo de cada
+rubro viven en el código, iguales para todos, y D1 guarda sólo el sandbox (una fila) y lo que el
+visitante cambia (`cambios`, por entidad y clave). Leer es: ejemplo + cambios del sandbox.
+El sandbox vence a las 24 h; `mostrador-jobs` llama a `/api/internal/cron` una vez por hora y la
+purga va de a tandas de 50. En desarrollo y en los e2e se usa la D1 local, nunca la remota.
+
+## 10. Contrato compartido entre la demo y la API Go
+`packages/contrato` tiene el OpenAPI (de donde salen los tipos del front), los rubros y los casos
+(`casos/*.json`). El mismo caso corre en vitest contra el sandbox y en Go contra Postgres, así la
+demo no puede mostrar algo que la API real no devuelve. Go no puede embeber archivos fuera de su
+módulo: sus rubros son una tabla propia que un test compara contra `rubros.json`.
+
+## 11. Las páginas no saben de dónde salen los datos
+`datosDe(locals)` devuelve la implementación de `DATA_SOURCE`: el sandbox (D1) o la API Go (BFF:
+el navegador nunca habla con Go). Los hooks sólo leen el sandbox en `/demo` y `/panel`, para que
+la landing no gaste lecturas de D1.

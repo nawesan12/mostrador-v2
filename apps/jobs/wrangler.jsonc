@@ -1,5 +1,5 @@
 {
-	// Worker auxiliar: cron cada 15 minutos → llama a la app por service binding (mismo patrón que caja-jobs).
+	// Worker auxiliar: cron cada hora → llama a la app por service binding (mismo patrón que caja-jobs).
 	// La app decide qué corre en cada pasada (reset del sandbox de la demo, monitor de /estado…).
 	"$schema": "../../node_modules/wrangler/config-schema.json",
 	"name": "mostrador-jobs",
@@ -7,7 +7,7 @@
 	"main": "index.ts",
 	"compatibility_date": "2026-10-18",
 	"workers_dev": false,
-	"triggers": { "crons": ["*/15 * * * *"] },
+	"triggers": { "crons": ["17 * * * *"] },
 	"services": [{ "binding": "APP", "service": "mostrador" }],
 	"observability": { "enabled": true }
 }

@@ -55,6 +55,14 @@ algo, buscalo en Caja (integraciones, sesiones, rate limit, caché, cripto, fech
 - Escrituras que no hace falta esperar: dentro de `waitUntil(...)`.
 - Límites y precios: una sola fuente (`#lib/plans.ts`). Nunca un precio escrito a mano.
 
+## Datos de la demo y contrato
+
+- Las páginas piden `datosDe(locals)` (`#lib/server/datos/index.ts`) y usan la interfaz `Datos`.
+- Toda operación nueva: primero en `packages/contrato/openapi.yaml` (`bun run contrato:gen`), después
+  en las dos implementaciones (`DatosSandbox` y la API Go), con su caso en `packages/contrato/casos/`.
+- Sandbox: el ejemplo del rubro sale del código; en D1 sólo van los cambios del visitante.
+- Tests del sandbox con `d1Local()` (D1 sobre node:sqlite), nunca contra la D1 remota.
+
 ## Textos
 
 - Español rioplatense (vos), claro y corto. Ortografía completa (tildes, ñ, ¿?).
