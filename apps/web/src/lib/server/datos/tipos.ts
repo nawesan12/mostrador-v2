@@ -10,6 +10,8 @@ export type Tienda = components['schemas']['Tienda'];
 export type Plan = components['schemas']['Plan'];
 
 export type Onboarding = components['schemas']['Onboarding'];
+export type ResumenPanel = components['schemas']['ResumenPanel'];
+export type Notificacion = components['schemas']['Notificacion'];
 
 export interface Datos {
 	rubros(): Promise<Rubro[]>;
@@ -17,4 +19,7 @@ export interface Datos {
 	tienda(): Promise<Tienda>;
 	/** Lo elegido en el onboarding (y si terminó). */
 	guardarOnboarding(o: Onboarding): Promise<void>;
+	/** Insignias del menú, notificaciones, canales y prueba: lo que muestra el armazón del panel. */
+	resumen(): Promise<ResumenPanel>;
+	marcarNotificacionesLeidas(): Promise<void>;
 }
