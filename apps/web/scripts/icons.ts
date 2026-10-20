@@ -4,7 +4,8 @@
  * para que el bundle sólo lleve los que se importan. Para cada ph:x también va ph:x-fill si existe
  * (el menú lateral muestra el ícono relleno del ítem activo).
  *
- * Uso: bun scripts/icons.ts [ph:otro-icono ...]   (los extra se suman a los del handoff)
+ * Uso: bun scripts/icons.ts [ph:otro-icono ...]. Lo que se use siempre va en EXTRA (si no, se pierde
+ * al regenerar).
  */
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -30,7 +31,9 @@ const sets: Record<string, Set> = {
 const files = readdirSync(design).filter(
 	(f) => f.endsWith('.dc.html') || f === 'templates-data.js'
 );
-const names = new Set<string>(process.argv.slice(2));
+// Íconos que no aparecen en el handoff pero se usan (reemplazos de logos que no existen en Iconify).
+const EXTRA = ['simple-icons:googlesheets', 'simple-icons:microsoftexcel'];
+const names = new Set<string>([...EXTRA, ...process.argv.slice(2)]);
 for (const f of files)
 	for (const m of readFileSync(join(design, f), 'utf8').matchAll(
 		/\b(ph|logos|simple-icons):([a-z0-9-]+)/g

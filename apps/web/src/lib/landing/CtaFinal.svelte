@@ -1,0 +1,120 @@
+<script lang="ts">
+	import { resolve } from '$app/paths';
+	import Icon from '#lib/components/Icon.svelte';
+	import { anim } from '#lib/anim.ts';
+	import { phArrowRightBold } from '#lib/icons.ts';
+	import { unsplash } from './formato.ts';
+
+	/** "Abrí tu mostrador hoy." — CTA final de la landing. */
+	const registro = `${resolve('/ingresar')}?m=registro`;
+</script>
+
+<section>
+	<div class="caja">
+		<img
+			src={unsplash('1556740758-90de374c12ad', 1800)}
+			data-pxi
+			alt="Dueñas de un local"
+			loading="lazy"
+		/>
+		<div class="sombra"></div>
+		<div class="txt">
+			<h2 use:anim={'reveal'}>Abrí tu mostrador hoy.</h2>
+			<p use:anim={'reveal'}>
+				14 días gratis, sin tarjeta. Si venís de otra plataforma, la migración corre por nuestra
+				cuenta.
+			</p>
+			<div class="ctas" use:anim={'reveal'}>
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- registro es /ingresar con query (resolve adentro) -->
+				<a class="pri" href={registro}
+					>Crear mi tienda gratis <Icon icon={phArrowRightBold} size={16} /></a
+				>
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- /contacto llega con las páginas públicas -->
+				<a class="sec" href="/contacto">Hablar con ventas</a>
+			</div>
+		</div>
+	</div>
+</section>
+
+<style>
+	section {
+		padding: 0 28px 100px;
+	}
+	.caja {
+		position: relative;
+		max-width: 1240px;
+		margin: 0 auto;
+		border-radius: 32px;
+		overflow: hidden;
+		min-height: 480px;
+		display: flex;
+		align-items: center;
+		box-shadow: 0 40px 80px -40px rgba(42, 20, 12, 0.6);
+	}
+	img {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+	.sombra {
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(
+			90deg,
+			rgba(42, 20, 12, 0.92) 0%,
+			rgba(42, 20, 12, 0.7) 45%,
+			rgba(42, 20, 12, 0.1)
+		);
+	}
+	.txt {
+		position: relative;
+		padding: 64px;
+		color: #fff;
+		max-width: 640px;
+	}
+	h2 {
+		margin: 0;
+		font-size: clamp(40px, 5.4vw, 72px);
+		line-height: 0.98;
+		letter-spacing: -0.045em;
+		font-weight: 600;
+		text-wrap: balance;
+	}
+	p {
+		margin: 20px 0 0;
+		font-size: 18px;
+		line-height: 1.55;
+		color: #eadbcf;
+	}
+	.ctas {
+		margin-top: 32px;
+		display: flex;
+		gap: 12px;
+		flex-wrap: wrap;
+	}
+	.ctas a {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		color: #fff;
+		font-size: 16px;
+		font-weight: 600;
+		border-radius: 999px;
+	}
+	.pri {
+		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		padding: 16px 26px;
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.3),
+			0 16px 34px -14px rgba(210, 88, 47, 0.8);
+	}
+	.sec {
+		border: 1px solid rgba(255, 255, 255, 0.4);
+		padding: 16px 24px;
+	}
+	.ctas a:hover {
+		color: #fff;
+	}
+</style>

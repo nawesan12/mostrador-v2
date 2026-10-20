@@ -8,7 +8,15 @@
 	 * onboarding, sección Plantillas de la landing y selector del panel). Tres layouts:
 	 * editorial (ed), grilla (grid) y catálogo (cat).
 	 */
-	let { t }: { t: Plantilla } = $props();
+	let {
+		t: base,
+		paleta = null
+	}: {
+		t: Plantilla;
+		/** Colores que pisan los de la plantilla (handoff: "Con tus colores", "Probá otros colores"). */
+		paleta?: { bg: string; tx: string; ac: string } | null;
+	} = $props();
+	const t = $derived(paleta ? { ...base, ...paleta } : base);
 	const onAc = $derived(sobreAcento(t.ac));
 </script>
 
