@@ -11,38 +11,56 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/config"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/servidor"
 )
 
 func main() {
-	dir := os.Getenv("MOSTRADOR_DIRECCION")
-	if dir == "" {
-		dir = ":4000"
+	if err := correr(); err != nil {
+		slog.Error("la api no arrancó", "error", err)
+		os.Exit(1)
 	}
+}
+
+func correr() error {
+	cfg, err := config.Leer()
+	if err != nil {
+		return err
+	}
+	if err := cfg.Exigir("BaseApp"); err != nil {
+		return err
+	}
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	app, err := db.Abrir(ctx, cfg.BaseApp)
+	if err != nil {
+		return err
+	}
+	defer app.Close()
+
 	srv := &http.Server{
-		Addr:              dir,
-		Handler:           servidor.Nuevo(),
+		Addr:              cfg.Direccion,
+		Handler:           servidor.Nuevo(servidor.Dependencias{App: app}),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
 		WriteTimeout:      30 * time.Second,
 		IdleTimeout:       90 * time.Second,
 	}
-
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-
+	errs := make(chan error, 1)
 	go func() {
-		slog.Info("api escuchando", "direccion", dir)
+		slog.Info("api escuchando", "direccion", cfg.Direccion, "entorno", cfg.Entorno)
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			slog.Error("el servidor se cayó", "error", err)
-			os.Exit(1)
+			errs <- err
 		}
 	}()
-
-	<-ctx.Done()
+	select {
+	case err := <-errs:
+		return err
+	case <-ctx.Done():
+	}
 	apagar, cancelar := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancelar()
-	if err := srv.Shutdown(apagar); err != nil {
-		slog.Error("no se pudo apagar a tiempo", "error", err)
-	}
+	return srv.Shutdown(apagar)
 }
