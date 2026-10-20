@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/arrepentimiento"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/tiendas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
@@ -21,6 +22,8 @@ type Dependencias struct {
 	// Cuentas y sesiones. Sin esto, el panel responde 401.
 	Cuentas  *cuentas.Servicio
 	ClaveBFF string
+	// Botón de arrepentimiento (público, sin sesión).
+	Arrepentimiento *arrepentimiento.Servicio
 }
 
 // Nuevo devuelve el handler raíz de la API.
@@ -60,6 +63,9 @@ func Nuevo(d Dependencias) http.Handler {
 			h = d.Cuentas.Autenticar(mux)
 		}
 		tiendas.Rutas(mux, d.App, tienda)
+		if d.Arrepentimiento != nil {
+			d.Arrepentimiento.Rutas(mux, func(r *http.Request) string { return cuentas.ClienteDe(r, d.ClaveBFF).IP })
+		}
 	}
 	return recuperar(d.Log, h)
 }

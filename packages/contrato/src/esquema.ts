@@ -119,6 +119,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/arrepentimientos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Botón de arrepentimiento (Res. 424/2020). Público, sin sesión; devuelve el código de trámite. */
+        post: operations["pedirArrepentimiento"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/tienda": {
         parameters: {
             query?: never;
@@ -140,6 +157,16 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        PedidoArrepentimiento: {
+            /** @description El de la cuenta */
+            email: string;
+            nombre: string;
+            /** @description DNI o CUIT, con o sin guiones */
+            documento: string;
+            /** @description Plan contratado y fecha */
+            plan: string;
+            motivo?: string;
+        };
         Alta: {
             nombre: string;
             tienda: string;
@@ -385,6 +412,34 @@ export interface operations {
             };
             400: components["responses"]["Problema"];
             422: components["responses"]["Problema"];
+        };
+    };
+    pedirArrepentimiento: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PedidoArrepentimiento"];
+            };
+        };
+        responses: {
+            /** @description Registrado; la confirmación sale por mail */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        codigo: string;
+                    };
+                };
+            };
+            400: components["responses"]["Problema"];
+            429: components["responses"]["Problema"];
         };
     };
     obtenerTienda: {

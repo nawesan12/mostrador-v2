@@ -81,4 +81,8 @@ export class CuentasApi {
 	restablecer(token: string, clave: string) {
 		return this.pedir<void>('POST', '/v1/auth/restablecer', { token, clave });
 	}
+	/** Botón de arrepentimiento: público, pero pasa por el BFF para que Go vea la IP real. */
+	arrepentimiento(p: components['schemas']['PedidoArrepentimiento']) {
+		return this.pedir<{ codigo: string }>('POST', '/v1/arrepentimientos', p);
+	}
 }

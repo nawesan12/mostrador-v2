@@ -67,7 +67,10 @@
 	</div>
 	<div class="barra">
 		<div class="barra-in">
-			<span>© 2026 Mostrador Tecnología S.A.S. · CUIT 30-71000000-0 <b>(datos de ejemplo)</b></span>
+			<span
+				>© 2026 Mostrador Tecnología S.A.S. · <span class="nw">CUIT 30-71000000-0</span>
+				<b>(datos de ejemplo)</b></span
+			>
 			<span class="legal">
 				<a class="arrep" href="/legales/arrepentimiento"
 					><Icon icon={I.phArrowCounterClockwiseBold} size={13} />Botón de arrepentimiento</a
@@ -173,5 +176,8 @@
 		color: #1a1a1a;
 		font-weight: 700;
 		box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+	}
+	.nw {
+		white-space: nowrap;
 	}
 </style>

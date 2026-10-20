@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/arrepentimiento"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/config"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
@@ -56,9 +57,10 @@ func correr() error {
 	srv := &http.Server{
 		Addr: cfg.Direccion,
 		Handler: servidor.Nuevo(servidor.Dependencias{
-			App:      app,
-			Cuentas:  &cuentas.Servicio{Pool: app, Correo: mails, Sitio: cfg.Sitio},
-			ClaveBFF: cfg.ClaveBFF,
+			App:             app,
+			Cuentas:         &cuentas.Servicio{Pool: app, Correo: mails, Sitio: cfg.Sitio},
+			Arrepentimiento: &arrepentimiento.Servicio{Pool: app, Correo: mails},
+			ClaveBFF:        cfg.ClaveBFF,
 		}),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
