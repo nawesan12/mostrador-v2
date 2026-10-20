@@ -103,3 +103,16 @@ URL, para que no quede en el historial ni en logs.
   confirmación. La app sólo puede insertar y leer el código; los datos personales los ve staff.
   En la demo no hay a quién revocarle nada: se valida igual y se da un código correlativo (tabla
   `contadores` de D1), sin guardar ningún dato del pedido.
+
+## 15. Formularios públicos (PR #14)
+
+- Contacto, postulación de partners y novedades: dominio Go `formularios` (tablas en `soporte`),
+  con límite por IP y por email, mail de confirmación a quien escribe y aviso a la bandeja del
+  equipo (`MOSTRADOR_CORREO_EQUIPO`, opcional; también recibe los arrepentimientos).
+- La app sólo inserta y lee el id: las consultas y postulaciones las lee staff. Por eso la
+  postulación repetida se detecta por el error de unicidad y no con `ON CONFLICT` (que exigiría leer
+  los emails).
+- La baja de novedades es un POST con el token del mail: abrir el link sólo muestra el botón, así los
+  clientes de correo que previsualizan links no desuscriben a nadie.
+- En la demo los formularios validan igual que Go y muestran el éxito, sin guardar ni mandar nada.
+- Los montos usan espacio duro entre "$" y el número (nunca se parten en dos renglones).

@@ -13,6 +13,7 @@ import (
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/arrepentimiento"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/formularios"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/config"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
@@ -59,7 +60,8 @@ func correr() error {
 		Handler: servidor.Nuevo(servidor.Dependencias{
 			App:             app,
 			Cuentas:         &cuentas.Servicio{Pool: app, Correo: mails, Sitio: cfg.Sitio},
-			Arrepentimiento: &arrepentimiento.Servicio{Pool: app, Correo: mails},
+			Arrepentimiento: &arrepentimiento.Servicio{Pool: app, Correo: mails, Equipo: cfg.CorreoEquipo},
+			Formularios:     &formularios.Servicio{Pool: app, Correo: mails, Sitio: cfg.Sitio, Equipo: cfg.CorreoEquipo},
 			ClaveBFF:        cfg.ClaveBFF,
 		}),
 		ReadHeaderTimeout: 5 * time.Second,

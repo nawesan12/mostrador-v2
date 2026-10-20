@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/mail"
 	"regexp"
 	"strings"
@@ -35,6 +36,8 @@ type Pedido struct {
 type Servicio struct {
 	Pool   *db.Pool
 	Correo correo.Correo
+	// Bandeja del equipo, que procesa la devolución; vacía, no se avisa.
+	Equipo string
 	// Ahora, para el año del código (los tests lo fijan).
 	Ahora func() time.Time
 }
@@ -103,6 +106,11 @@ func (s *Servicio) Pedir(ctx context.Context, p Pedido, ip string) (string, erro
 		s.ahora().In(argentina).Year(), p.Email, p.Nombre, p.Documento, p.Plan, motivo, ip).Scan(&codigo)
 	if err != nil {
 		return "", fmt.Errorf("registrar arrepentimiento: %w", err)
+	}
+	if s.Equipo != "" {
+		if err := s.Correo.Enviar(ctx, mailEquipo(s.Equipo, codigo, p)); err != nil {
+			slog.Warn("arrepentimiento: no salió el aviso al equipo", "codigo", codigo, "error", err)
+		}
 	}
 	// El trámite ya quedó registrado: si el mail falla, el código vale igual y se ve en pantalla.
 	if err := s.Correo.Enviar(ctx, mailRecibido(p.Email, p.Nombre, codigo, p.Plan)); err != nil {
