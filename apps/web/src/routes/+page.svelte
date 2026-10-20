@@ -1,11 +1,22 @@
 <script lang="ts">
+	import Seo from '#lib/components/Seo.svelte';
+
 	const LEMA = 'Todo lo que tienen las otras. Por menos plata y más seguro.';
 </script>
 
-<svelte:head>
-	<title>Mostrador · Tu tienda online</title>
-	<meta name="description" content={LEMA} />
-</svelte:head>
+<Seo
+	title="Mostrador · Vendé en todos lados, pagá menos"
+	description="Tienda online, WhatsApp, Mercado Libre, local y factura de ARCA en un solo panel. Más barato que Tiendanube en cada plan."
+	path="/"
+	image="home"
+	jsonLd={{
+		'@context': 'https://schema.org',
+		'@type': 'Organization',
+		name: 'Mostrador',
+		url: 'https://mostrador.iamnaw.dev',
+		logo: 'https://mostrador.iamnaw.dev/mark.svg'
+	}}
+/>
 
 <main>
 	<img src="/wordmark-brown.png" alt="Mostrador" width="220" />
