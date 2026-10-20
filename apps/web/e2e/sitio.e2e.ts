@@ -41,3 +41,23 @@ test('una ruta inexistente muestra el 404 del sitio', async ({ page }) => {
 	await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
 	expect(await sinDesborde(page)).toBeLessThanOrEqual(0);
 });
+
+test('migrar: la pestaña sale de ?desde= y el botón lleva al registro con el origen', async ({
+	page
+}) => {
+	await page.goto('/migrar?desde=mercadoshops');
+	await listo(page);
+	expect(await sinDesborde(page)).toBeLessThanOrEqual(0);
+	await expect(page.getByRole('button', { name: 'Desde Mercado Shops' })).toHaveAttribute(
+		'aria-pressed',
+		'true'
+	);
+	await expect(page.getByText('Traemos tus publicaciones de Mercado Libre')).toBeVisible();
+	await page.getByRole('button', { name: 'Desde Tiendanube' }).click();
+	await expect(page).toHaveURL(/desde=tiendanube/);
+	await page.getByLabel('Link de tu tienda en Tiendanube').fill('lucia.mitiendanube.com');
+	await page.getByRole('button', { name: 'Empezar' }).click();
+	await expect(page).toHaveURL(
+		/\/ingresar\?m=registro&desde=tiendanube&origen=lucia\.mitiendanube\.com$/
+	);
+});
