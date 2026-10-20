@@ -90,3 +90,16 @@ URL, para que no quede en el historial ni en logs.
   ve las tiendas ajenas para chequear si un slug está libre.
 - En Workers, `fetch` guardado como propiedad y llamado como método da "Illegal invocation": los
   clientes HTTP lo envuelven en una función. Lo detectó el e2e contra la API real, no los unitarios.
+
+## 14. Legales y botón de arrepentimiento (PR #12)
+
+- Los 8 legales salen de `design/Legal *.dc.html` con `scripts/legales.ts` (genera `src/lib/legales.ts`):
+  el texto no se copia a mano, y el HTML queda sólo con `<b>` y `<a>` (links reescritos a rutas).
+- Las páginas públicas comparten el layout `(sitio)`: header y footer del handoff y el banner de cookies.
+  En el celular la nav del header baja a una fila deslizable y el índice lateral de los legales
+  (sticky en escritorio) pasa a chips + un desplegable: con poco ancho, el sticky tapaba el texto.
+- Botón de arrepentimiento (Res. 424/2020): con la API, `POST /v1/arrepentimientos` lo registra en
+  `soporte.arrepentimientos` con código `ARR-AAAA-NNNNNN`, límite por IP y por email, y mail de
+  confirmación. La app sólo puede insertar y leer el código; los datos personales los ve staff.
+  En la demo no hay a quién revocarle nada: se valida igual y se da un código correlativo (tabla
+  `contadores` de D1), sin guardar ningún dato del pedido.

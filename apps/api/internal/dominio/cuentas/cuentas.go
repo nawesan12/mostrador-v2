@@ -22,6 +22,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/tiendas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/limite"
 )
 
 // Errores de dominio. El handler los traduce a problem+json.
@@ -351,17 +352,9 @@ func crearSesion(ctx context.Context, tx pgx.Tx, usuario, tienda string, vida ti
 	return Sesion{Token: token, VenceEn: vence, TiendaID: tienda}, err
 }
 
-// permitido suma un intento a la clave y dice si sigue dentro del máximo de la ventana
-// (un solo upsert atómico, como el ratelimit de Caja).
+// permitido suma un intento a la clave y dice si sigue dentro del máximo de la ventana.
 func (s *Servicio) permitido(ctx context.Context, clave string, max int, ventana time.Duration) (bool, error) {
-	var n int
-	err := s.Pool.QueryRow(ctx, `
-		INSERT INTO auth.intentos (clave, cantidad, desde) VALUES ($1, 1, now())
-		ON CONFLICT (clave) DO UPDATE SET
-			cantidad = CASE WHEN auth.intentos.desde < now() - $2::interval THEN 1 ELSE auth.intentos.cantidad + 1 END,
-			desde = CASE WHEN auth.intentos.desde < now() - $2::interval THEN now() ELSE auth.intentos.desde END
-		RETURNING cantidad`, clave, ventana.String()).Scan(&n)
-	return n <= max, err
+	return limite.Permitido(ctx, s.Pool, clave, max, ventana)
 }
 
 func nuevoToken() string {

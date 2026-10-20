@@ -87,6 +87,23 @@ paths:
         '204': { description: Contraseña cambiada; se cierran todas las sesiones }
         '400': { $ref: '#/components/responses/Problema' }
         '422': { $ref: '#/components/responses/Problema' }
+  /v1/arrepentimientos:
+    post:
+      operationId: pedirArrepentimiento
+      summary: Botón de arrepentimiento (Res. 424/2020). Público, sin sesión; devuelve el código de trámite.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PedidoArrepentimiento' }
+      responses:
+        '201':
+          description: Registrado; la confirmación sale por mail
+          content:
+            application/json:
+              schema: { type: object, required: [codigo], properties: { codigo: { type: string, pattern: '^ARR-\d{4}-\d{6,}$' } } }
+        '400': { $ref: '#/components/responses/Problema' }
+        '429': { $ref: '#/components/responses/Problema' }
   /v1/panel/tienda:
     get:
       operationId: obtenerTienda
@@ -110,6 +127,15 @@ components:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problema' }
   schemas:
+    PedidoArrepentimiento:
+      type: object
+      required: [email, nombre, documento, plan]
+      properties:
+        email: { type: string, description: 'El de la cuenta' }
+        nombre: { type: string, maxLength: 80 }
+        documento: { type: string, description: 'DNI o CUIT, con o sin guiones' }
+        plan: { type: string, maxLength: 120, description: 'Plan contratado y fecha' }
+        motivo: { type: string, maxLength: 1000 }
     Alta:
       type: object
       required: [nombre, tienda, email, clave]
