@@ -11,6 +11,7 @@
 	import { AREAS, ubicar } from '#lib/panel/navegacion.ts';
 	import { Shell, setShell } from '#lib/panel/shell.svelte.ts';
 	import { SITE } from '#lib/site.ts';
+	import { getUi } from '#lib/ui.svelte.ts';
 
 	/** Armazón del panel (design/Mostrador v4.dc.html, vista Panel). */
 	let { data, children } = $props();
@@ -21,6 +22,9 @@
 			untrack(() => data.modo)
 		)
 	);
+	const ui = getUi();
+	shell.hornero = () =>
+		ui.toast({ k: 'ai', title: 'Hornero', desc: 'Llega con la próxima versión del panel.' });
 	const donde = $derived(ubicar(page.url.pathname) ?? { seccion: 'Resumen', area: AREAS[0] });
 	const sinLeer = $derived(data.resumen.notificaciones.some((n) => !n.leida));
 	const dominio = $derived(`${SITE.replace(/^https?:\/\//, '')}/t/${data.tienda.slug}`);

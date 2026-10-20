@@ -179,6 +179,62 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ResumenPanel' }
         '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/tablero:
+    get:
+      operationId: tablero
+      summary: El Resumen del panel (dashboard) para un período.
+      parameters:
+        - name: periodo
+          in: query
+          schema: { type: string, enum: [hoy, 7d, 30d], default: 7d }
+      responses:
+        '200':
+          description: Tablero
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Tablero' }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/meta:
+    put:
+      operationId: guardarMeta
+      summary: La meta de ventas del mes (en pesos; 0 la saca).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [objetivo]
+              properties:
+                objetivo: { type: integer, minimum: 0, maximum: 100000000000 }
+      responses:
+        '204': { description: Guardada }
+        '400': { $ref: '#/components/responses/Problema' }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/avisos/{aviso}/ocultar:
+    post:
+      operationId: ocultarAviso
+      summary: Descarta un aviso del Resumen (por ahora, el del certificado de ARCA).
+      parameters:
+        - { name: aviso, in: path, required: true, schema: { type: string, enum: [certificado] } }
+      responses:
+        '204': { description: Oculto }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/carritos/recordar:
+    post:
+      operationId: recordarCarritos
+      summary: Manda por WhatsApp el recordatorio a los carritos abandonados recuperables.
+      responses:
+        '200':
+          description: Cuántos mensajes quedaron en cola
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [enviados]
+                properties:
+                  enviados: { type: integer }
+        '401': { $ref: '#/components/responses/Problema' }
   /v1/panel/tienda:
     get:
       operationId: obtenerTienda
@@ -229,6 +285,196 @@ components:
             plan: { type: string }
             diasRestantes: { type: integer }
             diasTotales: { type: integer }
+    Comparado:
+      type: object
+      description: 'El valor del período y el del período anterior del mismo largo'
+      required: [actual, anterior]
+      properties:
+        actual: { type: number }
+        anterior: { type: number }
+    Tablero:
+      type: object
+      required: [periodo, desde, hasta, hola, ventas, serie, kpis, canales, meta, avisos, ultimosPedidos, paraHacer, enVivo, caja, liquidaciones, hornero, bandeja, integraciones, masVendidos, resenas, envios]
+      properties:
+        periodo: { type: string, enum: [hoy, 7d, 30d] }
+        desde: { type: string, format: date-time }
+        hasta: { type: string, format: date-time }
+        hola: { type: [string, 'null'], description: 'Nombre de pila de quien entra' }
+        ventas: { $ref: '#/components/schemas/Comparado' }
+        serie:
+          type: object
+          description: 'Ventas acumuladas en 14 tramos del período, y las del período anterior'
+          required: [actual, anterior]
+          properties:
+            actual: { type: array, items: { type: number } }
+            anterior: { type: array, items: { type: number } }
+        kpis:
+          type: object
+          required: [pedidos, ticket, conversion, clientesNuevos]
+          properties:
+            pedidos: { $ref: '#/components/schemas/Comparado' }
+            ticket: { $ref: '#/components/schemas/Comparado' }
+            conversion: { $ref: '#/components/schemas/Comparado', description: 'Porcentaje (3.4 = 3,4 %)' }
+            clientesNuevos: { $ref: '#/components/schemas/Comparado' }
+        canales:
+          type: array
+          description: 'Parte de las ventas del período por canal (web, wa, ml, ig, pos, tg), de mayor a menor'
+          items:
+            type: object
+            required: [canal, parte]
+            properties:
+              canal: { type: string }
+              parte: { type: number, description: 'De 0 a 1' }
+        meta:
+          type: object
+          required: [objetivo, actual, proyeccion]
+          properties:
+            objetivo: { type: integer, description: '0: sin meta' }
+            actual: { type: integer, description: 'Vendido en el mes' }
+            proyeccion: { type: integer, description: 'Al ritmo actual, cómo cierra el mes' }
+        avisos:
+          type: object
+          required: [certificadoDias]
+          properties:
+            certificadoDias: { type: [integer, 'null'], description: 'Días para que venza el certificado de ARCA, si hay que avisar' }
+        ultimosPedidos:
+          type: array
+          items: { $ref: '#/components/schemas/PedidoBreve' }
+        paraHacer:
+          type: object
+          required: [preparar, chats, chatMasViejoMin, transferencias, transferenciasMonto, sinStock, sinStockEnMl]
+          properties:
+            preparar: { type: integer }
+            chats: { type: integer }
+            chatMasViejoMin: { type: integer }
+            transferencias: { type: integer }
+            transferenciasMonto: { type: integer }
+            sinStock: { type: integer }
+            sinStockEnMl: { type: integer }
+        enVivo:
+          type: object
+          required: [personas, paginas, carritos, carritosMonto]
+          properties:
+            personas: { type: integer }
+            paginas:
+              type: array
+              items:
+                type: object
+                required: [nombre, personas]
+                properties:
+                  nombre: { type: string }
+                  personas: { type: integer }
+            carritos: { type: integer }
+            carritosMonto: { type: integer }
+        caja:
+          type: object
+          required: [abierta, total, medios]
+          properties:
+            abierta: { type: [string, 'null'], format: date-time, description: 'Cuándo se abrió hoy (null: cerrada)' }
+            total: { type: integer }
+            medios:
+              type: array
+              items:
+                type: object
+                required: [medio, monto]
+                properties:
+                  medio: { type: string, description: 'efectivo, tarjeta, mp, modo, transf' }
+                  monto: { type: integer }
+        liquidaciones:
+          type: array
+          description: 'Lo que se acredita en los próximos 7 días, por medio de pago'
+          items:
+            type: object
+            required: [medio, fecha, monto]
+            properties:
+              medio: { type: string }
+              fecha: { type: string, format: date }
+              monto: { type: integer }
+        hornero:
+          type: object
+          required: [chatsHoy, ideas, carritos, carritosMonto, costoMensaje, recordados]
+          properties:
+            chatsHoy: { type: integer }
+            ideas: { type: integer }
+            carritos: { type: integer }
+            carritosMonto: { type: integer }
+            costoMensaje: { type: integer, description: 'Lo que cuesta cada mensaje de WhatsApp' }
+            recordados: { type: boolean, description: 'Ya se les mandó el recordatorio' }
+        bandeja:
+          type: array
+          items:
+            type: object
+            required: [nombre, foto, mensaje, creado, atiende, sinLeer]
+            properties:
+              nombre: { type: string }
+              foto: { type: [string, 'null'], description: 'Id de la foto en Unsplash' }
+              mensaje: { type: string }
+              creado: { type: string, format: date-time }
+              atiende: { type: string, enum: [hornero, vos] }
+              sinLeer: { type: integer }
+        integraciones:
+          type: array
+          description: 'Integraciones conectadas con su dato del momento'
+          items:
+            type: object
+            required: [id, valor]
+            properties:
+              id: { type: string, description: 'mp (cobrado en 7 días), ml (publicaciones), wa (chats esperando), arca (días del certificado), andreani (envíos en camino)' }
+              valor: { type: integer }
+        masVendidos:
+          type: array
+          description: 'Los 4 más vendidos de los últimos 7 días'
+          items:
+            type: object
+            required: [productoId, nombre, foto, unidades]
+            properties:
+              productoId: { type: string }
+              nombre: { type: string }
+              foto: { type: [string, 'null'] }
+              unidades: { type: integer }
+        resenas:
+          type: object
+          required: [promedio, nuevas]
+          properties:
+            promedio: { type: [number, 'null'] }
+            nuevas:
+              type: array
+              items:
+                type: object
+                required: [texto, autor, producto, canal, estrellas]
+                properties:
+                  texto: { type: string }
+                  autor: { type: string }
+                  producto: { type: string }
+                  canal: { type: string }
+                  estrellas: { type: integer }
+        envios:
+          type: object
+          required: [paquetes, retiros]
+          properties:
+            paquetes: { type: integer }
+            retiros:
+              type: array
+              items:
+                type: object
+                required: [hora, transporte, paquetes, ciudad, proximo]
+                properties:
+                  hora: { type: string, description: 'HH:MM' }
+                  transporte: { type: string, enum: [andreani, oca, correo, moto] }
+                  paquetes: { type: integer }
+                  ciudad: { type: [string, 'null'], description: 'Si todos van a la misma ciudad' }
+                  proximo: { type: boolean }
+    PedidoBreve:
+      type: object
+      required: [numero, cliente, foto, canal, estado, total, creado]
+      properties:
+        numero: { type: integer }
+        cliente: { type: string }
+        foto: { type: [string, 'null'] }
+        canal: { type: string }
+        estado: { type: string, enum: [Pago pendiente, Para preparar, Pagado, Enviado, Entregado, Cancelado] }
+        total: { type: integer }
+        creado: { type: string, format: date-time }
     Notificacion:
       type: object
       required: [id, tipo, titulo, detalle, creada, leida, grupo]

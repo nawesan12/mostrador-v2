@@ -1,5 +1,5 @@
 /**
- * Datos de la tienda de ejemplo de la demo: clientes y pedidos de los últimos 30 días sobre el
+ * Datos de la tienda de ejemplo de la demo: clientes y pedidos de los últimos 60 días sobre el
  * catálogo real de la plantilla (src/lib/catalogos.ts). Salen siempre iguales para una plantilla
  * (generador con semilla) y se fechan respecto de cuándo se creó el sandbox, así la demo se ve viva
  * pero no cambia mientras se usa. Lo que el visitante modifica se guarda aparte (tabla `cambios`).
@@ -9,7 +9,7 @@
 import { catalogoDe, type Catalogo, type ProductoEjemplo } from '#lib/catalogos.ts';
 
 export type Canal = 'web' | 'wa' | 'ml' | 'ig' | 'pos' | 'tg';
-export type MedioPago = 'mp' | 'transf' | 'modo' | 'payway' | 'uala' | 'efectivo';
+export type MedioPago = 'mp' | 'transf' | 'modo' | 'payway' | 'uala' | 'efectivo' | 'tarjeta';
 export type Envio = 'andreani' | 'oca' | 'correo' | 'moto' | 'retiro';
 export type EstadoPedido =
 	'Pago pendiente' | 'Para preparar' | 'Pagado' | 'Enviado' | 'Entregado' | 'Cancelado';
@@ -42,7 +42,47 @@ export type Pedido = {
 	creado: number;
 };
 
-export type Demo = { catalogo: Catalogo; clientes: Cliente[]; pedidos: Pedido[] };
+export type Carrito = {
+	id: string;
+	clienteId: string;
+	items: { productoId: string; nombre: string; cantidad: number; precio: number }[];
+	total: number;
+	creado: number;
+};
+
+export type Resena = {
+	pedido: number;
+	clienteId: string;
+	productoId: string;
+	producto: string;
+	canal: Canal;
+	estrellas: number;
+	texto: string;
+	creada: number;
+};
+
+/** Conversación de WhatsApp abierta (la bandeja). */
+export type Conversacion = {
+	clienteId: string;
+	mensaje: string;
+	creado: number;
+	atiende: 'hornero' | 'vos';
+	sinLeer: number;
+};
+
+export type Demo = {
+	catalogo: Catalogo;
+	clientes: Cliente[];
+	/** Del más nuevo al más viejo. */
+	pedidos: Pedido[];
+	/** Unidades por producto. */
+	stock: Record<string, number>;
+	/** Productos publicados en Mercado Libre. */
+	enMl: string[];
+	carritos: Carrito[];
+	resenas: Resena[];
+	conversaciones: Conversacion[];
+};
 
 /** Generador con semilla (mulberry32). */
 function azar(semilla: number) {
@@ -108,7 +148,17 @@ const APELLIDOS = [
 	'Medina',
 	'Herrera',
 	'Castro',
-	'Molina'
+	'Molina',
+	'Rojas',
+	'Ortiz',
+	'Silva',
+	'Núñez',
+	'Ramos',
+	'Vera',
+	'Suárez',
+	'Giménez',
+	'Cabrera',
+	'Ferreyra'
 ];
 const CIUDADES = [
 	'CABA',
@@ -154,23 +204,41 @@ function elegir<T>(r: () => number, pesos: [T, number][]): T {
 const MIN = 60_000;
 const DIA = 1440 * MIN;
 const PRIMER_NUMERO = 1048;
+/** Días de historia: 30 para mostrar y 30 más para comparar ("vs. mes anterior"). */
+export const DIAS_DEMO = 60;
+
+const RESENAS_5 = [
+	'Llegó rapidísimo y súper bien embalado. Ya es mi tercera compra.',
+	'Muy buena atención por WhatsApp, me ayudaron a elegir.',
+	'Excelente calidad, tal cual las fotos.',
+	'Todo perfecto, lo recomiendo.',
+	'Me encantó. El envío llegó antes de lo que decía.',
+	'Es un regalo y quedó hermoso. Gracias por la tarjetita.'
+];
+const RESENAS_4 = [
+	'Muy lindo, aunque tardó un día más de lo previsto.',
+	'Buena calidad. El color es un poco distinto al de la foto.'
+];
 
 function generar(plantilla: string, base: number): Demo | null {
 	const catalogo = catalogoDe(plantilla);
 	if (!catalogo) return null;
 	const r = azar(hash(plantilla));
 	const sinAcento = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+	const productos = catalogo.productos;
 
 	const clientes: Cliente[] = [];
 	const usados = new Set<string>();
-	while (clientes.length < 44) {
-		const n = NOMBRES[Math.floor(r() * NOMBRES.length)];
-		const a = APELLIDOS[Math.floor(r() * APELLIDOS.length)];
-		if (usados.has(n + a)) continue;
+	const nuevoCliente = (alta: number): Cliente => {
+		let n: string;
+		let a: string;
+		do {
+			n = NOMBRES[Math.floor(r() * NOMBRES.length)];
+			a = APELLIDOS[Math.floor(r() * APELLIDOS.length)];
+		} while (usados.has(n + a));
 		usados.add(n + a);
-		const i = clientes.length;
-		clientes.push({
-			id: `c${i + 1}`,
+		const c: Cliente = {
+			id: `c${clientes.length + 1}`,
 			nombre: `${n} ${a}`,
 			email: r() < 0.85 ? `${sinAcento(n)}.${sinAcento(a)}@gmail.com` : null,
 			telefono:
@@ -178,44 +246,57 @@ function generar(plantilla: string, base: number): Demo | null {
 					? `+54 9 11 ${String(4000 + Math.floor(r() * 5999))}-${String(1000 + Math.floor(r() * 8999))}`
 					: null,
 			ciudad: CIUDADES[Math.floor(r() * CIUDADES.length)],
-			foto: i < FOTOS.length ? FOTOS[i] : null,
-			mayorista: false,
-			alta: base - Math.floor(r() * 400) * DIA
-		});
-	}
-	for (const [i, m] of MAYORISTAS.entries())
-		clientes.push({
-			id: `m${i + 1}`,
-			nombre: m,
-			email: `compras@${sinAcento(m).replace(/[^a-z]/g, '')}.com.ar`,
-			telefono: null,
-			ciudad: CIUDADES[i * 3],
 			foto: null,
-			mayorista: true,
-			alta: base - (200 + i * 40) * DIA
-		});
-	const minoristas = clientes.filter((c) => !c.mayorista);
+			mayorista: false,
+			alta
+		};
+		clientes.push(c);
+		return c;
+	};
+	// Los que ya compraban antes de la ventana de la demo.
+	for (let i = 0; i < 90; i++) nuevoCliente(base - (DIAS_DEMO + 1 + Math.floor(r() * 400)) * DIA);
+	const mayoristas = MAYORISTAS.map((m, i): Cliente => ({
+		id: `m${i + 1}`,
+		nombre: m,
+		email: `compras@${sinAcento(m).replace(/[^a-z]/g, '')}.com.ar`,
+		telefono: null,
+		ciudad: CIUDADES[i * 3],
+		foto: null,
+		mayorista: true,
+		alta: base - (200 + i * 40) * DIA
+	}));
 
-	// Pedidos de los últimos 30 días, más seguidos hoy (como el feed del handoff).
-	const pedidos: Pedido[] = [];
-	let t = base - 4 * MIN;
-	let numero = PRIMER_NUMERO;
-	const productos = catalogo.productos;
-	const unidad = (p: ProductoEjemplo) => (p.precio >= 100_000 ? 1 : p.precio >= 20_000 ? 2 : 4);
-	while (t > base - 30 * DIA && numero > 0) {
+	// Cuándo entró cada pedido: hoy, cada 30 a 75 minutos; antes, unos 20 por día (y un poco menos
+	// el mes anterior: la tienda crece).
+	const momentos: number[] = [];
+	for (let t = base - 4 * MIN; t > base - DIAS_DEMO * DIA;) {
+		momentos.push(t);
 		const edad = base - t;
-		const canal = elegir<Canal>(r, [
+		t -= edad < DIA ? (30 + r() * 45) * MIN : (40 + r() * 100) * MIN * (edad > 30 * DIA ? 1.1 : 1);
+	}
+
+	// Del más viejo al más nuevo, así los clientes nuevos aparecen con su primera compra.
+	const unidad = (p: ProductoEjemplo) => (p.precio >= 100_000 ? 1 : p.precio >= 20_000 ? 2 : 4);
+	const pedidos: Pedido[] = [];
+	for (const t of momentos.toReversed()) {
+		const edad = base - t;
+		let canal = elegir<Canal>(r, [
 			['web', 30],
 			['wa', 26],
 			['ml', 18],
 			['ig', 12],
-			['pos', 10],
+			['pos', 18],
 			['tg', 4]
 		]);
+		// El local atiende de 9 a 21; fuera de hora, esa venta entra por la tienda online.
+		const horaLocal = ((((t - 3 * 3600_000) % DIA) + DIA) % DIA) / 3600_000;
+		if (canal === 'pos' && (horaLocal < 9 || horaLocal >= 21)) canal = 'web';
 		const mayorista = canal === 'pos' && r() < 0.15;
 		const cliente = mayorista
-			? clientes[clientes.length - 1 - Math.floor(r() * MAYORISTAS.length)]
-			: minoristas[Math.floor(r() * minoristas.length)];
+			? mayoristas[Math.floor(r() * mayoristas.length)]
+			: r() < 0.24
+				? nuevoCliente(t)
+				: clientes[Math.floor(r() ** 1.4 * clientes.length)];
 		const cuantos = mayorista
 			? 2
 			: elegir(r, [
@@ -237,12 +318,14 @@ function generar(plantilla: string, base: number): Demo | null {
 				precio: mayorista ? Math.round(p.precio * 0.82) : p.precio
 			});
 		}
-		const pago: MedioPago =
-			canal === 'pos'
+		const pago: MedioPago = mayorista
+			? 'transf'
+			: canal === 'pos'
 				? elegir(r, [
-						['efectivo', 50],
-						['mp', 30],
-						['transf', 20]
+						['efectivo', 35],
+						['tarjeta', 35],
+						['mp', 20],
+						['modo', 10]
 					])
 				: canal === 'ml'
 					? 'mp'
@@ -297,7 +380,7 @@ function generar(plantilla: string, base: number): Demo | null {
 						? 'Cobrado'
 						: 'Aprobado';
 		pedidos.push({
-			numero,
+			numero: 0,
 			clienteId: cliente.id,
 			canal,
 			pago,
@@ -310,11 +393,105 @@ function generar(plantilla: string, base: number): Demo | null {
 			total: items.reduce((s, i) => s + i.precio * i.cantidad, 0),
 			creado: t
 		});
-		numero--;
-		// Hoy, cada 30 a 75 minutos; antes, más espaciado (unos 20 por día).
-		t -= edad < DIA ? (30 + r() * 45) * MIN : (40 + r() * 100) * MIN;
 	}
-	return { catalogo, clientes, pedidos };
+	pedidos.reverse();
+	const ultimo = Math.max(PRIMER_NUMERO, pedidos.length);
+	pedidos.forEach((p, i) => (p.numero = ultimo - i));
+	clientes.push(...mayoristas);
+
+	// Las caras del handoff, para quienes compraron último.
+	const porId = new Map(clientes.map((c) => [c.id, c]));
+	let caras = 0;
+	for (const p of pedidos) {
+		const c = porId.get(p.clienteId)!;
+		if (caras >= FOTOS.length) break;
+		if (!c.mayorista && !c.foto) c.foto = FOTOS[caras++];
+	}
+
+	// Stock: uno o dos sin stock y uno con stock bajo (el del aviso).
+	const stock: Record<string, number> = {};
+	for (const p of productos) stock[p.id] = 4 + Math.floor(r() * 56);
+	const bajo = productos[2] ?? productos[0];
+	stock[bajo.id] = 3;
+	const agotados = 1 + Math.floor(r() * 2);
+	for (let k = 0, i = productos.length - 1; k < agotados && i > 2; k++, i -= 2)
+		stock[productos[i].id] = 0;
+	const enMl = productos.filter(() => r() < 0.75).map((p) => p.id);
+
+	// Carritos abandonados de los últimos 3 días, de gente con WhatsApp.
+	const conTelefono = clientes.filter((c) => c.telefono && !c.mayorista);
+	const carritos: Carrito[] = Array.from({ length: 12 }, (_, k) => {
+		const cliente = conTelefono[Math.floor(r() * conTelefono.length)];
+		const items: Carrito['items'] = [];
+		for (let i = 0, n = 1 + Math.floor(r() * 2); i < n; i++) {
+			const p = productos[Math.floor(r() * productos.length)];
+			if (!items.some((x) => x.productoId === p.id))
+				items.push({ productoId: p.id, nombre: p.nombre, cantidad: 1, precio: p.precio });
+		}
+		return {
+			id: `k${k + 1}`,
+			clienteId: cliente.id,
+			items,
+			total: items.reduce((s, i) => s + i.precio * i.cantidad, 0),
+			creado: base - Math.floor(20 + r() * 3 * 1440) * MIN
+		};
+	}).sort((a, b) => b.creado - a.creado);
+
+	// Reseñas de pedidos entregados (no en el local), unos días después de comprar.
+	const resenas: Resena[] = [];
+	for (const p of pedidos) {
+		if (p.estado !== 'Entregado' || p.canal === 'pos' || r() > 0.18) continue;
+		const creada = p.creado + (2 + r() * 5) * DIA;
+		const cinco = r() < 0.86;
+		const textos = cinco ? RESENAS_5 : RESENAS_4;
+		if (creada >= base) continue;
+		resenas.push({
+			pedido: p.numero,
+			clienteId: p.clienteId,
+			productoId: p.items[0].productoId,
+			producto: p.items[0].nombre,
+			canal: p.canal,
+			estrellas: cinco ? 5 : 4,
+			texto: textos[Math.floor(r() * textos.length)],
+			creada
+		});
+	}
+	resenas.sort((a, b) => b.creada - a.creada);
+
+	// La bandeja: tres conversaciones abiertas con quienes escribieron último por WhatsApp.
+	const deWa = [
+		...new Set(
+			pedidos
+				.filter((p) => p.canal === 'wa' && !porId.get(p.clienteId)!.mayorista)
+				.map((p) => p.clienteId)
+		)
+	];
+	const pregunta = pedidos.find((p) => p.clienteId === deWa[0])!.items[0].nombre;
+	const conversaciones: Conversacion[] = [
+		{
+			clienteId: deWa[0],
+			mensaje: `Hola, ¿tienen stock de ${pregunta}?`,
+			creado: base - 4 * MIN,
+			atiende: 'hornero',
+			sinLeer: 0
+		},
+		{
+			clienteId: deWa[1],
+			mensaje: 'Quiero cambiar la dirección de envío',
+			creado: base - 12 * MIN,
+			atiende: 'vos',
+			sinLeer: 2
+		},
+		{
+			clienteId: deWa[2],
+			mensaje: '¿Me pasás la lista de precios mayorista?',
+			creado: base - 22 * MIN,
+			atiende: 'vos',
+			sinLeer: 1
+		}
+	];
+
+	return { catalogo, clientes, pedidos, stock, enMl, carritos, resenas, conversaciones };
 }
 
 // Por isolate: generar es barato (unos 600 pedidos), pero se repite en cada pedido del panel.

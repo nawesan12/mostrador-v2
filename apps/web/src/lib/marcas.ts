@@ -32,6 +32,7 @@ export const MARCAS = {
 	modo: { sigla: 'MODO', col: '#fff', bg: '#00A88F' },
 	uala: { sigla: 'ualá', col: '#fff', bg: '#3E6BFD' },
 	oca: { sigla: 'OCA', col: '#fff', bg: '#4B2A85' },
+	correo: { sigla: 'CA', col: '#003DA5', bg: '#FFCE00' },
 	moto: { icon: I.phMopedFill, col: '#9A6A10', bg: '#FDF3DD' },
 	retiro: { icon: I.phStorefrontFill, col: '#8A5A3E', bg: '#F3E9DF' },
 	visa: { icon: I.logosVisa, bg: '#fff' },

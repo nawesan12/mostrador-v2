@@ -33,6 +33,9 @@ export class Shell {
 		guardarCookie('panel_modo', m);
 	}
 
+	/** Hornero (el panel de IA) llega en su propio PR; mientras, se avisa. */
+	hornero: () => void = () => {};
+
 	cerrarTodo() {
 		this.barra = false;
 		this.notificaciones = false;
