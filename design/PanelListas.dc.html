@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;flex-direction:column;gap:14px;font-family:'Instrument Sans',system-ui,sans-serif;color:var(--tx)">
+  <div data-r="" style="display:flex;align-items:end;gap:12px;flex-wrap:wrap">
+    <div style="flex:1;min-width:220px"><h1 style="margin:0;font-size:30px;letter-spacing:-.035em;font-weight:600">{{ title }}</h1><div style="margin-top:2px;font-size:15px;color:var(--mu)">{{ kpi }}</div></div>
+    <button onClick="{{ exportX }}" style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;border:1px solid var(--ln2);background:var(--sf);color:var(--tx);font:600 13.5px 'Instrument Sans';cursor:pointer;box-shadow:var(--sh);white-space:nowrap"><iconify-icon icon="ph:download-simple-bold" width="14"></iconify-icon>Exportar</button>
+    <button onClick="{{ primary }}" style="display:flex;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;border:0;background:linear-gradient(180deg,#E06A3E,#D2582F);color:#fff;font:600 13.5px 'Instrument Sans';cursor:pointer;box-shadow:0 10px 22px -10px rgba(210,88,47,.8);white-space:nowrap"><iconify-icon icon="{{ primaryI }}" width="15"></iconify-icon>{{ primaryT }}</button>
+  </div>
+
+  <sc-if value="{{ hasTip }}"><div data-r="" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:rgba(210,88,47,.08);border:1px solid rgba(210,88,47,.18)"><img src="assets/hornero/pensando.png" alt="" style="width:40px;height:40px;object-fit:contain;flex:none"><div style="flex:1;min-width:0;font-size:13.5px;line-height:1.4"><b>Hornero:</b> {{ tip }}</div><button onClick="{{ tipGo }}" style="flex:none;padding:8px 14px;border-radius:999px;border:0;background:#2A140C;color:#fff;font:600 12.5px 'Instrument Sans';cursor:pointer;white-space:nowrap">{{ tipBtn }}</button></div></sc-if>
+
+  <div data-r="" style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none">
+    <sc-for list="{{ views }}" as="v" hint-placeholder-count="5"><button onClick="{{ v.go }}" style="display:flex;align-items:center;gap:7px;border:1.5px solid {{ v.bd }};cursor:pointer;white-space:nowrap;font:600 13px 'Instrument Sans';padding:8px 13px;border-radius:999px;background:{{ v.bg }};color:var(--tx)"><iconify-icon icon="{{ v.i }}" width="15" style="color:{{ v.ic }}"></iconify-icon>{{ v.t }}</button></sc-for>
+  </div>
+
+  <div data-r="" style="display:flex;border-radius:18px;overflow-x:auto;scrollbar-width:none;background:var(--sf);box-shadow:var(--shd)">
+    <sc-for list="{{ segs }}" as="s" hint-placeholder-count="5">
+      <button onClick="{{ s.go }}" style="flex:1 0 120px;min-width:0;padding:12px 14px;border:0;border-right:1px solid var(--ln);background:{{ s.bg }};cursor:pointer;font-family:inherit;color:var(--tx);text-align:left;transition:background .2s">
+        <span style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--mu);white-space:nowrap;overflow:hidden"><span style="width:8px;height:8px;border-radius:50%;background:{{ s.c }};flex:none"></span>{{ s.t }}</span>
+        <span style="display:block;font-size:22px;font-weight:600;letter-spacing:-.03em;margin-top:2px">{{ s.n }}</span>
+        <span style="display:block;margin-top:6px;height:4px;border-radius:3px;background:{{ s.c }};opacity:{{ s.op }}"></span>
+      </button>
+    </sc-for>
+  </div>
+
+  <div data-r="" style="display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:20px;background:var(--sf);box-shadow:var(--shd)">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <div style="flex:1 1 240px;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:var(--sf3)"><iconify-icon icon="ph:magnifying-glass" width="16" style="color:var(--mu)"></iconify-icon><input value="{{ q }}" onInput="{{ setQ }}" placeholder="{{ ph }}" style="flex:1;min-width:0;border:0;outline:0;background:transparent;font:500 14px 'Instrument Sans';color:var(--tx)"><sc-if value="{{ hasQ }}"><button onClick="{{ clearQ }}" style="border:0;background:transparent;cursor:pointer;color:var(--mu);display:grid;place-items:center"><iconify-icon icon="ph:x-circle-fill" width="16"></iconify-icon></button></sc-if></div>
+      <button onClick="{{ toggleMore }}" style="display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:999px;border:1px solid {{ moreBd }};background:{{ moreBg }};color:var(--tx);font:600 13px 'Instrument Sans';cursor:pointer;white-space:nowrap"><iconify-icon icon="ph:sliders-horizontal-bold" width="15"></iconify-icon>Filtros<sc-if value="{{ nActive }}"><span style="min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#D2582F;color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center">{{ nActive }}</span></sc-if></button>
+      <button onClick="{{ cycleSort }}" style="display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:999px;border:1px solid var(--ln2);background:var(--sf);color:var(--tx);font:600 13px 'Instrument Sans';cursor:pointer;white-space:nowrap"><iconify-icon icon="ph:sort-ascending-bold" width="15"></iconify-icon>{{ sortTxt }}</button>
+    </div>
+    <sc-if value="{{ more }}">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;padding:6px 2px 2px">
+        <sc-for list="{{ facets }}" as="f" hint-placeholder-count="3">
+          <div><div style="font-size:12px;font-weight:600;color:var(--mu);margin-bottom:6px">{{ f.t }}</div><div style="display:flex;flex-wrap:wrap;gap:5px"><sc-for list="{{ f.opts }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.go }}" style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1.5px solid {{ o.bd }};background:{{ o.bg }};color:var(--tx);font:600 12.5px 'Instrument Sans';cursor:pointer;white-space:nowrap"><sc-if value="{{ o.icon }}"><iconify-icon icon="{{ o.icon }}" width="14" style="color:{{ o.col }}"></iconify-icon></sc-if>{{ o.t }}<span style="color:var(--fa);font-weight:500">{{ o.n }}</span></button></sc-for></div></div>
+        </sc-for>
+        <div><div style="font-size:12px;font-weight:600;color:var(--mu);margin-bottom:6px;display:flex;justify-content:space-between">{{ rangeLbl }}<b style="color:var(--tx)">{{ rangeTxt }}</b></div><input type="range" min="0" max="{{ rangeMax }}" step="{{ rangeStep }}" value="{{ rangeV }}" onInput="{{ setRange }}" style="width:100%;accent-color:#D2582F"></div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <sc-for list="{{ flags }}" as="g" hint-placeholder-count="2"><button onClick="{{ g.go }}" style="display:flex;align-items:center;gap:10px;padding:4px 0;border:0;background:transparent;cursor:pointer;font-family:inherit;color:var(--tx);text-align:left"><span style="flex:1;font-size:13px;font-weight:500">{{ g.t }}</span><span style="position:relative;width:36px;height:21px;flex:none;border-radius:999px;background:{{ g.tbg }};transition:background .25s"><span style="position:absolute;top:2px;left:{{ g.tx }};width:17px;height:17px;border-radius:50%;background:#fff;transition:left .25s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></span></span></button></sc-for>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ hasChips }}">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><sc-for list="{{ chips }}" as="c" hint-placeholder-count="2"><button onClick="{{ c.x }}" style="display:flex;align-items:center;gap:6px;padding:5px 8px 5px 11px;border-radius:999px;border:0;background:rgba(210,88,47,.12);color:#C24E25;font:600 12.5px 'Instrument Sans';cursor:pointer">{{ c.t }}<iconify-icon icon="ph:x-bold" width="11"></iconify-icon></button></sc-for><button onClick="{{ clearAll }}" style="border:0;background:transparent;cursor:pointer;font:600 12.5px 'Instrument Sans';color:var(--mu);text-decoration:underline">Limpiar todo</button></div>
+    </sc-if>
+  </div>
+
+  <div data-r="" style="position:relative;border-radius:24px;background:var(--sf);box-shadow:var(--shd);overflow:hidden">
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--ln);font-size:12.5px;color:var(--mu)">
+      <button onClick="{{ selAllVis }}" aria-label="Seleccionar visibles" style="width:20px;height:20px;padding:0;border-radius:6px;border:1.5px solid var(--ln2);background:var(--sf);cursor:pointer"></button>
+      <span style="flex:1">{{ showing }}</span><span style="display:flex;align-items:center;gap:6px;white-space:nowrap"><iconify-icon icon="ph:lightning-fill" width="13" style="color:#D2582F"></iconify-icon>{{ countTxt }} {{ unit }}</span>
+    </div>
+    <div data-vs="" data-lenis-prevent="" onScroll="{{ onScroll }}" style="height:{{ vh }};overflow-y:auto;overscroll-behavior:contain;position:relative">
+      <div style="position:relative;height:{{ totalH }}">
+        <sc-for list="{{ rows }}" as="r" hint-placeholder-count="8">
+          <div style="position:absolute;left:0;right:0;top:{{ r.top }};height:76px;padding:5px 10px;box-sizing:border-box">
+            <div onClick="{{ r.open }}" style="height:100%;display:flex;align-items:center;gap:{{ gap }};padding:0 12px;border-radius:16px;background:{{ r.bg }};border:1px solid {{ r.bd }};cursor:pointer;transition:background .15s" style-hover="background:var(--chip)">
+              <button onClick="{{ r.tick }}" aria-label="Seleccionar" style="width:20px;height:20px;flex:none;padding:0;border-radius:6px;border:1.5px solid {{ r.cbd }};background:{{ r.cbg }};color:#fff;cursor:pointer;display:grid;place-items:center"><sc-if value="{{ r.sel }}"><iconify-icon icon="ph:check-bold" width="12"></iconify-icon></sc-if></button>
+              <span style="position:relative;flex:none;width:42px;height:42px">
+                <sc-if value="{{ r.mImg }}"><img src="{{ r.mImg }}" alt="" style="width:42px;height:42px;border-radius:{{ r.mR }};object-fit:cover;display:block;background:var(--sf3)"></sc-if>
+                <sc-if value="{{ r.mIni }}"><span style="width:42px;height:42px;border-radius:{{ r.mR }};display:grid;place-items:center;background:{{ r.mBg }};color:{{ r.mFg }};font-size:14px;font-weight:700">{{ r.mIni }}</span></sc-if>
+                <sc-if value="{{ r.bIcon }}"><span style="position:absolute;right:-4px;bottom:-4px;width:20px;height:20px;border-radius:7px;display:grid;place-items:center;background:{{ r.bBg }};box-shadow:0 0 0 2px var(--sf)"><iconify-icon icon="{{ r.bIcon }}" width="12" style="color:{{ r.bCol }}"></iconify-icon></span></sc-if>
+              </span>
+              <span style="flex:1 1 150px;min-width:0"><span style="display:flex;align-items:center;gap:6px"><span style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.t }}</span><sc-for list="{{ r.tags }}" as="g" hint-placeholder-count="0"><iconify-icon icon="{{ g.i }}" width="13" title="{{ g.t }}" style="color:{{ g.c }};flex:none"></iconify-icon></sc-for></span><span style="display:block;font-size:12px;color:var(--fa);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.sub }}</span></span>
+              <sc-if value="{{ wide }}"><span style="width:180px;flex:none">
+                <sc-if value="{{ r.spark }}"><span style="display:flex;align-items:end;gap:2px;height:22px"><sc-for list="{{ r.spark }}" as="b" hint-placeholder-count="0"><span style="flex:1;height:{{ b.h }};border-radius:2px;background:{{ b.c }}"></span></sc-for></span></sc-if>
+                <sc-if value="{{ r.meter }}"><span style="position:relative;display:block;height:8px;border-radius:4px;background:var(--sf3);overflow:visible"><span style="position:absolute;left:0;top:0;bottom:0;width:{{ r.mtW }};border-radius:4px;background:{{ r.mtC }}"></span><sc-if value="{{ r.mtMark }}"><span title="Punto de reposición" style="position:absolute;top:-3px;bottom:-3px;left:{{ r.mtMark }};width:2px;border-radius:1px;background:var(--tx);opacity:.5"></span></sc-if></span></sc-if>
+                <sc-if value="{{ r.steps }}"><span style="display:flex;gap:3px"><sc-for list="{{ r.steps }}" as="s" hint-placeholder-count="0"><span style="flex:1;height:5px;border-radius:3px;background:{{ s.c }}"></span></sc-for></span></sc-if>
+                <span style="display:flex;align-items:center;gap:5px;margin-top:5px;font-size:12px;font-weight:600;color:{{ r.vC }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><sc-if value="{{ r.vI }}"><iconify-icon icon="{{ r.vI }}" width="13"></iconify-icon></sc-if>{{ r.vL }}</span>
+              </span></sc-if>
+              <sc-if value="{{ r.chip }}"><span style="flex:none;font-size:11.5px;font-weight:700;padding:4px 8px;border-radius:999px;background:{{ r.chBg }};color:{{ r.chFg }};white-space:nowrap">{{ r.chip }}</span></sc-if>
+              <span style="flex:none;min-width:80px;text-align:right"><span style="display:block;font-size:15px;font-weight:600;letter-spacing:-.01em">{{ r.v }}</span><span style="display:block;font-size:11.5px;color:var(--mu);white-space:nowrap">{{ r.vs }}</span></span>
+              <sc-if value="{{ r.stepper }}"><span onClick="{{ r.stop }}" style="flex:none;display:flex;align-items:center;gap:2px;padding:3px;border-radius:999px;background:var(--chip)"><button onClick="{{ r.dec }}" aria-label="Restar" style="width:28px;height:28px;border:0;border-radius:50%;background:var(--sf);color:var(--tx);cursor:pointer;display:grid;place-items:center"><iconify-icon icon="ph:minus-bold" width="12"></iconify-icon></button><span style="min-width:30px;text-align:center;font-size:13.5px;font-weight:700">{{ r.qty }}</span><button onClick="{{ r.inc }}" aria-label="Sumar" style="width:28px;height:28px;border:0;border-radius:50%;background:var(--sf);color:var(--tx);cursor:pointer;display:grid;place-items:center"><iconify-icon icon="ph:plus-bold" width="12"></iconify-icon></button></span></sc-if>
+              <sc-if value="{{ r.toggle }}"><button onClick="{{ r.tg }}" title="{{ r.tgT }}" style="flex:none;position:relative;width:40px;height:23px;border:0;padding:0;border-radius:999px;background:{{ r.tgBg }};cursor:pointer;transition:background .25s"><span style="position:absolute;top:2px;left:{{ r.tgX }};width:19px;height:19px;border-radius:50%;background:#fff;transition:left .25s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></span></button></sc-if>
+              <sc-if value="{{ r.act }}"><button onClick="{{ r.do }}" style="flex:none;display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;border:0;background:{{ r.aBg }};color:{{ r.aFg }};font:600 12.5px 'Instrument Sans';cursor:pointer;white-space:nowrap"><iconify-icon icon="{{ r.aI }}" width="14"></iconify-icon><sc-if value="{{ wide }}">{{ r.act }}</sc-if></button></sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <sc-if value="{{ empty }}"><div style="position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:30px"><div><img src="assets/hornero/lupa.png" alt="" style="width:110px;height:110px;object-fit:contain"><div style="font-size:16px;font-weight:600;margin-top:6px">Nada con esos filtros</div><button onClick="{{ clearAll }}" style="margin-top:10px;padding:9px 16px;border-radius:999px;border:0;background:var(--tx);color:var(--sf);font:600 13px 'Instrument Sans';cursor:pointer">Limpiar filtros</button></div></div></sc-if>
+    </div>
+    <sc-if value="{{ showTop }}"><button onClick="{{ toTop }}" aria-label="Volver arriba" style="position:absolute;right:16px;bottom:16px;width:40px;height:40px;border-radius:50%;border:0;background:var(--tx);color:var(--sf);cursor:pointer;display:grid;place-items:center;box-shadow:0 10px 24px -8px rgba(42,20,12,.5)"><iconify-icon icon="ph:arrow-up-bold" width="16"></iconify-icon></button></sc-if>
+  </div>
+
+  <sc-if value="{{ hasSel }}">
+    <div style="position:fixed;left:50%;bottom:{{ bulkB }};transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:6px;padding:8px 8px 8px 18px;border-radius:999px;background:#2A140C;color:#fff;box-shadow:0 24px 50px -16px rgba(42,20,12,.7);max-width:calc(100vw - 16px);overflow-x:auto;scrollbar-width:none">
+      <span style="font-size:14px;font-weight:600;white-space:nowrap;margin-right:6px">{{ selN }} seleccionados</span>
+      <sc-for list="{{ bulk }}" as="b" hint-placeholder-count="3"><button onClick="{{ b.go }}" style="display:flex;align-items:center;gap:6px;border:0;cursor:pointer;font:600 13px 'Instrument Sans';padding:9px 13px;border-radius:999px;background:rgba(255,255,255,.1);color:#fff;white-space:nowrap"><iconify-icon icon="{{ b.i }}" width="14"></iconify-icon>{{ b.t }}</button></sc-for>
+      <button onClick="{{ clearSel }}" aria-label="Quitar selección" style="width:34px;height:34px;flex:none;border:0;cursor:pointer;border-radius:50%;background:transparent;color:#D9C8BA;display:grid;place-items:center"><iconify-icon icon="ph:x-bold" width="14"></iconify-icon></button>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;screen&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;Clientes&quot;, &quot;Productos&quot;, &quot;Inventario&quot;, &quot;Facturación&quot;, &quot;Envíos&quot;], &quot;default&quot;: &quot;Clientes&quot;, &quot;tsType&quot;: &quot;string&quot;}, &quot;vw&quot;: {&quot;editor&quot;: &quot;int&quot;, &quot;default&quot;: 1400, &quot;tsType&quot;: &quot;number&quot;}, &quot;onToast&quot;: {&quot;editor&quot;: null, &quot;tsType&quot;: &quot;function&quot;}, &quot;onOpen&quot;: {&quot;editor&quot;: null, &quot;tsType&quot;: &quot;function&quot;}}">
+const fmt = n => '$ ' + Math.round(n).toLocaleString('es-AR');
+const fk = n => n >= 1e6 ? '$ ' + (n / 1e6).toLocaleString('es-AR', { maximumFractionDigits: 1 }) + ' M' : fmt(n);
+const U = (id, w) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${w}&h=${w}&q=60`;
+const FACES = ['1531058240690-006c446962d8', '1687422811062-a966b55cb217', '1764173039506-c5cc7b8ec14b', '1520333789090-1afc82db536a', '1687422810663-c316494f725a', '1545262722-9e0d80a0bc01', '1556745753-b2904692b3cd', '1562322140-8baeececf3df'].map(id => U(id, 96) + '&crop=faces');
+const PIMG = ['1634741011278-9dc2f5b6fc0b', '1609541994821-d909982e2f1b', '1675001077188-809370ce3279', '1444157545135-c045be691b05', '1585744259332-111384f5def9', '1495474472287-4d71bcdd2085'].map(id => U(id, 96));
+const FN = ['Lucía', 'Martín', 'Norma', 'Carla', 'Julián', 'Pablo', 'Valeria', 'Sofía', 'Tomás', 'Camila', 'Agustina', 'Federico', 'Micaela', 'Joaquín', 'Florencia', 'Diego', 'Rocío', 'Nicolás', 'Belén', 'Lautaro'];
+const LN = ['Fernández', 'Gómez', 'Ruiz', 'Pereyra', 'Medina', 'Sosa', 'Paz', 'Acosta', 'Ríos', 'Vega', 'Luna', 'Díaz', 'Torres', 'Romero', 'Benítez', 'Álvarez'];
+const CITIES = ['Rosario', 'Córdoba', 'CABA', 'La Plata', 'Mendoza', 'Salta', 'Mar del Plata', 'Tucumán', 'Neuquén', 'Santa Fe'];
+const PB = [['Termo', 42900, 0], ['Mate de cerámica', 18500, 1], ['Yerba orgánica', 8200, 2], ['Kit matero', 58400, 3], ['Bombilla', 1700, 4], ['Café de especialidad', 9800, 5], ['Mate de calabaza', 14200, 1], ['Matera de cuero', 36500, 3]];
+const PV = ['Negro', 'Crema', 'Terracota', 'Verde', '500 g', '1 kg', 'Acero', 'Grande', 'Chico'];
+const CHI = { web: ['ph:globe-simple-fill', '#D2582F', 'Tienda'], wa: ['logos:whatsapp-icon', null, 'WhatsApp'], ml: ['ph:handshake-fill', '#2D3277', 'Mercado Libre'], ig: ['logos:instagram-icon', null, 'Instagram'], pos: ['ph:storefront-fill', '#8A5A3E', 'Local'] };
+const INI = [['#FCEDE5', '#C24E25'], ['#E9F8EE', '#1F6F4A'], ['#ECEBFB', '#4A47A3'], ['#FFF4D9', '#8A5A08'], ['#F3E9DF', '#6B4A33']];
+const ago = d => d < 1 ? 'hoy' : d < 2 ? 'ayer' : d < 30 ? 'hace ' + Math.round(d) + ' días' : d < 365 ? 'hace ' + Math.round(d / 30) + ' meses' : 'hace más de un año';
+const mk = (n, s, f) => { let x = s; const r = () => (x = (x * 16807) % 2147483647) / 2147483647; return Array.from({ length: n }, (_, i) => f(i, r)); };
+const pick = (r, a) => a[Math.floor(r() * a.length)];
+
+const DATA = {
+  Clientes: mk(3200, 11, (i, r) => { const nm = pick(r, FN) + ' ' + pick(r, LN); const orders = Math.max(1, Math.round(Math.pow(r(), 2.2) * 40)); const last = Math.pow(r(), 1.6) * 420; const ltv = orders * (9000 + r() * 40000);
+    const seg = orders >= 12 && last < 60 ? 'vip' : orders >= 4 && last < 90 ? 'freq' : orders <= 1 && last < 30 ? 'new' : last > 180 ? 'sleep' : last > 75 ? 'risk' : 'freq';
+    return { id: i, t: nm, city: pick(r, CITIES), ch: pick(r, ['web', 'wa', 'wa', 'ml', 'ig', 'pos']), orders, last, ltv, seg, face: r() < .25 ? Math.floor(r() * FACES.length) : -1, ini: Math.floor(r() * 5), months: Array.from({ length: 12 }, (_, k) => { const p = last < (11 - k) * 30 + 30 ? Math.min(1, orders / 14) : 0; return r() < p ? 1 + Math.floor(r() * 3) : 0; }), cuit: r() < .08, wa: r() < .8 }; }),
+  Productos: mk(960, 23, (i, r) => { const b = PB[i % PB.length]; const v = PV[Math.floor(i / PB.length) % PV.length]; const stock = r() < .08 ? 0 : Math.round(Math.pow(r(), 1.5) * 220); const sales = Array.from({ length: 8 }, () => Math.round(r() * r() * 30)); const st = stock === 0 ? 'out' : r() < .07 ? 'paused' : r() < .05 ? 'draft' : 'active';
+    return { id: i, t: b[0] + ' ' + v, sku: 'SKU-' + (1000 + i), price: Math.round(b[1] * (0.85 + r() * .4) / 100) * 100, img: PIMG[b[2]], stock, sales, sold: sales.reduce((a, x) => a + x, 0), st, chs: ['web', 'wa', 'ml', 'ig', 'pos'].filter(() => r() < .7), margin: Math.round(18 + r() * 42), pub: st === 'active' }; }),
+  Inventario: mk(960, 31, (i, r) => { const b = PB[i % PB.length]; const v = PV[Math.floor(i / PB.length) % PV.length]; const min = 8 + Math.round(r() * 30); const stock = r() < .06 ? 0 : Math.round(Math.pow(r(), 1.3) * min * 4); const perDay = .4 + r() * 4;
+    const st = stock === 0 ? 'out' : stock < min * .5 ? 'crit' : stock < min ? 'low' : stock > min * 3.2 ? 'over' : 'ok';
+    return { id: i, t: b[0] + ' ' + v, sku: 'SKU-' + (1000 + i), img: PIMG[b[2]], stock, min, perDay, st, loc: pick(r, ['Local', 'Depósito', 'Local + Depósito']), sup: pick(r, ['Yerbatera Misiones', 'Cerámica Sur', 'Importadora Norte', 'Talabartería Luna']), cost: Math.round(b[1] * .45) }; }),
+  'Facturación': mk(4200, 41, (i, r) => { const type = r() < .12 ? 'A' : r() < .5 ? 'B' : 'C'; const days = Math.pow(i / 4200, 1.3) * 365; const st = i < 6 && r() < .5 ? 'pend' : r() < .015 ? 'rej' : r() < .02 ? 'void' : 'ok'; const total = Math.round((4000 + Math.pow(r(), 2) * 180000) / 100) * 100;
+    return { id: i, t: type === 'A' ? pick(r, ['Distribuidora Sur SRL', 'Café Norte SA', 'Almacén Luna', 'Estudio Paz']) : r() < .4 ? 'Consumidor final' : pick(r, FN) + ' ' + pick(r, LN), type, num: '0004-' + String(12812 - i).padStart(8, '0'), days, st, total, ch: pick(r, ['web', 'wa', 'ml', 'pos']), mailed: r() < .85 }; }),
+  'Envíos': mk(1800, 53, (i, r) => { const days = Math.pow(i / 1800, 1.2) * 60; const step = days < .5 ? 0 : days < 2 ? 1 + Math.floor(r() * 2) : days < 6 ? 2 + Math.floor(r() * 2) : 4; const late = step > 0 && step < 4 && r() < .09; const st = step === 0 ? 'todo' : step === 4 ? (r() < .03 ? 'ret' : 'done') : late ? 'late' : 'way';
+    return { id: i, t: pick(r, FN) + ' ' + pick(r, LN), city: pick(r, CITIES), car: pick(r, ['and', 'and', 'oca', 'moto', 'cor']), step, st, days, ord: '#' + (10480 - i), cost: 3800 + Math.round(r() * 5200), track: 'AR' + (300000000 + i * 37) }; })
+};
+const CAR = { and: ['Andreani', '#C8102E'], oca: ['OCA', '#5A2D82'], moto: ['Moto', '#8A5A3E'], cor: ['Correo Arg.', '#0F4C9A'] };
+
+const CFG = {
+  Clientes: { unit: 'clientes', ph: 'Nombre, ciudad, teléfono o CUIT', primary: ['Nuevo cliente', 'ph:user-plus-fill'],
+    segKey: 'seg', segs: [['vip', 'VIP', '#C98A12'], ['freq', 'Frecuentes', '#2F8F63'], ['new', 'Nuevos', '#3E6BFD'], ['risk', 'En riesgo', '#D2582F'], ['sleep', 'Dormidos', '#9C8B7E']],
+    facets: [['ch', 'Llegó por', Object.entries(CHI).map(([k, v]) => [k, v[2], v[0], v[1]])], ['city', 'Ciudad', CITIES.slice(0, 6).map(c => [c, c])]],
+    range: ['ltv', 'Gastó en total, desde', 2000000, 50000, fk], flags: [['wa', 'Acepta WhatsApp'], ['cuit', 'Con CUIT (factura A)']],
+    sorts: [['ltv', 'Más gastaron', (a, b) => b.ltv - a.ltv], ['last', 'Compraron hace poco', (a, b) => a.last - b.last], ['orders', 'Más pedidos', (a, b) => b.orders - a.orders], ['az', 'A–Z', (a, b) => a.t.localeCompare(b.t)]],
+    views: [['all', 'Todos', 'ph:users-three-fill', 'var(--mu)', {}], ['risk', 'Para recuperar', 'ph:heartbeat-fill', '#D2582F', { seg: { risk: 1 } }], ['vip', 'VIP', 'ph:crown-simple-fill', '#C98A12', { seg: { vip: 1 } }], ['new', 'Nuevos este mes', 'ph:sparkle-fill', '#3E6BFD', { seg: { new: 1 } }]],
+    search: o => o.t + ' ' + o.city,
+    tip: l => [l.filter(o => o.seg === 'risk').length.toLocaleString('es-AR') + ' clientes frecuentes no compran hace más de 75 días. Les mando un cupón del 10% por WhatsApp?', 'Mandar cupón', 'Cupón enviado a clientes en riesgo', 'Por WhatsApp · te aviso quién vuelve'],
+    kpi: l => l.length.toLocaleString('es-AR') + ' clientes · ' + fk(l.reduce((a, o) => a + o.ltv, 0)) + ' en compras',
+    bulk: [['ph:whatsapp-logo-fill', 'Escribirles'], ['ph:ticket-fill', 'Mandar cupón'], ['ph:tag-fill', 'Etiquetar']],
+    row: (o, ui) => { const SEG = { vip: ['VIP', 'rgba(201,138,18,.16)', '#8A5A08'], risk: ['En riesgo', 'rgba(210,88,47,.12)', '#C24E25'], sleep: ['Dormido', 'var(--chip)', 'var(--mu)'], new: ['Nuevo', 'rgba(62,107,253,.12)', '#3E6BFD'] }[o.seg]; const c = CHI[o.ch]; const ini = INI[o.ini];
+      return { mImg: o.face >= 0 ? FACES[o.face] : null, mIni: o.face < 0 ? o.t.split(' ').map(w => w[0]).join('') : null, mBg: ini[0], mFg: ini[1], mR: '50%', bIcon: c[0], bCol: c[1] || 'inherit', bBg: 'var(--sf)',
+        t: o.t, tags: o.cuit ? [{ i: 'ph:identification-card-fill', c: 'var(--mu)', t: 'CUIT' }] : [], sub: o.city + ' · ' + o.orders + (o.orders === 1 ? ' pedido' : ' pedidos'),
+        spark: o.months.map(m => ({ h: m ? (6 + m * 5) + 'px' : '3px', c: m ? '#D2582F' : 'var(--sf3)' })), vL: 'Última compra ' + ago(o.last), vC: o.last > 75 ? '#C24E25' : 'var(--mu)', vI: null,
+        chip: SEG ? SEG[0] : null, chBg: SEG && SEG[1], chFg: SEG && SEG[2], v: fk(o.ltv), vs: 'ticket ' + fmt(o.ltv / o.orders),
+        act: o.seg === 'risk' || o.seg === 'sleep' ? 'Cupón' : 'Escribir', aI: o.seg === 'risk' || o.seg === 'sleep' ? 'ph:ticket-fill' : 'ph:whatsapp-logo-fill', aBg: o.seg === 'risk' || o.seg === 'sleep' ? 'rgba(210,88,47,.14)' : '#E9F8EE', aFg: o.seg === 'risk' || o.seg === 'sleep' ? '#C24E25' : '#1F6F4A',
+        do: () => ui.toast(o.seg === 'risk' || o.seg === 'sleep' ? 'ok' : 'wa', o.seg === 'risk' || o.seg === 'sleep' ? 'Cupón del 10% para ' + o.t.split(' ')[0] : 'Chat con ' + o.t.split(' ')[0], o.seg === 'risk' || o.seg === 'sleep' ? 'Enviado por WhatsApp · vence en 7 días' : 'Abrimos la conversación en la bandeja') }; } },
+  Productos: { unit: 'productos', ph: 'Nombre, SKU o variante', primary: ['Nuevo producto', 'ph:camera-plus-fill'],
+    segKey: 'st', segs: [['active', 'Publicados', '#2F8F63'], ['out', 'Sin stock', '#B83A2E'], ['paused', 'Pausados', '#9C8B7E'], ['draft', 'Borradores', '#3E6BFD']],
+    facets: [['cat', 'Categoría', PB.map(b => [b[0], b[0]])], ['chs', 'Publicado en', Object.entries(CHI).map(([k, v]) => [k, v[2], v[0], v[1]])]],
+    range: ['price', 'Precio desde', 60000, 1000, fmt], flags: [['lowm', 'Margen menor al 25%'], ['star', 'Se vende mucho (+60 en 30 días)']],
+    sorts: [['sold', 'Más vendidos', (a, b) => b.sold - a.sold], ['stock', 'Menos stock', (a, b) => a.stock - b.stock], ['price', 'Mayor precio', (a, b) => b.price - a.price], ['margin', 'Mejor margen', (a, b) => b.margin - a.margin]],
+    views: [['all', 'Todos', 'ph:squares-four-fill', 'var(--mu)', {}], ['out', 'Sin stock', 'ph:warning-circle-fill', '#B83A2E', { st: { out: 1 } }], ['star', 'Estrellas', 'ph:star-fill', '#C98A12', { star: true }], ['lowm', 'Margen bajo', 'ph:trend-down-bold', '#D2582F', { lowm: true }]],
+    search: o => o.t + ' ' + o.sku, derive: o => ({ cat: PB.find(b => o.t.startsWith(b[0]))[0], lowm: o.margin < 25, star: o.sold > 60 }),
+    tip: l => [l.filter(o => o.st === 'out').length + ' productos sin stock siguen publicados en Mercado Libre. Los pauso hasta que repongas?', 'Pausar', 'Productos pausados en Mercado Libre', 'Se reactivan solos cuando cargues stock'],
+    kpi: l => l.length.toLocaleString('es-AR') + ' productos · ' + l.reduce((a, o) => a + o.sold, 0).toLocaleString('es-AR') + ' unidades vendidas en 30 días',
+    bulk: [['ph:percent-bold', 'Cambiar precio'], ['ph:pause-fill', 'Pausar'], ['ph:megaphone-fill', 'Publicar en ML']],
+    row: (o, ui) => { const pub = ui.flip(o.id, o.pub); const S = { out: ['Sin stock', 'rgba(184,58,46,.1)', '#B83A2E'], paused: ['Pausado', 'var(--chip)', 'var(--mu)'], draft: ['Borrador', 'rgba(62,107,253,.12)', '#3E6BFD'] }[o.st]; const mx = Math.max(1, ...o.sales);
+      return { mImg: o.img, mR: '12px', t: o.t, tags: o.chs.map(k => ({ i: CHI[k][0], c: CHI[k][1] || 'inherit', t: CHI[k][2] })), sub: o.sku + ' · ' + o.stock + ' en stock · margen ' + o.margin + '%',
+        spark: o.sales.map(x => ({ h: Math.max(3, x / mx * 22) + 'px', c: x ? '#D2582F' : 'var(--sf3)' })), vL: o.sold + ' vendidos en 30 días', vC: 'var(--mu)', vI: o.sold > 60 ? 'ph:fire-fill' : null,
+        chip: S ? S[0] : null, chBg: S && S[1], chFg: S && S[2], v: fmt(o.price), vs: 'precio', toggle: true, tgBg: pub ? '#2F8F63' : '#D9CBBE', tgX: pub ? '19px' : '2px', tgT: pub ? 'Publicado' : 'Pausado',
+        tg: e => { e.stopPropagation(); ui.setFlip(o.id, !pub); ui.toast('ok', o.t + (pub ? ' pausado' : ' publicado'), pub ? 'Ya no se ve en la tienda ni en ML' : 'Visible en todos tus canales', 'Deshacer'); } }; } },
+  Inventario: { unit: 'SKU', ph: 'Producto, SKU o proveedor', primary: ['Pedir mercadería', 'ph:truck-fill'],
+    segKey: 'st', segs: [['out', 'Sin stock', '#B83A2E'], ['crit', 'Crítico', '#D2582F'], ['low', 'Bajo', '#E3A93B'], ['ok', 'Bien', '#2F8F63'], ['over', 'De más', '#3E6BFD']],
+    facets: [['loc', 'Ubicación', [['Local', 'Local'], ['Depósito', 'Depósito'], ['Local + Depósito', 'Los dos']]], ['sup', 'Proveedor', [['Yerbatera Misiones', 'Yerbatera Misiones'], ['Cerámica Sur', 'Cerámica Sur'], ['Importadora Norte', 'Importadora Norte'], ['Talabartería Luna', 'Talabartería Luna']]]],
+    range: ['cover', 'Alcanza para menos de (días)', 60, 1, v => v ? v + ' días' : 'Cualquiera'], rangeLt: true, flags: [['fast', 'Rotación alta (+2 por día)']],
+    sorts: [['cover', 'Se acaba primero', (a, b) => a.cover - b.cover], ['stock', 'Menos unidades', (a, b) => a.stock - b.stock], ['value', 'Más plata inmovilizada', (a, b) => b.stock * b.cost - a.stock * a.cost]],
+    views: [['all', 'Todo', 'ph:stack-fill', 'var(--mu)', {}], ['buy', 'Para reponer', 'ph:shopping-cart-fill', '#D2582F', { st: { out: 1, crit: 1, low: 1 } }], ['over', 'Sobrestock', 'ph:archive-fill', '#3E6BFD', { st: { over: 1 } }]],
+    search: o => o.t + ' ' + o.sku + ' ' + o.sup, derive: o => ({ cover: Math.floor(o.stock / o.perDay), fast: o.perDay > 2 }),
+    tip: l => { const b = l.filter(o => o.st === 'out' || o.st === 'crit'); return [b.length + ' SKU se terminan esta semana. Armé el pedido para tus 4 proveedores con lo que vendés por día.', 'Ver pedido', 'Pedido a proveedores listo', b.length + ' SKU · revisalo y mandalo por WhatsApp']; },
+    kpi: l => l.reduce((a, o) => a + o.stock, 0).toLocaleString('es-AR') + ' unidades · ' + fk(l.reduce((a, o) => a + o.stock * o.cost, 0)) + ' en mercadería',
+    bulk: [['ph:shopping-cart-fill', 'Pedir al proveedor'], ['ph:arrows-left-right-bold', 'Mover a local'], ['ph:barcode-bold', 'Imprimir códigos']],
+    row: (o, ui) => { const q = Math.max(0, o.stock + ui.adj(o.id)); const st = q === 0 ? 'out' : q < o.min * .5 ? 'crit' : q < o.min ? 'low' : q > o.min * 3.2 ? 'over' : 'ok'; const C = { out: '#B83A2E', crit: '#D2582F', low: '#E3A93B', ok: '#2F8F63', over: '#3E6BFD' }[st]; const cap = o.min * 4; const cov = Math.floor(q / o.perDay);
+      return { mImg: o.img, mR: '12px', t: o.t, tags: [], sub: o.sku + ' · ' + o.loc + ' · ' + o.sup,
+        meter: true, mtW: Math.min(100, q / cap * 100) + '%', mtC: C, mtMark: (o.min / cap * 100) + '%', vL: q === 0 ? 'Agotado' : 'Alcanza para ' + cov + (cov === 1 ? ' día' : ' días'), vC: C, vI: st === 'out' || st === 'crit' ? 'ph:warning-fill' : null,
+        v: q + ' u.', vs: 'mínimo ' + o.min, stepper: true, qty: q, stop: e => e.stopPropagation(),
+        dec: e => { e.stopPropagation(); ui.setAdj(o.id, -1); }, inc: e => { e.stopPropagation(); ui.setAdj(o.id, 1); },
+        act: st === 'out' || st === 'crit' || st === 'low' ? 'Pedir' : null, aI: 'ph:shopping-cart-fill', aBg: 'rgba(210,88,47,.14)', aFg: '#C24E25',
+        do: e => { e.stopPropagation(); ui.toast('wa', 'Pedido a ' + o.sup, (o.min * 2 - q) + ' u. de ' + o.t + ' · por WhatsApp'); } }; } },
+  'Facturación': { unit: 'comprobantes', ph: 'Cliente, número o CUIT', primary: ['Emitir factura', 'ph:receipt-fill'],
+    segKey: 'st', segs: [['ok', 'Autorizadas', '#2F8F63'], ['pend', 'Pendientes', '#E3A93B'], ['rej', 'Rechazadas', '#B83A2E'], ['void', 'Anuladas', '#9C8B7E']],
+    facets: [['type', 'Tipo', [['A', 'Factura A'], ['B', 'Factura B'], ['C', 'Factura C']]], ['ch', 'Venta por', ['web', 'wa', 'ml', 'pos'].map(k => [k, CHI[k][2], CHI[k][0], CHI[k][1]])], ['per', 'Período', [['m', 'Este mes'], ['q', 'Trimestre'], ['y', 'Año']]]],
+    range: ['total', 'Monto desde', 180000, 5000, fmt], flags: [['nomail', 'Sin enviar al cliente']],
+    sorts: [['new', 'Más nuevas', (a, b) => a.days - b.days], ['total', 'Mayor monto', (a, b) => b.total - a.total]],
+    views: [['all', 'Todas', 'ph:files-fill', 'var(--mu)', {}], ['fix', 'Para resolver', 'ph:warning-circle-fill', '#B83A2E', { st: { pend: 1, rej: 1 } }], ['a', 'Facturas A', 'ph:buildings-fill', '#4A47A3', { type: { A: 1 } }]],
+    search: o => o.t + ' ' + o.num, derive: o => ({ per: o.days < 30 ? 'm' : o.days < 90 ? 'q' : 'y', nomail: !o.mailed }),
+    tip: () => ['Facturaste $ 18,2 M en los últimos 12 meses: 70% del tope de la categoría D. Caja te avisa antes de recategorizar.', 'Ver en Caja', 'Abriendo Caja', 'Monotributo · categoría D'],
+    kpi: l => l.length.toLocaleString('es-AR') + ' comprobantes · ' + fk(l.reduce((a, o) => a + (o.st === 'ok' ? o.total : 0), 0)) + ' facturado',
+    bulk: [['ph:envelope-simple-fill', 'Enviar por mail'], ['ph:file-pdf-fill', 'Descargar PDF'], ['ph:arrow-clockwise-bold', 'Reintentar']],
+    row: (o, ui) => { const S = { ok: ['Autorizada por ARCA', '#2F8F63', 'ph:seal-check-fill'], pend: ['Esperando a ARCA', '#9A6A10', 'ph:hourglass-medium-fill'], rej: ['Rechazada: CUIT inválido', '#B83A2E', 'ph:x-circle-fill'], void: ['Anulada con nota de crédito', 'var(--mu)', 'ph:prohibit-bold'] }[o.st]; const T = { A: ['#ECEBFB', '#4A47A3'], B: ['#FCEDE5', '#C24E25'], C: ['#F3E9DF', '#6B4A33'] }[o.type];
+      return { mIni: o.type, mBg: T[0], mFg: T[1], mR: '12px', bIcon: CHI[o.ch][0], bCol: CHI[o.ch][1] || 'inherit', bBg: 'var(--sf)', t: o.t, tags: o.mailed ? [] : [{ i: 'ph:envelope-simple-open-bold', c: '#9A6A10', t: 'Sin enviar' }], sub: 'Factura ' + o.type + ' ' + o.num + ' · ' + ago(o.days),
+        vL: S[0], vC: S[1], vI: S[2], v: fmt(o.total), vs: o.type === 'A' ? 'IVA ' + fmt(o.total * .21 / 1.21) : 'final',
+        act: o.st === 'rej' ? 'Corregir' : o.st === 'pend' ? null : o.mailed ? 'PDF' : 'Enviar', aI: o.st === 'rej' ? 'ph:pencil-simple-fill' : o.mailed ? 'ph:file-pdf-fill' : 'ph:envelope-simple-fill', aBg: o.st === 'rej' ? 'rgba(184,58,46,.1)' : 'var(--chip)', aFg: o.st === 'rej' ? '#B83A2E' : 'var(--tx)',
+        do: e => { e.stopPropagation(); ui.toast('ok', o.st === 'rej' ? 'Revisá el CUIT de ' + o.t : o.mailed ? 'Descargando ' + o.num : 'Factura enviada a ' + o.t.split(' ')[0], o.st === 'rej' ? 'Te lo marcamos para reemitir' : 'PDF con QR de ARCA'); } }; } },
+  'Envíos': { unit: 'envíos', ph: 'Cliente, pedido, ciudad o seguimiento', primary: ['Imprimir etiquetas', 'ph:printer-fill'],
+    segKey: 'st', segs: [['todo', 'Por despachar', '#D2582F'], ['way', 'En camino', '#3E6BFD'], ['late', 'Demorados', '#B83A2E'], ['done', 'Entregados', '#2F8F63'], ['ret', 'Devueltos', '#9C8B7E']],
+    facets: [['car', 'Transporte', Object.entries(CAR).map(([k, v]) => [k, v[0], 'ph:truck-fill', v[1]])], ['city', 'Destino', CITIES.slice(0, 6).map(c => [c, c])]],
+    range: ['cost', 'Costo de envío desde', 9000, 500, fmt], flags: [['wk', 'Últimos 7 días']],
+    sorts: [['new', 'Más nuevos', (a, b) => a.days - b.days], ['late', 'Demorados primero', (a, b) => (b.st === 'late') - (a.st === 'late') || a.days - b.days], ['cost', 'Más caros', (a, b) => b.cost - a.cost]],
+    views: [['all', 'Todos', 'ph:package-fill', 'var(--mu)', {}], ['today', 'Para hoy', 'ph:lightning-fill', '#D2582F', { st: { todo: 1 } }], ['late', 'Con problemas', 'ph:warning-fill', '#B83A2E', { st: { late: 1, ret: 1 } }]],
+    search: o => o.t + ' ' + o.ord + ' ' + o.city + ' ' + o.track, derive: o => ({ wk: o.days < 7 }),
+    tip: l => [l.filter(o => o.st === 'late').length + ' envíos llevan más de 2 días sin moverse. Hago el reclamo a cada transporte y les aviso a los clientes?', 'Reclamar todos', 'Reclamos enviados', 'Les avisamos a los clientes por WhatsApp'],
+    kpi: l => l.length.toLocaleString('es-AR') + ' envíos · ' + fk(l.reduce((a, o) => a + o.cost, 0)) + ' en costos',
+    bulk: [['ph:printer-fill', 'Etiquetas'], ['ph:hand-pointing-fill', 'Pedir retiro'], ['ph:whatsapp-logo-fill', 'Avisar']],
+    row: (o, ui) => { const C = CAR[o.car]; const sc = { todo: '#D2582F', way: '#3E6BFD', late: '#B83A2E', done: '#2F8F63', ret: '#9C8B7E' }[o.st];
+      return { mIni: C[0].slice(0, 2).toUpperCase(), mBg: C[1], mFg: '#fff', mR: '12px', t: o.t, tags: [], sub: o.ord + ' · ' + o.city + ' · ' + o.track,
+        steps: ['Etiqueta', 'Retirado', 'En viaje', 'Entregado'].map((x, j) => ({ c: j < o.step ? sc : 'var(--sf3)' })), vL: { todo: 'Sin despachar', way: 'Llega ' + (o.days < 2 ? 'mañana' : 'en 2 días'), late: 'Demorado · sin novedad', done: 'Entregado ' + ago(o.days), ret: 'Devuelto al remitente' }[o.st], vC: sc, vI: o.st === 'late' ? 'ph:warning-fill' : null,
+        chip: o.st === 'late' ? 'Reclamar' : null, chBg: 'rgba(184,58,46,.1)', chFg: '#B83A2E', v: fmt(o.cost), vs: C[0],
+        act: o.st === 'todo' ? 'Etiqueta' : o.st === 'late' ? 'Reclamar' : o.st === 'way' ? 'Seguir' : null, aI: o.st === 'todo' ? 'ph:printer-fill' : o.st === 'late' ? 'ph:megaphone-fill' : 'ph:map-pin-fill', aBg: o.st === 'todo' ? '#2A140C' : o.st === 'late' ? 'rgba(184,58,46,.1)' : 'var(--chip)', aFg: o.st === 'todo' ? '#fff' : o.st === 'late' ? '#B83A2E' : 'var(--tx)',
+        do: e => { e.stopPropagation(); ui.toast(o.car === 'and' ? 'andreani' : 'ok', o.st === 'todo' ? 'Etiqueta de ' + C[0] : o.st === 'late' ? 'Reclamo enviado a ' + C[0] : 'Seguimiento ' + o.track, o.ord + ' · ' + o.city); } }; } }
+};
+Object.entries(CFG).forEach(([k, c]) => { if (c.derive) DATA[k].forEach(o => Object.assign(o, c.derive(o))); });
+const ROW = 76;
+
+class Component extends DCLogic {
+  state = { scr: null, q: '', f: {}, rng: 0, flags: {}, sort: 0, more: false, top: 0, sel: {}, view: 'all', flip: {}, adj: {}, tipDone: false };
+  componentDidMount() { this.anim(); }
+  componentDidUpdate() { this.anim(); }
+  anim() { document.querySelectorAll('[data-r]:not([data-on])').forEach((el, i) => { el.setAttribute('data-on', ''); el.animate([{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 600, delay: i * 50, fill: 'both', easing: 'cubic-bezier(.2,.7,.1,1)' }); }); }
+  toast(k, t, d, a) { this.props.onToast && this.props.onToast(k, t, d, a); }
+  scrollTop() { const v = document.querySelector('[data-vs]'); v && (v.scrollTop = 0); this.setState({ top: 0 }); }
+  reset(extra) { this.setState({ q: '', f: {}, rng: 0, flags: {}, view: 'all', ...(extra || {}) }); this.scrollTop(); }
+  renderVals() {
+    const name = CFG[this.props.screen] ? this.props.screen : 'Clientes';
+    if (this.state.scr !== name) { setTimeout(() => this.setState({ scr: name, q: '', f: {}, rng: 0, flags: {}, sort: 0, sel: {}, view: 'all', top: 0, tipDone: false, more: false }), 0); }
+    const C = CFG[name], D = DATA[name], st = this.state, vw = this.props.vw || 1400, wide = vw >= 900;
+    const q = st.q.trim().toLowerCase(), any = m => m && Object.values(m).some(Boolean);
+    const val = (o, k) => k === C.segKey && name === 'Inventario' ? o.st : o[k];
+    const facetKeys = [C.segKey, ...C.facets.map(f => f[0])];
+    const fOk = (o, k) => { const m = st.f[k]; if (!any(m)) return true; const v = o[k]; return Array.isArray(v) ? v.some(x => m[x]) : !!m[v]; };
+    const base = o => (!q || C.search(o).toLowerCase().includes(q)) && (!st.rng || (C.rangeLt ? o[C.range[0]] < st.rng : o[C.range[0]] >= st.rng)) && C.flags.every(([k]) => !st.flags[k] || o[k]);
+    const pre = D.filter(base), all = (o, skip) => facetKeys.every(k => k === skip || fOk(o, k));
+    let list = pre.filter(o => all(o));
+    const S = C.sorts[st.sort % C.sorts.length]; list = list.slice().sort(S[2]);
+    const n = list.length, vh = vw < 760 ? 520 : 600;
+    const start = Math.max(0, Math.floor(st.top / ROW) - 4), end = Math.min(n, Math.ceil((st.top + vh) / ROW) + 6);
+    const tog = (k, v) => () => { this.setState(s => ({ f: { ...s.f, [k]: { ...(s.f[k] || {}), [v]: !(s.f[k] || {})[v] } }, view: 'custom' })); this.scrollTop(); };
+    const on = (k, v) => !!(st.f[k] || {})[v];
+    const cnt = (k, v) => pre.filter(o => all(o, k) && (Array.isArray(o[k]) ? o[k].includes(v) : o[k] === v)).length;
+    const chips = [];
+    facetKeys.forEach(k => Object.keys(st.f[k] || {}).forEach(v => { if (st.f[k][v]) { const lab = (C.segs.find(s => s[0] === v) || C.facets.flatMap(f => f[2]).find(x => x[0] === v) || [v, v])[1]; chips.push([lab, () => this.setState(s => ({ f: { ...s.f, [k]: { ...s.f[k], [v]: false } } }))]); } }));
+    if (st.rng) chips.push([C.range[1] + ' ' + C.range[4](st.rng), () => this.setState({ rng: 0 })]);
+    C.flags.forEach(([k, t]) => st.flags[k] && chips.push([t, () => this.setState(s => ({ flags: { ...s.flags, [k]: false } }))]));
+    const ui = { toast: (...a) => this.toast(...a), flip: (id, d) => st.flip[id] ?? d, setFlip: (id, v) => this.setState(s => ({ flip: { ...s.flip, [id]: v } })), adj: id => st.adj[id] || 0, setAdj: (id, d) => this.setState(s => ({ adj: { ...s.adj, [id]: (s.adj[id] || 0) + d } })) };
+    const selIds = Object.keys(st.sel).filter(k => st.sel[k]);
+    const tip = C.tip(pre);
+    return {
+      title: name, unit: C.unit, ph: C.ph, primaryT: C.primary[0], primaryI: C.primary[1], primary: () => this.toast('ok', C.primary[0], 'Abrimos el formulario'),
+      kpi: C.kpi(list), countTxt: n.toLocaleString('es-AR'), wide, gap: wide ? '14px' : '10px', vh: vh + 'px', totalH: (n * ROW) + 'px',
+      hasTip: !st.tipDone, tip: tip[0], tipBtn: tip[1], tipGo: () => { this.setState({ tipDone: true }); this.toast('ai', tip[2], tip[3], 'Deshacer'); },
+      views: C.views.map(([id, t, i, ic, preset]) => ({ t, i, ic, bd: st.view === id ? '#D2582F' : 'transparent', bg: st.view === id ? 'rgba(210,88,47,.08)' : 'var(--sf)', go: () => { const { st: s1, seg, type, ...flags } = preset; const f = {}; if (s1 || seg) f[C.segKey] = { ...(s1 || seg) }; if (type) f.type = { ...type }; this.reset({ view: id, f, flags }); } })),
+      segs: C.segs.map(([k, t, c]) => { const m = cnt(C.segKey, k); const sel = on(C.segKey, k); return { t, c, n: m.toLocaleString('es-AR'), op: sel || !any(st.f[C.segKey]) ? 1 : .25, bg: sel ? 'var(--chip)' : 'transparent', go: tog(C.segKey, k) }; }),
+      q: st.q, hasQ: !!st.q, setQ: e => { this.setState({ q: e.target.value, view: 'custom' }); this.scrollTop(); }, clearQ: () => this.setState({ q: '' }),
+      more: st.more, toggleMore: () => this.setState(s => ({ more: !s.more })), moreBd: st.more ? '#D2582F' : 'var(--ln2)', moreBg: st.more ? 'rgba(210,88,47,.08)' : 'var(--sf)', nActive: chips.length || null,
+      sortTxt: S[1], cycleSort: () => { this.setState(s => ({ sort: (s.sort + 1) % C.sorts.length })); this.scrollTop(); },
+      facets: C.facets.map(([k, t, opts]) => ({ t, opts: opts.map(([v, lab, icon, col]) => ({ t: lab, icon, col: col || 'inherit', n: cnt(k, v), bd: on(k, v) ? '#D2582F' : 'var(--ln2)', bg: on(k, v) ? 'rgba(210,88,47,.08)' : 'transparent', go: tog(k, v) })) })),
+      rangeLbl: C.range[1], rangeMax: C.range[2], rangeStep: C.range[3], rangeV: st.rng, rangeTxt: st.rng ? C.range[4](st.rng) : 'Cualquiera', setRange: e => { this.setState({ rng: +e.target.value, view: 'custom' }); this.scrollTop(); },
+      flags: C.flags.map(([k, t]) => ({ t, tbg: st.flags[k] ? '#D2582F' : '#D9CBBE', tx: st.flags[k] ? '17px' : '2px', go: () => { this.setState(s => ({ flags: { ...s.flags, [k]: !s.flags[k] }, view: 'custom' })); this.scrollTop(); } })),
+      hasChips: chips.length > 0, chips: chips.map(([t, x]) => ({ t, x: () => { x(); this.setState({ view: 'custom' }); } })), clearAll: () => this.reset(),
+      showing: n ? 'Mostrando ' + (start + 1).toLocaleString('es-AR') + '–' + Math.min(n, start + Math.ceil(vh / ROW)).toLocaleString('es-AR') + ' de ' + n.toLocaleString('es-AR') : 'Sin resultados',
+      onScroll: e => { const t = e.currentTarget.scrollTop; if (this._raf) return; this._raf = requestAnimationFrame(() => { this._raf = 0; this.setState({ top: t }); }); },
+      showTop: st.top > 1200, toTop: () => { const v = document.querySelector('[data-vs]'); v && v.scrollTo({ top: 0, behavior: 'smooth' }); }, empty: n === 0,
+      rows: list.slice(start, end).map((o, k) => { const sel = !!st.sel[o.id]; const r = C.row(o, ui);
+        return { tags: [], spark: null, meter: false, steps: null, chip: null, act: null, stepper: false, toggle: false, mImg: null, mIni: null, bIcon: null, ...r, top: ((start + k) * ROW) + 'px', sel, cbd: sel ? '#D2582F' : 'var(--ln2)', cbg: sel ? '#D2582F' : 'var(--sf)', bg: sel ? 'rgba(210,88,47,.06)' : 'transparent', bd: sel ? 'rgba(210,88,47,.3)' : 'transparent',
+          tick: e => { e.stopPropagation(); this.setState(x => ({ sel: { ...x.sel, [o.id]: !x.sel[o.id] } })); }, open: () => this.toast('info', o.t, 'Abrimos la ficha completa') }; }),
+      selAllVis: () => this.setState(x => { const s = { ...x.sel }; list.slice(start, end).forEach(o => s[o.id] = true); return { sel: s }; }),
+      hasSel: selIds.length > 0, selN: selIds.length, clearSel: () => this.setState({ sel: {} }), bulkB: vw < 760 ? '92px' : '84px',
+      bulk: C.bulk.map(([i, t]) => ({ i, t, go: () => { const m = selIds.length; this.setState({ sel: {} }); this.toast('ok', t + ' · ' + m + ' ' + C.unit, 'Listo. Te avisamos si algo falla.', 'Deshacer'); } })),
+      exportX: () => this.toast('ok', 'Exportando ' + n.toLocaleString('es-AR') + ' ' + C.unit, 'Con los filtros aplicados · llega a tu email')
+    };
+  }
+}
+</script>
+</body>
+</html>

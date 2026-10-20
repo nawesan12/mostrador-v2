@@ -1,0 +1,18 @@
+{
+	"name": "mostrador",
+	"private": true,
+	"type": "module",
+	"workspaces": ["apps/web", "apps/jobs", "packages/*"],
+	"scripts": {
+		"dev": "bun --cwd apps/web run dev",
+		"build": "bun --cwd apps/web run build",
+		"check": "bun --cwd apps/web run check",
+		"lint": "bun --cwd apps/web run lint",
+		"test": "bun --cwd apps/web run test",
+		"test:e2e": "bun --cwd apps/web run test:e2e",
+		"api:dev": "cd apps/api && go run ./cmd/api",
+		"api:test": "cd apps/api && go test -race ./...",
+		"db:up": "docker compose -f infra/compose.dev.yml up -d",
+		"db:down": "docker compose -f infra/compose.dev.yml down"
+	}
+}

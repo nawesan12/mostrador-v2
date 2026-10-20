@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div><sc-if value="{{ showCk }}"><div style="position:fixed;left:16px;bottom:16px;z-index:90;width:min(430px,calc(100vw - 32px));padding:18px;border-radius:24px;background:#fff;box-shadow:0 2px 4px rgba(58,29,18,.06),0 30px 60px -20px rgba(58,29,18,.45);font-family:'Instrument Sans',sans-serif;color:#2A140C"><div style="display:flex;gap:12px;align-items:flex-start"><img src="assets/hornero/asomado.png" alt="" style="width:54px;height:54px;object-fit:contain;flex:none"><div style="min-width:0"><b style="font-size:15.5px">Usamos cookies</b><p style="margin:4px 0 0;font-size:13.5px;line-height:1.5;color:#5C4536">Las necesarias hacen funcionar el sitio. Con tu permiso sumamos analíticas y de marketing para mejorar Mostrador. <a href="Legal%20Cookies.dc.html" style="font-weight:600">Ver política</a></p></div></div><sc-if value="{{ ckCfg }}"><div style="margin-top:14px;display:flex;flex-direction:column;gap:2px;border-radius:16px;overflow:hidden;background:#F4ECE2"><div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#FBF7F2"><div style="flex:1"><b style="font-size:14px">Necesarias</b><div style="font-size:12.5px;color:#7A6252">Sesión, seguridad y tu elección de cookies</div></div><span style="font-size:12px;font-weight:600;color:#2F8F63">Siempre activas</span></div><div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#FBF7F2"><div style="flex:1"><b style="font-size:14px">Analíticas</b><div style="font-size:12.5px;color:#7A6252">Visitas agregadas y uso del panel</div></div><button onClick="{{ tAn }}" style="position:relative;width:38px;height:22px;flex:none;border:0;padding:0;border-radius:999px;cursor:pointer;background:{{ an.bg }};transition:background .25s"><span style="position:absolute;top:2.5px;left:{{ an.x }};width:17px;height:17px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .25s"></span></button></div><div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#FBF7F2"><div style="flex:1"><b style="font-size:14px">Marketing</b><div style="font-size:12.5px;color:#7A6252">Medir campañas en Meta y Google</div></div><button onClick="{{ tMk }}" style="position:relative;width:38px;height:22px;flex:none;border:0;padding:0;border-radius:999px;cursor:pointer;background:{{ mk.bg }};transition:background .25s"><span style="position:absolute;top:2.5px;left:{{ mk.x }};width:17px;height:17px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .25s"></span></button></div></div></sc-if><div style="margin-top:14px;display:flex;gap:6px;flex-wrap:wrap"><sc-if value="{{ ckNoCfg }}"><button onClick="{{ configure }}" style="flex:1 1 auto;padding:11px 14px;border-radius:999px;border:1.5px solid rgba(58,29,18,.16);background:#fff;color:#2A140C;font:600 13.5px 'Instrument Sans';cursor:pointer;white-space:nowrap">Configurar</button><button onClick="{{ onlyNec }}" style="flex:1 1 auto;padding:11px 14px;border-radius:999px;border:1.5px solid rgba(58,29,18,.16);background:#fff;color:#2A140C;font:600 13.5px 'Instrument Sans';cursor:pointer;white-space:nowrap">Solo necesarias</button><button onClick="{{ acceptAll }}" style="flex:1 1 auto;padding:11px 14px;border-radius:999px;border:0;background:#2A140C;color:#fff;font:600 13.5px 'Instrument Sans';cursor:pointer;white-space:nowrap">Aceptar todas</button></sc-if><sc-if value="{{ ckCfg }}"><button onClick="{{ saveCfg }}" style="flex:1 1 auto;padding:11px 14px;border-radius:999px;border:1.5px solid rgba(58,29,18,.16);background:#fff;color:#2A140C;font:600 13.5px 'Instrument Sans';cursor:pointer;white-space:nowrap">Guardar mi elección</button><button onClick="{{ acceptAll }}" style="flex:1 1 auto;padding:11px 14px;border-radius:999px;border:0;background:#2A140C;color:#fff;font:600 13.5px 'Instrument Sans';cursor:pointer;white-space:nowrap">Aceptar todas</button></sc-if></div></div></sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = (() => { let ck = null; try { ck = localStorage.getItem('mostrador-cookies'); } catch (e) {} const q = new URLSearchParams(location.search); const d = ['tiendanube', 'empretienda', 'mercadoshops'].indexOf(q.get('desde')); return { ck, cfg: false, an: true, mk: false, tab: d < 0 ? 0 : d, mode: q.get('m') || 'login', sent: false, pw: false, faq: 0 }; })();
+  save(v) { try { localStorage.setItem('mostrador-cookies', v); } catch (e) {} this.setState({ ck: v, cfg: false }); }
+  renderVals() {
+    const s = this.state, tg = on => ({ bg: on ? '#D2582F' : '#D9CBBE', x: on ? '18.5px' : '2.5px' });
+    const out = {
+      showCk: !s.ck, ckCfg: s.cfg, ckNoCfg: !s.cfg,
+      openCfg: () => this.setState({ cfg: true, ck: null }), configure: () => this.setState({ cfg: true }),
+      acceptAll: () => this.save('all'), onlyNec: () => this.save('nec'), saveCfg: () => this.save(JSON.stringify({ an: s.an, mk: s.mk })),
+      tAn: () => this.setState(x => ({ an: !x.an })), tMk: () => this.setState(x => ({ mk: !x.mk })), an: tg(s.an), mk: tg(s.mk),
+      sent: s.sent, notSent: !s.sent, send: () => this.setState({ sent: true }), resetSent: () => this.setState({ sent: false }),
+      mLogin: s.mode === 'login', mSignup: s.mode === 'registro', mReset: s.mode === 'recuperar', mSent: s.mode === 'enviado',
+      toLogin: () => this.setState({ mode: 'login' }), toSignup: () => this.setState({ mode: 'registro' }), toReset: () => this.setState({ mode: 'recuperar' }), toSent: () => this.setState({ mode: 'enviado' }),
+      pwType: s.pw ? 'text' : 'password', pwIcon: s.pw ? 'ph:eye-slash' : 'ph:eye', togglePw: () => this.setState(x => ({ pw: !x.pw }))
+    };
+    for (let i = 0; i < 3; i++) { out['t' + i] = s.tab === i; out['tb' + i] = s.tab === i ? '#2A140C' : '#fff'; out['tf' + i] = s.tab === i ? '#fff' : '#2A140C'; out['go' + i] = () => this.setState({ tab: i }); }
+    for (let i = 0; i < 12; i++) { out['fo' + i] = s.faq === i; out['fi' + i] = s.faq === i ? 'ph:minus-bold' : 'ph:plus-bold'; out['ft' + i] = () => this.setState(x => ({ faq: x.faq === i ? -1 : i })); }
+    return out;
+  }
+}
+</script>
+</body>
+</html>

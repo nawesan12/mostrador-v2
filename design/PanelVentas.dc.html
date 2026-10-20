@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;flex-direction:column;gap:18px;font-family:'Instrument Sans',system-ui,sans-serif;color:var(--tx)">
+
+<!-- WHATSAPP -->
+<sc-if value="{{ sWa }}" hint-placeholder-val="{{ false }}">
+  <div data-r="" style="display:flex;align-items:end;gap:14px;flex-wrap:wrap"><div style="flex:1;min-width:220px"><h1 style="margin:0;font-size:30px;letter-spacing:-.035em;font-weight:600">Bandeja</h1><div style="margin-top:2px;font-size:15px;color:var(--mu)">WhatsApp, Instagram, Telegram y Mercado Libre en un solo lugar</div></div>
+    <span style="display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;background:var(--sf);box-shadow:var(--sh);font-size:13px;font-weight:600"><span style="width:8px;height:8px;border-radius:50%;background:#2F8F63"></span>Hornero atendiendo · 41 hoy</span></div>
+  <div data-r="" style="display:grid;grid-template-columns:{{ waCols }};height:{{ waH }};border-radius:24px;background:var(--sf);box-shadow:var(--shd);overflow:hidden">
+    <sc-if value="{{ waShowList }}">
+    <div style="border-right:1px solid var(--ln);display:flex;flex-direction:column;min-height:0">
+      <div style="padding:12px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--ln)">
+        <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:999px;background:var(--sf3);color:var(--mu);font-size:13.5px"><iconify-icon icon="ph:magnifying-glass" width="15"></iconify-icon>Buscar conversación</div>
+        <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none"><sc-for list="{{ waFilters }}" as="f" hint-placeholder-count="4"><button onClick="{{ f.go }}" style="border:0;cursor:pointer;white-space:nowrap;font:600 12.5px 'Instrument Sans';padding:6px 11px;border-radius:999px;background:{{ f.bg }};color:{{ f.fg }}">{{ f.t }}<span style="opacity:.6;margin-left:4px">{{ f.n }}</span></button></sc-for></div>
+      </div>
+      <div style="flex:1;overflow:auto" data-lenis-prevent="">
+        <sc-for list="{{ convs }}" as="c" hint-placeholder-count="7">
+          <button onClick="{{ c.go }}" style="width:100%;display:flex;gap:11px;padding:12px;border:0;border-bottom:1px solid var(--ln);background:{{ c.bg }};color:var(--tx);cursor:pointer;font-family:inherit;text-align:left">
+            <span style="position:relative;flex:none"><img src="{{ c.ph }}" alt="" style="width:42px;height:42px;border-radius:50%;object-fit:cover;display:block"><span style="position:absolute;right:-3px;bottom:-3px;width:19px;height:19px;border-radius:50%;background:var(--sf);display:grid;place-items:center;box-shadow:var(--sh)"><iconify-icon icon="{{ c.ch }}" width="12"></iconify-icon></span></span>
+            <span style="flex:1;min-width:0"><span style="display:flex;justify-content:space-between;gap:8px"><span style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.n }}</span><span style="font-size:11.5px;color:var(--fa);flex:none">{{ c.h }}</span></span>
+              <span style="display:block;font-size:12.5px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px">{{ c.m }}</span>
+              <span style="display:flex;gap:5px;margin-top:5px;align-items:center"><span style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;background:{{ c.tbg }};color:{{ c.tfg }}">{{ c.tag }}</span><sc-if value="{{ c.unread }}"><span style="margin-left:auto;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#2F8F63;color:#fff;font-size:10.5px;font-weight:700;display:grid;place-items:center">{{ c.unread }}</span></sc-if></span>
+            </span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+    <sc-if value="{{ waShowThread }}">
+    <div style="display:flex;flex-direction:column;min-height:0;min-width:0">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--ln)">
+        <sc-if value="{{ waBack }}"><button onClick="{{ waBackGo }}" style="width:34px;height:34px;border:0;border-radius:50%;background:var(--chip);color:var(--tx);cursor:pointer;display:grid;place-items:center"><iconify-icon icon="ph:caret-left-bold" width="14"></iconify-icon></button></sc-if>
+        <img src="{{ cur.ph }}" alt="" style="width:38px;height:38px;border-radius:50%;object-fit:cover">
+        <span style="flex:1;min-width:0"><span style="display:flex;align-items:center;gap:6px;font-size:15px;font-weight:600">{{ cur.n }}<iconify-icon icon="{{ cur.ch }}" width="13"></iconify-icon></span><span style="display:block;font-size:12.5px;color:var(--mu)">{{ cur.st }}</span></span>
+        <button onClick="{{ takeOver }}" style="display:flex;align-items:center;gap:6px;padding:8px 13px;border-radius:999px;border:0;background:{{ toBg }};color:{{ toFg }};font:600 12.5px 'Instrument Sans';cursor:pointer;white-space:nowrap"><iconify-icon icon="{{ toIcon }}" width="14"></iconify-icon>{{ toTxt }}</button>
+      </div>
+      <div data-lenis-prevent="" style="flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:8px;background:var(--sf3);background-image:url(assets/arch-pattern-dark.svg)">
+        <div style="align-self:center;font-size:11.5px;font-weight:600;color:var(--fa);padding:4px 10px;border-radius:999px;background:var(--sf)">Hoy</div>
+        <sc-for list="{{ msgs }}" as="m" hint-placeholder-count="5">
+          <sc-if value="{{ m.c }}"><div style="align-self:flex-start;max-width:76%;font-size:14px;line-height:1.45;background:var(--sf);padding:9px 13px;border-radius:16px 16px 16px 4px;box-shadow:var(--sh)">{{ m.t }}<span style="display:block;text-align:right;font-size:10.5px;color:var(--fa);margin-top:2px">{{ m.h }}</span></div></sc-if>
+          <sc-if value="{{ m.o }}"><div style="align-self:flex-end;max-width:78%;display:flex;flex-direction:column;align-items:flex-end;gap:2px"><sc-if value="{{ m.ai }}"><span style="font-size:10.5px;font-weight:600;color:#C24E25;white-space:nowrap;align-self:flex-end">✦ Hornero</span></sc-if><span style="font-size:14px;line-height:1.45;background:#FCE3D6;color:#2A140C;padding:9px 13px;border-radius:16px 16px 4px 16px">{{ m.t }}<span style="display:block;text-align:right;font-size:10.5px;color:#9A7A66;margin-top:2px">{{ m.h }} ✓✓</span></span></div></sc-if>
+          <sc-if value="{{ m.card }}"><div style="align-self:flex-end;width:240px;border-radius:16px;background:#FCE3D6;padding:6px"><div style="border-radius:12px;background:#fff;color:#2A140C;overflow:hidden"><img src="https://images.unsplash.com/photo-1634741011278-9dc2f5b6fc0b?auto=format&fit=crop&w=480&h=220&q=70" alt="" style="width:100%;height:100px;object-fit:cover;display:block"><div style="padding:9px 11px;display:flex;justify-content:space-between;align-items:center"><span><span style="display:block;font-size:13px;font-weight:600">Termo 1 L · Negro</span><span style="display:block;font-size:11.5px;color:#7A6252">Quedan 3</span></span><b style="color:#C24E25;font-size:14px">$ 42.900</b></div></div></div></sc-if>
+        </sc-for>
+      </div>
+      <sc-if value="{{ suggestOn }}">
+        <div style="margin:10px 12px 0;padding:10px 12px;border-radius:14px;background:rgba(210,88,47,.09);border:1px solid rgba(210,88,47,.22);display:flex;gap:10px;align-items:flex-start">
+          <iconify-icon icon="ph:sparkle-fill" width="15" style="color:#C24E25;margin-top:2px"></iconify-icon>
+          <span style="flex:1;font-size:13.5px;line-height:1.45"><b>Sugerencia:</b> {{ suggest }}</span>
+          <button onClick="{{ sendSuggest }}" style="padding:7px 12px;border-radius:999px;border:0;background:#D2582F;color:#fff;font:600 12.5px 'Instrument Sans';cursor:pointer;white-space:nowrap">Enviar</button>
+        </div>
+      </sc-if>
+      <div style="padding:10px 12px 12px;display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none"><sc-for list="{{ quickAct }}" as="q" hint-placeholder-count="4"><button onClick="{{ q.go }}" style="display:flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;border:1px solid var(--ln2);background:var(--sf);color:var(--tx);font:600 12.5px 'Instrument Sans';cursor:pointer;white-space:nowrap"><iconify-icon icon="{{ q.i }}" width="14" style="color:#C24E25"></iconify-icon>{{ q.t }}</button></sc-for></div>
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 6px 6px 14px;border-radius:999px;border:1px solid var(--ln2);background:var(--bg)"><input value="{{ draft }}" onInput="{{ setDraft }}" onKeyDown="{{ draftKey }}" placeholder="Escribí un mensaje…" style="flex:1;min-width:0;border:0;outline:0;background:transparent;font:500 14px 'Instrument Sans';color:var(--tx)"><button onClick="{{ sendDraft }}" style="width:36px;height:36px;border:0;border-radius:50%;background:#2F8F63;color:#fff;cursor:pointer;display:grid;place-items:center"><iconify-icon icon="ph:paper-plane-tilt-fill" width="16"></iconify-icon></button></div>
+      </div>
+    </div>
+    </sc-if>
+    <sc-if value="{{ waShowSide }}">
+    <div data-lenis-prevent="" style="border-left:1px solid var(--ln);overflow:auto;padding:16px;display:flex;flex-direction:column;gap:14px">
+      <div style="text-align:center"><img src="{{ cur.ph }}" alt="" style="width:72px;height:72px;border-radius:50%;object-fit:cover"><div style="margin-top:8px;font-size:16px;font-weight:600">{{ cur.n }}</div><div style="font-size:12.5px;color:var(--mu)">{{ cur.city }} · cliente desde 2024</div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div style="padding:10px;border-radius:14px;background:var(--sf3)"><div style="font-size:11.5px;color:var(--mu)">Gastó</div><div style="font-size:17px;font-weight:600">{{ cur.spent }}</div></div><div style="padding:10px;border-radius:14px;background:var(--sf3)"><div style="font-size:11.5px;color:var(--mu)">Pedidos</div><div style="font-size:17px;font-weight:600">{{ cur.orders }}</div></div></div>
+      <div><div style="font-size:12.5px;font-weight:600;color:var(--mu);margin-bottom:6px">Etiquetas</div><div style="display:flex;flex-wrap:wrap;gap:5px"><sc-for list="{{ cur.tags }}" as="t" hint-placeholder-count="3"><span style="font-size:12px;font-weight:600;padding:4px 9px;border-radius:999px;background:var(--chip)">{{ t }}</span></sc-for><span style="font-size:12px;font-weight:600;padding:4px 9px;border-radius:999px;border:1px dashed var(--ln2);color:var(--mu)">+</span></div></div>
+      <div><div style="font-size:12.5px;font-weight:600;color:var(--mu);margin-bottom:6px">Último pedido</div><div style="padding:10px 12px;border-radius:14px;border:1px solid var(--ln);font-size:13.5px"><b>#1048</b> · Termo 1 L · $ 42.900<div style="font-size:12px;color:#C24E25;font-weight:600;margin-top:2px">Para preparar</div></div></div>
+      <div style="padding:12px;border-radius:14px;background:rgba(210,88,47,.08);font-size:13px;line-height:1.45"><b style="color:#C24E25">✦ Hornero sabe que</b> prefiere envíos a domicilio y paga en cuotas.</div>
+      <button onClick="{{ newOrder }}" style="padding:11px;border-radius:999px;border:0;background:var(--tx);color:var(--sf);font:600 13.5px 'Instrument Sans';cursor:pointer">Crear pedido para {{ cur.first }}</button>
+    </div>
+    </sc-if>
+  </div>
+</sc-if>
+
+<!-- CLIENTES -->
+<sc-if value="{{ sCli }}" hint-placeholder-val="{{ false }}">
+  <div data-r="" style="display:flex;align-items:end;gap:14px;flex-wrap:wrap"><div style="flex:1;min-width:220px"><h1 style="margin:0;font-size:30px;letter-spacing:-.035em;font-weight:600">Clientes</h1><div style="margin-top:2px;font-size:15px;color:var(--mu)">3.880 personas que ya te compraron, unificadas de todos tus canales</div></div>
+    <button onClick="{{ exportCli }}" style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;border:1px solid var(--ln2);background:var(--sf);color:var(--tx);font:600 13.5px 'Instrument Sans';cursor:pointer;box-shadow:var(--sh);white-space:nowrap"><iconify-icon icon="ph:download-simple-bold" width="14"></iconify-icon>Exportar</button>
+    <button onClick="{{ campSeg }}" style="display:flex;align-items:center;gap:8px;padding:11px 20px;border-radius:999px;border:0;background:linear-gradient(180deg,#E06A3E,#D2582F);color:#fff;font:600 14px 'Instrument Sans';cursor:pointer;white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 10px 24px -10px rgba(210,88,47,.8)"><iconify-icon icon="ph:megaphone-fill" width="15"></iconify-icon>Campaña a «{{ segName }}»</button></div>
+  <div data-r="" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px">
+    <sc-for list="{{ segs }}" as="g" hint-placeholder-count="5">
+      <button onClick="{{ g.go }}" style="text-align:left;padding:16px;border-radius:20px;border:1.5px solid {{ g.bd }};background:var(--sf);box-shadow:var(--shd);cursor:pointer;font-family:inherit;color:var(--tx)">
+        <div style="display:flex;align-items:center;justify-content:space-between"><span style="width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:{{ g.ibg }};color:{{ g.ifg }}"><iconify-icon icon="{{ g.i }}" width="18"></iconify-icon></span><span style="font-size:12px;font-weight:600;color:{{ g.dc }}">{{ g.d }}</span></div>
+        <div style="margin-top:12px;font-size:24px;font-weight:600;letter-spacing:-.03em">{{ g.n }}</div><div style="font-size:13px;color:var(--mu)">{{ g.t }}</div>
+      </button>
+    </sc-for>
+  </div>
+  <div data-r="" style="border-radius:24px;background:var(--sf);box-shadow:var(--shd);overflow:hidden">
+    <div style="display:grid;grid-template-columns:{{ cliCols }};gap:12px;padding:12px 18px;font-size:12.5px;font-weight:600;color:var(--fa);background:var(--sf2);border-bottom:1px solid var(--ln)"><span>Cliente</span><span style="display:{{ cliHide }}">Canal</span><span style="display:{{ cliHide }}">Pedidos</span><span>Gastó</span><span style="display:{{ cliHide }}">Último</span></div>
+    <sc-for list="{{ clis }}" as="c" hint-placeholder-count="8">
+      <div style="display:grid;grid-template-columns:{{ cliCols }};gap:12px;align-items:center;padding:11px 18px;border-bottom:1px solid var(--ln);font-size:14px;cursor:pointer" style-hover="background:var(--chip)">
+        <span style="display:flex;align-items:center;gap:10px;min-width:0"><sc-if value="{{ c.ph }}"><img src="{{ c.ph }}" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex:none"></sc-if><sc-if value="{{ c.noPh }}"><span style="width:36px;height:36px;flex:none;border-radius:50%;background:var(--sf3);display:grid;place-items:center;font-size:12px;font-weight:600;color:var(--mu)">{{ c.ini }}</span></sc-if><span style="min-width:0"><span style="display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.n }}</span><span style="display:flex;gap:4px;margin-top:2px"><sc-for list="{{ c.tags }}" as="t" hint-placeholder-count="1"><span style="font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;background:{{ t.bg }};color:{{ t.fg }}">{{ t.t }}</span></sc-for></span></span></span>
+        <span style="display:{{ cliHideF }};align-items:center;gap:6px;color:var(--mu);font-size:13px"><iconify-icon icon="{{ c.chi }}" width="15"></iconify-icon>{{ c.ch }}</span>
+        <span style="display:{{ cliHide }};font-weight:500">{{ c.o }}</span>
+        <span style="font-weight:600">{{ c.s }}</span>
+        <span style="display:{{ cliHide }};color:var(--mu);font-size:13px">{{ c.l }}</span>
+      </div>
+    </sc-for>
+  </div>
+</sc-if>
+
+<!-- CARRITOS -->
+<sc-if value="{{ sCart }}" hint-placeholder-val="{{ false }}">
+  <div data-r="" style="display:flex;align-items:end;gap:14px;flex-wrap:wrap"><div style="flex:1;min-width:220px"><h1 style="margin:0;font-size:30px;letter-spacing:-.035em;font-weight:600">Carritos abandonados</h1><div style="margin-top:2px;font-size:15px;color:var(--mu)">Gente que estuvo a un paso de comprarte</div></div>
+    <button onClick="{{ remindAll }}" style="display:flex;align-items:center;gap:8px;padding:11px 20px;border-radius:999px;border:0;background:linear-gradient(180deg,#E06A3E,#D2582F);color:#fff;font:600 14px 'Instrument Sans';cursor:pointer;white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 10px 24px -10px rgba(210,88,47,.8)"><iconify-icon icon="ph:whatsapp-logo-fill" width="15"></iconify-icon>Recordar a todos · $ 1.440</button></div>
+  <div data-r="" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+    <div style="position:relative;overflow:hidden;padding:20px;border-radius:22px;background:#2A140C;color:#FBF7F2;box-shadow:var(--shd)"><div style="position:absolute;inset:0;background-image:url(assets/arch-pattern-light.svg)"></div><div style="position:relative"><div style="font-size:13px;color:#D9C8BA">En carritos abiertos</div><div style="font-size:34px;font-weight:600;letter-spacing:-.04em">$ 384.600</div><div style="font-size:13px;color:#F5B796;margin-top:2px">12 carritos · ticket promedio $ 32.050</div></div></div>
+    <div style="padding:20px;border-radius:22px;background:var(--sf);box-shadow:var(--shd)"><div style="font-size:13px;color:var(--mu)">Recuperado este mes</div><div style="font-size:34px;font-weight:600;letter-spacing:-.04em;color:#2F8F63">$ 612.300</div><div style="margin-top:8px;height:8px;border-radius:8px;background:var(--sf3);overflow:hidden"><div style="width:38%;height:100%;border-radius:8px;background:#2F8F63"></div></div><div style="font-size:12.5px;color:var(--mu);margin-top:6px">38% de recuperación · el promedio es 12%</div></div>
+    <div style="padding:16px 18px;border-radius:22px;background:var(--sf);box-shadow:var(--shd);display:flex;flex-direction:column;gap:6px"><div style="font-size:14px;font-weight:600;margin-bottom:4px">Automático</div>
+      <sc-for list="{{ autos }}" as="a" hint-placeholder-count="3"><button onClick="{{ a.go }}" style="display:flex;align-items:center;gap:10px;padding:7px 0;border:0;background:transparent;cursor:pointer;font-family:inherit;color:var(--tx);text-align:left"><span style="flex:1;font-size:13.5px;line-height:1.3">{{ a.t }}</span><span style="position:relative;width:38px;height:22px;flex:none;border-radius:999px;background:{{ a.tbg }};transition:background .25s"><span style="position:absolute;top:2px;left:{{ a.tx }};width:18px;height:18px;border-radius:50%;background:#fff;transition:left .25s cubic-bezier(.2,.7,.1,1);box-shadow:0 1px 3px rgba(0,0,0,.3)"></span></span></button></sc-for>
+    </div>
+  </div>
+  <div data-r="" style="display:flex;flex-direction:column;gap:10px">
+    <sc-for list="{{ carts }}" as="c" hint-placeholder-count="5">
+      <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:20px;background:var(--sf);box-shadow:var(--shd);flex-wrap:wrap">
+        <img src="{{ c.ph }}" alt="" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex:none">
+        <span style="flex:1 1 180px;min-width:0"><span style="display:block;font-size:15px;font-weight:600">{{ c.n }}</span><span style="display:block;font-size:12.5px;color:var(--mu)">{{ c.when }} · desde {{ c.src }}</span></span>
+        <span style="display:flex">
+          <sc-for list="{{ c.items }}" as="i" hint-placeholder-count="2"><img src="{{ i }}" alt="" style="width:40px;height:40px;border-radius:10px;object-fit:cover;margin-left:-8px;box-shadow:0 0 0 2px var(--sf)"></sc-for>
+        </span>
+        <span style="min-width:90px;text-align:right"><span style="display:block;font-size:16px;font-weight:600">{{ c.v }}</span><span style="display:block;font-size:12px;color:var(--mu)">{{ c.q }}</span></span>
+        <sc-if value="{{ c.todo }}"><button onClick="{{ c.go }}" style="display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:999px;border:0;background:#E9F8EE;color:#1F6F4A;font:600 13px 'Instrument Sans';cursor:pointer;white-space:nowrap"><iconify-icon icon="logos:whatsapp-icon" width="14"></iconify-icon>Recordar</button></sc-if>
+        <sc-if value="{{ c.done }}"><span style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#2F8F63;white-space:nowrap"><iconify-icon icon="ph:check-circle-fill" width="16"></iconify-icon>Recordado</span></sc-if>
+      </div>
+    </sc-for>
+  </div>
+</sc-if>
+
+<!-- DEVOLUCIONES -->
+<sc-if value="{{ sDev }}" hint-placeholder-val="{{ false }}">
+  <div data-r="" style="display:flex;align-items:end;gap:14px;flex-wrap:wrap"><div style="flex:1;min-width:220px"><h1 style="margin:0;font-size:30px;letter-spacing:-.035em;font-weight:600">Devoluciones</h1><div style="margin-top:2px;font-size:15px;color:var(--mu)">Cambios y reintegros con tu política de 30 días</div></div>
+    <span style="font-size:13.5px;font-weight:600;padding:9px 14px;border-radius:999px;background:rgba(47,143,99,.12);color:#2F8F63;white-space:nowrap">1,2% de tus pedidos · muy bajo</span></div>
+  <div data-r="" style="display:flex;flex-direction:column;gap:12px">
+    <sc-for list="{{ devs }}" as="d" hint-placeholder-count="3">
+      <div style="padding:16px;border-radius:22px;background:var(--sf);box-shadow:var(--shd);display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+        <img src="{{ d.img }}" alt="" style="width:64px;height:64px;border-radius:14px;object-fit:cover;flex:none">
+        <span style="flex:1 1 220px;min-width:0"><span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:15px;font-weight:600">{{ d.p }}</span><span style="font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;background:{{ d.sbg }};color:{{ d.sfg }}">{{ d.s }}</span></span><span style="display:block;font-size:13px;color:var(--mu);margin-top:3px">{{ d.c }} · pedido {{ d.o }} · {{ d.h }}</span><span style="display:block;font-size:13.5px;margin-top:6px;line-height:1.4">“{{ d.r }}”</span></span>
+        <span style="text-align:right;min-width:110px"><span style="display:block;font-size:16px;font-weight:600">{{ d.v }}</span><span style="display:block;font-size:12px;color:var(--mu)">{{ d.m }}</span></span>
+        <sc-if value="{{ d.pend }}"><span style="display:flex;gap:6px"><button onClick="{{ d.ok }}" style="padding:9px 14px;border-radius:999px;border:0;background:var(--tx);color:var(--sf);font:600 13px 'Instrument Sans';cursor:pointer">Aprobar</button><button onClick="{{ d.chg }}" style="padding:9px 14px;border-radius:999px;border:1px solid var(--ln2);background:transparent;color:var(--tx);font:600 13px 'Instrument Sans';cursor:pointer;white-space:nowrap">Ofrecer cambio</button></span></sc-if>
+      </div>
+    </sc-for>
+  </div>
+</sc-if>
+
+<!-- POS -->
+<sc-if value="{{ sPos }}" hint-placeholder-val="{{ false }}">
+  <div data-r="" style="display:flex;align-items:end;gap:14px;flex-wrap:wrap"><div style="flex:1;min-width:220px"><h1 style="margin:0;font-size:30px;letter-spacing:-.035em;font-weight:600">Ventas en el local</h1><div style="margin-top:2px;font-size:15px;color:var(--mu)">Caja abierta desde las 9:02 · mismo stock que la web</div></div>
+    <span style="display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;background:var(--sf);box-shadow:var(--sh);font-size:13px;font-weight:600"><iconify-icon icon="ph:barcode" width="16"></iconify-icon>Lector conectado</span></div>
+  <div data-r="" style="display:grid;grid-template-columns:{{ posCols }};gap:16px;align-items:start">
+    <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><div style="flex:1 1 220px;display:flex;align-items:center;gap:8px;padding:11px 14px;border-radius:999px;background:var(--sf);box-shadow:var(--sh);color:var(--mu);font-size:14px"><iconify-icon icon="ph:magnifying-glass" width="16"></iconify-icon>Buscá o escaneá un producto</div>
+        <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none"><sc-for list="{{ posCats }}" as="c" hint-placeholder-count="4"><button onClick="{{ c.go }}" style="border:0;cursor:pointer;white-space:nowrap;font:600 13px 'Instrument Sans';padding:10px 14px;border-radius:999px;background:{{ c.bg }};color:{{ c.fg }};box-shadow:var(--sh)">{{ c.t }}</button></sc-for></div></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px">
+        <sc-for list="{{ posProds }}" as="p" hint-placeholder-count="8">
+          <button onClick="{{ p.add }}" style="padding:8px;border-radius:18px;border:0;background:var(--sf);box-shadow:var(--shd);cursor:pointer;font-family:inherit;color:var(--tx);text-align:left;transition:transform .15s" style-active="transform:scale(.96)">
+            <div style="position:relative;aspect-ratio:1.2;border-radius:12px;overflow:hidden"><img src="{{ p.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"><sc-if value="{{ p.inCart }}"><span style="position:absolute;top:6px;right:6px;min-width:24px;height:24px;padding:0 7px;border-radius:999px;background:#D2582F;color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center">{{ p.inCart }}</span></sc-if></div>
+            <div style="padding:8px 4px 2px"><div style="font-size:13.5px;font-weight:600;line-height:1.25">{{ p.n }}</div><div style="display:flex;justify-content:space-between;margin-top:3px"><b style="font-size:14px">{{ p.pf }}</b><span style="font-size:12px;color:{{ p.stc }}">{{ p.st }} u</span></div></div>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+    <div style="position:sticky;top:80px;border-radius:24px;background:var(--sf);box-shadow:var(--shd);display:flex;flex-direction:column;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid var(--ln)"><span style="font-size:16px;font-weight:600">Ticket</span><button onClick="{{ clearTicket }}" style="border:0;background:transparent;cursor:pointer;font:600 13px 'Instrument Sans';color:var(--mu)">Vaciar</button></div>
+      <div style="padding:6px 18px;max-height:280px;overflow:auto" data-lenis-prevent="">
+        <sc-for list="{{ ticket }}" as="t" hint-placeholder-count="0">
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--ln)"><span style="flex:1;min-width:0"><span style="display:block;font-size:14px;font-weight:600">{{ t.n }}</span><span style="display:block;font-size:12.5px;color:var(--mu)">{{ t.pf }} c/u</span></span>
+            <span style="display:flex;align-items:center;gap:6px"><button onClick="{{ t.dec }}" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--ln2);background:transparent;color:var(--tx);cursor:pointer;display:grid;place-items:center"><iconify-icon icon="ph:minus-bold" width="12"></iconify-icon></button><b style="min-width:16px;text-align:center">{{ t.q }}</b><button onClick="{{ t.inc }}" style="width:28px;height:28px;border-radius:50%;border:0;background:var(--tx);color:var(--sf);cursor:pointer;display:grid;place-items:center"><iconify-icon icon="ph:plus-bold" width="12"></iconify-icon></button></span>
+            <b style="min-width:74px;text-align:right">{{ t.tf }}</b></div>
+        </sc-for>
+        <sc-if value="{{ ticketEmpty }}"><div style="padding:28px 0;text-align:center;color:var(--mu);font-size:14px"><iconify-icon icon="ph:barcode" width="28" style="display:block;margin:0 auto 6px;color:var(--fa)"></iconify-icon>Tocá un producto o escanealo</div></sc-if>
+      </div>
+      <div style="padding:14px 18px;display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--ln);background:var(--sf2)">
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:14px;color:var(--mu)">Total</span><span style="font-size:32px;font-weight:600;letter-spacing:-.04em">{{ ticketTotal }}</span></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"><sc-for list="{{ payM }}" as="m" hint-placeholder-count="6"><button onClick="{{ m.go }}" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 4px;border-radius:14px;border:1.5px solid {{ m.bd }};background:var(--sf);cursor:pointer;font:600 11.5px 'Instrument Sans';color:var(--tx)"><iconify-icon icon="{{ m.i }}" width="20" style="color:{{ m.c }}"></iconify-icon>{{ m.t }}</button></sc-for></div>
+        <button onClick="{{ charge }}" style="padding:15px;border-radius:999px;border:0;background:{{ chargeBg }};color:#fff;font:600 15.5px 'Instrument Sans';cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.3)">Cobrar {{ ticketTotal }}</button>
+        <div style="font-size:12px;color:var(--mu);text-align:center">La factura sale sola por ARCA · ticket por WhatsApp opcional</div>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<!-- RESEÑAS -->
+<sc-if value="{{ sRev }}" hint-placeholder-val="{{ false }}">
+  <div data-r="" style="display:flex;align-items:end;gap:14px;flex-wrap:wrap"><div style="flex:1;min-width:220px"><h1 style="margin:0;font-size:30px;letter-spacing:-.035em;font-weight:600">Reseñas y preguntas</h1><div style="margin-top:2px;font-size:15px;color:var(--mu)">De tu tienda, Google y Mercado Libre</div></div>
+    <div style="display:flex;padding:3px;border-radius:999px;background:var(--chip)"><sc-for list="{{ revTabs }}" as="t" hint-placeholder-count="2"><button onClick="{{ t.go }}" style="border:0;cursor:pointer;font:600 13px 'Instrument Sans';padding:8px 14px;border-radius:999px;background:{{ t.bg }};color:var(--tx);box-shadow:{{ t.sh }};white-space:nowrap">{{ t.t }}</button></sc-for></div></div>
+  <sc-if value="{{ revQ }}">
+    <div data-r="" style="display:flex;flex-direction:column;gap:12px">
+      <sc-for list="{{ qs }}" as="q" hint-placeholder-count="3">
+        <div style="padding:16px;border-radius:22px;background:var(--sf);box-shadow:var(--shd)">
+          <div style="display:flex;gap:12px;align-items:flex-start"><img src="{{ q.img }}" alt="" style="width:48px;height:48px;border-radius:12px;object-fit:cover;flex:none"><span style="flex:1;min-width:0"><span style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--mu)"><span style="font-size:8px;font-weight:800;padding:2px 4px;border-radius:4px;background:#FFE600;color:#2D3277">ML</span>{{ q.p }} · {{ q.h }}</span><span style="display:block;font-size:15px;font-weight:600;margin-top:3px">{{ q.q }}</span></span></div>
+          <sc-if value="{{ q.todo }}"><div style="margin-top:12px;padding:12px;border-radius:14px;background:rgba(210,88,47,.08);border:1px solid rgba(210,88,47,.2)"><div style="font-size:12px;font-weight:600;color:#C24E25;margin-bottom:4px">✦ Respuesta de Hornero</div><div style="font-size:14px;line-height:1.45">{{ q.a }}</div><div style="margin-top:10px;display:flex;gap:6px"><button onClick="{{ q.pub }}" style="padding:8px 14px;border-radius:999px;border:0;background:var(--tx);color:var(--sf);font:600 13px 'Instrument Sans';cursor:pointer">Publicar</button><button style="padding:8px 14px;border-radius:999px;border:1px solid var(--ln2);background:transparent;color:var(--tx);font:600 13px 'Instrument Sans';cursor:pointer">Editar</button></div></div></sc-if>
+          <sc-if value="{{ q.done }}"><div style="margin-top:10px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#2F8F63"><iconify-icon icon="ph:check-circle-fill" width="15"></iconify-icon>Publicada en Mercado Libre</div></sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+  <sc-if value="{{ revR }}">
+    <div data-r="" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;align-items:start">
+      <div style="padding:20px;border-radius:22px;background:var(--sf);box-shadow:var(--shd)"><div style="display:flex;align-items:baseline;gap:10px"><span style="font-size:52px;font-weight:600;letter-spacing:-.05em">4,9</span><span style="color:#E3A93B;font-size:18px;letter-spacing:2px">★★★★★</span></div><div style="font-size:13.5px;color:var(--mu)">312 reseñas · 96% recomendaría</div>
+        <div style="margin-top:14px;display:flex;flex-direction:column;gap:7px"><sc-for list="{{ stars }}" as="s" hint-placeholder-count="5"><div style="display:flex;align-items:center;gap:10px;font-size:13px"><span style="width:14px">{{ s.n }}</span><div style="flex:1;height:8px;border-radius:6px;background:var(--sf3);overflow:hidden"><div style="height:100%;width:{{ s.w }};border-radius:6px;background:#E3A93B"></div></div><span style="width:36px;text-align:right;color:var(--mu)">{{ s.c }}</span></div></sc-for></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px"><sc-for list="{{ revs }}" as="r" hint-placeholder-count="4"><div style="padding:14px 16px;border-radius:20px;background:var(--sf);box-shadow:var(--shd)"><div style="display:flex;align-items:center;gap:8px"><span style="color:#E3A93B;letter-spacing:1px">{{ r.st }}</span><span style="flex:1;font-size:13px;color:var(--mu)">{{ r.w }} · {{ r.src }}</span><span style="font-size:12px;color:var(--fa)">{{ r.h }}</span></div><div style="margin-top:6px;font-size:14px;line-height:1.5">{{ r.t }}</div></div></sc-for></div>
+    </div>
+  </sc-if>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;screen&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;WhatsApp&quot;, &quot;tsType&quot;: &quot;string&quot;}, &quot;vw&quot;: {&quot;editor&quot;: &quot;int&quot;, &quot;default&quot;: 1400, &quot;tsType&quot;: &quot;number&quot;}, &quot;onToast&quot;: {&quot;editor&quot;: null, &quot;tsType&quot;: &quot;function&quot;}, &quot;onOpen&quot;: {&quot;editor&quot;: null, &quot;tsType&quot;: &quot;function&quot;}}">
+const FACE = id => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=96&h=96&q=70&crop=faces`;
+const IMG = id => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=300&h=300&q=70`;
+const P = { termo: IMG('1634741011278-9dc2f5b6fc0b'), mate: IMG('1609541994821-d909982e2f1b'), yerba: IMG('1675001077188-809370ce3279'), kit: IMG('1444157545135-c045be691b05'), bombi: IMG('1585744259332-111384f5def9'), cafe: IMG('1495474472287-4d71bcdd2085'), pour: IMG('1687920492018-e21cad9023d9'), pan: IMG('1509440159596-0249088772ff') };
+const F = { lucia: FACE('1531058240690-006c446962d8'), martin: FACE('1687422811062-a966b55cb217'), norma: FACE('1764173039506-c5cc7b8ec14b'), carla: FACE('1520333789090-1afc82db536a'), julian: FACE('1687422810663-c316494f725a'), pablo: FACE('1545262722-9e0d80a0bc01'), vale: FACE('1556745753-b2904692b3cd'), sofi: FACE('1562322140-8baeececf3df') };
+const fmt = n => '$ ' + Math.round(n).toLocaleString('es-AR');
+const CH = { wa: 'logos:whatsapp-icon', ig: 'logos:instagram-icon', tg: 'logos:telegram', ml: 'ph:handshake-fill', web: 'ph:globe-simple-fill' };
+const CONVS = [
+  ['lucia', 'Lucía Fernández', '¿Hacen envíos a Córdoba?', '2 min', 'wa', 'Hornero', 0, 'Córdoba', '$ 284.000', 6, ['VIP', 'Cuotas']],
+  ['martin', 'Martín Gómez', 'Quiero cambiar la dirección de envío', '12 min', 'wa', 'Te espera', 2, 'Rosario', '$ 96.400', 3, ['Recurrente']],
+  ['norma', 'Norma Ruiz', '¿Me pasás la lista mayorista?', '22 min', 'ig', 'Te espera', 1, 'CABA', '$ 1.240.000', 14, ['Mayorista']],
+  ['sofi', 'Sofía Paz', '¡Gracias! Ya lo recibí 😊', '1 h', 'ig', 'Resuelto', 0, 'La Plata', '$ 58.400', 1, ['Nueva']],
+  ['julian', 'Julián Pereyra', '¿Tienen bombillas de alpaca?', '2 h', 'tg', 'Hornero', 0, 'Mendoza', '$ 143.200', 5, ['Recurrente']],
+  ['carla', 'Carla Ruiz', 'Ya te transferí', '3 h', 'wa', 'Hornero', 0, 'Quilmes', '$ 54.300', 1, ['Nueva']],
+  ['pablo', 'Pablo Medina', '¿Cuándo llega mi pedido?', '5 h', 'wa', 'Resuelto', 0, 'Salta', '$ 18.500', 1, ['Nueva']]
+];
+const TAGC = { Hornero: ['rgba(210,88,47,.12)', '#C24E25'], 'Te espera': ['rgba(227,169,59,.2)', '#9A6A10'], Resuelto: ['rgba(47,143,99,.12)', '#2F8F63'] };
+const THREAD = [
+  { c: 1, t: 'Hola! ¿Tienen el termo de 1 L en negro?', h: '19:31' },
+  { o: 1, ai: 1, t: '¡Hola Lucía! Sí, nos quedan 3 en negro 🙌', h: '19:31' },
+  { card: 1 },
+  { c: 1, t: '¿Hacen envíos a Córdoba?', h: '19:33' }
+];
+const POSP = [['Yerba orgánica 1 kg', 8200, 'yerba', 42, 'Yerbas'], ['Mate de cerámica', 18500, 'mate', 12, 'Mates'], ['Termo 1 L', 42900, 'termo', 3, 'Termos'], ['Kit matero', 58400, 'kit', 8, 'Mates'], ['Bombilla de acero', 1700, 'bombi', 64, 'Mates'], ['Café de especialidad', 9800, 'cafe', 20, 'Café'], ['Yerba con hierbas', 7600, 'pour', 18, 'Yerbas'], ['Budín de nuez', 4200, 'pan', 6, 'Café']];
+
+class Component extends DCLogic {
+  state = { conv: 0, waF: 'all', mobileThread: false, taken: false, extra: [], draft: '', suggested: false, seg: 0, autos: { a: true, b: true, c: false }, reminded: {}, devSt: {}, posCat: 'Todo', cart: {}, pay: 'qr', revTab: 'q', pub: {} };
+  componentDidMount() { this.anim(); this._scr = this.props.screen; }
+  componentDidUpdate() { if (this._scr !== this.props.screen) { this._scr = this.props.screen; setTimeout(() => this.anim(), 20); } }
+  anim() { document.querySelectorAll('[data-r]:not([data-on])').forEach((el, i) => { el.setAttribute('data-on', ''); el.animate([{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 600, delay: i * 60, fill: 'both', easing: 'cubic-bezier(.2,.7,.1,1)' }); }); }
+  toast(k, t, d, a) { this.props.onToast && this.props.onToast(k, t, d, a); }
+  renderVals() {
+    const st = this.state, scr = this.props.screen || 'WhatsApp', vw = this.props.vw || 1400;
+    const tg = on => ({ tbg: on ? '#D2582F' : '#D9CBBE', tx: on ? '18px' : '2px' });
+    // WhatsApp
+    const filt = { all: () => true, wait: c => c[5] === 'Te espera', ai: c => c[5] === 'Hornero', done: c => c[5] === 'Resuelto' };
+    const list = CONVS.map((c, i) => ({ c, i })).filter(x => filt[st.waF](x.c));
+    const c0 = CONVS[st.conv];
+    const narrow = vw < 1000, phone = vw < 760;
+    const msgs = (st.conv === 0 ? THREAD : [{ c: 1, t: c0[2], h: c0[3] }]).concat(st.extra);
+    const sug = st.conv === 0 ? 'Sí, por Andreani te llega el jueves. Envío $ 4.200, o gratis si sumás una bombilla ($ 1.700).' : st.conv === 2 ? 'Te paso la lista mayorista: desde 10 unidades tenés 25% off. ¿Te armo el pedido?' : '¡Hola! Ya lo reviso y te confirmo en un minuto.';
+    const send = t => { if (!t.trim()) return; this.setState(s => ({ extra: [...s.extra, { o: 1, t, h: 'ahora' }], draft: '', suggested: true })); };
+    // Clientes
+    const SEGS = [['ph:crown-simple-fill', 'VIP', 128, '+12', '#FDF3DD', '#9A6A10'], ['ph:arrows-clockwise-bold', 'Recurrentes', 1204, '+48', 'rgba(47,143,99,.13)', '#2F8F63'], ['ph:sparkle-fill', 'Nuevos este mes', 154, '+31', '#FCEDE5', '#C24E25'], ['ph:warning-fill', 'En riesgo', 342, '−18', 'rgba(227,169,59,.2)', '#9A6A10'], ['ph:storefront-fill', 'Mayoristas', 46, '+3', '#EFE9F7', '#6A4FA0']];
+    const CLI = [['lucia', 'Lucía Fernández', 'WhatsApp', 'wa', 6, 284000, 'hoy', ['VIP']], ['norma', 'Norma Ruiz', 'Instagram', 'ig', 14, 1240000, 'hace 2 días', ['Mayorista', 'VIP']], [null, 'Distribuidora Sur', 'Local', 'web', 22, 3412000, 'hoy', ['Mayorista']], ['julian', 'Julián Pereyra', 'Telegram', 'tg', 5, 143200, 'hace 1 semana', ['Recurrente']], ['martin', 'Martín Gómez', 'Mercado Libre', 'ml', 3, 96400, 'ayer', ['Recurrente']], ['carla', 'Carla Ruiz', 'Tienda online', 'web', 1, 54300, 'hace 3 h', ['Nueva']], ['pablo', 'Pablo Medina', 'Mercado Libre', 'ml', 1, 18500, 'hoy', ['Nueva']], ['sofi', 'Sofía Paz', 'Instagram', 'ig', 2, 76900, 'hace 3 meses', ['En riesgo']]];
+    const TAGS = { VIP: ['#FDF3DD', '#9A6A10'], Mayorista: ['#EFE9F7', '#6A4FA0'], Recurrente: ['rgba(47,143,99,.13)', '#2F8F63'], Nueva: ['#FCEDE5', '#C24E25'], 'En riesgo': ['rgba(184,58,46,.1)', '#B83A2E'] };
+    // POS
+    const cats = ['Todo', 'Yerbas', 'Mates', 'Termos', 'Café'];
+    const tk = Object.entries(st.cart).filter(([, q]) => q > 0).map(([i, q]) => ({ i: +i, q }));
+    const total = tk.reduce((a, x) => a + POSP[x.i][1] * x.q, 0);
+    const addQ = (i, d) => this.setState(s => ({ cart: { ...s.cart, [i]: Math.max(0, (s.cart[i] || 0) + d) } }));
+    const PAY = [['qr', 'ph:qr-code-bold', 'QR MP', '#00B1EA'], ['cash', 'ph:money-fill', 'Efectivo', '#2F8F63'], ['card', 'ph:credit-card-fill', 'Tarjeta', '#3E6BFD'], ['modo', 'ph:device-mobile-fill', 'MODO', '#00A88F'], ['transf', 'ph:bank-fill', 'Transfer.', '#6B5244'], ['mix', 'ph:split-horizontal-fill', 'Dividir', '#C24E25']];
+    return {
+      sWa: scr === 'WhatsApp', sCli: scr === 'Clientes', sCart: scr === 'Carritos abandonados', sDev: scr === 'Devoluciones', sPos: scr === 'Ventas en local', sRev: scr === 'Reseñas y preguntas',
+      waCols: phone ? 'minmax(0,1fr)' : narrow ? '300px minmax(0,1fr)' : '320px minmax(0,1fr) 280px', waH: phone ? 'calc(100dvh - 240px)' : '680px',
+      waShowList: !phone || !st.mobileThread, waShowThread: !phone || st.mobileThread, waShowSide: !narrow, waBack: phone, waBackGo: () => this.setState({ mobileThread: false }),
+      waFilters: [['all', 'Todas'], ['wait', 'Te esperan'], ['ai', 'Hornero'], ['done', 'Resueltas']].map(([id, t]) => ({ t, n: CONVS.filter(filt[id]).length, go: () => this.setState({ waF: id }), bg: st.waF === id ? 'var(--tx)' : 'var(--chip)', fg: st.waF === id ? 'var(--sf)' : 'var(--mu)' })),
+      convs: list.map(({ c, i }) => ({ n: c[1], m: c[2], h: c[3], ph: F[c[0]], ch: CH[c[4]], tag: c[5], tbg: TAGC[c[5]][0], tfg: TAGC[c[5]][1], unread: c[6] || null, bg: i === st.conv ? 'var(--chip)' : 'transparent', go: () => this.setState({ conv: i, mobileThread: true, extra: [], suggested: false, taken: false }) })),
+      cur: { n: c0[1], first: c0[1].split(' ')[0], ph: F[c0[0]], ch: CH[c0[4]], st: st.taken ? 'Atendés vos' : c0[5] === 'Hornero' ? 'Hornero está respondiendo…' : 'En línea', city: c0[7], spent: c0[8], orders: c0[9], tags: c0[10] },
+      msgs: msgs.map(m => ({ ...m, c: !!m.c, o: !!m.o, ai: !!m.ai, card: !!m.card })),
+      takeOver: () => { this.setState(s => ({ taken: !s.taken })); this.toast('info', st.taken ? 'Hornero vuelve a atender' : 'Tomaste la conversación', st.taken ? 'Te avisa si necesita algo' : 'Hornero queda en pausa con ' + c0[1].split(' ')[0]); },
+      toBg: st.taken ? 'rgba(210,88,47,.12)' : 'var(--tx)', toFg: st.taken ? '#C24E25' : 'var(--sf)', toIcon: st.taken ? 'ph:sparkle-fill' : 'ph:hand-fill', toTxt: st.taken ? 'Devolver a Hornero' : 'Tomar',
+      suggestOn: !st.suggested, suggest: sug, sendSuggest: () => send(sug),
+      quickAct: [['ph:book-open-text-fill', 'Catálogo'], ['ph:link-bold', 'Link de pago'], ['ph:truck-fill', 'Calcular envío'], ['ph:lightning-fill', 'Respuestas rápidas']].map(([i, t]) => ({ i, t, go: () => t === 'Link de pago' ? this.props.onOpen && this.props.onOpen('link') : send(t === 'Catálogo' ? 'Te paso nuestro catálogo: laesquina.com.ar/catalogo' : t === 'Calcular envío' ? 'El envío a ' + c0[7] + ' sale $ 4.200 y llega en 48 h.' : '¡Gracias por escribirnos! ¿En qué te ayudo?') })),
+      draft: st.draft, setDraft: e => this.setState({ draft: e.target.value }), sendDraft: () => send(st.draft), draftKey: e => { if (e.key === 'Enter') send(st.draft); },
+      newOrder: () => this.toast('ok', 'Pedido en borrador', 'Para ' + c0[1] + ' · elegí los productos', 'Continuar'),
+      segs: SEGS.map(([i, t, n, d, ibg, ifg], k) => ({ i, t, n: n.toLocaleString('es-AR'), d, ibg, ifg, dc: d.startsWith('−') ? '#B83A2E' : '#2F8F63', bd: st.seg === k ? '#D2582F' : 'transparent', go: () => this.setState({ seg: k }) })),
+      segName: SEGS[st.seg][1], campSeg: () => this.toast('ai', 'Campaña lista para revisar', 'Hornero armó un mensaje para «' + SEGS[st.seg][1] + '»', 'Revisar'), exportCli: () => this.toast('ok', 'Exportando clientes', 'Te mandamos el Excel por email'),
+      cliCols: phone ? 'minmax(0,1fr) auto' : '1.6fr 1fr 70px 110px 110px', cliHide: phone ? 'none' : 'block', cliHideF: phone ? 'none' : 'flex',
+      clis: CLI.map(([ph, n, ch, chk, o, s, l, tags]) => ({ ph: ph ? F[ph] : null, noPh: !ph, ini: n.split(' ').map(w => w[0]).slice(0, 2).join(''), n, ch, chi: CH[chk], o, s: fmt(s), l, tags: tags.map(t => ({ t, bg: TAGS[t][0], fg: TAGS[t][1] })) })),
+      autos: [['a', 'Recordatorio por WhatsApp a la hora'], ['b', 'Segundo aviso a las 24 h con 5% off'], ['c', 'Email al tercer día']].map(([k, t]) => ({ t, ...tg(st.autos[k]), go: () => this.setState(s => ({ autos: { ...s.autos, [k]: !s.autos[k] } })) })),
+      remindAll: () => { this.setState({ reminded: { 0: 1, 1: 1, 2: 1, 3: 1, 4: 1 } }); this.toast('wa', '12 recordatorios en camino', 'Costo total $ 1.440 · te avisamos cuando compren', 'Deshacer'); },
+      carts: [['vale', 'Valeria Sosa', 'hace 25 min', 'Instagram', ['kit', 'bombi'], 60100, '2 productos'], ['julian', 'Julián Pereyra', 'hace 1 h', 'la tienda', ['termo'], 42900, '1 producto'], ['carla', 'Carla Ruiz', 'hace 3 h', 'WhatsApp', ['yerba', 'mate', 'bombi'], 28400, '3 productos'], ['sofi', 'Sofía Paz', 'ayer', 'Google', ['cafe'], 19600, '2 productos'], ['pablo', 'Pablo Medina', 'ayer', 'la tienda', ['kit'], 58400, '1 producto']]
+        .map(([f, n, when, src, items, v, q], i) => ({ ph: F[f], n, when, src, items: items.map(x => P[x]), v: fmt(v), q, done: !!st.reminded[i], todo: !st.reminded[i], go: () => { this.setState(s => ({ reminded: { ...s.reminded, [i]: 1 } })); this.toast('wa', 'Recordatorio enviado', n + ' · $ 120 de WhatsApp'); } })),
+      devs: [['termo', 'Termo 1 L · Rojo', 'Martín Gómez', '#1032', 'hace 2 h', 'El color no es el de la foto, quería el rojo más oscuro.', 42900, 'Reintegro a Mercado Pago'], ['mate', 'Mate de cerámica', 'Sofía Paz', '#1019', 'ayer', 'Llegó con una pequeña fisura en el borde.', 18500, 'Envío de reemplazo'], ['kit', 'Kit matero', 'Pablo Medina', '#0998', 'hace 4 días', 'Era un regalo y ya tenían uno igual.', 58400, 'Cambio por otro producto']]
+        .map(([img, p, c, o, h, r, v, m], i) => { const s = st.devSt[i] || 'Pendiente'; return { img: P[img], p, c, o, h, r, v: fmt(v), m, s, pend: s === 'Pendiente', sbg: s === 'Pendiente' ? 'rgba(227,169,59,.2)' : 'rgba(47,143,99,.13)', sfg: s === 'Pendiente' ? '#9A6A10' : '#2F8F63',
+          ok: () => { this.setState(x => ({ devSt: { ...x.devSt, [i]: 'Aprobada' } })); this.toast('ok', 'Devolución aprobada', 'Le mandamos la etiqueta de Andreani a ' + c.split(' ')[0], 'Deshacer'); },
+          chg: () => { this.setState(x => ({ devSt: { ...x.devSt, [i]: 'Cambio ofrecido' } })); this.toast('wa', 'Cambio ofrecido por WhatsApp', 'Hornero le muestra 3 alternativas a ' + c.split(' ')[0]); } }; }),
+      posCols: vw < 1000 ? 'minmax(0,1fr)' : 'minmax(0,1fr) 360px',
+      posCats: cats.map(t => ({ t, go: () => this.setState({ posCat: t }), bg: st.posCat === t ? 'var(--tx)' : 'var(--sf)', fg: st.posCat === t ? 'var(--sf)' : 'var(--tx)' })),
+      posProds: POSP.map((p, i) => ({ p, i })).filter(x => st.posCat === 'Todo' || x.p[4] === st.posCat).map(({ p, i }) => ({ n: p[0], pf: fmt(p[1]), img: P[p[2]], st: p[3], stc: p[3] < 5 ? '#B83A2E' : 'var(--mu)', inCart: st.cart[i] || null, add: () => addQ(i, 1) })),
+      ticket: tk.map(x => ({ n: POSP[x.i][0], pf: fmt(POSP[x.i][1]), q: x.q, tf: fmt(POSP[x.i][1] * x.q), inc: () => addQ(x.i, 1), dec: () => addQ(x.i, -1) })),
+      ticketEmpty: tk.length === 0, ticketTotal: fmt(total), clearTicket: () => this.setState({ cart: {} }),
+      payM: PAY.map(([id, i, t, c]) => ({ i, t, c, bd: st.pay === id ? '#D2582F' : 'var(--ln)', go: () => this.setState({ pay: id }) })),
+      chargeBg: total ? 'linear-gradient(180deg,#E06A3E,#D2582F)' : '#C9B6A6',
+      charge: () => { if (!total) return; const m = PAY.find(p => p[0] === st.pay)[2]; this.setState({ cart: {} }); this.toast('ok', 'Cobrado ' + fmt(total), m + ' · Factura B emitida', 'Imprimir ticket'); },
+      revTabs: [['q', 'Preguntas · 3'], ['r', 'Reseñas']].map(([id, t]) => ({ t, go: () => this.setState({ revTab: id }), bg: st.revTab === id ? 'var(--sf)' : 'transparent', sh: st.revTab === id ? 'var(--sh)' : 'none' })),
+      revQ: st.revTab === 'q', revR: st.revTab === 'r',
+      qs: [['mate', 'Mate de cerámica', 'hace 1 h', '¿Es apto lavavajillas?', '¡Hola! Te recomendamos lavarlo a mano para que dure más. Es apto microondas. ¡Saludos!'], ['termo', 'Termo 1 L', 'hace 3 h', '¿Mantiene el agua caliente 24 horas?', '¡Hola! Sí, mantiene el calor hasta 24 h y el frío hasta 30 h. Tiene garantía de 1 año.'], ['kit', 'Kit matero', 'ayer', '¿Viene con yerba incluida?', '¡Hola! Sí, incluye 500 g de yerba orgánica. Hacemos envíos a todo el país.']]
+        .map(([img, p, h, q, a], i) => ({ img: P[img], p, h, q, a, done: !!st.pub[i], todo: !st.pub[i], pub: () => { this.setState(s => ({ pub: { ...s.pub, [i]: 1 } })); this.toast('ml', 'Respuesta publicada', p + ' · Mercado Libre'); } })),
+      stars: [[5, 268], [4, 31], [3, 8], [2, 3], [1, 2]].map(([n, c]) => ({ n, c, w: (c / 268 * 100) + '%' })),
+      revs: [['★★★★★', 'Martín G.', 'Mercado Libre', 'hoy', 'Llegó rapidísimo y súper bien embalado. Ya es mi tercera compra.'], ['★★★★★', 'Lucía F.', 'Tienda', 'ayer', 'El termo es hermoso y mantiene el agua caliente todo el día.'], ['★★★★★', 'Sofía P.', 'Google', 'hace 3 días', 'Muy buena atención por WhatsApp, me ayudaron a elegir.'], ['★★★★☆', 'Pablo M.', 'Mercado Libre', 'hace 1 semana', 'Muy lindo el mate, tardó un día más de lo esperado.']].map(([st2, w, src, h, t]) => ({ st: st2, w, src, h, t }))
+    };
+  }
+}
+</script>
+</body>
+</html>

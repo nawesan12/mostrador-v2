@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;flex-direction:column;gap:18px;font-family:'Instrument Sans',system-ui,sans-serif;color:var(--tx)">
+
+<!-- MARKETING -->
+<sc-if value="{{ sMkt }}" hint-placeholder-val="{{ false }}">
+  <div data-r="" style="display:flex;align-items:end;gap:12px;flex-wrap:wrap"><div style="flex:1;min-width:220px"><h1 style="margin:0;font-size:30px;letter-spacing:-.035em;font-weight:600">Marketing</h1><div style="margin-top:2px;font-size:15px;color:var(--mu)">Campañas por WhatsApp, email y cupones, con el costo exacto antes de enviar</div></div></div>
+  <div data-r="" style="display:grid;grid-template-columns:{{ mktCols }};gap:16px;align-items:start">
+    <div style="padding:20px;border-radius:24px;background:var(--sf);box-shadow:var(--shd);display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:10px"><span style="width:38px;height:38px;border-radius:12px;background:#E9F8EE;display:grid;place-items:center"><iconify-icon icon="logos:whatsapp-icon" width="20"></iconify-icon></span><span style="flex:1;font-size:17px;font-weight:600">Nueva campaña</span></div>
+      <div><div style="font-size:12.5px;font-weight:600;color:var(--mu);margin-bottom:6px">¿A quién?</div><div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ auds }}" as="a" hint-placeholder-count="4"><button onClick="{{ a.go }}" style="padding:8px 13px;border-radius:999px;border:1.5px solid {{ a.bd }};background:{{ a.bg }};color:var(--tx);font:600 13px 'Instrument Sans';cursor:pointer;white-space:nowrap">{{ a.t }} <span style="opacity:.6">{{ a.n }}</span></button></sc-for></div></div>
+      <div><div style="font-size:12.5px;font-weight:600;color:var(--mu);margin-bottom:6px;display:flex;justify-content:space-between">Mensaje<button onClick="{{ rewrite }}" style="border:0;background:transparent;cursor:pointer;font:600 12.5px 'Instrument Sans';color:#C24E25">✦ Reescribir con Hornero</button></div>
+        <textarea onInput="{{ setMsg }}" style="width:100%;min-height:96px;padding:12px;border-radius:14px;border:1px solid var(--ln2);background:var(--bg);font:500 14px/1.5 'Instrument Sans';color:var(--tx);outline:none;resize:vertical;box-sizing:border-box" value="{{ msg }}"></textarea></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ attach }}" as="a" hint-placeholder-count="3"><button onClick="{{ a.go }}" style="display:flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;border:1px solid {{ a.bd }};background:{{ a.bg }};color:var(--tx);font:600 12.5px 'Instrument Sans';cursor:pointer"><iconify-icon icon="{{ a.i }}" width="14" style="color:#C24E25"></iconify-icon>{{ a.t }}</button></sc-for></div>
+      <div style="display:flex;align-items:center;gap:14px;padding:14px;border-radius:16px;background:var(--sf3);flex-wrap:wrap"><span style="flex:1 1 160px"><span style="display:block;font-size:12.5px;color:var(--mu)">Costo exacto</span><span style="display:block;font-size:24px;font-weight:600;letter-spacing:-.03em">{{ cost }}</span><span style="display:block;font-size:12px;color:var(--mu)">{{ costD }}</span></span><span style="flex:1 1 140px"><span style="display:block;font-size:12.5px;color:var(--mu)">Ventas estimadas</span><span style="display:block;font-size:24px;font-weight:600;letter-spacing:-.03em;color:#2F8F63">{{ est }}</span><span style="display:block;font-size:12px;color:var(--mu)">según tus campañas anteriores</span></span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button onClick="{{ schedCamp }}" style="padding:12px 16px;border-radius:999px;border:1px solid var(--ln2);background:transparent;color:var(--tx);font:600 13.5px 'Instrument Sans';cursor:pointer">Programar</button><button onClick="{{ sendCamp }}" style="flex:1;padding:12px;border-radius:999px;border:0;background:linear-gradient(180deg,#E06A3E,#D2582F);color:#fff;font:600 14px 'Instrument Sans';cursor:pointer">Enviar a {{ audN }} personas</button></div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+      <div style="width:260px;border-radius:38px;padding:9px;background:#2A140C;box-shadow:0 30px 60px -30px rgba(42,20,12,.7)"><div style="border-radius:30px;overflow:hidden;background:#EFE7DC"><div style="display:flex;align-items:center;gap:8px;padding:26px 12px 10px;background:#fff;color:#2A140C"><img src="https://images.unsplash.com/photo-1556745753-b2904692b3cd?auto=format&fit=crop&w=80&h=80&q=70" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover"><span style="flex:1;font-size:12.5px;font-weight:600">Café La Esquina</span><iconify-icon icon="ph:seal-check-fill" width="14" style="color:#2F8F63"></iconify-icon></div>
+        <div style="padding:12px 10px 16px;min-height:300px;display:flex;flex-direction:column;justify-content:flex-end;background-image:url(assets/arch-pattern-dark.svg)"><div data-pv="{{ msgKey }}" style="align-self:flex-start;max-width:92%;border-radius:12px 12px 12px 3px;background:#fff;color:#1F2A20;overflow:hidden;box-shadow:0 1px 1px rgba(0,0,0,.06)"><sc-if value="{{ hasImg }}"><img src="https://images.unsplash.com/photo-1444157545135-c045be691b05?auto=format&fit=crop&w=480&h=260&q=70" alt="" style="width:100%;height:110px;object-fit:cover;display:block"></sc-if><div style="padding:8px 10px;font-size:12.5px;line-height:1.45">{{ msgPrev }}</div><sc-if value="{{ hasBtn }}"><div style="border-top:1px solid #eee;padding:8px;text-align:center;font-size:12.5px;font-weight:600;color:#0B8DB8">🛍️ Ver el kit</div></sc-if></div></div></div></div>
+      <span style="font-size:12.5px;color:var(--mu)">Vista previa en WhatsApp</span>
+    </div>
+  </div>
+  <div data-r="" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">
+    <sc-for list="{{ camps }}" as="c" hint-placeholder-count="3">
+      <div style="padding:16px;border-radius:22px;background:var(--sf);box-shadow:var(--shd)"><div style="display:flex;align-items:center;gap:8px"><iconify-icon icon="{{ c.i }}" width="18"></iconify-icon><span style="flex:1;font-size:15px;font-weight:600">{{ c.t }}</span><span style="font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;background:{{ c.sbg }};color:{{ c.sfg }}">{{ c.s }}</span></div><div style="font-size:12.5px;color:var(--mu);margin-top:3px">{{ c.d }}</div>
+        <div style="margin-top:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px"><sc-for list="{{ c.m }}" as="m" hint-placeholder-count="3"><div><div style="font-size:11.5px;color:var(--mu)">{{ m.k }}</div><div style="font-size:16px;font-weight:600">{{ m.v }}</div></div></sc-for></div></div>
+    </sc-for>
+  </div>
+  <div data-r="" style="padding:18px;border-radius:22px;background:var(--sf);box-shadow:var(--shd)"><div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:16px;font-weight:600">Cupones activos</span><button onClick="{{ newCoupon }}" style="border:0;background:transparent;cursor:pointer;font:600 13.5px 'Instrument Sans';color:#C24E25">+ Nuevo cupón</button></div>
+    <div style="margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px"><sc-for list="{{ coupons }}" as="c" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:16px;border:1.5px dashed var(--ln2)"><span style="font-size:15px;font-weight:700;letter-spacing:.04em;padding:6px 10px;border-radius:10px;background:rgba(210,88,47,.1);color:#C24E25">{{ c.code }}</span><span style="flex:1;min-width:0"><span style="display:block;font-size:13.5px;font-weight:600">{{ c.t }}</span><span style="display:block;font-size:12px;color:var(--mu)">{{ c.u }}</span></span></div></sc-for></div>
+  </div>
+</sc-if>
+
+<!-- CANALES -->
+<sc-if value="{{ sCan }}" hint-placeholder-val="{{ false }}">
+  <div data-r="" style="display:flex;align-items:end;gap:12px;flex-wrap:wrap"><div style="flex:1;min-width:220px"><h1 style="margin:0;font-size:30px;letter-spacing:-.035em;font-weight:600">Canales de venta</h1><div style="margin-top:2px;font-size:15px;color:var(--mu)">Dónde vendés y cuánto deja cada uno, ya descontadas las comisiones</div></div></div>
+  <div data-r="" style="padding:18px;border-radius:24px;background:var(--sf);box-shadow:var(--shd)"><div style="font-size:14px;font-weight:600">Ventas de octubre por canal</div>
+    <div style="margin-top:12px;display:flex;height:16px;border-radius:10px;overflow:hidden;gap:2px"><sc-for list="{{ chans }}" as="c" hint-placeholder-count="6"><span style="width:{{ c.w }};background:{{ c.bar }}"></span></sc-for></div>
+    <div style="margin-top:10px;display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--mu)"><sc-for list="{{ chans }}" as="c" hint-placeholder-count="6"><span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:3px;background:{{ c.bar }}"></span>{{ c.n }} {{ c.p }}</span></sc-for></div></div>
+  <div data-r="" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px">
+    <sc-for list="{{ chans }}" as="c" hint-placeholder-count="6">
+      <div style="padding:18px;border-radius:22px;background:var(--sf);box-shadow:var(--shd);display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;gap:10px"><span style="width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:{{ c.bg }}"><sc-if value="{{ c.icon }}"><iconify-icon icon="{{ c.icon }}" width="22" style="color:{{ c.col }}"></iconify-icon></sc-if><sc-if value="{{ c.word }}"><span style="font-size:9px;font-weight:800;color:{{ c.col }}">{{ c.word }}</span></sc-if></span><span style="flex:1;min-width:0"><span style="display:block;font-size:15.5px;font-weight:600">{{ c.n }}</span><span style="display:flex;align-items:center;gap:5px;font-size:12.5px;color:{{ c.sc }}"><span style="width:6px;height:6px;border-radius:50%;background:{{ c.sc }}"></span>{{ c.st }}</span></span>
+          <button onClick="{{ c.go }}" style="position:relative;width:40px;height:23px;flex:none;border:0;padding:0;cursor:pointer;border-radius:999px;background:{{ c.tbg }};transition:background .25s"><span style="position:absolute;top:2px;left:{{ c.tx }};width:19px;height:19px;border-radius:50%;background:#fff;transition:left .25s cubic-bezier(.2,.7,.1,1);box-shadow:0 1px 3px rgba(0,0,0,.3)"></span></button></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"><div><div style="font-size:11.5px;color:var(--mu)">Vendido</div><div style="font-size:16px;font-weight:600">{{ c.v }}</div></div><div><div style="font-size:11.5px;color:var(--mu)">Pedidos</div><div style="font-size:16px;font-weight:600">{{ c.o }}</div></div><div><div style="font-size:11.5px;color:var(--mu)">Comisión</div><div style="font-size:16px;font-weight:600;color:{{ c.cc }}">{{ c.fee }}</div></div></div>
+        <div style="font-size:12.5px;color:var(--mu);padding-top:10px;border-top:1px solid var(--ln)">{{ c.note }}</div>
+      </div>
+    </sc-for>
+  </div>
+</sc-if>
+
+<!-- INFORMES -->
+<sc-if value="{{ sRep }}" hint-placeholder-val="{{ false }}">
+  <div data-r="" style="display:flex;align-items:end;gap:12px;flex-wrap:wrap"><div style="flex:1;min-width:220px"><h1 style="margin:0;font-size:30px;letter-spacing:-.035em;font-weight:600">Informes</h1><div style="margin-top:2px;font-size:15px;color:var(--mu)">Con 14 meses de historia importada de Mercado Pago</div></div>
+    <button onClick="{{ exportRep }}" style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;border:1px solid var(--ln2);background:var(--sf);color:var(--tx);font:600 13.5px 'Instrument Sans';cursor:pointer;box-shadow:var(--sh);white-space:nowrap"><iconify-icon icon="ph:download-simple-bold" width="14"></iconify-icon>Exportar</button></div>
+  <div data-r="" style="display:flex;padding:3px;border-radius:999px;background:var(--chip);align-self:flex-start;overflow-x:auto;scrollbar-width:none;max-width:100%"><sc-for list="{{ repTabs }}" as="t" hint-placeholder-count="4"><button onClick="{{ t.go }}" style="border:0;cursor:pointer;font:600 13px 'Instrument Sans';padding:8px 15px;border-radius:999px;background:{{ t.bg }};color:var(--tx);box-shadow:{{ t.sh }};white-space:nowrap">{{ t.t }}</button></sc-for></div>
+  <div data-r="" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px"><sc-for list="{{ repK }}" as="k" hint-placeholder-count="4"><div style="padding:16px 18px;border-radius:20px;background:var(--sf);box-shadow:var(--shd)"><div style="font-size:13px;color:var(--mu)">{{ k.t }}</div><div style="font-size:26px;font-weight:600;letter-spacing:-.04em;margin-top:4px">{{ k.v }}</div><div style="font-size:12.5px;font-weight:600;color:{{ k.c }}">{{ k.d }}</div></div></sc-for></div>
+  <div data-r="" style="padding:20px;border-radius:24px;background:var(--sf);box-shadow:var(--shd)">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><span style="font-size:16px;font-weight:600">{{ chartT }}</span><span style="font-size:12.5px;color:var(--mu)">últimos 12 meses</span></div>
+    <div style="margin-top:16px;height:220px;display:flex;align-items:flex-end;gap:{{ barGap }}">
+      <sc-for list="{{ bars }}" as="b" hint-placeholder-count="12"><div style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;min-width:0"><span style="font-size:11px;color:var(--mu);white-space:nowrap;display:{{ b.lblD }}">{{ b.lbl }}</span><span data-bar="" style="width:100%;max-width:44px;height:{{ b.h }};border-radius:8px 8px 3px 3px;background:{{ b.c }};transform-origin:bottom"></span><span style="font-size:11px;color:var(--fa)">{{ b.m }}</span></div></sc-for>
+    </div>
+  </div>
+  <div data-r="" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">
+    <sc-for list="{{ insights }}" as="x" hint-placeholder-count="3"><div style="display:flex;gap:12px;padding:16px;border-radius:20px;background:var(--sf);box-shadow:var(--shd)"><span style="width:38px;height:38px;flex:none;border-radius:12px;background:rgba(210,88,47,.12);color:#C24E25;display:grid;place-items:center"><iconify-icon icon="{{ x.i }}" width="19"></iconify-icon></span><span style="flex:1"><span style="display:block;font-size:12px;font-weight:600;color:#C24E25">✦ Hornero notó</span><span style="display:block;font-size:14px;line-height:1.45;margin-top:2px">{{ x.t }}</span></span></div></sc-for>
+  </div>
+</sc-if>
+
+<!-- ACTIVIDAD -->
+<sc-if value="{{ sAct }}" hint-placeholder-val="{{ false }}">
+  <div data-r="" style="display:flex;align-items:end;gap:12px;flex-wrap:wrap"><div style="flex:1;min-width:220px"><h1 style="margin:0;font-size:30px;letter-spacing:-.035em;font-weight:600">Actividad</h1><div style="margin-top:2px;font-size:15px;color:var(--mu)">Todo lo que pasó en tu cuenta, quién lo hizo y desde dónde</div></div>
+    <div style="display:flex;padding:3px;border-radius:999px;background:var(--chip)"><sc-for list="{{ actF }}" as="f" hint-placeholder-count="4"><button onClick="{{ f.go }}" style="border:0;cursor:pointer;font:600 13px 'Instrument Sans';padding:8px 13px;border-radius:999px;background:{{ f.bg }};color:var(--tx);box-shadow:{{ f.sh }};white-space:nowrap">{{ f.t }}</button></sc-for></div></div>
+  <div data-r="" style="padding:8px 20px;border-radius:24px;background:var(--sf);box-shadow:var(--shd)">
+    <sc-for list="{{ acts }}" as="a" hint-placeholder-count="8">
+      <div style="display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--ln)">
+        <sc-if value="{{ a.ph }}"><img src="{{ a.ph }}" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex:none"></sc-if>
+        <sc-if value="{{ a.noPh }}"><span style="width:36px;height:36px;flex:none;border-radius:50%;display:grid;place-items:center;background:{{ a.bg }};color:{{ a.fg }}"><iconify-icon icon="{{ a.i }}" width="17"></iconify-icon></span></sc-if>
+        <span style="flex:1;min-width:0"><span style="display:block;font-size:14px;line-height:1.4"><b>{{ a.who }}</b> {{ a.t }}</span><span style="display:block;font-size:12.5px;color:var(--fa);margin-top:2px">{{ a.h }} · {{ a.where }}</span></span>
+        <sc-if value="{{ a.undo }}"><button onClick="{{ a.undoGo }}" style="align-self:center;padding:7px 12px;border-radius:999px;border:1px solid var(--ln2);background:transparent;color:var(--tx);font:600 12.5px 'Instrument Sans';cursor:pointer">Deshacer</button></sc-if>
+      </div>
+    </sc-for>
+  </div>
+</sc-if>
+
+<!-- PARA HACER HOY -->
+<sc-if value="{{ sTodo }}" hint-placeholder-val="{{ false }}">
+  <div data-r="" style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:20px;border-radius:24px;background:#2A140C;color:#FBF7F2;position:relative;overflow:hidden">
+    <div style="position:absolute;inset:0;background-image:url(assets/arch-pattern-light.svg)"></div>
+    <div style="position:relative;width:96px;height:96px;flex:none"><svg viewBox="0 0 120 120" style="width:100%;height:100%;transform:rotate(-90deg)"><circle cx="60" cy="60" r="52" fill="none" stroke="rgba(251,247,242,.12)" stroke-width="12"></circle><circle cx="60" cy="60" r="52" fill="none" stroke="#E8875F" stroke-width="12" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="{{ ringOff }}" style="transition:stroke-dashoffset .6s cubic-bezier(.2,.7,.1,1)"></circle></svg><div style="position:absolute;inset:0;display:grid;place-items:center;font-size:22px;font-weight:600">{{ doneN }}/{{ totN }}</div></div>
+    <div style="position:relative;flex:1 1 240px"><h1 style="margin:0;font-size:28px;letter-spacing:-.035em;font-weight:600">{{ todoTitle }}</h1><div style="margin-top:4px;font-size:14.5px;color:#D9C8BA">Hornero ordenó tus tareas por lo que más plata te mueve.</div></div>
+    <img src="assets/hornero/portapapeles.png" alt="" style="position:relative;width:96px;height:96px;object-fit:contain">
+  </div>
+  <sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+    <div data-r="" style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:{{ g.c }}"><span style="width:8px;height:8px;border-radius:50%;background:{{ g.c }}"></span>{{ g.t }}</div>
+      <sc-for list="{{ g.items }}" as="t" hint-placeholder-count="2">
+        <div style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:20px;background:var(--sf);box-shadow:var(--shd);opacity:{{ t.op }};transition:opacity .3s;flex-wrap:wrap">
+          <button onClick="{{ t.tick }}" aria-label="Marcar" style="width:26px;height:26px;flex:none;border-radius:8px;border:2px solid {{ t.cbd }};background:{{ t.cbg }};color:#fff;cursor:pointer;display:grid;place-items:center;padding:0"><sc-if value="{{ t.done }}"><iconify-icon icon="ph:check-bold" width="14"></iconify-icon></sc-if></button>
+          <span style="width:38px;height:38px;flex:none;border-radius:12px;display:grid;place-items:center;background:{{ t.bg }};color:{{ t.fg }}"><iconify-icon icon="{{ t.i }}" width="19"></iconify-icon></span>
+          <span style="flex:1 1 180px;min-width:0"><span style="display:block;font-size:14.5px;font-weight:600;text-decoration:{{ t.dec }}">{{ t.t }}</span><span style="display:block;font-size:12.5px;color:var(--mu)">{{ t.d }}</span></span>
+          <span style="font-size:13px;font-weight:600;color:#2F8F63;white-space:nowrap">{{ t.v }}</span>
+          <button onClick="{{ t.go }}" style="padding:8px 14px;border-radius:999px;border:0;background:var(--tx);color:var(--sf);font:600 13px 'Instrument Sans';cursor:pointer;white-space:nowrap">{{ t.a }}</button>
+        </div>
+      </sc-for>
+    </div>
+  </sc-for>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;screen&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;Marketing&quot;, &quot;tsType&quot;: &quot;string&quot;}, &quot;vw&quot;: {&quot;editor&quot;: &quot;int&quot;, &quot;default&quot;: 1400, &quot;tsType&quot;: &quot;number&quot;}, &quot;onToast&quot;: {&quot;editor&quot;: null, &quot;tsType&quot;: &quot;function&quot;}, &quot;onOpen&quot;: {&quot;editor&quot;: null, &quot;tsType&quot;: &quot;function&quot;}}">
+const fmt = n => '$ ' + Math.round(n).toLocaleString('es-AR');
+const FACE = id => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=96&h=96&q=70&crop=faces`;
+const MSGS = ['¡Hola {nombre}! Este finde el Kit matero tiene 10% off solo para clientes. ¿Te lo reservo?', '{nombre}, ¡llegó el kit que estabas esperando! 🧉 Con tu código FINDE10 tenés 10% off hasta el domingo.', 'Hola {nombre} 👋 Armamos un kit especial: mate, bombilla y yerba orgánica. Para vos, 10% off este finde.'];
+class Component extends DCLogic {
+  state = { aud: 0, msgI: 0, att: { img: 1, btn: 1, cup: 1 }, chOn: { web: 1, wa: 1, ml: 1, ig: 1, gg: 1, tk: 0 }, rep: 0, actF: 'all', undone: {}, todo: {} };
+  componentDidMount() { this.anim(); this._scr = this.props.screen; }
+  componentDidUpdate() {
+    if (this._scr !== this.props.screen) { this._scr = this.props.screen; setTimeout(() => this.anim(), 20); }
+    if (this._rep !== this.state.rep) { this._rep = this.state.rep; setTimeout(() => document.querySelectorAll('[data-bar]').forEach((b, i) => b.animate([{ transform: 'scaleY(0)' }, { transform: 'scaleY(1)' }], { duration: 700, delay: i * 35, easing: 'cubic-bezier(.2,.7,.1,1)', fill: 'both' })), 30); }
+    if (this._mi !== this.state.msgI) { this._mi = this.state.msgI; const p = document.querySelector('[data-pv]'); p && p.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 380, easing: 'cubic-bezier(.2,.7,.1,1)' }); }
+  }
+  anim() { document.querySelectorAll('[data-r]:not([data-on])').forEach((el, i) => { el.setAttribute('data-on', ''); el.animate([{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 600, delay: i * 60, fill: 'both', easing: 'cubic-bezier(.2,.7,.1,1)' }); }); this._rep = -1; this.forceUpdate(); }
+  toast(k, t, d, a) { this.props.onToast && this.props.onToast(k, t, d, a); }
+  renderVals() {
+    const st = this.state, scr = this.props.screen || 'Marketing', vw = this.props.vw || 1400;
+    const tg = on => ({ tbg: on ? '#D2582F' : '#D9CBBE', tx: on ? '19px' : '2px' });
+    const AUD = [['Todos', 380], ['VIP', 128], ['En riesgo', 342], ['Compraron mates', 214]];
+    const n = AUD[st.aud][1];
+    const msg = MSGS[st.msgI].replace('{nombre}', 'Lucía');
+    const CH = [
+      ['web', 'Tienda online', 'ph:globe-simple-fill', '#D2582F', '#FCEDE5', null, 7.46, 231, 0, 'Sin comisión · conversión 3,4%', '#D2582F'],
+      ['wa', 'WhatsApp', 'logos:whatsapp-icon', null, '#E9F8EE', null, 5.30, 168, 0, 'Hornero cerró 61% de las ventas', '#25D366'],
+      ['ml', 'Mercado Libre', null, '#2D3277', '#FFE600', 'ML', 4.12, 121, 0.14, 'Comisión 14% · ya cubierta con +10%', '#E5CF00'],
+      ['pos', 'Local', 'ph:storefront-fill', '#8A5A3E', '#F3E9DF', null, 2.75, 304, 0, 'Ticket promedio $ 9.050', '#8A5A3E'],
+      ['ig', 'Instagram', 'logos:instagram-icon', null, '#FCEEF3', null, 1.18, 37, 0, '12,4 mil seguidores · 86 productos etiquetados', '#E1306C'],
+      ['gg', 'Google Shopping', 'logos:google-icon', null, '#EEF4FD', null, 0.42, 14, 0, 'Gratis · 3.100 impresiones', '#4285F4'],
+      ['tk', 'TikTok Shop', 'logos:tiktok-icon', null, '#F1F1F1', null, 0, 0, 0, 'Conectalo para vender en videos', '#111']
+    ];
+    const tot = CH.reduce((a, c) => a + (st.chOn[c[0]] ? c[6] : 0), 0);
+    const REPS = [['Ventas', 'Ventas por mes', [9.8, 10.4, 11.2, 10.9, 12.6, 13.1, 12.4, 14.8, 15.2, 16.9, 17.8, 19.6], 'M'], ['Productos', 'Unidades vendidas', [610, 640, 702, 688, 790, 812, 776, 902, 940, 1010, 1080, 1204], ''], ['Clientes', 'Clientes nuevos', [64, 70, 82, 77, 98, 104, 96, 120, 128, 140, 146, 154], ''], ['Margen', 'Margen bruto %', [34, 33, 35, 36, 35, 37, 36, 38, 37, 39, 38, 38], '%']];
+    const R = REPS[st.rep], mx = Math.max(...R[2]);
+    const MONTHS = ['nov', 'dic', 'ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct'];
+    const ACT = [
+      ['ai', null, 'Hornero', 'respondió 41 consultas y cerró 9 ventas por $ 386.400', 'hace 5 min', 'WhatsApp e Instagram', 0],
+      ['team', '1545262722-9e0d80a0bc01', 'Nahuel', 'cambió el precio de Termo 1 L de $ 39.900 a $ 42.900', 'hace 40 min', 'Chrome · Rosario', 1],
+      ['team', '1556745753-b2904692b3cd', 'Valeria', 'cobró $ 62.300 en efectivo en la caja del local', 'hace 1 h', 'Punto de venta', 0],
+      ['sys', null, 'Sistema', 'sincronizó 86 publicaciones con Mercado Libre', 'hace 2 h', 'Automático', 0],
+      ['team', '1545262722-9e0d80a0bc01', 'Nahuel', 'pausó 4 productos sin stock', 'hace 3 h', 'iPhone · Rosario', 1],
+      ['ai', null, 'Hornero', 'mejoró las fotos de 12 productos', 'hace 5 h', 'Catálogo', 0],
+      ['sys', null, 'Seguridad', 'nuevo inicio de sesión verificado con doble factor', 'ayer 22:14', 'Safari · Rosario', 0],
+      ['sys', null, 'Sistema', 'hizo una copia de seguridad completa', 'hoy 04:00', 'Región São Paulo', 0]
+    ];
+    const ACI = { ai: ['ph:sparkle-fill', 'rgba(210,88,47,.12)', '#C24E25'], sys: ['ph:gear-six-fill', 'var(--chip)', 'var(--mu)'] };
+    const TODO = [
+      ['Urgente', '#B83A2E', [['p1', 'ph:package-fill', 'Despachar 7 pedidos', 'Andreani retira a las 15:00', '$ 284.600', 'Preparar', 'rgba(210,88,47,.13)', '#C24E25'], ['p2', 'ph:chat-circle-dots-fill', 'Responder 3 chats', 'Norma espera la lista mayorista', '~$ 120.000', 'Abrir bandeja', 'rgba(47,143,99,.13)', '#2F8F63']]],
+      ['Hoy', '#9A6A10', [['p3', 'ph:shopping-cart-simple-fill', 'Recuperar 12 carritos', 'Recordatorio por WhatsApp · $ 1.440', '~$ 96.000', 'Enviar', 'rgba(227,169,59,.2)', '#9A6A10'], ['p4', 'ph:bank-fill', 'Conciliar 2 transferencias', 'Pedidos #1044 y #1041', '$ 96.500', 'Conciliar', 'var(--chip)', 'var(--mu)']]],
+      ['Esta semana', '#2F8F63', [['p5', 'ph:certificate-fill', 'Renovar certificado de ARCA', 'Vence en 5 días', '', 'Renovar', '#E6ECF7', '#1F3A6E'], ['p6', 'ph:package-fill', 'Reponer 4 productos', 'Hornero armó el pedido al proveedor', '', 'Revisar', 'var(--chip)', 'var(--mu)']]]
+    ];
+    const all = TODO.flatMap(g => g[2]); const dn = all.filter(t => st.todo[t[0]]).length;
+    return {
+      sMkt: scr === 'Marketing', sCan: scr === 'Canales', sRep: scr === 'Informes', sAct: scr === 'Actividad', sTodo: scr === 'Para hacer hoy',
+      mktCols: vw < 1000 ? 'minmax(0,1fr)' : 'minmax(0,1fr) 300px',
+      auds: AUD.map(([t, c], i) => ({ t, n: c, go: () => this.setState({ aud: i }), bd: st.aud === i ? '#D2582F' : 'var(--ln2)', bg: st.aud === i ? 'rgba(210,88,47,.08)' : 'transparent' })),
+      msg, msgPrev: msg, msgKey: st.msgI, setMsg: () => {}, rewrite: () => this.setState(s => ({ msgI: (s.msgI + 1) % MSGS.length })),
+      attach: [['img', 'ph:image-fill', 'Foto'], ['btn', 'ph:cursor-click-fill', 'Botón al producto'], ['cup', 'ph:ticket-fill', 'Cupón FINDE10']].map(([k, i, t]) => ({ i, t, bd: st.att[k] ? '#D2582F' : 'var(--ln2)', bg: st.att[k] ? 'rgba(210,88,47,.08)' : 'transparent', go: () => this.setState(s => ({ att: { ...s.att, [k]: !s.att[k] } })) })),
+      hasImg: !!st.att.img, hasBtn: !!st.att.btn,
+      cost: fmt(n * 14), costD: n + ' mensajes de marketing × $ 14', est: fmt(n * 14 * 31), audN: n,
+      sendCamp: () => this.toast('wa', 'Campaña en camino', n + ' mensajes · ' + fmt(n * 14) + ' · te avisamos las ventas', 'Ver resultados'),
+      schedCamp: () => this.toast('info', 'Campaña programada', 'Sábado 10:00 · el mejor horario de tus clientes'),
+      camps: [['logos:whatsapp-icon', 'Día de la madre', 'WhatsApp · 380 personas · 18 oct', 'Terminada', [['Leídos', '92%'], ['Ventas', '41'], ['Retorno', '×38']]], ['ph:envelope-simple-fill', 'Novedades de octubre', 'Email · 2.140 personas · 12 oct', 'Terminada', [['Abiertos', '38%'], ['Clics', '9%'], ['Ventas', '22']]], ['ph:ticket-fill', 'Vuelta a clientes en riesgo', 'WhatsApp · 342 personas · automática', 'Activa', [['Volvieron', '58'], ['Ventas', '$ 1,1 M'], ['Retorno', '×24']]]]
+        .map(([i, t, d, s, m]) => ({ i, t, d, s, sbg: s === 'Activa' ? 'rgba(47,143,99,.13)' : 'var(--chip)', sfg: s === 'Activa' ? '#2F8F63' : 'var(--mu)', m: m.map(([k, v]) => ({ k, v })) })),
+      coupons: [['FINDE10', '10% off en kits', '41 usos · vence domingo'], ['BIENVENIDA', '$ 3.000 en la primera compra', '128 usos'], ['ENVIOGRATIS', 'Envío gratis desde $ 40.000', '96 usos']].map(([code, t, u]) => ({ code, t, u })),
+      newCoupon: () => this.toast('ok', 'Cupón creado', 'OTONO15 · 15% off · vence en 7 días', 'Compartir'),
+      chans: CH.map(([k, nme, icon, col, bg, word, v, o, fee, note, bar]) => { const on = !!st.chOn[k]; return { n: nme, icon, col: col || 'inherit', bg, word, v: v ? '$ ' + v.toLocaleString('es-AR') + ' M' : '—', o, fee: fee ? (fee * 100) + '%' : '0%', cc: fee ? '#9A6A10' : '#2F8F63', note, bar, p: on && tot ? Math.round(v / tot * 100) + '%' : '0%', w: on && tot ? (v / tot * 100) + '%' : '0%', st: on ? (v ? 'Conectado y vendiendo' : 'Conectado') : 'Pausado', sc: on ? '#2F8F63' : 'var(--fa)', ...tg(on),
+        go: () => { this.setState(s => ({ chOn: { ...s.chOn, [k]: !s.chOn[k] } })); this.toast(on ? 'warn' : 'ok', nme + (on ? ' pausado' : ' activado'), on ? 'Tus publicaciones quedan ocultas, no se borra nada' : 'Sincronizando productos y stock…'); } }; }),
+      repTabs: REPS.map((r, i) => ({ t: r[0], go: () => this.setState({ rep: i }), bg: st.rep === i ? 'var(--sf)' : 'transparent', sh: st.rep === i ? 'var(--sh)' : 'none' })),
+      repK: [['Ventas del mes', '$ 19,6 M', '+10,1% vs. septiembre', '#2F8F63'], ['Ticket promedio', '$ 32.140', '+2,3%', '#2F8F63'], ['Margen bruto', '38%', '+1 punto', '#2F8F63'], ['Comisiones ahorradas', '$ 412.000', 'vs. plataformas con comisión', '#C24E25']].map(([t, v, d, c]) => ({ t, v, d, c })),
+      chartT: R[1], barGap: vw < 700 ? '4px' : '10px',
+      bars: R[2].map((v, i) => ({ h: (v / mx * 82) + '%', c: i === 11 ? 'linear-gradient(180deg,#E8875F,#D2582F)' : 'var(--sf3)', m: MONTHS[i], lbl: R[3] === 'M' ? v.toLocaleString('es-AR') : v + (R[3] || ''), lblD: vw < 700 && i !== 11 ? 'none' : 'block' })),
+      insights: [['ph:trend-up-bold', 'Los sábados vendés 2,3× más por WhatsApp. Programá tus campañas el viernes a la noche.'], ['ph:coffee-fill', 'Quien compra un mate vuelve a comprar yerba en 34 días. Activá un recordatorio automático.'], ['ph:tag-bold', 'El Termo 1 L se agota cada 3 semanas: subir el precio 6% no cambiaría la demanda.']].map(([i, t]) => ({ i, t })),
+      exportRep: () => this.toast('ok', 'Informe exportado', 'Excel con 12 meses · llega a tu email'),
+      actF: [['all', 'Todo'], ['team', 'Equipo'], ['ai', 'Hornero'], ['sys', 'Sistema']].map(([id, t]) => ({ t, go: () => this.setState({ actF: id }), bg: st.actF === id ? 'var(--sf)' : 'transparent', sh: st.actF === id ? 'var(--sh)' : 'none' })),
+      acts: ACT.filter(a => st.actF === 'all' || a[0] === st.actF).map((a, i) => ({ who: a[2], t: st.undone[a[3]] ? '— deshecho' : a[3], h: a[4], where: a[5], ph: a[1] ? FACE(a[1]) : null, noPh: !a[1], i: (ACI[a[0]] || ACI.sys)[0], bg: (ACI[a[0]] || ACI.sys)[1], fg: (ACI[a[0]] || ACI.sys)[2], undo: !!a[6] && !st.undone[a[3]], undoGo: () => { this.setState(s => ({ undone: { ...s.undone, [a[3]]: 1 } })); this.toast('ok', 'Cambio deshecho', 'Volvimos todo a como estaba'); } })),
+      ringOff: (326.7 * (1 - dn / all.length)).toFixed(1), doneN: dn, totN: all.length,
+      todoTitle: dn === all.length ? '¡Día terminado! 🎉' : 'Te quedan ' + (all.length - dn) + ' cosas para hoy',
+      groups: TODO.map(([t, c, items]) => ({ t, c, items: items.map(([id, i, tt, d, v, a, bg, fg]) => { const done = !!st.todo[id]; return { i, t: tt, d, v, a, bg, fg, done, op: done ? .55 : 1, dec: done ? 'line-through' : 'none', cbd: done ? '#2F8F63' : 'var(--ln2)', cbg: done ? '#2F8F63' : 'transparent',
+        tick: () => this.setState(s => ({ todo: { ...s.todo, [id]: !s.todo[id] } })), go: () => { this.setState(s => ({ todo: { ...s.todo, [id]: true } })); this.toast('ok', tt, 'Listo, lo marcamos como hecho', 'Deshacer'); } }; }) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+# Desarrollo local de la API Go: Postgres 17 y un buzón de mails falso.
+# bun run db:up · bun run db:down
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: mostrador
+      # Sólo escucha en localhost: sin contraseña, como la base efímera del CI.
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_DB: mostrador
+    ports: ['127.0.0.1:5433:5432']
+    volumes: [pg:/var/lib/postgresql/data]
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U mostrador']
+      interval: 2s
+      retries: 30
+  mailpit:
+    image: axllent/mailpit:latest
+    ports: ['8025:8025', '1025:1025']
+volumes:
+  pg:

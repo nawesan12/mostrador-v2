@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;flex-direction:column;gap:14px;font-family:'Instrument Sans',system-ui,sans-serif;color:var(--tx)">
+  <div data-r="" style="display:flex;align-items:end;gap:12px;flex-wrap:wrap">
+    <div style="flex:1;min-width:220px"><h1 style="margin:0;font-size:30px;letter-spacing:-.035em;font-weight:600">Pedidos</h1><div style="margin-top:2px;font-size:15px;color:var(--mu)"><b style="color:var(--tx)">{{ countTxt }}</b> pedidos · {{ sumTxt }} · ticket promedio {{ avgTxt }}</div></div>
+    <button onClick="{{ exportX }}" style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;border:1px solid var(--ln2);background:var(--sf);color:var(--tx);font:600 13.5px 'Instrument Sans';cursor:pointer;box-shadow:var(--sh);white-space:nowrap"><iconify-icon icon="ph:download-simple-bold" width="14"></iconify-icon>Exportar {{ countTxt }}</button>
+  </div>
+
+  <div data-r="" style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none">
+    <sc-for list="{{ views }}" as="v" hint-placeholder-count="5"><button onClick="{{ v.go }}" style="display:flex;align-items:center;gap:7px;border:1.5px solid {{ v.bd }};cursor:pointer;white-space:nowrap;font:600 13px 'Instrument Sans';padding:8px 13px;border-radius:999px;background:{{ v.bg }};color:var(--tx)"><iconify-icon icon="{{ v.i }}" width="15" style="color:{{ v.ic }}"></iconify-icon>{{ v.t }}<span style="font-weight:500;color:var(--mu)">{{ v.n }}</span></button></sc-for>
+  </div>
+
+  <div data-r="" style="display:flex;border-radius:18px;overflow:hidden;background:var(--sf);box-shadow:var(--shd)">
+    <sc-for list="{{ stages }}" as="s" hint-placeholder-count="5">
+      <button onClick="{{ s.go }}" style="flex:{{ s.flex }};min-width:0;padding:12px 14px;border:0;border-right:1px solid var(--ln);background:{{ s.bg }};cursor:pointer;font-family:inherit;color:var(--tx);text-align:left;transition:background .2s">
+        <span style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--mu);white-space:nowrap;overflow:hidden"><span style="width:8px;height:8px;border-radius:50%;background:{{ s.c }};flex:none"></span>{{ s.t }}</span>
+        <span style="display:block;font-size:22px;font-weight:600;letter-spacing:-.03em;margin-top:2px">{{ s.n }}</span>
+        <span style="display:block;margin-top:6px;height:4px;border-radius:3px;background:{{ s.c }};opacity:{{ s.op }}"></span>
+      </button>
+    </sc-for>
+  </div>
+
+  <div data-r="" style="display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:20px;background:var(--sf);box-shadow:var(--shd)">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <div style="flex:1 1 240px;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:var(--sf3)"><iconify-icon icon="ph:magnifying-glass" width="16" style="color:var(--mu)"></iconify-icon><input value="{{ q }}" onInput="{{ setQ }}" placeholder="Cliente, N.º de pedido, producto o ciudad" style="flex:1;min-width:0;border:0;outline:0;background:transparent;font:500 14px 'Instrument Sans';color:var(--tx)"><sc-if value="{{ hasQ }}"><button onClick="{{ clearQ }}" style="border:0;background:transparent;cursor:pointer;color:var(--mu);display:grid;place-items:center"><iconify-icon icon="ph:x-circle-fill" width="16"></iconify-icon></button></sc-if></div>
+      <div style="display:flex;padding:3px;border-radius:999px;background:var(--chip)"><sc-for list="{{ dates }}" as="d" hint-placeholder-count="4"><button onClick="{{ d.go }}" style="border:0;cursor:pointer;font:600 12.5px 'Instrument Sans';padding:7px 12px;border-radius:999px;background:{{ d.bg }};color:var(--tx);box-shadow:{{ d.sh }};white-space:nowrap">{{ d.t }}</button></sc-for></div>
+      <button onClick="{{ toggleMore }}" style="display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:999px;border:1px solid {{ moreBd }};background:{{ moreBg }};color:var(--tx);font:600 13px 'Instrument Sans';cursor:pointer;white-space:nowrap"><iconify-icon icon="ph:sliders-horizontal-bold" width="15"></iconify-icon>Filtros<sc-if value="{{ nActive }}"><span style="min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#D2582F;color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center">{{ nActive }}</span></sc-if></button>
+      <button onClick="{{ cycleSort }}" style="display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:999px;border:1px solid var(--ln2);background:var(--sf);color:var(--tx);font:600 13px 'Instrument Sans';cursor:pointer;white-space:nowrap"><iconify-icon icon="ph:sort-ascending-bold" width="15"></iconify-icon>{{ sortTxt }}</button>
+    </div>
+    <sc-if value="{{ more }}">
+      <div data-more="" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;padding:6px 2px 2px">
+        <sc-for list="{{ facets }}" as="f" hint-placeholder-count="4">
+          <div><div style="font-size:12px;font-weight:600;color:var(--mu);margin-bottom:6px">{{ f.t }}</div><div style="display:flex;flex-wrap:wrap;gap:5px"><sc-for list="{{ f.opts }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.go }}" style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1.5px solid {{ o.bd }};background:{{ o.bg }};color:var(--tx);font:600 12.5px 'Instrument Sans';cursor:pointer;white-space:nowrap"><sc-if value="{{ o.icon }}"><iconify-icon icon="{{ o.icon }}" width="14" style="color:{{ o.col }}"></iconify-icon></sc-if><sc-if value="{{ o.word }}"><span style="font-size:7px;font-weight:800;padding:2px 3px;border-radius:3px;background:{{ o.wbg }};color:{{ o.col }}">{{ o.word }}</span></sc-if>{{ o.t }}<span style="color:var(--fa);font-weight:500">{{ o.n }}</span></button></sc-for></div></div>
+        </sc-for>
+        <div><div style="font-size:12px;font-weight:600;color:var(--mu);margin-bottom:6px;display:flex;justify-content:space-between">Monto mínimo<b style="color:var(--tx)">{{ minTxt }}</b></div><input type="range" min="0" max="200000" step="5000" value="{{ minAmt }}" onInput="{{ setMin }}" style="width:100%;accent-color:#D2582F"></div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <sc-for list="{{ flags }}" as="g" hint-placeholder-count="3"><button onClick="{{ g.go }}" style="display:flex;align-items:center;gap:10px;padding:4px 0;border:0;background:transparent;cursor:pointer;font-family:inherit;color:var(--tx);text-align:left"><span style="flex:1;font-size:13px;font-weight:500">{{ g.t }}</span><span style="position:relative;width:36px;height:21px;flex:none;border-radius:999px;background:{{ g.tbg }};transition:background .25s"><span style="position:absolute;top:2px;left:{{ g.tx }};width:17px;height:17px;border-radius:50%;background:#fff;transition:left .25s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></span></span></button></sc-for>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ hasChips }}">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><sc-for list="{{ chips }}" as="c" hint-placeholder-count="2"><button onClick="{{ c.x }}" style="display:flex;align-items:center;gap:6px;padding:5px 8px 5px 11px;border-radius:999px;border:0;background:rgba(210,88,47,.12);color:#C24E25;font:600 12.5px 'Instrument Sans';cursor:pointer">{{ c.t }}<iconify-icon icon="ph:x-bold" width="11"></iconify-icon></button></sc-for><button onClick="{{ clearAll }}" style="border:0;background:transparent;cursor:pointer;font:600 12.5px 'Instrument Sans';color:var(--mu);text-decoration:underline">Limpiar todo</button></div>
+    </sc-if>
+  </div>
+
+  <div data-r="" style="position:relative;border-radius:24px;background:var(--sf);box-shadow:var(--shd);overflow:hidden">
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--ln);font-size:12.5px;color:var(--mu)">
+      <button onClick="{{ selAllVis }}" aria-label="Seleccionar" style="width:20px;height:20px;padding:0;border-radius:6px;border:1.5px solid var(--ln2);background:var(--sf);cursor:pointer"></button>
+      <span style="flex:1">{{ rangeTxt }}</span><span style="display:flex;align-items:center;gap:6px"><iconify-icon icon="ph:lightning-fill" width="13" style="color:#D2582F"></iconify-icon>Lista virtual · {{ countTxt }} filas, rápida igual</span>
+    </div>
+    <div data-vs="" data-lenis-prevent="" onScroll="{{ onScroll }}" style="height:{{ vh }};overflow-y:auto;overscroll-behavior:contain;position:relative">
+      <div style="position:relative;height:{{ totalH }}">
+        <sc-for list="{{ rows }}" as="r" hint-placeholder-count="8">
+          <div style="position:absolute;left:0;right:0;top:{{ r.top }};height:{{ rowH }};padding:5px 10px;box-sizing:border-box">
+            <div onClick="{{ r.open }}" style="height:100%;display:flex;align-items:center;gap:{{ gap }};padding:0 12px;border-radius:16px;background:{{ r.bg }};border:1px solid {{ r.bd }};cursor:pointer;transition:background .15s" style-hover="background:var(--chip)">
+              <button onClick="{{ r.tick }}" aria-label="Seleccionar" style="width:20px;height:20px;flex:none;padding:0;border-radius:6px;border:1.5px solid {{ r.cbd }};background:{{ r.cbg }};color:#fff;cursor:pointer;display:grid;place-items:center"><sc-if value="{{ r.sel }}"><iconify-icon icon="ph:check-bold" width="12"></iconify-icon></sc-if></button>
+              <span style="position:relative;flex:none"><img src="{{ r.ph }}" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;display:block;background:var(--sf3)"><span style="position:absolute;right:-4px;bottom:-4px;width:20px;height:20px;border-radius:7px;display:grid;place-items:center;background:{{ r.chBg }};box-shadow:0 0 0 2px var(--sf)"><sc-if value="{{ r.chIcon }}"><iconify-icon icon="{{ r.chIcon }}" width="12" style="color:{{ r.chCol }}"></iconify-icon></sc-if><sc-if value="{{ r.chWord }}"><span style="font-size:6px;font-weight:800;color:{{ r.chCol }}">{{ r.chWord }}</span></sc-if></span></span>
+              <span style="flex:1 1 150px;min-width:0"><span style="display:flex;align-items:center;gap:6px"><span style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.c }}</span><sc-if value="{{ r.vip }}"><iconify-icon icon="ph:crown-simple-fill" width="13" style="color:#C98A12"></iconify-icon></sc-if><sc-if value="{{ r.ai }}"><span title="Lo vendió Hornero" style="font-size:10.5px;font-weight:700;color:#C24E25">✦</span></sc-if></span><span style="display:block;font-size:12px;color:var(--fa);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.n }} · {{ r.h }} · {{ r.city }}</span></span>
+              <sc-if value="{{ wide }}"><span style="display:flex;align-items:center;gap:8px;width:150px;flex:none"><span style="display:flex"><sc-for list="{{ r.thumbs }}" as="t" hint-placeholder-count="2"><img src="{{ t }}" alt="" style="width:30px;height:30px;border-radius:8px;object-fit:cover;margin-left:-6px;box-shadow:0 0 0 2px var(--sf)"></sc-for></span><span style="font-size:12px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.items }}</span></span></sc-if>
+              <sc-if value="{{ wide }}"><span style="width:150px;flex:none"><span style="display:flex;gap:3px"><sc-for list="{{ r.steps }}" as="s" hint-placeholder-count="4"><span title="{{ s.t }}" style="flex:1;height:5px;border-radius:3px;background:{{ s.c }}"></span></sc-for></span><span style="display:flex;align-items:center;gap:5px;margin-top:5px;font-size:12px;font-weight:600;color:{{ r.sc }};white-space:nowrap"><iconify-icon icon="{{ r.si }}" width="13"></iconify-icon>{{ r.s }}</span></span></sc-if>
+              <sc-if value="{{ r.urg }}"><span style="flex:none;font-size:11.5px;font-weight:700;padding:4px 8px;border-radius:999px;background:{{ r.ubg }};color:{{ r.ufg }};white-space:nowrap">{{ r.urg }}</span></sc-if>
+              <span style="flex:none;min-width:84px;text-align:right"><span style="display:block;font-size:15px;font-weight:600;letter-spacing:-.01em">{{ r.t }}</span><span style="display:flex;justify-content:flex-end;align-items:center;gap:4px;font-size:11.5px;color:var(--mu)"><sc-if value="{{ r.pIcon }}"><iconify-icon icon="{{ r.pIcon }}" width="12" style="color:{{ r.pCol }}"></iconify-icon></sc-if>{{ r.pay }}</span></span>
+              <sc-if value="{{ r.act }}"><button onClick="{{ r.do }}" style="flex:none;display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;border:0;background:{{ r.abg }};color:{{ r.afg }};font:600 12.5px 'Instrument Sans';cursor:pointer;white-space:nowrap"><iconify-icon icon="{{ r.ai2 }}" width="14"></iconify-icon><sc-if value="{{ wide }}">{{ r.act }}</sc-if></button></sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <sc-if value="{{ empty }}"><div style="position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:30px"><div><img src="assets/hornero/lupa.png" alt="" style="width:110px;height:110px;object-fit:contain"><div style="font-size:16px;font-weight:600;margin-top:6px">Ningún pedido con esos filtros</div><button onClick="{{ clearAll }}" style="margin-top:10px;padding:9px 16px;border-radius:999px;border:0;background:var(--tx);color:var(--sf);font:600 13px 'Instrument Sans';cursor:pointer">Limpiar filtros</button></div></div></sc-if>
+    </div>
+    <sc-if value="{{ showTop }}"><button onClick="{{ toTop }}" aria-label="Volver arriba" style="position:absolute;right:16px;bottom:16px;width:40px;height:40px;border-radius:50%;border:0;background:var(--tx);color:var(--sf);cursor:pointer;display:grid;place-items:center;box-shadow:0 10px 24px -8px rgba(42,20,12,.5)"><iconify-icon icon="ph:arrow-up-bold" width="16"></iconify-icon></button></sc-if>
+  </div>
+
+  <sc-if value="{{ hasSel }}">
+    <div data-bulk="" style="position:fixed;left:50%;bottom:{{ bulkB }};transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:6px;padding:8px 8px 8px 18px;border-radius:999px;background:#2A140C;color:#fff;box-shadow:0 24px 50px -16px rgba(42,20,12,.7);max-width:calc(100vw - 16px);overflow-x:auto;scrollbar-width:none">
+      <span style="font-size:14px;font-weight:600;white-space:nowrap;margin-right:6px">{{ selN }} seleccionados · {{ selSum }}</span>
+      <sc-for list="{{ bulk }}" as="b" hint-placeholder-count="4"><button onClick="{{ b.go }}" style="display:flex;align-items:center;gap:6px;border:0;cursor:pointer;font:600 13px 'Instrument Sans';padding:9px 13px;border-radius:999px;background:rgba(255,255,255,.1);color:#fff;white-space:nowrap"><iconify-icon icon="{{ b.i }}" width="14"></iconify-icon>{{ b.t }}</button></sc-for>
+      <button onClick="{{ clearSel }}" style="width:34px;height:34px;flex:none;border:0;cursor:pointer;border-radius:50%;background:transparent;color:#D9C8BA;display:grid;place-items:center"><iconify-icon icon="ph:x-bold" width="14"></iconify-icon></button>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;vw&quot;: {&quot;editor&quot;: &quot;int&quot;, &quot;default&quot;: 1400, &quot;tsType&quot;: &quot;number&quot;}, &quot;onToast&quot;: {&quot;editor&quot;: null, &quot;tsType&quot;: &quot;function&quot;}, &quot;onOpen&quot;: {&quot;editor&quot;: null, &quot;tsType&quot;: &quot;function&quot;}}">
+const fmt = n => '$ ' + Math.round(n).toLocaleString('es-AR');
+const FACES = ['1531058240690-006c446962d8', '1687422811062-a966b55cb217', '1764173039506-c5cc7b8ec14b', '1520333789090-1afc82db536a', '1687422810663-c316494f725a', '1545262722-9e0d80a0bc01', '1556745753-b2904692b3cd', '1562322140-8baeececf3df', '1579389083078-4e7018379f7e', '1543269664-56d93c1b41a6'].map(id => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=96&h=96&q=60&crop=faces`);
+const PIMG = ['1634741011278-9dc2f5b6fc0b', '1609541994821-d909982e2f1b', '1675001077188-809370ce3279', '1444157545135-c045be691b05', '1585744259332-111384f5def9', '1495474472287-4d71bcdd2085'].map(id => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=80&h=80&q=60`);
+const PNAME = ['Termo 1 L', 'Mate de cerámica', 'Yerba orgánica', 'Kit matero', 'Bombilla', 'Café'];
+const PPRICE = [42900, 18500, 8200, 58400, 1700, 9800];
+const NAMES = ['Lucía Fernández', 'Martín Gómez', 'Norma Ruiz', 'Carla Ruiz', 'Julián Pereyra', 'Pablo Medina', 'Valeria Sosa', 'Sofía Paz', 'Tomás Acosta', 'Camila Ríos', 'Distribuidora Sur', 'Agustina Vega', 'Federico Luna', 'Micaela Díaz', 'Joaquín Torres', 'Florencia Paz'];
+const CITIES = ['Rosario', 'Córdoba', 'CABA', 'La Plata', 'Mendoza', 'Salta', 'Mar del Plata', 'Tucumán', 'Neuquén', 'Santa Fe'];
+const CH = { web: ['Tienda', 'ph:globe-simple-fill', '#D2582F', '#FCEDE5', null], wa: ['WhatsApp', 'logos:whatsapp-icon', null, '#E9F8EE', null], ml: ['Mercado Libre', null, '#2D3277', '#FFE600', 'ML'], ig: ['Instagram', 'logos:instagram-icon', null, '#FCEEF3', null], pos: ['Local', 'ph:storefront-fill', '#8A5A3E', '#F3E9DF', null], tg: ['Telegram', 'logos:telegram', null, '#E8F4FB', null] };
+const PAY = { mp: ['Mercado Pago', 'simple-icons:mercadopago', '#00B1EA'], card: ['Tarjeta', 'ph:credit-card-fill', '#3E6BFD'], transf: ['Transferencia', 'ph:bank-fill', '#6B5244'], cash: ['Efectivo', 'ph:money-fill', '#2F8F63'], modo: ['MODO', 'ph:device-mobile-fill', '#00A88F'] };
+const SHIP = { and: 'Andreani', oca: 'OCA', moto: 'Moto', ret: 'Retiro' };
+const ST = [['unpaid', 'Sin pagar', '#E3A93B', 'ph:hourglass-medium-fill'], ['paid', 'Para preparar', '#D2582F', 'ph:package-fill'], ['ready', 'Listo para despachar', '#C98A12', 'ph:tag-fill'], ['sent', 'En camino', '#3E6BFD', 'ph:truck-fill'], ['done', 'Entregado', '#2F8F63', 'ph:check-circle-fill']];
+const STI = Object.fromEntries(ST.map((s, i) => [s[0], i]));
+const N = 2400;
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const ORDERS = Array.from({ length: N }, (_, i) => {
+  const chs = ['web', 'wa', 'ml', 'ig', 'pos', 'tg'], cw = [0.3, 0.27, 0.2, 0.1, 0.1, 0.03];
+  let r = rnd(), ch = 'web'; for (let k = 0, a = 0; k < chs.length; k++) { a += cw[k]; if (r < a) { ch = chs[k]; break; } }
+  const hrs = i < 12 ? i * 0.4 + 0.05 : Math.pow(i / N, 1.4) * 24 * 60 + rnd() * 3;
+  const sIdx = hrs < 3 ? Math.floor(rnd() * 3) : hrs < 48 ? Math.floor(rnd() * 4) : rnd() < 0.04 ? 0 : 3 + Math.round(rnd() * 0.9);
+  const nItems = 1 + Math.floor(rnd() * rnd() * 4); const items = Array.from({ length: nItems }, () => Math.floor(rnd() * 6));
+  const qty = 1 + (ch === 'pos' && rnd() < .1 ? 20 : 0);
+  const total = items.reduce((a, p) => a + PPRICE[p] * qty, 0);
+  const pay = ch === 'pos' ? (rnd() < .4 ? 'cash' : 'mp') : ['mp', 'mp', 'card', 'transf', 'modo'][Math.floor(rnd() * 5)];
+  const ship = ch === 'pos' ? 'ret' : ['and', 'and', 'oca', 'moto', 'ret'][Math.floor(rnd() * 5)];
+  const ni = Math.floor(rnd() * NAMES.length);
+  return { id: 10480 - i, n: '#' + (10480 - i), c: NAMES[ni], face: ni % FACES.length, city: CITIES[Math.floor(rnd() * CITIES.length)], ch, pay, ship, s: ST[Math.min(4, sIdx)][0], hrs, items, total, vip: ni === 0 || ni === 2 || total > 120000, ai: (ch === 'wa' || ch === 'ig') && rnd() < .6, mayor: ni === 10 || qty > 1 };
+});
+const ago = h => h < 1 ? 'hace ' + Math.max(1, Math.round(h * 60)) + ' min' : h < 24 ? 'hace ' + Math.round(h) + ' h' : h < 48 ? 'ayer' : 'hace ' + Math.round(h / 24) + ' días';
+const SORTS = [['new', 'Más nuevos'], ['urgent', 'Urgentes primero'], ['amount', 'Mayor monto'], ['old', 'Más viejos']];
+const VIEWS = [['all', 'Todos', 'ph:tray-fill', 'var(--mu)', {}], ['today', 'Para despachar hoy', 'ph:lightning-fill', '#D2582F', { st: { paid: 1, ready: 1 }, date: 'today' }], ['unpaid', 'Sin pagar', 'ph:hourglass-medium-fill', '#9A6A10', { st: { unpaid: 1 } }], ['vip', 'Clientes VIP', 'ph:crown-simple-fill', '#C98A12', { vip: true }], ['mayor', 'Mayoristas', 'ph:package-fill', '#6A4FA0', { mayor: true }], ['ai', 'Vendidos por Hornero', 'ph:sparkle-fill', '#C24E25', { ai: true }]];
+const ROW = 76;
+
+class Component extends DCLogic {
+  state = { q: '', st: {}, ch: {}, pay: {}, ship: {}, date: 'all', minAmt: 0, vip: false, ai: false, mayor: false, sort: 'new', more: false, top: 0, sel: {}, view: 'all', status: {} };
+  componentDidMount() { this.anim(); }
+  componentDidUpdate() { if (this.state.more && !this._mA) { this._mA = 1; const m = document.querySelector('[data-more]'); m && m.animate([{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 280, easing: 'cubic-bezier(.2,.7,.1,1)' }); } if (!this.state.more) this._mA = 0; }
+  anim() { document.querySelectorAll('[data-r]:not([data-on])').forEach((el, i) => { el.setAttribute('data-on', ''); el.animate([{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 600, delay: i * 50, fill: 'both', easing: 'cubic-bezier(.2,.7,.1,1)' }); }); }
+  toast(k, t, d, a) { this.props.onToast && this.props.onToast(k, t, d, a); }
+  reset(extra) { this.setState({ q: '', st: {}, ch: {}, pay: {}, ship: {}, date: 'all', minAmt: 0, vip: false, ai: false, mayor: false, view: 'all', ...(extra || {}) }); this.scrollTop(); }
+  scrollTop() { const v = document.querySelector('[data-vs]'); v && (v.scrollTop = 0); this.setState({ top: 0 }); }
+  sOf(o) { return this.state.status[o.id] || o.s; }
+  renderVals() {
+    const st = this.state, vw = this.props.vw || 1400, wide = vw >= 900;
+    const q = st.q.trim().toLowerCase();
+    const any = m => Object.values(m).some(Boolean);
+    const dateOk = o => st.date === 'all' || (st.date === 'today' ? o.hrs < 24 : st.date === '7d' ? o.hrs < 168 : o.hrs < 720);
+    const base = o => dateOk(o) && (!q || (o.n + ' ' + o.c + ' ' + o.city + ' ' + o.items.map(p => PNAME[p]).join(' ')).toLowerCase().includes(q)) && o.total >= st.minAmt && (!st.vip || o.vip) && (!st.ai || o.ai) && (!st.mayor || o.mayor);
+    const facetOk = (o, skip) => (skip === 'st' || !any(st.st) || st.st[this.sOf(o)]) && (skip === 'ch' || !any(st.ch) || st.ch[o.ch]) && (skip === 'pay' || !any(st.pay) || st.pay[o.pay]) && (skip === 'ship' || !any(st.ship) || st.ship[o.ship]);
+    const pre = ORDERS.filter(base);
+    let list = pre.filter(o => facetOk(o));
+    const urgency = o => { const s = this.sOf(o); return s === 'paid' || s === 'ready' ? (o.hrs < 20 ? 3 : 2) : s === 'unpaid' && o.hrs > 24 ? 1 : 0; };
+    if (st.sort === 'amount') list = list.slice().sort((a, b) => b.total - a.total);
+    else if (st.sort === 'old') list = list.slice().reverse();
+    else if (st.sort === 'urgent') list = list.slice().sort((a, b) => urgency(b) - urgency(a) || a.hrs - b.hrs);
+    const n = list.length, sum = list.reduce((a, o) => a + o.total, 0);
+    const vh = vw < 760 ? 520 : 600;
+    const start = Math.max(0, Math.floor(st.top / ROW) - 4), end = Math.min(n, Math.ceil((st.top + vh) / ROW) + 6);
+    const tog = (key, k) => () => { this.setState(s => ({ [key]: { ...s[key], [k]: !s[key][k] }, view: 'custom' })); this.scrollTop(); };
+    const cnt = (skip, fn) => pre.filter(o => facetOk(o, skip) && fn(o)).length;
+    const opt = (key, k, t, icon, col, word, wbg) => { const on = !!st[key][k]; return { t, icon, col: col || 'inherit', word, wbg, n: cnt(key, o => (key === 'st' ? this.sOf(o) : o[key]) === k), bd: on ? '#D2582F' : 'var(--ln2)', bg: on ? 'rgba(210,88,47,.08)' : 'transparent', go: tog(key, k) }; };
+    const tgl = on => ({ tbg: on ? '#D2582F' : '#D9CBBE', tx: on ? '17px' : '2px' });
+    const chips = [];
+    ST.forEach(s => st.st[s[0]] && chips.push([s[1], () => this.setState(x => ({ st: { ...x.st, [s[0]]: false } }))]));
+    Object.keys(CH).forEach(k => st.ch[k] && chips.push([CH[k][0], () => this.setState(x => ({ ch: { ...x.ch, [k]: false } }))]));
+    Object.keys(PAY).forEach(k => st.pay[k] && chips.push([PAY[k][0], () => this.setState(x => ({ pay: { ...x.pay, [k]: false } }))]));
+    Object.keys(SHIP).forEach(k => st.ship[k] && chips.push([SHIP[k], () => this.setState(x => ({ ship: { ...x.ship, [k]: false } }))]));
+    if (st.minAmt) chips.push(['Desde ' + fmt(st.minAmt), () => this.setState({ minAmt: 0 })]);
+    if (st.vip) chips.push(['VIP', () => this.setState({ vip: false })]);
+    if (st.ai) chips.push(['Vendidos por Hornero', () => this.setState({ ai: false })]);
+    if (st.mayor) chips.push(['Mayoristas', () => this.setState({ mayor: false })]);
+    if (st.date !== 'all') chips.push([{ today: 'Hoy', '7d': '7 días', '30d': '30 días' }[st.date], () => this.setState({ date: 'all' })]);
+    const selIds = Object.keys(st.sel).filter(k => st.sel[k]).map(Number);
+    const selSum = ORDERS.filter(o => st.sel[o.id]).reduce((a, o) => a + o.total, 0);
+    const advance = (o, to, k, title, desc) => { this.setState(s => ({ status: { ...s.status, [o.id]: to } })); this.toast(k, title, desc, 'Deshacer'); };
+    const ACT = { unpaid: ['Reclamar pago', 'ph:whatsapp-logo-fill', '#E9F8EE', '#1F6F4A'], paid: ['Preparar', 'ph:package-fill', '#2A140C', '#fff'], ready: ['Etiqueta', 'ph:printer-fill', 'rgba(210,88,47,.14)', '#C24E25'], sent: ['Seguimiento', 'ph:map-pin-fill', 'var(--chip)', 'var(--tx)'] };
+    return {
+      wide, gap: wide ? '14px' : '10px', rowH: ROW + 'px', vh: vh + 'px', totalH: (n * ROW) + 'px',
+      countTxt: n.toLocaleString('es-AR'), sumTxt: fmt(sum), avgTxt: fmt(n ? sum / n : 0),
+      views: VIEWS.map(([id, t, i, ic, preset]) => ({ t, i, ic, n: '', bd: st.view === id ? '#D2582F' : 'transparent', bg: st.view === id ? 'rgba(210,88,47,.08)' : 'var(--sf)', go: () => { this.reset({ view: id, ...JSON.parse(JSON.stringify(preset)) }); } })),
+      stages: ST.map(([k, t, c]) => { const m = pre.filter(o => facetOk(o, 'st') && this.sOf(o) === k).length; const on = !!st.st[k]; return { t, c, n: m.toLocaleString('es-AR'), flex: wide ? '1' : '1 0 120px', op: on || !any(st.st) ? 1 : .25, bg: on ? 'var(--chip)' : 'transparent', go: tog('st', k) }; }),
+      q: st.q, hasQ: !!st.q, setQ: e => { this.setState({ q: e.target.value, view: 'custom' }); this.scrollTop(); }, clearQ: () => this.setState({ q: '' }),
+      dates: [['today', 'Hoy'], ['7d', '7 días'], ['30d', '30 días'], ['all', 'Todo']].map(([id, t]) => ({ t, go: () => { this.setState({ date: id, view: 'custom' }); this.scrollTop(); }, bg: st.date === id ? 'var(--sf)' : 'transparent', sh: st.date === id ? 'var(--sh)' : 'none' })),
+      more: st.more, toggleMore: () => this.setState(s => ({ more: !s.more })), moreBd: st.more ? '#D2582F' : 'var(--ln2)', moreBg: st.more ? 'rgba(210,88,47,.08)' : 'var(--sf)',
+      nActive: chips.length || null,
+      sortTxt: SORTS.find(s => s[0] === st.sort)[1], cycleSort: () => { const i = SORTS.findIndex(s => s[0] === st.sort); this.setState({ sort: SORTS[(i + 1) % SORTS.length][0] }); this.scrollTop(); },
+      facets: [
+        { t: 'Canal', opts: Object.entries(CH).map(([k, v]) => opt('ch', k, v[0], v[1], v[2], v[4], v[3])) },
+        { t: 'Pago', opts: Object.entries(PAY).map(([k, v]) => opt('pay', k, v[0], v[1], v[2])) },
+        { t: 'Envío', opts: Object.entries(SHIP).map(([k, v]) => opt('ship', k, v, { and: 'ph:truck-fill', oca: 'ph:truck-fill', moto: 'ph:moped-fill', ret: 'ph:storefront-fill' }[k], 'var(--mu)')) }
+      ],
+      minAmt: st.minAmt, minTxt: st.minAmt ? fmt(st.minAmt) : 'Cualquiera', setMin: e => { this.setState({ minAmt: +e.target.value, view: 'custom' }); this.scrollTop(); },
+      flags: [['vip', 'Solo clientes VIP'], ['ai', 'Vendidos por Hornero'], ['mayor', 'Mayoristas']].map(([k, t]) => ({ t, ...tgl(st[k]), go: () => { this.setState(s => ({ [k]: !s[k], view: 'custom' })); this.scrollTop(); } })),
+      hasChips: chips.length > 0, chips: chips.map(([t, x]) => ({ t, x: () => { x(); this.setState({ view: 'custom' }); } })), clearAll: () => this.reset(),
+      rangeTxt: n ? 'Mostrando ' + (start + 1).toLocaleString('es-AR') + '–' + Math.min(n, start + Math.ceil(vh / ROW)).toLocaleString('es-AR') + ' de ' + n.toLocaleString('es-AR') : 'Sin resultados',
+      onScroll: e => { const t = e.currentTarget.scrollTop; if (this._raf) return; this._raf = requestAnimationFrame(() => { this._raf = 0; this.setState({ top: t }); }); },
+      showTop: st.top > 1200, toTop: () => { const v = document.querySelector('[data-vs]'); v && v.scrollTo({ top: 0, behavior: 'smooth' }); },
+      empty: n === 0,
+      rows: list.slice(start, end).map((o, k) => {
+        const i = start + k, s = this.sOf(o), si = STI[s], S = ST[si], c = CH[o.ch], p = PAY[o.pay], sel = !!st.sel[o.id], u = urgency(o), a = ACT[s];
+        return { top: (i * ROW) + 'px', n: o.n, c: o.c, ph: FACES[o.face], h: ago(o.hrs), city: o.city, vip: o.vip, ai: o.ai,
+          chIcon: c[1], chCol: c[2] || 'inherit', chBg: c[3], chWord: c[4],
+          thumbs: o.items.slice(0, 3).map(x => PIMG[x]), items: o.items.length === 1 ? PNAME[o.items[0]] : o.items.length + ' productos',
+          steps: ['Pagado', 'Preparado', 'Enviado', 'Entregado'].map((t, j) => ({ t, c: si === 0 ? 'var(--sf3)' : j < si ? S[2] : 'var(--sf3)' })),
+          s: S[1], sc: S[2], si: S[3],
+          urg: u === 3 ? 'Despachá hoy' : u === 2 ? 'Atrasado' : u === 1 ? 'Sin pagar +24 h' : null, ubg: u >= 2 ? 'rgba(184,58,46,.1)' : 'rgba(227,169,59,.18)', ufg: u >= 2 ? '#B83A2E' : '#9A6A10',
+          t: fmt(o.total), pay: p[0], pIcon: p[1], pCol: p[2],
+          sel, cbd: sel ? '#D2582F' : 'var(--ln2)', cbg: sel ? '#D2582F' : 'var(--sf)', bg: sel ? 'rgba(210,88,47,.06)' : 'transparent', bd: sel ? 'rgba(210,88,47,.3)' : 'transparent',
+          act: a ? a[0] : null, ai2: a ? a[1] : null, abg: a ? a[2] : null, afg: a ? a[3] : null,
+          tick: e => { e.stopPropagation(); this.setState(x => ({ sel: { ...x.sel, [o.id]: !x.sel[o.id] } })); },
+          open: () => this.props.onOpen && this.props.onOpen('sheet'),
+          do: e => { e.stopPropagation();
+            if (s === 'unpaid') this.toast('wa', 'Recordatorio de pago enviado', o.c + ' · ' + fmt(o.total) + ' por WhatsApp');
+            else if (s === 'paid') advance(o, 'ready', 'ok', o.n + ' preparado', 'Le avisamos a ' + o.c.split(' ')[0]);
+            else if (s === 'ready') advance(o, 'sent', 'andreani', 'Etiqueta de ' + SHIP[o.ship], o.n + ' · listo para despachar');
+            else this.toast('info', 'Seguimiento de ' + o.n, 'En camino a ' + o.city + ' · llega mañana'); } };
+      }),
+      selAllVis: () => this.setState(x => { const s = { ...x.sel }; list.slice(start, end).forEach(o => s[o.id] = true); return { sel: s }; }),
+      hasSel: selIds.length > 0, selN: selIds.length, selSum: fmt(selSum), clearSel: () => this.setState({ sel: {} }), bulkB: vw < 760 ? '92px' : '84px',
+      bulk: [['ph:package-fill', 'Preparar', 'ready'], ['ph:printer-fill', 'Etiquetas', 'sent'], ['ph:receipt-fill', 'Facturar', null], ['ph:whatsapp-logo-fill', 'Avisar', null]].map(([i, t, to]) => ({ i, t, go: () => { const nSel = selIds.length; this.setState(x => { const status = { ...x.status }; if (to) selIds.forEach(id => status[id] = to); return { sel: {}, status }; }); this.toast('ok', t + ' · ' + nSel + ' pedidos', 'Listo. Te avisamos si algo falla.', 'Deshacer'); } })),
+      exportX: () => this.toast('ok', 'Exportando ' + n.toLocaleString('es-AR') + ' pedidos', 'Con los filtros aplicados · llega a tu email')
+    };
+  }
+}
+</script>
+</body>
+</html>
