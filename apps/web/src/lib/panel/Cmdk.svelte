@@ -7,8 +7,9 @@
 	import { getShell } from './shell.svelte.ts';
 
 	/**
-	 * ⌘K (handoff): buscar y saltar a cualquier sección. Las acciones del handoff (crear pedido, link
-	 * de pago, cargar con foto, abrir caja) y "Preguntale a Hornero" se suman con cada función.
+	 * ⌘K (handoff): preguntarle a Hornero y saltar a cualquier sección. Las acciones del handoff (crear
+	 * pedido, link de pago, cargar con foto, abrir caja) y los pedidos se suman con cada función.
+	 * La opción 0 es Hornero; las secciones van de la 1 en adelante.
 	 */
 	const shell = getShell();
 	let q = $state('');
@@ -26,6 +27,10 @@
 		if (!shell.cmdk) q = '';
 	});
 
+	const EJEMPLO = '¿Cuánto vendí ayer por Mercado Libre?';
+	function preguntar() {
+		shell.hornero(q.trim() || EJEMPLO);
+	}
 	function ir(href: string) {
 		shell.cmdk = false;
 		// eslint-disable-next-line svelte/no-navigation-without-resolve -- rutas del panel armadas con rutaDe
@@ -34,15 +39,16 @@
 	function teclas(e: KeyboardEvent) {
 		if (e.key === 'ArrowDown') {
 			e.preventDefault();
-			sel = Math.min(items.length - 1, sel + 1);
+			sel = Math.min(items.length, sel + 1);
 			document.getElementById(`cmdk-${sel}`)?.scrollIntoView({ block: 'nearest' });
 		} else if (e.key === 'ArrowUp') {
 			e.preventDefault();
 			sel = Math.max(0, sel - 1);
 			document.getElementById(`cmdk-${sel}`)?.scrollIntoView({ block: 'nearest' });
-		} else if (e.key === 'Enter' && items[sel]) {
+		} else if (e.key === 'Enter') {
 			e.preventDefault();
-			ir(items[sel].href);
+			if (sel === 0) preguntar();
+			else if (items[sel - 1]) ir(items[sel - 1].href);
 		}
 	}
 </script>
@@ -66,23 +72,41 @@
 				<input
 					bind:value={q}
 					onkeydown={teclas}
-					placeholder="Buscá una sección del panel…"
+					placeholder="Buscá una sección o preguntale a Hornero…"
 					aria-label="Buscar"
 					aria-controls="cmdk-lista"
-					aria-activedescendant={items[sel] ? `cmdk-${sel}` : undefined}
+					aria-activedescendant="cmdk-{sel}"
 				/>
 				<kbd>esc</kbd>
 			</div>
 			<div class="lista" id="cmdk-lista" role="listbox" aria-label="Resultados">
+				<button
+					type="button"
+					id="cmdk-0"
+					role="option"
+					aria-selected={sel === 0}
+					class="hornero"
+					class:sel={sel === 0}
+					onmouseenter={() => (sel = 0)}
+					onclick={preguntar}
+				>
+					<span class="h-ico"><Icon icon={I.phSparkleFill} size={18} /></span>
+					<span class="txt"
+						><span class="t">Preguntale a Hornero</span><span class="s h-q"
+							>“{q.trim() || EJEMPLO}”</span
+						></span
+					>
+					<kbd class="h-kbd">↵</kbd>
+				</button>
 				{#if items.length}<div class="g">Ir a</div>{/if}
 				{#each items as it, i (it.href)}
 					<button
 						type="button"
-						id="cmdk-{i}"
+						id="cmdk-{i + 1}"
 						role="option"
-						aria-selected={i === sel}
-						class:sel={i === sel}
-						onmouseenter={() => (sel = i)}
+						aria-selected={i + 1 === sel}
+						class:sel={i + 1 === sel}
+						onmouseenter={() => (sel = i + 1)}
 						onclick={() => ir(it.href)}
 					>
 						<span class="ico"><Icon icon={it.icon} size={17} /></span>
@@ -90,7 +114,7 @@
 						<kbd>↵</kbd>
 					</button>
 				{:else}
-					<div class="nada">Nada con «{q}».</div>
+					<div class="nada">Ninguna sección se llama «{q}».</div>
 				{/each}
 			</div>
 			<div class="pie">
@@ -187,6 +211,33 @@
 	}
 	.lista button.sel {
 		background: var(--chip);
+	}
+	.lista .hornero {
+		padding: 12px;
+		border-radius: 14px;
+		background: rgba(210, 88, 47, 0.09);
+	}
+	.lista .hornero.sel {
+		background: rgba(210, 88, 47, 0.16);
+	}
+	.h-ico {
+		width: 36px;
+		height: 36px;
+		flex: none;
+		border-radius: 11px;
+		background: linear-gradient(140deg, #e8875f, #c24e25);
+		color: #fff;
+		display: grid;
+		place-items: center;
+	}
+	.h-q {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		font-size: 13px !important;
+	}
+	.h-kbd {
+		background: var(--sf);
 	}
 	.ico {
 		width: 32px;

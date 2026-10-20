@@ -3,7 +3,17 @@
  * (BFF), con el token de la sesión. Los errores problem+json se convierten en errores de SvelteKit.
  */
 import { error } from '@sveltejs/kit';
-import type { Datos, Onboarding, Periodo, ResumenPanel, Rubro, Tablero, Tienda } from './tipos.ts';
+import type {
+	ContextoHornero,
+	Datos,
+	Idea,
+	Onboarding,
+	Periodo,
+	ResumenPanel,
+	Rubro,
+	Tablero,
+	Tienda
+} from './tipos.ts';
 
 export class DatosApi implements Datos {
 	constructor(
@@ -66,5 +76,12 @@ export class DatosApi implements Datos {
 	async recordarCarritos() {
 		return (await this.pedir<{ enviados: number }>('/v1/panel/carritos/recordar', 'POST', {}))
 			.enviados;
+	}
+
+	contextoHornero() {
+		return this.pedir<ContextoHornero>('/v1/panel/hornero/contexto');
+	}
+	marcarIdea(idea: Idea, hecha: boolean) {
+		return this.pedir<void>(`/v1/panel/hornero/ideas/${idea}`, 'POST', { hecha });
 	}
 }

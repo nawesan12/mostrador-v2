@@ -77,12 +77,14 @@ type Tablero struct {
 	} `json:"caja"`
 	Liquidaciones []any `json:"liquidaciones"`
 	Hornero       struct {
-		ChatsHoy      int   `json:"chatsHoy"`
-		Ideas         int   `json:"ideas"`
-		Carritos      int   `json:"carritos"`
-		CarritosMonto int64 `json:"carritosMonto"`
-		CostoMensaje  int   `json:"costoMensaje"`
-		Recordados    bool  `json:"recordados"`
+		ChatsHoy      int      `json:"chatsHoy"`
+		Ideas         int      `json:"ideas"`
+		Carritos      int      `json:"carritos"`
+		CarritosMonto int64    `json:"carritosMonto"`
+		CostoMensaje  int      `json:"costoMensaje"`
+		Recordados    bool     `json:"recordados"`
+		Audiencia     int      `json:"audiencia"`
+		IdeasHechas   []string `json:"ideasHechas"`
 	} `json:"hornero"`
 	Bandeja       []any `json:"bandeja"`
 	Integraciones []any `json:"integraciones"`
@@ -130,7 +132,7 @@ func ObtenerTablero(ctx context.Context, pool interface {
 	t.Canales, t.UltimosPedidos, t.Liquidaciones, t.Bandeja = []any{}, []any{}, []any{}, []any{}
 	t.Integraciones, t.MasVendidos, t.EnVivo.Paginas, t.Caja.Medios = []any{}, []any{}, []any{}, []any{}
 	t.Resenas.Nuevas, t.Envios.Retiros = []any{}, []any{}
-	t.Hornero.CostoMensaje = 120
+	t.Hornero.CostoMensaje, t.Hornero.IdeasHechas = 120, []string{}
 	err = pool.EnTienda(ctx, tiendaID, func(tx pgx.Tx) error {
 		return tx.QueryRow(ctx, `SELECT meta_mensual FROM tiendas WHERE id = $1`, tiendaID).Scan(&t.Meta.Objetivo)
 	})
@@ -211,6 +213,25 @@ func rutasTablero(mux *http.ServeMux, pool interface {
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
+	})
+	// Lo que Hornero sabe de la tienda: se llena con cada dominio (pedidos, productos, clientes).
+	mux.HandleFunc("GET /v1/panel/hornero/contexto", func(w http.ResponseWriter, r *http.Request) {
+		if tienda(r) == "" {
+			problema.Escribir(w, problema.SinSesion())
+			return
+		}
+		escribir(w, map[string]any{
+			"ventasPorDia": []any{}, "productos": []any{}, "canales30d": []any{},
+			"clientes": map[string]int{"total": 0, "nuevos30d": 0, "conWhatsApp": 0, "sinVolver": 0},
+		})
+	})
+	// Las ideas salen de carritos, stock y campañas: sin esos dominios todavía no hay ninguna.
+	mux.HandleFunc("POST /v1/panel/hornero/ideas/{idea}", func(w http.ResponseWriter, r *http.Request) {
+		if tienda(r) == "" {
+			problema.Escribir(w, problema.SinSesion())
+			return
+		}
+		problema.Escribir(w, problema.NoEncontrado("Esa idea no está disponible para tu tienda."))
 	})
 	// Sin carritos todavía (llegan con su dominio): no hay a quién recordarle nada.
 	mux.HandleFunc("POST /v1/panel/carritos/recordar", func(w http.ResponseWriter, r *http.Request) {

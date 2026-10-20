@@ -30,11 +30,16 @@
 			"migrations_dir": "migraciones-estado"
 		}
 	],
+	// Hornero: Workers AI (siempre remoto). En desarrollo y en las pruebas no se llama: el preview
+	// corre con --local y HORNERO=simulado.
+	"ai": { "binding": "AI", "remote": true },
 	"vars": {
 		"PUBLIC_SITE_URL": "https://mostrador.iamnaw.dev",
 		// sandbox: la demo pública con datos por visitante en D1. api: la API Go del VPS.
 		"DATA_SOURCE": "sandbox",
 		// URL de la API Go cuando DATA_SOURCE=api (VPS). Vacía en la demo.
-		"API_URL": ""
+		"API_URL": "",
+		// Hornero: workers-ai (el modelo) o simulado (respuestas armadas, sin llamar al modelo).
+		"HORNERO": "workers-ai"
 	}
 }

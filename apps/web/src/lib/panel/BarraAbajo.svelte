@@ -18,12 +18,8 @@
 				>{pedidos}</span
 			>{/if}</a
 	>
-	<button
-		type="button"
-		class="hornero"
-		aria-label="Hornero"
-		title="Hornero llega con la próxima versión del panel"
-		disabled><span><img src="/hornero/avatar.png" alt="" /></span></button
+	<button type="button" class="hornero" aria-label="Hornero" onclick={() => shell.hornero()}
+		><span><img src="/hornero/avatar.png" alt="" /></span></button
 	>
 	<a href={rutaDe('Productos')} class:on={seccion === 'Productos'}
 		><Icon icon={I.phTagFill} size={23} />Productos</a

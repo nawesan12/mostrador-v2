@@ -5,13 +5,13 @@
 	import BarraAbajo from '#lib/panel/BarraAbajo.svelte';
 	import BarraLateral from '#lib/panel/BarraLateral.svelte';
 	import Cmdk from '#lib/panel/Cmdk.svelte';
+	import Hornero from '#lib/panel/Hornero.svelte';
 	import Notificaciones from '#lib/panel/Notificaciones.svelte';
 	import Rail from '#lib/panel/Rail.svelte';
 	import Topbar from '#lib/panel/Topbar.svelte';
 	import { AREAS, ubicar } from '#lib/panel/navegacion.ts';
 	import { Shell, setShell } from '#lib/panel/shell.svelte.ts';
 	import { SITE } from '#lib/site.ts';
-	import { getUi } from '#lib/ui.svelte.ts';
 
 	/** Armazón del panel (design/Mostrador v4.dc.html, vista Panel). */
 	let { data, children } = $props();
@@ -22,9 +22,6 @@
 			untrack(() => data.modo)
 		)
 	);
-	const ui = getUi();
-	shell.hornero = () =>
-		ui.toast({ k: 'ai', title: 'Hornero', desc: 'Llega con la próxima versión del panel.' });
 	const donde = $derived(ubicar(page.url.pathname) ?? { seccion: 'Resumen', area: AREAS[0] });
 	const sinLeer = $derived(data.resumen.notificaciones.some((n) => !n.leida));
 	const dominio = $derived(`${SITE.replace(/^https?:\/\//, '')}/t/${data.tienda.slug}`);
@@ -88,6 +85,7 @@
 	<BarraAbajo seccion={donde.seccion} pedidos={data.resumen.insignias.pedidos} />
 	<Notificaciones notificaciones={data.resumen.notificaciones} {marcarLeidas} />
 	<Cmdk />
+	<Hornero />
 </div>
 
 <style>

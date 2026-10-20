@@ -306,6 +306,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/hornero/contexto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lo que Hornero sabe de la tienda para responder (ventas por día, productos, clientes, pendientes). */
+        get: operations["contextoHornero"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/hornero/ideas/{idea}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Aprueba (o deshace) una idea de Hornero. */
+        post: operations["marcarIdea"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/tienda": {
         parameters: {
             query?: never;
@@ -352,6 +386,34 @@ export interface components {
         Comparado: {
             actual: number;
             anterior: number;
+        };
+        ContextoHornero: {
+            /** @description Últimos 14 días, del más viejo a hoy (hora de Argentina) */
+            ventasPorDia: {
+                /** Format: date */
+                fecha: string;
+                ventas: number;
+                pedidos: number;
+            }[];
+            productos: {
+                nombre: string;
+                categoria: string | null;
+                precio: number;
+                stock: number;
+                vendidos30d: number;
+                enMl: boolean;
+            }[];
+            clientes: {
+                total: number;
+                nuevos30d: number;
+                conWhatsApp: number;
+                /** @description Compraron más de una vez y hace 30 días que no vuelven */
+                sinVolver: number;
+            };
+            canales30d: {
+                canal: string;
+                ventas: number;
+            }[];
         };
         Tablero: {
             /** @enum {string} */
@@ -441,6 +503,10 @@ export interface components {
                 costoMensaje: number;
                 /** @description Ya se les mandó el recordatorio */
                 recordados: boolean;
+                /** @description Clientes que aceptan mensajes por WhatsApp */
+                audiencia: number;
+                /** @description Ideas de Hornero ya aprobadas (carritos, stock, promo) */
+                ideasHechas: string[];
             };
             bandeja: {
                 nombre: string;
@@ -1061,6 +1127,55 @@ export interface operations {
                 };
             };
             401: components["responses"]["Problema"];
+        };
+    };
+    contextoHornero: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Contexto */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContextoHornero"];
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    marcarIdea: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                idea: "carritos" | "stock" | "promo";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    hecha: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Hecho */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
         };
     };
     obtenerTienda: {
