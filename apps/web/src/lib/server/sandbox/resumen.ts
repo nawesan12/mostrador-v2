@@ -4,6 +4,7 @@
  */
 import type { components } from '@mostrador/contrato/esquema';
 import type { Demo } from './demo.ts';
+import { tareasDeHoy } from './tablero.ts';
 
 type ResumenPanel = components['schemas']['ResumenPanel'];
 type Notificacion = components['schemas']['Notificacion'];
@@ -20,7 +21,7 @@ export function resumenDemo(
 	const { catalogo, clientes, pedidos } = d;
 	const cliente = (id: string) => clientes.find((c) => c.id === id)!;
 	const primerNombre = (id: string) => cliente(id).nombre.split(' ')[0];
-	const ultimoWa = pedidos.find((p) => p.canal === 'wa') ?? pedidos[0];
+	const chat = d.conversaciones[0];
 	const ultimoMl = pedidos.find((p) => p.canal === 'ml') ?? pedidos[0];
 	// Lo que Mercado Pago liquidó: lo cobrado ayer por MP.
 	const liquidado = pedidos
@@ -28,8 +29,7 @@ export function resumenDemo(
 			(p) => p.pago === 'mp' && ahora - p.creado > 1440 * MIN && ahora - p.creado < 2880 * MIN
 		)
 		.reduce((s, p) => s + p.total, 0);
-	const masVendido = catalogo.productos[0];
-	const conStockBajo = catalogo.productos[2] ?? masVendido;
+	const conStockBajo = catalogo.productos.find((p) => d.stock[p.id] === 3) ?? catalogo.productos[0];
 	const n = (
 		id: string,
 		tipo: string,
@@ -53,15 +53,15 @@ export function resumenDemo(
 		insignias: {
 			pedidos: pedidos.filter((p) => p.estado === 'Para preparar').length,
 			carritos: 12,
-			whatsapp: 3,
-			paraHacer: 4
+			whatsapp: d.conversaciones.length,
+			paraHacer: tareasDeHoy(d)
 		},
 		notificaciones: [
 			n(
 				'wa',
 				'wa',
-				`Nuevo mensaje de ${primerNombre(ultimoWa.clienteId)}`,
-				`“Hola, ¿tienen stock de ${ultimoWa.items[0].nombre}?” · Hornero ya respondió`,
+				`Nuevo mensaje de ${primerNombre(chat.clienteId)}`,
+				`“${chat.mensaje}” · Hornero ya respondió`,
 				4,
 				'ventas'
 			),

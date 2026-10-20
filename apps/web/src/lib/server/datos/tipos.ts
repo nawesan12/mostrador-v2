@@ -12,6 +12,8 @@ export type Plan = components['schemas']['Plan'];
 export type Onboarding = components['schemas']['Onboarding'];
 export type ResumenPanel = components['schemas']['ResumenPanel'];
 export type Notificacion = components['schemas']['Notificacion'];
+export type Tablero = components['schemas']['Tablero'];
+export type Periodo = Tablero['periodo'];
 
 export interface Datos {
 	rubros(): Promise<Rubro[]>;
@@ -22,4 +24,11 @@ export interface Datos {
 	/** Insignias del menú, notificaciones, canales y prueba: lo que muestra el armazón del panel. */
 	resumen(): Promise<ResumenPanel>;
 	marcarNotificacionesLeidas(): Promise<void>;
+	/** El Resumen (dashboard) del período. */
+	tablero(periodo: Periodo): Promise<Tablero>;
+	/** La meta de ventas del mes, en pesos (0 la saca). */
+	guardarMeta(objetivo: number): Promise<void>;
+	ocultarAviso(aviso: 'certificado'): Promise<void>;
+	/** Manda el recordatorio a los carritos abandonados; devuelve cuántos mensajes salieron. */
+	recordarCarritos(): Promise<number>;
 }

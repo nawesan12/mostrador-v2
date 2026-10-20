@@ -12,9 +12,10 @@ import { inArray } from './sql.ts';
 import { fromB64url, randomToken, sha256 } from '../crypto.ts';
 import { rubro as buscarRubro, slugDe } from './rubros.ts';
 import { cambios, sandboxes } from './schema.ts';
-import type { Datos, Onboarding, ResumenPanel, Tienda } from '../datos/tipos.ts';
+import type { Datos, Onboarding, Periodo, ResumenPanel, Tablero, Tienda } from '../datos/tipos.ts';
 import { demoDe } from './demo.ts';
 import { resumenDemo } from './resumen.ts';
+import { tableroDemo, type CambiosTablero } from './tablero.ts';
 import RUBROS from '@mostrador/contrato/rubros.json';
 import { plantilla as buscarPlantilla } from '#lib/plantillas.ts';
 
@@ -170,5 +171,38 @@ export class DatosSandbox implements Datos {
 
 	async marcarNotificacionesLeidas() {
 		await guardarCambio(this.db, this.sb.id, 'notificaciones', 'leidas', { hasta: Date.now() });
+	}
+
+	async tablero(periodo: Periodo): Promise<Tablero> {
+		const d = demoDe(this.plantilla(), this.sb.creadoEn)!;
+		const c = await cambiosDe(this.db, this.sb.id, 'tablero');
+		const cambios: CambiosTablero = {
+			meta: (c.get('meta') as { objetivo: number } | undefined)?.objetivo,
+			certificadoOculto: c.has('certificado'),
+			carritosRecordados: c.has('carritos')
+		};
+		// Quien prueba la demo es la dueña de la tienda de ejemplo (la del onboarding).
+		return tableroDemo(d, periodo, {
+			base: this.sb.creadoEn,
+			ahora: Date.now(),
+			hola: 'Valeria',
+			cambios
+		});
+	}
+
+	async guardarMeta(objetivo: number) {
+		await guardarCambio(this.db, this.sb.id, 'tablero', 'meta', { objetivo });
+	}
+
+	async ocultarAviso(aviso: 'certificado') {
+		await guardarCambio(this.db, this.sb.id, 'tablero', aviso, true);
+	}
+
+	async recordarCarritos() {
+		const d = demoDe(this.plantilla(), this.sb.creadoEn)!;
+		const ya = (await cambiosDe(this.db, this.sb.id, 'tablero')).has('carritos');
+		if (ya) return 0;
+		await guardarCambio(this.db, this.sb.id, 'tablero', 'carritos', { en: Date.now() });
+		return d.carritos.length;
 	}
 }

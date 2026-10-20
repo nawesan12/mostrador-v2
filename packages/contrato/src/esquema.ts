@@ -238,6 +238,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/tablero": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** El Resumen del panel (dashboard) para un período. */
+        get: operations["tablero"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/meta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** La meta de ventas del mes (en pesos; 0 la saca). */
+        put: operations["guardarMeta"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/avisos/{aviso}/ocultar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Descarta un aviso del Resumen (por ahora, el del certificado de ARCA). */
+        post: operations["ocultarAviso"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/carritos/recordar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Manda por WhatsApp el recordatorio a los carritos abandonados recuperables. */
+        post: operations["recordarCarritos"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/tienda": {
         parameters: {
             query?: never;
@@ -279,6 +347,159 @@ export interface components {
                 diasRestantes: number;
                 diasTotales: number;
             };
+        };
+        /** @description El valor del período y el del período anterior del mismo largo */
+        Comparado: {
+            actual: number;
+            anterior: number;
+        };
+        Tablero: {
+            /** @enum {string} */
+            periodo: "hoy" | "7d" | "30d";
+            /** Format: date-time */
+            desde: string;
+            /** Format: date-time */
+            hasta: string;
+            /** @description Nombre de pila de quien entra */
+            hola: string | null;
+            ventas: components["schemas"]["Comparado"];
+            /** @description Ventas acumuladas en 14 tramos del período, y las del período anterior */
+            serie: {
+                actual: number[];
+                anterior: number[];
+            };
+            kpis: {
+                pedidos: components["schemas"]["Comparado"];
+                ticket: components["schemas"]["Comparado"];
+                /** @description Porcentaje (3.4 = 3,4 %) */
+                conversion: components["schemas"]["Comparado"];
+                clientesNuevos: components["schemas"]["Comparado"];
+            };
+            /** @description Parte de las ventas del período por canal (web, wa, ml, ig, pos, tg), de mayor a menor */
+            canales: {
+                canal: string;
+                /** @description De 0 a 1 */
+                parte: number;
+            }[];
+            meta: {
+                /** @description 0: sin meta */
+                objetivo: number;
+                /** @description Vendido en el mes */
+                actual: number;
+                /** @description Al ritmo actual, cómo cierra el mes */
+                proyeccion: number;
+            };
+            avisos: {
+                /** @description Días para que venza el certificado de ARCA, si hay que avisar */
+                certificadoDias: number | null;
+            };
+            ultimosPedidos: components["schemas"]["PedidoBreve"][];
+            paraHacer: {
+                preparar: number;
+                chats: number;
+                chatMasViejoMin: number;
+                transferencias: number;
+                transferenciasMonto: number;
+                sinStock: number;
+                sinStockEnMl: number;
+            };
+            enVivo: {
+                personas: number;
+                paginas: {
+                    nombre: string;
+                    personas: number;
+                }[];
+                carritos: number;
+                carritosMonto: number;
+            };
+            caja: {
+                /**
+                 * Format: date-time
+                 * @description Cuándo se abrió hoy (null: cerrada)
+                 */
+                abierta: string | null;
+                total: number;
+                medios: {
+                    /** @description efectivo, tarjeta, mp, modo, transf */
+                    medio: string;
+                    monto: number;
+                }[];
+            };
+            /** @description Lo que se acredita en los próximos 7 días, por medio de pago */
+            liquidaciones: {
+                medio: string;
+                /** Format: date */
+                fecha: string;
+                monto: number;
+            }[];
+            hornero: {
+                chatsHoy: number;
+                ideas: number;
+                carritos: number;
+                carritosMonto: number;
+                /** @description Lo que cuesta cada mensaje de WhatsApp */
+                costoMensaje: number;
+                /** @description Ya se les mandó el recordatorio */
+                recordados: boolean;
+            };
+            bandeja: {
+                nombre: string;
+                /** @description Id de la foto en Unsplash */
+                foto: string | null;
+                mensaje: string;
+                /** Format: date-time */
+                creado: string;
+                /** @enum {string} */
+                atiende: "hornero" | "vos";
+                sinLeer: number;
+            }[];
+            /** @description Integraciones conectadas con su dato del momento */
+            integraciones: {
+                /** @description mp (cobrado en 7 días), ml (publicaciones), wa (chats esperando), arca (días del certificado), andreani (envíos en camino) */
+                id: string;
+                valor: number;
+            }[];
+            /** @description Los 4 más vendidos de los últimos 7 días */
+            masVendidos: {
+                productoId: string;
+                nombre: string;
+                foto: string | null;
+                unidades: number;
+            }[];
+            resenas: {
+                promedio: number | null;
+                nuevas: {
+                    texto: string;
+                    autor: string;
+                    producto: string;
+                    canal: string;
+                    estrellas: number;
+                }[];
+            };
+            envios: {
+                paquetes: number;
+                retiros: {
+                    /** @description HH:MM */
+                    hora: string;
+                    /** @enum {string} */
+                    transporte: "andreani" | "oca" | "correo" | "moto";
+                    paquetes: number;
+                    /** @description Si todos van a la misma ciudad */
+                    ciudad: string | null;
+                    proximo: boolean;
+                }[];
+            };
+        };
+        PedidoBreve: {
+            numero: number;
+            cliente: string;
+            foto: string | null;
+            canal: string;
+            /** @enum {string} */
+            estado: "Pago pendiente" | "Para preparar" | "Pagado" | "Enviado" | "Entregado" | "Cancelado";
+            total: number;
+            /** Format: date-time */
+            creado: string;
         };
         Notificacion: {
             id: string;
@@ -744,6 +965,99 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResumenPanel"];
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    tablero: {
+        parameters: {
+            query?: {
+                periodo?: "hoy" | "7d" | "30d";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tablero */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tablero"];
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    guardarMeta: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    objetivo: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Guardada */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
+            401: components["responses"]["Problema"];
+        };
+    };
+    ocultarAviso: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                aviso: "certificado";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Oculto */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    recordarCarritos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cuántos mensajes quedaron en cola */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        enviados: number;
+                    };
                 };
             };
             401: components["responses"]["Problema"];
