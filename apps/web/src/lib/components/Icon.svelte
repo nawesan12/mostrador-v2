@@ -14,7 +14,16 @@
 		style = ''
 	}: { icon: IconData; size?: number; label?: string; class?: string; style?: string } = $props();
 
-	const [w, h, body] = $derived(icon);
+	const [w, h, cuerpo] = $derived(icon);
+	// Los logos con degradés traen ids fijos: si la primera copia está oculta (p. ej. el hero de
+	// escritorio en el celular), url(#id) apunta a ella y el logo no se pinta. Cada instancia los
+	// sufija con su propio id.
+	const uid = $props.id();
+	const body = $derived(
+		cuerpo.includes('id="')
+			? cuerpo.replace(/(id="|url\(#|href="#)([\w-]+)/g, `$1$2-${uid}`)
+			: cuerpo
+	);
 </script>
 
 <svg

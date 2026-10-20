@@ -14,7 +14,10 @@
 
 	function parallax() {
 		const vh = window.innerHeight;
+		// En el celular las piezas flotantes no se desplazan: con poco ancho pisan lo que tienen al lado.
+		const flota = window.innerWidth > 640;
 		document.querySelectorAll<HTMLElement>('[data-px]').forEach((el) => {
+			if (!flota) return void (el.style.translate = '');
 			const r = (el.parentElement ?? el).getBoundingClientRect();
 			if (r.bottom < -200 || r.top > vh + 200) return;
 			const c = r.top + r.height / 2 - vh / 2;

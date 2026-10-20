@@ -1,12 +1,16 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { guardarEleccion, leerEleccion } from '#lib/consentimiento.svelte.ts';
+	import { banner, guardarEleccion, leerEleccion } from '#lib/consentimiento.svelte.ts';
 
 	/** Banner de cookies del handoff (design/CookieBanner.dc.html). Abajo a la izquierda. */
 	let visible = $state(false);
 	let cfg = $state(false);
 	let an = $state(true);
 	let mk = $state(false);
+
+	$effect(() => {
+		banner.abierto = visible;
+	});
 
 	onMount(() => {
 		visible = leerEleccion() === null;

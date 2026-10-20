@@ -27,7 +27,11 @@ export class Landing {
 				this.mig = this.mig >= 100 ? 64 : Math.min(100, this.mig + 6);
 			}, 3200),
 			setInterval(() => (this.chat = this.chat >= chatLargo + 2 ? 0 : this.chat + 1), 1700),
-			setTimeout(() => (this.widget = true), 2600)
+			setTimeout(() => {
+				// En el celular la burbuja abierta tapa un quinto de la pantalla: arranca minimizada.
+				if (window.innerWidth <= 640) this.widgetOpen = false;
+				this.widget = true;
+			}, 2600)
 		);
 	}
 

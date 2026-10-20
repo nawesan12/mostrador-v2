@@ -67,7 +67,7 @@
 	.in {
 		max-width: 1240px;
 		margin: 0 auto;
-		padding: 120px 28px;
+		padding: 120px var(--lado);
 		display: flex;
 		gap: 56px;
 		flex-wrap: wrap;
@@ -113,6 +113,7 @@
 	}
 	.e-cab {
 		display: flex;
+		gap: 12px;
 		justify-content: space-between;
 		align-items: center;
 	}
@@ -135,6 +136,7 @@
 		background: #2f8f63;
 	}
 	.e-dias {
+		white-space: nowrap;
 		font-size: 13px;
 		color: #7a6252;
 	}

@@ -3,11 +3,13 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import { anim } from '#lib/anim.ts';
 	import { phMinusBold } from '#lib/icons.ts';
+	import { banner } from '#lib/consentimiento.svelte.ts';
 	import { getLanding } from './estado.svelte.ts';
 
 	/**
 	 * Widget flotante de Hornero (handoff): aparece a los 2,6 s; al minimizarlo no desaparece, queda el
-	 * avatar con "¿Te ayudo?" y un aviso.
+	 * avatar con "¿Te ayudo?" y un aviso. No se muestra con el menú mobile abierto (taparía los links)
+	 * ni mientras el banner de cookies está a la vista.
 	 */
 	const l = getLanding();
 	const registro = `${resolve('/ingresar')}?m=registro`;
@@ -23,7 +25,7 @@
 	}
 </script>
 
-{#if l.widget}
+{#if l.widget && !l.menu && !banner.abierto}
 	<div class="widget" use:anim={'rise'}>
 		{#if l.widgetOpen}
 			<div class="globo" use:entra role="dialog" aria-label="Hornero">

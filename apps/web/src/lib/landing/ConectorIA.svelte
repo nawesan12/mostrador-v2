@@ -89,7 +89,7 @@
 	section {
 		max-width: 1240px;
 		margin: 0 auto;
-		padding: 120px 28px 0;
+		padding: 120px var(--lado) 0;
 	}
 	.grilla {
 		display: grid;
@@ -290,5 +290,23 @@
 		font-size: 13px;
 		font-weight: 600;
 		color: #5c4536;
+	}
+	@media (max-width: 640px) {
+		.provs {
+			gap: 8px;
+		}
+		.provs button {
+			gap: 7px;
+			padding: 11px 10px;
+		}
+		.p-n {
+			font-size: 13.5px;
+		}
+		.c-filas > span {
+			gap: 12px;
+		}
+		.c-filas b {
+			text-align: right;
+		}
 	}
 </style>

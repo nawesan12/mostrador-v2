@@ -38,7 +38,7 @@
 
 <style>
 	section {
-		padding: 0 28px 100px;
+		padding: 0 var(--lado) 100px;
 	}
 	.caja {
 		position: relative;
@@ -116,5 +116,32 @@
 	}
 	.ctas a:hover {
 		color: #fff;
+	}
+	@media (max-width: 640px) {
+		section {
+			padding-bottom: 80px;
+		}
+		.caja {
+			min-height: 440px;
+			border-radius: 26px;
+		}
+		.sombra {
+			background: linear-gradient(
+				180deg,
+				rgba(42, 20, 12, 0.88) 0%,
+				rgba(42, 20, 12, 0.72) 60%,
+				rgba(42, 20, 12, 0.5)
+			);
+		}
+		.txt {
+			padding: 36px 24px;
+		}
+		p {
+			font-size: 16.5px;
+		}
+		.ctas a {
+			width: 100%;
+			justify-content: center;
+		}
 	}
 </style>

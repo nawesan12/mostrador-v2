@@ -175,7 +175,7 @@
 		max-width: 1240px;
 		margin: 0 auto;
 		height: 72px;
-		padding: 0 28px;
+		padding: 0 var(--lado);
 		display: flex;
 		align-items: center;
 		gap: 32px;

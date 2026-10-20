@@ -137,6 +137,7 @@
 		overflow: hidden;
 		border-radius: 36px;
 		max-width: 1240px;
+		width: calc(100% - 2 * var(--lado));
 		margin: 40px auto 0;
 	}
 	.arcos {
@@ -153,7 +154,7 @@
 		position: relative;
 		max-width: 1240px;
 		margin: 0 auto;
-		padding: clamp(28px, 5vw, 56px);
+		padding: clamp(20px, 5vw, 56px);
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
 		gap: 48px;

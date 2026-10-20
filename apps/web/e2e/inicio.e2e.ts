@@ -83,6 +83,17 @@ test.describe('menú mobile', () => {
 		await expect(boton).toHaveAttribute('aria-expanded', 'false');
 		await expect(page.locator('section#hornero h2')).toBeInViewport();
 	});
+
+	test('con el menú abierto no aparece la burbuja de Hornero', async ({ page }) => {
+		await page.goto('/');
+		await listo(page);
+		const avatar = page.getByRole('button', { name: 'Hornero', exact: true });
+		await expect(avatar).toBeVisible({ timeout: 6000 });
+		await page.getByRole('button', { name: 'Menú', exact: true }).click();
+		await expect(avatar).toBeHidden();
+		await page.keyboard.press('Escape');
+		await expect(avatar).toBeVisible();
+	});
 });
 
 test('tablet (1024 px): sin desborde y con el hero apilado', async ({ page }) => {
@@ -167,9 +178,14 @@ test('el conector de IA confirma los cambios', async ({ page }) => {
 	await expect(sec.getByRole('button', { name: 'Hecho' })).toBeVisible();
 });
 
-test('el widget de Hornero aparece, se minimiza y vuelve', async ({ page }) => {
+test('el widget de Hornero aparece, se minimiza y vuelve', async ({ page, isMobile }) => {
 	await page.goto('/');
 	await listo(page);
+	if (isMobile) {
+		// En el celular arranca minimizado para no tapar la pantalla.
+		await expect(page.getByText('¿Te ayudo?')).toBeVisible({ timeout: 6000 });
+		await page.getByRole('button', { name: 'Hornero', exact: true }).click();
+	}
 	await expect(page.getByText('¡Hola! Soy Hornero')).toBeVisible({ timeout: 6000 });
 	await page.getByRole('button', { name: 'Minimizar' }).click();
 	await expect(page.getByText('¿Te ayudo?')).toBeVisible();
@@ -182,4 +198,17 @@ test('el footer tiene el botón de arrepentimiento', async ({ page }) => {
 	await expect(
 		page.locator('footer').getByRole('link', { name: 'Botón de arrepentimiento' }).first()
 	).toHaveAttribute('href', '/legales/arrepentimiento');
+});
+
+test('el widget espera a que se cierre el banner de cookies', async ({ browser }) => {
+	const ctx = await browser.newContext();
+	const page = await ctx.newPage();
+	await page.goto('/');
+	await listo(page);
+	await expect(page.getByText('Usamos cookies')).toBeVisible();
+	await page.waitForTimeout(3000);
+	await expect(page.getByRole('button', { name: 'Hornero', exact: true })).toBeHidden();
+	await page.getByRole('button', { name: 'Solo necesarias' }).click();
+	await expect(page.getByRole('button', { name: 'Hornero', exact: true })).toBeVisible();
+	await ctx.close();
 });

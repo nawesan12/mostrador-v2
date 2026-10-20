@@ -517,6 +517,7 @@
 		display: block;
 	}
 	.lema {
+		text-wrap: balance;
 		margin-top: 8px;
 		font-size: clamp(30px, 3.4vw, 46px);
 		line-height: 1.02;

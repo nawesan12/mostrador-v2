@@ -116,9 +116,9 @@
 				<div class="ave" data-px="-0.08" use:anim={{ t: 'float', dur: 4200 }}>
 					<div class="ave-in"><img src="/hornero/saludo.png" alt="Hornero" /></div>
 				</div>
-				{#each METRICAS as m (m.b)}
+				{#each METRICAS as m, i (m.b)}
 					<div
-						class="metrica"
+						class="metrica m{i}"
 						style={m.pos}
 						data-px={m.px}
 						use:anim={{ t: 'float', dur: m.dur, delay: m.delay }}
@@ -260,7 +260,7 @@
 		position: relative;
 		max-width: 1240px;
 		margin: 0 auto;
-		padding: 120px 28px 110px;
+		padding: 120px var(--lado) 110px;
 	}
 	.cab {
 		text-align: center;
@@ -699,5 +699,56 @@
 	}
 	.tg.on span {
 		left: 20px;
+	}
+	/* Celular: la escena se compacta para que las métricas no se salgan, y la cabecera del chat
+	   pasa el "Hornero atendiendo" abajo en vez de estrujar el nombre. */
+	@media (max-width: 640px) {
+		.dos {
+			margin-top: 40px;
+			gap: 28px;
+		}
+		.escena {
+			flex-basis: 100%;
+			min-height: 380px;
+		}
+		.ave {
+			width: 250px;
+			height: 250px;
+			box-shadow:
+				0 0 0 10px rgba(255, 255, 255, 0.55),
+				0 40px 70px -30px rgba(194, 78, 37, 0.55);
+		}
+		.metrica {
+			padding: 8px 11px;
+			gap: 8px;
+			font-size: 12.5px;
+		}
+		.m0 {
+			top: 10px !important;
+		}
+		.m1 {
+			top: 110px !important;
+		}
+		.m2 {
+			left: 0 !important;
+			bottom: 64px !important;
+		}
+		.canales {
+			right: 0;
+			bottom: 0;
+		}
+		.canales span {
+			font-size: 12.5px;
+		}
+		.chat-cab {
+			flex-wrap: wrap;
+			row-gap: 8px;
+		}
+		.cab-txt {
+			flex: 1 1 calc(100% - 52px);
+		}
+		.atiende {
+			margin-left: 52px;
+		}
 	}
 </style>

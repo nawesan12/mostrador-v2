@@ -5,6 +5,8 @@
  */
 
 :root {
+	/* Margen lateral de las secciones: la mitad en el celular, para no desperdiciar ancho. */
+	--lado: 28px;
 	/* Marca */
 	--terracota: #d2582f;
 	--terracota-oscuro: #c24e25;
@@ -401,4 +403,19 @@ html.lenis body {
 		transition-duration: 0.01ms !important;
 		scroll-behavior: auto !important;
 	}
+}
+
+@media (max-width: 640px) {
+	:root {
+		--lado: 14px;
+	}
+}
+
+/* Sin palabras sueltas en el último renglón ni cortes raros (pedido de Nahuel, por encima del
+   handoff): los títulos se balancean y el texto corrido evita viudas. */
+:where(h1, h2, h3, h4, h5, h6, blockquote, figcaption) {
+	text-wrap: balance;
+}
+body {
+	text-wrap: pretty;
 }

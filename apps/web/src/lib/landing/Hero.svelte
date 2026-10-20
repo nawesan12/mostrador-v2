@@ -792,7 +792,7 @@
 		position: relative;
 		max-width: 1240px;
 		margin: 0 auto;
-		padding: 72px 28px 96px;
+		padding: 72px var(--lado) 96px;
 		display: flex;
 		gap: 56px;
 		flex-wrap: wrap;
