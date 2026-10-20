@@ -107,3 +107,79 @@ test('con movimiento reducido no hay animaciones infinitas', async ({ browser })
 	expect(infinitas).toBe(0);
 	await ctx.close();
 });
+
+test('el modal de plantillas recorre, elige y lleva al registro con la plantilla', async ({
+	page
+}) => {
+	await page.goto('/');
+	await listo(page);
+	await page.getByRole('button', { name: /Ver las 16 plantillas/ }).click();
+	const modal = page.getByRole('dialog');
+	await expect(modal).toBeVisible();
+	await expect(modal.getByText('Plantilla Ceibo')).toBeAttached();
+	await modal.getByRole('button', { name: 'Plantilla siguiente' }).click();
+	await expect(modal.getByText('Plantilla Ceibo')).not.toBeAttached();
+	await page.keyboard.press('Escape');
+	await expect(modal).toBeHidden();
+	await page.getByRole('button', { name: /Ver las 16 plantillas/ }).click();
+	await page
+		.getByRole('dialog')
+		.getByRole('link', { name: /Usar esta plantilla/ })
+		.click();
+	await expect(page).toHaveURL(/\/ingresar\?m=registro$/);
+	expect(await page.evaluate(() => localStorage.getItem('ob-tpl'))).toBeTruthy();
+});
+
+test('integraciones filtra por categoría', async ({ page }) => {
+	await page.goto('/');
+	await listo(page);
+	const sec = page.locator('section#integraciones');
+	const tarjetas = sec.locator('.integ');
+	await expect(tarjetas).toHaveCount(70);
+	await sec.getByRole('button', { name: /^Envíos/ }).click();
+	await expect(tarjetas).toHaveCount(11);
+	await expect(sec.locator('.n', { hasText: 'Andreani' })).toBeVisible();
+});
+
+test('precios: la calculadora y el ciclo anual cambian los montos', async ({ page }) => {
+	await page.goto('/');
+	await listo(page);
+	const sec = page.locator('section#precios');
+	await sec.getByLabel('Vendo por mes').fill('1000000');
+	await expect(sec.getByText('Plan Emprende · 0% de comisión de Mostrador')).toBeVisible();
+	await sec.getByLabel('Vendo por mes').fill('20000000');
+	await expect(sec.getByText('Plan Negocio · 0% de comisión de Mostrador')).toBeVisible();
+	await sec.getByRole('button', { name: /Anual/ }).click();
+	await expect(sec.getByText('$ 37.425').first()).toBeVisible();
+	await expect(sec.getByText('$ 449.100 por año')).toBeVisible();
+});
+
+test('el conector de IA confirma los cambios', async ({ page }) => {
+	await page.goto('/');
+	await listo(page);
+	const sec = page.locator('section#ia');
+	await sec.getByRole('button', { name: /ChatGPT/ }).click();
+	await expect(sec.getByRole('button', { name: /ChatGPT/ })).toHaveAttribute(
+		'aria-pressed',
+		'true'
+	);
+	await sec.getByRole('button', { name: 'Confirmar' }).click();
+	await expect(sec.getByRole('button', { name: 'Hecho' })).toBeVisible();
+});
+
+test('el widget de Hornero aparece, se minimiza y vuelve', async ({ page }) => {
+	await page.goto('/');
+	await listo(page);
+	await expect(page.getByText('¡Hola! Soy Hornero')).toBeVisible({ timeout: 6000 });
+	await page.getByRole('button', { name: 'Minimizar' }).click();
+	await expect(page.getByText('¿Te ayudo?')).toBeVisible();
+	await page.getByRole('button', { name: 'Hornero', exact: true }).click();
+	await expect(page.getByText('¡Hola! Soy Hornero')).toBeVisible();
+});
+
+test('el footer tiene el botón de arrepentimiento', async ({ page }) => {
+	await page.goto('/');
+	await expect(
+		page.locator('footer').getByRole('link', { name: 'Botón de arrepentimiento' }).first()
+	).toHaveAttribute('href', '/legales/arrepentimiento');
+});
