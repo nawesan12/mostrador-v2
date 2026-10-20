@@ -69,7 +69,7 @@
 		<div class="barra-in">
 			<span
 				>© 2026 Mostrador Tecnología S.A.S. · <span class="nw">CUIT 30-71000000-0</span>
-				<b>(datos de ejemplo)</b></span
+				<b class="nw">(datos de ejemplo)</b></span
 			>
 			<span class="legal">
 				<a class="arrep" href="/legales/arrepentimiento"
