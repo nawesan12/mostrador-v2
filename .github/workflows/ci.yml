@@ -59,6 +59,61 @@ jobs:
       - run: go vet ./...
       - run: go test -race ./...
 
+  # La app real de punta a punta: web en modo API + API Go + Postgres + Mailpit (registro, ingreso,
+  # recuperar por mail, contraseña nueva, salir).
+  integracion:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: mostrador
+          POSTGRES_DB: mostrador
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U mostrador" --health-interval 2s --health-retries 30
+      mailpit:
+        image: axllent/mailpit:latest
+        ports: ['1025:1025', '8025:8025']
+    env:
+      MOSTRADOR_BASE_DE_DATOS_ADMIN: postgres://mostrador@localhost:5432/mostrador?sslmode=disable
+      MOSTRADOR_BASE_DE_DATOS_MIGRADOR: postgres://mostrador_migrador@localhost:5432/mostrador_dev?sslmode=disable
+      MOSTRADOR_BASE_DE_DATOS: postgres://mostrador_app@localhost:5432/mostrador_dev?sslmode=disable
+      MOSTRADOR_SMTP: 127.0.0.1:1025
+      MOSTRADOR_CLAVE_BFF: clave-bff-e2e
+      MOSTRADOR_DIRECCION: ':4000'
+      E2E_MAILPIT: http://127.0.0.1:8025
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: apps/api/go.mod
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - name: Base y API
+        working-directory: apps/api
+        run: |
+          go run ./cmd/mostradorctl bootstrap
+          go run ./cmd/mostradorctl migrar
+          go build -o /tmp/api ./cmd/api
+          /tmp/api > /tmp/api.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf localhost:4000/salud/listo && break; sleep 1; done
+      - name: Web en modo API
+        working-directory: apps/web
+        run: |
+          bun run gen
+          bun run build
+          bunx playwright install --with-deps chromium
+          bun run test:e2e:api
+      - if: failure()
+        run: cat /tmp/api.log
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-integracion
+          path: apps/web/test-results
+
   jobs-worker:
     runs-on: ubuntu-latest
     steps:
@@ -106,7 +161,7 @@ jobs:
   # Deploy a mostrador.iamnaw.dev en cada push a main, sólo si ya están los secretos de Cloudflare.
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [web, api, jobs-worker]
+    needs: [web, api, jobs-worker, integracion]
     runs-on: ubuntu-latest
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

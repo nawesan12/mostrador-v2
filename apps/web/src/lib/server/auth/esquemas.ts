@@ -44,6 +44,15 @@ export const Recuperar = v.variant('canal', [
 	})
 ]);
 
+export const Restablecer = v.object({
+	token: v.pipe(v.string(), v.nonEmpty('El link no es válido. Pedí uno nuevo.'), v.maxLength(200)),
+	clave: v.pipe(
+		v.string(),
+		v.minLength(8, 'La contraseña tiene que tener al menos 8 caracteres.'),
+		v.maxLength(200)
+	)
+});
+
 /** Errores de valibot como { campo: mensaje } para mostrar debajo de cada input. */
 export function errores(issues: v.BaseIssue<unknown>[]) {
 	const out: Record<string, string> = {};

@@ -72,3 +72,21 @@ demo, y "recuperar" muestra "Revisá tu email" sin mandar nada. Las cuentas real
 (Postgres): hashear contraseñas en Workers Free pasaría el tope de 10 ms de CPU, y una demo pública
 no necesita guardar datos personales. El destino de "recuperar" vuelve en la respuesta, no en la
 URL, para que no quede en el historial ni en logs.
+
+## 13. Cuentas y sesiones en la API Go (PR #8)
+- Contraseñas con argon2id (parámetros de OWASP); el hash guarda sus parámetros para poder subirlos.
+- Un email inexistente tarda lo mismo y responde igual que una contraseña incorrecta, y "recuperar"
+  responde 202 siempre: la API no delata quién tiene cuenta.
+- Las sesiones guardan el sha256 del token. El token se entrega una sola vez al BFF, que lo guarda en
+  la cookie `__Host-mostrador_sesion` (httpOnly, Secure, SameSite=Lax); el navegador nunca habla con
+  Go. "Visto" se actualiza como mucho una vez por hora.
+- Cambiar la contraseña con el link (un solo uso, 30 min) cierra todas las sesiones de la cuenta.
+- Límites de intentos con un upsert atómico (`auth.intentos`), como Caja: 5 ingresos por email y 30
+  por IP cada 15 min; 3 links de recuperación por email por hora.
+- La IP del visitante llega del BFF en `X-Cliente-IP` y Go sólo le cree si viene con la clave del
+  BFF; si no, usa la IP de la conexión.
+- Cuentas, membresías y sesiones viven en el esquema `auth` (una persona puede tener varias
+  tiendas), fuera de RLS. Los slugs tomados se registran en `app.slugs`: con RLS forzada ni el dueño
+  ve las tiendas ajenas para chequear si un slug está libre.
+- En Workers, `fetch` guardado como propiedad y llamado como método da "Illegal invocation": los
+  clientes HTTP lo envuelven en una función. Lo detectó el e2e contra la API real, no los unitarios.

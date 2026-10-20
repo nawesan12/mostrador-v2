@@ -12,6 +12,7 @@
 		logosWhatsappIcon,
 		phArrowLeftBold,
 		phCheckBold,
+		phCheckCircleFill,
 		phEye,
 		phEyeSlash,
 		phInfoFill,
@@ -25,8 +26,11 @@
 	/* Recreación de design/Mostrador Ingresar.dc.html: modos login, registro, recuperar y enviado. */
 	let { form } = $props();
 
-	type Modo = 'login' | 'registro' | 'recuperar' | 'enviado';
-	const MODOS: Modo[] = ['login', 'registro', 'recuperar', 'enviado'];
+	type Modo = 'login' | 'registro' | 'recuperar' | 'enviado' | 'restablecer';
+	const MODOS: Modo[] = ['login', 'registro', 'recuperar', 'enviado', 'restablecer'];
+	// Link del mail de recuperación: ?m=restablecer&token=…
+	const tokenUrl = $derived(page.url.searchParams.get('token') ?? '');
+	const listo = $derived(page.url.searchParams.get('listo') === 'clave');
 	const deUrl = $derived.by(() => {
 		const m = page.url.searchParams.get('m') as Modo | null;
 		return m && MODOS.includes(m) && m !== 'enviado' ? m : 'login';
@@ -97,6 +101,16 @@
 							<h1>Hola de nuevo</h1>
 							<p class="bajada">Entrá para ver cómo vienen tus ventas hoy.</p>
 						</div>
+						{#if listo}
+							<div class="nota" role="status">
+								<Icon
+									icon={phCheckCircleFill}
+									size={18}
+									style="color:#2F8F63;flex:none;margin-top:1px"
+								/>
+								Listo, tu contraseña cambió. Ya podés ingresar con la nueva.
+							</div>
+						{/if}
 						<div class="sociales">
 							<button
 								type="submit"
@@ -121,7 +135,7 @@
 									type="email"
 									autocomplete="email"
 									placeholder="lucia@laesquina.com.ar"
-									value={form?.email ?? ''}
+									defaultValue={form?.email ?? ''}
 									aria-invalid={!!err.email}
 									aria-describedby={err.email ? 'err-email' : undefined}
 								/></span
@@ -191,7 +205,7 @@
 										name="nombre"
 										autocomplete="name"
 										placeholder="Lucía Fernández"
-										value={form?.nombre ?? ''}
+										defaultValue={form?.nombre ?? ''}
 										aria-invalid={!!err.nombre}
 										aria-describedby={err.nombre ? 'err-nombre' : undefined}
 									/></span
@@ -203,7 +217,7 @@
 										name="tienda"
 										autocomplete="organization"
 										placeholder="La Esquina"
-										value={form?.tienda ?? ''}
+										defaultValue={form?.tienda ?? ''}
 										aria-invalid={!!err.tienda}
 										aria-describedby={err.tienda ? 'err-tienda' : undefined}
 									/></span
@@ -217,7 +231,7 @@
 									type="email"
 									autocomplete="email"
 									placeholder="lucia@laesquina.com.ar"
-									value={form?.email ?? ''}
+									defaultValue={form?.email ?? ''}
 									aria-invalid={!!err.email}
 									aria-describedby={err.email ? 'err-email' : undefined}
 								/></span
@@ -322,6 +336,44 @@
 							>{#if err.telefono}<small class="err" id="err-telefono">{err.telefono}</small>{/if}
 						{/if}
 						<button type="submit" class="cta" disabled={enviando}>Mandame el link</button>
+					</form>
+				{:else if modo === 'restablecer'}
+					<!-- No está en el handoff: se arma con las piezas del modo "recuperar" y el medidor del registro. -->
+					<form method="POST" action="?/restablecer" class="col" use:enhance={conEnvio} novalidate>
+						<img src="/hornero/seguridad.png" alt="" class="ave-chica" />
+						<div>
+							<h1>Elegí tu nueva contraseña</h1>
+							<p class="bajada">
+								Reemplaza a la anterior y cerramos las sesiones abiertas en otros dispositivos.
+							</p>
+						</div>
+						<input type="hidden" name="token" value={tokenUrl} />
+						<label class="campo"
+							>Contraseña nueva<span class="in"
+								><input
+									name="clave"
+									type={verClave ? 'text' : 'password'}
+									autocomplete="new-password"
+									placeholder="Mínimo 8 caracteres"
+									class="con-ojo"
+									bind:value={clave}
+									aria-invalid={!!err.clave}
+									aria-describedby={err.clave ? 'err-clave fuerza' : 'fuerza'}
+								/><button
+									type="button"
+									class="ojo"
+									aria-label={verClave ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+									onclick={() => (verClave = !verClave)}
+									><Icon icon={verClave ? phEyeSlash : phEye} size={19} /></button
+								></span
+							></label
+						>{#if err.clave}<small class="err" id="err-clave">{err.clave}</small>{/if}
+						<div class="barras" aria-hidden="true">
+							{#each [0, 1, 2, 3] as i (i)}<span style:background={barra(i)}></span>{/each}
+						</div>
+						<div class="fuerza" id="fuerza">{f.texto}</div>
+						{#if err.token}<small class="err">{err.token}</small>{/if}
+						<button type="submit" class="cta" disabled={enviando}>Guardar contraseña</button>
 					</form>
 				{:else}
 					<form method="POST" action="?/recuperar" class="col enviado" use:enhance={conEnvio}>

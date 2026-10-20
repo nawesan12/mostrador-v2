@@ -17,7 +17,8 @@
 		"format": "prettier --write .",
 		"deploy": "bun run build && wrangler deploy",
 		"db:migrar": "CI=true wrangler d1 migrations apply mostrador-sandbox --remote",
-		"db:migrar:local": "wrangler d1 migrations apply mostrador-sandbox --local"
+		"db:migrar:local": "wrangler d1 migrations apply mostrador-sandbox --local",
+		"test:e2e:api": "playwright test -c playwright.api.config.ts"
 	},
 	"imports": {
 		"#lib": "./src/lib/index.ts",
