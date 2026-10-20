@@ -7,6 +7,7 @@ export const sandboxes = sqliteTable(
 	{
 		id: text('id').primaryKey(),
 		rubro: text('rubro').notNull(),
+		plantilla: text('plantilla'),
 		creadoEn: integer('creado_en').notNull(),
 		venceEn: integer('vence_en').notNull()
 	},

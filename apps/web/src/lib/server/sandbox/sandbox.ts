@@ -14,6 +14,7 @@ import { rubro as buscarRubro, slugDe } from './rubros.ts';
 import { cambios, sandboxes } from './schema.ts';
 import type { Datos, Tienda } from '../datos/tipos.ts';
 import RUBROS from '@mostrador/contrato/rubros.json';
+import { plantilla as buscarPlantilla } from '#lib/plantillas.ts';
 
 export type DbSandbox = DrizzleD1Database<Record<string, never>>;
 
@@ -22,16 +23,28 @@ export const VIDA_MS = 24 * 60 * 60 * 1000;
 
 export const dbSandbox = (d1: D1Database): DbSandbox => drizzle(d1);
 
-export type Sandbox = { id: string; rubro: string; creadoEn: number; venceEn: number };
+export type Sandbox = {
+	id: string;
+	rubro: string;
+	plantilla: string | null;
+	creadoEn: number;
+	venceEn: number;
+};
 
-/** Crea un sandbox del rubro. Devuelve null si el rubro no existe. */
+/**
+ * Crea un sandbox del rubro, con su plantilla por defecto o la elegida en la galería (que tiene que
+ * ser de ese rubro). Devuelve null si el rubro o la plantilla no existen.
+ */
 export async function crear(
 	db: DbSandbox,
 	rubro: string,
-	ahora = Date.now()
+	ahora = Date.now(),
+	plantilla: string | null = null
 ): Promise<Sandbox | null> {
-	if (!buscarRubro(rubro)) return null;
-	const sb = { id: randomToken(24), rubro, creadoEn: ahora, venceEn: ahora + VIDA_MS };
+	const r = buscarRubro(rubro);
+	if (!r) return null;
+	if (plantilla && buscarPlantilla(plantilla)?.rubro !== r.nombre) return null;
+	const sb = { id: randomToken(24), rubro, plantilla, creadoEn: ahora, venceEn: ahora + VIDA_MS };
 	await db.insert(sandboxes).values(sb);
 	return sb;
 }
@@ -91,12 +104,15 @@ export class DatosSandbox implements Datos {
 
 	async tienda(): Promise<Tienda> {
 		const r = buscarRubro(this.sb.rubro)!;
+		// La tienda de ejemplo es la de la plantilla elegida (o la del rubro).
+		const p = buscarPlantilla(this.sb.plantilla ?? r.plantilla);
+		const nombre = p?.tienda ?? r.tienda;
 		const base: Tienda = {
 			id: await uuidDe(`${this.sb.id}:tienda`),
-			slug: slugDe(r.tienda),
-			nombre: r.tienda,
+			slug: slugDe(nombre),
+			nombre,
 			rubro: r.id,
-			plantilla: r.plantilla,
+			plantilla: p?.id ?? r.plantilla,
 			plan: 'gratis',
 			creadaEn: new Date(this.sb.creadoEn).toISOString()
 		};

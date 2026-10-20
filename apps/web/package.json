@@ -16,7 +16,7 @@
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
 		"deploy": "bun run build && wrangler deploy",
-		"db:migrar": "wrangler d1 migrations apply mostrador-sandbox --remote",
+		"db:migrar": "CI=true wrangler d1 migrations apply mostrador-sandbox --remote",
 		"db:migrar:local": "wrangler d1 migrations apply mostrador-sandbox --local"
 	},
 	"imports": {

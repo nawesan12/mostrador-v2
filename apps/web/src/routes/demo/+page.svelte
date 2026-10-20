@@ -1,41 +1,71 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { resolve } from '$app/paths';
 	import Alerta from '#lib/components/Alerta.svelte';
 	import Grano from '#lib/components/Grano.svelte';
 	import Icon from '#lib/components/Icon.svelte';
 	import Seo from '#lib/components/Seo.svelte';
-	import { anim } from '#lib/anim.ts';
-	import { phArrowRightBold, phCheckBold } from '#lib/icons.ts';
-	import { plantilla } from '#lib/plantillas.ts';
+	import TplMini from '#lib/components/TplMini.svelte';
+	import { phCheckBold, phMagnifyingGlass } from '#lib/icons.ts';
+	import { CON_PORTADA, LAYOUT, PLANTILLAS, RUBROS_PLANTILLAS } from '#lib/plantillas.ts';
 
+	/*
+	 * El handoff no tiene una pantalla de "entrar a la demo": se arma con la galería de plantillas del
+	 * onboarding (design/Onboarding Mostrador.dc.html, `gallery`), tal cual, como página.
+	 */
 	let { data, form } = $props();
+
+	let rubro = $state<string>('Todos');
+	let q = $state('');
 	let eligiendo = $state<string | null>(null);
+
+	// Chips: "Todos" y los rubros que tienen alguna plantilla (handoff: rubros filtrados).
+	const chips = RUBROS_PLANTILLAS.filter(
+		(r) => r === 'Todos' || PLANTILLAS.some((t) => t.rubro === r)
+	);
+	const lista = $derived.by(() => {
+		const b = q.trim().toLowerCase();
+		return PLANTILLAS.filter(
+			(t) =>
+				(rubro === 'Todos' || t.rubro === rubro) &&
+				(!b || `${t.nombre} ${t.rubro} ${LAYOUT[t.layout]}`.toLowerCase().includes(b))
+		);
+	});
 </script>
 
 <Seo
-	title="Probá Mostrador · Elegí tu rubro"
-	description="Armamos una tienda de ejemplo de tu rubro, con productos, pedidos y clientes, para que pruebes el panel completo."
+	title="Probá Mostrador · Elegí una tienda"
+	description="Elegí una tienda de ejemplo y recorré el panel completo con sus productos, pedidos y clientes."
 	path="/demo"
-	image="general"
+	image="plantillas"
 />
 
 <Grano />
 
-<main>
-	<header>
-		<a href={resolve('/')} aria-label="Mostrador, volver al inicio">
-			<img src="/wordmark-brown.png" alt="Mostrador" width="150" height="38" />
-		</a>
-	</header>
+<main class="gal">
+	<div class="cab">
+		<div class="tit">
+			<h1>Probá Mostrador</h1>
+			<p>Elegí una tienda de ejemplo. La demo es tuya por 24 horas.</p>
+		</div>
+		<label class="buscar">
+			<Icon icon={phMagnifyingGlass} size={15} style="color:#7A6252" />
+			<input
+				bind:value={q}
+				placeholder="Buscar estilo o rubro"
+				aria-label="Buscar estilo o rubro"
+			/>
+		</label>
+	</div>
 
-	<div class="intro" use:anim={'rise'}>
-		<div class="etiqueta">Probá Mostrador</div>
-		<h1>¿Qué vendés?</h1>
-		<p>
-			Armamos una tienda de ejemplo de tu rubro, con productos, pedidos y clientes. Es tuya por 24
-			horas: tocá todo lo que quieras.
-		</p>
+	<div class="chips" role="group" aria-label="Rubro">
+		{#each chips as r (r)}
+			<button
+				type="button"
+				class:on={rubro === r}
+				aria-pressed={rubro === r}
+				onclick={() => (rubro = r)}>{r}</button
+			>
+		{/each}
 	</div>
 
 	{#if form?.error}
@@ -46,215 +76,225 @@
 
 	<form
 		method="POST"
+		class="cuerpo"
 		use:enhance={({ formData }) => {
-			eligiendo = String(formData.get('rubro'));
+			eligiendo = String(formData.get('plantilla'));
 			return async ({ update }) => {
 				await update();
 				eligiendo = null;
 			};
 		}}
 	>
-		<ul class="rubros">
-			{#each data.rubros as r, i (r.id)}
-				{@const p = plantilla(r.plantilla)}
-				<li use:anim={{ t: 'rise', delay: 40 * i }}>
-					<button
-						type="submit"
-						name="rubro"
-						value={r.id}
-						class="rubro"
-						class:actual={data.actual === r.id}
-						disabled={eligiendo !== null}
-						aria-describedby="tienda-{r.id}"
+		<div class="grilla">
+			{#each lista as t (t.id)}
+				{@const sel = data.actual === t.id}
+				<button
+					type="submit"
+					name="plantilla"
+					value={t.id}
+					class="tpl"
+					disabled={eligiendo !== null}
+					aria-label="{t.nombre}, {t.rubro}: {t.tienda}"
+				>
+					<div
+						class="marco"
+						style:box-shadow="0 0 0 2px {sel ? '#D2582F' : 'transparent'},0 20px 40px -24px
+						rgba(58,29,18,.55)"
 					>
-						<span
-							class="vidriera"
-							style:--bg={p?.bg}
-							style:--tx={p?.tx}
-							style:--ac={p?.ac}
-							style:--ff={p?.serif ? "Georgia, 'Times New Roman', serif" : 'var(--font)'}
-						>
-							<span class="tienda" id="tienda-{r.id}">{r.tienda}</span>
-							<span class="lema"><i></i>{p?.lema}</span>
-						</span>
-						<span class="pie">
-							<span class="nombre">{r.nombre}</span>
-							{#if eligiendo === r.id}
-								<span class="estado">Armando…</span>
-							{:else if data.actual === r.id}
-								<span class="estado"><Icon icon={phCheckBold} size={13} />Tu demo</span>
-							{:else}
-								<Icon icon={phArrowRightBold} size={15} />
-							{/if}
-						</span>
-					</button>
-				</li>
+						{#if CON_PORTADA.has(t.id)}
+							<img
+								class="portada"
+								src="/plantillas/{t.id}.jpg"
+								alt=""
+								loading="lazy"
+								width="560"
+								height="611"
+							/>
+						{:else}
+							<TplMini {t} />
+						{/if}
+						{#if sel}
+							<span class="elegida"><Icon icon={phCheckBold} size={12} />Elegida</span>
+						{:else if eligiendo === t.id}
+							<span class="elegida">Armando…</span>
+						{/if}
+					</div>
+					<div class="pie">
+						<span class="nom">{t.nombre}</span>
+						<span class="sub">{t.rubro} · {LAYOUT[t.layout]}</span>
+					</div>
+				</button>
 			{/each}
-		</ul>
+		</div>
+		{#if lista.length === 0}
+			<div class="vacia">No hay plantillas con «{q}».</div>
+		{/if}
 	</form>
-
-	<p class="nota">La demo no pide datos ni tarjeta. A las 24 horas se borra sola.</p>
 </main>
 
 <style>
-	main {
-		max-width: 1240px;
-		margin: 0 auto;
-		padding: 28px 28px 96px;
+	.gal {
+		min-height: 100svh;
+		background: #fbf7f2;
+		color: #2a140c;
+		display: flex;
+		flex-direction: column;
 	}
-	header img {
-		display: block;
-		width: 150px;
-		height: auto;
+	.cab {
+		display: flex;
+		align-items: center;
+		gap: 14px;
+		padding: 20px 24px;
+		border-bottom: 1px solid rgba(58, 29, 18, 0.08);
+		flex-wrap: wrap;
 	}
-	.intro {
-		margin-top: 56px;
-		max-width: 640px;
+	.tit {
+		flex: 1;
+		min-width: 240px;
 	}
 	h1 {
-		margin: 12px 0 0;
-		font-size: clamp(40px, 6vw, 72px);
+		margin: 0;
+		font-size: 24px;
 		font-weight: 600;
-		line-height: 0.95;
-		letter-spacing: -0.045em;
+		letter-spacing: -0.03em;
 	}
-	.intro p {
-		margin: 16px 0 0;
-		font-size: 17px;
-		line-height: 1.5;
-		color: var(--marron);
+	.tit p {
+		margin: 0;
+		font-size: 13.5px;
+		color: #7a6252;
 	}
-	.aviso {
-		margin-top: 24px;
-		max-width: 560px;
-	}
-	.rubros {
-		margin: 40px 0 0;
-		padding: 0;
-		list-style: none;
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(min(210px, 100%), 1fr));
-		gap: 14px;
-	}
-	.rubro {
-		width: 100%;
-		height: 100%;
-		display: flex;
-		flex-direction: column;
-		padding: 8px;
-		border: 1px solid rgba(58, 29, 18, 0.09);
-		border-radius: 26px;
-		background: #fff;
-		color: var(--tostado);
-		text-align: left;
-		box-shadow: var(--shd);
-		transition:
-			transform 0.25s var(--ease),
-			box-shadow 0.25s;
-	}
-	.rubro:hover:not(:disabled) {
-		transform: translateY(-3px);
-		box-shadow:
-			inset 0 1px 0 #fff,
-			0 20px 40px -20px rgba(58, 29, 18, 0.35);
-	}
-	.rubro:disabled {
-		cursor: progress;
-	}
-	.rubro.actual {
-		border-color: var(--terracota);
-	}
-	/* Vidriera con el arco de la marca: la tienda de ejemplo con los colores de su plantilla. */
-	.vidriera {
-		position: relative;
-		aspect-ratio: 4 / 3;
-		display: flex;
-		flex-direction: column;
-		justify-content: flex-end;
-		gap: 6px;
-		padding: 16px;
-		border-radius: 999px 999px 18px 18px;
-		background: var(--bg);
-		color: var(--tx);
-		overflow: hidden;
-	}
-	.vidriera::before {
-		content: '';
-		position: absolute;
-		inset: 0;
-		background: url('/textura/arch-pattern-light.svg') center / 46px;
-		opacity: 0.35;
-		mix-blend-mode: multiply;
-	}
-	.tienda {
-		position: relative;
-		font-family: var(--ff);
-		font-size: 21px;
-		font-weight: 600;
-		line-height: 1.05;
-		letter-spacing: -0.02em;
-	}
-	.lema {
-		position: relative;
+	.buscar {
 		display: flex;
 		align-items: center;
-		gap: 6px;
-		font-size: 12px;
-		font-weight: 600;
-		opacity: 0.85;
-	}
-	.lema i {
-		width: 7px;
-		height: 7px;
-		flex: none;
-		border-radius: 50%;
-		background: var(--ac);
-	}
-	.pie {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
 		gap: 8px;
-		min-height: 44px;
-		padding: 10px 8px 4px;
+		padding: 9px 14px;
+		border-radius: 999px;
+		background: #fff;
+		border: 1px solid rgba(58, 29, 18, 0.12);
+		min-width: 220px;
 	}
-	.nombre {
-		font-size: 15.5px;
-		font-weight: 600;
+	.buscar input {
+		flex: 1;
+		min-width: 0;
+		border: 0;
+		outline: 0;
+		background: transparent;
+		font:
+			500 14px 'Instrument Sans Variable',
+			'Instrument Sans',
+			sans-serif;
+		color: #2a140c;
 	}
-	.estado {
-		display: inline-flex;
-		align-items: center;
-		gap: 4px;
-		font-size: 12.5px;
+	.chips {
+		display: flex;
+		gap: 6px;
+		padding: 14px 24px;
+		overflow-x: auto;
+		flex: none;
+	}
+	.chips button {
+		border: 1px solid rgba(58, 29, 18, 0.14);
+		font-size: 13px;
 		font-weight: 600;
-		color: var(--terracota-oscuro);
+		padding: 8px 14px;
+		border-radius: 999px;
+		background: #fff;
+		color: #2a140c;
 		white-space: nowrap;
 	}
-	.nota {
-		margin-top: 32px;
-		font-size: 14px;
-		color: var(--marron-2);
+	.chips button.on {
+		border-color: #2a140c;
+		background: #2a140c;
+		color: #fff;
+	}
+	.aviso {
+		padding: 0 24px 12px;
+		max-width: 620px;
+	}
+	.cuerpo {
+		flex: 1;
+		padding: 4px 24px 24px;
+	}
+	.grilla {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+		gap: 16px;
+	}
+	.tpl {
+		padding: 0;
+		border: 0;
+		background: transparent;
+		font-family: inherit;
+		text-align: left;
+		color: #2a140c;
+		transition: transform 0.3s var(--ease);
+	}
+	.tpl:hover:not(:disabled) {
+		transform: translateY(-4px);
+	}
+	.tpl:disabled {
+		cursor: progress;
+	}
+	.marco {
+		position: relative;
+		height: 290px;
+		border-radius: 16px;
+		overflow: hidden;
+		background: #fff;
+	}
+	/* Portada real de la plantilla trabajada, anclada arriba como la vista de la tienda. */
+	.portada {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: top center;
+	}
+	.elegida {
+		position: absolute;
+		top: 10px;
+		right: 10px;
+		display: flex;
+		align-items: center;
+		gap: 5px;
+		font-size: 12px;
+		font-weight: 700;
+		color: #fff;
+		background: #d2582f;
+		padding: 5px 10px;
+		border-radius: 999px;
+	}
+	.pie {
+		margin-top: 9px;
+		display: grid;
+	}
+	.nom {
+		font-size: 15px;
+		font-weight: 600;
+	}
+	.sub {
+		font-size: 12.5px;
+		color: #7a6252;
+	}
+	.vacia {
+		padding: 60px;
+		text-align: center;
+		color: #7a6252;
 	}
 	@media (max-width: 760px) {
-		main {
-			padding: 20px 16px 72px;
+		.cab,
+		.chips,
+		.cuerpo {
+			padding-left: 16px;
+			padding-right: 16px;
 		}
-		.intro {
-			margin-top: 36px;
+		/* Como en el handoff: el buscador baja a su propia fila. */
+		.buscar {
+			flex: 1 1 100%;
+			min-width: 0;
 		}
-		.rubros {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-			gap: 10px;
-		}
-		.vidriera {
-			padding: 12px;
-		}
-		.tienda {
-			font-size: 17px;
-		}
-		.lema {
-			font-size: 11px;
+		.chips button {
+			min-height: 40px;
 		}
 	}
 </style>

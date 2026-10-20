@@ -1,20 +1,25 @@
 import { env } from 'cloudflare:workers';
 import { fail, redirect } from '@sveltejs/kit';
 import { dev } from '$app/env';
+import { plantilla as buscarPlantilla } from '#lib/plantillas.ts';
 import { RUBROS } from '#lib/server/sandbox/rubros.ts';
 import { COOKIE, crear, dbSandbox, VIDA_MS } from '#lib/server/sandbox/sandbox.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => ({
-	rubros: RUBROS,
-	actual: locals.sandbox?.rubro ?? null
+	// La plantilla de la demo actual, para marcarla "Elegida".
+	actual: locals.sandbox
+		? (locals.sandbox.plantilla ?? RUBROS.find((r) => r.id === locals.sandbox!.rubro)?.plantilla)
+		: null
 });
 
 export const actions: Actions = {
 	default: async ({ request, cookies }) => {
-		const rubro = String((await request.formData()).get('rubro') ?? '');
-		const sb = await crear(dbSandbox(env.SANDBOX), rubro);
-		if (!sb) return fail(400, { error: 'Elegí uno de los rubros de la lista.' });
+		const id = String((await request.formData()).get('plantilla') ?? '');
+		const p = buscarPlantilla(id);
+		const rubro = p && RUBROS.find((r) => r.nombre === p.rubro);
+		const sb = rubro && (await crear(dbSandbox(env.SANDBOX), rubro.id, Date.now(), p.id));
+		if (!sb) return fail(400, { error: 'Elegí una de las plantillas de la galería.' });
 		cookies.set(COOKIE, sb.id, {
 			path: '/',
 			httpOnly: true,
