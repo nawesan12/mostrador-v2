@@ -1,0 +1,22 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "mostrador",
+	"account_id": "ce736d18d9f37624e453e7b3f9aa96a2",
+	"compatibility_date": "2026-10-18",
+	"compatibility_flags": ["nodejs_als", "nodejs_compat"],
+	"main": ".svelte-kit/cloudflare/_worker.js",
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare"
+	},
+	"routes": [{ "pattern": "mostrador.iamnaw.dev", "custom_domain": true }],
+	"workers_dev": true,
+	// Cada PR sube una versión con alias pr-N: https://pr-N-mostrador.<subdominio>.workers.dev
+	"preview_urls": true,
+	"observability": { "enabled": true },
+	"vars": {
+		"PUBLIC_SITE_URL": "https://mostrador.iamnaw.dev",
+		// sandbox: la demo pública con datos por visitante en D1. api: la API Go del VPS.
+		"DATA_SOURCE": "sandbox"
+	}
+}

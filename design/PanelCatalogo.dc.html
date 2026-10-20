@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;flex-direction:column;gap:18px;font-family:'Instrument Sans',system-ui,sans-serif;color:var(--tx)">
+
+<!-- PRODUCTOS -->
+<sc-if value="{{ sProd }}" hint-placeholder-val="{{ false }}">
+  <div data-r="" style="display:flex;align-items:end;gap:12px;flex-wrap:wrap"><div style="flex:1;min-width:220px"><h1 style="margin:0;font-size:30px;letter-spacing:-.035em;font-weight:600">Productos</h1><div style="margin-top:2px;font-size:15px;color:var(--mu)">1.204 productos · publicados en tu tienda, Mercado Libre e Instagram</div></div>
+    <button onClick="{{ importX }}" style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;border:1px solid var(--ln2);background:var(--sf);color:var(--tx);font:600 13.5px 'Instrument Sans';cursor:pointer;box-shadow:var(--sh);white-space:nowrap"><iconify-icon icon="ph:file-xls-bold" width="15"></iconify-icon>Importar Excel</button>
+    <button onClick="{{ newProd }}" style="display:flex;align-items:center;gap:8px;padding:11px 20px;border-radius:999px;border:0;background:linear-gradient(180deg,#E06A3E,#D2582F);color:#fff;font:600 14px 'Instrument Sans';cursor:pointer;white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 10px 24px -10px rgba(210,88,47,.8)"><iconify-icon icon="ph:plus-bold" width="14"></iconify-icon>Nuevo producto</button></div>
+  <div data-r="" style="position:relative;overflow:hidden;display:flex;align-items:center;gap:16px;padding:16px 18px;border-radius:22px;background:linear-gradient(120deg,#2A140C,#4A2416);color:#FBF7F2;flex-wrap:wrap">
+    <div style="position:absolute;inset:0;background-image:url(assets/arch-pattern-light.svg)"></div>
+    <img src="assets/hornero/foto.png" alt="" style="position:relative;width:64px;height:64px;object-fit:contain">
+    <div style="position:relative;flex:1 1 260px"><div style="font-size:16px;font-weight:600">Cargá productos con una foto</div><div style="font-size:13.5px;color:#D9C8BA">Hornero completa nombre, descripción, categoría y precio sugerido. Vos solo confirmás.</div></div>
+    <button onClick="{{ photoLoad }}" style="position:relative;display:flex;align-items:center;gap:8px;padding:11px 18px;border-radius:999px;border:0;background:#FBF7F2;color:#2A140C;font:600 13.5px 'Instrument Sans';cursor:pointer;white-space:nowrap"><iconify-icon icon="ph:camera-fill" width="16" style="color:#D2582F"></iconify-icon>Subir fotos</button>
+  </div>
+  <div data-r="" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <div style="flex:1 1 220px;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:var(--sf);box-shadow:var(--sh)"><iconify-icon icon="ph:magnifying-glass" width="15" style="color:var(--mu)"></iconify-icon><input value="{{ q }}" onInput="{{ setQ }}" placeholder="Buscar por nombre o SKU" style="flex:1;min-width:0;border:0;outline:0;background:transparent;font:500 14px 'Instrument Sans';color:var(--tx)"></div>
+    <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none"><sc-for list="{{ pcats }}" as="c" hint-placeholder-count="5"><button onClick="{{ c.go }}" style="border:0;cursor:pointer;white-space:nowrap;font:600 13px 'Instrument Sans';padding:9px 14px;border-radius:999px;background:{{ c.bg }};color:{{ c.fg }};box-shadow:var(--sh)">{{ c.t }}</button></sc-for></div>
+    <div style="display:flex;padding:3px;border-radius:999px;background:var(--chip)"><button onClick="{{ vGrid }}" aria-label="Grilla" style="width:34px;height:30px;border:0;border-radius:999px;cursor:pointer;background:{{ gridBg }};color:var(--tx);display:grid;place-items:center"><iconify-icon icon="ph:squares-four-bold" width="15"></iconify-icon></button><button onClick="{{ vList }}" aria-label="Lista" style="width:34px;height:30px;border:0;border-radius:999px;cursor:pointer;background:{{ listBg }};color:var(--tx);display:grid;place-items:center"><iconify-icon icon="ph:list-bold" width="15"></iconify-icon></button></div>
+  </div>
+  <sc-if value="{{ isGrid }}">
+    <div data-r="" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px">
+      <sc-for list="{{ prods }}" as="p" hint-placeholder-count="8">
+        <button onClick="{{ p.open }}" style="padding:0;border:0;border-radius:22px;background:var(--sf);box-shadow:var(--shd);overflow:hidden;cursor:pointer;font-family:inherit;color:var(--tx);text-align:left;transition:transform .25s" style-hover="transform:translateY(-3px)">
+          <div style="position:relative;aspect-ratio:1.15;overflow:hidden"><img src="{{ p.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"><span style="position:absolute;left:10px;top:10px;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:999px;background:{{ p.sbg }};color:{{ p.sfg }}">{{ p.stTxt }}</span><span style="position:absolute;right:10px;top:10px;display:flex;gap:4px"><sc-for list="{{ p.chs }}" as="c" hint-placeholder-count="2"><span style="width:24px;height:24px;border-radius:7px;background:#fff;display:grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,.15)"><sc-if value="{{ c.icon }}"><iconify-icon icon="{{ c.icon }}" width="13" style="color:{{ c.col }}"></iconify-icon></sc-if><sc-if value="{{ c.word }}"><span style="font-size:7px;font-weight:800;color:#2D3277;background:#FFE600;padding:2px 3px;border-radius:3px">ML</span></sc-if></span></sc-for></span></div>
+          <div style="padding:12px 14px 14px"><div style="font-size:14.5px;font-weight:600;line-height:1.3">{{ p.n }}</div><div style="font-size:12.5px;color:var(--mu);margin-top:2px">{{ p.cat }} · {{ p.var }}</div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:8px"><b style="font-size:17px;letter-spacing:-.02em">{{ p.pf }}</b><span style="font-size:12.5px;color:var(--mu)">{{ p.sold }} vendidos</span></div></div>
+        </button>
+      </sc-for>
+    </div>
+  </sc-if>
+  <sc-if value="{{ isList }}">
+    <div data-r="" style="border-radius:24px;background:var(--sf);box-shadow:var(--shd);overflow:hidden">
+      <sc-for list="{{ prods }}" as="p" hint-placeholder-count="8">
+        <button onClick="{{ p.open }}" style="width:100%;display:flex;align-items:center;gap:12px;padding:10px 16px;border:0;border-bottom:1px solid var(--ln);background:transparent;cursor:pointer;font-family:inherit;color:var(--tx);text-align:left" style-hover="background:var(--chip)">
+          <img src="{{ p.img }}" alt="" style="width:46px;height:46px;border-radius:12px;object-fit:cover;flex:none">
+          <span style="flex:1;min-width:0"><span style="display:block;font-size:14px;font-weight:600">{{ p.n }}</span><span style="display:block;font-size:12.5px;color:var(--mu)">{{ p.cat }} · SKU {{ p.sku }}</span></span>
+          <span style="font-size:12px;font-weight:700;padding:4px 9px;border-radius:999px;background:{{ p.sbg }};color:{{ p.sfg }};white-space:nowrap">{{ p.stTxt }}</span>
+          <b style="min-width:84px;text-align:right">{{ p.pf }}</b>
+        </button>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ edOpen }}">
+    <div onClick="{{ closeEd }}" style="position:fixed;inset:0;z-index:70;background:rgba(42,20,12,.34);backdrop-filter:blur(3px)"></div>
+    <aside data-sheet="" data-lenis-prevent="" style="position:fixed;top:12px;right:12px;bottom:12px;z-index:71;width:560px;max-width:calc(100vw - 24px);border-radius:26px;background:var(--bg);color:var(--tx);box-shadow:0 40px 90px -20px rgba(42,20,12,.6);display:flex;flex-direction:column;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:12px;padding:16px 18px;background:var(--sf);border-bottom:1px solid var(--ln)"><span style="flex:1;font-size:20px;font-weight:600;letter-spacing:-.02em">Editar producto</span><button onClick="{{ closeEd }}" style="width:36px;height:36px;border:0;border-radius:50%;background:var(--chip);color:var(--tx);cursor:pointer;display:grid;place-items:center"><iconify-icon icon="ph:x-bold" width="14"></iconify-icon></button></div>
+      <div style="flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px"><img src="{{ ed.img }}" alt="" style="width:100%;aspect-ratio:1;border-radius:16px;object-fit:cover;grid-row:span 2"><img src="{{ ed.img }}" alt="" style="width:100%;aspect-ratio:1;border-radius:12px;object-fit:cover;object-position:20% 30%"><img src="{{ ed.img }}" alt="" style="width:100%;aspect-ratio:1;border-radius:12px;object-fit:cover;object-position:80% 70%"><span style="aspect-ratio:1;border-radius:12px;border:1.5px dashed var(--ln2);display:grid;place-items:center;color:var(--mu)"><iconify-icon icon="ph:plus-bold" width="18"></iconify-icon></span><span style="aspect-ratio:1;border-radius:12px;background:rgba(210,88,47,.1);display:grid;place-items:center;color:#C24E25;font-size:11px;font-weight:600;text-align:center;padding:4px"><iconify-icon icon="ph:magic-wand-fill" width="16"></iconify-icon>Mejorar fondo</span></div>
+        <div style="padding:14px;border-radius:18px;background:var(--sf);box-shadow:var(--sh);display:flex;flex-direction:column;gap:10px">
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:12.5px;font-weight:600;color:var(--mu)">Nombre<input value="{{ ed.n }}" style="padding:11px 12px;border-radius:12px;border:1px solid var(--ln2);background:var(--bg);font:500 15px 'Instrument Sans';color:var(--tx);outline:none"></label>
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:12.5px;font-weight:600;color:var(--mu)"><span style="display:flex;justify-content:space-between">Descripción<span style="color:#C24E25">✦ Mejorar con Hornero</span></span><textarea style="min-height:72px;padding:11px 12px;border-radius:12px;border:1px solid var(--ln2);background:var(--bg);font:500 14px/1.5 'Instrument Sans';color:var(--tx);outline:none;resize:vertical">{{ ed.d }}</textarea></label>
+        </div>
+        <div style="padding:14px;border-radius:18px;background:var(--sf);box-shadow:var(--sh)">
+          <div style="font-size:14px;font-weight:600">Precio por canal</div>
+          <div style="margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px"><sc-for list="{{ ed.prices }}" as="x" hint-placeholder-count="3"><div style="padding:10px 12px;border-radius:12px;background:var(--sf3)"><div style="font-size:12px;color:var(--mu)">{{ x.t }}</div><div style="font-size:18px;font-weight:600">{{ x.v }}</div><div style="font-size:11.5px;color:var(--fa)">{{ x.n }}</div></div></sc-for></div>
+          <div style="margin-top:10px;font-size:12.5px;color:var(--mu)">Margen <b style="color:#2F8F63">{{ ed.m }}</b> · costo $ {{ ed.c }}</div>
+        </div>
+        <div style="padding:14px;border-radius:18px;background:var(--sf);box-shadow:var(--sh)">
+          <div style="font-size:14px;font-weight:600">Variantes y stock</div>
+          <div style="margin-top:8px;display:flex;flex-direction:column"><sc-for list="{{ ed.vars }}" as="v" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--ln)"><span style="width:18px;height:18px;border-radius:50%;background:{{ v.c }};box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)"></span><span style="flex:1;font-size:14px">{{ v.n }}</span><span style="font-size:13px;color:{{ v.sc }};font-weight:600">{{ v.s }} u</span></div></sc-for></div>
+        </div>
+        <div style="padding:14px;border-radius:18px;background:var(--sf);box-shadow:var(--sh);display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:14px;font-weight:600;margin-bottom:4px">Dónde se publica</div>
+          <sc-for list="{{ ed.chans }}" as="c" hint-placeholder-count="4"><button onClick="{{ c.go }}" style="display:flex;align-items:center;gap:10px;padding:7px 0;border:0;background:transparent;cursor:pointer;font-family:inherit;color:var(--tx);text-align:left"><iconify-icon icon="{{ c.i }}" width="18"></iconify-icon><span style="flex:1;font-size:14px">{{ c.t }}</span><span style="position:relative;width:38px;height:22px;flex:none;border-radius:999px;background:{{ c.tbg }};transition:background .25s"><span style="position:absolute;top:2px;left:{{ c.tx }};width:18px;height:18px;border-radius:50%;background:#fff;transition:left .25s cubic-bezier(.2,.7,.1,1);box-shadow:0 1px 3px rgba(0,0,0,.3)"></span></span></button></sc-for>
+        </div>
+        <div style="padding:14px;border-radius:18px;background:var(--sf);box-shadow:var(--sh)"><div style="font-size:12px;color:var(--mu)">Así aparece en Google</div><div style="margin-top:6px;font-size:12.5px;color:#2F8F63">laesquina.com.ar › {{ ed.slug }}</div><div style="font-size:16px;color:#3E6BFD;font-weight:500">{{ ed.n }} | Café La Esquina</div><div style="font-size:13px;color:var(--mu);line-height:1.4">{{ ed.d }}</div></div>
+      </div>
+      <div style="padding:14px 16px;display:flex;gap:8px;background:var(--sf);border-top:1px solid var(--ln)"><button onClick="{{ closeEd }}" style="padding:13px 18px;border-radius:999px;border:1px solid var(--ln2);background:transparent;color:var(--tx);font:600 14px 'Instrument Sans';cursor:pointer">Cancelar</button><button onClick="{{ saveEd }}" style="flex:1;padding:13px;border-radius:999px;border:0;background:linear-gradient(180deg,#E06A3E,#D2582F);color:#fff;font:600 14.5px 'Instrument Sans';cursor:pointer">Guardar y publicar</button></div>
+    </aside>
+  </sc-if>
+</sc-if>
+
+<!-- INVENTARIO -->
+<sc-if value="{{ sInv }}" hint-placeholder-val="{{ false }}">
+  <div data-r="" style="display:flex;align-items:end;gap:12px;flex-wrap:wrap"><div style="flex:1;min-width:220px"><h1 style="margin:0;font-size:30px;letter-spacing:-.035em;font-weight:600">Inventario</h1><div style="margin-top:2px;font-size:15px;color:var(--mu)">Un solo stock para el local, la web y Mercado Libre</div></div>
+    <button onClick="{{ countInv }}" style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;border:1px solid var(--ln2);background:var(--sf);color:var(--tx);font:600 13.5px 'Instrument Sans';cursor:pointer;box-shadow:var(--sh);white-space:nowrap"><iconify-icon icon="ph:barcode-bold" width="15"></iconify-icon>Contar stock</button>
+    <button onClick="{{ orderSup }}" style="display:flex;align-items:center;gap:8px;padding:11px 20px;border-radius:999px;border:0;background:linear-gradient(180deg,#E06A3E,#D2582F);color:#fff;font:600 14px 'Instrument Sans';cursor:pointer;white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 10px 24px -10px rgba(210,88,47,.8)"><iconify-icon icon="ph:truck-fill" width="15"></iconify-icon>Pedir a proveedores</button></div>
+  <div data-r="" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px">
+    <sc-for list="{{ invK }}" as="k" hint-placeholder-count="4"><div style="padding:16px 18px;border-radius:20px;background:var(--sf);box-shadow:var(--shd)"><div style="font-size:13.5px;color:var(--mu)">{{ k.t }}</div><div style="font-size:28px;font-weight:600;letter-spacing:-.04em;margin-top:4px;color:{{ k.c }}">{{ k.v }}</div><div style="font-size:12.5px;color:var(--mu)">{{ k.d }}</div></div></sc-for>
+  </div>
+  <div data-r="" style="border-radius:24px;background:var(--sf);box-shadow:var(--shd);overflow:hidden">
+    <sc-for list="{{ inv }}" as="r" hint-placeholder-count="7">
+      <div style="display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid var(--ln);flex-wrap:wrap">
+        <img src="{{ r.img }}" alt="" style="width:44px;height:44px;border-radius:12px;object-fit:cover;flex:none">
+        <span style="flex:1 1 160px;min-width:0"><span style="display:block;font-size:14px;font-weight:600">{{ r.n }}</span><span style="display:block;font-size:12.5px;color:var(--mu)">{{ r.loc }}</span></span>
+        <span style="flex:1 1 160px;min-width:140px"><span style="display:flex;justify-content:space-between;font-size:12.5px"><span style="color:var(--mu)">{{ r.days }}</span><b style="color:{{ r.c }}">{{ r.s }} u</b></span><span style="display:block;margin-top:5px;height:7px;border-radius:5px;background:var(--sf3);overflow:hidden"><span style="display:block;height:100%;width:{{ r.w }};border-radius:5px;background:{{ r.c }}"></span></span></span>
+        <span style="display:flex;align-items:center;gap:4px"><button onClick="{{ r.dec }}" style="width:30px;height:30px;border-radius:50%;border:1px solid var(--ln2);background:transparent;color:var(--tx);cursor:pointer;display:grid;place-items:center"><iconify-icon icon="ph:minus-bold" width="12"></iconify-icon></button><button onClick="{{ r.inc }}" style="width:30px;height:30px;border-radius:50%;border:1px solid var(--ln2);background:transparent;color:var(--tx);cursor:pointer;display:grid;place-items:center"><iconify-icon icon="ph:plus-bold" width="12"></iconify-icon></button></span>
+        <sc-if value="{{ r.low }}"><button onClick="{{ r.re }}" style="padding:8px 13px;border-radius:999px;border:0;background:rgba(210,88,47,.12);color:#C24E25;font:600 12.5px 'Instrument Sans';cursor:pointer;white-space:nowrap">Reponer {{ r.sug }}</button></sc-if>
+      </div>
+    </sc-for>
+  </div>
+  <div data-r="" style="padding:18px;border-radius:22px;background:var(--sf);box-shadow:var(--shd)"><div style="font-size:16px;font-weight:600">Movimientos de hoy</div>
+    <div style="margin-top:10px;display:flex;flex-direction:column"><sc-for list="{{ moves }}" as="m" hint-placeholder-count="5"><div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--ln);font-size:13.5px"><span style="width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:{{ m.bg }};color:{{ m.fg }}"><iconify-icon icon="{{ m.i }}" width="15"></iconify-icon></span><span style="flex:1;min-width:0">{{ m.t }}</span><b style="color:{{ m.fg }}">{{ m.q }}</b><span style="font-size:12px;color:var(--fa);min-width:44px;text-align:right">{{ m.h }}</span></div></sc-for></div>
+  </div>
+</sc-if>
+
+<!-- LISTAS DE PRECIO -->
+<sc-if value="{{ sList }}" hint-placeholder-val="{{ false }}">
+  <div data-r="" style="display:flex;align-items:end;gap:12px;flex-wrap:wrap"><div style="flex:1;min-width:220px"><h1 style="margin:0;font-size:30px;letter-spacing:-.035em;font-weight:600">Listas de precio</h1><div style="margin-top:2px;font-size:15px;color:var(--mu)">Un precio base y reglas para cada canal y tipo de cliente</div></div></div>
+  <div data-r="" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+    <sc-for list="{{ lists }}" as="l" hint-placeholder-count="4">
+      <button onClick="{{ l.go }}" style="text-align:left;padding:16px;border-radius:22px;border:1.5px solid {{ l.bd }};background:var(--sf);box-shadow:var(--shd);cursor:pointer;font-family:inherit;color:var(--tx)">
+        <div style="display:flex;align-items:center;gap:10px"><span style="width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:{{ l.bg }};color:{{ l.fg }}"><iconify-icon icon="{{ l.i }}" width="19"></iconify-icon></span><span style="flex:1"><span style="display:block;font-size:15px;font-weight:600">{{ l.t }}</span><span style="display:block;font-size:12.5px;color:var(--mu)">{{ l.who }}</span></span></div>
+        <div style="margin-top:12px;font-size:26px;font-weight:600;letter-spacing:-.03em">{{ l.rule }}</div><div style="font-size:12.5px;color:var(--mu)">{{ l.d }}</div>
+      </button>
+    </sc-for>
+  </div>
+  <div data-r="" style="padding:20px;border-radius:24px;background:#2A140C;color:#FBF7F2;position:relative;overflow:hidden">
+    <div style="position:absolute;inset:0;background-image:url(assets/arch-pattern-light.svg)"></div>
+    <div style="position:relative;display:flex;gap:20px;flex-wrap:wrap;align-items:center">
+      <div style="flex:1 1 280px"><div style="font-size:17px;font-weight:600">Actualizar precios por inflación</div><div style="font-size:13.5px;color:#D9C8BA;margin-top:2px">Subí todo de una, con redondeo lindo ($ 8.990 en vez de $ 9.012).</div>
+        <div style="margin-top:14px;display:flex;align-items:center;gap:12px"><input type="range" min="0" max="25" step="1" value="{{ inc }}" onInput="{{ setInc }}" style="flex:1;accent-color:#E8875F"><span style="font-size:28px;font-weight:600;min-width:64px">+{{ inc }}%</span></div>
+        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ rounds }}" as="r" hint-placeholder-count="3"><button onClick="{{ r.go }}" style="padding:7px 12px;border-radius:999px;border:1px solid rgba(251,247,242,.25);background:{{ r.bg }};color:{{ r.fg }};font:600 12.5px 'Instrument Sans';cursor:pointer">{{ r.t }}</button></sc-for></div>
+      </div>
+      <div style="flex:1 1 300px;border-radius:18px;background:rgba(251,247,242,.06);border:1px solid rgba(251,247,242,.12);overflow:hidden">
+        <div style="display:grid;grid-template-columns:minmax(0,1.4fr) 1fr 1fr;gap:8px;padding:10px 14px;font-size:12px;color:#C9B4A4;font-weight:600"><span>Producto</span><span>Hoy</span><span>Nuevo · {{ listName }}</span></div>
+        <sc-for list="{{ preview }}" as="p" hint-placeholder-count="4"><div style="display:grid;grid-template-columns:minmax(0,1.4fr) 1fr 1fr;gap:8px;padding:9px 14px;border-top:1px solid rgba(251,247,242,.08);font-size:13.5px"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.n }}</span><span style="color:#C9B4A4">{{ p.a }}</span><b style="color:#F5B796">{{ p.b }}</b></div></sc-for>
+      </div>
+    </div>
+    <div style="position:relative;margin-top:16px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><button onClick="{{ schedule }}" style="padding:11px 16px;border-radius:999px;border:1px solid rgba(251,247,242,.3);background:transparent;color:#fff;font:600 13.5px 'Instrument Sans';cursor:pointer">Programar para el lunes</button><button onClick="{{ applyInc }}" style="padding:11px 18px;border-radius:999px;border:0;background:#D2582F;color:#fff;font:600 13.5px 'Instrument Sans';cursor:pointer">Aplicar a 1.204 productos</button></div>
+  </div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;screen&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;Productos&quot;, &quot;tsType&quot;: &quot;string&quot;}, &quot;vw&quot;: {&quot;editor&quot;: &quot;int&quot;, &quot;default&quot;: 1400, &quot;tsType&quot;: &quot;number&quot;}, &quot;onToast&quot;: {&quot;editor&quot;: null, &quot;tsType&quot;: &quot;function&quot;}, &quot;onOpen&quot;: {&quot;editor&quot;: null, &quot;tsType&quot;: &quot;function&quot;}}">
+const IMG = id => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=500&h=440&q=72`;
+const fmt = n => '$ ' + Math.round(n).toLocaleString('es-AR');
+const PR = [
+  ['Termo 1 L', 'Termos', '1634741011278-9dc2f5b6fc0b', 42900, 3, 76, 'TER-1L', '3 colores', ['web', 'ml', 'ig']],
+  ['Mate de cerámica', 'Mates', '1609541994821-d909982e2f1b', 18500, 12, 132, 'MAT-CER', '4 colores', ['web', 'ml', 'ig']],
+  ['Yerba orgánica 1 kg', 'Yerbas', '1675001077188-809370ce3279', 8200, 42, 214, 'YER-ORG', 'Única', ['web', 'ml']],
+  ['Kit matero completo', 'Mates', '1444157545135-c045be691b05', 58400, 8, 41, 'KIT-01', 'Única', ['web', 'ig']],
+  ['Bombilla de acero', 'Mates', '1585744259332-111384f5def9', 1700, 64, 118, 'BOM-AC', '2 tamaños', ['web', 'ml']],
+  ['Café de especialidad', 'Café', '1495474472287-4d71bcdd2085', 9800, 20, 88, 'CAF-ESP', '250 g · 500 g', ['web']],
+  ['Yerba con hierbas', 'Yerbas', '1687920492018-e21cad9023d9', 7600, 0, 54, 'YER-HIE', 'Única', ['web', 'ml']],
+  ['Budín de nuez', 'Café', '1509440159596-0249088772ff', 4200, 6, 37, 'BUD-NUE', 'Única', ['web']]
+];
+const CHI = { web: { icon: 'ph:globe-simple-fill', col: '#D2582F' }, ml: { word: 1 }, ig: { icon: 'logos:instagram-icon' } };
+
+class Component extends DCLogic {
+  state = { q: '', cat: 'Todos', view: 'grid', ed: null, chans: { web: 1, ml: 1, ig: 1, gg: 0 }, stock: PR.map(p => p[4]), list: 0, inc: 8, round: 1 };
+  componentDidMount() { this.anim(); this._scr = this.props.screen; }
+  componentDidUpdate() { if (this._scr !== this.props.screen) { this._scr = this.props.screen; setTimeout(() => this.anim(), 20); } if (this.state.ed !== null && !this._edA) { this._edA = 1; const s = document.querySelector('[data-sheet]'); s && s.animate([{ transform: 'translateX(105%)' }, { transform: 'none' }], { duration: 460, easing: 'cubic-bezier(.16,1,.3,1)' }); } if (this.state.ed === null) this._edA = 0; }
+  anim() { document.querySelectorAll('[data-r]:not([data-on])').forEach((el, i) => { el.setAttribute('data-on', ''); el.animate([{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 600, delay: i * 60, fill: 'both', easing: 'cubic-bezier(.2,.7,.1,1)' }); }); }
+  toast(k, t, d, a) { this.props.onToast && this.props.onToast(k, t, d, a); }
+  renderVals() {
+    const st = this.state, scr = this.props.screen || 'Productos';
+    const tg = on => ({ tbg: on ? '#D2582F' : '#D9CBBE', tx: on ? '18px' : '2px' });
+    const q = st.q.trim().toLowerCase();
+    const stockBadge = s => s === 0 ? ['Sin stock', 'rgba(184,58,46,.92)', '#fff'] : s < 5 ? ['Quedan ' + s, 'rgba(227,169,59,.95)', '#3A2414'] : [s + ' en stock', 'rgba(255,255,255,.92)', '#2A140C'];
+    const prods = PR.map((p, i) => ({ p, i })).filter(({ p }) => (st.cat === 'Todos' || p[1] === st.cat) && (!q || (p[0] + ' ' + p[6]).toLowerCase().includes(q))).map(({ p, i }) => { const s = st.stock[i], b = stockBadge(s); return { n: p[0], cat: p[1], img: IMG(p[2]), pf: fmt(p[3]), sold: p[5], sku: p[6], var: p[7], stTxt: b[0], sbg: b[1], sfg: b[2], chs: p[8].map(c => ({ icon: CHI[c].icon || null, col: CHI[c].col || 'inherit', word: !!CHI[c].word })), open: () => this.setState({ ed: i }) }; });
+    const e = st.ed !== null ? PR[st.ed] : PR[0];
+    const LISTS = [['ph:storefront-fill', 'Minorista', 'Tienda y local', 'Base', 'Precio de referencia', '#FCEDE5', '#C24E25', 1], ['ph:package-fill', 'Mayorista', 'Desde 10 unidades', '−25%', '46 clientes mayoristas', '#EFE9F7', '#6A4FA0', 0.75], ['ph:handshake-fill', 'Mercado Libre', 'Cubre la comisión', '+10%', 'Se actualiza solo', '#FFF6C2', '#6B5B00', 1.1], ['ph:users-fill', 'Revendedoras', '12 personas', '−15%', 'Con link propio', 'rgba(47,143,99,.13)', '#2F8F63', 0.85]];
+    const RND = [['Sin redondeo', 0], ['Terminado en 90', 1], ['Múltiplo de 500', 2]];
+    const rnd = v => st.round === 1 ? Math.max(90, Math.round(v / 100) * 100 - 10) : st.round === 2 ? Math.round(v / 500) * 500 : Math.round(v);
+    const mul = LISTS[st.list][7];
+    return {
+      sProd: scr === 'Productos', sInv: scr === 'Inventario', sList: scr === 'Listas de precio',
+      q: st.q, setQ: ev => this.setState({ q: ev.target.value }),
+      pcats: ['Todos', 'Mates', 'Yerbas', 'Termos', 'Café'].map(t => ({ t, go: () => this.setState({ cat: t }), bg: st.cat === t ? 'var(--tx)' : 'var(--sf)', fg: st.cat === t ? 'var(--sf)' : 'var(--tx)' })),
+      isGrid: st.view === 'grid', isList: st.view === 'list', vGrid: () => this.setState({ view: 'grid' }), vList: () => this.setState({ view: 'list' }), gridBg: st.view === 'grid' ? 'var(--sf)' : 'transparent', listBg: st.view === 'list' ? 'var(--sf)' : 'transparent',
+      prods,
+      importX: () => this.toast('ok', 'Subí tu Excel', 'Detectamos columnas de Tiendanube, ML o cualquier planilla'),
+      newProd: () => this.setState({ ed: 0 }),
+      photoLoad: () => this.toast('ai', 'Hornero está mirando tus fotos', '3 productos listos para revisar en 20 segundos', 'Ver'),
+      edOpen: st.ed !== null, closeEd: () => this.setState({ ed: null }),
+      saveEd: () => { this.setState({ ed: null }); this.toast('ok', 'Producto guardado', e[0] + ' · publicado en ' + Object.values(st.chans).filter(Boolean).length + ' canales', 'Ver en la tienda'); },
+      ed: { n: e[0], img: IMG(e[2]), slug: e[0].toLowerCase().replace(/[^a-z0-9]+/g, '-'), d: 'Hecho en Argentina, ideal para el mate de todos los días. Envío a todo el país y cambios sin vueltas.', m: '38%', c: Math.round(e[3] * 0.62).toLocaleString('es-AR'),
+        prices: [['Tienda y local', e[3], 'Precio base'], ['Mercado Libre', e[3] * 1.1, '+10% por comisión'], ['Mayorista', e[3] * 0.75, 'Desde 10 u']].map(([t, v, n]) => ({ t, v: fmt(v), n })),
+        vars: [['Negro', '#1C1A17', 3], ['Acero', '#B8BCC2', 12], ['Rojo', '#B83A2E', 0]].map(([n, c, s]) => ({ n, c, s, sc: s === 0 ? '#B83A2E' : s < 5 ? '#9A6A10' : 'var(--mu)' })),
+        chans: [['web', 'ph:globe-simple-fill', 'Tienda online'], ['ml', 'ph:handshake-fill', 'Mercado Libre'], ['ig', 'logos:instagram-icon', 'Instagram Shopping'], ['gg', 'logos:google-icon', 'Google Shopping']].map(([k, i, t]) => ({ i, t, ...tg(st.chans[k]), go: () => this.setState(s => ({ chans: { ...s.chans, [k]: !s.chans[k] } })) })) },
+      invK: [['Valor del inventario', '$ 18,4 M', 'a precio de costo', 'var(--tx)'], ['Sin stock', '4', '2 publicados en ML', '#B83A2E'], ['Stock bajo', '9', 'menos de 1 semana', '#9A6A10'], ['Rotación', '24 días', 'promedio', '#2F8F63']].map(([t, v, d, c]) => ({ t, v, d, c })),
+      inv: PR.map((p, i) => { const s = st.stock[i], days = Math.round(s / Math.max(1, p[5] / 30)); return { n: p[0], img: IMG(p[2]), loc: 'Local 60% · Depósito 40%', s, days: s === 0 ? 'Agotado' : days <= 7 ? 'Alcanza ~' + days + ' días' : 'Alcanza ~' + days + ' días', w: Math.min(100, s / 64 * 100) + '%', c: s === 0 ? '#B83A2E' : s < 5 ? '#E3A93B' : '#2F8F63', low: s < 5, sug: Math.max(10, Math.round(p[5] / 2)) + ' u',
+        inc: () => this.setState(x => { const a = x.stock.slice(); a[i]++; return { stock: a }; }), dec: () => this.setState(x => { const a = x.stock.slice(); a[i] = Math.max(0, a[i] - 1); return { stock: a }; }),
+        re: () => this.toast('ok', 'Pedido al proveedor en borrador', p[0] + ' · ' + Math.max(10, Math.round(p[5] / 2)) + ' unidades', 'Enviar por WhatsApp') }; }),
+      moves: [['ph:shopping-bag-fill', 'Venta web #1048 · Termo 1 L', '−1', '19:40', 'rgba(210,88,47,.12)', '#C24E25'], ['ph:storefront-fill', 'Venta en local · Yerba orgánica', '−2', '18:12', 'rgba(210,88,47,.12)', '#C24E25'], ['ph:handshake-fill', 'Mercado Libre #1046 · Mate', '−2', '17:05', 'rgba(210,88,47,.12)', '#C24E25'], ['ph:truck-fill', 'Ingreso de proveedor · Bombillas', '+40', '11:30', 'rgba(47,143,99,.13)', '#2F8F63'], ['ph:arrow-u-up-left-bold', 'Devolución aprobada · Kit matero', '+1', '10:02', 'rgba(47,143,99,.13)', '#2F8F63']].map(([i, t, q, h, bg, fg]) => ({ i, t, q, h, bg, fg })),
+      countInv: () => this.toast('info', 'Modo conteo activado', 'Escaneá con el celular o el lector'),
+      orderSup: () => this.toast('ai', 'Hornero armó 2 pedidos', 'Distribuidora Norte y Yerbatera Misiones', 'Revisar'),
+      lists: LISTS.map(([i, t, who, rule, d, bg, fg], k) => ({ i, t, who, rule, d, bg, fg, bd: st.list === k ? '#D2582F' : 'transparent', go: () => this.setState({ list: k }) })),
+      listName: LISTS[st.list][1], inc: st.inc, setInc: ev => this.setState({ inc: +ev.target.value }),
+      rounds: RND.map(([t, v]) => ({ t, go: () => this.setState({ round: v }), bg: st.round === v ? '#FBF7F2' : 'transparent', fg: st.round === v ? '#2A140C' : '#FBF7F2' })),
+      preview: PR.slice(0, 4).map(p => ({ n: p[0], a: fmt(p[3] * mul), b: fmt(rnd(p[3] * mul * (1 + st.inc / 100))) })),
+      applyInc: () => this.toast('ok', 'Precios actualizados +' + st.inc + '%', '1.204 productos en todos tus canales', 'Deshacer'),
+      schedule: () => this.toast('info', 'Aumento programado', 'Lunes 26 a las 00:00 · te avisamos antes')
+    };
+  }
+}
+</script>
+</body>
+</html>

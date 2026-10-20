@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+<style>body{margin:0;background:#120709;-webkit-font-smoothing:antialiased}a{color:#E8B86A}a:hover{color:#F4E9E1}*{box-sizing:border-box}</style>
+</helmet>
+
+<div style="min-height:100vh;display:flex;justify-content:center;align-items:flex-start;padding:{{ outerPad }};font-family:'Instrument Sans',system-ui,sans-serif;color:#F4E9E1">
+<div style="width:{{ frameW }};border-radius:{{ frameR }};padding:{{ framePad }};background:{{ frameBg }};box-shadow:{{ frameSh }};flex:none;max-width:100%">
+<div data-scroll="" style="container-type:inline-size;width:100%;height:{{ stageH }};overflow-y:{{ stageOv }};border-radius:{{ stageR }};background:#1E0E12;position:relative">
+
+  <sc-if value="{{ gate }}">
+    <div style="position:{{ gatePos }};inset:0;z-index:60;display:grid;place-items:center;padding:20px;background:rgba(18,7,9,.86);backdrop-filter:blur(10px);min-height:{{ gateH }}">
+      <div style="width:min(460px,100%);padding:clamp(26px,5cqw,44px);border:1px solid rgba(232,184,106,.3);background:#1E0E12;text-align:center">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:15px;letter-spacing:.3em;text-transform:uppercase;color:#E8B86A">Vinoteca Tres</div>
+        <h2 style="margin:16px 0 0;font-family:'Cormorant Garamond',serif;font-weight:500;font-size:40px;line-height:1.05">¿Sos mayor de 18 años?</h2>
+        <p style="margin:12px 0 0;font-size:14px;line-height:1.55;color:#BFA9A3">La venta de alcohol a menores está prohibida (Ley 24.788).</p>
+        <div style="margin-top:22px;display:flex;gap:8px"><button onClick="{{ okGate }}" style="flex:1;padding:15px;border:0;background:#E8B86A;color:#1E0E12;font:700 14px 'Instrument Sans';letter-spacing:.06em;cursor:pointer">Sí, soy mayor</button><button style="flex:1;padding:15px;border:1px solid rgba(244,233,225,.3);background:transparent;color:#F4E9E1;font:600 14px 'Instrument Sans';cursor:pointer">No</button></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="display:flex;justify-content:center;align-items:center;gap:14px;flex-wrap:wrap;padding:9px 16px;background:#9E2F40;color:#F4E9E1;font-size:13px;text-align:center">
+    <span>Selección de octubre · 6 botellas con 20% off</span><span style="display:flex;gap:4px;font-variant-numeric:tabular-nums"><sc-for list="{{ cd }}" as="c" hint-placeholder-count="4"><span style="padding:2px 7px;background:rgba(0,0,0,.25)">{{ c.v }}{{ c.u }}</span></sc-for></span>
+  </div>
+
+  <header style="position:sticky;top:0;z-index:20;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;padding:16px clamp(16px,4cqw,48px);background:rgba(30,14,18,.92);backdrop-filter:blur(10px);border-bottom:1px solid rgba(244,233,225,.1)">
+    <div style="display:flex;gap:24px;align-items:center"><sc-if value="{{ nar }}"><iconify-icon icon="ph:list" width="22"></iconify-icon></sc-if><sc-if value="{{ wide }}"><sc-for list="{{ navL }}" as="n" hint-placeholder-count="3"><button onClick="{{ n.go }}" style="border:0;background:transparent;padding:4px 0;cursor:pointer;font:500 13.5px 'Instrument Sans';letter-spacing:.08em;text-transform:uppercase;color:#F4E9E1;border-bottom:1px solid {{ n.bd }}">{{ n.t }}</button></sc-for></sc-if></div>
+    <button onClick="{{ goInicio }}" style="border:0;background:transparent;padding:0;cursor:pointer;color:#F4E9E1;text-align:center;line-height:1"><span style="display:block;font-family:'Cormorant Garamond',serif;font-weight:600;font-size:clamp(24px,2.6cqw,32px);letter-spacing:.04em">Vinoteca Tres</span><span style="display:block;margin-top:3px;font-size:10px;letter-spacing:.34em;text-transform:uppercase;color:#E8B86A">Mendoza · 2016</span></button>
+    <div style="display:flex;gap:18px;align-items:center;justify-content:flex-end"><sc-if value="{{ wide }}"><button onClick="{{ goClub }}" style="border:0;background:transparent;padding:4px 0;cursor:pointer;font:500 13.5px 'Instrument Sans';letter-spacing:.08em;text-transform:uppercase;color:#E8B86A">Club</button></sc-if><iconify-icon icon="ph:magnifying-glass" width="20"></iconify-icon><button onClick="{{ goCarrito }}" style="position:relative;border:0;background:transparent;padding:0;cursor:pointer;color:#F4E9E1;display:grid"><iconify-icon icon="ph:wine" width="22"></iconify-icon><span style="position:absolute;top:-6px;right:-8px;min-width:17px;height:17px;border-radius:999px;background:#E8B86A;color:#1E0E12;font-size:10.5px;font-weight:700;display:grid;place-items:center">4</span></button></div>
+  </header>
+
+<!-- INICIO -->
+<sc-if value="{{ pInicio }}" hint-placeholder-val="{{ true }}">
+  <section style="position:relative;min-height:clamp(560px,64cqw,860px);overflow:hidden;background:#2A161B">
+    <img src="https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?auto=format&fit=crop&w=1800&q=75" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.55">
+    <div style="position:absolute;inset:0;background:radial-gradient(120% 90% at 30% 70%,rgba(30,14,18,.2),rgba(30,14,18,.92) 75%)"></div>
+    <div style="position:relative;padding:clamp(60px,10cqw,140px) clamp(16px,5cqw,72px) clamp(40px,6cqw,80px);max-width:860px">
+      <div style="font-size:12.5px;letter-spacing:.32em;text-transform:uppercase;color:#E8B86A">Selección de octubre</div>
+      <h1 style="margin:18px 0 0;font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(54px,9.4cqw,140px);line-height:.9;letter-spacing:-.015em;overflow-wrap:anywhere">Vinos chicos<br><i style="color:#E8B86A">de bodegas grandes.</i></h1>
+      <p style="margin:22px 0 0;font-size:17px;line-height:1.55;color:#DCCBC4;max-width:460px">Cada mes probamos más de cuarenta etiquetas de productores independientes y elegimos seis. Te las mandamos con ficha de cata y maridaje.</p>
+      <div style="margin-top:28px;display:flex;gap:10px;flex-wrap:wrap"><button onClick="{{ goCatalogo }}" style="padding:16px 28px;border:0;background:#E8B86A;color:#1E0E12;font:700 14px 'Instrument Sans';letter-spacing:.08em;text-transform:uppercase;cursor:pointer">Ver la selección</button><button onClick="{{ goClub }}" style="padding:16px 24px;border:1px solid rgba(244,233,225,.45);background:transparent;color:#F4E9E1;font:600 14px 'Instrument Sans';letter-spacing:.08em;text-transform:uppercase;cursor:pointer">Club de vinos</button></div>
+    </div>
+  </section>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));border-bottom:1px solid rgba(244,233,225,.1)">
+    <sc-for list="{{ perks }}" as="p" hint-placeholder-count="4"><div style="display:flex;align-items:center;gap:12px;padding:18px clamp(16px,3cqw,36px);border-right:1px solid rgba(244,233,225,.08)"><iconify-icon icon="{{ p.i }}" width="22" style="color:#E8B86A"></iconify-icon><div><div style="font-size:13.5px;font-weight:600">{{ p.t }}</div><div style="font-size:12.5px;color:#BFA9A3">{{ p.d }}</div></div></div></sc-for>
+  </div>
+
+  <section style="padding:clamp(56px,8cqw,110px) clamp(16px,4cqw,48px) 0">
+    <div style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap"><div><div style="font-size:12.5px;letter-spacing:.3em;text-transform:uppercase;color:#E8B86A">Las seis de octubre</div><h2 style="margin:10px 0 0;font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(40px,5.4cqw,70px);line-height:1">Elegidos por el equipo</h2></div><button onClick="{{ goCatalogo }}" style="border:0;background:transparent;padding:0;cursor:pointer;font:600 13px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#F4E9E1;border-bottom:1px solid #E8B86A">Ver las 140 etiquetas</button></div>
+    <div style="margin-top:30px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(46%,220px),1fr));gap:clamp(12px,1.8cqw,22px)">
+      <sc-for list="{{ sel }}" as="p" hint-placeholder-count="6">
+        <button onClick="{{ goProducto }}" style="border:1px solid rgba(244,233,225,.1);padding:0;background:#24121A;cursor:pointer;text-align:left;color:#F4E9E1;font-family:inherit;display:flex;flex-direction:column;transition:border-color .3s" style-hover="border-color:rgba(232,184,106,.5)">
+          <span style="position:relative;display:block;aspect-ratio:3/4;overflow:hidden;background:linear-gradient(180deg,#3A2026,#24121A)"><img src="{{ p.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform .8s cubic-bezier(.2,.7,.1,1)" style-hover="transform:scale(1.04)"><span style="position:absolute;top:10px;left:10px;padding:4px 9px;background:{{ p.tbg }};color:{{ p.tfg }};font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase">{{ p.cepa }}</span><sc-if value="{{ p.pts }}"><span style="position:absolute;top:10px;right:10px;width:46px;height:46px;border-radius:50%;border:1px solid #E8B86A;background:rgba(30,14,18,.8);display:grid;place-items:center;text-align:center;line-height:1"><span><b style="display:block;font-family:'Cormorant Garamond',serif;font-size:19px;color:#E8B86A">{{ p.pts }}</b><span style="font-size:8px;letter-spacing:.1em">PTS</span></span></span></sc-if></span>
+          <span style="display:block;padding:14px 14px 16px"><span style="display:block;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:#BFA9A3">{{ p.bod }} · {{ p.reg }}</span><span style="display:block;margin-top:6px;font-family:'Cormorant Garamond',serif;font-size:23px;font-weight:600;line-height:1.05">{{ p.n }}</span><span style="display:flex;gap:4px;margin-top:10px"><sc-for list="{{ p.notes }}" as="t" hint-placeholder-count="2"><span style="padding:3px 7px;border:1px solid rgba(244,233,225,.18);font-size:11px;color:#DCCBC4">{{ t }}</span></sc-for></span><span style="display:flex;justify-content:space-between;align-items:baseline;margin-top:12px"><b style="font-size:16px">{{ p.price }}</b><span style="font-size:12px;color:#9FD3A8;font-weight:600">{{ p.box }}</span></span></span>
+        </button>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="margin-top:clamp(56px,8cqw,110px);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));background:#F4E9E1;color:#1E0E12">
+    <div style="position:relative;min-height:520px;background:#3A2026"><img src="https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=1200&q=75" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></div>
+    <div style="padding:clamp(30px,6cqw,90px);display:flex;flex-direction:column;justify-content:center">
+      <div style="font-size:12.5px;letter-spacing:.3em;text-transform:uppercase;color:#9E2F40;font-weight:600">Club de vinos</div>
+      <h2 style="margin:14px 0 0;font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(40px,5.4cqw,72px);line-height:.95">Una caja por mes,<br><i>elegida para vos.</i></h2>
+      <p style="margin:16px 0 0;font-size:16px;line-height:1.55;color:#5A3A40;max-width:440px">Contanos qué te gusta y armamos tu caja. La pausás o la cancelás cuando quieras.</p>
+      <div style="margin-top:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px"><sc-for list="{{ plans }}" as="p" hint-placeholder-count="3"><button onClick="{{ goClub }}" style="padding:16px;border:1.5px solid {{ p.bd }};background:{{ p.bg }};color:#1E0E12;cursor:pointer;text-align:left;font-family:inherit"><span style="display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9E2F40;font-weight:700">{{ p.t }}</span><span style="display:block;margin-top:6px;font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:600;line-height:1">{{ p.p }}</span><span style="display:block;margin-top:4px;font-size:12.5px;color:#5A3A40">{{ p.d }}</span></button></sc-for></div>
+    </div>
+  </section>
+
+  <section style="padding:clamp(56px,8cqw,110px) clamp(16px,4cqw,48px) 0">
+    <div style="text-align:center"><div style="font-size:12.5px;letter-spacing:.3em;text-transform:uppercase;color:#E8B86A">¿Qué comés hoy?</div><h2 style="margin:10px 0 0;font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(40px,5.4cqw,70px);line-height:1">Elegí por maridaje</h2></div>
+    <div style="margin-top:28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(46%,180px),1fr));gap:10px"><sc-for list="{{ pair }}" as="m" hint-placeholder-count="5"><button onClick="{{ goCatalogo }}" style="position:relative;aspect-ratio:1;border:0;padding:0;overflow:hidden;cursor:pointer;background:#3A2026;text-align:left"><img src="{{ m.img }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.75;transition:transform .8s" style-hover="transform:scale(1.05)"><span style="position:absolute;inset:auto 0 0 0;padding:16px;background:linear-gradient(0deg,rgba(30,14,18,.9),transparent);color:#F4E9E1"><span style="display:block;font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;line-height:1">{{ m.t }}</span><span style="display:block;margin-top:4px;font-size:12px;color:#E8B86A;letter-spacing:.06em">{{ m.c }}</span></span></button></sc-for></div>
+  </section>
+
+  <section style="padding:clamp(56px,8cqw,110px) clamp(16px,4cqw,48px) 0">
+    <div style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap"><h2 style="margin:0;font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(40px,5.4cqw,70px);line-height:1">Lo que dicen</h2><span style="display:flex;align-items:center;gap:8px;font-size:14px"><span style="display:flex;color:#E8B86A"><iconify-icon icon="ph:star-fill" width="15"></iconify-icon><iconify-icon icon="ph:star-fill" width="15"></iconify-icon><iconify-icon icon="ph:star-fill" width="15"></iconify-icon><iconify-icon icon="ph:star-fill" width="15"></iconify-icon><iconify-icon icon="ph:star-fill" width="15"></iconify-icon></span><b>4,9</b><span style="color:#BFA9A3">· 1.204 reseñas</span></span></div>
+    <div style="margin-top:26px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:14px"><sc-for list="{{ reviews }}" as="r" hint-placeholder-count="3"><div style="display:flex;gap:14px;padding:16px;border:1px solid rgba(244,233,225,.1);background:#24121A"><img src="{{ r.img }}" alt="" style="width:88px;height:116px;object-fit:cover;flex:none;background:#3A2026"><div style="min-width:0"><p style="margin:0;font-family:'Cormorant Garamond',serif;font-size:21px;line-height:1.25;font-style:italic">“{{ r.q }}”</p><div style="margin-top:10px;font-size:12.5px;color:#BFA9A3">{{ r.who }} · {{ r.p }}</div></div></div></sc-for></div>
+  </section>
+
+  <section style="padding:clamp(56px,8cqw,110px) clamp(16px,4cqw,48px)">
+    <div style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap"><div><div style="font-size:12.5px;letter-spacing:.3em;text-transform:uppercase;color:#E8B86A">@vinotecatres</div><h2 style="margin:10px 0 0;font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(40px,5.4cqw,70px);line-height:1">En la mesa de todos</h2></div><span style="display:flex;align-items:center;gap:8px;padding:12px 18px;border:1px solid rgba(244,233,225,.4);font-size:13px;font-weight:600;letter-spacing:.06em"><iconify-icon icon="ph:instagram-logo" width="17"></iconify-icon>27,5 mil</span></div>
+    <div style="margin-top:22px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(30%,160px),1fr));gap:6px"><sc-for list="{{ ig }}" as="g" hint-placeholder-count="6"><div style="aspect-ratio:1;overflow:hidden;background:#3A2026"><img src="{{ g }}" alt="" style="width:100%;height:100%;object-fit:cover"></div></sc-for></div>
+  </section>
+</sc-if>
+
+<!-- CLUB -->
+<sc-if value="{{ pClub }}" hint-placeholder-val="{{ false }}">
+  <section style="padding:clamp(44px,7cqw,96px) clamp(16px,4cqw,48px) 0;text-align:center">
+    <div style="font-size:12.5px;letter-spacing:.3em;text-transform:uppercase;color:#E8B86A">Club de vinos</div>
+    <h1 style="margin:16px auto 0;max-width:860px;font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(46px,7.4cqw,108px);line-height:.92;overflow-wrap:anywhere">Armemos tu caja <i style="color:#E8B86A">en tres preguntas.</i></h1>
+  </section>
+  <section style="padding:clamp(36px,5cqw,64px) clamp(16px,4cqw,48px) clamp(56px,8cqw,100px);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:clamp(18px,3.4cqw,44px);align-items:start">
+    <div style="display:flex;flex-direction:column;gap:26px">
+      <sc-for list="{{ quiz }}" as="q" hint-placeholder-count="3"><div><div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'Cormorant Garamond',serif;font-size:34px;color:#E8B86A;line-height:1">{{ q.n }}</span><span style="font-size:17px;font-weight:600">{{ q.t }}</span></div><div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px"><sc-for list="{{ q.o }}" as="o" hint-placeholder-count="3"><span style="padding:14px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:14px;font-weight:600;text-align:center">{{ o.t }}<span style="display:block;font-size:12px;font-weight:500;margin-top:3px;opacity:.75">{{ o.d }}</span></span></sc-for></div></div></sc-for>
+    </div>
+    <div style="position:sticky;top:96px;padding:26px;background:#F4E9E1;color:#1E0E12">
+      <div style="font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#9E2F40;font-weight:700">Tu caja</div>
+      <div style="margin-top:8px;font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:600;line-height:1">Explorador · 6 botellas</div>
+      <div style="margin-top:6px;font-size:14px;color:#5A3A40">Tintos de altura, rango medio. Llega el primer martes de cada mes.</div>
+      <div style="margin-top:16px;display:flex;gap:6px"><sc-for list="{{ boxImgs }}" as="b" hint-placeholder-count="6"><div style="flex:1;aspect-ratio:1/3;overflow:hidden;background:#E2D2C8"><img src="{{ b }}" alt="" style="width:100%;height:100%;object-fit:cover"></div></sc-for></div>
+      <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;font-size:14px"><span style="display:flex;justify-content:space-between"><span>6 botellas elegidas</span><s style="color:#8A6A70">$ 147.500</s></span><span style="display:flex;justify-content:space-between;color:#9E2F40;font-weight:600"><span>Descuento socio −20%</span><span>− $ 29.500</span></span><span style="display:flex;justify-content:space-between"><span>Envío</span><span style="color:#2F7D4F;font-weight:600">Gratis</span></span><span style="display:flex;justify-content:space-between;align-items:baseline;padding-top:8px;border-top:1px solid rgba(30,14,18,.15)"><b>Por mes</b><b style="font-family:'Cormorant Garamond',serif;font-size:34px">$ 118.000</b></span></div>
+      <button onClick="{{ goCheckout }}" style="margin-top:16px;width:100%;padding:16px;border:0;background:#1E0E12;color:#F4E9E1;font:700 14px 'Instrument Sans';letter-spacing:.08em;text-transform:uppercase;cursor:pointer">Sumarme al club</button>
+      <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px;font-size:13px;color:#5A3A40"><span style="display:flex;gap:8px"><iconify-icon icon="ph:check" width="15"></iconify-icon>Débito automático con Mercado Pago</span><span style="display:flex;gap:8px"><iconify-icon icon="ph:check" width="15"></iconify-icon>Pausás o cancelás cuando quieras</span><span style="display:flex;gap:8px"><iconify-icon icon="ph:check" width="15"></iconify-icon>Cata online en vivo una vez por mes</span></div>
+    </div>
+  </section>
+</sc-if>
+
+<!-- CATÁLOGO -->
+<sc-if value="{{ pCatalogo }}" hint-placeholder-val="{{ false }}">
+  <section style="padding:28px clamp(16px,4cqw,48px) clamp(56px,8cqw,100px)">
+    <div style="font-size:12.5px;color:#BFA9A3">Inicio / <span style="color:#F4E9E1">Tintos</span></div>
+    <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap"><h1 style="margin:0;font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(50px,7.6cqw,104px);line-height:.92">Tintos</h1><span style="font-size:13.5px;color:#BFA9A3">84 etiquetas · 38 bodegas</span></div>
+    <div style="margin-top:20px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none"><sc-for list="{{ cepas }}" as="c" hint-placeholder-count="7"><span style="flex:none;padding:9px 15px;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }};font-size:13px;font-weight:600;white-space:nowrap">{{ c.t }}</span></sc-for></div>
+    <div style="margin-top:22px;display:flex;gap:clamp(20px,3cqw,40px);align-items:flex-start">
+      <sc-if value="{{ wide }}">
+      <aside style="width:240px;flex:none;position:sticky;top:96px;display:flex;flex-direction:column;gap:26px;font-size:13.5px">
+        <sc-for list="{{ facets }}" as="f" hint-placeholder-count="3"><div><div style="font-size:11.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#E8B86A;margin-bottom:12px">{{ f.t }}</div><div style="display:flex;flex-direction:column;gap:10px"><sc-for list="{{ f.o }}" as="o" hint-placeholder-count="4"><span style="display:flex;align-items:center;gap:10px"><span style="width:16px;height:16px;border:1px solid {{ o.bd }};background:{{ o.bg }};display:grid;place-items:center;color:#1E0E12"><sc-if value="{{ o.on }}"><iconify-icon icon="ph:check-bold" width="10"></iconify-icon></sc-if></span>{{ o.t }}<span style="margin-left:auto;color:#8F7A75">{{ o.n }}</span></span></sc-for></div></div></sc-for>
+        <div><div style="font-size:11.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#E8B86A;margin-bottom:12px">Cuerpo</div><div style="display:flex;justify-content:space-between;font-size:12px;color:#BFA9A3"><span>Ligero</span><span>Intenso</span></div><div style="position:relative;height:2px;background:rgba(244,233,225,.2);margin-top:10px"><span style="position:absolute;left:40%;right:15%;top:0;bottom:0;background:#E8B86A"></span><span style="position:absolute;left:40%;top:-6px;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:#E8B86A"></span><span style="position:absolute;right:15%;top:-6px;width:14px;height:14px;margin-right:-7px;border-radius:50%;background:#E8B86A"></span></div></div>
+      </aside>
+      </sc-if>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid rgba(244,233,225,.1);font-size:13.5px"><span style="display:flex;gap:6px;flex-wrap:wrap"><sc-if value="{{ nar }}"><span style="display:flex;align-items:center;gap:7px;padding:8px 13px;border:1px solid #F4E9E1;font-weight:600"><iconify-icon icon="ph:sliders-horizontal" width="15"></iconify-icon>Filtrar · 2</span></sc-if><span style="display:flex;align-items:center;gap:6px;padding:7px 11px;background:#3A2026">Valle de Uco<iconify-icon icon="ph:x" width="11"></iconify-icon></span><span style="display:flex;align-items:center;gap:6px;padding:7px 11px;background:#3A2026">Hasta $ 40.000<iconify-icon icon="ph:x" width="11"></iconify-icon></span></span><span style="display:flex;align-items:center;gap:6px;font-weight:600">Mejor puntaje<iconify-icon icon="ph:caret-down" width="13"></iconify-icon></span></div>
+        <div style="margin-top:22px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(46%,210px),1fr));gap:clamp(12px,1.8cqw,20px)">
+          <sc-for list="{{ all }}" as="p" hint-placeholder-count="9">
+            <button onClick="{{ goProducto }}" style="border:1px solid rgba(244,233,225,.1);padding:0;background:#24121A;cursor:pointer;text-align:left;color:#F4E9E1;font-family:inherit">
+              <span style="position:relative;display:block;aspect-ratio:3/4;overflow:hidden;background:#3A2026"><img src="{{ p.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"><sc-if value="{{ p.pts }}"><span style="position:absolute;top:10px;right:10px;padding:4px 8px;background:rgba(30,14,18,.85);border:1px solid #E8B86A;color:#E8B86A;font-size:12px;font-weight:700">{{ p.pts }} pts</span></sc-if></span>
+              <span style="display:block;padding:12px 12px 14px"><span style="display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#BFA9A3">{{ p.bod }}</span><span style="display:block;margin-top:4px;font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:600;line-height:1.05">{{ p.n }}</span><span style="display:flex;justify-content:space-between;align-items:baseline;margin-top:10px"><b style="font-size:15px">{{ p.price }}</b><span style="font-size:11.5px;color:#BFA9A3">{{ p.cepa }}</span></span></span>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </section>
+</sc-if>
+
+<!-- PRODUCTO -->
+<sc-if value="{{ pProducto }}" hint-placeholder-val="{{ false }}">
+  <section style="padding:24px clamp(16px,4cqw,48px) 0">
+    <div style="font-size:12.5px;color:#BFA9A3">Inicio / Tintos / <span style="color:#F4E9E1">Malbec Valle de Uco 2021</span></div>
+    <div style="margin-top:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:clamp(24px,4.4cqw,64px);align-items:start">
+      <div style="position:relative;aspect-ratio:4/5;overflow:hidden;background:radial-gradient(70% 60% at 50% 40%,#4A2630,#24121A)"><img src="https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?auto=format&fit=crop&w=1100&q=75" alt="" style="width:100%;height:100%;object-fit:cover"><span style="position:absolute;top:16px;right:16px;width:72px;height:72px;border-radius:50%;border:1px solid #E8B86A;background:rgba(30,14,18,.82);display:grid;place-items:center;text-align:center;line-height:1"><span><b style="display:block;font-family:'Cormorant Garamond',serif;font-size:30px;color:#E8B86A">93</b><span style="font-size:9px;letter-spacing:.14em">PUNTOS</span></span></span></div>
+      <div style="position:sticky;top:96px">
+        <div style="font-size:12.5px;letter-spacing:.24em;text-transform:uppercase;color:#E8B86A">Bodega Los Álamos · Tupungato</div>
+        <h1 style="margin:12px 0 0;font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(42px,5cqw,66px);line-height:.98">Malbec Valle de Uco <i>2021</i></h1>
+        <div style="margin-top:18px;display:flex;align-items:baseline;gap:12px"><b style="font-size:28px">$ 18.900</b><span style="font-size:14px;color:#BFA9A3">la botella</span></div>
+        <div style="margin-top:6px;display:flex;flex-direction:column;gap:3px;font-size:14px"><span>6 cuotas sin interés de <b>$ 3.150</b></span><span style="color:#9FD3A8;font-weight:600">$ 17.010 por transferencia (10% off)</span></div>
+        <div style="margin-top:22px"><div style="font-size:13px;margin-bottom:10px">Presentación</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"><sc-for list="{{ pres }}" as="s" hint-placeholder-count="3"><span style="padding:12px 8px;text-align:center;border:1px solid {{ s.bd }};background:{{ s.bg }};color:{{ s.fg }};font-size:14px;font-weight:600">{{ s.t }}<span style="display:block;font-size:12px;font-weight:500;margin-top:2px;opacity:.8">{{ s.p }}</span></span></sc-for></div></div>
+        <div style="margin-top:20px;display:flex;flex-direction:column;gap:8px"><button onClick="{{ goCarrito }}" style="padding:17px;border:0;background:#E8B86A;color:#1E0E12;font:700 14.5px 'Instrument Sans';letter-spacing:.08em;text-transform:uppercase;cursor:pointer">Agregar al carrito</button><span style="display:flex;justify-content:center;align-items:center;gap:8px;padding:15px;border:1px solid rgba(244,233,225,.4);font-size:14px;font-weight:600"><iconify-icon icon="ph:whatsapp-logo" width="18"></iconify-icon>Pedile una recomendación al sommelier</span></div>
+        <div style="margin-top:22px;padding:18px;border:1px solid rgba(244,233,225,.12);background:#24121A">
+          <div style="font-size:11.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#E8B86A">Ficha de cata</div>
+          <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px"><sc-for list="{{ tasting }}" as="t" hint-placeholder-count="4"><div style="display:grid;grid-template-columns:92px 1fr;align-items:center;gap:12px;font-size:13px"><span style="color:#BFA9A3">{{ t.t }}</span><span style="display:flex;gap:4px"><sc-for list="{{ t.d }}" as="d" hint-placeholder-count="5"><span style="flex:1;height:5px;background:{{ d }}"></span></sc-for></span></div></sc-for></div>
+          <div style="margin-top:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding-top:14px;border-top:1px solid rgba(244,233,225,.1)"><sc-for list="{{ facts }}" as="f" hint-placeholder-count="3"><div><div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#BFA9A3">{{ f.t }}</div><div style="margin-top:3px;font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:600">{{ f.v }}</div></div></sc-for></div>
+        </div>
+        <div style="margin-top:12px;padding:16px;border:1px solid rgba(244,233,225,.12);display:flex;gap:12px;align-items:center"><iconify-icon icon="ph:fork-knife" width="24" style="color:#E8B86A;flex:none"></iconify-icon><div style="font-size:14px;line-height:1.45"><b>Va con</b> asado, cordero al horno, pastas con ragú y quesos estacionados.</div></div>
+        <div style="margin-top:12px;padding:16px;background:#24121A"><div style="font-size:13.5px;font-weight:600">Calculá el envío</div><div style="margin-top:10px;display:flex;gap:6px"><span style="flex:1;padding:11px 12px;background:#1E0E12;font-size:14px;border:1px solid rgba(244,233,225,.12)">5501</span><span style="padding:11px 16px;background:#F4E9E1;color:#1E0E12;font-size:13px;font-weight:700">Calcular</span></div><div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;font-size:13.5px"><span style="display:flex;justify-content:space-between"><span>Envío con cuidado de botellas · 48 h</span><b>$ 7.400</b></span><span style="display:flex;justify-content:space-between"><span>Retiro en la vinoteca</span><b style="color:#9FD3A8">Gratis</b></span></div></div>
+      </div>
+    </div>
+  </section>
+  <section style="padding:clamp(56px,8cqw,100px) clamp(16px,4cqw,48px)">
+    <h2 style="margin:0;font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(36px,4.6cqw,58px);line-height:1">Si te gusta este, probá</h2>
+    <div style="margin-top:24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(46%,210px),1fr));gap:14px"><sc-for list="{{ related }}" as="p" hint-placeholder-count="4"><button onClick="{{ goProducto }}" style="border:0;padding:0;background:transparent;cursor:pointer;text-align:left;color:#F4E9E1;font-family:inherit"><span style="display:block;aspect-ratio:3/4;overflow:hidden;background:#3A2026"><img src="{{ p.img }}" alt="" style="width:100%;height:100%;object-fit:cover"></span><span style="display:block;margin-top:10px;font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600">{{ p.n }}</span><b style="font-size:14.5px">{{ p.price }}</b></button></sc-for></div>
+  </section>
+</sc-if>
+
+<!-- CARRITO -->
+<sc-if value="{{ pCarrito }}" hint-placeholder-val="{{ false }}">
+  <section style="padding:32px clamp(16px,4cqw,48px) clamp(56px,8cqw,100px)">
+    <h1 style="margin:0;font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(46px,6.4cqw,86px);line-height:1">Tu selección</h1>
+    <div style="margin-top:16px;padding:14px 16px;background:#24121A;border:1px solid rgba(232,184,106,.3);display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:14px"><iconify-icon icon="ph:package" width="22" style="color:#E8B86A"></iconify-icon><span style="flex:1;min-width:220px">Sumá <b>2 botellas más</b> y armá una caja de 6 con <b style="color:#E8B86A">20% off</b> y envío gratis</span><span style="display:flex;gap:4px"><sc-for list="{{ slots }}" as="s" hint-placeholder-count="6"><span style="width:14px;height:30px;border:1px solid #E8B86A;background:{{ s }}"></span></sc-for></span></div>
+    <div style="margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:clamp(22px,4cqw,56px);align-items:start">
+      <div>
+        <sc-for list="{{ cart }}" as="c" hint-placeholder-count="3"><div style="display:flex;gap:16px;padding:16px 0;border-bottom:1px solid rgba(244,233,225,.1)"><img src="{{ c.img }}" alt="" style="width:80px;height:112px;object-fit:cover;flex:none;background:#3A2026"><div style="flex:1;min-width:0;display:flex;flex-direction:column"><div style="display:flex;justify-content:space-between;gap:10px"><span style="font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:600;line-height:1.05">{{ c.n }}</span><b style="white-space:nowrap">{{ c.price }}</b></div><span style="font-size:12.5px;color:#BFA9A3;margin-top:4px">{{ c.v }}</span><span style="flex:1"></span><div style="display:flex;justify-content:space-between;align-items:center"><span style="display:flex;align-items:center;border:1px solid rgba(244,233,225,.2)"><span style="width:34px;height:32px;display:grid;place-items:center"><iconify-icon icon="ph:minus" width="12"></iconify-icon></span><b style="width:24px;text-align:center;font-size:14px">{{ c.q }}</b><span style="width:34px;height:32px;display:grid;place-items:center"><iconify-icon icon="ph:plus" width="12"></iconify-icon></span></span><span style="font-size:12.5px;color:#BFA9A3;text-decoration:underline">Quitar</span></div></div></div></sc-for>
+        <div style="margin-top:24px;font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#E8B86A">Para completar la caja</div>
+        <div style="margin-top:12px;display:flex;gap:10px;overflow-x:auto;scrollbar-width:none"><sc-for list="{{ upsell }}" as="p" hint-placeholder-count="3"><div style="flex:none;width:150px"><div style="aspect-ratio:3/4;overflow:hidden;background:#3A2026"><img src="{{ p.img }}" alt="" style="width:100%;height:100%;object-fit:cover"></div><div style="margin-top:8px;font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;line-height:1.1">{{ p.n }}</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px"><b style="font-size:14px">{{ p.price }}</b><span style="width:28px;height:28px;border:1px solid #E8B86A;color:#E8B86A;display:grid;place-items:center"><iconify-icon icon="ph:plus" width="13"></iconify-icon></span></div></div></sc-for></div>
+      </div>
+      <div style="position:sticky;top:96px;padding:24px;background:#F4E9E1;color:#1E0E12;display:flex;flex-direction:column;gap:11px;font-size:14px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:600">Resumen</div>
+        <span style="display:flex;justify-content:space-between"><span>4 botellas</span><span>$ 96.100</span></span>
+        <span style="display:flex;justify-content:space-between"><span>Envío a Mendoza</span><span>$ 7.400</span></span>
+        <div style="display:flex;gap:6px"><span style="flex:1;padding:11px 12px;background:#fff;color:#8A6A70">Código de regalo</span><span style="padding:11px 14px;border:1px solid #1E0E12;font-weight:600">Aplicar</span></div>
+        <span style="display:flex;align-items:center;gap:10px;font-size:13.5px"><span style="width:18px;height:18px;border:1px solid #1E0E12;display:grid;place-items:center;background:#1E0E12;color:#F4E9E1"><iconify-icon icon="ph:check-bold" width="11"></iconify-icon></span>Es para regalo · caja de madera + tarjeta ($ 4.900)</span>
+        <div style="height:1px;background:rgba(30,14,18,.15)"></div>
+        <span style="display:flex;justify-content:space-between;align-items:baseline"><b>Total</b><b style="font-family:'Cormorant Garamond',serif;font-size:34px">$ 108.400</b></span>
+        <span style="color:#5A3A40">6 cuotas sin interés de $ 18.067</span>
+        <span style="color:#2F7D4F;font-weight:600">$ 97.560 por transferencia</span>
+        <button onClick="{{ goCheckout }}" style="margin-top:4px;padding:16px;border:0;background:#1E0E12;color:#F4E9E1;font:700 14px 'Instrument Sans';letter-spacing:.08em;text-transform:uppercase;cursor:pointer">Finalizar compra</button>
+      </div>
+    </div>
+  </section>
+</sc-if>
+
+<!-- CHECKOUT -->
+<sc-if value="{{ pCheckout }}" hint-placeholder-val="{{ false }}">
+  <section style="padding:32px clamp(16px,4cqw,48px) clamp(56px,8cqw,100px);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:clamp(22px,4cqw,56px);align-items:start">
+    <div style="display:flex;flex-direction:column;gap:26px">
+      <div style="display:flex;gap:8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase"><span style="color:#E8B86A;font-weight:700">1 Datos</span><span style="color:#8F7A75">— 2 Entrega — 3 Pago</span></div>
+      <div><div style="font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:600">Tus datos</div><div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px"><sc-for list="{{ fields }}" as="f" hint-placeholder-count="4"><div style="padding:11px 13px;border:1px solid rgba(244,233,225,.15);background:#24121A"><div style="font-size:11.5px;color:#BFA9A3">{{ f.l }}</div><div style="font-size:14.5px;margin-top:2px">{{ f.v }}</div></div></sc-for></div><div style="margin-top:10px;display:flex;align-items:center;gap:8px;font-size:12.5px;color:#BFA9A3"><iconify-icon icon="ph:identification-card" width="16"></iconify-icon>Pedimos DNI para confirmar que sos mayor de 18. Lo verifica quien entrega.</div></div>
+      <div><div style="font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:600">Entrega</div><div style="margin-top:12px;display:flex;flex-direction:column;gap:8px"><sc-for list="{{ ship }}" as="s" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:12px;padding:15px;border:1px solid {{ s.bd }};background:{{ s.bg }}"><span style="width:18px;height:18px;border-radius:50%;border:1px solid #E8B86A;display:grid;place-items:center;flex:none"><sc-if value="{{ s.on }}"><span style="width:9px;height:9px;border-radius:50%;background:#E8B86A"></span></sc-if></span><div style="flex:1"><div style="font-size:14.5px;font-weight:600">{{ s.t }}</div><div style="font-size:12.5px;color:#BFA9A3">{{ s.d }}</div></div><b style="color:{{ s.c }}">{{ s.p }}</b></div></sc-for></div></div>
+      <div><div style="font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:600">Pago</div><div style="margin-top:12px;display:flex;flex-direction:column;gap:8px"><sc-for list="{{ pay }}" as="s" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:12px;padding:15px;border:1px solid {{ s.bd }};background:{{ s.bg }}"><span style="width:18px;height:18px;border-radius:50%;border:1px solid #E8B86A;display:grid;place-items:center;flex:none"><sc-if value="{{ s.on }}"><span style="width:9px;height:9px;border-radius:50%;background:#E8B86A"></span></sc-if></span><iconify-icon icon="{{ s.i }}" width="22" style="color:{{ s.c }}"></iconify-icon><div style="flex:1"><div style="font-size:14.5px;font-weight:600">{{ s.t }}</div><div style="font-size:12.5px;color:#BFA9A3">{{ s.d }}</div></div></div></sc-for></div></div>
+      <button style="padding:18px;border:0;background:#E8B86A;color:#1E0E12;font:700 15px 'Instrument Sans';letter-spacing:.08em;text-transform:uppercase;cursor:pointer;display:flex;justify-content:center;align-items:center;gap:8px"><iconify-icon icon="ph:lock-simple" width="16"></iconify-icon>Pagar $ 97.560</button>
+    </div>
+    <div style="position:sticky;top:96px;padding:24px;background:#24121A;border:1px solid rgba(244,233,225,.1)">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:600">Tu pedido</div>
+      <div style="margin-top:14px;display:flex;flex-direction:column;gap:12px"><sc-for list="{{ cart }}" as="c" hint-placeholder-count="3"><div style="display:flex;gap:12px;align-items:center"><span style="position:relative;flex:none"><img src="{{ c.img }}" alt="" style="width:48px;height:66px;object-fit:cover;background:#3A2026"><span style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#E8B86A;color:#1E0E12;font-size:11px;font-weight:700;display:grid;place-items:center">{{ c.q }}</span></span><span style="flex:1;font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;line-height:1.1">{{ c.n }}</span><b style="font-size:14px">{{ c.price }}</b></div></sc-for></div>
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(244,233,225,.1);display:flex;flex-direction:column;gap:8px;font-size:14px"><span style="display:flex;justify-content:space-between"><span>Subtotal</span><span>$ 96.100</span></span><span style="display:flex;justify-content:space-between"><span>Caja de regalo</span><span>$ 4.900</span></span><span style="display:flex;justify-content:space-between"><span>Envío</span><span>$ 7.400</span></span><span style="display:flex;justify-content:space-between;color:#9FD3A8;font-weight:600"><span>Transferencia −10%</span><span>− $ 10.840</span></span><span style="display:flex;justify-content:space-between;align-items:baseline;margin-top:6px"><b>Total</b><b style="font-family:'Cormorant Garamond',serif;font-size:32px">$ 97.560</b></span></div>
+    </div>
+  </section>
+</sc-if>
+
+<!-- NOSOTROS -->
+<sc-if value="{{ pNosotros }}" hint-placeholder-val="{{ false }}">
+  <section style="padding:clamp(56px,8cqw,110px) clamp(16px,4cqw,48px) 0;text-align:center">
+    <div style="font-size:12.5px;letter-spacing:.3em;text-transform:uppercase;color:#E8B86A">Desde 2016 · Mendoza</div>
+    <h1 style="margin:18px auto 0;max-width:900px;font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(46px,7.4cqw,108px);line-height:.92;overflow-wrap:anywhere">Si no lo tomaríamos en casa, <i style="color:#E8B86A">no lo vendemos.</i></h1>
+  </section>
+  <section style="padding:clamp(40px,6cqw,80px) clamp(16px,4cqw,48px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:14px">
+    <sc-for list="{{ team }}" as="t" hint-placeholder-count="3"><div><div style="aspect-ratio:4/5;overflow:hidden;background:#3A2026"><img src="{{ t.img }}" alt="" style="width:100%;height:100%;object-fit:cover"></div><div style="margin-top:12px;font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600">{{ t.n }}</div><div style="font-size:13.5px;color:#BFA9A3">{{ t.r }}</div></div></sc-for>
+  </section>
+  <section style="margin-top:clamp(56px,8cqw,100px);padding:clamp(40px,6cqw,80px) clamp(16px,4cqw,48px);background:#F4E9E1;color:#1E0E12;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:clamp(24px,4cqw,56px)">
+    <div>
+      <h2 style="margin:0;font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(40px,5cqw,64px);line-height:1">Vení a probar</h2>
+      <p style="margin:12px 0 0;font-size:15px;line-height:1.55;color:#5A3A40;max-width:420px">Los viernes a las 19 h abrimos tres botellas del mes. Es gratis, pero el lugar es chico: reservá por WhatsApp.</p>
+      <div style="margin-top:20px;display:flex;flex-direction:column;gap:12px;font-size:15px"><span style="display:flex;gap:12px"><iconify-icon icon="ph:map-pin" width="19"></iconify-icon>Arístides Villanueva 380, Mendoza</span><span style="display:flex;gap:12px"><iconify-icon icon="ph:clock" width="19"></iconify-icon>Martes a sábado de 11 a 21 h</span><span style="display:flex;gap:12px"><iconify-icon icon="ph:whatsapp-logo" width="19"></iconify-icon>261 555-0133</span></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:600">Escribinos</div>
+      <span style="padding:14px;border:1px solid rgba(30,14,18,.2);font-size:14.5px;color:#8A6A70">Nombre</span>
+      <span style="padding:14px;border:1px solid rgba(30,14,18,.2);font-size:14.5px;color:#8A6A70">Email o WhatsApp</span>
+      <span style="padding:14px;height:110px;border:1px solid rgba(30,14,18,.2);font-size:14.5px;color:#8A6A70">Eventos, regalos empresariales, consultas…</span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><span style="flex:1;padding:15px;text-align:center;background:#1E0E12;color:#F4E9E1;font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">Enviar</span><span style="flex:1;display:flex;justify-content:center;align-items:center;gap:8px;padding:15px;border:1px solid #1E0E12;font-size:14px;font-weight:700"><iconify-icon icon="ph:whatsapp-logo" width="18"></iconify-icon>WhatsApp</span></div>
+    </div>
+  </section>
+</sc-if>
+
+  <footer style="padding:clamp(48px,6cqw,80px) clamp(16px,4cqw,48px) 26px;border-top:1px solid rgba(244,233,225,.1)">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:30px">
+      <div style="min-width:0;max-width:380px"><div style="font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:600">Vinoteca Tres</div><p style="margin:10px 0 0;font-size:14px;color:#BFA9A3;line-height:1.55">Recibí la selección del mes antes que nadie y una invitación a la cata de los viernes.</p><div style="margin-top:12px;display:flex;border-bottom:1px solid #E8B86A"><span style="flex:1;padding:10px 0;font-size:14.5px;color:#8F7A75">Tu email</span><iconify-icon icon="ph:arrow-right" width="18" style="align-self:center;color:#E8B86A"></iconify-icon></div></div>
+      <sc-for list="{{ foot }}" as="f" hint-placeholder-count="3"><div style="display:flex;flex-direction:column;gap:9px;font-size:14px"><b style="font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:#E8B86A;margin-bottom:4px">{{ f.t }}</b><sc-for list="{{ f.l }}" as="l" hint-placeholder-count="4"><span style="color:#DCCBC4">{{ l }}</span></sc-for></div></sc-for>
+    </div>
+    <div data-footer-trust="" style="margin-top:32px;padding-top:24px;border-top:1px solid color-mix(in srgb,currentColor 16%,transparent);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:22px"><div style="min-width:0"><div style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:10px">Medios de pago</div><div style="display:flex;flex-wrap:wrap;gap:6px"><span style="height:28px;display:inline-flex;align-items:center;gap:5px;padding:0 9px;border-radius:6px;background:#fff;color:#1A1A1A;box-shadow:0 0 0 1px rgba(0,0,0,.06);font:700 11.5px 'Instrument Sans',sans-serif;white-space:nowrap"><iconify-icon icon="logos:visa" width="34"></iconify-icon></span><span style="height:28px;display:inline-flex;align-items:center;gap:5px;padding:0 9px;border-radius:6px;background:#fff;color:#1A1A1A;box-shadow:0 0 0 1px rgba(0,0,0,.06);font:700 11.5px 'Instrument Sans',sans-serif;white-space:nowrap"><iconify-icon icon="logos:mastercard" width="22"></iconify-icon></span><span style="height:28px;display:inline-flex;align-items:center;gap:5px;padding:0 9px;border-radius:6px;background:#fff;color:#1A1A1A;box-shadow:0 0 0 1px rgba(0,0,0,.06);font:700 11.5px 'Instrument Sans',sans-serif;white-space:nowrap"><iconify-icon icon="logos:amex" width="30"></iconify-icon></span><span style="height:28px;display:inline-flex;align-items:center;gap:5px;padding:0 9px;border-radius:6px;background:#fff;color:#1A1A1A;box-shadow:0 0 0 1px rgba(0,0,0,.06);font:700 11.5px 'Instrument Sans',sans-serif;white-space:nowrap"><span style="color:#FE5000;font-weight:800;letter-spacing:-.02em">naranja X</span></span><span style="height:28px;display:inline-flex;align-items:center;gap:5px;padding:0 9px;border-radius:6px;background:#fff;color:#1A1A1A;box-shadow:0 0 0 1px rgba(0,0,0,.06);font:700 11.5px 'Instrument Sans',sans-serif;white-space:nowrap"><span style="color:#0055A4;font-weight:800">CABAL</span></span><span style="height:28px;display:inline-flex;align-items:center;gap:5px;padding:0 9px;border-radius:6px;background:#fff;color:#1A1A1A;box-shadow:0 0 0 1px rgba(0,0,0,.06);font:700 11.5px 'Instrument Sans',sans-serif;white-space:nowrap"><iconify-icon icon="simple-icons:mercadopago" width="17" style="color:#00B1EA"></iconify-icon><span style="color:#0A2D6E">Mercado Pago</span></span><span style="height:28px;display:inline-flex;align-items:center;gap:5px;padding:0 9px;border-radius:6px;background:#fff;color:#1A1A1A;box-shadow:0 0 0 1px rgba(0,0,0,.06);font:700 11.5px 'Instrument Sans',sans-serif;white-space:nowrap"><span style="color:#009B72;font-weight:800;letter-spacing:.04em">MODO</span></span><span style="height:28px;display:inline-flex;align-items:center;gap:5px;padding:0 9px;border-radius:6px;background:#fff;color:#1A1A1A;box-shadow:0 0 0 1px rgba(0,0,0,.06);font:700 11.5px 'Instrument Sans',sans-serif;white-space:nowrap"><iconify-icon icon="ph:bank-fill" width="14" style="color:#2F7A43"></iconify-icon>Transferencia</span><span style="height:28px;display:inline-flex;align-items:center;gap:5px;padding:0 9px;border-radius:6px;background:#fff;color:#1A1A1A;box-shadow:0 0 0 1px rgba(0,0,0,.06);font:700 11.5px 'Instrument Sans',sans-serif;white-space:nowrap"><iconify-icon icon="ph:money-fill" width="14" style="color:#2F7A43"></iconify-icon>Efectivo</span></div></div><div style="min-width:0"><div style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:10px">Medios de envío</div><div style="display:flex;flex-wrap:wrap;gap:6px"><span style="height:28px;display:inline-flex;align-items:center;gap:5px;padding:0 9px;border-radius:6px;background:#fff;color:#1A1A1A;box-shadow:0 0 0 1px rgba(0,0,0,.06);font:700 11.5px 'Instrument Sans',sans-serif;white-space:nowrap"><span style="color:#D71920;font-weight:800;letter-spacing:-.02em">andreani</span></span><span style="height:28px;display:inline-flex;align-items:center;gap:5px;padding:0 9px;border-radius:6px;background:#fff;color:#1A1A1A;box-shadow:0 0 0 1px rgba(0,0,0,.06);font:700 11.5px 'Instrument Sans',sans-serif;white-space:nowrap"><span style="color:#5B2C83;font-weight:800">OCA</span></span><span style="height:28px;display:inline-flex;align-items:center;gap:5px;padding:0 9px;border-radius:6px;background:#fff;color:#1A1A1A;box-shadow:0 0 0 1px rgba(0,0,0,.06);font:700 11.5px 'Instrument Sans',sans-serif;white-space:nowrap"><span style="width:14px;height:14px;border-radius:3px;background:#FFD100;display:inline-block"></span><span style="color:#00205B">Correo Argentino</span></span><span style="height:28px;display:inline-flex;align-items:center;gap:5px;padding:0 9px;border-radius:6px;background:#fff;color:#1A1A1A;box-shadow:0 0 0 1px rgba(0,0,0,.06);font:700 11.5px 'Instrument Sans',sans-serif;white-space:nowrap"><iconify-icon icon="ph:moped-fill" width="15" style="color:#1A1A1A"></iconify-icon>Moto en el día</span><span style="height:28px;display:inline-flex;align-items:center;gap:5px;padding:0 9px;border-radius:6px;background:#fff;color:#1A1A1A;box-shadow:0 0 0 1px rgba(0,0,0,.06);font:700 11.5px 'Instrument Sans',sans-serif;white-space:nowrap"><iconify-icon icon="ph:storefront-fill" width="14" style="color:#1A1A1A"></iconify-icon>Retiro en el local</span></div></div><div style="min-width:0"><div style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:10px">Compra segura</div><div style="display:flex;flex-wrap:wrap;gap:6px"><span style="height:28px;display:inline-flex;align-items:center;gap:5px;padding:0 9px;border-radius:6px;background:#fff;color:#1A1A1A;box-shadow:0 0 0 1px rgba(0,0,0,.06);font:700 11.5px 'Instrument Sans',sans-serif;white-space:nowrap"><iconify-icon icon="ph:lock-simple-fill" width="14" style="color:#2F7A43"></iconify-icon>Sitio seguro SSL</span><span style="height:28px;display:inline-flex;align-items:center;gap:5px;padding:0 9px;border-radius:6px;background:#fff;color:#1A1A1A;box-shadow:0 0 0 1px rgba(0,0,0,.06);font:700 11.5px 'Instrument Sans',sans-serif;white-space:nowrap"><iconify-icon icon="ph:qr-code-bold" width="16" style="color:#1A1A1A"></iconify-icon><span style="display:flex;flex-direction:column;line-height:1"><span style="font-size:8px;font-weight:600;color:#666">ARCA</span>Data fiscal</span></span><span style="height:28px;display:inline-flex;align-items:center;gap:5px;padding:0 9px;border-radius:6px;background:#fff;color:#1A1A1A;box-shadow:0 0 0 1px rgba(0,0,0,.06);font:700 11.5px 'Instrument Sans',sans-serif;white-space:nowrap"><iconify-icon icon="ph:shield-check-fill" width="14" style="color:#1A1A1A"></iconify-icon>Compra protegida</span></div></div></div>
+    <div style="margin-top:36px;padding-top:16px;border-top:1px solid rgba(244,233,225,.1);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;font-size:12px;color:#8F7A75"><span>Beber con moderación. Prohibida su venta a menores de 18 años.</span></div>
+  <div data-footer-mostrador="" style="margin-top:16px;padding-top:16px;border-top:1px solid color-mix(in srgb,currentColor 16%,transparent);display:flex;justify-content:space-between;align-items:center;gap:12px 20px;flex-wrap:wrap;font-size:12.5px">
+      <span style="display:flex;gap:6px 16px;flex-wrap:wrap"><a href="#" style="color:inherit;opacity:1;text-decoration:underline;text-underline-offset:3px;font-weight:700;display:inline-flex;align-items:center;gap:5px"><iconify-icon icon="ph:arrow-counter-clockwise-bold" width="13"></iconify-icon>Botón de arrepentimiento</a><a href="#" style="color:inherit;opacity:0.75;text-decoration:underline;text-underline-offset:3px;font-weight:500;display:inline-flex;align-items:center;gap:5px">Defensa de las y los consumidores</a><a href="#" style="color:inherit;opacity:0.75;text-decoration:underline;text-underline-offset:3px;font-weight:500;display:inline-flex;align-items:center;gap:5px">Términos y condiciones</a><a href="#" style="color:inherit;opacity:0.75;text-decoration:underline;text-underline-offset:3px;font-weight:500;display:inline-flex;align-items:center;gap:5px">Políticas de privacidad</a></span>
+      <a href="Mostrador%20v4.dc.html" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:5px 13px 5px 5px;border-radius:999px;background:#fff;color:#2A140C;text-decoration:none;font:500 12.5px 'Instrument Sans',sans-serif;box-shadow:0 1px 3px rgba(0,0,0,.12);white-space:nowrap"><span style="width:24px;height:24px;border-radius:50%;background:#FCEDE5;display:grid;place-items:center"><img src="assets/mark.svg" alt="" style="width:13px;height:auto;display:block"></span>Tienda creada con <b style="font-weight:800;letter-spacing:-.02em">mostrador</b></a>
+    </div>
+  </footer>
+
+  <a href="#" style="position:{{ waPos }};right:18px;bottom:18px;z-index:30;width:54px;height:54px;border-radius:50%;background:#25D366;color:#fff;display:grid;place-items:center;box-shadow:0 12px 26px -8px rgba(0,0,0,.5);margin-left:auto"><iconify-icon icon="ph:whatsapp-logo-fill" width="28"></iconify-icon></a>
+</div>
+</div>
+</div>
+
+<div style="position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:100;display:flex;align-items:center;gap:4px;padding:5px;border-radius:999px;background:#0E0507;border:1px solid rgba(232,184,106,.2);box-shadow:0 18px 40px -12px rgba(0,0,0,.7);max-width:calc(100vw - 16px);overflow-x:auto;scrollbar-width:none;font-family:'Instrument Sans',sans-serif">
+  <span style="font-size:12px;font-weight:600;color:#BFA9A3;padding:0 10px;white-space:nowrap">Malbec</span>
+  <sc-for list="{{ pages }}" as="p" hint-placeholder-count="7"><button onClick="{{ p.go }}" style="border:0;cursor:pointer;font:600 12.5px 'Instrument Sans';padding:8px 13px;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};white-space:nowrap">{{ p.t }}</button></sc-for>
+  <span style="width:1px;height:20px;background:rgba(255,255,255,.2);margin:0 4px"></span>
+  <sc-for list="{{ devs }}" as="d" hint-placeholder-count="2"><button onClick="{{ d.go }}" aria-label="{{ d.t }}" title="{{ d.t }}" style="border:0;cursor:pointer;width:34px;height:34px;border-radius:50%;background:{{ d.bg }};color:#fff;display:grid;place-items:center"><iconify-icon icon="{{ d.i }}" width="16"></iconify-icon></button></sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const U = (id, w, h) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${w}${h ? '&h=' + h : ''}&q=72`;
+const fmt = n => '$ ' + Math.round(n).toLocaleString('es-AR');
+const W = [
+  ['Malbec Valle de Uco 2021', 'Los Álamos', 'Tupungato', 'Malbec', 18900, 93, ['Ciruela', 'Violeta'], '1553361371-9b22f78e8b1d'],
+  ['Cabernet Franc Gualtallary', 'Altos del Río', 'Tupungato', 'Cab. Franc', 32400, 94, ['Pimiento', 'Grafito'], '1584916201218-f4242ceb4809'],
+  ['Blend de Altura 2020', 'Finca Piedra', 'San Carlos', 'Blend', 26800, 92, ['Cassis', 'Especias'], '1568213816046-0ee1c42bd559'],
+  ['Chardonnay sin madera', 'Viña Clara', 'Tunuyán', 'Blanco', 15600, 0, ['Pera', 'Cítrico'], '1474722883778-792e7990302f'],
+  ['Espumante Nature', 'Casa Burbuja', 'Luján de Cuyo', 'Espumante', 21900, 91, ['Brioche', 'Manzana'], '1547595628-c61a29f496f0'],
+  ['Malbec Reserva Luján', 'Bodega Tres', 'Luján de Cuyo', 'Malbec', 42000, 95, ['Chocolate', 'Mora'], '1510812431401-41d2bd2722f3'],
+  ['Rosado de Malbec', 'Viña Clara', 'Tunuyán', 'Rosado', 12800, 0, ['Frutilla', 'Fresco'], '1516594915697-87eb3b1c14ea'],
+  ['Pinot Noir Patagonia', 'Río Frío', 'Neuquén', 'Pinot Noir', 28500, 92, ['Cereza', 'Tierra'], '1586370434639-0fe43b2d32e6'],
+  ['Bonarda Clásica', 'Don Ernesto', 'San Martín', 'Bonarda', 11900, 0, ['Frambuesa', 'Jugoso'], '1543418219-44e30b057fea']
+];
+const PAGES = [['inicio', 'Inicio'], ['club', 'Club'], ['catalogo', 'Catálogo'], ['producto', 'Producto'], ['carrito', 'Carrito'], ['checkout', 'Checkout'], ['nosotros', 'Nosotros']];
+const CEPA_C = { Malbec: '#9E2F40', 'Cab. Franc': '#6B2A3A', Blend: '#5A2340', Blanco: '#C9B26A', Espumante: '#D8C79A', Rosado: '#D88A8E', 'Pinot Noir': '#7A2F3A', Bonarda: '#7B2236' };
+
+class Component extends DCLogic {
+  state = { page: localStorage.getItem('tpl-malbec-page') || 'inicio', dev: localStorage.getItem('tpl-malbec-dev') || 'desk', vw: window.innerWidth, now: Date.now(), gate: !sessionStorage.getItem('tpl-malbec-18') };
+  componentDidMount() { this._r = () => this.setState({ vw: window.innerWidth }); window.addEventListener('resize', this._r); this._t = setInterval(() => this.setState({ now: Date.now() }), 1000); }
+  componentWillUnmount() { window.removeEventListener('resize', this._r); clearInterval(this._t); }
+  go(page) { localStorage.setItem('tpl-malbec-page', page); this.setState({ page }); const s = document.querySelector('[data-scroll]'); s && (s.scrollTop = 0); window.scrollTo(0, 0); }
+  renderVals() {
+    const st = this.state, mob = st.dev === 'mob', nar = mob || st.vw < 820;
+    const end = new Date(end0()); function end0() { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59).getTime(); }
+    const left = Math.max(0, end - st.now) / 1000, pad = n => String(Math.floor(n)).padStart(2, '0');
+    const wine = w => { const light = ['Blanco', 'Espumante', 'Rosado'].includes(w[3]); return { n: w[0], bod: w[1], reg: w[2], cepa: w[3], price: fmt(w[4]), pts: w[5] || null, notes: w[6], img: U(w[7], 600, 800), box: 'Caja ×6 ' + fmt(w[4] * 6 * .8), tbg: CEPA_C[w[3]] || '#9E2F40', tfg: light ? '#1E0E12' : '#F4E9E1' }; };
+    const dots = n => Array.from({ length: 5 }, (_, i) => i < n ? '#E8B86A' : 'rgba(244,233,225,.14)');
+    const sel = (on) => ({ bd: on ? '#E8B86A' : 'rgba(244,233,225,.18)', bg: on ? 'rgba(232,184,106,.12)' : 'transparent', fg: '#F4E9E1' });
+    const cart = [[0, 2], [1, 1], [5, 1]].map(([i, q]) => ({ n: W[i][0], v: W[i][1] + ' · ' + W[i][3], q, price: fmt(W[i][4] * q), img: U(W[i][7], 160, 224) }));
+    return {
+      wide: !nar, nar, gate: st.gate, gatePos: mob ? 'absolute' : 'fixed', gateH: mob ? '100%' : '100vh',
+      okGate: () => { sessionStorage.setItem('tpl-malbec-18', '1'); this.setState({ gate: false }); },
+      outerPad: mob ? '28px 12px 90px' : '0px', frameW: mob ? '414px' : '100%', frameR: mob ? '52px' : '0px', framePad: mob ? '12px' : '0px', frameBg: mob ? '#000' : 'transparent', frameSh: mob ? '0 40px 80px -30px rgba(0,0,0,.8)' : 'none',
+      stageH: mob ? '844px' : 'auto', stageOv: mob ? 'auto' : 'visible', stageR: mob ? '40px' : '0px', waPos: mob ? 'sticky' : 'fixed',
+      pages: PAGES.map(([k, t]) => ({ t, bg: st.page === k ? '#E8B86A' : 'transparent', fg: st.page === k ? '#1E0E12' : '#F4E9E1', go: () => this.go(k) })),
+      devs: [['desk', 'Escritorio', 'ph:desktop'], ['mob', 'Celular', 'ph:device-mobile']].map(([k, t, i]) => ({ t, i, bg: st.dev === k ? 'rgba(255,255,255,.16)' : 'transparent', go: () => { localStorage.setItem('tpl-malbec-dev', k); this.setState({ dev: k }); } })),
+      pInicio: st.page === 'inicio', pClub: st.page === 'club', pCatalogo: st.page === 'catalogo', pProducto: st.page === 'producto', pCarrito: st.page === 'carrito', pCheckout: st.page === 'checkout', pNosotros: st.page === 'nosotros',
+      goInicio: () => this.go('inicio'), goClub: () => this.go('club'), goCatalogo: () => this.go('catalogo'), goProducto: () => this.go('producto'), goCarrito: () => this.go('carrito'), goCheckout: () => this.go('checkout'),
+      navL: [['Tintos', 'catalogo'], ['Blancos', 'catalogo'], ['Nosotros', 'nosotros']].map(([t, k], i) => ({ t, go: () => this.go(k), bd: st.page === k && (k !== 'catalogo' || i === 0) ? '#E8B86A' : 'transparent' })),
+      cd: [[left / 86400, 'd'], [(left % 86400) / 3600, 'h'], [(left % 3600) / 60, 'm'], [left % 60, 's']].map(([v, u]) => ({ v: pad(v), u })),
+      perks: [['ph:package', 'Embalaje seguro', 'Cajas para botellas, sin roturas'], ['ph:credit-card', '6 cuotas sin interés', 'Con todas las tarjetas'], ['ph:bank', '10% off', 'Pagando por transferencia'], ['ph:truck', 'Envío gratis', 'En cajas de 6 botellas']].map(([i, t, d]) => ({ i, t, d })),
+      sel: [0, 1, 2, 7, 4, 3].map(i => wine(W[i])),
+      plans: [['Descubrir', '$ 64.000', '3 botellas por mes'], ['Explorador', '$ 118.000', '6 botellas · el más elegido', true], ['Coleccionista', '$ 196.000', '6 de alta gama']].map(([t, p, d, on]) => ({ t, p, d, bd: on ? '#9E2F40' : 'rgba(30,14,18,.15)', bg: on ? '#fff' : 'transparent' })),
+      pair: [['Asado', 'Malbec · Bonarda', '1544025162-d76694265947'], ['Pastas', 'Blend · Cab. Franc', '1621996346565-e3dbc646d9a9'], ['Pescados', 'Chardonnay · Rosado', '1519708227418-c8fd9a32b7a2'], ['Quesos', 'Pinot Noir · Espumante', '1452195100486-9cc805987862'], ['Postres', 'Espumante dulce', '1488477181946-6428a0291777']].map(([t, c, id]) => ({ t, c, img: U(id, 500, 500) })),
+      reviews: [['Cada mes descubro algo. El Cabernet Franc fue lo mejor que tomé este año.', 'Gustavo, Rosario', 'Socio del club', 1], ['Llegó perfecto, con una ficha de cata hermosa. Ideal para regalar.', 'Sole, CABA', 'Caja de regalo', 0], ['Les pedí algo para cordero por WhatsApp y le pegaron justo.', 'Hernán, Neuquén', 'Malbec Reserva', 5]].map(([q, who, p, i]) => ({ q, who, p, img: U(W[i][7], 200, 260) })),
+      ig: ['1506377247377-2a5b3b417ebb', '1510812431401-41d2bd2722f3', '1553361371-9b22f78e8b1d', '1547595628-c61a29f496f0', '1544025162-d76694265947', '1452195100486-9cc805987862'].map(id => U(id, 400, 400)),
+      quiz: [['1', '¿Qué te gusta tomar?', [['Tintos', 'Malbec, blends', true], ['Blancos', 'Frescos y frutados'], ['Mixta', 'Un poco de todo']]], ['2', '¿Cuántas botellas por mes?', [['3', 'Para probar'], ['6', 'El más elegido', true], ['12', 'Para compartir']]], ['3', '¿Qué rango de precio?', [['Diario', 'Hasta $ 15 mil'], ['Medio', '$ 15 a 30 mil', true], ['Alta gama', 'Más de $ 30 mil']]]].map(([n, t, o]) => ({ n, t, o: o.map(([t2, d, on]) => ({ t: t2, d, ...sel(!!on) })) })),
+      boxImgs: [0, 1, 2, 7, 5, 8].map(i => U(W[i][7], 120, 360)),
+      cepas: [['Todos', true], ['Malbec'], ['Cabernet Franc'], ['Blends'], ['Pinot Noir'], ['Bonarda'], ['Syrah']].map(([t, on]) => ({ t, bd: on ? '#E8B86A' : 'rgba(244,233,225,.2)', bg: on ? '#E8B86A' : 'transparent', fg: on ? '#1E0E12' : '#F4E9E1' })),
+      facets: [['Región', [['Valle de Uco', 38, true], ['Luján de Cuyo', 22], ['Patagonia', 12], ['Salta', 8]]], ['Bodega', [['Los Álamos', 6], ['Altos del Río', 4], ['Finca Piedra', 5], ['Bodega Tres', 7]]], ['Precio', [['Hasta $ 15.000', 18], ['$ 15 a 40 mil', 52, true], ['Más de $ 40.000', 14]]]].map(([t, o]) => ({ t, o: o.map(([t2, n, on]) => ({ t: t2, n, on: !!on, bd: on ? '#E8B86A' : 'rgba(244,233,225,.35)', bg: on ? '#E8B86A' : 'transparent' })) })),
+      all: [0, 1, 2, 5, 7, 8, 0, 2, 1].map(i => wine(W[i])),
+      pres: [['Botella', '$ 18.900', true], ['Caja ×3', '$ 51.030'], ['Caja ×6', '$ 90.720']].map(([t, p, on]) => ({ t, p, ...sel(!!on) })),
+      tasting: [['Cuerpo', 4], ['Taninos', 3], ['Acidez', 3], ['Madera', 2]].map(([t, n]) => ({ t, d: dots(n) })),
+      facts: [['Crianza', '12 meses'], ['Alcohol', '14 %'], ['Servir', '16–18 °C']].map(([t, v]) => ({ t, v })),
+      related: [5, 2, 8, 7].map(i => ({ n: W[i][0], price: fmt(W[i][4]), img: U(W[i][7], 500, 667) })),
+      slots: ['#E8B86A', '#E8B86A', '#E8B86A', '#E8B86A', 'transparent', 'transparent'],
+      cart, upsell: [2, 7, 8].map(i => ({ n: W[i][0], price: fmt(W[i][4]), img: U(W[i][7], 300, 400) })),
+      fields: [['Email', 'gustavo.lopez@gmail.com'], ['Nombre y apellido', 'Gustavo López'], ['WhatsApp', '261 555-0174'], ['DNI', '29.884.120']].map(([l, v]) => ({ l, v })),
+      ship: [['Envío con cuidado de botellas', 'Llega en 48 h · Mendoza', '$ 7.400', true], ['Retiro en la vinoteca', 'Arístides Villanueva 380 · hoy', 'Gratis'], ['Moto en el día', 'Gran Mendoza · antes de las 21 h', '$ 4.200']].map(([t, d, p, on]) => ({ t, d, p, on: !!on, c: p === 'Gratis' ? '#9FD3A8' : '#F4E9E1', bd: on ? '#E8B86A' : 'rgba(244,233,225,.14)', bg: on ? 'rgba(232,184,106,.08)' : 'transparent' })),
+      pay: [['Transferencia', '10% off · alias al confirmar', 'ph:bank', '#9FD3A8', true], ['Tarjeta de crédito', 'Hasta 6 cuotas sin interés', 'ph:credit-card', '#F4E9E1'], ['Mercado Pago', 'Dinero en cuenta y Cuotas sin Tarjeta', 'simple-icons:mercadopago', '#00B1EA']].map(([t, d, i, c, on]) => ({ t, d, i, c, on: !!on, bd: on ? '#E8B86A' : 'rgba(244,233,225,.14)', bg: on ? 'rgba(232,184,106,.08)' : 'transparent' })),
+      team: [['Julia Ferrari', 'Sommelier · elige los tintos', '1580489944761-15a19d654956'], ['Martín Ochoa', 'Sommelier · espumantes y blancos', '1506794778202-cad84cf45f1d'], ['Rocío Paz', 'Atención y club de vinos', '1438761681033-6461ffad8d80']].map(([n, r, id]) => ({ n, r, img: `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=600&h=750&q=70&crop=faces` })),
+      foot: [['Vinos', ['Tintos', 'Blancos', 'Espumantes', 'Selección del mes']], ['Club', ['Cómo funciona', 'Planes', 'Regalá el club', 'Cata de los viernes']], ['Ayuda', ['Envíos', 'Medios de pago', 'Regalos empresariales', 'Contacto']]].map(([t, l]) => ({ t, l }))
+    };
+  }
+}
+</script>
+</body>
+</html>

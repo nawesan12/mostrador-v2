@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Mostrador">
+<meta property="og:title" content="Creá tu tienda en Mostrador">
+<meta property="og:description" content="Importamos tus productos y te dejamos la tienda lista en 10 minutos.">
+<meta property="og:image" content="https://mostrador.com.ar/assets/og/home.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://mostrador.com.ar/assets/og/home.png">
+<meta name="description" content="Importamos tus productos y te dejamos la tienda lista en 10 minutos.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+<script src="image-slot.js"></script>
+<script src="templates-data.js"></script>
+<style>
+html,body{margin:0;background:#FBF7F2;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:#C24E25;text-decoration:none}
+a:hover{color:#2A140C}
+input::placeholder{color:#A8907F}
+</style>
+</helmet>
+
+<div data-screen-label="Onboarding" style="font-family:'Instrument Sans',system-ui,sans-serif;color:#2A140C;background:#FBF7F2;min-height:100vh;display:flex;font-variant-numeric:tabular-nums">
+  <div style="position:fixed;inset:0;pointer-events:none;z-index:90;background-image:url(assets/grain.png);opacity:.5;mix-blend-mode:multiply"></div>
+
+  <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}"><aside style="width:{{ asideW }};flex:none;position:sticky;top:0;height:100vh;background:#2A140C;color:#FBF7F2;display:flex;flex-direction:column;padding:28px 24px;overflow:hidden">
+    <div style="position:absolute;inset:0;background-image:url(assets/arch-pattern-light.svg)"></div>
+    <div style="position:absolute;inset:0;background:radial-gradient(420px 320px at 0% 100%,rgba(210,88,47,.35),transparent 70%)"></div>
+    <a href="Mostrador%20v4.dc.html" style="position:relative;display:flex;align-items:center;gap:10px">
+      <svg viewBox="0 0 100 76" style="width:24px;height:18px;display:block"><path fill="#E8875F" d="M3 76a3 3 0 0 1-3-3V5a5 5 0 0 1 5-5h90a5 5 0 0 1 5 5v68a3 3 0 0 1-3 3H82a3 3 0 0 1-3-3V21H21v52a3 3 0 0 1-3 3Z"></path></svg>
+      <img src="assets/wordmark-cream.png" alt="mostrador" style="height:18px;width:auto;display:block">
+    </a>
+    <div style="position:relative;margin-top:36px">
+      <div style="font-size:13.5px;color:#D9C8BA">Tu cuenta está</div>
+      <div style="display:flex;align-items:baseline;gap:8px;margin-top:2px"><span style="font-size:52px;font-weight:600;letter-spacing:-.05em;line-height:1">{{ pct }}%</span><span style="font-size:16px;font-weight:600;color:#F5B796">lista</span></div>
+      <div style="margin-top:12px;height:8px;border-radius:8px;background:rgba(251,247,242,.12);overflow:hidden"><div style="height:100%;width:{{ pctW }};border-radius:8px;background:linear-gradient(90deg,#D2582F,#F5B796);transition:width .9s cubic-bezier(.2,.7,.1,1)"></div></div>
+      <div style="margin-top:8px;font-size:12.5px;color:#C9B4A4">Sin cargar nada a mano: lo traemos de lo que ya usás.</div>
+    </div>
+    <div style="position:relative;margin-top:28px;display:flex;flex-direction:column;gap:2px">
+      <sc-for list="{{ steps }}" as="s" hint-placeholder-count="8">
+        <button onClick="{{ s.go }}" style="display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:12px;border:0;background:{{ s.bg }};color:{{ s.fg }};cursor:pointer;font-family:inherit;text-align:left">
+          <sc-if value="{{ s.done }}"><span style="width:24px;height:24px;flex:none;border-radius:50%;background:#2F8F63;color:#fff;display:grid;place-items:center"><iconify-icon icon="ph:check-bold" width="12"></iconify-icon></span></sc-if>
+          <sc-if value="{{ s.cur }}"><span style="width:24px;height:24px;flex:none;border-radius:50%;background:#D2582F;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700;box-shadow:0 0 0 4px rgba(210,88,47,.25)">{{ s.n }}</span></sc-if>
+          <sc-if value="{{ s.next }}"><span style="width:24px;height:24px;flex:none;border-radius:50%;border:1.5px solid rgba(251,247,242,.25);display:grid;place-items:center;font-size:12px;font-weight:600;color:#C9B4A4">{{ s.n }}</span></sc-if>
+          <span style="flex:1;font-size:14.5px;font-weight:{{ s.fw }}">{{ s.label }}</span>
+        </button>
+      </sc-for>
+    </div>
+    <div style="flex:1"></div>
+    <div style="position:relative;display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:18px;background:rgba(251,247,242,.07);border:1px solid rgba(251,247,242,.12)">
+      <div style="width:56px;height:56px;flex:none;border-radius:50%;overflow:hidden;background:#FBF7F2;box-shadow:0 0 0 2px #E8875F;display:grid;place-items:center"><img data-tipimg="" src="{{ tipImg }}" alt="Hornero" style="display:block;width:52px;height:52px;object-fit:contain"></div>
+      <div style="flex:1"><div style="font-size:13.5px;font-weight:600">Hornero</div><div style="font-size:13px;line-height:1.45;color:#EADBCF;margin-top:2px">{{ tip }}</div></div>
+    </div>
+  </aside></sc-if>
+
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column;min-height:100vh">
+    <sc-if value="{{ narrow }}">
+      <div style="position:sticky;top:0;z-index:20;background:#2A140C;color:#FBF7F2">
+        <div style="height:58px;display:flex;align-items:center;gap:10px;padding:0 14px">
+          <svg viewBox="0 0 100 76" style="width:22px;height:17px;flex:none"><path fill="#E8875F" d="M3 76a3 3 0 0 1-3-3V5a5 5 0 0 1 5-5h90a5 5 0 0 1 5 5v68a3 3 0 0 1-3 3H82a3 3 0 0 1-3-3V21H21v52a3 3 0 0 1-3 3Z"></path></svg>
+          <span style="flex:1;min-width:0"><span style="display:block;font-size:12px;color:#C9B4A4">Paso {{ stepN }} de 8</span><span style="display:block;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ stepLabel }}</span></span>
+          <span style="font-size:20px;font-weight:600;letter-spacing:-.03em">{{ pct }}%</span>
+          <button onClick="{{ toggleTip }}" aria-label="Consejo de Hornero" style="width:40px;height:40px;flex:none;border-radius:50%;border:0;padding:0;overflow:hidden;background:#FBF7F2;box-shadow:0 0 0 2px #E8875F;cursor:pointer"><img src="{{ tipImg }}" alt="" style="width:100%;height:100%;object-fit:contain"></button>
+        </div>
+        <div style="display:flex;gap:3px;padding:0 14px 10px"><sc-for list="{{ steps }}" as="s" hint-placeholder-count="8"><button onClick="{{ s.go }}" aria-label="{{ s.label }}" style="flex:1;height:5px;padding:0;border:0;border-radius:3px;cursor:pointer;background:{{ s.bar }}"></button></sc-for></div>
+        <sc-if value="{{ tipOpen }}"><div data-tip="" style="margin:0 12px 12px;padding:12px 14px;border-radius:14px;background:rgba(251,247,242,.08);border:1px solid rgba(251,247,242,.14);font-size:13.5px;line-height:1.45;color:#EADBCF"><b style="color:#fff">Hornero:</b> {{ tip }}</div></sc-if>
+      </div>
+    </sc-if>
+    <div style="height:{{ topH }};display:{{ topDisp }};align-items:center;gap:14px;padding:0 40px;border-bottom:1px solid rgba(58,29,18,.08)">
+      <span style="font-size:14px;color:#7A6252">Paso {{ stepN }} de 8</span>
+      <span style="display:flex;align-items:center;gap:6px;font-size:13px;color:#2F8F63;font-weight:600"><iconify-icon icon="ph:cloud-check-fill" width="16"></iconify-icon>Guardado automáticamente</span>
+      <div style="flex:1"></div>
+      <a href="#" style="font-size:14px;font-weight:600;color:#5C4536">¿Necesitás ayuda?</a>
+      <a href="Mostrador%20v4.dc.html" style="font-size:14px;font-weight:600;color:#5C4536">Salir</a>
+    </div>
+
+    <div style="flex:1;padding:{{ mainPad }};display:flex;justify-content:center">
+      <div data-step="{{ step }}" style="width:100%;max-width:880px">
+
+<!-- 1 CUENTA -->
+<sc-if value="{{ s0 }}" hint-placeholder-val="{{ true }}">
+  <div style="display:flex;gap:40px;flex-wrap:wrap">
+    <div style="flex:1 1 380px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#D2582F"><span style="width:6px;height:6px;border-radius:50%;background:#D2582F"></span>Crear cuenta</div>
+      <h1 style="margin:12px 0 0;font-size:clamp(34px,4vw,52px);line-height:1;letter-spacing:-.045em;font-weight:600;text-wrap:balance">Abrí tu mostrador. No arrancás de cero.</h1>
+      <p style="margin:14px 0 0;font-size:17px;line-height:1.55;color:#5C4536">Entrá con la cuenta que ya usás y traemos tus datos desde ahí: nombre, CUIT, clientes y ventas.</p>
+      <div style="margin-top:28px;display:flex;flex-direction:column;gap:10px">
+        <button onClick="{{ loginMp }}" style="display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:16px;border:0;background:#00B1EA;color:#fff;font:600 15.5px 'Instrument Sans';cursor:pointer;box-shadow:0 12px 26px -14px rgba(0,120,170,.8)"><span style="width:30px;height:30px;border-radius:9px;background:#fff;display:grid;place-items:center"><iconify-icon icon="simple-icons:mercadopago" width="18" style="color:#00B1EA"></iconify-icon></span><span style="flex:1;text-align:left">Continuar con Mercado Pago</span><span style="font-size:12px;font-weight:700;background:rgba(255,255,255,.22);padding:3px 8px;border-radius:999px">Recomendado</span></button>
+        <button onClick="{{ loginMl }}" style="display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:16px;border:0;background:#FFE600;color:#2D3277;font:600 15.5px 'Instrument Sans';cursor:pointer"><span style="width:30px;height:30px;border-radius:9px;background:#2D3277;color:#FFE600;display:grid;place-items:center;font-size:9px;font-weight:800">ML</span><span style="flex:1;text-align:left">Continuar con Mercado Libre</span></button>
+        <button onClick="{{ loginG }}" style="display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:16px;border:1px solid rgba(58,29,18,.14);background:#fff;color:#2A140C;font:600 15.5px 'Instrument Sans';cursor:pointer"><span style="width:30px;height:30px;border-radius:9px;background:#F6EEE4;display:grid;place-items:center"><iconify-icon icon="logos:google-icon" width="16"></iconify-icon></span><span style="flex:1;text-align:left">Continuar con Google</span></button>
+      </div>
+      <div style="margin:22px 0;display:flex;align-items:center;gap:12px;font-size:13px;color:#8A7060"><span style="flex:1;height:1px;background:rgba(58,29,18,.12)"></span>o con tu email<span style="flex:1;height:1px;background:rgba(58,29,18,.12)"></span></div>
+      <div style="display:flex;gap:8px"><input placeholder="tu@email.com" style="flex:1;min-width:0;padding:14px 16px;border-radius:14px;border:1px solid rgba(58,29,18,.16);background:#fff;font:500 15px 'Instrument Sans';color:#2A140C;outline:none"><button onClick="{{ loginG }}" style="padding:14px 18px;border-radius:14px;border:0;background:#2A140C;color:#fff;font:600 15px 'Instrument Sans';cursor:pointer">Seguir</button></div>
+      <div style="margin-top:14px;font-size:12.5px;color:#8A7060;line-height:1.5">Al continuar aceptás los términos y la política de privacidad. 14 días gratis, sin tarjeta.</div>
+    </div>
+    <div style="flex:1 1 300px;padding:24px;border-radius:24px;background:#fff;box-shadow:0 1px 2px rgba(58,29,18,.06),0 24px 50px -30px rgba(58,29,18,.4);align-self:flex-start">
+      <div style="font-size:15px;font-weight:600">Con Mercado Pago traemos</div>
+      <div style="margin-top:14px;display:flex;flex-direction:column;gap:12px">
+        <sc-for list="{{ mpBrings }}" as="b" hint-placeholder-count="5">
+          <div style="display:flex;gap:12px;align-items:center"><span style="width:34px;height:34px;flex:none;border-radius:10px;background:#FCEDE5;color:#C24E25;display:grid;place-items:center"><iconify-icon icon="{{ b.i }}" width="17"></iconify-icon></span><span style="flex:1;font-size:14px">{{ b.t }}</span><iconify-icon icon="ph:check-bold" width="14" style="color:#2F8F63"></iconify-icon></div>
+        </sc-for>
+      </div>
+      <div style="margin-top:18px;padding:12px 14px;border-radius:14px;background:#F6EEE4;font-size:13px;line-height:1.45;color:#5C4536"><iconify-icon icon="ph:lock-key-fill" width="13" style="color:#C24E25"></iconify-icon> Solo leemos lo necesario. Nunca movemos tu plata sin permiso.</div>
+    </div>
+  </div>
+</sc-if>
+
+<!-- 2 NEGOCIO -->
+<sc-if value="{{ s1 }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#D2582F"><span style="width:6px;height:6px;border-radius:50%;background:#D2582F"></span>Tu negocio</div>
+  <h1 style="margin:12px 0 0;font-size:clamp(32px,3.6vw,46px);line-height:1.02;letter-spacing:-.04em;font-weight:600;text-wrap:balance">Encontramos tu negocio. Revisá que esté todo bien.</h1>
+  <div style="margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+    <div style="padding:12px 14px;border-radius:14px;background:#fff;border:1px solid rgba(58,29,18,.12)"><div style="font-size:12px;color:#8A7060">CUIT · desde Mercado Pago</div><div style="font-size:15.5px;font-weight:600;margin-top:2px">27-31458902-4</div></div>
+    <div style="padding:12px 14px;border-radius:14px;background:#fff;border:1px solid rgba(58,29,18,.12)"><div style="font-size:12px;color:#8A7060">Instagram</div><div style="font-size:15.5px;font-weight:600;margin-top:2px">@cafelaesquina</div></div>
+    <div style="padding:12px 14px;border-radius:14px;background:#fff;border:1px solid rgba(58,29,18,.12)"><div style="font-size:12px;color:#8A7060">Tienda actual</div><div style="font-size:15.5px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">laesquina.mitiendanube.com</div></div>
+  </div>
+  <div style="margin-top:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px">
+    <sc-for list="{{ finds }}" as="f" hint-placeholder-count="3">
+      <div style="border-radius:22px;background:#fff;box-shadow:0 1px 2px rgba(58,29,18,.06),0 20px 44px -28px rgba(58,29,18,.45);overflow:hidden">
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(58,29,18,.07)">
+          <span style="width:32px;height:32px;flex:none;border-radius:10px;display:grid;place-items:center;background:{{ f.bg }}"><sc-if value="{{ f.icon }}"><iconify-icon icon="{{ f.icon }}" width="18" style="color:{{ f.col }}"></iconify-icon></sc-if><sc-if value="{{ f.word }}"><span style="font-size:7.5px;font-weight:800;color:{{ f.col }}">{{ f.word }}</span></sc-if></span>
+          <span style="flex:1;font-size:14.5px;font-weight:600">{{ f.src }}</span>
+          <sc-if value="{{ f.ready }}"><span style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:#2F8F63"><iconify-icon icon="ph:check-circle-fill" width="14"></iconify-icon>Importado</span></sc-if>
+          <sc-if value="{{ f.loading }}"><span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#C24E25"><iconify-icon data-spin="" icon="ph:circle-notch-bold" width="14"></iconify-icon>Buscando</span></sc-if>
+        </div>
+        <div style="padding:12px 16px 16px;display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ f.rows }}" as="r" hint-placeholder-count="4">
+            <sc-if value="{{ f.ready }}"><div data-reveal=""><div style="font-size:11.5px;color:#8A7060">{{ r.k }}</div><div style="font-size:14px;font-weight:500;margin-top:1px;line-height:1.35">{{ r.v }}</div></div></sc-if>
+            <sc-if value="{{ f.loading }}"><div><div style="width:40%;height:9px;border-radius:5px;background:#F1E7DC"></div><div data-shimmer="" style="width:85%;height:13px;border-radius:6px;margin-top:6px;background:linear-gradient(90deg,#F1E7DC,#FBF4EC,#F1E7DC);background-size:200% 100%"></div></div></sc-if>
+          </sc-for>
+          <sc-if value="{{ f.swatches }}"><sc-if value="{{ f.ready }}"><div style="display:flex;gap:6px;align-items:center;margin-top:2px"><span style="font-size:11.5px;color:#8A7060;margin-right:4px">Colores</span><span style="width:22px;height:22px;border-radius:7px;background:#6B3A22"></span><span style="width:22px;height:22px;border-radius:7px;background:#E9D8C4"></span><span style="width:22px;height:22px;border-radius:7px;background:#2F5D50"></span><img src="https://images.unsplash.com/photo-1556745753-b2904692b3cd?auto=format&fit=crop&w=80&h=80&q=70" alt="" style="width:22px;height:22px;border-radius:7px;object-fit:cover;margin-left:auto"></div></sc-if></sc-if>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="margin-top:18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-size:13.5px;color:#7A6252">Rubro detectado</span><span style="font-size:13.5px;font-weight:600;padding:7px 12px;border-radius:999px;background:#2A140C;color:#fff">Cafetería y almacén de especialidad</span><span style="font-size:13.5px;font-weight:500;padding:7px 12px;border-radius:999px;background:#F4ECE2;color:#5C4536">Yerba mate y accesorios</span><span style="font-size:13.5px;font-weight:500;padding:7px 12px;border-radius:999px;border:1px dashed rgba(58,29,18,.25);color:#7A6252">+ Agregar</span></div>
+  <div style="margin-top:26px;padding:18px;border-radius:22px;background:#fff;box-shadow:0 1px 2px rgba(58,29,18,.06)">
+    <div style="font-size:16px;font-weight:600">¿Qué querés resolver primero?</div>
+    <div style="font-size:13.5px;color:#7A6252;margin-top:2px">Ordenamos tu panel y tus primeras tareas según esto. Elegí las que quieras.</div>
+    <div style="margin-top:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">
+      <sc-for list="{{ goals }}" as="g" hint-placeholder-count="6">
+        <button onClick="{{ g.go }}" style="display:flex;align-items:center;gap:10px;padding:12px;border-radius:16px;border:1.5px solid {{ g.bd }};background:{{ g.bg }};cursor:pointer;font-family:inherit;color:#2A140C;text-align:left;transition:border-color .2s,background .2s">
+          <span style="width:34px;height:34px;flex:none;border-radius:10px;display:grid;place-items:center;background:{{ g.ibg }};color:{{ g.ifg }}"><iconify-icon icon="{{ g.i }}" width="18"></iconify-icon></span>
+          <span style="flex:1;font-size:13.5px;font-weight:600;line-height:1.25">{{ g.t }}</span>
+          <sc-if value="{{ g.on }}"><iconify-icon icon="ph:check-circle-fill" width="18" style="color:#D2582F"></iconify-icon></sc-if>
+        </button>
+      </sc-for>
+    </div>
+  </div>
+</sc-if>
+
+<!-- 3 CANALES -->
+<sc-if value="{{ s2 }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex;align-items:end;gap:20px;flex-wrap:wrap">
+    <div style="flex:1 1 400px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#D2582F"><span style="width:6px;height:6px;border-radius:50%;background:#D2582F"></span>Canales</div>
+      <h1 style="margin:12px 0 0;font-size:clamp(32px,3.6vw,46px);line-height:1.02;letter-spacing:-.04em;font-weight:600;text-wrap:balance">Conectá lo que ya usás. Traemos todo de una.</h1>
+    </div>
+    <button onClick="{{ connectAll }}" style="display:flex;align-items:center;gap:8px;padding:12px 18px;border-radius:999px;border:0;background:#2A140C;color:#fff;font:600 14px 'Instrument Sans';cursor:pointer;white-space:nowrap"><iconify-icon icon="ph:lightning-fill" width="15" style="color:#F5B796"></iconify-icon>Conectar las recomendadas</button>
+  </div>
+  <div style="margin-top:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px">
+    <sc-for list="{{ conns }}" as="c" hint-placeholder-count="8">
+      <div style="display:flex;gap:14px;padding:16px;border-radius:20px;background:#fff;border:1.5px solid {{ c.bd }};box-shadow:0 1px 2px rgba(58,29,18,.05);transition:border-color .3s">
+        <span style="width:44px;height:44px;flex:none;border-radius:13px;display:grid;place-items:center;background:{{ c.bg }}"><sc-if value="{{ c.icon }}"><iconify-icon icon="{{ c.icon }}" width="24" style="color:{{ c.col }}"></iconify-icon></sc-if><sc-if value="{{ c.word }}"><span style="font-size:9px;font-weight:800;color:{{ c.col }}">{{ c.word }}</span></sc-if></span>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:15px;font-weight:600">{{ c.n }}</span><sc-if value="{{ c.rec }}"><span style="font-size:11px;font-weight:700;color:#C24E25;background:rgba(210,88,47,.12);padding:2px 7px;border-radius:999px">Recomendado</span></sc-if></div>
+          <sc-if value="{{ c.isOn }}"><div style="font-size:13px;color:#2F8F63;font-weight:500;margin-top:3px;line-height:1.4">{{ c.got }}</div></sc-if>
+          <sc-if value="{{ c.notOn }}"><div style="font-size:13px;color:#7A6252;margin-top:3px;line-height:1.4">{{ c.d }}</div></sc-if>
+        </div>
+        <sc-if value="{{ c.isOff }}"><button onClick="{{ c.go }}" style="align-self:center;padding:8px 14px;border-radius:999px;border:1px solid rgba(58,29,18,.16);background:#fff;color:#2A140C;font:600 13px 'Instrument Sans';cursor:pointer">Conectar</button></sc-if>
+        <sc-if value="{{ c.isWait }}"><span style="align-self:center;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#C24E25"><iconify-icon data-spin="" icon="ph:circle-notch-bold" width="15"></iconify-icon>Conectando</span></sc-if>
+        <sc-if value="{{ c.isOn }}"><span style="align-self:center;width:30px;height:30px;border-radius:50%;background:#2F8F63;color:#fff;display:grid;place-items:center"><iconify-icon icon="ph:check-bold" width="14"></iconify-icon></span></sc-if>
+      </div>
+    </sc-for>
+  </div>
+  <div style="margin-top:14px;font-size:13px;color:#7A6252">{{ connSummary }}</div>
+  <div style="margin-top:16px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:18px 20px;border-radius:24px;background:#131211;color:#F4EEE6;position:relative;overflow:hidden">
+    <img src="https://caja.iamnaw.dev/mascota/01-saludo.png" alt="Caja" style="width:64px;height:64px;object-fit:contain;flex:none">
+    <div style="flex:1 1 300px;min-width:0"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:16px">Sumá Caja y sabé cuánto ganás de verdad</b><span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:#E8875F;color:#131211;letter-spacing:.02em">3 MESES DE PRO MAX GRATIS</span></div><div style="font-size:13.5px;color:#BDB2A8;margin-top:4px;line-height:1.45">Tus ventas, cobros, comisiones y facturas pasan solos a Caja, separados de tus gastos personales. Con el monotributo y el dólar del día ya calculados.</div></div>
+    <button onClick="{{ cajaToggle }}" style="flex:none;display:flex;align-items:center;gap:8px;padding:11px 18px;border-radius:999px;border:0;background:{{ cajaBtnBg }};color:{{ cajaBtnFg }};font:600 14px 'Instrument Sans';cursor:pointer;white-space:nowrap;transition:background .25s"><iconify-icon icon="{{ cajaBtnI }}" width="15"></iconify-icon>{{ cajaBtnT }}</button>
+  </div>
+</sc-if>
+
+<!-- 4 IMPORTACIÓN -->
+<sc-if value="{{ s3 }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex;gap:28px;flex-wrap:wrap">
+    <div style="flex:1 1 440px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#D2582F"><span style="width:6px;height:6px;border-radius:50%;background:#D2582F"></span>Importación</div>
+      <h1 style="margin:12px 0 0;font-size:clamp(32px,3.6vw,46px);line-height:1.02;letter-spacing:-.04em;font-weight:600;text-wrap:balance">{{ impTitle }}</h1>
+      <div style="margin-top:22px;padding:20px;border-radius:22px;background:#fff;box-shadow:0 1px 2px rgba(58,29,18,.06),0 24px 50px -30px rgba(58,29,18,.4)">
+        <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:600"><span>Progreso general</span><span style="color:#C24E25">{{ impPct }}</span></div>
+        <div style="margin-top:10px;height:10px;border-radius:10px;background:#F1E7DC;overflow:hidden"><div style="height:100%;width:{{ impPct }};border-radius:10px;background:linear-gradient(90deg,#D2582F,#E8875F)"></div></div>
+        <div style="margin-top:18px;display:flex;flex-direction:column">
+          <sc-for list="{{ impRows }}" as="r" hint-placeholder-count="7">
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid rgba(58,29,18,.07)">
+              <span style="width:34px;height:34px;flex:none;border-radius:10px;display:grid;place-items:center;background:{{ r.bg }};color:{{ r.fg }}"><iconify-icon icon="{{ r.i }}" width="17"></iconify-icon></span>
+              <span style="flex:1;min-width:0"><span style="display:block;font-size:14px;font-weight:600">{{ r.t }}</span><span style="display:block;font-size:12.5px;color:#7A6252;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.s }}</span></span>
+              <span style="font-size:15px;font-weight:600;min-width:64px;text-align:right">{{ r.v }}</span>
+              <sc-if value="{{ r.done }}"><iconify-icon icon="ph:check-circle-fill" width="18" style="color:#2F8F63"></iconify-icon></sc-if>
+              <sc-if value="{{ r.busy }}"><iconify-icon data-spin="" icon="ph:circle-notch-bold" width="18" style="color:#C24E25"></iconify-icon></sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <sc-if value="{{ showConflict }}">
+        <div data-conf="" style="margin-top:14px;padding:18px;border-radius:22px;background:#fff;border:1.5px solid rgba(227,169,59,.5);box-shadow:0 20px 44px -30px rgba(58,29,18,.45)">
+          <div style="display:flex;gap:12px;align-items:flex-start"><span style="width:38px;height:38px;flex:none;border-radius:12px;background:rgba(227,169,59,.2);color:#9A6A10;display:grid;place-items:center"><iconify-icon icon="ph:git-diff-fill" width="19"></iconify-icon></span>
+            <div style="flex:1"><div style="font-size:15px;font-weight:600">12 productos tienen precio distinto</div><div style="font-size:13px;color:#7A6252;margin-top:2px;line-height:1.45">En Tiendanube el Termo 1 L sale $ 42.900 y en Mercado Libre $ 47.190. ¿Cuál usamos como precio base?</div></div></div>
+          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+            <sc-for list="{{ conflictOpts }}" as="c" hint-placeholder-count="3"><button onClick="{{ c.go }}" style="padding:9px 14px;border-radius:999px;border:1.5px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }};cursor:pointer;font:600 13px 'Instrument Sans'">{{ c.t }}</button></sc-for>
+          </div>
+          <sc-if value="{{ conflictDone }}"><div style="margin-top:10px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#2F8F63"><iconify-icon icon="ph:check-circle-fill" width="15"></iconify-icon>{{ conflictMsg }}</div></sc-if>
+        </div>
+      </sc-if>
+    </div>
+    <div style="flex:1 1 300px;align-self:flex-start;padding:20px;border-radius:22px;background:#2A140C;color:#FBF7F2;position:relative;overflow:hidden;box-shadow:0 24px 50px -24px rgba(42,20,12,.6)">
+      <div style="position:absolute;inset:0;background-image:url(assets/arch-pattern-light.svg)"></div>
+      <div style="position:relative;display:flex;align-items:center;gap:12px">
+        <div style="width:52px;height:52px;flex:none;border-radius:50%;overflow:hidden;background:#FBF7F2;box-shadow:0 0 0 3px #D2582F"><img src="assets/hornero/caja.png" alt="Hornero" style="display:block;width:52px;height:52px;object-fit:contain"></div>
+        <div><div style="font-size:15px;font-weight:600">Hornero está ordenando</div><div style="font-size:12.5px;color:#D9C8BA">Mientras importamos, mejora lo que llega</div></div>
+      </div>
+      <div style="position:relative;margin-top:16px;display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ logs }}" as="l" hint-placeholder-count="0">
+          <div data-log="" style="display:flex;gap:10px;padding:10px 12px;border-radius:12px;background:rgba(251,247,242,.07);font-size:13px;line-height:1.4"><iconify-icon icon="ph:sparkle-fill" width="14" style="color:#F5B796;flex:none;margin-top:2px"></iconify-icon>{{ l }}</div>
+        </sc-for>
+        <sc-if value="{{ impBusy }}"><div style="display:flex;gap:4px;padding:8px 12px"><span data-anim="dots" style="width:6px;height:6px;border-radius:50%;background:#F5B796"></span><span data-anim="dots" data-delay="180" style="width:6px;height:6px;border-radius:50%;background:#F5B796"></span><span data-anim="dots" data-delay="360" style="width:6px;height:6px;border-radius:50%;background:#F5B796"></span></div></sc-if>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<!-- 5 TIENDA -->
+<sc-if value="{{ s4 }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex;align-items:end;gap:16px;flex-wrap:wrap">
+    <div style="flex:1 1 420px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#D2582F"><span style="width:6px;height:6px;border-radius:50%;background:#D2582F"></span>Tu tienda</div>
+      <h1 style="margin:12px 0 0;font-size:clamp(32px,3.6vw,46px);line-height:1.02;letter-spacing:-.04em;font-weight:600;text-wrap:balance">Elegí cómo se ve. Ya tiene tus productos adentro.</h1>
+    </div>
+    <div style="display:flex;padding:3px;border-radius:999px;background:rgba(58,29,18,.07)">
+      <button onClick="{{ devDesk }}" style="display:flex;align-items:center;gap:6px;border:0;cursor:pointer;font:600 13px 'Instrument Sans';padding:8px 14px;border-radius:999px;background:{{ devDeskBg }};color:#2A140C;box-shadow:{{ devDeskSh }}"><iconify-icon icon="ph:desktop" width="15"></iconify-icon>Escritorio</button>
+      <button onClick="{{ devMob }}" style="display:flex;align-items:center;gap:6px;border:0;cursor:pointer;font:600 13px 'Instrument Sans';padding:8px 14px;border-radius:999px;background:{{ devMobBg }};color:#2A140C;box-shadow:{{ devMobSh }}"><iconify-icon icon="ph:device-mobile" width="15"></iconify-icon>Celular</button>
+    </div>
+  </div>
+  <div style="margin-top:22px;display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
+    <div style="flex:1 1 480px;min-height:520px;border-radius:24px;background:#EFE6DA;display:grid;place-items:center;padding:24px">
+      <div data-prev="{{ tplKey }}" style="width:{{ frameW }};height:{{ frameH }};border-radius:{{ frameR }};padding:{{ frameP }};background:{{ frameBg }};box-shadow:0 30px 70px -30px rgba(42,20,12,.6);transition:width .45s cubic-bezier(.2,.7,.1,1),height .45s cubic-bezier(.2,.7,.1,1)">
+        <div style="width:100%;height:100%;border-radius:{{ innerR }};overflow:hidden;background:#fff;display:flex;flex-direction:column">
+          <sc-if value="{{ isDeskDev }}"><div style="height:24px;flex:none;display:flex;align-items:center;gap:5px;padding:0 10px;background:#F1E9DF"><span style="width:7px;height:7px;border-radius:50%;background:#E0A595"></span><span style="width:7px;height:7px;border-radius:50%;background:#E7CB8F"></span><span style="width:7px;height:7px;border-radius:50%;background:#A9CBA8"></span><span style="flex:1;margin:0 40px;padding:2px 10px;border-radius:999px;background:#fff;font-size:10px;color:#5C4536;text-align:center">laesquina.com.ar</span></div></sc-if>
+          <div style="flex:1;min-height:0;zoom:{{ frameZoom }}"><div style="background:{{ cur.bg }};color:{{ cur.ink }};font-family:{{ cur.ff }};height:100%;display:flex;flex-direction:column;overflow:hidden">
+  <div style="display:flex;align-items:center;gap:7px;padding:9px 11px;font-size:8.5px;flex:none">
+    <span style="width:14px;height:14px;border-radius:50%;background:{{ cur.acc }};flex:none"></span>
+    <b style="font-size:10.5px;letter-spacing:-.01em;white-space:nowrap">{{ cur.store }}</b><span style="flex:1"></span>
+    <span style="opacity:.6">Tienda</span><span style="opacity:.6">Nosotros</span><iconify-icon icon="ph:handbag" width="11"></iconify-icon>
+  </div>
+  <sc-if value="{{ cur.isEd }}">
+    <div style="position:relative;margin:0 9px;flex:1 1 56%;min-height:0;border-radius:{{ cur.r }};overflow:hidden"><img src="{{ cur.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"><div style="position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.55),transparent 60%)"></div><div style="position:absolute;left:10px;right:10px;bottom:10px;color:#fff"><div style="font-size:15px;font-weight:700;line-height:1.05;letter-spacing:-.02em">{{ cur.tag }}</div><div style="margin-top:6px;display:inline-block;font-size:7.5px;font-weight:700;padding:4px 8px;border-radius:999px;background:#fff;color:#111">Ver colección</div></div></div>
+    <div style="padding:9px;display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:7px;flex:none;max-height:38%;overflow:hidden">
+      <sc-for list="{{ cur.prods }}" as="p" hint-placeholder-count="3"><div><div style="aspect-ratio:1;border-radius:{{ cur.r }};overflow:hidden;background:rgba(0,0,0,.06)"><img src="{{ cur.img }}" alt="" style="width:100%;height:100%;object-fit:cover;object-position:{{ p.pos }};transform:scale(1.6)"></div><div style="margin-top:4px;height:4px;width:70%;border-radius:2px;background:currentColor;opacity:.25"></div><div style="margin-top:3px;font-size:8px;font-weight:700">{{ p.price }}</div></div></sc-for>
+    </div>
+  </sc-if>
+  <sc-if value="{{ cur.isGrid }}">
+    <div style="margin:0 9px;padding:9px 11px;border-radius:{{ cur.r }};background:{{ cur.acc }};color:{{ cur.onAcc }};display:flex;align-items:center;gap:8px;flex:none"><span style="flex:1;font-size:11px;font-weight:700;letter-spacing:-.01em;line-height:1.1">{{ cur.tag }}</span><span style="font-size:7.5px;font-weight:700;padding:4px 7px;border-radius:999px;background:{{ cur.bg }};color:{{ cur.ink }}">Comprar</span></div>
+    <div style="padding:9px;display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:8px;flex:1;min-height:0;overflow:hidden;align-content:start">
+      <sc-for list="{{ cur.prods }}" as="p" hint-placeholder-count="6"><div><div style="aspect-ratio:1;border-radius:{{ cur.r }};overflow:hidden;background:rgba(0,0,0,.06)"><img src="{{ cur.img }}" alt="" style="width:100%;height:100%;object-fit:cover;object-position:{{ p.pos }};transform:scale(1.5)"></div><div style="margin-top:4px;height:4px;width:75%;border-radius:2px;background:currentColor;opacity:.25"></div><div style="margin-top:3px;font-size:8px;font-weight:700;color:{{ cur.acc }}">{{ p.price }}</div></div></sc-for>
+    </div>
+  </sc-if>
+  <sc-if value="{{ cur.isCat }}">
+    <div style="flex:1;min-height:0;display:flex;gap:8px;padding:0 9px 9px">
+      <div style="width:30%;flex:none;display:flex;flex-direction:column;gap:6px;padding-top:4px;font-size:8.5px"><b style="font-size:9px">Categorías</b><span style="opacity:.65">Destacados</span><span style="opacity:.65">Novedades</span><span style="opacity:.65">Combos</span><span style="opacity:.65">Regalos</span><span style="margin-top:4px;padding:5px 6px;border-radius:6px;background:{{ cur.acc }};color:{{ cur.onAcc }};font-weight:700;font-size:7.5px;text-align:center">Ofertas</span></div>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:7px">
+        <div style="position:relative;flex:1;min-height:0;border-radius:{{ cur.r }};overflow:hidden"><img src="{{ cur.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"><div style="position:absolute;left:8px;bottom:8px;right:8px;font-size:12px;font-weight:700;line-height:1.05;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.4)">{{ cur.tag }}</div></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:6px;flex:none;max-height:40%;overflow:hidden">
+          <sc-for list="{{ cur.prods }}" as="p" hint-placeholder-count="2"><div style="display:flex;gap:5px;align-items:center;padding:4px;border-radius:8px;background:rgba(0,0,0,.05)"><span style="width:22px;height:22px;flex:none;border-radius:5px;overflow:hidden"><img src="{{ cur.img }}" alt="" style="width:100%;height:100%;object-fit:cover;object-position:{{ p.pos }};transform:scale(1.6)"></span><span style="font-size:7.5px;font-weight:700">{{ p.price }}</span></div></sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</div>
+        </div>
+      </div>
+    </div>
+    <div style="flex:0 1 320px;display:flex;flex-direction:column;gap:14px">
+      <div style="padding:16px;border-radius:20px;background:#fff;box-shadow:0 1px 2px rgba(58,29,18,.06)">
+        <div style="display:flex;align-items:center;gap:8px"><iconify-icon icon="ph:sparkle-fill" width="15" style="color:#D2582F"></iconify-icon><span style="font-size:14px;font-weight:600">Recomendadas para tu rubro</span></div>
+        <div style="margin-top:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+          <sc-for list="{{ recTpls }}" as="t" hint-placeholder-count="3">
+            <button onClick="{{ t.pick }}" style="padding:0;border:0;background:transparent;cursor:pointer;font-family:inherit;text-align:left;color:#2A140C">
+              <div style="height:112px;border-radius:12px;overflow:hidden;box-shadow:0 0 0 2px {{ t.ring }},0 8px 18px -10px rgba(58,29,18,.5);zoom:1"><div style="width:200%;height:224px;zoom:.5"><div style="background:{{ t.bg }};color:{{ t.ink }};font-family:{{ t.ff }};height:100%;display:flex;flex-direction:column;overflow:hidden">
+  <div style="display:flex;align-items:center;gap:7px;padding:9px 11px;font-size:8.5px;flex:none">
+    <span style="width:14px;height:14px;border-radius:50%;background:{{ t.acc }};flex:none"></span>
+    <b style="font-size:10.5px;letter-spacing:-.01em;white-space:nowrap">{{ t.store }}</b><span style="flex:1"></span>
+    <span style="opacity:.6">Tienda</span><span style="opacity:.6">Nosotros</span><iconify-icon icon="ph:handbag" width="11"></iconify-icon>
+  </div>
+  <sc-if value="{{ t.isEd }}">
+    <div style="position:relative;margin:0 9px;flex:1 1 56%;min-height:0;border-radius:{{ t.r }};overflow:hidden"><img src="{{ t.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"><div style="position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.55),transparent 60%)"></div><div style="position:absolute;left:10px;right:10px;bottom:10px;color:#fff"><div style="font-size:15px;font-weight:700;line-height:1.05;letter-spacing:-.02em">{{ t.tag }}</div><div style="margin-top:6px;display:inline-block;font-size:7.5px;font-weight:700;padding:4px 8px;border-radius:999px;background:#fff;color:#111">Ver colección</div></div></div>
+    <div style="padding:9px;display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:7px;flex:none;max-height:38%;overflow:hidden">
+      <sc-for list="{{ t.prods }}" as="p" hint-placeholder-count="3"><div><div style="aspect-ratio:1;border-radius:{{ t.r }};overflow:hidden;background:rgba(0,0,0,.06)"><img src="{{ t.img }}" alt="" style="width:100%;height:100%;object-fit:cover;object-position:{{ p.pos }};transform:scale(1.6)"></div><div style="margin-top:4px;height:4px;width:70%;border-radius:2px;background:currentColor;opacity:.25"></div><div style="margin-top:3px;font-size:8px;font-weight:700">{{ p.price }}</div></div></sc-for>
+    </div>
+  </sc-if>
+  <sc-if value="{{ t.isGrid }}">
+    <div style="margin:0 9px;padding:9px 11px;border-radius:{{ t.r }};background:{{ t.acc }};color:{{ t.onAcc }};display:flex;align-items:center;gap:8px;flex:none"><span style="flex:1;font-size:11px;font-weight:700;letter-spacing:-.01em;line-height:1.1">{{ t.tag }}</span><span style="font-size:7.5px;font-weight:700;padding:4px 7px;border-radius:999px;background:{{ t.bg }};color:{{ t.ink }}">Comprar</span></div>
+    <div style="padding:9px;display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:8px;flex:1;min-height:0;overflow:hidden;align-content:start">
+      <sc-for list="{{ t.prods }}" as="p" hint-placeholder-count="6"><div><div style="aspect-ratio:1;border-radius:{{ t.r }};overflow:hidden;background:rgba(0,0,0,.06)"><img src="{{ t.img }}" alt="" style="width:100%;height:100%;object-fit:cover;object-position:{{ p.pos }};transform:scale(1.5)"></div><div style="margin-top:4px;height:4px;width:75%;border-radius:2px;background:currentColor;opacity:.25"></div><div style="margin-top:3px;font-size:8px;font-weight:700;color:{{ t.acc }}">{{ p.price }}</div></div></sc-for>
+    </div>
+  </sc-if>
+  <sc-if value="{{ t.isCat }}">
+    <div style="flex:1;min-height:0;display:flex;gap:8px;padding:0 9px 9px">
+      <div style="width:30%;flex:none;display:flex;flex-direction:column;gap:6px;padding-top:4px;font-size:8.5px"><b style="font-size:9px">Categorías</b><span style="opacity:.65">Destacados</span><span style="opacity:.65">Novedades</span><span style="opacity:.65">Combos</span><span style="opacity:.65">Regalos</span><span style="margin-top:4px;padding:5px 6px;border-radius:6px;background:{{ t.acc }};color:{{ t.onAcc }};font-weight:700;font-size:7.5px;text-align:center">Ofertas</span></div>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:7px">
+        <div style="position:relative;flex:1;min-height:0;border-radius:{{ t.r }};overflow:hidden"><img src="{{ t.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"><div style="position:absolute;left:8px;bottom:8px;right:8px;font-size:12px;font-weight:700;line-height:1.05;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.4)">{{ t.tag }}</div></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:6px;flex:none;max-height:40%;overflow:hidden">
+          <sc-for list="{{ t.prods }}" as="p" hint-placeholder-count="2"><div style="display:flex;gap:5px;align-items:center;padding:4px;border-radius:8px;background:rgba(0,0,0,.05)"><span style="width:22px;height:22px;flex:none;border-radius:5px;overflow:hidden"><img src="{{ t.img }}" alt="" style="width:100%;height:100%;object-fit:cover;object-position:{{ p.pos }};transform:scale(1.6)"></span><span style="font-size:7.5px;font-weight:700">{{ p.price }}</span></div></sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</div></div>
+              <div style="margin-top:6px;font-size:12.5px;font-weight:600">{{ t.name }}</div>
+            </button>
+          </sc-for>
+        </div>
+        <button onClick="{{ openGallery }}" style="margin-top:12px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border-radius:999px;border:1px solid rgba(58,29,18,.16);background:#fff;cursor:pointer;font:600 13.5px 'Instrument Sans';color:#2A140C"><iconify-icon icon="ph:squares-four" width="15"></iconify-icon>Ver las {{ tplCount }} plantillas</button>
+      </div>
+      <div style="padding:16px;border-radius:20px;background:#fff;box-shadow:0 1px 2px rgba(58,29,18,.06)">
+        <button onClick="{{ toggleIg }}" style="width:100%;display:flex;align-items:center;gap:12px;border:0;background:transparent;cursor:pointer;font-family:inherit;color:#2A140C;text-align:left;padding:0">
+          <iconify-icon icon="logos:instagram-icon" width="20"></iconify-icon>
+          <span style="flex:1"><span style="display:block;font-size:14px;font-weight:600">Usar mis colores y logo</span><span style="display:block;font-size:12.5px;color:#7A6252">Sacados de @cafelaesquina</span></span>
+          <span style="position:relative;width:40px;height:23px;flex:none;border-radius:999px;background:{{ igTg.bg }};transition:background .25s"><span style="position:absolute;top:2px;left:{{ igTg.x }};width:19px;height:19px;border-radius:50%;background:#fff;transition:left .25s cubic-bezier(.2,.7,.1,1);box-shadow:0 1px 3px rgba(0,0,0,.3)"></span></span>
+        </button>
+        <div style="margin-top:12px;display:flex;gap:6px"><span style="width:26px;height:26px;border-radius:8px;background:#F3E9DC;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)"></span><span style="width:26px;height:26px;border-radius:8px;background:#6B3A22"></span><span style="width:26px;height:26px;border-radius:8px;background:#2F5D50"></span><span style="width:26px;height:26px;border-radius:8px;background:#3B2416"></span></div>
+      </div>
+      <div style="padding:16px;border-radius:20px;background:#fff;box-shadow:0 1px 2px rgba(58,29,18,.06)">
+        <div style="font-size:14px;font-weight:600">Secciones que armamos</div>
+        <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px">
+          <sc-for list="{{ sections }}" as="s" hint-placeholder-count="6"><button onClick="{{ s.go }}" style="display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:999px;border:1px solid {{ s.bd }};background:{{ s.bg }};cursor:pointer;font:500 12.5px 'Instrument Sans';color:#2A140C"><iconify-icon icon="{{ s.icon }}" width="13"></iconify-icon>{{ s.t }}</button></sc-for>
+        </div>
+      </div>
+      <div style="padding:14px 16px;border-radius:20px;background:#fff;box-shadow:0 1px 2px rgba(58,29,18,.06);display:flex;align-items:center;gap:10px">
+        <iconify-icon icon="ph:check-circle-fill" width="18" style="color:#2F8F63"></iconify-icon>
+        <span style="flex:1"><span style="display:block;font-size:14px;font-weight:600">laesquina.com.ar</span><span style="display:block;font-size:12.5px;color:#7A6252">Disponible · lo reservamos por vos</span></span>
+      </div>
+    </div>
+  </div>
+
+  <sc-if value="{{ gallery }}">
+    <div onClick="{{ closeGallery }}" style="position:fixed;inset:0;z-index:80;background:rgba(32,15,8,.5);backdrop-filter:blur(5px)"></div>
+    <div data-gal="" style="position:fixed;top:16px;right:16px;bottom:16px;left:16px;z-index:81;border-radius:28px;background:#FBF7F2;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 50px 120px -30px rgba(0,0,0,.6)">
+      <div style="display:flex;align-items:center;gap:14px;padding:20px 24px;border-bottom:1px solid rgba(58,29,18,.08);flex-wrap:wrap">
+        <div style="flex:1;min-width:240px"><div style="font-size:24px;font-weight:600;letter-spacing:-.03em">Plantillas</div><div style="font-size:13.5px;color:#7A6252">Todas usan tus productos, fotos y textos importados.</div></div>
+        <div style="display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;background:#fff;border:1px solid rgba(58,29,18,.12);min-width:220px"><iconify-icon icon="ph:magnifying-glass" width="15" style="color:#7A6252"></iconify-icon><input value="{{ gq }}" onInput="{{ setGq }}" placeholder="Buscar estilo o rubro" style="flex:1;min-width:0;border:0;outline:0;background:transparent;font:500 14px 'Instrument Sans';color:#2A140C"></div>
+        <button onClick="{{ closeGallery }}" style="width:40px;height:40px;border-radius:50%;border:0;background:#F1E7DC;cursor:pointer;display:grid;place-items:center;color:#2A140C"><iconify-icon icon="ph:x-bold" width="15"></iconify-icon></button>
+      </div>
+      <div style="display:flex;gap:6px;padding:14px 24px;overflow-x:auto;flex:none">
+        <sc-for list="{{ rubros }}" as="r" hint-placeholder-count="8"><button onClick="{{ r.go }}" style="border:1px solid {{ r.bd }};cursor:pointer;font:600 13px 'Instrument Sans';padding:8px 14px;border-radius:999px;background:{{ r.bg }};color:{{ r.fg }};white-space:nowrap">{{ r.label }}</button></sc-for>
+      </div>
+      <div style="flex:1;overflow:auto;padding:4px 24px 24px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px">
+          <sc-for list="{{ galTpls }}" as="t" hint-placeholder-count="8">
+            <button onClick="{{ t.pick }}" style="padding:0;border:0;background:transparent;cursor:pointer;font-family:inherit;text-align:left;color:#2A140C;transition:transform .3s cubic-bezier(.2,.7,.1,1)" style-hover="transform:translateY(-4px)">
+              <div style="position:relative;height:290px;border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 0 0 2px {{ t.ring }},0 20px 40px -24px rgba(58,29,18,.55)"><div style="background:{{ t.bg }};color:{{ t.ink }};font-family:{{ t.ff }};height:100%;display:flex;flex-direction:column;overflow:hidden">
+  <div style="display:flex;align-items:center;gap:7px;padding:9px 11px;font-size:8.5px;flex:none">
+    <span style="width:14px;height:14px;border-radius:50%;background:{{ t.acc }};flex:none"></span>
+    <b style="font-size:10.5px;letter-spacing:-.01em;white-space:nowrap">{{ t.store }}</b><span style="flex:1"></span>
+    <span style="opacity:.6">Tienda</span><span style="opacity:.6">Nosotros</span><iconify-icon icon="ph:handbag" width="11"></iconify-icon>
+  </div>
+  <sc-if value="{{ t.isEd }}">
+    <div style="position:relative;margin:0 9px;flex:1 1 56%;min-height:0;border-radius:{{ t.r }};overflow:hidden"><img src="{{ t.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"><div style="position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.55),transparent 60%)"></div><div style="position:absolute;left:10px;right:10px;bottom:10px;color:#fff"><div style="font-size:15px;font-weight:700;line-height:1.05;letter-spacing:-.02em">{{ t.tag }}</div><div style="margin-top:6px;display:inline-block;font-size:7.5px;font-weight:700;padding:4px 8px;border-radius:999px;background:#fff;color:#111">Ver colección</div></div></div>
+    <div style="padding:9px;display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:7px;flex:none;max-height:38%;overflow:hidden">
+      <sc-for list="{{ t.prods }}" as="p" hint-placeholder-count="3"><div><div style="aspect-ratio:1;border-radius:{{ t.r }};overflow:hidden;background:rgba(0,0,0,.06)"><img src="{{ t.img }}" alt="" style="width:100%;height:100%;object-fit:cover;object-position:{{ p.pos }};transform:scale(1.6)"></div><div style="margin-top:4px;height:4px;width:70%;border-radius:2px;background:currentColor;opacity:.25"></div><div style="margin-top:3px;font-size:8px;font-weight:700">{{ p.price }}</div></div></sc-for>
+    </div>
+  </sc-if>
+  <sc-if value="{{ t.isGrid }}">
+    <div style="margin:0 9px;padding:9px 11px;border-radius:{{ t.r }};background:{{ t.acc }};color:{{ t.onAcc }};display:flex;align-items:center;gap:8px;flex:none"><span style="flex:1;font-size:11px;font-weight:700;letter-spacing:-.01em;line-height:1.1">{{ t.tag }}</span><span style="font-size:7.5px;font-weight:700;padding:4px 7px;border-radius:999px;background:{{ t.bg }};color:{{ t.ink }}">Comprar</span></div>
+    <div style="padding:9px;display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:8px;flex:1;min-height:0;overflow:hidden;align-content:start">
+      <sc-for list="{{ t.prods }}" as="p" hint-placeholder-count="6"><div><div style="aspect-ratio:1;border-radius:{{ t.r }};overflow:hidden;background:rgba(0,0,0,.06)"><img src="{{ t.img }}" alt="" style="width:100%;height:100%;object-fit:cover;object-position:{{ p.pos }};transform:scale(1.5)"></div><div style="margin-top:4px;height:4px;width:75%;border-radius:2px;background:currentColor;opacity:.25"></div><div style="margin-top:3px;font-size:8px;font-weight:700;color:{{ t.acc }}">{{ p.price }}</div></div></sc-for>
+    </div>
+  </sc-if>
+  <sc-if value="{{ t.isCat }}">
+    <div style="flex:1;min-height:0;display:flex;gap:8px;padding:0 9px 9px">
+      <div style="width:30%;flex:none;display:flex;flex-direction:column;gap:6px;padding-top:4px;font-size:8.5px"><b style="font-size:9px">Categorías</b><span style="opacity:.65">Destacados</span><span style="opacity:.65">Novedades</span><span style="opacity:.65">Combos</span><span style="opacity:.65">Regalos</span><span style="margin-top:4px;padding:5px 6px;border-radius:6px;background:{{ t.acc }};color:{{ t.onAcc }};font-weight:700;font-size:7.5px;text-align:center">Ofertas</span></div>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:7px">
+        <div style="position:relative;flex:1;min-height:0;border-radius:{{ t.r }};overflow:hidden"><img src="{{ t.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"><div style="position:absolute;left:8px;bottom:8px;right:8px;font-size:12px;font-weight:700;line-height:1.05;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.4)">{{ t.tag }}</div></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:6px;flex:none;max-height:40%;overflow:hidden">
+          <sc-for list="{{ t.prods }}" as="p" hint-placeholder-count="2"><div style="display:flex;gap:5px;align-items:center;padding:4px;border-radius:8px;background:rgba(0,0,0,.05)"><span style="width:22px;height:22px;flex:none;border-radius:5px;overflow:hidden"><img src="{{ t.img }}" alt="" style="width:100%;height:100%;object-fit:cover;object-position:{{ p.pos }};transform:scale(1.6)"></span><span style="font-size:7.5px;font-weight:700">{{ p.price }}</span></div></sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+
+                <sc-if value="{{ t.sel }}"><span style="position:absolute;top:10px;right:10px;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#fff;background:#D2582F;padding:5px 10px;border-radius:999px"><iconify-icon icon="ph:check-bold" width="12"></iconify-icon>Elegida</span></sc-if>
+                <sc-if value="{{ t.rec }}"><span style="position:absolute;top:10px;left:10px;display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;color:#C24E25;background:#fff;padding:5px 9px;border-radius:999px"><iconify-icon icon="ph:sparkle-fill" width="11"></iconify-icon>Para vos</span></sc-if>
+              </div>
+              <div style="margin-top:9px;display:flex;align-items:center;gap:8px"><span style="flex:1"><span style="display:block;font-size:15px;font-weight:600">{{ t.name }}</span><span style="display:block;font-size:12.5px;color:#7A6252">{{ t.rubro }} · {{ t.layoutName }}</span></span><sc-if value="{{ t.demoUrl }}"><a href="{{ t.demoUrl }}" target="_blank" onClick="{{ t.stop }}" style="flex:none;display:flex;align-items:center;gap:5px;padding:7px 11px;border-radius:999px;border:1px solid rgba(58,29,18,.16);color:#2A140C;font-size:12.5px;font-weight:600;text-decoration:none;white-space:nowrap">Ver demo<iconify-icon icon="ph:arrow-up-right-bold" width="11"></iconify-icon></a></sc-if></div>
+            </button>
+          </sc-for>
+        </div>
+        <sc-if value="{{ galEmpty }}"><div style="padding:60px;text-align:center;color:#7A6252">No hay plantillas con «{{ gq }}».</div></sc-if>
+      </div>
+    </div>
+  </sc-if>
+</sc-if>
+
+<!-- 6 COBROS Y ENVÍOS -->
+<sc-if value="{{ s5 }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#D2582F"><span style="width:6px;height:6px;border-radius:50%;background:#D2582F"></span>Cobros, envíos y facturas</div>
+  <h1 style="margin:12px 0 0;font-size:clamp(32px,3.6vw,46px);line-height:1.02;letter-spacing:-.04em;font-weight:600;text-wrap:balance">Ya lo configuramos. Solo confirmá.</h1>
+  <div style="margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px">
+    <sc-for list="{{ cfgGroups }}" as="g" hint-placeholder-count="3">
+      <div style="padding:18px;border-radius:22px;background:#fff;box-shadow:0 1px 2px rgba(58,29,18,.06),0 20px 44px -30px rgba(58,29,18,.4)">
+        <div style="display:flex;align-items:center;gap:10px"><span style="width:34px;height:34px;border-radius:10px;background:#FCEDE5;color:#C24E25;display:grid;place-items:center"><iconify-icon icon="{{ g.i }}" width="18"></iconify-icon></span><span style="font-size:16px;font-weight:600">{{ g.t }}</span></div>
+        <div style="margin-top:10px;display:flex;flex-direction:column">
+          <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="3">
+            <button onClick="{{ it.go }}" style="display:flex;align-items:center;gap:12px;padding:11px 0;border:0;border-top:1px solid rgba(58,29,18,.07);background:transparent;cursor:pointer;font-family:inherit;color:#2A140C;text-align:left">
+              <span style="width:30px;height:30px;flex:none;border-radius:9px;display:grid;place-items:center;background:{{ it.bg }}"><sc-if value="{{ it.icon }}"><iconify-icon icon="{{ it.icon }}" width="16" style="color:{{ it.col }}"></iconify-icon></sc-if><sc-if value="{{ it.word }}"><span style="font-size:7px;font-weight:800;color:{{ it.col }}">{{ it.word }}</span></sc-if></span>
+              <span style="flex:1;min-width:0"><span style="display:block;font-size:14px;font-weight:600">{{ it.t }}</span><span style="display:block;font-size:12.5px;color:#7A6252;line-height:1.35">{{ it.d }}</span></span>
+              <sc-if value="{{ it.pending }}"><span style="font-size:12px;font-weight:700;color:#9A6A10;background:rgba(227,169,59,.2);padding:4px 9px;border-radius:999px;white-space:nowrap">Falta 1 paso</span></sc-if>
+              <sc-if value="{{ it.tog }}"><span style="position:relative;width:40px;height:23px;flex:none;border-radius:999px;background:{{ it.tbg }};transition:background .25s"><span style="position:absolute;top:2px;left:{{ it.tx }};width:19px;height:19px;border-radius:50%;background:#fff;transition:left .25s cubic-bezier(.2,.7,.1,1);box-shadow:0 1px 3px rgba(0,0,0,.3)"></span></span></sc-if>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</sc-if>
+
+<!-- 7 HORNERO -->
+<sc-if value="{{ s6 }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex;gap:28px;flex-wrap:wrap">
+    <div style="flex:1 1 420px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#D2582F"><span style="width:6px;height:6px;border-radius:50%;background:#D2582F"></span>Tu asistente</div>
+      <h1 style="margin:12px 0 0;font-size:clamp(32px,3.6vw,46px);line-height:1.02;letter-spacing:-.04em;font-weight:600;text-wrap:balance">Hornero ya conoce tu negocio. ¿Cómo querés que hable?</h1>
+      <div style="margin-top:22px;font-size:14px;font-weight:600">Tono</div>
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+        <sc-for list="{{ tones }}" as="t" hint-placeholder-count="3"><button onClick="{{ t.go }}" style="padding:11px 16px;border-radius:999px;border:1.5px solid {{ t.bd }};background:{{ t.bg }};color:{{ t.fg }};font:600 14px 'Instrument Sans';cursor:pointer">{{ t.n }}</button></sc-for>
+      </div>
+      <div style="margin-top:20px;font-size:14px;font-weight:600">Dónde atiende</div>
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+        <span style="display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 2px rgba(58,29,18,.08);font-size:14px;font-weight:500"><iconify-icon icon="logos:whatsapp-icon" width="16"></iconify-icon>WhatsApp<iconify-icon icon="ph:check-bold" width="13" style="color:#2F8F63"></iconify-icon></span>
+        <span style="display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 2px rgba(58,29,18,.08);font-size:14px;font-weight:500"><iconify-icon icon="logos:instagram-icon" width="15"></iconify-icon>Instagram<iconify-icon icon="ph:check-bold" width="13" style="color:#2F8F63"></iconify-icon></span>
+        <span style="display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 2px rgba(58,29,18,.08);font-size:14px;font-weight:500"><span style="font-size:8px;font-weight:800;padding:2px 4px;border-radius:4px;background:#FFE600;color:#2D3277">ML</span>Preguntas de ML<iconify-icon icon="ph:check-bold" width="13" style="color:#2F8F63"></iconify-icon></span>
+        <span style="display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 2px rgba(58,29,18,.08);font-size:14px;font-weight:500;color:#7A6252"><iconify-icon icon="logos:telegram" width="15"></iconify-icon>Telegram</span>
+      </div>
+      <div style="margin-top:20px;padding:14px 16px;border-radius:16px;background:#fff;box-shadow:0 1px 2px rgba(58,29,18,.06);display:flex;gap:12px;align-items:center"><iconify-icon icon="logos:google-maps" width="20"></iconify-icon><span style="flex:1;font-size:14px;line-height:1.4"><b>Horario del local:</b> lun a sáb de 8 a 20 h<br><span style="color:#7A6252;font-size:13px">Fuera de ese horario, Hornero atiende y vos ves todo a la mañana.</span></span></div>
+      <div style="margin-top:12px;padding:14px 16px;border-radius:16px;background:#fff;box-shadow:0 1px 2px rgba(58,29,18,.06);display:flex;gap:12px;align-items:center"><iconify-icon icon="ph:seal-percent-fill" width="20" style="color:#C24E25"></iconify-icon><span style="flex:1;font-size:14px;line-height:1.4"><b>Descuentos:</b> puede ofrecer hasta 10% sin preguntarte<br><span style="color:#7A6252;font-size:13px">Más que eso, te pide aprobación por WhatsApp.</span></span></div>
+    </div>
+    <div style="flex:1 1 320px;align-self:flex-start;border-radius:24px;background:#fff;overflow:hidden;box-shadow:0 2px 4px rgba(58,29,18,.06),0 30px 60px -30px rgba(58,29,18,.5)">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid rgba(58,29,18,.08)"><img src="https://images.unsplash.com/photo-1531058240690-006c446962d8?auto=format&fit=crop&w=96&h=96&q=70&crop=faces" alt="" style="width:34px;height:34px;border-radius:50%;object-fit:cover"><span style="flex:1;font-size:14px;font-weight:600">Vista previa</span><iconify-icon icon="logos:whatsapp-icon" width="16"></iconify-icon></div>
+      <div style="padding:16px 14px;display:flex;flex-direction:column;gap:8px;background:#F4ECE2;background-image:url(assets/arch-pattern-dark.svg);min-height:260px;justify-content:flex-end">
+        <div style="align-self:flex-start;max-width:82%;font-size:14px;line-height:1.45;background:#fff;padding:9px 13px;border-radius:16px 16px 16px 4px">Hola! ¿Tienen el termo de 1 L en negro?</div>
+        <div data-tone="{{ tone }}" style="align-self:flex-end;max-width:86%;display:flex;flex-direction:column;align-items:flex-end;gap:3px"><span style="font-size:11px;font-weight:600;color:#C24E25;display:flex;align-items:center;gap:4px"><iconify-icon icon="ph:sparkle-fill" width="11"></iconify-icon>Hornero</span><span style="font-size:14px;line-height:1.45;background:#FCE3D6;padding:9px 13px;border-radius:16px 16px 4px 16px">{{ toneMsg }}</span></div>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<!-- 8 LISTO -->
+<sc-if value="{{ s7 }}" hint-placeholder-val="{{ false }}">
+  <div style="position:relative;text-align:center;max-width:760px;margin:0 auto">
+    <div data-confetti="" style="position:absolute;left:50%;top:60px;width:0;height:0"></div>
+    <div style="position:relative;width:200px;height:200px;margin:0 auto">
+      <svg viewBox="0 0 120 120" style="width:100%;height:100%;transform:rotate(-90deg)"><circle cx="60" cy="60" r="52" fill="none" stroke="#F1E7DC" stroke-width="10"></circle><circle data-ring="0.94" cx="60" cy="60" r="52" fill="none" stroke="#D2582F" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="19.6"></circle></svg>
+      <div style="position:absolute;inset:22px;border-radius:50%;overflow:hidden;background:#FCEDE5"><img src="assets/hornero/celebrando.png" alt="Hornero celebrando" style="display:block;width:100%;height:100%;object-fit:contain"></div>
+    </div>
+    <h1 style="margin:22px 0 0;font-size:clamp(34px,4.2vw,56px);line-height:1;letter-spacing:-.045em;font-weight:600;text-wrap:balance">Tu mostrador está 94% listo.</h1>
+    <p style="margin:14px auto 0;font-size:17px;line-height:1.55;color:#5C4536;max-width:520px">Y no tuviste que cargar nada a mano. Ya podés vender por todos tus canales.</p>
+    <div style="margin-top:28px;display:grid;grid-template-columns:{{ sumCols }};gap:10px">
+      <sc-for list="{{ summary }}" as="s" hint-placeholder-count="4"><div style="padding:16px 12px;border-radius:18px;background:#fff;box-shadow:0 1px 2px rgba(58,29,18,.06)"><div style="font-size:28px;font-weight:600;letter-spacing:-.04em">{{ s.v }}</div><div style="font-size:13px;color:#7A6252;margin-top:2px">{{ s.t }}</div></div></sc-for>
+    </div>
+    <div style="margin-top:20px;padding:16px 18px;border-radius:20px;background:#fff;box-shadow:0 1px 2px rgba(58,29,18,.06);text-align:left">
+      <div style="font-size:14.5px;font-weight:600">Te quedan 2 cosas, cuando quieras</div>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid rgba(58,29,18,.07)"><span style="width:30px;height:30px;border-radius:9px;background:#1F3A6E;display:grid;place-items:center;font-size:7px;font-weight:800;color:#fff">ARCA</span><span style="flex:1;font-size:14px">Subir el certificado para facturar <span style="color:#7A6252">· 2 minutos</span></span><a href="#" style="font-size:13.5px;font-weight:600">Hacerlo</a></div>
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid rgba(58,29,18,.07)"><span style="width:30px;height:30px;border-radius:9px;background:#FCEDE5;color:#C24E25;display:grid;place-items:center"><iconify-icon icon="ph:crown-simple-fill" width="15"></iconify-icon></span><span style="flex:1;font-size:14px">Elegir tu plan <span style="color:#7A6252">· te quedan 14 días gratis</span></span><a href="#" style="font-size:13.5px;font-weight:600">Ver planes</a></div>
+    </div>
+    <div style="margin-top:14px;padding:20px;border-radius:24px;background:#131211;color:#F4EEE6;text-align:left">
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><img src="https://caja.iamnaw.dev/mascota/05-exito.png" alt="Caja" style="width:56px;height:56px;object-fit:contain;flex:none"><div style="flex:1 1 260px;min-width:0"><div style="font-size:17px;font-weight:600">{{ cajaTitle }}</div><div style="font-size:13px;color:#A99E94;margin-top:2px">{{ cajaSub }}</div></div><sc-if value="{{ cajaOff }}"><button onClick="{{ cajaToggle }}" style="flex:none;display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;border:0;background:#F4EEE6;color:#131211;font:600 13.5px 'Instrument Sans';cursor:pointer;white-space:nowrap"><iconify-icon icon="ph:plug-fill" width="14"></iconify-icon>Conectar Caja</button></sc-if><sc-if value="{{ cajaOn }}"><a href="https://caja.iamnaw.dev" target="_blank" style="flex:none;display:flex;align-items:center;gap:7px;padding:10px 16px;border-radius:999px;background:#F4EEE6;color:#131211;font:600 13.5px 'Instrument Sans';text-decoration:none;white-space:nowrap">Abrir Caja<iconify-icon icon="ph:arrow-up-right-bold" width="13"></iconify-icon></a></sc-if></div>
+      <div style="margin-top:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+        <sc-for list="{{ cajaBen }}" as="b" hint-placeholder-count="4"><div style="display:flex;gap:10px;padding:12px;border-radius:16px;background:#1F1C1A"><iconify-icon icon="{{ b.i }}" width="20" style="color:#E8875F;flex:none;margin-top:1px"></iconify-icon><div><div style="font-size:14px;font-weight:600">{{ b.t }}</div><div style="font-size:12.5px;color:#9C9188;margin-top:2px;line-height:1.4">{{ b.d }}</div></div></div></sc-for>
+      </div>
+    </div>
+    <div style="margin-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;text-align:left">
+      <div style="padding:16px;border-radius:20px;background:#2A140C;color:#FBF7F2;display:flex;gap:14px;align-items:center">
+        <div style="width:84px;height:84px;flex:none;border-radius:14px;background:#FBF7F2;padding:8px;display:grid;grid-template-columns:repeat(7,1fr);gap:2px"><sc-for list="{{ qr }}" as="q" hint-placeholder-count="49"><span style="border-radius:1.5px;background:{{ q }}"></span></sc-for></div>
+        <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600">Tu tienda ya está en línea</div><div style="font-size:12.5px;color:#D9C8BA;margin-top:2px">laesquina.com.ar · imprimí el QR para el mostrador</div>
+          <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap"><button onClick="{{ copyLink }}" style="display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:999px;border:0;background:rgba(251,247,242,.12);color:#fff;cursor:pointer;font:600 12.5px 'Instrument Sans'"><iconify-icon icon="{{ copyIcon }}" width="13"></iconify-icon>{{ copyTxt }}</button><span style="display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:999px;background:#25D366;color:#fff;font-size:12.5px;font-weight:600"><iconify-icon icon="ph:whatsapp-logo-fill" width="13"></iconify-icon>Compartir</span></div></div>
+      </div>
+      <div style="padding:16px;border-radius:20px;background:#fff;box-shadow:0 1px 2px rgba(58,29,18,.06)">
+        <div style="font-size:15px;font-weight:600">Sumá a tu equipo</div><div style="font-size:12.5px;color:#7A6252;margin-top:2px">Cada uno con sus permisos y doble verificación.</div>
+        <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px">
+          <sc-for list="{{ team }}" as="m" hint-placeholder-count="2"><div style="display:flex;align-items:center;gap:10px;font-size:13.5px"><span style="width:28px;height:28px;border-radius:50%;background:#F1E7DC;display:grid;place-items:center;font-size:11px;font-weight:700;color:#7A6252">{{ m.ini }}</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ m.e }}</span><span style="font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;background:#F4ECE2;color:#5C4536">{{ m.r }}</span></div></sc-for>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:6px"><input value="{{ invite }}" onInput="{{ setInvite }}" placeholder="email de tu socio o empleado" style="flex:1;min-width:0;padding:9px 12px;border-radius:12px;border:1px solid rgba(58,29,18,.16);font:500 13.5px 'Instrument Sans';outline:none;color:#2A140C;background:#fff"><button onClick="{{ addInvite }}" style="padding:9px 14px;border-radius:12px;border:0;background:#2A140C;color:#fff;cursor:pointer;font:600 13px 'Instrument Sans'">Invitar</button></div>
+      </div>
+    </div>
+    <div style="margin-top:24px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <a href="Mostrador%20v4.dc.html" onClick="{{ toPanel }}" style="display:flex;align-items:center;gap:10px;color:#fff;background:linear-gradient(180deg,#E06A3E,#D2582F);font-size:16px;font-weight:600;padding:16px 26px;border-radius:999px;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 16px 34px -14px rgba(210,88,47,.75)">Ir a mi panel <iconify-icon icon="ph:arrow-right-bold" width="16"></iconify-icon></a>
+      <a href="#" style="display:flex;align-items:center;gap:10px;color:#2A140C;background:#fff;border:1px solid rgba(58,29,18,.14);font-size:16px;font-weight:600;padding:16px 24px;border-radius:999px">Ver mi tienda</a>
+    </div>
+  </div>
+</sc-if>
+
+      </div>
+    </div>
+
+    <sc-if value="{{ showFooter }}" hint-placeholder-val="{{ true }}">
+      <div style="position:sticky;bottom:0;z-index:20;display:flex;align-items:center;gap:{{ footGap }};padding:{{ footPad }};background:rgba(251,247,242,.9);backdrop-filter:blur(12px);border-top:1px solid rgba(58,29,18,.08)">
+        <sc-if value="{{ canBack }}"><button onClick="{{ back }}" style="display:flex;align-items:center;gap:8px;padding:12px 18px;border-radius:999px;border:1px solid rgba(58,29,18,.16);background:#fff;color:#2A140C;font:600 14.5px 'Instrument Sans';cursor:pointer"><iconify-icon icon="ph:arrow-left-bold" width="14"></iconify-icon>{{ backTxt }}</button></sc-if>
+        <div style="flex:1;min-width:0;font-size:13.5px;color:#7A6252;display:{{ noteDisp }}">{{ footNote }}</div><sc-if value="{{ narrow }}"><span style="flex:1"></span></sc-if>
+        <button onClick="{{ skip }}" style="border:0;background:transparent;cursor:pointer;font:600 14px 'Instrument Sans';color:#7A6252;padding:12px 6px;white-space:nowrap">{{ skipTxt }}</button>
+        <button onClick="{{ next }}" style="display:flex;align-items:center;gap:8px;padding:13px 24px;border-radius:999px;border:0;background:{{ nextBg }};color:#fff;font:600 15px 'Instrument Sans';cursor:pointer;white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 12px 26px -12px rgba(210,88,47,.7)">{{ nextLabel }}<iconify-icon icon="ph:arrow-right-bold" width="15"></iconify-icon></button>
+      </div>
+    </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const U = (id, w, x) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${w}&q=75${x || ''}`;
+const fmt = n => Math.round(n).toLocaleString('es-AR');
+const STEPS = ['Cuenta', 'Tu negocio', 'Canales', 'Importación', 'Tu tienda', 'Cobros y envíos', 'Hornero', '¡Listo!'];
+const PCT = [6, 28, 52, 71, 80, 88, 92, 94];
+const TIPS = [
+  'Si entrás con Mercado Pago, me ahorro preguntarte la mitad de las cosas.',
+  'Saqué esto de ARCA, de tu Instagram y de Google Maps. Si algo está mal, tocalo y lo corregís.',
+  'Cuantas más cuentas conectes, menos vas a cargar a mano. Nada se publica sin que lo revises.',
+  'Mientras importo, junto clientes repetidos y ordeno tus productos. Podés seguir, te aviso al terminar.',
+  'Usé los colores y las fotos de tu Instagram. Probá otra paleta si querés.',
+  'Configuré todo con lo que ya tenías. Solo falta el certificado de ARCA, te guío cuando quieras.',
+  'Aprendí tus precios, stock, horarios y políticas. Elegí cómo querés que hable con tus clientes.',
+  '¡Listo! Te dejo el panel ordenado y te aviso apenas entre la primera venta.'
+];
+const LG = {
+  mp: { icon: 'simple-icons:mercadopago', col: '#00B1EA', bg: '#E6F7FD' }, ml: { word: 'ML', col: '#2D3277', bg: '#FFE600' },
+  ig: { icon: 'logos:instagram-icon', bg: '#FCEEF3' }, wa: { icon: 'logos:whatsapp-icon', bg: '#E9F8EE' },
+  tn: { icon: 'ph:storefront-fill', col: '#fff', bg: '#2C3E8F' }, gm: { icon: 'logos:google-maps', bg: '#EEF4FD' },
+  and: { word: 'AND', col: '#fff', bg: '#E2001A' }, arca: { word: 'ARCA', col: '#fff', bg: '#1F3A6E' },
+  transf: { icon: 'ph:bank-fill', col: '#6B5244', bg: '#F1E9DF' }, cash: { icon: 'ph:money-fill', col: '#2F8F63', bg: '#E9F5EE' },
+  local: { icon: 'ph:storefront-fill', col: '#8A5A3E', bg: '#F3E9DF' }, free: { icon: 'ph:gift-fill', col: '#C24E25', bg: '#FCEDE5' },
+  pol: { icon: 'ph:file-text-fill', col: '#6A4FA0', bg: '#EFE9F7' }, moto: { icon: 'ph:moped-fill', col: '#9A6A10', bg: '#FDF3DD' }
+};
+const lg = k => { const m = LG[k]; return { icon: m.icon || null, word: m.word || null, col: m.col || 'inherit', bg: m.bg }; };
+const CONNS = [
+  ['mp', 'Mercado Pago', 'Cobros, devoluciones y clientes', 'Conectado al crear tu cuenta · 1.920 clientes · 14 meses de ventas', true],
+  ['tn', 'Tiendanube', 'Migración completa de tu tienda actual', '1.204 productos · 3.880 clientes · 9.112 pedidos · 14 cupones', true],
+  ['ml', 'Mercado Libre', 'Publicaciones, stock y preguntas', '86 publicaciones · 412 preguntas · reputación verde', true],
+  ['wa', 'WhatsApp Business', 'Tu número, catálogo y contactos', '+54 341 555-0142 · 380 contactos · catálogo de 64 productos', true],
+  ['ig', 'Instagram y Facebook', 'Fotos, catálogo y mensajes', '@cafelaesquina · 86 fotos de productos · 12,4 mil seguidores', true],
+  ['gm', 'Google Maps', 'Dirección, horarios y reseñas', 'Bv. Oroño 1240 · lun a sáb 8–20 h · 4,8 ★ (312 reseñas)', false],
+  ['and', 'Andreani', 'Envíos con tu cuenta y tarifas', 'Cuenta 4410-882 · tarifas pactadas importadas', false],
+  ['arca', 'ARCA', 'Punto de venta para facturar', 'Monotributo D · punto de venta 0004 creado', false]
+];
+const IMP = [
+  ['ph:tag-fill', 'Productos', 'Tiendanube + Mercado Libre, sin duplicados', 1204, '#FCEDE5', '#C24E25'],
+  ['ph:images-fill', 'Fotos', 'Con fondo mejorado y tamaño optimizado', 3412, '#EFE9F7', '#6A4FA0'],
+  ['ph:users-three-fill', 'Clientes', 'Unificados de Mercado Pago, ML y WhatsApp', 3880, 'rgba(47,143,99,.13)', '#2F8F63'],
+  ['ph:receipt-fill', 'Pedidos históricos', 'Para que tus informes arranquen con datos', 9112, '#FDF3DD', '#9A6A10'],
+  ['ph:star-fill', 'Reseñas', 'De Google y Mercado Libre', 312, '#FDF3DD', '#C98A12'],
+  ['ph:ticket-fill', 'Cupones', 'Activos en Tiendanube', 14, '#FCEDE5', '#C24E25'],
+  ['ph:arrows-split-fill', 'Redirecciones SEO', 'Para no perder tu lugar en Google', 1204, '#EEF4FD', '#3E6BFD']
+];
+const LOGS = [
+  'Unifiqué 412 clientes repetidos entre Mercado Pago y WhatsApp.',
+  'Agrupé tus productos en 8 categorías.',
+  'Mejoré 128 títulos para que aparezcan mejor en Google.',
+  'Detecté 4 productos sin stock en Mercado Libre y los marqué.',
+  'Calculé precios con IVA incluido para Factura B.'
+];
+const PALS = [
+  { name: 'Café y crema · de tu Instagram', bg: '#F3E9DC', ink: '#3B2416', acc: '#6B3A22' },
+  { name: 'Verde yerba', bg: '#EEF1E8', ink: '#1E2B22', acc: '#2F5D50' },
+  { name: 'Terracota', bg: '#FBF3EC', ink: '#2A140C', acc: '#C24E25' }
+];
+const FONTS = [{ name: 'Moderna', ff: "'Instrument Sans', sans-serif" }, { name: 'Clásica', ff: "Georgia, 'Times New Roman', serif" }];
+const PRODS = [
+  ['1609541994821-d909982e2f1b', 'Mate de cerámica', '$ 18.500'], ['1675001077188-809370ce3279', 'Yerba orgánica 1 kg', '$ 8.200'],
+  ['1634741011278-9dc2f5b6fc0b', 'Termo 1 L', '$ 42.900'], ['1444157545135-c045be691b05', 'Kit matero', '$ 58.400']
+];
+const TONES = { cercano: ['Cercano', '¡Hola Lucía! Sí, nos quedan 3 en negro. ¿Te lo separo? Te llega el jueves a Córdoba.'],
+  profesional: ['Profesional', 'Hola Lucía, buenas tardes. Sí, tenemos 3 unidades en negro. ¿Desea que se lo reserve? El envío a Córdoba demora 48 h.'],
+  canchero: ['Canchero', '¡Holaa Lu! Sí, quedan 3 negros y vuelan. ¿Te guardo uno? El jueves lo tenés en Córdoba.'] };
+
+const TPL_DESC = { ed: 'Imagen grande y colecciones destacadas. Ideal si tenés buenas fotos y una marca para mostrar.', grid: 'Muchos productos a la vista y compra rápida desde el celular. Ideal para catálogos que rotan.', cat: 'Categorías a un costado y combos destacados. Ideal para almacenes y tiendas con mucho surtido.' };
+const TPL_LAYOUT = { ed: 'Editorial', grid: 'Grilla', cat: 'Catálogo' };
+const lumOf = hex => { const n = parseInt(hex.slice(1), 16), r = n >> 16 & 255, g = n >> 8 & 255, b = n & 255; return (0.299 * r + 0.587 * g + 0.114 * b) / 255; };
+const tplView = (t, o) => { const v = { ...t, ...(o || {}) }; return { ...v, demoUrl: v.demo ? encodeURI(v.demo) : null, stop: e => e.stopPropagation(), isEd: v.layout === 'ed', isGrid: v.layout === 'grid', isCat: v.layout === 'cat', onAcc: lumOf(v.acc) > 0.62 ? '#141414' : '#FFFFFF', desc: TPL_DESC[v.layout], layoutName: TPL_LAYOUT[v.layout] }; };
+const TPLS = () => window.MOSTRADOR_TEMPLATES || [];
+const RUBROS = () => window.MOSTRADOR_RUBROS || ['Todos'];
+
+const GOALS = [['ph:storefront-fill','Vender online por primera vez'],['ph:whatsapp-logo-fill','Ordenar los pedidos de WhatsApp'],['ph:cash-register-fill','Unificar el local y la web'],['ph:receipt-fill','Facturar sin complicarme'],['ph:users-three-fill','Vender a mayoristas'],['ph:trend-up-fill','Dejar de pagar comisiones']];
+class Component extends DCLogic {
+  state = { step: +(localStorage.getItem('ob-step') || 0), reveal: 0, conn: { mp: 'on' }, imp: 0, pal: 0, font: 0, tone: 'cercano', tpl: localStorage.getItem('ob-tpl') || 'litoral', vw: window.innerWidth, tipOpen: false, dev: 'desk', ig: true, gallery: false, grub: 'Todos', gq: '', secs: { dest: true, cat: true, ig: true, res: true, faq: false, blog: false }, goals: { 1: true, 2: true }, conflict: null, copied: false, invite: '', team: [['VS', 'valeria@laesquina.com.ar', 'Dueña']],
+    cfg: { cuotas: true, transf: true, cash: true, andreani: true, retiro: true, free: true, moto: false, pol: true } };
+  componentDidMount() {
+    this._ps = { ...this.state }; this.enter(this.state.step); setTimeout(() => this.forceUpdate(), 400); this.onResize = () => { if (Math.abs(window.innerWidth - this.state.vw) > 4) this.setState({ vw: window.innerWidth }); }; window.addEventListener('resize', this.onResize); this.onKey = e => { if (e.key === 'Escape') this.setState({ gallery: false }); }; document.addEventListener('keydown', this.onKey); }
+  componentWillUnmount() { clearInterval(this.revT); clearInterval(this.impT); document.removeEventListener('keydown', this.onKey); window.removeEventListener('resize', this.onResize); }
+  componentDidUpdate(pp) {
+    const ps = this._ps || this.state; this._ps = { ...this.state };
+    try { this._cdu(pp, ps); } catch (e) { console.warn(e); }
+  }
+  _cdu(pp, ps) {
+    if (ps.step !== this.state.step) { localStorage.setItem('ob-step', this.state.step); this.enter(this.state.step); window.scrollTo(0, 0); }
+    if (ps.reveal !== this.state.reveal) document.querySelectorAll('[data-reveal]:not([data-on])').forEach((el, i) => { el.setAttribute('data-on', ''); el.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 380, delay: i * 70, fill: 'both', easing: 'cubic-bezier(.2,.7,.1,1)' }); });
+    const nl = Math.min(LOGS.length, Math.floor(this.state.imp / 19)), ol = Math.min(LOGS.length, Math.floor(ps.imp / 19));
+    if (nl > ol) { const ls = document.querySelectorAll('[data-log]'); const l = ls[ls.length - 1]; l && l.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.2,.7,.1,1)' }); }
+    if (ps.tpl !== this.state.tpl || ps.ig !== this.state.ig) { const p = document.querySelector('[data-prev]'); p && p.animate([{ opacity: .3, transform: 'scale(.98)' }, { opacity: 1, transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.2,.7,.1,1)' }); }
+    if (!ps.gallery && this.state.gallery) { const g = document.querySelector('[data-gal]'); g && g.animate([{ opacity: 0, transform: 'translateY(24px) scale(.98)' }, { opacity: 1, transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.16,1,.3,1)' }); }
+    if (this.state.imp >= 100 && ps.imp < 100) setTimeout(() => { const c = document.querySelector('[data-conf]'); c && c.animate([{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 480, easing: 'cubic-bezier(.2,.7,.1,1)' }); }, 30);
+    if (ps.tone !== this.state.tone) { const b = document.querySelector('[data-tone]'); b && b.animate([{ opacity: 0, transform: 'translateY(8px) scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 380, easing: 'cubic-bezier(.2,.7,.1,1)' }); }
+    this.anim();
+  }
+  anim() {
+    document.querySelectorAll('[data-spin]:not([data-on])').forEach(el => { el.setAttribute('data-on', ''); el.animate([{ transform: 'rotate(0)' }, { transform: 'rotate(360deg)' }], { duration: 900, iterations: Infinity }); });
+    document.querySelectorAll('[data-shimmer]:not([data-on])').forEach(el => { el.setAttribute('data-on', ''); el.animate([{ backgroundPosition: '100% 0' }, { backgroundPosition: '-100% 0' }], { duration: 1200, iterations: Infinity }); });
+    document.querySelectorAll('[data-anim="dots"]:not([data-on])').forEach(el => { el.setAttribute('data-on', ''); el.animate([{ opacity: .25 }, { opacity: 1 }, { opacity: .25 }], { duration: 1100, delay: +(el.dataset.delay || 0), iterations: Infinity }); });
+    const st = document.querySelector('[data-step]:not([data-on])');
+    if (st) { st.setAttribute('data-on', ''); }
+  }
+  enter(s) {
+    clearInterval(this.revT); clearInterval(this.impT);
+    const box = document.querySelector('[data-step]');
+    box && box.animate([{ opacity: 0, transform: 'translateY(16px)' }, { opacity: 1, transform: 'none' }], { duration: 520, easing: 'cubic-bezier(.2,.7,.1,1)' });
+    if (s === 1) { this.setState({ reveal: 0 }); this.revT = setInterval(() => this.setState(st => { if (st.reveal >= 3) { clearInterval(this.revT); return null; } return { reveal: st.reveal + 1 }; }), 950); }
+    if (s === 3 && this.state.imp < 100) this.impT = setInterval(() => this.setState(st => { if (st.imp >= 100) { clearInterval(this.impT); return null; } return { imp: Math.min(100, st.imp + 1.1) }; }), 70);
+    if (s === 7) setTimeout(() => this.confetti(), 300);
+    setTimeout(() => this.anim(), 50);
+  }
+  confetti() {
+    const host = document.querySelector('[data-confetti]'); if (!host) return;
+    const cols = ['#D2582F', '#E8875F', '#E3A93B', '#2F8F63', '#2A140C'];
+    for (let i = 0; i < 70; i++) {
+      const p = document.createElement('span'); const w = 6 + Math.random() * 6;
+      p.style.cssText = `position:absolute;left:0;top:0;width:${w}px;height:${w * 0.45}px;border-radius:2px;background:${cols[i % 5]}`;
+      host.appendChild(p);
+      const a = Math.random() * Math.PI * 2, d = 160 + Math.random() * 260;
+      p.animate([{ transform: 'translate(0,0) rotate(0)', opacity: 1 }, { transform: `translate(${Math.cos(a) * d}px,${Math.sin(a) * d * 0.6 + 260}px) rotate(${Math.random() * 720}deg)`, opacity: 0 }], { duration: 1600 + Math.random() * 1200, easing: 'cubic-bezier(.15,.6,.3,1)', fill: 'forwards' }).onfinish = () => p.remove();
+    }
+  }
+  go(s) { this.setState({ step: Math.max(0, Math.min(7, s)) }); }
+  connect(k) { this.setState(s => ({ conn: { ...s.conn, [k]: 'wait' } })); setTimeout(() => this.setState(s => ({ conn: { ...s.conn, [k]: 'on' } })), 900 + Math.random() * 700); }
+  renderVals() {
+    const st = this.state, s = st.step;
+    const tg = on => ({ tbg: on ? '#D2582F' : '#D9CBBE', tx: on ? '19px' : '2px' });
+    const cfgItem = (key, k, t, d, pending) => ({ ...lg(k), t, d, pending: !!pending, tog: !pending, ...tg(st.cfg[key]), go: () => !pending && this.setState(x => ({ cfg: { ...x.cfg, [key]: !x.cfg[key] } })) });
+    const onCount = Object.values(st.conn).filter(v => v === 'on').length;
+    const impDone = st.imp >= 100;
+    const findRows = [
+      { src: 'ARCA · desde tu CUIT', k: 'arca', rows: [['Razón social', 'Valeria Sosa'], ['Nombre de fantasía', 'Café La Esquina'], ['Condición', 'Monotributo · categoría D'], ['Domicilio fiscal', 'Bv. Oroño 1240, Rosario, Santa Fe']] },
+      { src: 'Instagram · @cafelaesquina', k: 'ig', sw: true, rows: [['Logo y foto de portada', 'Listos para tu tienda'], ['Descripción', 'Café de especialidad y todo para el mate, desde 2019'], ['Productos detectados', '86 fotos con precio en la descripción']] },
+      { src: 'Google Maps', k: 'gm', rows: [['Dirección', 'Bv. Oroño 1240, Rosario'], ['Horario', 'Lunes a sábado de 8 a 20 h'], ['Teléfono', '+54 341 555-0142'], ['Reseñas', '4,8 ★ · 312 reseñas']] }
+    ];
+    return {
+      ...(() => { const w = st.vw, nar = w < 900, ph = w < 560; return {
+        wide: !nar, narrow: nar, asideW: w < 1100 ? '280px' : '340px', stepLabel: STEPS[s],
+        topH: nar ? '0px' : '68px', topDisp: nar ? 'none' : 'flex', mainPad: nar ? (ph ? '22px 14px 28px' : '28px 22px 32px') : '44px 40px 40px',
+        footPad: ph ? '10px 12px calc(10px + env(safe-area-inset-bottom))' : nar ? '12px 18px' : '16px 40px', footGap: ph ? '6px' : '12px', noteDisp: nar ? 'none' : 'block',
+        skipTxt: ph ? 'Después' : 'Hacerlo después', backTxt: ph ? '' : 'Atrás', sumCols: ph ? 'repeat(2,minmax(0,1fr))' : 'repeat(4,minmax(0,1fr))',
+        tipOpen: st.tipOpen, toggleTip: () => this.setState(x => ({ tipOpen: !x.tipOpen }))
+      }; })(),
+      step: s, stepN: s + 1, tipImg: 'assets/hornero/' + ['saludo', 'lupa', 'whatsapp', 'caja', 'foto', 'ticket', 'hablando', 'celebrando'][s] + '.png', pct: PCT[s], pctW: PCT[s] + '%', tip: TIPS[s],
+      s0: s === 0, s1: s === 1, s2: s === 2, s3: s === 3, s4: s === 4, s5: s === 5, s6: s === 6, s7: s === 7,
+      steps: STEPS.map((label, i) => ({ label, n: i + 1, done: i < s, cur: i === s, next: i > s, fw: i === s ? 600 : 500, bar: i < s ? '#2F8F63' : i === s ? '#E8875F' : 'rgba(251,247,242,.18)',
+        bg: i === s ? 'rgba(251,247,242,.1)' : 'transparent', fg: i > s ? '#C9B4A4' : '#FBF7F2', go: () => i <= s + 1 && this.go(i) })),
+      loginMp: () => this.go(1), loginMl: () => this.go(1), loginG: () => this.go(1),
+      mpBrings: [['ph:identification-card-fill', 'Tu nombre, email y CUIT'], ['ph:users-three-fill', '1.920 clientes que ya te compraron'], ['ph:chart-line-up-fill', '14 meses de ventas para tus informes'], ['ph:wallet-fill', 'Cobros, cuotas y tu alias para transferencias'], ['ph:qr-code-fill', 'Tu QR del local y el Point']].map(([i, t]) => ({ i, t })),
+      finds: findRows.map((f, i) => ({ ...lg(f.k), src: f.src, ready: st.reveal > i, loading: st.reveal <= i, swatches: !!f.sw, rows: f.rows.map(([k, v]) => ({ k, v })) })),
+      conns: CONNS.map(([k, n, d, got, rec]) => { const c = st.conn[k] || 'off'; return { ...lg(k), n, d, got, rec, isOff: c === 'off', isWait: c === 'wait', isOn: c === 'on', notOn: c !== 'on', bd: c === 'on' ? 'rgba(47,143,99,.45)' : 'rgba(58,29,18,.08)', go: () => this.connect(k) }; }),
+      connectAll: () => CONNS.forEach(([k, , , , rec], i) => rec && (st.conn[k] || 'off') === 'off' && setTimeout(() => this.connect(k), i * 260)),
+      connSummary: onCount + ' de ' + CONNS.length + ' conectadas. Podés sumar más después desde Integraciones.',
+      impTitle: impDone ? 'Listo. Tu negocio ya está adentro.' : 'Estamos armando tu mostrador.',
+      impPct: Math.floor(st.imp) + '%', impBusy: !impDone,
+      impRows: IMP.map(([i, t, sub, total, bg, fg], idx) => { const start = idx * 7, p = Math.max(0, Math.min(1, (st.imp - start) / (100 - start - 4 + 0.001))); return { i, t, s: sub, bg, fg, v: fmt(total * p), done: p >= 1, busy: p < 1 }; }),
+      logs: LOGS.slice(0, Math.min(LOGS.length, Math.floor(st.imp / 19))),
+      domain: 'laesquina.com.ar', pal: PALS[st.pal], font: FONTS[st.font].ff,
+      pals: PALS.map((p, i) => ({ ...p, bd: i === st.pal ? '#D2582F' : 'rgba(58,29,18,.1)', go: () => this.setState({ pal: i }) })),
+      fonts: FONTS.map((f, i) => ({ ...f, bd: i === st.font ? '#D2582F' : 'rgba(58,29,18,.1)', go: () => this.setState({ font: i }) })),
+      prods: PRODS.map(([id, n, p]) => ({ img: U(id, 400, '&h=400'), n, p })),
+      cfgGroups: [
+        { i: 'ph:wallet-fill', t: 'Cobros', items: [cfgItem('cuotas', 'mp', 'Mercado Pago', 'Tarjetas, QR y hasta 3 cuotas sin interés'), cfgItem('transf', 'transf', 'Transferencia', 'Alias cafe.esquina.mp, sacado de tu cuenta'), cfgItem('cash', 'cash', 'Efectivo en el local', 'Con caja diaria en el punto de venta')] },
+        { i: 'ph:truck-fill', t: 'Envíos', items: [cfgItem('andreani', 'and', 'Andreani', 'Paquete promedio 20×15×10 cm, 1,2 kg (calculado de tus productos)'), cfgItem('retiro', 'local', 'Retiro en el local', 'Bv. Oroño 1240, en tu horario de Google'), cfgItem('free', 'free', 'Envío gratis desde $ 60.000', 'Sugerido por Hornero: 1,8× tu ticket promedio'), cfgItem('moto', 'moto', 'Moto propia en Rosario', 'Activalo si hacés entregas en el día')] },
+        { i: 'ph:receipt-fill', t: 'Facturas y políticas', items: [cfgItem('x', 'arca', 'Factura electrónica ARCA', 'Punto de venta 0004 creado · Factura C por ser monotributo', true), cfgItem('pol', 'pol', 'Cambios y devoluciones', '30 días, redactado según la ley de defensa del consumidor')] }
+      ],
+      ...(() => {
+        const all = TPLS(); const base = all.find(t => t.id === st.tpl) || all[0] || { layout: 'ed', bg: '#fff', ink: '#000', acc: '#000', prods: [], img: '' };
+        const igO = st.ig ? { bg: '#F3E9DC', ink: '#3B2416', acc: '#6B3A22', img: U('1687920492018-e21cad9023d9', 900), tag: 'El mate de cada mañana' } : {};
+        const mob = st.dev === 'mob';
+        const recIds = ['litoral', 'mostaza', 'yerbal'];
+        const q = st.gq.trim().toLowerCase();
+        const gl = all.filter(t => (st.grub === 'Todos' || t.rubro === st.grub) && (!q || (t.name + ' ' + t.rubro + ' ' + TPL_LAYOUT[t.layout]).toLowerCase().includes(q)));
+        const pick = t => () => this.setState({ tpl: t.id, gallery: false });
+        const SECS = [['dest', 'ph:star', 'Destacados'], ['cat', 'ph:squares-four', 'Categorías'], ['ig', 'ph:instagram-logo', 'Feed de Instagram'], ['res', 'ph:chat-centered-text', 'Reseñas de Google'], ['faq', 'ph:question', 'Preguntas frecuentes'], ['blog', 'ph:article', 'Recetas y blog']];
+        return {
+          cur: tplView(base, { ...igO, store: 'Café La Esquina' }), tplKey: st.tpl + (st.ig ? '-ig' : ''), tplCount: all.length,
+          recTpls: recIds.map(id => all.find(t => t.id === id)).filter(Boolean).map(t => ({ ...tplView(t), ring: t.id === st.tpl ? '#D2582F' : 'transparent', pick: pick(t) })),
+          galTpls: gl.map(t => ({ ...tplView(t), ring: t.id === st.tpl ? '#D2582F' : 'transparent', sel: t.id === st.tpl, rec: recIds.includes(t.id) && t.id !== st.tpl, pick: pick(t) })), galEmpty: gl.length === 0,
+          rubros: RUBROS().filter(r => r === 'Todos' || all.some(t => t.rubro === r)).map(r => ({ label: r, go: () => this.setState({ grub: r }), bg: st.grub === r ? '#2A140C' : '#fff', fg: st.grub === r ? '#fff' : '#2A140C', bd: st.grub === r ? '#2A140C' : 'rgba(58,29,18,.14)' })),
+          gallery: st.gallery, openGallery: () => this.setState({ gallery: true }), closeGallery: () => this.setState({ gallery: false }), gq: st.gq, setGq: e => this.setState({ gq: e.target.value }),
+          devDesk: () => this.setState({ dev: 'desk' }), devMob: () => this.setState({ dev: 'mob' }), isDeskDev: !mob,
+          devDeskBg: mob ? 'transparent' : '#fff', devMobBg: mob ? '#fff' : 'transparent', devDeskSh: mob ? 'none' : '0 1px 2px rgba(58,29,18,.12)', devMobSh: mob ? '0 1px 2px rgba(58,29,18,.12)' : 'none',
+          frameW: mob ? '260px' : '100%', frameH: mob ? '520px' : '470px', frameR: mob ? '38px' : '14px', frameP: mob ? '9px' : '0px', frameBg: mob ? '#2A140C' : 'transparent', innerR: mob ? '30px' : '14px', frameZoom: mob ? 1 : 1.55,
+          toggleIg: () => this.setState(s => ({ ig: !s.ig })), igTg: { bg: st.ig ? '#D2582F' : '#D9CBBE', x: st.ig ? '19px' : '2px' },
+          sections: SECS.map(([k, icon, t]) => ({ icon, t, bg: st.secs[k] ? '#FCEDE5' : '#fff', bd: st.secs[k] ? 'rgba(210,88,47,.45)' : 'rgba(58,29,18,.14)', go: () => this.setState(s => ({ secs: { ...s.secs, [k]: !s.secs[k] } })) })),
+          goals: GOALS.map(([i, t], k) => { const on = !!st.goals[k]; return { i, t, on, bg: on ? '#FCEDE5' : '#fff', bd: on ? '#D2582F' : 'rgba(58,29,18,.12)', ibg: on ? '#D2582F' : '#F4ECE2', ifg: on ? '#fff' : '#7A6252', go: () => this.setState(s => ({ goals: { ...s.goals, [k]: !s.goals[k] } })) }; }),
+          showConflict: st.imp >= 100,
+          conflictOpts: [['tn', 'Usar Tiendanube'], ['ml', 'Usar Mercado Libre (+10%)'], ['one', 'Revisar uno por uno']].map(([id, t]) => ({ t, go: () => this.setState({ conflict: id }), bg: st.conflict === id ? '#2A140C' : '#fff', fg: st.conflict === id ? '#fff' : '#2A140C', bd: st.conflict === id ? '#2A140C' : 'rgba(58,29,18,.16)' })),
+          conflictDone: !!st.conflict, conflictMsg: st.conflict === 'ml' ? 'Listo: en Mercado Libre mantenemos tu recargo del 10% automáticamente.' : st.conflict === 'one' ? 'Te dejamos los 12 en una lista para revisar desde el panel.' : 'Listo: usamos los precios de Tiendanube en todos tus canales.',
+          qr: Array.from({ length: 49 }, (_, i) => { const r = Math.floor(i / 7), c = i % 7; const f = (r < 2 && c < 2) || (r < 2 && c > 4) || (r > 4 && c < 2); return f || ((i * 37 + 11) % 5 < 2) ? '#2A140C' : 'transparent'; }),
+          cajaOn: !!st.caja, cajaOff: !st.caja, cajaToggle: () => this.setState(s => ({ caja: !s.caja })),
+          cajaBtnT: st.caja ? 'Caja conectada' : 'Conectar Caja', cajaBtnI: st.caja ? 'ph:check-circle-fill' : 'ph:plug-fill', cajaBtnBg: st.caja ? '#2F8F63' : '#F4EEE6', cajaBtnFg: st.caja ? '#fff' : '#131211',
+          cajaTitle: st.caja ? 'Caja ya está ordenando tu plata' : 'Tu negocio vende. Caja te dice cuánto ganás.', cajaSub: st.caja ? 'Conectado · 3 meses de Pro Max activos · las ventas de hoy ya están ahí' : 'Con tu cuenta de Mostrador tenés 3 meses de Caja Pro Max gratis',
+          cajaBen: [['ph:arrows-left-right-bold', 'Todo entra solo', 'Ventas, liquidaciones, comisiones y envíos, sin cargar nada.'], ['ph:receipt-bold', 'Monotributo al día', 'Lo que facturás suma al tope y te avisa antes de recategorizar.'], ['ph:currency-dollar-bold', 'Ganancia real', 'En pesos de hoy por inflación o al dólar MEP de cada venta.'], ['ph:user-switch-bold', 'Lo tuyo, aparte', 'Los retiros personales no se mezclan con los gastos del negocio.']].map(([i, t, d]) => ({ i, t, d })),
+          copyLink: () => { this.setState({ copied: true }); setTimeout(() => this.setState({ copied: false }), 1800); }, copyTxt: st.copied ? 'Copiado' : 'Copiar link', copyIcon: st.copied ? 'ph:check-bold' : 'ph:copy-bold',
+          team: st.team.map(([ini, e, r]) => ({ ini, e, r })), invite: st.invite, setInvite: e => this.setState({ invite: e.target.value }),
+          addInvite: () => { const e = st.invite.trim() || 'martin@laesquina.com.ar'; this.setState(s => ({ invite: '', team: [...s.team, [e.slice(0, 2).toUpperCase(), e, 'Ventas']] })); }
+        };
+      })(),
+      tone: st.tone, toneMsg: TONES[st.tone][1],
+      tones: Object.entries(TONES).map(([id, [n]]) => ({ n, go: () => this.setState({ tone: id }), bg: st.tone === id ? '#2A140C' : '#fff', fg: st.tone === id ? '#fff' : '#2A140C', bd: st.tone === id ? '#2A140C' : 'rgba(58,29,18,.16)' })),
+      summary: [['1.204', 'productos'], ['3.880', 'clientes'], ['5', 'canales conectados'], ['0', 'cosas cargadas a mano']].map(([v, t]) => ({ v, t })),
+      toPanel: () => { localStorage.setItem('mv4-view', 'panel'); localStorage.setItem('ob-step', '0'); },
+      showFooter: s > 0 && s < 7, canBack: s > 1,
+      back: () => this.go(s - 1), next: () => this.go(s + 1), skip: () => this.go(s + 1),
+      nextLabel: s === 3 && !impDone ? 'Seguir mientras importa' : s === 6 ? 'Terminar' : 'Continuar',
+      nextBg: 'linear-gradient(180deg,#E06A3E,#D2582F)',
+      footNote: s === 2 ? 'Nada se publica sin que lo revises.' : s === 3 ? 'Si cerrás, la importación sigue y te avisamos por email.' : s === 5 ? 'Podés cambiar todo después desde Configuración.' : 'Todo se guarda solo.'
+    };
+  }
+}
+</script>
+</body>
+</html>
