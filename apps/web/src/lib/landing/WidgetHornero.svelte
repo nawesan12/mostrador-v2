@@ -12,7 +12,8 @@
 	 * ni mientras el banner de cookies está a la vista.
 	 */
 	const l = getLanding();
-	const registro = `${resolve('/ingresar')}?m=registro`;
+	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Mostrador.dc.html).
+	const registro = resolve('/onboarding');
 
 	function entra(el: HTMLElement) {
 		el.animate(
@@ -42,7 +43,6 @@
 				<div class="g-acc">
 					<a class="calc" href="#precios">Calcular</a>
 					<a href="#hornero">¿Qué hacés?</a>
-					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- registro es /ingresar con query (resolve adentro) -->
 					<a href={registro}>Crear cuenta</a>
 				</div>
 			</div>

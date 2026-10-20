@@ -50,8 +50,9 @@ export const actions: Actions = {
 			email: String(f.email ?? '')
 		};
 		if (!r.success) return fail(400, { ...previo, errores: errores(r.issues) });
-		// El registro sigue en el onboarding (decisión: el onboarding es el registro).
-		if (usaSandbox()) redirect(303, '/demo');
+		// El registro sigue en el onboarding (decisión: el onboarding es el registro). En la demo no
+		// hay cuentas: se sigue igual, con el negocio de ejemplo.
+		if (usaSandbox()) redirect(303, '/onboarding?paso=1');
 		try {
 			const { nombre, tienda, email, clave } = r.output;
 			const s = await cuentasDe(event).registrar({ nombre, tienda, email, clave });
@@ -60,7 +61,7 @@ export const actions: Actions = {
 			const x = deApi(e);
 			return fail(x.estado, { ...previo, errores: x.errores });
 		}
-		redirect(303, '/panel');
+		redirect(303, '/onboarding?paso=1');
 	},
 	/** Google o WhatsApp: con la API, inicia el OAuth o el código por WhatsApp (próximo PR). */
 	social: async ({ request }) => {

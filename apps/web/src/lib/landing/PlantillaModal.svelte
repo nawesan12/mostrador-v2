@@ -9,7 +9,8 @@
 
 	/** Modal de plantilla de la landing (handoff: tplModal). */
 	const l = getLanding();
-	const registro = `${resolve('/ingresar')}?m=registro`;
+	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Mostrador.dc.html).
+	const registro = resolve('/onboarding');
 	const DESC = {
 		ed: 'Imagen grande y colecciones destacadas. Ideal si tenés buenas fotos y una marca para mostrar.',
 		grid: 'Muchos productos a la vista y compra rápida desde el celular. Ideal para catálogos que rotan.',
@@ -118,7 +119,6 @@
 					{/each}
 				</div>
 				<div class="esp"></div>
-				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- registro es /ingresar con query (resolve adentro) -->
 				<a class="usar" href={registro} onclick={usar}
 					>Usar esta plantilla <Icon icon={I.phArrowRightBold} size={15} /></a
 				>

@@ -6,7 +6,8 @@
 	import { unsplash } from './formato.ts';
 
 	/** "Abrí tu mostrador hoy." — CTA final de la landing. */
-	const registro = `${resolve('/ingresar')}?m=registro`;
+	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Mostrador.dc.html).
+	const registro = resolve('/onboarding');
 </script>
 
 <section>
@@ -25,7 +26,6 @@
 				cuenta.
 			</p>
 			<div class="ctas" use:anim={'reveal'}>
-				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- registro es /ingresar con query (resolve adentro) -->
 				<a class="pri" href={registro}
 					>Crear mi tienda gratis <Icon icon={phArrowRightBold} size={16} /></a
 				>

@@ -3,7 +3,7 @@
  * (BFF), con el token de la sesión. Los errores problem+json se convierten en errores de SvelteKit.
  */
 import { error } from '@sveltejs/kit';
-import type { Datos, Rubro, Tienda } from './tipos.ts';
+import type { Datos, Onboarding, Rubro, Tienda } from './tipos.ts';
 
 export class DatosApi implements Datos {
 	constructor(
@@ -13,17 +13,25 @@ export class DatosApi implements Datos {
 		private f: typeof fetch = (i, init) => fetch(i, init)
 	) {}
 
-	private async pedir<T>(ruta: string): Promise<T> {
+	private async pedir<T>(
+		ruta: string,
+		metodo: 'GET' | 'PUT' = 'GET',
+		cuerpo?: unknown
+	): Promise<T> {
 		const res = await this.f(this.base + ruta, {
+			method: metodo,
 			headers: {
 				accept: 'application/json',
+				...(cuerpo === undefined ? {} : { 'content-type': 'application/json' }),
 				...(this.token ? { authorization: `Bearer ${this.token}` } : {})
-			}
+			},
+			body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo)
 		});
 		if (!res.ok) {
 			const p = (await res.json().catch(() => null)) as { detail?: string; code?: string } | null;
 			error(res.status, { message: p?.detail ?? 'La API no respondió bien.', code: p?.code });
 		}
+		if (res.status === 204) return undefined as T;
 		return (await res.json()) as T;
 	}
 
@@ -33,5 +41,9 @@ export class DatosApi implements Datos {
 
 	tienda() {
 		return this.pedir<Tienda>('/v1/panel/tienda');
+	}
+
+	guardarOnboarding(o: Onboarding) {
+		return this.pedir<void>('/v1/panel/onboarding', 'PUT', o);
 	}
 }

@@ -131,3 +131,14 @@ URL, para que no quede en el historial ni en logs.
   se ven grises ("Sin datos"), nunca verdes inventados.
 - Avisos a suscriptos por mail con Resend si `mostrador-jobs` tiene `RESEND_API_KEY`; por WhatsApp,
   cuando esté WhatsApp Cloud. La baja es un POST con token, como en novedades.
+
+## 17. Onboarding (PR #17)
+
+- `/onboarding` es el registro (decisión §0): todos los "Crear mi tienda" de la landing y del sitio
+  llevan ahí, y "Usar esta plantilla" lo arranca con esa plantilla (`ob-tpl`, como en el handoff).
+- Lo elegido queda en el navegador (`ob-estado`) para que recargar no pierda nada. En la demo, al
+  terminar se crea el sandbox con la plantilla elegida y lo demás se guarda como cambio del sandbox.
+  Con la API, el paso 1 pasa por `/ingresar` (que al registrar vuelve a `?paso=1`) y cada paso se
+  guarda con `PUT /v1/panel/onboarding` (columna `tiendas.onboarding`, jsonb hasta 16 KB).
+- Los datos que muestran los pasos son los del negocio de ejemplo del handoff (Café La Esquina);
+  traerlos de verdad de cada integración llega con el PR de esa integración.

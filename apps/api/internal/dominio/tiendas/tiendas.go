@@ -69,6 +69,7 @@ func Rutas(mux *http.ServeMux, pool *db.Pool, tienda func(*http.Request) string)
 		}
 		escribir(w, t)
 	})
+	rutasOnboarding(mux, pool, tienda)
 }
 
 func escribir(w http.ResponseWriter, v any) {

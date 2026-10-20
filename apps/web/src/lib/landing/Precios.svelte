@@ -8,7 +8,8 @@
 	import { fmt } from './formato.ts';
 
 	/** Precios de la landing (handoff: #precios y #planes): calculadora, planes y comparativa. */
-	const registro = `${resolve('/ingresar')}?m=registro`;
+	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Mostrador.dc.html).
+	const registro = resolve('/onboarding');
 
 	let ventas = $state(6_000_000);
 	let anual = $state(false);
@@ -129,7 +130,6 @@
 								<Icon icon={I.phCheckBold} size={15} style="flex:none;margin-top:2px" />{f}
 							</div>{/each}
 					</div>
-					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- registro es /ingresar con query (resolve adentro) -->
 					<a class="pl-cta" href={registro}>{p.cta}</a>
 				</div>
 			{/each}

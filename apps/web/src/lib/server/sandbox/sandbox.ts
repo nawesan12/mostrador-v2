@@ -12,7 +12,7 @@ import { inArray } from './sql.ts';
 import { fromB64url, randomToken, sha256 } from '../crypto.ts';
 import { rubro as buscarRubro, slugDe } from './rubros.ts';
 import { cambios, sandboxes } from './schema.ts';
-import type { Datos, Tienda } from '../datos/tipos.ts';
+import type { Datos, Onboarding, Tienda } from '../datos/tipos.ts';
 import RUBROS from '@mostrador/contrato/rubros.json';
 import { plantilla as buscarPlantilla } from '#lib/plantillas.ts';
 
@@ -92,6 +92,32 @@ async function uuidDe(texto: string) {
 	return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-8${h.slice(17, 20)}-${h.slice(20, 32)}`;
 }
 
+/** Guarda (o reemplaza) lo que el visitante cambió de una entidad. */
+export async function guardarCambio(
+	db: DbSandbox,
+	sandboxId: string,
+	entidad: string,
+	clave: string,
+	datos: unknown,
+	ahora = Date.now()
+) {
+	const fila = {
+		sandboxId,
+		entidad,
+		clave,
+		datos: JSON.stringify(datos),
+		borrado: false,
+		actualizadoEn: ahora
+	};
+	await db
+		.insert(cambios)
+		.values(fila)
+		.onConflictDoUpdate({
+			target: [cambios.sandboxId, cambios.entidad, cambios.clave],
+			set: { datos: fila.datos, borrado: false, actualizadoEn: ahora }
+		});
+}
+
 export class DatosSandbox implements Datos {
 	constructor(
 		private db: DbSandbox,
@@ -118,5 +144,13 @@ export class DatosSandbox implements Datos {
 		};
 		const cambio = (await cambiosDe(this.db, this.sb.id, 'tienda')).get('tienda');
 		return cambio ? { ...base, ...cambio } : base;
+	}
+
+	/** La plantilla ya la fija el sandbox al crearse; acá queda el resto de lo elegido. */
+	async guardarOnboarding(o: Onboarding) {
+		await guardarCambio(this.db, this.sb.id, 'onboarding', 'estado', {
+			elecciones: o.elecciones,
+			terminado: o.terminado ?? false
+		});
 	}
 }

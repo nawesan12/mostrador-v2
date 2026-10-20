@@ -32,7 +32,8 @@ export function chequeos(sitio: string, apiUrl: string): Chequeo[] {
 			url: 'https://servicios1.afip.gov.ar/wsfev1/service.asmx',
 			exige200: true
 		},
-		{ componente: 'mercadolibre', url: 'https://api.mercadolibre.com/sites/MLA', exige200: true }
+		// Mercado Libre responde 403 a los pedidos sin token desde datacenters: igual dice que está arriba.
+		{ componente: 'mercadolibre', url: 'https://api.mercadolibre.com/sites/MLA' }
 	];
 	if (apiUrl) lista.push({ componente: 'api', url: `${apiUrl}/salud/listo`, exige200: true });
 	return lista;
