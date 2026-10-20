@@ -9,7 +9,9 @@ async function ultimoMail(para: string): Promise<string> {
 		const r = await fetch(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:${para}`)}`);
 		const j = (await r.json()) as { messages: { ID: string }[] };
 		if (j.messages?.length) {
-			const m = (await (await fetch(`${MAILPIT}/api/v1/message/${j.messages[0].ID}`)).json()) as { Text: string };
+			const m = (await (await fetch(`${MAILPIT}/api/v1/message/${j.messages[0].ID}`)).json()) as {
+				Text: string;
+			};
 			return m.Text;
 		}
 		await new Promise((res) => setTimeout(res, 250));
@@ -17,7 +19,10 @@ async function ultimoMail(para: string): Promise<string> {
 	throw new Error(`No llegó ningún mail a ${para}`);
 }
 
-test('registro, salir, recuperar por mail, contraseña nueva e ingreso', async ({ page, context }) => {
+test('registro, salir, recuperar por mail, contraseña nueva e ingreso', async ({
+	page,
+	context
+}) => {
 	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
 	const email = `lucia+${Date.now()}@laesquina.com.ar`;
 
