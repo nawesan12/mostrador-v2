@@ -8,7 +8,9 @@ const BASE = Date.parse('2026-10-20T15:00:00Z');
 
 describe('datos de la demo', () => {
 	it('las 16 plantillas tienen catálogo con categorías y fotos', () => {
-		expect(new Set(CATALOGOS.map((c) => c.plantilla))).toEqual(new Set(PLANTILLAS.map((p) => p.id)));
+		expect(new Set(CATALOGOS.map((c) => c.plantilla))).toEqual(
+			new Set(PLANTILLAS.map((p) => p.id))
+		);
 		for (const c of CATALOGOS) {
 			expect(c.productos.length).toBeGreaterThanOrEqual(8);
 			for (const p of c.productos) {
