@@ -1,11 +1,15 @@
+<script lang="ts">
+	const LEMA = 'Todo lo que tienen las otras. Por menos plata y más seguro.';
+</script>
+
 <svelte:head>
 	<title>Mostrador · Tu tienda online</title>
-	<meta name="description" content="Todo lo que tienen las otras. Por menos plata y más seguro." />
+	<meta name="description" content={LEMA} />
 </svelte:head>
 
 <main>
 	<img src="/wordmark-brown.png" alt="Mostrador" width="220" />
-	<h1>Todo lo que tienen las otras. Por menos plata y más seguro.</h1>
+	<h1>{LEMA}</h1>
 	<p>Estamos armando Mostrador. Muy pronto vas a poder crear tu tienda acá.</p>
 </main>
 
