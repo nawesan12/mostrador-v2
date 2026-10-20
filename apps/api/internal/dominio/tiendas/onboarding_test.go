@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"slices"
 	"testing"
+	"time"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/tiendas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db/pruebadb"
@@ -62,5 +63,21 @@ func TestGuardarOnboarding(t *testing.T) {
 	}
 	if err := tiendas.GuardarOnboarding(ctx, b.App, una, tiendas.Onboarding{Plantilla: "inventada"}); !errors.Is(err, tiendas.ErrPlantilla) {
 		t.Fatalf("err = %v", err)
+	}
+}
+
+func TestResumenSinDatosTodavia(t *testing.T) {
+	ctx := context.Background()
+	b := pruebadb.Nueva(t)
+	id, err := tiendas.Crear(ctx, b.App, "resumen", "Resumen", "moda")
+	if err != nil {
+		t.Fatal(err)
+	}
+	r, err := tiendas.ObtenerResumen(ctx, b.App, id, time.Now().Add(5*24*time.Hour+time.Hour))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.Prueba.DiasRestantes != 9 || r.Prueba.DiasTotales != 14 || r.Insignias.Pedidos != 0 || r.Notificaciones == nil {
+		t.Fatalf("%+v", r)
 	}
 }

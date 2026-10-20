@@ -157,3 +157,16 @@ URL, para que no quede en el historial ni en logs.
   igual haya o no cuenta con ese número.
 - Cada proveedor se prende al cargar sus credenciales; apagado, el botón lo explica. En desarrollo
   los mensajes de WhatsApp van al log.
+
+## 19. Los datos de cada demo (PR #19)
+
+- Cada demo es la tienda de su plantilla, con su catálogo del handoff: `scripts/catalogos.ts` genera
+  `src/lib/catalogos.ts` desde `Plantillas Tienda` (12 tiendas) y las plantillas trabajadas (Ceibo,
+  Mostaza, Yerbal, Tijera). Las categorías de cada producto se asignan en el generador (el handoff
+  da las de la tienda, no en cuál va cada uno).
+- Clientes y pedidos de 30 días se generan con semilla por plantilla (`sandbox/demo.ts`): siempre
+  los mismos, fechados desde que se creó el sandbox. No se guardan: D1 sólo guarda lo que cambia el
+  visitante. Canales, pagos, envíos y estados son los del panel del handoff.
+- `GET /v1/panel/resumen` (insignias, notificaciones, canales y prueba) está en el contrato. En la
+  demo sale de esos datos; en Go, la prueba es real y lo demás va en cero hasta que existan los
+  dominios (pedidos, carritos, WhatsApp, tareas).

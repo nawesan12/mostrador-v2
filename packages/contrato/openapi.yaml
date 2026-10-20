@@ -168,6 +168,17 @@ paths:
         '204': { description: Guardado }
         '400': { $ref: '#/components/responses/Problema' }
         '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/resumen:
+    get:
+      operationId: resumenPanel
+      summary: Lo que muestra el armazón del panel en cada pantalla (insignias del menú y notificaciones).
+      responses:
+        '200':
+          description: Resumen
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ResumenPanel' }
+        '401': { $ref: '#/components/responses/Problema' }
   /v1/panel/tienda:
     get:
       operationId: obtenerTienda
@@ -191,6 +202,44 @@ components:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problema' }
   schemas:
+    ResumenPanel:
+      type: object
+      required: [insignias, notificaciones, canales, prueba]
+      properties:
+        insignias:
+          type: object
+          description: 'Números del menú (0: sin insignia)'
+          required: [pedidos, carritos, whatsapp, paraHacer]
+          properties:
+            pedidos: { type: integer, description: 'Para preparar' }
+            carritos: { type: integer, description: 'Carritos abandonados recuperables' }
+            whatsapp: { type: integer, description: 'Conversaciones sin leer' }
+            paraHacer: { type: integer, description: 'Tareas de hoy' }
+        notificaciones:
+          type: array
+          items: { $ref: '#/components/schemas/Notificacion' }
+        canales:
+          type: array
+          description: 'Canales conectados (ids: wa, ml, mp, ig, tg)'
+          items: { type: string }
+        prueba:
+          type: object
+          required: [plan, diasRestantes, diasTotales]
+          properties:
+            plan: { type: string }
+            diasRestantes: { type: integer }
+            diasTotales: { type: integer }
+    Notificacion:
+      type: object
+      required: [id, tipo, titulo, detalle, creada, leida, grupo]
+      properties:
+        id: { type: string }
+        tipo: { type: string, description: 'Marca o tipo del ícono: wa, mp, ml, warn, arca, star, ok, err' }
+        titulo: { type: string }
+        detalle: { type: string }
+        creada: { type: string, format: date-time }
+        leida: { type: boolean }
+        grupo: { type: string, enum: [ventas, sistema] }
     Onboarding:
       type: object
       required: [elecciones]

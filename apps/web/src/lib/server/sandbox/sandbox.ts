@@ -12,7 +12,9 @@ import { inArray } from './sql.ts';
 import { fromB64url, randomToken, sha256 } from '../crypto.ts';
 import { rubro as buscarRubro, slugDe } from './rubros.ts';
 import { cambios, sandboxes } from './schema.ts';
-import type { Datos, Onboarding, Tienda } from '../datos/tipos.ts';
+import type { Datos, Onboarding, ResumenPanel, Tienda } from '../datos/tipos.ts';
+import { demoDe } from './demo.ts';
+import { resumenDemo } from './resumen.ts';
 import RUBROS from '@mostrador/contrato/rubros.json';
 import { plantilla as buscarPlantilla } from '#lib/plantillas.ts';
 
@@ -152,5 +154,21 @@ export class DatosSandbox implements Datos {
 			elecciones: o.elecciones,
 			terminado: o.terminado ?? false
 		});
+	}
+
+	/** La plantilla del sandbox (o la del rubro). */
+	private plantilla() {
+		return this.sb.plantilla ?? buscarRubro(this.sb.rubro)!.plantilla;
+	}
+
+	async resumen(): Promise<ResumenPanel> {
+		const d = demoDe(this.plantilla(), this.sb.creadoEn)!;
+		const leidas = (await cambiosDe(this.db, this.sb.id, 'notificaciones')).get('leidas') as
+			{ hasta?: number } | undefined;
+		return resumenDemo(d, this.sb.creadoEn, leidas?.hasta ?? 0, Date.now());
+	}
+
+	async marcarNotificacionesLeidas() {
+		await guardarCambio(this.db, this.sb.id, 'notificaciones', 'leidas', { hasta: Date.now() });
 	}
 }
