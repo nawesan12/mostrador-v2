@@ -10,5 +10,5 @@ test('la portada carga, sin desborde horizontal y con los encabezados de segurid
 	const desborde = await page.evaluate(
 		() => document.documentElement.scrollWidth - document.documentElement.clientWidth
 	);
-	expect(desborde).toBe(0);
+	expect(desborde).toBeLessThanOrEqual(0);
 });

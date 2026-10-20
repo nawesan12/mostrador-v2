@@ -25,6 +25,18 @@ algo, buscalo en Caja (integraciones, sesiones, rate limit, caché, cripto, fech
   Logos de marcas como SVG locales. Nada de Tailwind: estilos por token en `app.css` y `<style>`.
 - Hornero (sprites en `static/hornero/`): sólo en vacíos, carga, error, éxito, consejo y onboarding.
 
+## Design system (`apps/web/src/lib`)
+
+- Tokens y primitivas en `src/app.css`: `.btn` (`-primary`, `-dark`, `-secondary`, `-soft`, `-danger`,
+  `-sm`, `-lg`, `-block`), `.icon-btn`, `.chip-estado`, `.card`, `.etiqueta`, `.input`, `.field`.
+  Tema del panel con `data-theme="dark"` sobre el contenedor.
+- Íconos: `#lib/icons.ts` (generado: `bun scripts/icons.ts ph:nombre` para sumar uno) + `Icon.svelte`.
+- Identidad de canales, pagos y avisos: `#lib/marcas.ts` (`MARCAS`, `ESTADOS`) + `MarcaIcono.svelte`.
+- Avisos: `getUi().toast({ k, title, desc, action, onAction })` y `getUi().undoable(...)`.
+- `Modal`, `Hoja`, `Alerta`, `Vacio`, `Interruptor`, `Segmentado`, `ChipEstado`, `Grano` en
+  `#lib/components/`. Animaciones de entrada con `use:anim` (`#lib/anim.ts`).
+- Catálogo vivo en `/componentes`.
+
 ## Imports
 
 - Alias `#lib/...` **con extensión**: `#lib/server/csrf.ts`.

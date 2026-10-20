@@ -1,0 +1,414 @@
+/*
+ * Mostrador · tokens y primitivas globales.
+ * Fuente de verdad: design/README.md (tokens) y la vista "Componentes" de design/Mostrador v4.dc.html.
+ * Estilos específicos van en el <style> de cada componente; acá sólo lo que se repite.
+ */
+
+:root {
+	/* Marca */
+	--terracota: #d2582f;
+	--terracota-oscuro: #c24e25;
+	--terracota-claro: #e8875f;
+	--tostado: #2a140c;
+	--crema: #fbf7f2;
+	--crema-2: #f7f1ea;
+	--arena: #efe6da;
+	--arena-2: #e7ded3;
+	--durazno: #fcede5;
+	--durazno-2: #f7e2d3;
+	--durazno-3: #fceadf;
+	--marron: #6b5244;
+	--marron-2: #7a6252;
+	--marron-3: #7e6656;
+	--marron-4: #9c8676;
+	--caja-negro: #131211;
+	--caja-texto: #f4eee6;
+
+	/* Semánticos */
+	--ok: #2f8f63;
+	--ok-suave: rgba(47, 143, 99, 0.13);
+	--alerta: #e3a93b;
+	--alerta-texto: #9a6a10;
+	--alerta-suave: rgba(227, 169, 59, 0.18);
+	--error: #b83a2e;
+	--error-suave: rgba(184, 58, 46, 0.1);
+	--info: #3e6bfd;
+	--info-suave: rgba(62, 107, 253, 0.12);
+	--vip: #c98a12;
+	--wa-bg: #e9f8ee;
+	--wa-fg: #1f6f4a;
+
+	/* Panel · tema claro (el panel cambia estas variables con data-theme) */
+	--bg: #f7f1ea;
+	--bga: rgba(247, 241, 234, 0.82);
+	--sf: #ffffff;
+	--sf2: #f1e9df;
+	--sf3: #f7f1ea;
+	--ln: rgba(58, 29, 18, 0.09);
+	--ln2: rgba(58, 29, 18, 0.16);
+	--tx: #2a140c;
+	--mu: #6b5244;
+	--fa: #7e6656;
+	--chip: rgba(58, 29, 18, 0.055);
+	--sh: 0 1px 2px rgba(58, 29, 18, 0.08);
+	--shd:
+		inset 0 1px 0 #fff, 0 1px 2px rgba(58, 29, 18, 0.05), 0 10px 24px -14px rgba(58, 29, 18, 0.22);
+	--ok-tx: #2f8f63;
+
+	/* Sombras */
+	--sombra-flotante: 0 24px 50px -16px rgba(42, 20, 12, 0.7);
+	--sombra-cta: 0 10px 24px -10px rgba(210, 88, 47, 0.7);
+	--sombra-mockup: 0 40px 80px -40px rgba(42, 20, 12, 0.4), 0 0 0 1px rgba(42, 20, 12, 0.06);
+	--sombra-modal: 0 40px 100px -20px rgba(42, 20, 12, 0.6);
+	--sombra-hoja: 0 40px 90px -20px rgba(42, 20, 12, 0.6);
+	--sombra-toast:
+		0 1px 0 rgba(255, 255, 255, 0.5) inset, 0 24px 50px -18px rgba(42, 20, 12, 0.5),
+		0 0 0 1px var(--ln);
+
+	/* Radios */
+	--r-input: 14px;
+	--r-card-sm: 18px;
+	--r-card: 22px;
+	--r-bloque: 28px;
+
+	/* Movimiento */
+	--ease: cubic-bezier(0.2, 0.7, 0.1, 1);
+	--ease-hoja: cubic-bezier(0.16, 1, 0.3, 1);
+	--fondo-modal: rgba(42, 20, 12, 0.34);
+
+	--font: 'Instrument Sans Variable', 'Instrument Sans', system-ui, sans-serif;
+
+	color-scheme: light;
+}
+
+/* Panel · tema oscuro */
+[data-theme='dark'] {
+	--bg: #22140d;
+	--bga: rgba(34, 20, 13, 0.82);
+	--sf: #2e1b12;
+	--sf2: #28170f;
+	--sf3: #3a2418;
+	--ln: rgba(251, 247, 242, 0.08);
+	--ln2: rgba(251, 247, 242, 0.15);
+	--tx: #fbf7f2;
+	--mu: #cdb8a8;
+	--fa: #b09a8a;
+	--chip: rgba(251, 247, 242, 0.07);
+	--sh: 0 1px 2px rgba(0, 0, 0, 0.3);
+	--shd: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 14px 30px -16px rgba(0, 0, 0, 0.6);
+	--ok-tx: #7fd3a6;
+	color-scheme: dark;
+}
+
+/* ---------- Base ---------- */
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	background: var(--crema);
+	color: var(--tostado);
+	font-family: var(--font);
+	font-variant-numeric: tabular-nums;
+	-webkit-font-smoothing: antialiased;
+	scrollbar-gutter: stable;
+	-webkit-text-size-adjust: 100%;
+}
+
+body {
+	margin: 0;
+}
+
+a {
+	color: var(--terracota-oscuro);
+	text-decoration: none;
+}
+
+a:hover {
+	color: var(--tostado);
+}
+
+::selection {
+	background: var(--terracota);
+	color: #fff;
+}
+
+input[type='range'] {
+	accent-color: var(--terracota);
+}
+
+button,
+input,
+select,
+textarea {
+	font: inherit;
+	color: inherit;
+}
+
+button {
+	cursor: pointer;
+}
+
+:focus-visible {
+	outline: 2px solid var(--terracota);
+	outline-offset: 2px;
+}
+
+h1,
+h2,
+h3 {
+	text-wrap: balance;
+}
+
+p {
+	text-wrap: pretty;
+}
+
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* Lenis (landing) */
+html.lenis,
+html.lenis body {
+	height: auto;
+}
+.lenis.lenis-smooth {
+	scroll-behavior: auto !important;
+}
+
+/* ---------- Botones ---------- */
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	min-height: 40px;
+	padding: 10px 19px;
+	border: 1px solid transparent;
+	border-radius: 999px;
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 1.1;
+	white-space: nowrap;
+	text-decoration: none;
+	transition:
+		background 0.2s,
+		box-shadow 0.2s,
+		transform 0.15s var(--ease);
+}
+
+.btn:active {
+	transform: scale(0.98);
+}
+
+.btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.btn-primary {
+	background: linear-gradient(180deg, #e06a3e, var(--terracota));
+	color: #fff;
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.3),
+		0 10px 24px -10px rgba(210, 88, 47, 0.8);
+}
+.btn-primary:hover {
+	color: #fff;
+	background: linear-gradient(180deg, #d9603a, var(--terracota-oscuro));
+}
+
+.btn-dark {
+	background: var(--tostado);
+	color: #fff;
+}
+.btn-dark:hover {
+	color: #fff;
+	background: #3d2116;
+}
+
+.btn-secondary {
+	background: var(--sf);
+	color: var(--tx);
+	border-color: var(--ln2);
+}
+.btn-secondary:hover {
+	color: var(--tx);
+	background: var(--sf3);
+}
+
+.btn-soft {
+	background: #f4ece2;
+	color: var(--tostado);
+}
+[data-theme='dark'] .btn-soft {
+	background: var(--chip);
+	color: var(--tx);
+}
+.btn-soft:hover {
+	color: var(--tostado);
+	background: #ede2d5;
+}
+
+.btn-danger {
+	background: var(--error);
+	color: #fff;
+}
+.btn-danger:hover {
+	color: #fff;
+	background: #a13226;
+}
+
+.btn-sm {
+	min-height: 32px;
+	padding: 6px 12px;
+	font-size: 12.5px;
+}
+
+.btn-lg {
+	min-height: 48px;
+	padding: 13px 22px;
+	font-size: 15px;
+}
+
+.btn-block {
+	width: 100%;
+}
+
+/* Botón redondo de ícono (cerrar, imprimir…) */
+.icon-btn {
+	width: 36px;
+	height: 36px;
+	flex: none;
+	display: grid;
+	place-items: center;
+	border: 0;
+	border-radius: 50%;
+	background: var(--chip);
+	color: var(--tx);
+}
+.icon-btn:hover {
+	background: var(--ln2);
+}
+
+@media (max-width: 760px) {
+	.btn {
+		min-height: 44px;
+	}
+	.btn-sm {
+		min-height: 36px;
+	}
+	.icon-btn {
+		width: 44px;
+		height: 44px;
+	}
+}
+
+/* ---------- Chips de estado ---------- */
+
+.chip-estado {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 10px;
+	border-radius: 999px;
+	font-size: 12.5px;
+	font-weight: 600;
+	white-space: nowrap;
+	background: var(--chip-bg);
+	color: var(--chip-fg);
+}
+.chip-estado::before {
+	content: '';
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: currentColor;
+}
+
+/* ---------- Superficies ---------- */
+
+.card {
+	background: var(--sf);
+	border-radius: var(--r-card);
+	box-shadow: var(--shd);
+}
+
+.etiqueta {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--terracota);
+}
+.etiqueta::before {
+	content: '';
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: currentColor;
+}
+
+/* ---------- Formularios ---------- */
+
+.input,
+.select,
+.textarea {
+	width: 100%;
+	min-height: 44px;
+	padding: 11px 14px;
+	border: 1px solid var(--ln2);
+	border-radius: var(--r-input);
+	background: var(--sf3);
+	color: var(--tx);
+	font-size: 15px;
+	outline: none;
+	transition:
+		border-color 0.2s,
+		box-shadow 0.2s;
+}
+.input:focus,
+.select:focus,
+.textarea:focus {
+	border-color: var(--terracota);
+	box-shadow: 0 0 0 3px rgba(210, 88, 47, 0.18);
+}
+.input::placeholder,
+.textarea::placeholder {
+	color: var(--fa);
+}
+
+.field {
+	display: grid;
+	gap: 6px;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--mu);
+}
+
+/* ---------- Movimiento ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+}
