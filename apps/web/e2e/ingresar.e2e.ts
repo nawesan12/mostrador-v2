@@ -112,3 +112,30 @@ test.describe('banner de cookies', () => {
 		await expect(page.getByRole('dialog', { name: 'Cookies' })).toHaveCount(0);
 	});
 });
+
+test('WhatsApp pide el número y, en la demo, sigue a la demo', async ({ page }) => {
+	await page.goto('/ingresar');
+	await listo(page);
+	await page.getByRole('button', { name: 'WhatsApp' }).first().click();
+	await expect(page.getByRole('heading', { name: 'Entrá con tu WhatsApp' })).toBeVisible();
+	await page.getByLabel('WhatsApp de tu cuenta').fill('12');
+	await page.getByRole('button', { name: 'Mandame el link' }).click();
+	await expect(page.getByText(/Escribí el número con código de área/)).toBeVisible();
+	await page.getByLabel('WhatsApp de tu cuenta').fill('11 5555-0000');
+	await page.getByRole('button', { name: 'Mandame el link' }).click();
+	await expect(page).toHaveURL(/\/demo$/);
+});
+
+test('el link del WhatsApp pide un clic para entrar', async ({ page }) => {
+	await page.goto('/ingresar?m=enlace&token=abc');
+	await listo(page);
+	await expect(page.getByRole('heading', { name: 'Entrá a tu cuenta' })).toBeVisible();
+	await expect(page.getByRole('button', { name: 'Entrar a mi panel' })).toBeVisible();
+});
+
+test('los errores de la vuelta de un proveedor se explican', async ({ page }) => {
+	await page.goto('/ingresar?error=vincular');
+	await expect(page.getByRole('alert')).toContainText('Ya hay una cuenta con ese email');
+	await page.goto('/ingresar?error=cancelado');
+	await expect(page.getByRole('alert')).toContainText('Cancelaste el ingreso');
+});

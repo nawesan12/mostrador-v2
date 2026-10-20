@@ -105,3 +105,24 @@ test('registro, salir, recuperar por mail, contraseña nueva e ingreso', async (
 	await page.goto('/panel');
 	await expect(page).toHaveURL(/\/ingresar$/);
 });
+
+test('ingreso con proveedores apagados y link por WhatsApp', async ({ page }) => {
+	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	// Sin credenciales de Google en la API, el botón explica que todavía no está.
+	await page.goto('/ingresar');
+	await listo(page);
+	await page.getByRole('button', { name: 'Google' }).click();
+	await expect(page.getByRole('alert')).toContainText('todavía no está disponible');
+
+	// WhatsApp: en desarrollo la API lo manda al log; responde igual haya o no cuenta con ese número.
+	await page.getByRole('button', { name: 'WhatsApp' }).first().click();
+	await page.getByLabel('WhatsApp de tu cuenta').fill('11 5555-0000');
+	await page.getByRole('button', { name: 'Mandame el link' }).click();
+	await expect(page.getByRole('heading', { name: 'Revisá tu WhatsApp' })).toBeVisible();
+
+	// Un link inventado no entra.
+	await page.goto('/ingresar?m=enlace&token=inventado');
+	await listo(page);
+	await page.getByRole('button', { name: 'Entrar a mi panel' }).click();
+	await expect(page.getByRole('alert')).toContainText(/venció o ya se usó/);
+});

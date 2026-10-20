@@ -5,6 +5,7 @@ import * as v from 'valibot';
 import { plantilla as buscarPlantilla } from '#lib/plantillas.ts';
 import { datosDe, usaSandbox } from '#lib/server/datos/index.ts';
 import { RUBROS } from '#lib/server/sandbox/rubros.ts';
+import { esProveedor, irAlProveedor } from '#lib/server/auth/social.ts';
 import { COOKIE, crear, DatosSandbox, dbSandbox, VIDA_MS } from '#lib/server/sandbox/sandbox.ts';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -92,5 +93,10 @@ export const actions: Actions = {
 		const email = String((await request.formData()).get('email') ?? '').trim();
 		redirect(303, `/ingresar?m=registro${email ? `&email=${encodeURIComponent(email)}` : ''}`);
 	},
-	proveedor: async () => redirect(303, '/ingresar?m=registro')
+	/** Paso 1 con la API: Mercado Pago, Mercado Libre o Google, con OAuth. */
+	proveedor: async (event) => {
+		const p = String((await event.request.formData()).get('proveedor') ?? '');
+		if (!esProveedor(p)) return fail(400, { error: 'Elegí cómo querés entrar.' });
+		return irAlProveedor(event, p, '/onboarding?paso=1', 'login');
+	}
 };

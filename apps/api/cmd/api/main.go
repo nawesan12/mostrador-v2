@@ -18,6 +18,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/servidor"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/whatsapp"
 )
 
 func main() {
@@ -46,6 +47,15 @@ func correr() error {
 	if cfg.ResendClave != "" {
 		mails = &correo.Resend{Clave: cfg.ResendClave, De: cfg.CorreoDe}
 	}
+	// WhatsApp de la plataforma: con credenciales, Cloud API; en desarrollo, al log; si no, apagado.
+	var wa whatsapp.Mensajero
+	switch {
+	case cfg.WhatsAppToken != "":
+		wa = &whatsapp.Cloud{Token: cfg.WhatsAppToken, NumeroID: cfg.WhatsAppNumeroID,
+			Plantillas: map[string]string{"ingreso": "mostrador_ingreso", "restablecer": "mostrador_clave"}}
+	case cfg.Desarrollo():
+		wa = whatsapp.Log{}
+	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
@@ -58,8 +68,9 @@ func correr() error {
 	srv := &http.Server{
 		Addr: cfg.Direccion,
 		Handler: servidor.Nuevo(servidor.Dependencias{
-			App:             app,
-			Cuentas:         &cuentas.Servicio{Pool: app, Correo: mails, Sitio: cfg.Sitio},
+			App: app,
+			Cuentas: &cuentas.Servicio{Pool: app, Correo: mails, Sitio: cfg.Sitio,
+				OAuth: cuentas.Proveedores(cfg.OAuth), WhatsApp: wa},
 			Arrepentimiento: &arrepentimiento.Servicio{Pool: app, Correo: mails, Equipo: cfg.CorreoEquipo},
 			Formularios:     &formularios.Servicio{Pool: app, Correo: mails, Sitio: cfg.Sitio, Equipo: cfg.CorreoEquipo},
 			ClaveBFF:        cfg.ClaveBFF,

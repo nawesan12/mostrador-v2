@@ -2,7 +2,15 @@ import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
 import * as v from 'valibot';
 import { cuentasDe, usaSandbox } from '#lib/server/datos/index.ts';
 import { ErrorCuenta } from '#lib/server/auth/cuentas.ts';
-import { errores, Ingreso, Recuperar, Registro, Restablecer } from '#lib/server/auth/esquemas.ts';
+import {
+	Enlace,
+	errores,
+	Ingreso,
+	Recuperar,
+	Registro,
+	Restablecer
+} from '#lib/server/auth/esquemas.ts';
+import { esProveedor, irAlProveedor } from '#lib/server/auth/social.ts';
 import { guardarSesion } from '#lib/server/auth/sesion.ts';
 import type { Actions } from './$types';
 
@@ -63,18 +71,45 @@ export const actions: Actions = {
 		}
 		redirect(303, '/onboarding?paso=1');
 	},
-	/** Google o WhatsApp: con la API, inicia el OAuth o el código por WhatsApp (próximo PR). */
-	social: async ({ request }) => {
-		const proveedor = String((await request.formData()).get('proveedor') ?? '');
-		if (!['google', 'whatsapp'].includes(proveedor))
+	/** Google, Mercado Pago y Mercado Libre van al proveedor; WhatsApp pide el número. */
+	social: async (event) => {
+		const proveedor = String((await event.request.formData()).get('proveedor') ?? '');
+		if (proveedor === 'whatsapp') return { modo: 'whatsapp' as const };
+		if (!esProveedor(proveedor))
 			return fail(400, { modo: 'login', errores: { form: 'Elegí cómo querés ingresar.' } });
+		return irAlProveedor(event, proveedor, '/demo', 'login');
+	},
+	/** Pide el link para entrar al WhatsApp de la cuenta. */
+	enlace: async (event) => {
+		const f = await datos(event.request);
+		const r = v.safeParse(Enlace, f);
+		if (!r.success) return fail(400, { modo: 'whatsapp', errores: errores(r.issues) });
 		if (usaSandbox()) redirect(303, '/demo');
-		return fail(503, {
-			modo: 'login',
-			errores: {
-				form: `El ingreso con ${proveedor === 'google' ? 'Google' : 'WhatsApp'} todavía no está disponible.`
-			}
-		});
+		try {
+			await cuentasDe(event).pedirEnlace(r.output.telefono);
+		} catch (e) {
+			const x = deApi(e);
+			return fail(x.estado, { modo: 'whatsapp', errores: x.errores });
+		}
+		return {
+			modo: 'enviado' as const,
+			canal: 'whatsapp' as const,
+			tipo: 'ingreso' as const,
+			a: r.output.telefono
+		};
+	},
+	/** Entra con el link del WhatsApp (un clic: así la vista previa del link no lo consume). */
+	entrar: async (event) => {
+		const token = String((await event.request.formData()).get('token') ?? '');
+		if (usaSandbox()) redirect(303, '/demo');
+		try {
+			const s = await cuentasDe(event).usarEnlace(token);
+			guardarSesion(event.cookies, s.token, s.venceEn);
+		} catch (e) {
+			const x = deApi(e);
+			return fail(x.estado, { modo: 'enlace', errores: x.errores });
+		}
+		redirect(303, '/panel');
 	},
 	recuperar: async (event: RequestEvent) => {
 		const f = await datos(event.request);
@@ -86,17 +121,13 @@ export const actions: Actions = {
 				errores: errores(r.issues)
 			});
 		if (!usaSandbox()) {
-			if (r.output.canal === 'whatsapp')
-				return fail(503, {
-					modo: 'recuperar',
-					canal: 'whatsapp',
-					errores: { form: 'Recuperar por WhatsApp todavía no está disponible. Probá por email.' }
-				});
 			try {
-				await cuentasDe(event).recuperar(r.output.email);
+				await cuentasDe(event).recuperar(
+					r.output.canal === 'email' ? { email: r.output.email } : { telefono: r.output.telefono }
+				);
 			} catch (e) {
 				const x = deApi(e);
-				return fail(x.estado, { modo: 'recuperar', canal: 'email', errores: x.errores });
+				return fail(x.estado, { modo: 'recuperar', canal: r.output.canal, errores: x.errores });
 			}
 		}
 		// El destino vuelve en la respuesta, no en la URL: así no queda en el historial ni en logs.

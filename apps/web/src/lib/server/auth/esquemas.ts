@@ -31,18 +31,24 @@ export const Registro = v.object({
 	)
 });
 
+const telefono = v.pipe(
+	v.string(),
+	v.trim(),
+	v.transform((s) => s.replace(/[^\d+]/g, '')),
+	v.regex(/^\+?\d{8,15}$/, 'Escribí el número con código de área, por ejemplo 11 2345 6789.')
+);
+
 export const Recuperar = v.variant('canal', [
 	v.object({ canal: v.literal('email'), email }),
-	v.object({
-		canal: v.literal('whatsapp'),
-		telefono: v.pipe(
-			v.string(),
-			v.trim(),
-			v.transform((s) => s.replace(/[^\d+]/g, '')),
-			v.regex(/^\+?\d{8,15}$/, 'Escribí el número con código de área, por ejemplo 11 2345 6789.')
-		)
-	})
+	v.object({ canal: v.literal('whatsapp'), telefono })
 ]);
+
+/** Entrar con un link al WhatsApp de la cuenta. */
+export const Enlace = v.object({ telefono });
+
+/** Proveedores de ingreso con OAuth (los mismos que la API). */
+export const PROVEEDORES = ['google', 'mercadopago', 'mercadolibre'] as const;
+export type ProveedorOAuth = (typeof PROVEEDORES)[number];
 
 export const Restablecer = v.object({
 	token: v.pipe(v.string(), v.nonEmpty('El link no es válido. Pedí uno nuevo.'), v.maxLength(200)),

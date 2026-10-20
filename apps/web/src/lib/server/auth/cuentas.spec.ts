@@ -44,7 +44,7 @@ describe('CuentasApi', () => {
 	it('202 y 204 no tienen cuerpo', async () => {
 		const f = (async () => new Response(null, { status: 202 })) as typeof fetch;
 		await expect(
-			new CuentasApi('http://api', 'c', cliente, f).recuperar('a@b.co')
+			new CuentasApi('http://api', 'c', cliente, f).recuperar({ email: 'a@b.co' })
 		).resolves.toBeUndefined();
 	});
 });
