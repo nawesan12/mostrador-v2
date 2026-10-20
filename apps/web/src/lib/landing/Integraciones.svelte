@@ -57,7 +57,7 @@
 	section {
 		max-width: 1240px;
 		margin: 0 auto;
-		padding: 120px 28px;
+		padding: 120px var(--lado);
 	}
 	.cab {
 		display: flex;
@@ -176,5 +176,50 @@
 		font-size: 12.5px;
 		color: #7a6252;
 		margin-top: 2px;
+	}
+	/* En mobile, de a 3: si no, son 70 tarjetas de a una y el scroll no termina más. */
+	@media (max-width: 640px) {
+		.grilla {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 8px;
+		}
+		.integ {
+			padding: 12px 8px;
+			gap: 8px;
+			align-items: center;
+			text-align: center;
+			border-radius: 14px;
+		}
+		.integ:hover {
+			transform: none;
+		}
+		.logo {
+			height: 32px;
+			justify-content: center;
+		}
+		.logo img {
+			width: 30px;
+			height: 30px;
+		}
+		.logo :global(svg) {
+			width: 28px;
+			height: 28px;
+		}
+		.palabra {
+			height: 26px;
+			padding: 0 6px;
+			font-size: 11px;
+			border-radius: 7px;
+			max-width: 100%;
+			overflow: hidden;
+			white-space: nowrap;
+		}
+		.n {
+			font-size: 12.5px;
+			line-height: 1.2;
+		}
+		.d {
+			display: none;
+		}
 	}
 </style>

@@ -89,7 +89,7 @@
 	.cols {
 		max-width: 1240px;
 		margin: 0 auto;
-		padding: 56px 28px 110px;
+		padding: 56px var(--lado) 110px;
 		display: flex;
 		gap: 48px;
 		flex-wrap: wrap;
@@ -131,7 +131,7 @@
 	.barra {
 		max-width: 1240px;
 		margin: 0 auto;
-		padding: 0 28px 26px;
+		padding: 0 var(--lado) 26px;
 	}
 	.barra-in {
 		padding-top: 18px;

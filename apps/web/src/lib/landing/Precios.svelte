@@ -34,6 +34,13 @@
 	);
 </script>
 
+{#snippet valor(t: string)}
+	{@const [a, b] = t.split(' · ')}
+	<span class="val"
+		>{a}{#if b}<span class="sep"> · </span><span class="pr">{b}</span>{/if}</span
+	>
+{/snippet}
+
 <section id="precios">
 	<div class="arcos"></div>
 	<div class="luz"></div>
@@ -174,14 +181,14 @@
 							icon={mOk ? I.phCheckCircleFill : I.phMinusCircle}
 							size={16}
 							style="color:{mOk ? '#7FD3A6' : '#B8A293'};flex:none"
-						/>{m}</span
+						/>{@render valor(m)}</span
 					>
 					<span class="t-o"
 						><Icon
 							icon={oOk === 1 ? I.phCheckCircleFill : oOk === 2 ? I.phClock : I.phMinusCircle}
 							size={16}
 							style="color:{oOk === 1 ? '#D9C8BA' : oOk === 2 ? '#E3A93B' : '#8F7B6C'};flex:none"
-						/>{o}</span
+						/>{@render valor(o)}</span
 					>
 				</div>
 			{/each}
@@ -215,7 +222,7 @@
 		position: relative;
 		max-width: 1240px;
 		margin: 0 auto;
-		padding: 120px 28px;
+		padding: 120px var(--lado);
 		display: flex;
 		gap: 56px;
 		flex-wrap: wrap;
@@ -375,7 +382,7 @@
 		position: relative;
 		max-width: 1240px;
 		margin: 0 auto;
-		padding: 0 28px 120px;
+		padding: 0 var(--lado) 120px;
 		scroll-margin-top: 80px;
 	}
 	.p-cab {
@@ -535,7 +542,9 @@
 		background: #fcede5;
 	}
 	.nota b {
+		display: block;
 		font-size: 15px;
+		text-wrap: balance;
 	}
 	.nota div div {
 		font-size: 13.5px;
@@ -618,5 +627,43 @@
 		margin-top: 10px;
 		font-size: 12.5px;
 		color: #b8a293;
+	}
+	/* En mobile, tres columnas no entran: el concepto va arriba y abajo Mostrador contra Tiendanube. */
+	@media (max-width: 640px) {
+		.t-fila {
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+			gap: 6px 12px;
+			padding: 14px 16px;
+		}
+		.t-fila .t-t {
+			grid-column: 1 / -1;
+			font-size: 13px;
+			color: #d9c8ba;
+		}
+		.t-fila.cab {
+			padding: 14px 16px;
+		}
+		.t-fila.cab > .t-col:first-child {
+			display: none;
+		}
+		.t-m,
+		.t-o {
+			align-items: flex-start;
+			font-size: 14px;
+			line-height: 1.35;
+		}
+		.sep {
+			display: none;
+		}
+		.pr {
+			display: block;
+			font-weight: 500;
+			opacity: 0.8;
+			white-space: nowrap;
+		}
+		.t-m :global(svg),
+		.t-o :global(svg) {
+			margin-top: 1px;
+		}
 	}
 </style>

@@ -152,7 +152,7 @@
 	.in {
 		max-width: 1240px;
 		margin: 0 auto;
-		padding: 120px 28px;
+		padding: 120px var(--lado);
 	}
 	.cab {
 		max-width: 720px;

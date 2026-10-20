@@ -162,13 +162,13 @@
 	section {
 		max-width: 1240px;
 		margin: 0 auto;
-		padding: 120px 28px 40px;
+		padding: 120px var(--lado) 40px;
 	}
 	.bloque {
 		border-radius: 36px;
 		background: #131211;
 		color: #f4eee6;
-		padding: clamp(28px, 5vw, 64px);
+		padding: clamp(20px, 5vw, 64px);
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
 		gap: 48px;
