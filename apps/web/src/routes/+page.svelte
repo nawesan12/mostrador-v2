@@ -1,7 +1,23 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import CookieBanner from '#lib/components/CookieBanner.svelte';
+	import Grano from '#lib/components/Grano.svelte';
 	import Seo from '#lib/components/Seo.svelte';
+	import Header from '#lib/landing/Header.svelte';
+	import Etapas from '#lib/landing/Etapas.svelte';
+	import Hero from '#lib/landing/Hero.svelte';
+	import HorneroSeccion from '#lib/landing/HorneroSeccion.svelte';
+	import Lenis from '#lib/landing/Lenis.svelte';
+	import Marquesina from '#lib/landing/Marquesina.svelte';
+	import { CHAT } from '#lib/landing/datos.ts';
+	import { Landing, setLanding } from '#lib/landing/estado.svelte.ts';
 
-	const LEMA = 'Todo lo que tienen las otras. Por menos plata y más seguro.';
+	/* Landing de Mostrador: recreación de la vista "Landing" de design/Mostrador v4.dc.html. */
+	const l = setLanding(new Landing());
+	onMount(() => {
+		l.iniciar(CHAT.length);
+		return () => l.detener();
+	});
 </script>
 
 <Seo
@@ -18,42 +34,26 @@
 	}}
 />
 
-<main>
-	<img src="/wordmark-brown.png" alt="Mostrador" width="220" />
-	<h1>{LEMA}</h1>
-	<p>Estamos armando Mostrador. Muy pronto vas a poder crear tu tienda acá.</p>
-</main>
+<Grano />
+<Lenis />
+
+<div class="landing">
+	<Header />
+	<main>
+		<Hero />
+		<Marquesina />
+		<HorneroSeccion />
+		<Etapas />
+	</main>
+</div>
+
+<CookieBanner />
 
 <style>
-	main {
-		min-height: 100svh;
-		box-sizing: border-box;
-		display: grid;
-		place-content: center;
-		justify-items: center;
-		gap: 20px;
-		padding: 24px 16px;
-		text-align: center;
-	}
-	img {
-		width: 220px;
-		height: auto;
-	}
-	h1 {
-		margin: 0;
-		max-width: 16ch;
-		font-size: clamp(34px, 6vw, 64px);
-		font-weight: 600;
-		line-height: 1;
-		letter-spacing: -0.045em;
-		text-wrap: balance;
-	}
-	p {
-		margin: 0;
-		max-width: 38ch;
-		font-size: 17px;
-		line-height: 1.5;
-		color: #6b5244;
-		text-wrap: pretty;
+	.landing {
+		position: relative;
+		overflow-x: clip;
+		background: #fbf7f2;
+		color: #2a140c;
 	}
 </style>

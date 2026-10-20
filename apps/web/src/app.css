@@ -157,16 +157,6 @@ button {
 	outline-offset: 2px;
 }
 
-h1,
-h2,
-h3 {
-	text-wrap: balance;
-}
-
-p {
-	text-wrap: pretty;
-}
-
 .sr-only {
 	position: absolute;
 	width: 1px;

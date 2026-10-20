@@ -18,6 +18,8 @@ export type Anim =
 	| 'drop'
 	| 'marquee'
 	| 'marquee-r';
+/** HTML o SVG: cualquier elemento con estilo propio. */
+type Animable = Element & ElementCSSInlineStyle;
 type Opciones = { t: Anim; delay?: number; dur?: number };
 
 export const calma = () =>
@@ -25,7 +27,7 @@ export const calma = () =>
 
 const infinito = { iterations: Infinity } as const;
 
-function correr(el: HTMLElement, { t, delay = 0, dur = 0 }: Opciones) {
+function correr(el: Animable, { t, delay = 0, dur = 0 }: Opciones) {
 	switch (t) {
 		case 'reveal':
 		case 'rise':
@@ -85,7 +87,7 @@ function correr(el: HTMLElement, { t, delay = 0, dur = 0 }: Opciones) {
 	}
 }
 
-export const anim: Action<HTMLElement, Anim | Opciones> = (el, param) => {
+export const anim: Action<Animable, Anim | Opciones> = (el, param) => {
 	const op: Opciones = typeof param === 'string' ? { t: param } : param;
 	// Sin movimiento: lo decorativo infinito no corre y lo de entrada aparece directo.
 	if (calma()) return;
