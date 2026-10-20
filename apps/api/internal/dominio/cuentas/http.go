@@ -78,6 +78,7 @@ func ClienteDe(r *http.Request, claveBFF string) Cliente {
 
 // Rutas del dominio.
 func (s *Servicio) Rutas(mux *http.ServeMux, claveBFF string) {
+	s.rutasSociales(mux, claveBFF)
 	mux.HandleFunc("POST /v1/auth/registro", func(w http.ResponseWriter, r *http.Request) {
 		var a struct{ Nombre, Tienda, Email, Clave string }
 		if !leer(w, r, &a) {
@@ -123,11 +124,18 @@ func (s *Servicio) Rutas(mux *http.ServeMux, claveBFF string) {
 		escribir(w, http.StatusOK, d)
 	})
 	mux.HandleFunc("POST /v1/auth/recuperar", func(w http.ResponseWriter, r *http.Request) {
-		var a struct{ Email string }
+		var a struct{ Email, Telefono string }
 		if !leer(w, r, &a) {
 			return
 		}
-		if err := s.Recuperar(r.Context(), a.Email, ClienteDe(r, claveBFF)); err != nil {
+		cl := ClienteDe(r, claveBFF)
+		var err error
+		if a.Telefono != "" {
+			err = s.RecuperarPorWhatsApp(r.Context(), a.Telefono, cl)
+		} else {
+			err = s.Recuperar(r.Context(), a.Email, cl)
+		}
+		if err != nil {
 			escribirError(w, err)
 			return
 		}
@@ -143,6 +151,56 @@ func (s *Servicio) Rutas(mux *http.ServeMux, claveBFF string) {
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
+	})
+}
+
+// rutasSociales: proveedores OAuth y link por WhatsApp.
+func (s *Servicio) rutasSociales(mux *http.ServeMux, claveBFF string) {
+	mux.HandleFunc("GET /v1/auth/proveedores", func(w http.ResponseWriter, _ *http.Request) {
+		escribir(w, http.StatusOK, map[string]any{"oauth": s.Disponibles(), "whatsapp": s.WhatsApp != nil})
+	})
+	mux.HandleFunc("POST /v1/auth/oauth/{proveedor}/inicio", func(w http.ResponseWriter, r *http.Request) {
+		u, err := s.IniciarOAuth(r.Context(), r.PathValue("proveedor"), ClienteDe(r, claveBFF))
+		if err != nil {
+			escribirError(w, err)
+			return
+		}
+		escribir(w, http.StatusOK, map[string]string{"url": u})
+	})
+	mux.HandleFunc("POST /v1/auth/oauth/{proveedor}/vuelta", func(w http.ResponseWriter, r *http.Request) {
+		var a struct{ Codigo, Estado string }
+		if !leer(w, r, &a) {
+			return
+		}
+		res, err := s.VolverOAuth(r.Context(), r.PathValue("proveedor"), a.Codigo, a.Estado, ClienteDe(r, claveBFF))
+		if err != nil {
+			escribirError(w, err)
+			return
+		}
+		escribir(w, http.StatusOK, res)
+	})
+	mux.HandleFunc("POST /v1/auth/enlace", func(w http.ResponseWriter, r *http.Request) {
+		var a struct{ Telefono string }
+		if !leer(w, r, &a) {
+			return
+		}
+		if err := s.PedirEnlace(r.Context(), a.Telefono, ClienteDe(r, claveBFF)); err != nil {
+			escribirError(w, err)
+			return
+		}
+		w.WriteHeader(http.StatusAccepted)
+	})
+	mux.HandleFunc("POST /v1/auth/enlace/usar", func(w http.ResponseWriter, r *http.Request) {
+		var a struct{ Token string }
+		if !leer(w, r, &a) {
+			return
+		}
+		ses, err := s.UsarEnlace(r.Context(), a.Token, ClienteDe(r, claveBFF))
+		if err != nil {
+			escribirError(w, err)
+			return
+		}
+		escribir(w, http.StatusOK, ses)
 	})
 }
 
@@ -177,6 +235,16 @@ func escribirError(w http.ResponseWriter, err error) {
 		w.Header().Set("Retry-After", "900")
 		problema.Escribir(w, &problema.Problema{Estado: http.StatusTooManyRequests, Codigo: "demasiados_intentos",
 			Titulo: "Esperá un rato", Detalle: "Hubo demasiados intentos. Probá de nuevo en 15 minutos."})
+	case errors.Is(err, ErrProveedorApagado):
+		problema.Escribir(w, problema.NoProcesable("proveedor_apagado", "Ese ingreso todavía no está disponible. Probá con tu email."))
+	case errors.Is(err, ErrSinWhatsApp):
+		problema.Escribir(w, problema.NoProcesable("whatsapp_apagado", "Entrar por WhatsApp todavía no está disponible. Probá con tu email."))
+	case errors.Is(err, ErrEstadoInvalido):
+		problema.Escribir(w, problema.NoProcesable("estado_invalido", "El ingreso se cortó o tardó demasiado. Probá de nuevo."))
+	case errors.Is(err, ErrSinEmail):
+		problema.Escribir(w, problema.NoProcesable("sin_email", "No pudimos saber tu email desde esa cuenta. Probá con tu email."))
+	case errors.Is(err, ErrVincular):
+		problema.Escribir(w, problema.Conflicto("vincular", "Ya hay una cuenta con ese email. Ingresá con tu contraseña y conectá esa cuenta desde Mis datos."))
 	case errors.Is(err, ErrTokenInvalido):
 		problema.Escribir(w, problema.NoProcesable("link_invalido", "El link venció o ya se usó. Pedí uno nuevo."))
 	default:

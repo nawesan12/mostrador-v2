@@ -142,3 +142,18 @@ URL, para que no quede en el historial ni en logs.
   guarda con `PUT /v1/panel/onboarding` (columna `tiendas.onboarding`, jsonb hasta 16 KB).
 - Los datos que muestran los pasos son los del negocio de ejemplo del handoff (Café La Esquina);
   traerlos de verdad de cada integración llega con el PR de esa integración.
+
+## 18. Ingreso con Google, Mercado Pago, Mercado Libre y WhatsApp (PR #18)
+
+- OAuth 2 con PKCE (S256) en la API: Go guarda el state (hasheado, un uso, 10 min) y el
+  verificador; el BFF sólo redirige y, en `/ingresar/<proveedor>/vuelta`, canjea y guarda la
+  sesión. Una cuenta nueva sigue al onboarding (tienda provisoria "La tienda de <nombre>").
+- Vinculación por email sólo si el proveedor lo verifica (Google). Mercado Pago y Mercado Libre no
+  garantizan el email: si ya hay una cuenta con ese email no se vinculan solas (error que explica
+  cómo hacerlo desde Mis datos). Así nadie entra a una cuenta ajena creando otra en un proveedor.
+- WhatsApp: link para entrar sin contraseña (15 min, un uso) y link de contraseña nueva, al número
+  de la cuenta. Sin pantalla de código: el handoff no la tiene y sí tiene "Revisá tu WhatsApp". El
+  link pide un clic para entrar porque WhatsApp abre los links para armar la vista previa. Responde
+  igual haya o no cuenta con ese número.
+- Cada proveedor se prende al cargar sus credenciales; apagado, el botón lo explica. En desarrollo
+  los mensajes de WhatsApp van al log.

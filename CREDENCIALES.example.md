@@ -35,7 +35,7 @@ Ojo: la cuenta compartida con Caja tiene tope de 100 mails por día. ¿Usamos la
 ## 4. Google (PR 5 login, PR 8 onboarding, PR 20 integraciones)
 Dónde: console.cloud.google.com → proyecto "Mostrador".
 - ⬜ OAuth client (Web), con pantalla de consentimiento en producción. Redirects:
-  `https://mostrador.iamnaw.dev/ingresar/google/callback`, `http://localhost:5173/ingresar/google/callback`
+  `https://mostrador.iamnaw.dev/ingresar/google/vuelta`, `http://localhost:5173/ingresar/google/vuelta`
   - `GOOGLE_CLIENT_ID=`
   - `GOOGLE_CLIENT_SECRET=`
 - ⬜ Places API (New) habilitada + API key restringida: `GOOGLE_PLACES_API_KEY=`
@@ -44,7 +44,7 @@ Dónde: console.cloud.google.com → proyecto "Mostrador".
 
 ## 5. Mercado Pago (PR 5 login, PR 17 abono, PR 20 cobros)
 Dónde: mercadopago.com.ar/developers → Tus integraciones → Crear aplicación "Mostrador" (pagos online + suscripciones + OAuth/marketplace).
-Redirect OAuth: `https://mostrador.iamnaw.dev/integraciones/mercadopago/callback` (+ localhost).
+Redirects OAuth: ingreso `https://mostrador.iamnaw.dev/ingresar/mercadopago/vuelta` y conexión de cobros `https://mostrador.iamnaw.dev/integraciones/mercadopago/callback` (+ localhost).
 - ⬜ `MP_CLIENT_ID=`
 - ⬜ `MP_CLIENT_SECRET=`
 - ⬜ `MP_PUBLIC_KEY_TEST=` / `MP_ACCESS_TOKEN_TEST=`
@@ -54,7 +54,7 @@ Redirect OAuth: `https://mostrador.iamnaw.dev/integraciones/mercadopago/callback
 - Planes de suscripción (preapproval_plan) de Emprende, Pro y Negocio, mensual y anual: los creo yo por API.
 
 ## 6. Mercado Libre (PR 5 login, PR 20 canal)
-Dónde: developers.mercadolibre.com.ar → Mis aplicaciones → Crear. Redirect: `https://mostrador.iamnaw.dev/integraciones/mercadolibre/callback`. Scopes: read, write, offline_access. Notificaciones: orders_v2, items, questions, messages.
+Dónde: developers.mercadolibre.com.ar → Mis aplicaciones → Crear. Redirects: ingreso `https://mostrador.iamnaw.dev/ingresar/mercadolibre/vuelta` y canal `https://mostrador.iamnaw.dev/integraciones/mercadolibre/callback`. Scopes: read, write, offline_access. Notificaciones: orders_v2, items, questions, messages.
 - ⬜ `ML_CLIENT_ID=`
 - ⬜ `ML_CLIENT_SECRET=`
 - ⬜ Usuario de test vendedor (lo podemos crear por API una vez que esté la app)
@@ -64,11 +64,11 @@ Dónde: developers.facebook.com → Crear app tipo "Business" → productos What
 - ⬜ `META_APP_ID=`
 - ⬜ `META_APP_SECRET=`
 - ⬜ `META_CONFIG_ID=` (Embedded Signup para que cada tienda conecte su número)
-- ⬜ Número de WhatsApp de la PLATAFORMA (para mandar códigos de ingreso):
+- ⬜ Número de WhatsApp de la PLATAFORMA (para mandar los links de ingreso y de contraseña nueva):
   - `WHATSAPP_TOKEN=` (System User token permanente)
   - `WHATSAPP_PHONE_NUMBER_ID=`
   - `WHATSAPP_BUSINESS_ACCOUNT_ID=`
-  - Plantilla de autenticación aprobada (nombre): `WHATSAPP_OTP_TEMPLATE=`
+  - Dos plantillas de utilidad aprobadas, en español (es_AR), con un botón de link `https://mostrador.iamnaw.dev/ingresar?{{1}}`: `mostrador_ingreso` ("Tocá para entrar a tu cuenta de Mostrador") y `mostrador_clave` ("Tocá para crear tu contraseña nueva"). Ya no hace falta una de autenticación con código: `WHATSAPP_OTP_TEMPLATE=`
 - `WHATSAPP_VERIFY_TOKEN`: lo genero yo.
 - ⬜ Pixel del sitio de Mostrador: `PUBLIC_META_PIXEL_ID=` y `META_CAPI_TOKEN=`
 

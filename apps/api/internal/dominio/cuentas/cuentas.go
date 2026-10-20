@@ -11,6 +11,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/mail"
 	"strings"
 	"time"
@@ -23,6 +24,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/limite"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/whatsapp"
 )
 
 // Errores de dominio. El handler los traduce a problem+json.
@@ -52,6 +54,12 @@ type Servicio struct {
 	Correo correo.Correo
 	// URL pública del sitio, para los links de los mails.
 	Sitio string
+	// Ingreso con Google, Mercado Pago y Mercado Libre (Proveedores); los apagados no tienen ClientID.
+	OAuth map[string]*Proveedor
+	// WhatsApp de la plataforma: links de ingreso y de contraseña nueva. nil: no se manda.
+	WhatsApp whatsapp.Mensajero
+	// Cliente HTTP para los proveedores (tests: el del servidor falso).
+	HTTP *http.Client
 }
 
 // Cliente es de dónde viene el pedido (para la sesión y los límites).
@@ -129,32 +137,43 @@ func (s *Servicio) Registrar(ctx context.Context, a Alta, cl Cliente) (Sesion, e
 	}
 	var ses Sesion
 	err = s.Pool.EnTx(ctx, func(tx pgx.Tx) error {
-		var usuario string
-		err := tx.QueryRow(ctx, `INSERT INTO auth.usuarios (email, nombre, clave_hash) VALUES ($1, $2, $3) RETURNING id`,
-			email, nombre, hash).Scan(&usuario)
-		var pg *pgconn.PgError
-		if errors.As(err, &pg) && pg.Code == "23505" {
-			return ErrEmailEnUso
-		}
+		usuario, tiendaID, err := crearCuenta(ctx, tx, email, nombre, &hash, tienda)
 		if err != nil {
-			return err
-		}
-		slug, err := slugLibre(ctx, tx, tiendas.Slug(tienda))
-		if err != nil {
-			return err
-		}
-		r, _ := tiendas.BuscarRubro(tiendas.RubroPorDefecto)
-		var tiendaID string
-		if err := tx.QueryRow(ctx, "SELECT app.crear_tienda($1, $2, $3, $4)", slug, tienda, r.ID, r.Plantilla).Scan(&tiendaID); err != nil {
-			return err
-		}
-		if _, err := tx.Exec(ctx, `INSERT INTO auth.membresias (usuario_id, tienda_id, rol) VALUES ($1, $2, 'duenio')`, usuario, tiendaID); err != nil {
 			return err
 		}
 		ses, err = crearSesion(ctx, tx, usuario, tiendaID, SesionLarga, cl)
 		return err
 	})
 	return ses, err
+}
+
+// crearCuenta da de alta a la persona, su tienda (rubro y plantilla por defecto: los ajusta el
+// onboarding) y la membresía de dueña. Sin clave (hash nil) es una cuenta que entra con un
+// proveedor o con link.
+func crearCuenta(ctx context.Context, tx pgx.Tx, email, nombre string, hash *string, tienda string) (string, string, error) {
+	var usuario string
+	err := tx.QueryRow(ctx, `INSERT INTO auth.usuarios (email, nombre, clave_hash) VALUES ($1, $2, $3) RETURNING id`,
+		email, nombre, hash).Scan(&usuario)
+	var pg *pgconn.PgError
+	if errors.As(err, &pg) && pg.Code == "23505" {
+		return "", "", ErrEmailEnUso
+	}
+	if err != nil {
+		return "", "", err
+	}
+	slug, err := slugLibre(ctx, tx, tiendas.Slug(tienda))
+	if err != nil {
+		return "", "", err
+	}
+	r, _ := tiendas.BuscarRubro(tiendas.RubroPorDefecto)
+	var tiendaID string
+	if err := tx.QueryRow(ctx, "SELECT app.crear_tienda($1, $2, $3, $4)", slug, tienda, r.ID, r.Plantilla).Scan(&tiendaID); err != nil {
+		return "", "", err
+	}
+	if _, err := tx.Exec(ctx, `INSERT INTO auth.membresias (usuario_id, tienda_id, rol) VALUES ($1, $2, 'duenio')`, usuario, tiendaID); err != nil {
+		return "", "", err
+	}
+	return usuario, tiendaID, nil
 }
 
 // slugLibre agrega -2, -3… hasta encontrar uno libre.
@@ -218,8 +237,13 @@ func (s *Servicio) Ingresar(ctx context.Context, email, clave string, recordarme
 	if recordarme {
 		vida = SesionLarga
 	}
+	return s.sesionDeUsuario(ctx, usuario, vida, cl)
+}
+
+// sesionDeUsuario abre una sesión de la persona en su primera tienda.
+func (s *Servicio) sesionDeUsuario(ctx context.Context, usuario string, vida time.Duration, cl Cliente) (Sesion, error) {
 	var ses Sesion
-	err = s.Pool.EnTx(ctx, func(tx pgx.Tx) error {
+	err := s.Pool.EnTx(ctx, func(tx pgx.Tx) error {
 		var tienda *string
 		err := tx.QueryRow(ctx, `SELECT tienda_id FROM auth.membresias WHERE usuario_id = $1 ORDER BY creada_en LIMIT 1`, usuario).Scan(&tienda)
 		if err != nil && !errors.Is(err, pgx.ErrNoRows) {

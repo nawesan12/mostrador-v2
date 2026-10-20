@@ -22,8 +22,35 @@ export class CuentasApi extends ClienteBff {
 	salir(token: string) {
 		return this.pedir<void>('POST', '/v1/auth/salir', undefined, token);
 	}
-	recuperar(email: string) {
-		return this.pedir<void>('POST', '/v1/auth/recuperar', { email });
+	/** El link de contraseña nueva, por email o al WhatsApp de la cuenta. */
+	recuperar(a: { email: string } | { telefono: string }) {
+		return this.pedir<void>('POST', '/v1/auth/recuperar', a);
+	}
+	/** Qué ingresos están configurados en la API. */
+	proveedores() {
+		return this.pedir<{ oauth: string[]; whatsapp: boolean }>('GET', '/v1/auth/proveedores');
+	}
+	/** URL del proveedor a la que se manda a la persona (con state y PKCE guardados en Go). */
+	iniciarOAuth(proveedor: string) {
+		return this.pedir<{ url: string }>(
+			'POST',
+			`/v1/auth/oauth/${encodeURIComponent(proveedor)}/inicio`,
+			{}
+		);
+	}
+	volverOAuth(proveedor: string, codigo: string, estado: string) {
+		return this.pedir<Sesion & { nueva: boolean }>(
+			'POST',
+			`/v1/auth/oauth/${encodeURIComponent(proveedor)}/vuelta`,
+			{ codigo, estado }
+		);
+	}
+	/** Link para entrar sin contraseña, al WhatsApp de la cuenta. */
+	pedirEnlace(telefono: string) {
+		return this.pedir<void>('POST', '/v1/auth/enlace', { telefono });
+	}
+	usarEnlace(token: string) {
+		return this.pedir<Sesion>('POST', '/v1/auth/enlace/usar', { token });
 	}
 	restablecer(token: string, clave: string) {
 		return this.pedir<void>('POST', '/v1/auth/restablecer', { token, clave });

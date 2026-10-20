@@ -23,6 +23,11 @@ type Config struct {
 	// Bandeja del equipo: le llegan las consultas de ventas, las postulaciones de partners y los
 	// arrepentimientos. Vacía: no se avisa (los pedidos quedan igual en la base).
 	CorreoEquipo string
+	// Ingreso con proveedores: {google|mercadopago|mercadolibre: [client id, secreto]}. Sin client
+	// id, el proveedor queda apagado.
+	OAuth map[string][2]string
+	// WhatsApp Cloud de la plataforma (links de ingreso y de contraseña nueva).
+	WhatsAppToken, WhatsAppNumeroID string
 }
 
 // Desarrollo dice si se está corriendo en local.
@@ -43,6 +48,13 @@ func Leer() (Config, error) {
 		CorreoDe:     valor("MOSTRADOR_CORREO_DE", "Mostrador <hola@mostrador.iamnaw.dev>"),
 		SMTP:         os.Getenv("MOSTRADOR_SMTP"),
 		CorreoEquipo: os.Getenv("MOSTRADOR_CORREO_EQUIPO"),
+		OAuth: map[string][2]string{
+			"google":       {os.Getenv("MOSTRADOR_GOOGLE_CLIENT_ID"), os.Getenv("MOSTRADOR_GOOGLE_SECRETO")},
+			"mercadopago":  {os.Getenv("MOSTRADOR_MP_CLIENT_ID"), os.Getenv("MOSTRADOR_MP_SECRETO")},
+			"mercadolibre": {os.Getenv("MOSTRADOR_ML_CLIENT_ID"), os.Getenv("MOSTRADOR_ML_SECRETO")},
+		},
+		WhatsAppToken:    os.Getenv("MOSTRADOR_WHATSAPP_TOKEN"),
+		WhatsAppNumeroID: os.Getenv("MOSTRADOR_WHATSAPP_NUMERO_ID"),
 	}
 	switch c.Entorno {
 	case "desarrollo", "staging", "produccion":

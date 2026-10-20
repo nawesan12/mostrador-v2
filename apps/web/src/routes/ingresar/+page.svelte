@@ -26,8 +26,17 @@
 	/* Recreación de design/Mostrador Ingresar.dc.html: modos login, registro, recuperar y enviado. */
 	let { form } = $props();
 
-	type Modo = 'login' | 'registro' | 'recuperar' | 'enviado' | 'restablecer';
-	const MODOS: Modo[] = ['login', 'registro', 'recuperar', 'enviado', 'restablecer'];
+	type Modo =
+		'login' | 'registro' | 'recuperar' | 'enviado' | 'restablecer' | 'whatsapp' | 'enlace';
+	const MODOS: Modo[] = [
+		'login',
+		'registro',
+		'recuperar',
+		'enviado',
+		'restablecer',
+		'whatsapp',
+		'enlace'
+	];
 	// Link del mail de recuperación: ?m=restablecer&token=…
 	const tokenUrl = $derived(page.url.searchParams.get('token') ?? '');
 	const listo = $derived(page.url.searchParams.get('listo') === 'clave');
@@ -36,7 +45,26 @@
 		return m && MODOS.includes(m) && m !== 'enviado' ? m : 'login';
 	});
 	const modo = $derived<Modo>((form?.modo as Modo | undefined) ?? deUrl);
-	const err = $derived((form && 'errores' in form ? form.errores : {}) as Record<string, string>);
+	// Errores que vuelven en la URL desde la vuelta de un proveedor (/ingresar/<proveedor>/vuelta).
+	const ERRORES_URL: Record<string, string> = {
+		cancelado: 'Cancelaste el ingreso. Probá de nuevo o entrá con tu email.',
+		estado_invalido: 'El ingreso se cortó o tardó demasiado. Probá de nuevo.',
+		sin_email: 'No pudimos saber tu email desde esa cuenta. Probá con tu email.',
+		vincular:
+			'Ya hay una cuenta con ese email. Ingresá con tu contraseña y conectá esa cuenta desde Mis datos.',
+		proveedor_apagado: 'Ese ingreso todavía no está disponible. Probá con tu email.'
+	};
+	const errorUrl = $derived.by(() => {
+		const c = page.url.searchParams.get('error');
+		return c ? (ERRORES_URL[c] ?? 'No pudimos completar el ingreso. Probá de nuevo.') : '';
+	});
+	const err = $derived(
+		(form && 'errores' in form
+			? form.errores
+			: errorUrl && !form
+				? { form: errorUrl }
+				: {}) as Record<string, string>
+	);
 
 	let verClave = $state(false);
 	let clave = $state('');
@@ -375,13 +403,64 @@
 						{#if err.token}<small class="err">{err.token}</small>{/if}
 						<button type="submit" class="cta" disabled={enviando}>Guardar contraseña</button>
 					</form>
+				{:else if modo === 'whatsapp'}
+					<!-- No está en el handoff: las piezas del modo "recuperar" (canal WhatsApp). -->
+					<form method="POST" action="?/enlace" class="col" use:enhance={conEnvio} novalidate>
+						<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- otro modo de esta misma pantalla (aModo usa resolve) -->
+						<a class="volver" href={aModo('login')}
+							><Icon icon={phArrowLeftBold} size={14} />Volver</a
+						>
+						<img src="/hornero/whatsapp.png" alt="" class="ave-chica" />
+						<div>
+							<h1>Entrá con tu WhatsApp</h1>
+							<p class="bajada">
+								Te mandamos un link al WhatsApp de tu cuenta. Lo tocás y entrás, sin contraseña.
+							</p>
+						</div>
+						<label class="campo"
+							>WhatsApp de tu cuenta<span class="in"
+								><input
+									name="telefono"
+									type="tel"
+									autocomplete="tel"
+									placeholder="11 2345 6789"
+									aria-invalid={!!err.telefono}
+									aria-describedby={err.telefono ? 'err-telefono' : undefined}
+								/></span
+							></label
+						>{#if err.telefono}<small class="err" id="err-telefono">{err.telefono}</small>{/if}
+						<button type="submit" class="cta" disabled={enviando}>Mandame el link</button>
+						<p class="pie-nota">
+							¿Todavía no cargaste tu WhatsApp? Entrá con tu email y sumalo desde Mis datos.
+						</p>
+					</form>
+				{:else if modo === 'enlace'}
+					<!-- Link del WhatsApp: pide un clic, así la vista previa del link no lo consume. -->
+					<form method="POST" action="?/entrar" class="col" use:enhance={conEnvio}>
+						<img src="/hornero/saludo.png" alt="" class="ave-chica" />
+						<div>
+							<h1>Entrá a tu cuenta</h1>
+							<p class="bajada">Tocá el botón para entrar. El link vale una sola vez.</p>
+						</div>
+						<input type="hidden" name="token" value={tokenUrl} />
+						<button type="submit" class="cta" disabled={enviando}>Entrar a mi panel</button>
+						<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- otro modo de esta misma pantalla (aModo usa resolve) -->
+						<a class="volver centro-l" href={aModo('whatsapp')}>Pedir otro link</a>
+					</form>
 				{:else}
-					<form method="POST" action="?/recuperar" class="col enviado" use:enhance={conEnvio}>
+					<form
+						method="POST"
+						action={form?.tipo === 'ingreso' ? '?/enlace' : '?/recuperar'}
+						class="col enviado"
+						use:enhance={conEnvio}
+					>
 						<img src="/hornero/exito.png" alt="" class="ave-exito" />
 						<div>
 							<h1>{form?.canal === 'whatsapp' ? 'Revisá tu WhatsApp' : 'Revisá tu email'}</h1>
 							<p class="bajada">
-								Te mandamos un link a <b>{form?.a}</b>. Vence en 30 minutos.
+								Te mandamos un link a <b>{form?.a}</b>. Vence en {form?.tipo === 'ingreso'
+									? 15
+									: 30} minutos.
 							</p>
 						</div>
 						<div class="nota">
@@ -913,6 +992,16 @@
 	}
 	.oscuro:hover {
 		color: #fff;
+	}
+	.pie-nota {
+		margin: 0;
+		font-size: 13px;
+		line-height: 1.5;
+		color: #7a6252;
+		text-align: center;
+	}
+	.centro-l {
+		align-self: center;
 	}
 	.err-form {
 		margin-bottom: 16px;
