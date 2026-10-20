@@ -700,6 +700,23 @@ export const RUBROS_PLANTILLAS = [
 	'Servicios'
 ] as const;
 
+/**
+ * Plantillas con su versión trabajada en el handoff (Plantilla X.dc.html): las tarjetas muestran la
+ * captura de su portada (static/plantillas/<id>.jpg) en vez de la miniatura genérica.
+ */
+export const CON_PORTADA: ReadonlySet<string> = new Set([
+	'ceibo',
+	'mostaza',
+	'yerbal',
+	'tijera',
+	'pampa',
+	'malbec',
+	'miga',
+	'rosedal',
+	'andes',
+	'quebracho'
+]);
+
 /** Color legible sobre el acento (handoff: lumOf(acc) > 0.62 ? '#141414' : '#FFFFFF'). */
 export function sobreAcento(hex: string) {
 	const n = parseInt(hex.slice(1), 16);

@@ -6,7 +6,7 @@
 	import Seo from '#lib/components/Seo.svelte';
 	import TplMini from '#lib/components/TplMini.svelte';
 	import { phCheckBold, phMagnifyingGlass } from '#lib/icons.ts';
-	import { LAYOUT, PLANTILLAS, RUBROS_PLANTILLAS } from '#lib/plantillas.ts';
+	import { CON_PORTADA, LAYOUT, PLANTILLAS, RUBROS_PLANTILLAS } from '#lib/plantillas.ts';
 
 	/*
 	 * El handoff no tiene una pantalla de "entrar a la demo": se arma con la galería de plantillas del
@@ -101,7 +101,18 @@
 						style:box-shadow="0 0 0 2px {sel ? '#D2582F' : 'transparent'},0 20px 40px -24px
 						rgba(58,29,18,.55)"
 					>
-						<TplMini {t} />
+						{#if CON_PORTADA.has(t.id)}
+							<img
+								class="portada"
+								src="/plantillas/{t.id}.jpg"
+								alt=""
+								loading="lazy"
+								width="560"
+								height="611"
+							/>
+						{:else}
+							<TplMini {t} />
+						{/if}
 						{#if sel}
 							<span class="elegida"><Icon icon={phCheckBold} size={12} />Elegida</span>
 						{:else if eligiendo === t.id}
@@ -230,6 +241,14 @@
 		border-radius: 16px;
 		overflow: hidden;
 		background: #fff;
+	}
+	/* Portada real de la plantilla trabajada, anclada arriba como la vista de la tienda. */
+	.portada {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: top center;
 	}
 	.elegida {
 		position: absolute;
