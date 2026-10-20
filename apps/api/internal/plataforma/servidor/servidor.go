@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/tiendas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
@@ -17,6 +18,9 @@ import (
 type Dependencias struct {
 	App *db.Pool
 	Log *slog.Logger
+	// Cuentas y sesiones. Sin esto, el panel responde 401.
+	Cuentas  *cuentas.Servicio
+	ClaveBFF string
 }
 
 // Nuevo devuelve el handler raíz de la API.
@@ -46,12 +50,18 @@ func Nuevo(d Dependencias) http.Handler {
 		}
 		escribirJSON(w, http.StatusOK, map[string]string{"estado": "listo"})
 	})
+	var h http.Handler = mux
 	if d.App != nil {
-		// La tienda del pedido sale de la sesión, que llega con el PR de ingreso. Hasta entonces el
-		// panel responde 401: nunca se acepta una tienda que diga el cliente.
-		tiendas.Rutas(mux, d.App, func(*http.Request) string { return "" })
+		// La tienda del pedido sale siempre de la sesión: nunca de algo que diga el cliente.
+		tienda := func(*http.Request) string { return "" }
+		if d.Cuentas != nil {
+			d.Cuentas.Rutas(mux, d.ClaveBFF)
+			tienda = cuentas.TiendaDe
+			h = d.Cuentas.Autenticar(mux)
+		}
+		tiendas.Rutas(mux, d.App, tienda)
 	}
-	return recuperar(d.Log, mux)
+	return recuperar(d.Log, h)
 }
 
 // recuperar convierte un panic en un 500 con problem+json y lo registra, sin tirar el proceso.

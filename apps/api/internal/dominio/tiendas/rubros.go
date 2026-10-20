@@ -36,3 +36,7 @@ func BuscarRubro(id string) (Rubro, bool) {
 	}
 	return Rubro{}, false
 }
+
+// RubroPorDefecto de una tienda recién registrada: el onboarding lo cambia. Litoral es la plantilla
+// por defecto del onboarding del handoff (ob-tpl = 'litoral').
+const RubroPorDefecto = "regionales"

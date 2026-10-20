@@ -3,6 +3,7 @@ import type { Handle } from '@sveltejs/kit/hooks';
 import { env } from 'cloudflare:workers';
 import { csrfForbidden } from '#lib/server/csrf.ts';
 import { COOKIE, dbSandbox, leer } from '#lib/server/sandbox/sandbox.ts';
+import { COOKIE_SESION } from '#lib/server/auth/sesion.ts';
 
 /** Rutas que usan el sandbox de la demo: sólo ahí se lee D1 (la landing no gasta lecturas). */
 const CON_SANDBOX = /^\/(demo|panel)(\/|$)/;
@@ -38,7 +39,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 		);
 	const started = Date.now();
 	event.locals.sandbox = null;
-	if (CON_SANDBOX.test(event.url.pathname) && String(env.DATA_SOURCE) !== 'api') {
+	event.locals.token = null;
+	if (String(env.DATA_SOURCE) === 'api') {
+		// La sesión la valida Go en cada pedido del panel; acá sólo se lee la cookie.
+		event.locals.token = event.cookies.get(COOKIE_SESION) ?? null;
+	} else if (CON_SANDBOX.test(event.url.pathname)) {
 		event.locals.sandbox = await leer(dbSandbox(env.SANDBOX), event.cookies.get(COOKIE));
 	}
 	const res = secure(await resolve(event));

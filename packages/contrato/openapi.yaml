@@ -20,6 +20,73 @@ paths:
               schema:
                 type: array
                 items: { $ref: '#/components/schemas/Rubro' }
+  /v1/auth/registro:
+    post:
+      operationId: registrar
+      summary: Crea la cuenta, su tienda y la sesión (sigue en el onboarding)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Alta' }
+      responses:
+        '201': { description: Sesión, content: { application/json: { schema: { $ref: '#/components/schemas/Sesion' } } } }
+        '400': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+        '429': { $ref: '#/components/responses/Problema' }
+  /v1/auth/ingresar:
+    post:
+      operationId: ingresar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, clave]
+              properties:
+                email: { type: string }
+                clave: { type: string }
+                recordarme: { type: boolean }
+      responses:
+        '200': { description: Sesión, content: { application/json: { schema: { $ref: '#/components/schemas/Sesion' } } } }
+        '401': { $ref: '#/components/responses/Problema' }
+        '429': { $ref: '#/components/responses/Problema' }
+  /v1/auth/salir:
+    post:
+      operationId: salir
+      responses:
+        '204': { description: Sesión cerrada }
+  /v1/auth/sesion:
+    get:
+      operationId: sesion
+      responses:
+        '200': { description: Sesión en curso, content: { application/json: { schema: { $ref: '#/components/schemas/DatosSesion' } } } }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/auth/recuperar:
+    post:
+      operationId: recuperar
+      summary: Manda el link para crear una contraseña nueva. Responde igual exista o no la cuenta.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [email], properties: { email: { type: string } } }
+      responses:
+        '202': { description: Recibido }
+        '429': { $ref: '#/components/responses/Problema' }
+  /v1/auth/restablecer:
+    post:
+      operationId: restablecer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [token, clave], properties: { token: { type: string }, clave: { type: string } } }
+      responses:
+        '204': { description: Contraseña cambiada; se cierran todas las sesiones }
+        '400': { $ref: '#/components/responses/Problema' }
+        '422': { $ref: '#/components/responses/Problema' }
   /v1/panel/tienda:
     get:
       operationId: obtenerTienda
@@ -36,7 +103,42 @@ paths:
             application/problem+json:
               schema: { $ref: '#/components/schemas/Problema' }
 components:
+  responses:
+    Problema:
+      description: Error (application/problem+json)
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problema' }
   schemas:
+    Alta:
+      type: object
+      required: [nombre, tienda, email, clave]
+      properties:
+        nombre: { type: string }
+        tienda: { type: string }
+        email: { type: string }
+        clave: { type: string, minLength: 8 }
+    Sesion:
+      type: object
+      required: [token, venceEn, tiendaId]
+      properties:
+        token: { type: string, description: 'Se entrega una sola vez; el BFF lo guarda en una cookie httpOnly' }
+        venceEn: { type: string, format: date-time }
+        tiendaId: { type: string }
+    DatosSesion:
+      type: object
+      required: [usuario, tiendaId, rol, venceEn]
+      properties:
+        usuario:
+          type: object
+          required: [id, nombre, email]
+          properties:
+            id: { type: string, format: uuid }
+            nombre: { type: string }
+            email: { type: string }
+        tiendaId: { type: string }
+        rol: { type: string, enum: [duenio, admin, ventas, deposito, ''] }
+        venceEn: { type: string, format: date-time }
     Rubro:
       type: object
       required: [id, nombre, plantilla, tienda]

@@ -45,6 +45,9 @@ test('registro: medidor de fuerza y términos obligatorios', async ({ page }) =>
 	await page.getByRole('textbox', { name: 'Tu nombre' }).fill('Lucía');
 	await page.getByRole('textbox', { name: 'Nombre de la tienda' }).fill('La Esquina');
 	await page.getByRole('textbox', { name: 'Email' }).fill('lucia@laesquina.com.ar');
+	// Escribir la contraseña después no puede borrar lo anterior (bug que tuvo esta pantalla).
+	await clave.fill('Abcdefghijk12');
+	await expect(page.getByRole('textbox', { name: 'Tu nombre' })).toHaveValue('Lucía');
 	await page.getByRole('button', { name: 'Crear mi tienda' }).click();
 	await expect(
 		page.getByText('Para crear la tienda tenés que aceptar los términos.')

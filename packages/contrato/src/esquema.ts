@@ -21,6 +21,104 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/auth/registro": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Crea la cuenta, su tienda y la sesión (sigue en el onboarding) */
+        post: operations["registrar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/ingresar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ingresar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/salir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["salir"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/sesion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sesion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/recuperar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Manda el link para crear una contraseña nueva. Responde igual exista o no la cuenta. */
+        post: operations["recuperar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/restablecer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["restablecer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/tienda": {
         parameters: {
             query?: never;
@@ -42,6 +140,32 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        Alta: {
+            nombre: string;
+            tienda: string;
+            email: string;
+            clave: string;
+        };
+        Sesion: {
+            /** @description Se entrega una sola vez; el BFF lo guarda en una cookie httpOnly */
+            token: string;
+            /** Format: date-time */
+            venceEn: string;
+            tiendaId: string;
+        };
+        DatosSesion: {
+            usuario: {
+                /** Format: uuid */
+                id: string;
+                nombre: string;
+                email: string;
+            };
+            tiendaId: string;
+            /** @enum {string} */
+            rol: "duenio" | "admin" | "ventas" | "deposito" | "";
+            /** Format: date-time */
+            venceEn: string;
+        };
         Rubro: {
             /** @example gastronomia */
             id: string;
@@ -77,7 +201,17 @@ export interface components {
             }[];
         };
     };
-    responses: never;
+    responses: {
+        /** @description Error (application/problem+json) */
+        Problema: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problema"];
+            };
+        };
+    };
     parameters: never;
     requestBodies: never;
     headers: never;
@@ -103,6 +237,154 @@ export interface operations {
                     "application/json": components["schemas"]["Rubro"][];
                 };
             };
+        };
+    };
+    registrar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Alta"];
+            };
+        };
+        responses: {
+            /** @description Sesión */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Sesion"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+            429: components["responses"]["Problema"];
+        };
+    };
+    ingresar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    email: string;
+                    clave: string;
+                    recordarme?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Sesión */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Sesion"];
+                };
+            };
+            401: components["responses"]["Problema"];
+            429: components["responses"]["Problema"];
+        };
+    };
+    salir: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sesión cerrada */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    sesion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sesión en curso */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatosSesion"];
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    recuperar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    email: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Recibido */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            429: components["responses"]["Problema"];
+        };
+    };
+    restablecer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    token: string;
+                    clave: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Contraseña cambiada; se cierran todas las sesiones */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
+            422: components["responses"]["Problema"];
         };
     };
     obtenerTienda: {

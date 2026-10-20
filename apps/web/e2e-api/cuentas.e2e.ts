@@ -1,0 +1,95 @@
+import { expect, test, type Page } from '@playwright/test';
+
+const MAILPIT = process.env.E2E_MAILPIT ?? 'http://127.0.0.1:8026';
+const listo = (page: Page) => page.locator('html[data-listo]').waitFor({ state: 'attached' });
+
+/** Último mail que llegó a Mailpit para esa dirección (texto plano). */
+async function ultimoMail(para: string): Promise<string> {
+	for (let i = 0; i < 20; i++) {
+		const r = await fetch(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:${para}`)}`);
+		const j = (await r.json()) as { messages: { ID: string }[] };
+		if (j.messages?.length) {
+			const m = (await (await fetch(`${MAILPIT}/api/v1/message/${j.messages[0].ID}`)).json()) as { Text: string };
+			return m.Text;
+		}
+		await new Promise((res) => setTimeout(res, 250));
+	}
+	throw new Error(`No llegó ningún mail a ${para}`);
+}
+
+test('registro, salir, recuperar por mail, contraseña nueva e ingreso', async ({ page, context }) => {
+	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	const email = `lucia+${Date.now()}@laesquina.com.ar`;
+
+	// Registro: crea cuenta y tienda, y entra al panel.
+	await page.goto('/ingresar?m=registro');
+	await listo(page);
+	await page.getByRole('textbox', { name: 'Tu nombre' }).fill('Lucía');
+	await page.getByRole('textbox', { name: 'Nombre de la tienda' }).fill('La Esquina');
+	await page.getByRole('textbox', { name: 'Email' }).fill(email);
+	await page.getByLabel('Contraseña', { exact: true }).fill('Abcdefghijk1');
+	await page.locator('label.terminos .caja-check').click();
+	await page.getByRole('button', { name: 'Crear mi tienda' }).click();
+	await expect(page).toHaveURL(/\/panel$/);
+	await expect(page.getByText('Hola, La Esquina')).toBeVisible();
+	const cookie = (await context.cookies()).find((c) => c.name.endsWith('mostrador_sesion'));
+	expect(cookie?.httpOnly).toBe(true);
+
+	// El mismo email no se registra dos veces.
+	await context.clearCookies();
+	await page.goto('/ingresar?m=registro');
+	await listo(page);
+	await page.getByRole('textbox', { name: 'Tu nombre' }).fill('Otra');
+	await page.getByRole('textbox', { name: 'Nombre de la tienda' }).fill('Otra');
+	await page.getByRole('textbox', { name: 'Email' }).fill(email);
+	await page.getByLabel('Contraseña', { exact: true }).fill('Abcdefghijk1');
+	await page.locator('label.terminos .caja-check').click();
+	await page.getByRole('button', { name: 'Crear mi tienda' }).click();
+	await expect(page.getByText(/Ese email ya tiene una cuenta/)).toBeVisible();
+
+	// Sin sesión, el panel manda a ingresar.
+	await page.goto('/panel');
+	await expect(page).toHaveURL(/\/ingresar$/);
+
+	// Contraseña incorrecta.
+	await listo(page);
+	await page.getByRole('textbox', { name: 'Email' }).fill(email);
+	await page.getByLabel('Contraseña', { exact: true }).fill('otra-clave');
+	await page.getByRole('button', { name: 'Ingresar', exact: true }).click();
+	await expect(page.getByText('El email o la contraseña no son correctos.')).toBeVisible();
+
+	// Recuperar: llega el mail con el link.
+	await page.getByRole('link', { name: 'Olvidé mi contraseña' }).click();
+	await page.getByRole('textbox', { name: 'Email de tu cuenta' }).fill(email);
+	await page.getByRole('button', { name: 'Mandame el link' }).click();
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Revisá tu email');
+	const texto = await ultimoMail(email);
+	const link = texto.match(/https?:\/\/\S+m=restablecer&token=[A-Za-z0-9_-]+/)?.[0];
+	expect(link).toBeTruthy();
+
+	// Contraseña nueva desde el link (el sitio del mail apunta al front de desarrollo).
+	await page.goto(new URL(link!).pathname + new URL(link!).search);
+	await listo(page);
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Elegí tu nueva contraseña');
+	await page.getByLabel('Contraseña nueva', { exact: true }).fill('Nuevaclave123');
+	await page.getByRole('button', { name: 'Guardar contraseña' }).click();
+	await expect(page.getByText('Listo, tu contraseña cambió.')).toBeVisible();
+
+	// El link se usa una sola vez.
+	await page.goto(new URL(link!).pathname + new URL(link!).search);
+	await listo(page);
+	await page.getByLabel('Contraseña nueva', { exact: true }).fill('Otraclave1234');
+	await page.getByRole('button', { name: 'Guardar contraseña' }).click();
+	await expect(page.getByText(/El link venció o ya se usó/)).toBeVisible();
+
+	// Ingreso con la nueva y salida.
+	await page.goto('/ingresar');
+	await listo(page);
+	await page.getByRole('textbox', { name: 'Email' }).fill(email);
+	await page.getByLabel('Contraseña', { exact: true }).fill('Nuevaclave123');
+	await page.getByRole('button', { name: 'Ingresar', exact: true }).click();
+	await expect(page).toHaveURL(/\/panel$/);
+	await page.request.post('/salir', { headers: { origin: 'http://localhost:4174' } });
+	await page.goto('/panel');
+	await expect(page).toHaveURL(/\/ingresar$/);
+});

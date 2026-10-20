@@ -14,6 +14,12 @@ type Config struct {
 	Direccion string
 	// URLs de Postgres por rol.
 	BaseApp, BaseWorker, BaseMigrador, BaseAdmin string
+	// Sitio público (links de los mails).
+	Sitio string
+	// Clave que comparte con el BFF (SvelteKit): habilita creerle X-Cliente-IP.
+	ClaveBFF string
+	// Correo: Resend en producción; en desarrollo, SMTP de Mailpit.
+	ResendClave, CorreoDe, SMTP string
 }
 
 // Desarrollo dice si se está corriendo en local.
@@ -28,6 +34,11 @@ func Leer() (Config, error) {
 		BaseWorker:   os.Getenv("MOSTRADOR_BASE_DE_DATOS_WORKER"),
 		BaseMigrador: os.Getenv("MOSTRADOR_BASE_DE_DATOS_MIGRADOR"),
 		BaseAdmin:    os.Getenv("MOSTRADOR_BASE_DE_DATOS_ADMIN"),
+		Sitio:        valor("MOSTRADOR_SITIO", "https://mostrador.iamnaw.dev"),
+		ClaveBFF:     os.Getenv("MOSTRADOR_CLAVE_BFF"),
+		ResendClave:  os.Getenv("MOSTRADOR_RESEND_CLAVE"),
+		CorreoDe:     valor("MOSTRADOR_CORREO_DE", "Mostrador <hola@mostrador.iamnaw.dev>"),
+		SMTP:         os.Getenv("MOSTRADOR_SMTP"),
 	}
 	switch c.Entorno {
 	case "desarrollo", "staging", "produccion":
@@ -42,6 +53,8 @@ func Leer() (Config, error) {
 		c.BaseWorker = conDefecto(c.BaseWorker, fmt.Sprintf(local, "mostrador_worker", "mostrador_dev"))
 		c.BaseMigrador = conDefecto(c.BaseMigrador, fmt.Sprintf(local, "mostrador_migrador", "mostrador_dev"))
 		c.BaseAdmin = conDefecto(c.BaseAdmin, fmt.Sprintf(local, "mostrador", "mostrador"))
+		c.SMTP = conDefecto(c.SMTP, "127.0.0.1:1026")
+		c.Sitio = conDefecto(os.Getenv("MOSTRADOR_SITIO"), "http://localhost:5173")
 	}
 	return c, nil
 }
@@ -50,6 +63,7 @@ func Leer() (Config, error) {
 func (c Config) Exigir(campos ...string) error {
 	vals := map[string]string{
 		"BaseApp": c.BaseApp, "BaseWorker": c.BaseWorker, "BaseMigrador": c.BaseMigrador, "BaseAdmin": c.BaseAdmin,
+		"ResendClave": c.ResendClave, "ClaveBFF": c.ClaveBFF,
 	}
 	var faltan []string
 	for _, f := range campos {

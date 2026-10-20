@@ -4,6 +4,6 @@
 		"strict": true,
 		"types": ["$app/types", "./worker-configuration.d.ts", "node"]
 	},
-	"include": ["src", "e2e", "vite.config.ts", "playwright.config.ts"],
+	"include": ["src", "e2e", "e2e-api", "playwright.api.config.ts", "vite.config.ts", "playwright.config.ts"],
 	"exclude": ["node_modules", ".svelte-kit/output", ".svelte-kit/cloudflare", "build"]
 }

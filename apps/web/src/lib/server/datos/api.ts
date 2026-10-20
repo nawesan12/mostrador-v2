@@ -9,7 +9,8 @@ export class DatosApi implements Datos {
 	constructor(
 		private base: string,
 		private token: string | undefined,
-		private f: typeof fetch = fetch
+		// Envuelto: en Workers, `fetch` llamado como método de otro objeto da "Illegal invocation".
+		private f: typeof fetch = (i, init) => fetch(i, init)
 	) {}
 
 	private async pedir<T>(ruta: string): Promise<T> {

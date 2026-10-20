@@ -11,7 +11,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/config"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/servidor"
 )
@@ -31,6 +33,17 @@ func correr() error {
 	if err := cfg.Exigir("BaseApp"); err != nil {
 		return err
 	}
+	// Fuera de desarrollo los mails salen por Resend y hace falta la clave del BFF: si faltan, la API
+	// no arranca (mejor que arrancar y no mandar los links de recuperación).
+	if !cfg.Desarrollo() {
+		if err := cfg.Exigir("ResendClave", "ClaveBFF"); err != nil {
+			return err
+		}
+	}
+	var mails correo.Correo = &correo.SMTP{Direccion: cfg.SMTP, De: cfg.CorreoDe}
+	if cfg.ResendClave != "" {
+		mails = &correo.Resend{Clave: cfg.ResendClave, De: cfg.CorreoDe}
+	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
@@ -41,8 +54,12 @@ func correr() error {
 	defer app.Close()
 
 	srv := &http.Server{
-		Addr:              cfg.Direccion,
-		Handler:           servidor.Nuevo(servidor.Dependencias{App: app}),
+		Addr: cfg.Direccion,
+		Handler: servidor.Nuevo(servidor.Dependencias{
+			App:      app,
+			Cuentas:  &cuentas.Servicio{Pool: app, Correo: mails, Sitio: cfg.Sitio},
+			ClaveBFF: cfg.ClaveBFF,
+		}),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
 		WriteTimeout:      30 * time.Second,
