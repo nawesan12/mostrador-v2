@@ -28,7 +28,10 @@ Hecho en la rama:
 - vitest: 49 pasan. Check, lint y Go con `-race` pasan.
 
 Falta:
-1. Confirmar los e2e de `e2e/hornero.e2e.ts` (se cortó mientras corrían) y la suite completa.
+1. Arreglar el e2e «aprobar una idea queda hecho y se puede deshacer» (`e2e/hornero.e2e.ts`). Los otros 2 e2e de Hornero pasan en desktop y mobile. Falla así:
+   - desktop: después de «Deshacer», el botón «Aprobar» no vuelve a aparecer (línea 64);
+   - mobile: después de «Aprobar», no aparece «Hecho» (línea 61).
+   Sospecha: el `cargar()` de `Hornero.svelte` o el `invalidateAll()` del layout no refrescan las ideas (o el layout las cierra con `cerrarTodo`). Después, correr la suite completa.
 2. Probar el modelo real con pocas llamadas (`bun run dev` con el binding remoto), verificar el formato del stream y que responda en rioplatense sin inventar.
 3. Comparar el panel contra el handoff a 1440 y barrer 375 px.
 4. Abrir el PR, pasar CI, mergear y desplegar (preview y deploy a mano).
