@@ -14,9 +14,21 @@
 	// Cada PR sube una versión con alias pr-N: https://pr-N-mostrador.<subdominio>.workers.dev
 	"preview_urls": true,
 	"observability": { "enabled": true },
+	// Sandbox de la demo (DATA_SOURCE=sandbox). En desarrollo se usa la D1 local (sin "remote"):
+	// las pruebas nunca tocan la base real.
+	"d1_databases": [
+		{
+			"binding": "SANDBOX",
+			"database_name": "mostrador-sandbox",
+			"database_id": "9efb42e6-6750-4f05-9a89-00731e798113",
+			"migrations_dir": "migraciones-sandbox"
+		}
+	],
 	"vars": {
 		"PUBLIC_SITE_URL": "https://mostrador.iamnaw.dev",
 		// sandbox: la demo pública con datos por visitante en D1. api: la API Go del VPS.
-		"DATA_SOURCE": "sandbox"
+		"DATA_SOURCE": "sandbox",
+		// URL de la API Go cuando DATA_SOURCE=api (VPS). Vacía en la demo.
+		"API_URL": ""
 	}
 }

@@ -1,0 +1,106 @@
+/**
+ * Sandbox de la demo pública. Cada visitante tiene uno (cookie), que vence a las 24 h.
+ *
+ * "Copia al escribir": la tienda de ejemplo de cada rubro sale del código, igual para todos; D1
+ * guarda sólo el sandbox (una fila) y lo que el visitante cambie (tabla `cambios`). Así crear una
+ * demo cuesta una escritura y no cientos, y el cupo gratis de D1 (100.000 escrituras por día)
+ * alcanza para muchas visitas.
+ */
+import { and, eq, lt } from 'drizzle-orm';
+import { drizzle, type DrizzleD1Database } from 'drizzle-orm/d1';
+import { inArray } from './sql.ts';
+import { fromB64url, randomToken, sha256 } from '../crypto.ts';
+import { rubro as buscarRubro, slugDe } from './rubros.ts';
+import { cambios, sandboxes } from './schema.ts';
+import type { Datos, Tienda } from '../datos/tipos.ts';
+import RUBROS from '@mostrador/contrato/rubros.json';
+
+export type DbSandbox = DrizzleD1Database<Record<string, never>>;
+
+export const COOKIE = 'mostrador_demo';
+export const VIDA_MS = 24 * 60 * 60 * 1000;
+
+export const dbSandbox = (d1: D1Database): DbSandbox => drizzle(d1);
+
+export type Sandbox = { id: string; rubro: string; creadoEn: number; venceEn: number };
+
+/** Crea un sandbox del rubro. Devuelve null si el rubro no existe. */
+export async function crear(
+	db: DbSandbox,
+	rubro: string,
+	ahora = Date.now()
+): Promise<Sandbox | null> {
+	if (!buscarRubro(rubro)) return null;
+	const sb = { id: randomToken(24), rubro, creadoEn: ahora, venceEn: ahora + VIDA_MS };
+	await db.insert(sandboxes).values(sb);
+	return sb;
+}
+
+/** El sandbox de la cookie, si existe y no venció. */
+export async function leer(db: DbSandbox, id: string | undefined, ahora = Date.now()) {
+	if (!id || id.length > 64) return null;
+	const [sb] = await db.select().from(sandboxes).where(eq(sandboxes.id, id)).limit(1);
+	return sb && sb.venceEn > ahora ? sb : null;
+}
+
+/**
+ * Borra los sandboxes vencidos y sus cambios. Va de a tandas chicas para no pasar el tope de CPU ni
+ * de parámetros de D1; lo llama el cron.
+ */
+export async function purgar(db: DbSandbox, ahora = Date.now(), tanda = 50) {
+	const viejos = await db
+		.select({ id: sandboxes.id })
+		.from(sandboxes)
+		.where(lt(sandboxes.venceEn, ahora))
+		.limit(tanda);
+	if (!viejos.length) return 0;
+	const ids = viejos.map((v) => v.id);
+	await db.batch([
+		db.delete(cambios).where(inArray(cambios.sandboxId, ids)),
+		db.delete(sandboxes).where(inArray(sandboxes.id, ids))
+	]);
+	return ids.length;
+}
+
+/** Lo que el visitante cambió de una entidad, por clave. `null` = borrado. */
+async function cambiosDe(db: DbSandbox, sandboxId: string, entidad: string) {
+	const filas = await db
+		.select()
+		.from(cambios)
+		.where(and(eq(cambios.sandboxId, sandboxId), eq(cambios.entidad, entidad)));
+	return new Map(filas.map((f) => [f.clave, f.borrado ? null : JSON.parse(f.datos ?? 'null')]));
+}
+
+/** uuid estable a partir de un texto (para ids de ejemplo que no cambian entre pedidos). */
+async function uuidDe(texto: string) {
+	const h = [...fromB64url(await sha256(texto))]
+		.map((b) => b.toString(16).padStart(2, '0'))
+		.join('');
+	return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-8${h.slice(17, 20)}-${h.slice(20, 32)}`;
+}
+
+export class DatosSandbox implements Datos {
+	constructor(
+		private db: DbSandbox,
+		private sb: Sandbox
+	) {}
+
+	async rubros() {
+		return RUBROS;
+	}
+
+	async tienda(): Promise<Tienda> {
+		const r = buscarRubro(this.sb.rubro)!;
+		const base: Tienda = {
+			id: await uuidDe(`${this.sb.id}:tienda`),
+			slug: slugDe(r.tienda),
+			nombre: r.tienda,
+			rubro: r.id,
+			plantilla: r.plantilla,
+			plan: 'gratis',
+			creadaEn: new Date(this.sb.creadoEn).toISOString()
+		};
+		const cambio = (await cambiosDe(this.db, this.sb.id, 'tienda')).get('tienda');
+		return cambio ? { ...base, ...cambio } : base;
+	}
+}

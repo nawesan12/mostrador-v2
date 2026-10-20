@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/tiendas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
@@ -45,6 +46,11 @@ func Nuevo(d Dependencias) http.Handler {
 		}
 		escribirJSON(w, http.StatusOK, map[string]string{"estado": "listo"})
 	})
+	if d.App != nil {
+		// La tienda del pedido sale de la sesión, que llega con el PR de ingreso. Hasta entonces el
+		// panel responde 401: nunca se acepta una tienda que diga el cliente.
+		tiendas.Rutas(mux, d.App, func(*http.Request) string { return "" })
+	}
 	return recuperar(d.Log, mux)
 }
 

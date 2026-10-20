@@ -105,7 +105,7 @@ func CrearTienda(t testing.TB, app *db.Pool, slug string) string {
 	t.Helper()
 	var id string
 	err := app.EnTx(context.Background(), func(tx pgx.Tx) error {
-		return tx.QueryRow(context.Background(), "SELECT app.crear_tienda($1, $2)", slug, "Tienda "+slug).Scan(&id)
+		return tx.QueryRow(context.Background(), "SELECT app.crear_tienda($1, $2, 'regionales', 'litoral')", slug, "Tienda "+slug).Scan(&id)
 	})
 	if err != nil {
 		t.Fatal(err)

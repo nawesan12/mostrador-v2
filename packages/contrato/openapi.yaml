@@ -1,0 +1,78 @@
+openapi: 3.1.0
+info:
+  title: Mostrador
+  version: 0.1.0
+  description: |
+    Contrato único entre el front (SvelteKit, BFF) y sus dos fuentes de datos: el sandbox de la
+    demo (D1) y la API Go. Los casos de `casos/` corren contra las dos implementaciones.
+    Montos en centavos (enteros). Fechas de negocio YYYY-MM-DD en hora de Argentina.
+    Errores: application/problem+json.
+paths:
+  /v1/rubros:
+    get:
+      operationId: listarRubros
+      summary: Rubros con su plantilla y tienda de ejemplo
+      responses:
+        '200':
+          description: Rubros
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Rubro' }
+  /v1/panel/tienda:
+    get:
+      operationId: obtenerTienda
+      summary: La tienda de la sesión
+      responses:
+        '200':
+          description: Tienda
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Tienda' }
+        '401':
+          description: Sin sesión
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problema' }
+components:
+  schemas:
+    Rubro:
+      type: object
+      required: [id, nombre, plantilla, tienda]
+      properties:
+        id: { type: string, examples: [gastronomia] }
+        nombre: { type: string, examples: [Gastronomía] }
+        plantilla: { type: string, description: Plantilla de tienda que se usa por defecto }
+        tienda: { type: string, description: Nombre de la tienda de ejemplo }
+    Plan:
+      type: string
+      enum: [gratis, emprende, pro, negocio]
+    Tienda:
+      type: object
+      required: [id, slug, nombre, rubro, plantilla, plan, creadaEn]
+      properties:
+        id: { type: string, format: uuid }
+        slug: { type: string, pattern: '^[a-z0-9]([a-z0-9-]{0,46}[a-z0-9])?$' }
+        nombre: { type: string }
+        rubro: { type: string }
+        plantilla: { type: string }
+        plan: { $ref: '#/components/schemas/Plan' }
+        creadaEn: { type: string, format: date-time }
+    Problema:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        code: { type: string }
+        issues:
+          type: array
+          items:
+            type: object
+            required: [path, message]
+            properties:
+              path: { type: string }
+              message: { type: string }

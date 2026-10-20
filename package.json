@@ -20,6 +20,7 @@
 		"db:down": "docker compose -f infra/compose.dev.yml down",
 		"api:bootstrap": "cd apps/api && go run ./cmd/mostradorctl bootstrap",
 		"api:migrar": "cd apps/api && go run ./cmd/mostradorctl migrar",
-		"api:worker": "cd apps/api && go run ./cmd/worker"
+		"api:worker": "cd apps/api && go run ./cmd/worker",
+		"contrato:gen": "cd packages/contrato && bunx openapi-typescript openapi.yaml -o src/esquema.ts"
 	}
 }

@@ -6,6 +6,7 @@ const sinDesborde = (page: import('@playwright/test').Page) =>
 test.describe('/componentes', () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/componentes');
+		await page.locator('html[data-listo]').waitFor({ state: 'attached' });
 		await expect(page.getByRole('heading', { level: 1 })).toHaveText('Avisos, modales y hojas');
 	});
 

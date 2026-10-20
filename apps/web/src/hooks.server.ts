@@ -1,6 +1,11 @@
 import { dev } from '$app/env';
 import type { Handle } from '@sveltejs/kit/hooks';
+import { env } from 'cloudflare:workers';
 import { csrfForbidden } from '#lib/server/csrf.ts';
+import { COOKIE, dbSandbox, leer } from '#lib/server/sandbox/sandbox.ts';
+
+/** Rutas que usan el sandbox de la demo: sólo ahí se lee D1 (la landing no gasta lecturas). */
+const CON_SANDBOX = /^\/(demo|panel)(\/|$)/;
 
 /**
  * Encabezados de seguridad en todas las respuestas (también las tempranas, como el rechazo por CSRF).
@@ -32,6 +37,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 			})
 		);
 	const started = Date.now();
+	event.locals.sandbox = null;
+	if (CON_SANDBOX.test(event.url.pathname) && String(env.DATA_SOURCE) !== 'api') {
+		event.locals.sandbox = await leer(dbSandbox(env.SANDBOX), event.cookies.get(COOKIE));
+	}
 	const res = secure(await resolve(event));
 	try {
 		res.headers.set('Server-Timing', `app;dur=${Date.now() - started}`);
