@@ -61,7 +61,7 @@ export function resumenDemo(
 				'wa',
 				'wa',
 				`Nuevo mensaje de ${primerNombre(ultimoWa.clienteId)}`,
-				`“¿Tenés ${ultimoWa.items[0].nombre.toLowerCase()}?” · Hornero ya respondió`,
+				`“Hola, ¿tienen stock de ${ultimoWa.items[0].nombre}?” · Hornero ya respondió`,
 				4,
 				'ventas'
 			),

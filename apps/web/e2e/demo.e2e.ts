@@ -16,7 +16,7 @@ test('elegir un rubro arma la tienda y la recuerda', async ({ page, context }) =
 	await page.locator('html[data-listo]').waitFor({ state: 'attached' });
 	await page.getByRole('button', { name: /^Mostaza/ }).click();
 	await expect(page).toHaveURL(/\/panel$/);
-	await expect(page.getByText('Hola, Café Bruma')).toBeVisible();
+	await expect(page.locator('.barra .t-n')).toHaveText('Café Bruma');
 
 	const cookie = (await context.cookies()).find((c) => c.name === 'mostrador_demo');
 	expect(cookie?.httpOnly).toBe(true);
@@ -30,7 +30,7 @@ test('elegir un rubro arma la tienda y la recuerda', async ({ page, context }) =
 	await page.getByRole('group', { name: 'Rubro' }).getByRole('button', { name: 'Moda' }).click();
 	await expect(page.getByRole('button', { name: /^Mostaza/ })).toHaveCount(0);
 	await page.getByRole('button', { name: /^Pampa/ }).click();
-	await expect(page.getByText('Hola, PMPA Store')).toBeVisible();
+	await expect(page.locator('.barra .t-n')).toHaveText('PMPA Store');
 	await page.goto('/demo');
 	await page.locator('html[data-listo]').waitFor({ state: 'attached' });
 	await page.getByRole('textbox', { name: 'Buscar estilo o rubro' }).fill('zzz');
