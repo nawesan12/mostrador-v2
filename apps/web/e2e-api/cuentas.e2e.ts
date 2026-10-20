@@ -43,7 +43,7 @@ test('registro, salir, recuperar por mail, contraseña nueva e ingreso', async (
 	await expect(page.getByRole('heading', { name: 'Tu mostrador está 94% listo.' })).toBeVisible();
 	await page.getByRole('button', { name: /Ir a mi panel/ }).click();
 	await expect(page).toHaveURL(/\/panel$/);
-	await expect(page.getByText('Hola, La Esquina')).toBeVisible();
+	await expect(page.locator('.barra .t-n')).toHaveText('La Esquina');
 	const cookie = (await context.cookies()).find((c) => c.name.endsWith('mostrador_sesion'));
 	expect(cookie?.httpOnly).toBe(true);
 

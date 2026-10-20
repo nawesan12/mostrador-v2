@@ -70,7 +70,7 @@ test('el onboarding se recorre entero y termina en el panel con la demo armada',
 	expect(await sinDesborde(page)).toBeLessThanOrEqual(0);
 	await page.getByRole('button', { name: /Ir a mi panel/ }).click();
 	await expect(page).toHaveURL(/\/panel$/);
-	await expect(page.getByText(/Hola, /)).toBeVisible();
+	await expect(page.locator('.barra .t-n')).toHaveText('Tienda Lumbre');
 });
 
 test('lo elegido sobrevive a recargar y "Atrás" vuelve un paso', async ({ page }) => {
