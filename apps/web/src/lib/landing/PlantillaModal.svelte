@@ -172,6 +172,7 @@
 	.prev {
 		flex: 1;
 		min-width: 0;
+		overflow: hidden;
 		background: #efe6da;
 		display: flex;
 		flex-direction: column;
