@@ -104,6 +104,57 @@ paths:
               schema: { type: object, required: [codigo], properties: { codigo: { type: string, pattern: '^ARR-\d{4}-\d{6,}$' } } }
         '400': { $ref: '#/components/responses/Problema' }
         '429': { $ref: '#/components/responses/Problema' }
+  /v1/contacto:
+    post:
+      operationId: consultar
+      summary: Consulta de ventas (/contacto). Público, sin sesión.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Consulta' }
+      responses:
+        '202': { description: Registrada; confirmación por mail }
+        '400': { $ref: '#/components/responses/Problema' }
+        '429': { $ref: '#/components/responses/Problema' }
+  /v1/partners/postulaciones:
+    post:
+      operationId: postularPartner
+      summary: Postulación al programa de partners. Repetir el email no es error.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Postulacion' }
+      responses:
+        '202': { description: Registrada }
+        '400': { $ref: '#/components/responses/Problema' }
+        '429': { $ref: '#/components/responses/Problema' }
+  /v1/novedades/suscripciones:
+    post:
+      operationId: suscribirNovedades
+      summary: Suma un email al resumen mensual de novedades.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [email], properties: { email: { type: string } } }
+      responses:
+        '202': { description: Suscripto (o ya lo estaba) }
+        '400': { $ref: '#/components/responses/Problema' }
+        '429': { $ref: '#/components/responses/Problema' }
+  /v1/novedades/baja:
+    post:
+      operationId: bajaNovedades
+      summary: Baja con el token del link del mail.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [token], properties: { token: { type: string } } }
+      responses:
+        '204': { description: Dado de baja }
+        '422': { $ref: '#/components/responses/Problema' }
   /v1/panel/tienda:
     get:
       operationId: obtenerTienda
@@ -127,6 +178,28 @@ components:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problema' }
   schemas:
+    Consulta:
+      type: object
+      required: [nombre, email]
+      properties:
+        nombre: { type: string, maxLength: 80 }
+        email: { type: string }
+        whatsapp: { type: string, description: 'Con característica; se guardan sólo los dígitos' }
+        web: { type: string, maxLength: 200 }
+        facturacion: { type: string, enum: [empiezo, hasta-5, 5-a-20, 20-a-100, mas-de-100] }
+        origen: { type: string, enum: [tiendanube, empretienda, mercadoshops, shopify, woocommerce, ninguna] }
+        mensaje: { type: string, maxLength: 2000 }
+    Postulacion:
+      type: object
+      required: [nombre, email, agencia]
+      properties:
+        nombre: { type: string, maxLength: 80 }
+        email: { type: string }
+        agencia: { type: string, maxLength: 120 }
+        web: { type: string, maxLength: 200 }
+        especialidades:
+          type: array
+          items: { type: string, enum: [diseno, desarrollo, marketing, contabilidad, fotografia] }
     PedidoArrepentimiento:
       type: object
       required: [email, nombre, documento, plan]

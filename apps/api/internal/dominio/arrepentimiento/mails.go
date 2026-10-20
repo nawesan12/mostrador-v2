@@ -27,3 +27,19 @@ func mailRecibido(para, nombre, codigo, plan string) correo.Mensaje {
 </div></body></html>`, n, p, c),
 	}
 }
+
+// mailEquipo avisa al equipo que hay una devolución para procesar (plazo legal: 10 días hábiles).
+func mailEquipo(para, codigo string, p Pedido) correo.Mensaje {
+	return correo.Mensaje{
+		Para:   para,
+		Asunto: "Arrepentimiento " + codigo + ": " + p.Nombre,
+		Texto: fmt.Sprintf("Pedido de revocación %s.\n\nEmail: %s\nNombre: %s\nDocumento: %s\nPlan: %s\nMotivo: %s\n\n"+
+			"Cancelar el débito y devolver el total en hasta 10 días hábiles.", codigo, p.Email, p.Nombre, p.Documento, p.Plan, p.Motivo),
+		HTML: fmt.Sprintf(`<!doctype html><html lang="es-AR"><body style="font-family:Helvetica,Arial,sans-serif;color:#2A140C">
+<h1 style="font-size:22px">Pedido de revocación %s</h1>
+<p>Email: %s<br>Nombre: %s<br>Documento: %s<br>Plan: %s<br>Motivo: %s</p>
+<p>Cancelar el débito y devolver el total en hasta 10 días hábiles.</p></body></html>`,
+			html.EscapeString(codigo), html.EscapeString(p.Email), html.EscapeString(p.Nombre), html.EscapeString(p.Documento),
+			html.EscapeString(p.Plan), html.EscapeString(p.Motivo)),
+	}
+}

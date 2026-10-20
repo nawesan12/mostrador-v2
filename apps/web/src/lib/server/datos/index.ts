@@ -6,6 +6,7 @@ import { env } from 'cloudflare:workers';
 import { redirect, type RequestEvent } from '@sveltejs/kit';
 import { CuentasApi } from '../auth/cuentas.ts';
 import { DatosApi } from './api.ts';
+import { FormulariosApi } from '../formularios.ts';
 import { DatosSandbox, dbSandbox } from '../sandbox/sandbox.ts';
 import type { Datos } from './tipos.ts';
 
@@ -22,16 +23,23 @@ export function datosDe(locals: App.Locals): Datos {
 	return new DatosSandbox(dbSandbox(env.SANDBOX), locals.sandbox);
 }
 
-/** Cuentas en la API Go, con la IP y el navegador del visitante. */
-export function cuentasDe(event: Pick<RequestEvent, 'request' | 'getClientAddress'>) {
+type Evento = Pick<RequestEvent, 'request' | 'getClientAddress'>;
+
+/** IP y navegador del visitante, para que Go aplique los límites a la persona y no al BFF. */
+function clienteDe(event: Evento) {
 	let ip = '';
 	try {
 		ip = event.request.headers.get('cf-connecting-ip') ?? event.getClientAddress();
 	} catch {
 		// Sin dirección (tests): Go usa la de la conexión.
 	}
-	return new CuentasApi(String(env.API_URL), String(env.CLAVE_BFF ?? ''), {
-		ip,
-		agente: event.request.headers.get('user-agent') ?? ''
-	});
+	return { ip, agente: event.request.headers.get('user-agent') ?? '' };
 }
+
+/** Cuentas en la API Go, con la IP y el navegador del visitante. */
+export const cuentasDe = (event: Evento) =>
+	new CuentasApi(String(env.API_URL), String(env.CLAVE_BFF ?? ''), clienteDe(event));
+
+/** Formularios públicos en la API Go (arrepentimiento, contacto, partners, novedades). */
+export const formulariosDe = (event: Evento) =>
+	new FormulariosApi(String(env.API_URL), String(env.CLAVE_BFF ?? ''), clienteDe(event));

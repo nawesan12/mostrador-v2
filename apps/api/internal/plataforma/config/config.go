@@ -20,6 +20,9 @@ type Config struct {
 	ClaveBFF string
 	// Correo: Resend en producción; en desarrollo, SMTP de Mailpit.
 	ResendClave, CorreoDe, SMTP string
+	// Bandeja del equipo: le llegan las consultas de ventas, las postulaciones de partners y los
+	// arrepentimientos. Vacía: no se avisa (los pedidos quedan igual en la base).
+	CorreoEquipo string
 }
 
 // Desarrollo dice si se está corriendo en local.
@@ -39,6 +42,7 @@ func Leer() (Config, error) {
 		ResendClave:  os.Getenv("MOSTRADOR_RESEND_CLAVE"),
 		CorreoDe:     valor("MOSTRADOR_CORREO_DE", "Mostrador <hola@mostrador.iamnaw.dev>"),
 		SMTP:         os.Getenv("MOSTRADOR_SMTP"),
+		CorreoEquipo: os.Getenv("MOSTRADOR_CORREO_EQUIPO"),
 	}
 	switch c.Entorno {
 	case "desarrollo", "staging", "produccion":

@@ -136,6 +136,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/contacto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Consulta de ventas (/contacto). Público, sin sesión. */
+        post: operations["consultar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/partners/postulaciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Postulación al programa de partners. Repetir el email no es error. */
+        post: operations["postularPartner"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/novedades/suscripciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Suma un email al resumen mensual de novedades. */
+        post: operations["suscribirNovedades"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/novedades/baja": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Baja con el token del link del mail. */
+        post: operations["bajaNovedades"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/tienda": {
         parameters: {
             query?: never;
@@ -157,6 +225,25 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        Consulta: {
+            nombre: string;
+            email: string;
+            /** @description Con característica; se guardan sólo los dígitos */
+            whatsapp?: string;
+            web?: string;
+            /** @enum {string} */
+            facturacion?: "empiezo" | "hasta-5" | "5-a-20" | "20-a-100" | "mas-de-100";
+            /** @enum {string} */
+            origen?: "tiendanube" | "empretienda" | "mercadoshops" | "shopify" | "woocommerce" | "ninguna";
+            mensaje?: string;
+        };
+        Postulacion: {
+            nombre: string;
+            email: string;
+            agencia: string;
+            web?: string;
+            especialidades?: ("diseno" | "desarrollo" | "marketing" | "contabilidad" | "fotografia")[];
+        };
         PedidoArrepentimiento: {
             /** @description El de la cuenta */
             email: string;
@@ -440,6 +527,105 @@ export interface operations {
             };
             400: components["responses"]["Problema"];
             429: components["responses"]["Problema"];
+        };
+    };
+    consultar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Consulta"];
+            };
+        };
+        responses: {
+            /** @description Registrada; confirmación por mail */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
+            429: components["responses"]["Problema"];
+        };
+    };
+    postularPartner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Postulacion"];
+            };
+        };
+        responses: {
+            /** @description Registrada */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
+            429: components["responses"]["Problema"];
+        };
+    };
+    suscribirNovedades: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    email: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Suscripto (o ya lo estaba) */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
+            429: components["responses"]["Problema"];
+        };
+    };
+    bajaNovedades: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    token: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Dado de baja */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            422: components["responses"]["Problema"];
         };
     };
     obtenerTienda: {
