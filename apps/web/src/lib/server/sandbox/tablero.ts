@@ -37,7 +37,7 @@ export type CambiosTablero = {
 /** Días que faltan para que venza el certificado de ARCA de la tienda de ejemplo. */
 const DIAS_CERTIFICADO = 5;
 /** Lo que cuesta un mensaje de marketing por WhatsApp (Meta, Argentina). */
-const COSTO_MENSAJE = 120;
+export const COSTO_MENSAJE = 120;
 /** Día de la semana en que acredita cada medio (null: todos los días). 3 = miércoles. */
 const LIQUIDA: Record<string, number | null> = { mp: null, payway: 3, modo: 4, uala: 5 };
 /** Horario de retiro de cada transporte. */

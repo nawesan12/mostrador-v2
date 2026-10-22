@@ -5,6 +5,10 @@
 import { error } from '@sveltejs/kit';
 import type {
 	AccionCupon,
+	Campana,
+	Canales,
+	Informes,
+	Marketing,
 	AccionLote,
 	AccionRelampago,
 	Cupon,
@@ -224,6 +228,25 @@ export class DatosApi implements Datos {
 		return (await this.pedir<{ codigo: string }>('/v1/panel/links', 'POST', l)).codigo;
 	}
 
+	marketing() {
+		return this.pedir<Marketing>('/v1/panel/marketing');
+	}
+	async crearCampana(c: Parameters<Datos['crearCampana']>[0]) {
+		const r = await this.intentar('/v1/panel/campanas', 'POST', c);
+		if (r.status === 409) return 'sin-whatsapp' as const;
+		return (await r.json()) as Campana;
+	}
+	canales() {
+		return this.pedir<Canales>('/v1/panel/canales');
+	}
+	async fijarCanal(id: string, activo: boolean) {
+		return resultado(
+			await this.intentar(`/v1/panel/canales/${encodeURIComponent(id)}`, 'PUT', { activo })
+		);
+	}
+	informes() {
+		return this.pedir<Informes>('/v1/panel/informes');
+	}
 	cupones() {
 		return this.pedir<Cupones>('/v1/panel/cupones');
 	}

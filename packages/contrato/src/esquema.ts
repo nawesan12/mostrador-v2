@@ -845,6 +845,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/marketing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Audiencias, campañas y lo necesario para armar una nueva. */
+        get: operations["marketing"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/campanas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Manda (o programa) una campaña por WhatsApp. */
+        post: operations["crearCampana"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/canales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lo vendido por canal este mes, ya descontadas las comisiones. */
+        get: operations["canales"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/canales/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Pausa o activa un canal conectado. */
+        put: operations["fijarCanal"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/informes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Los últimos 12 meses. */
+        get: operations["informes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/tienda": {
         parameters: {
             query?: never;
@@ -1273,6 +1358,87 @@ export interface components {
             }[];
             /** @description La categoría que más vende (alcance "una categoría") */
             categoria: string | null;
+        };
+        Campana: {
+            id: string;
+            /** @enum {string} */
+            canal: "wa" | "email";
+            titulo: string;
+            detalle: string;
+            /** @enum {string} */
+            estado: "Enviando" | "Programada" | "Activa" | "Terminada";
+            metricas: {
+                k: string;
+                v: string;
+            }[];
+        };
+        Marketing: {
+            tienda: {
+                nombre: string;
+                foto: string | null;
+            };
+            audiencias: {
+                /** @enum {string} */
+                id: "todos" | "vip" | "riesgo" | "categoria";
+                nombre: string;
+                cantidad: number;
+            }[];
+            /** @description Pesos por mensaje de marketing de WhatsApp */
+            costoMensaje: number;
+            /** @description Ventas por cada peso, según campañas anteriores */
+            retorno: number | null;
+            /** @description Lo que propone Hornero; {nombre} se reemplaza */
+            mensajes: string[];
+            producto: {
+                nombre: string;
+                foto: string | null;
+            } | null;
+            /** @description El cupón que se puede adjuntar */
+            cupon: string | null;
+            campanas: components["schemas"]["Campana"][];
+            cupones: {
+                codigo: string;
+                descripcion: string;
+                usos: string;
+            }[];
+        };
+        Canales: {
+            mes: string;
+            canales: {
+                /** @enum {string} */
+                id: "web" | "wa" | "ml" | "pos" | "ig" | "tg" | "gg" | "tk";
+                nombre: string;
+                vendido: number;
+                pedidos: number;
+                /** @description 0,14 = 14 % */
+                comision: number;
+                nota: string;
+                activo: boolean;
+                conectado: boolean;
+            }[];
+        };
+        Informes: {
+            meses: string[];
+            series: {
+                ventas: number[];
+                productos: number[];
+                clientes: number[];
+                margen: (number | null)[];
+            };
+            kpis: {
+                ventas: number;
+                ventasVs: number | null;
+                ticket: number;
+                ticketVs: number | null;
+                margen: number | null;
+                margenVs: number | null;
+                /** @description Comisiones que no pagó contra una plataforma con comisión */
+                ahorro: number;
+                mesAnterior: string;
+            };
+            /** @description Meses de historia */
+            historia: number;
+            insights: string[];
         };
         Tablero: {
             /** @enum {string} */
@@ -3043,6 +3209,132 @@ export interface operations {
                 content?: never;
             };
             404: components["responses"]["Problema"];
+        };
+    };
+    marketing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Marketing */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Marketing"];
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    crearCampana: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    audiencia: "todos" | "vip" | "riesgo" | "categoria";
+                    mensaje: string;
+                    foto: boolean;
+                    boton: boolean;
+                    cupon: boolean;
+                    /** @default false */
+                    programar?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Creada */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Campana"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+        };
+    };
+    canales: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Canales */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Canales"];
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    fijarCanal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    activo: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Guardado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+        };
+    };
+    informes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Informes */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Informes"];
+                };
+            };
+            401: components["responses"]["Problema"];
         };
     };
     obtenerTienda: {
