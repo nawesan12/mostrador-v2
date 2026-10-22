@@ -13,6 +13,7 @@
 | #18 | Ingreso con Google, Mercado Pago, Mercado Libre y link por WhatsApp (apagados hasta tener credenciales) |
 | #19 | Datos de la demo: catálogo real de las 16 plantillas (`scripts/catalogos.ts`), clientes y pedidos sembrados |
 | #20 | Armazón del panel: rail, barra lateral, topbar, barra de abajo, notificaciones, ⌘K, tema y modo Simple/Completo |
+| #24 | Motor de listas (filtros en la URL, segmentos y facetas, lista virtual, lote, sugerencia de Hornero, exportar CSV) con Clientes (ficha, alta, etiquetas, cupón) y Productos (editor lateral de PanelCatalogo, alta, importar CSV, cambiar precio, publicar/pausar, mejorar descripción con Hornero). Go: tabla `productos` (00010), Clientes desde pedidos, filtro genérico |
 | #23 | Pedidos: vistas, embudo, filtros en la URL, lista virtual, acciones por fila y en lote, hoja de detalle, exportar CSV. Go: tabla `pedidos` (migración 00009) con RLS, lista con facetas, detalle, estados y lote |
 | #22 | Hornero con Workers AI (ver abajo) |
 | #21 | Resumen (dashboard) completo, meta del mes (migración Go 00008), demo con 60 días de pedidos, stock, carritos, reseñas y chats |
@@ -31,7 +32,7 @@ El circuito es el de PanelPedidos del handoff: Sin pagar → Para preparar → L
 
 ## Lo que sigue (orden del plan)
 
-Crear pedido y link de pago → motor de listas (Clientes, Productos, Inventario, Facturación, Envíos) → Ventas (bandeja WhatsApp, Carritos, Devoluciones, POS, Reseñas) → Listas de precio → Cupones → Crecer → Operación → Cuenta → storefront y 16 plantillas → integraciones reales → MCP + OAuth → Marca → endurecimiento.
+Inventario (conteo y movimientos), Facturación y Envíos sobre el motor de listas → crear pedido y link de pago → Ventas (bandeja WhatsApp, Carritos, Devoluciones, POS, Reseñas) → Listas de precio → Cupones → Crecer → Operación → Cuenta → storefront y 16 plantillas → integraciones reales → MCP + OAuth → Marca → endurecimiento.
 
 ## Trampas que ya mordieron
 

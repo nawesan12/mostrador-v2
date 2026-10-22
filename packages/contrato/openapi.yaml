@@ -369,6 +369,104 @@ paths:
         '401': { $ref: '#/components/responses/Problema' }
         '404': { $ref: '#/components/responses/Problema' }
         '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/listas/{lista}:
+    get:
+      operationId: listar
+      summary: 'Motor de listas (Clientes, Productos, Inventario, Facturación, Envíos): filtros, conteos y una ventana de filas.'
+      parameters:
+        - { name: lista, in: path, required: true, schema: { $ref: '#/components/schemas/NombreLista' } }
+        - { name: q, in: query, schema: { type: string, maxLength: 100 } }
+        - { name: seg, in: query, schema: { type: string }, description: 'Segmentos, separados por coma' }
+        - { name: facetas, in: query, schema: { type: string }, description: 'clave:valor separados por coma (ch:wa,city:Rosario)' }
+        - { name: rango, in: query, schema: { type: integer, minimum: 0 } }
+        - { name: banderas, in: query, schema: { type: string } }
+        - { name: orden, in: query, schema: { type: string } }
+        - { name: desde, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+        - { name: cuantos, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 60 } }
+      responses:
+        '200':
+          description: Lista
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ListaGenerica' }
+        '401': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+  /v1/panel/listas/{lista}/acciones:
+    post:
+      operationId: accionLista
+      summary: Una acción sobre una o varias filas (o la sugerencia de Hornero de esa lista).
+      parameters:
+        - { name: lista, in: path, required: true, schema: { $ref: '#/components/schemas/NombreLista' } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ids, accion]
+              properties:
+                ids: { type: array, maxItems: 500, items: { type: string } }
+                accion: { type: string }
+                valor: { description: 'Lo que la acción necesite (ajuste de stock, publicado…)' }
+      responses:
+        '200':
+          description: Cuántas filas cambiaron
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [hechos]
+                properties:
+                  hechos: { type: integer }
+        '401': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/productos:
+    post:
+      operationId: crearProducto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductoEditable' }
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Producto' }
+        '400': { $ref: '#/components/responses/Problema' }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/productos/{id}:
+    get:
+      operationId: obtenerProducto
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Producto
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Producto' }
+        '401': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+    put:
+      operationId: guardarProducto
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductoEditable' }
+      responses:
+        '200':
+          description: Guardado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Producto' }
+        '400': { $ref: '#/components/responses/Problema' }
+        '401': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
   /v1/panel/tienda:
     get:
       operationId: obtenerTienda
@@ -468,6 +566,56 @@ components:
             properties:
               canal: { type: string }
               ventas: { type: integer }
+    NombreLista:
+      type: string
+      enum: [clientes, productos, inventario, facturacion, envios]
+    ListaGenerica:
+      type: object
+      required: [total, filas, segmentos, facetas, resumen]
+      properties:
+        total: { type: integer }
+        filas:
+          type: array
+          description: 'Registros de la lista (la forma depende de la lista: ver FilaCliente, FilaProducto, …)'
+          items: { type: object, additionalProperties: true }
+        segmentos:
+          type: object
+          description: 'Conteo por segmento, sin el filtro de segmento'
+          additionalProperties: { type: integer }
+        facetas:
+          type: object
+          description: 'Por faceta, conteo de cada valor sin el filtro de esa faceta'
+          additionalProperties: { type: object, additionalProperties: { type: integer } }
+        resumen:
+          type: object
+          description: 'Números para el encabezado y la sugerencia de Hornero (dependen de la lista)'
+          additionalProperties: { type: number }
+    ProductoEditable:
+      type: object
+      required: [nombre, precio]
+      properties:
+        nombre: { type: string, minLength: 2, maxLength: 120 }
+        descripcion: { type: string, maxLength: 4000 }
+        categoria: { type: [string, 'null'], maxLength: 60 }
+        precio: { type: integer, minimum: 0 }
+        costo: { type: integer, minimum: 0 }
+        sku: { type: string, maxLength: 40 }
+        stock: { type: integer, minimum: 0 }
+        foto: { type: [string, 'null'] }
+        canales:
+          type: object
+          description: 'Dónde se publica: web, ml, ig, google'
+          additionalProperties: { type: boolean }
+    Producto:
+      allOf:
+        - { $ref: '#/components/schemas/ProductoEditable' }
+        - type: object
+          required: [id, publicado, vendidos30d, slug]
+          properties:
+            id: { type: string }
+            publicado: { type: boolean }
+            vendidos30d: { type: integer }
+            slug: { type: string }
     Tablero:
       type: object
       required: [periodo, desde, hasta, hola, ventas, serie, kpis, canales, meta, avisos, ultimosPedidos, paraHacer, enVivo, caja, liquidaciones, hornero, bandeja, integraciones, masVendidos, resenas, envios]
