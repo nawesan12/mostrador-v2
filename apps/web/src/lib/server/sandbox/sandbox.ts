@@ -6,6 +6,8 @@
  * demo cuesta una escritura y no cientos, y el cupo gratis de D1 (100.000 escrituras por día)
  * alcanza para muchas visitas.
  */
+import { canalesDemo, informesDemo, marketingDemo, type CampanaDemo } from './crecer.ts';
+import { cuando } from '#lib/panel/cupones.ts';
 import { descripcionDe, lunes9, vigenciaDe } from '#lib/panel/cupones.ts';
 import { cuponesDemo, type CambioCupon, type EstadoRelampago } from './cupones.ts';
 import { aumentar, proximoLunes, type Redondeo } from '#lib/panel/precios.ts';
@@ -16,6 +18,10 @@ import { fromB64url, randomToken, sha256 } from '../crypto.ts';
 import { rubro as buscarRubro, slugDe } from './rubros.ts';
 import { cambios, sandboxes } from './schema.ts';
 import type {
+	Campana,
+	Canales,
+	Informes,
+	Marketing,
 	Cupon,
 	Cupones,
 	CuponNuevo as CuponNuevoT,
@@ -84,7 +90,7 @@ import {
 	type FiltrosPedidos
 } from './pedidos.ts';
 import { resumenDemo } from './resumen.ts';
-import { contextoDemo, tableroDemo, type CambiosTablero } from './tablero.ts';
+import { COSTO_MENSAJE, contextoDemo, tableroDemo, type CambiosTablero } from './tablero.ts';
 import RUBROS from '@mostrador/contrato/rubros.json';
 import { plantilla as buscarPlantilla } from '#lib/plantillas.ts';
 
@@ -244,6 +250,13 @@ export async function buscarLink(db: DbSandbox, cod: string, ahora = Date.now())
 	const sb = await leer(db, f.sandboxId, ahora);
 	if (!sb) return null;
 	return { sb, link: JSON.parse(f.datos ?? 'null') as LinkDemo };
+}
+
+/** El sábado que viene a las 10 de Argentina (el mejor horario para campañas). */
+function sabado10(ahora: number) {
+	const ar = new Date(ahora - 3 * 3_600_000);
+	const dias = (6 - ar.getUTCDay() + 7) % 7 || 7;
+	return Date.UTC(ar.getUTCFullYear(), ar.getUTCMonth(), ar.getUTCDate() + dias, 13);
 }
 
 type AumentoProgramado = { pct: number; redondeo: Redondeo; para: number };
@@ -1017,6 +1030,98 @@ export class DatosSandbox implements Datos {
 					: { ...e, terminada: accion === 'terminar' };
 		await guardarCambio(this.db, this.sb.id, 'relampago', 'vivo', nuevo);
 		return 'ok';
+	}
+
+	// ---------------------------------------------------------------- Crecer
+
+	async marketing(): Promise<Marketing> {
+		const d = await this.demo();
+		const [clientes, cup, nuevas] = await Promise.all([
+			this.regClientes(),
+			this.cupones(),
+			cambiosDe(this.db, this.sb.id, 'campana')
+		]);
+		const cat = d.catalogo.categorias[0];
+		const deCat = new Set(d.catalogo.productos.filter((p) => p.categoria === cat).map((p) => p.id));
+		const compraron = new Set(
+			d.pedidos.filter((p) => p.items.some((i) => deCat.has(i.productoId))).map((p) => p.clienteId)
+		);
+		const conWa = clientes.filter((c) => c.wa);
+		const activos = cup.cupones.filter((c) => c.estado === 'activo');
+		return marketingDemo(
+			d,
+			Date.now(),
+			{
+				todos: conWa.length,
+				vip: conWa.filter((c) => c.seg === 'vip').length,
+				riesgo: conWa.filter((c) => c.seg === 'risk').length,
+				categoria: conWa.filter((c) => compraron.has(c.id)).length
+			},
+			activos.slice(0, 3).map((c) => ({
+				codigo: c.codigo,
+				descripcion: c.descripcion,
+				usos: `${c.usos} usos${c.termina ? ` · ${cuando(c, Date.now()).toLowerCase()}` : ''}`
+			})),
+			activos.find((c) => c.tipo === 'pct')?.codigo ?? null,
+			[...nuevas]
+				.filter(([, v]) => v)
+				.map(([, v]) => v as CampanaDemo)
+				.sort((a, b) => b.en - a.en),
+			COSTO_MENSAJE
+		);
+	}
+
+	async crearCampana(c: {
+		audiencia: 'todos' | 'vip' | 'riesgo' | 'categoria';
+		programar: boolean;
+	}): Promise<Campana | 'sin-audiencia'> {
+		const m = await this.marketing();
+		const personas = m.audiencias.find((a) => a.id === c.audiencia)?.cantidad ?? 0;
+		if (!personas) return 'sin-audiencia';
+		const ahora = Date.now();
+		const id = `n${ahora.toString(36)}`;
+		await guardarCambio(this.db, this.sb.id, 'campana', id, {
+			id,
+			audiencia: c.audiencia,
+			personas,
+			en: ahora,
+			programada: c.programar ? sabado10(ahora) : null
+		} satisfies CampanaDemo);
+		return (await this.marketing()).campanas.find((x) => x.id === id)!;
+	}
+
+	async canales(): Promise<Canales> {
+		const d = await this.demo();
+		const [pausados, productos] = await Promise.all([
+			cambiosDe(this.db, this.sb.id, 'canal'),
+			this.regProductos()
+		]);
+		return canalesDemo(
+			d,
+			Date.now(),
+			new Map(
+				[...pausados].filter(([, v]) => v).map(([k, v]) => [k, (v as { pausado: boolean }).pausado])
+			),
+			productos.filter((p) => p.canales.includes('ig')).length
+		);
+	}
+
+	async fijarCanal(id: string, activo: boolean): Promise<Resultado> {
+		const c = (await this.canales()).canales.find((x) => x.id === id);
+		if (!c) return 'no-existe';
+		if (!c.conectado) return 'no-se-puede';
+		await guardarCambio(this.db, this.sb.id, 'canal', id, { pausado: !activo });
+		return 'ok';
+	}
+
+	async informes(): Promise<Informes> {
+		const d = await this.demo();
+		const productos = await this.regProductos();
+		const vendidos = productos.reduce((s, p) => s + p.vendidos30, 0);
+		const margen = vendidos
+			? Math.round(productos.reduce((s, p) => s + p.margen * p.vendidos30, 0) / vendidos)
+			: 38;
+		return informesDemo(d, Date.now(), margen);
 	}
 
 	// ---------------------------------------------------------------- Listas de precio

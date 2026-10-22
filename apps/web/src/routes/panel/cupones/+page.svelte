@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { invalidateAll } from '$app/navigation';
+	import { page } from '$app/state';
 	import Icon from '#lib/components/Icon.svelte';
 	import Interruptor from '#lib/components/Interruptor.svelte';
 	import Seo from '#lib/components/Seo.svelte';
@@ -28,6 +29,8 @@
 
 	let ahora = $state(Date.now());
 	onMount(() => {
+		// Desde Marketing, "+ Nuevo cupón" llega con ?nuevo y abre el armador.
+		if (page.url.searchParams.has('nuevo')) abrir();
 		const t = setInterval(() => (ahora = Date.now()), 1000);
 		return () => clearInterval(t);
 	});

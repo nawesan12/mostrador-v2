@@ -840,6 +840,84 @@ paths:
       responses:
         '204': { description: Hecho }
         '404': { $ref: '#/components/responses/Problema' }
+  /v1/panel/marketing:
+    get:
+      operationId: marketing
+      summary: Audiencias, campañas y lo necesario para armar una nueva.
+      responses:
+        '200':
+          description: Marketing
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Marketing' }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/campanas:
+    post:
+      operationId: crearCampana
+      summary: Manda (o programa) una campaña por WhatsApp.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [audiencia, mensaje, foto, boton, cupon]
+              properties:
+                audiencia: { type: string, enum: [todos, vip, riesgo, categoria] }
+                mensaje: { type: string, minLength: 10, maxLength: 1000 }
+                foto: { type: boolean }
+                boton: { type: boolean }
+                cupon: { type: boolean }
+                programar: { type: boolean, default: false }
+      responses:
+        '201':
+          description: Creada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Campana' }
+        '400': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/canales:
+    get:
+      operationId: canales
+      summary: Lo vendido por canal este mes, ya descontadas las comisiones.
+      responses:
+        '200':
+          description: Canales
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Canales' }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/canales/{id}:
+    put:
+      operationId: fijarCanal
+      summary: Pausa o activa un canal conectado.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [activo]
+              properties:
+                activo: { type: boolean }
+      responses:
+        '204': { description: Guardado }
+        '404': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/informes:
+    get:
+      operationId: informes
+      summary: Los últimos 12 meses.
+      responses:
+        '200':
+          description: Informes
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Informes' }
+        '401': { $ref: '#/components/responses/Problema' }
   /v1/panel/tienda:
     get:
       operationId: obtenerTienda
@@ -1321,6 +1399,108 @@ components:
               nombre: { type: string }
               foto: { type: [string, 'null'] }
         categoria: { type: [string, 'null'], description: 'La categoría que más vende (alcance "una categoría")' }
+    Campana:
+      type: object
+      required: [id, canal, titulo, detalle, estado, metricas]
+      properties:
+        id: { type: string }
+        canal: { type: string, enum: [wa, email] }
+        titulo: { type: string }
+        detalle: { type: string }
+        estado: { type: string, enum: [Enviando, Programada, Activa, Terminada] }
+        metricas:
+          type: array
+          items:
+            type: object
+            required: [k, v]
+            properties:
+              k: { type: string }
+              v: { type: string }
+    Marketing:
+      type: object
+      required: [tienda, audiencias, costoMensaje, retorno, mensajes, producto, cupon, campanas, cupones]
+      properties:
+        tienda:
+          type: object
+          required: [nombre, foto]
+          properties:
+            nombre: { type: string }
+            foto: { type: [string, 'null'] }
+        audiencias:
+          type: array
+          items:
+            type: object
+            required: [id, nombre, cantidad]
+            properties:
+              id: { type: string, enum: [todos, vip, riesgo, categoria] }
+              nombre: { type: string }
+              cantidad: { type: integer }
+        costoMensaje: { type: integer, description: 'Pesos por mensaje de marketing de WhatsApp' }
+        retorno: { type: [number, 'null'], description: 'Ventas por cada peso, según campañas anteriores' }
+        mensajes: { type: array, items: { type: string }, description: 'Lo que propone Hornero; {nombre} se reemplaza' }
+        producto:
+          type: [object, 'null']
+          required: [nombre, foto]
+          properties:
+            nombre: { type: string }
+            foto: { type: [string, 'null'] }
+        cupon: { type: [string, 'null'], description: 'El cupón que se puede adjuntar' }
+        campanas: { type: array, items: { $ref: '#/components/schemas/Campana' } }
+        cupones:
+          type: array
+          items:
+            type: object
+            required: [codigo, descripcion, usos]
+            properties:
+              codigo: { type: string }
+              descripcion: { type: string }
+              usos: { type: string }
+    Canales:
+      type: object
+      required: [mes, canales]
+      properties:
+        mes: { type: string }
+        canales:
+          type: array
+          items:
+            type: object
+            required: [id, nombre, vendido, pedidos, comision, nota, activo, conectado]
+            properties:
+              id: { type: string, enum: [web, wa, ml, pos, ig, tg, gg, tk] }
+              nombre: { type: string }
+              vendido: { type: integer }
+              pedidos: { type: integer }
+              comision: { type: number, description: '0,14 = 14 %' }
+              nota: { type: string }
+              activo: { type: boolean }
+              conectado: { type: boolean }
+    Informes:
+      type: object
+      required: [meses, series, kpis, historia, insights]
+      properties:
+        meses: { type: array, items: { type: string } }
+        series:
+          type: object
+          required: [ventas, productos, clientes, margen]
+          properties:
+            ventas: { type: array, items: { type: integer } }
+            productos: { type: array, items: { type: integer } }
+            clientes: { type: array, items: { type: integer } }
+            margen: { type: array, items: { type: [integer, 'null'] } }
+        kpis:
+          type: object
+          required: [ventas, ventasVs, ticket, ticketVs, margen, margenVs, ahorro, mesAnterior]
+          properties:
+            ventas: { type: integer }
+            ventasVs: { type: [number, 'null'] }
+            ticket: { type: integer }
+            ticketVs: { type: [number, 'null'] }
+            margen: { type: [integer, 'null'] }
+            margenVs: { type: [integer, 'null'] }
+            ahorro: { type: integer, description: 'Comisiones que no pagó contra una plataforma con comisión' }
+            mesAnterior: { type: string }
+        historia: { type: integer, description: 'Meses de historia' }
+        insights: { type: array, items: { type: string } }
     Tablero:
       type: object
       required: [periodo, desde, hasta, hola, ventas, serie, kpis, canales, meta, avisos, ultimosPedidos, paraHacer, enVivo, caja, liquidaciones, hornero, bandeja, integraciones, masVendidos, resenas, envios]

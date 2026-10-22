@@ -36,6 +36,10 @@ export type AutomaticosCarritos = components['schemas']['AutomaticosCarritos'];
 export type PedidoNuevo = components['schemas']['PedidoNuevo'];
 export type ListasPrecio = components['schemas']['ListasPrecio'];
 export type Cupon = components['schemas']['Cupon'];
+export type Marketing = components['schemas']['Marketing'];
+export type Campana = components['schemas']['Campana'];
+export type Canales = components['schemas']['Canales'];
+export type Informes = components['schemas']['Informes'];
 export type Cupones = components['schemas']['Cupones'];
 export type CuponNuevo = components['schemas']['CuponNuevo'];
 export type AccionCupon = 'pausar' | 'activar' | 'duplicar' | 'minimo' | 'deshacer-minimo';
@@ -102,6 +106,18 @@ export interface Datos {
 	responderPregunta(id: string, respuesta: string): Promise<Resultado>;
 	listasPrecio(): Promise<ListasPrecio>;
 	cupones(): Promise<Cupones>;
+	marketing(): Promise<Marketing>;
+	crearCampana(c: {
+		audiencia: 'todos' | 'vip' | 'riesgo' | 'categoria';
+		mensaje: string;
+		foto: boolean;
+		boton: boolean;
+		cupon: boolean;
+		programar: boolean;
+	}): Promise<Campana | 'sin-audiencia' | 'sin-whatsapp'>;
+	canales(): Promise<Canales>;
+	fijarCanal(id: string, activo: boolean): Promise<Resultado>;
+	informes(): Promise<Informes>;
 	crearCupon(n: CuponNuevo): Promise<Cupon | 'repetido'>;
 	accionCupon(
 		id: string,
