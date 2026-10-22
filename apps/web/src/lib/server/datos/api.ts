@@ -5,6 +5,7 @@
 import { error } from '@sveltejs/kit';
 import type {
 	AccionLote,
+	ListasPrecio,
 	Devolucion,
 	PedidoNuevo,
 	ResenasYPreguntas,
@@ -218,8 +219,30 @@ export class DatosApi implements Datos {
 		return (await this.pedir<{ codigo: string }>('/v1/panel/links', 'POST', l)).codigo;
 	}
 
+	listasPrecio() {
+		return this.pedir<ListasPrecio>('/v1/panel/listas-precio');
+	}
+	async aumentarPrecios(pct: number, redondeo: 'no' | '90' | '500', programar: boolean) {
+		const r = await this.pedir<{ productos: number; para?: string | null }>(
+			'/v1/panel/listas-precio/aumento',
+			'POST',
+			{ pct, redondeo, programar }
+		);
+		return { productos: r.productos, para: r.para ?? null };
+	}
+	async deshacerAumento() {
+		return resultado(await this.intentar('/v1/panel/listas-precio/aumento/deshacer', 'POST'));
+	}
+	async cancelarAumento() {
+		return resultado(await this.intentar('/v1/panel/listas-precio/programado', 'DELETE'));
+	}
+
 	/** Como `pedir`, pero 404 y 409 vuelven como respuesta (son resultados, no errores). */
-	private async intentar(ruta: string, metodo: 'GET' | 'POST' | 'PUT', cuerpo?: unknown) {
+	private async intentar(
+		ruta: string,
+		metodo: 'GET' | 'POST' | 'PUT' | 'DELETE',
+		cuerpo?: unknown
+	) {
 		const res = await this.f(this.base + ruta, {
 			method: metodo,
 			headers: {

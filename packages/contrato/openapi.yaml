@@ -696,6 +696,59 @@ paths:
         '204': { description: Pagado }
         '404': { $ref: '#/components/responses/Problema' }
         '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/listas-precio:
+    get:
+      operationId: listasPrecio
+      summary: Las listas de precio y la muestra para el aumento por inflación.
+      responses:
+        '200':
+          description: Listas
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ListasPrecio' }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/listas-precio/aumento:
+    post:
+      operationId: aumentarPrecios
+      summary: Sube todos los precios (o lo programa para el lunes).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pct, redondeo]
+              properties:
+                pct: { type: integer, minimum: 1, maximum: 50 }
+                redondeo: { type: string, enum: ['no', '90', '500'] }
+                programar: { type: boolean, default: false }
+      responses:
+        '200':
+          description: Aplicado o programado
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [productos]
+                properties:
+                  productos: { type: integer }
+                  para: { type: [string, 'null'], format: date-time }
+        '400': { $ref: '#/components/responses/Problema' }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/listas-precio/aumento/deshacer:
+    post:
+      operationId: deshacerAumento
+      summary: Vuelve los precios a como estaban antes del último aumento.
+      responses:
+        '204': { description: Deshecho }
+        '404': { $ref: '#/components/responses/Problema' }
+  /v1/panel/listas-precio/programado:
+    delete:
+      operationId: cancelarAumento
+      summary: Cancela el aumento programado.
+      responses:
+        '204': { description: Cancelado }
+        '404': { $ref: '#/components/responses/Problema' }
   /v1/panel/tienda:
     get:
       operationId: obtenerTienda
@@ -1021,6 +1074,38 @@ components:
         cuotas: { type: boolean }
         pagado: { type: boolean }
         pedido: { type: [integer, 'null'] }
+    ListasPrecio:
+      type: object
+      required: [listas, productos, muestra, programado]
+      properties:
+        listas:
+          type: array
+          items:
+            type: object
+            required: [id, nombre, quien, ajuste, detalle]
+            properties:
+              id: { type: string, enum: [minorista, mayorista, ml, revendedoras] }
+              nombre: { type: string }
+              quien: { type: string }
+              ajuste: { type: integer, description: 'Porcentaje sobre el precio base (0 = base)' }
+              detalle: { type: string }
+        productos: { type: integer, description: 'Cuántos productos toca un aumento' }
+        muestra:
+          type: array
+          items:
+            type: object
+            required: [id, nombre, precio]
+            properties:
+              id: { type: string }
+              nombre: { type: string }
+              precio: { type: integer }
+        programado:
+          type: [object, 'null']
+          required: [pct, redondeo, para]
+          properties:
+            pct: { type: integer }
+            redondeo: { type: string, enum: ['no', '90', '500'] }
+            para: { type: string, format: date-time }
     Tablero:
       type: object
       required: [periodo, desde, hasta, hola, ventas, serie, kpis, canales, meta, avisos, ultimosPedidos, paraHacer, enVivo, caja, liquidaciones, hornero, bandeja, integraciones, masVendidos, resenas, envios]

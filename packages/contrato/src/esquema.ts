@@ -691,6 +691,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/listas-precio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Las listas de precio y la muestra para el aumento por inflación. */
+        get: operations["listasPrecio"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/listas-precio/aumento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sube todos los precios (o lo programa para el lunes). */
+        post: operations["aumentarPrecios"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/listas-precio/aumento/deshacer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Vuelve los precios a como estaban antes del último aumento. */
+        post: operations["deshacerAumento"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/listas-precio/programado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Cancela el aumento programado. */
+        delete: operations["cancelarAumento"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/tienda": {
         parameters: {
             query?: never;
@@ -979,6 +1047,31 @@ export interface components {
             cuotas: boolean;
             pagado: boolean;
             pedido: number | null;
+        };
+        ListasPrecio: {
+            listas: {
+                /** @enum {string} */
+                id: "minorista" | "mayorista" | "ml" | "revendedoras";
+                nombre: string;
+                quien: string;
+                /** @description Porcentaje sobre el precio base (0 = base) */
+                ajuste: number;
+                detalle: string;
+            }[];
+            /** @description Cuántos productos toca un aumento */
+            productos: number;
+            muestra: {
+                id: string;
+                nombre: string;
+                precio: number;
+            }[];
+            programado: {
+                pct: number;
+                /** @enum {string} */
+                redondeo: "no" | "90" | "500";
+                /** Format: date-time */
+                para: string;
+            } | null;
         };
         Tablero: {
             /** @enum {string} */
@@ -2504,6 +2597,101 @@ export interface operations {
             };
             404: components["responses"]["Problema"];
             409: components["responses"]["Problema"];
+        };
+    };
+    listasPrecio: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Listas */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListasPrecio"];
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    aumentarPrecios: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    pct: number;
+                    /** @enum {string} */
+                    redondeo: "no" | "90" | "500";
+                    /** @default false */
+                    programar?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Aplicado o programado */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        productos: number;
+                        /** Format: date-time */
+                        para?: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["Problema"];
+            401: components["responses"]["Problema"];
+        };
+    };
+    deshacerAumento: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deshecho */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["Problema"];
+        };
+    };
+    cancelarAumento: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cancelado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["Problema"];
         };
     };
     obtenerTienda: {
