@@ -11,7 +11,9 @@ export default defineConfig({
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true,
 				experimental: { async: true }
 			},
-			adapter: adapter(),
+			// En los tests no se abren bindings remotos (Workers AI): en CI no hay credenciales y
+			// las pruebas nunca llaman al modelo.
+			adapter: adapter({ platformProxy: { remoteBindings: !process.env.VITEST } }),
 			// Igual que en Caja: el chequeo de origen lo hace hooks.server.ts, porque el OAuth del
 			// conector MCP recibe POST sin `Origin` desde los servidores de Claude o ChatGPT.
 			csrf: { trustedOrigins: ['*'] },
