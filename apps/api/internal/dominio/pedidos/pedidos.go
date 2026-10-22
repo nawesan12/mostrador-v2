@@ -1,0 +1,448 @@
+// Package pedidos: los pedidos de cada tienda (components/schemas/PedidoFila, PedidoDetalle,
+// ListaPedidos). La lista filtra en SQL y cuenta cada faceta sin su propio filtro, igual que la demo.
+package pedidos
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"slices"
+	"strings"
+	"time"
+
+	"github.com/jackc/pgx/v5"
+)
+
+// Circuito es el orden de las etapas (Cancelado va aparte).
+var Circuito = []string{"Sin pagar", "Para preparar", "Listo para despachar", "En camino", "Entregado"}
+
+// Estados válidos.
+var Estados = append(slices.Clone(Circuito), "Cancelado")
+
+var (
+	ErrNoExiste   = errors.New("el pedido no existe")
+	ErrTransicion = errors.New("el pedido no puede pasar a ese estado")
+)
+
+// TransicionValida: avanzar una etapa, volver una (deshacer) o cancelar (y deshacer la cancelación).
+func TransicionValida(de, a string) bool {
+	if de == a || !slices.Contains(Estados, a) {
+		return false
+	}
+	if a == "Cancelado" {
+		return de != "Entregado"
+	}
+	if de == "Cancelado" {
+		return a != "Entregado"
+	}
+	d := slices.Index(Circuito, a) - slices.Index(Circuito, de)
+	return d == 1 || d == -1
+}
+
+type tx interface {
+	EnTienda(context.Context, string, func(pgx.Tx) error) error
+}
+
+// Item es un producto del pedido, tal como se vendió.
+type Item struct {
+	Nombre   string  `json:"nombre"`
+	Foto     *string `json:"foto"`
+	Cantidad int     `json:"cantidad"`
+	Precio   int64   `json:"precio"`
+}
+
+// Comprador es quien compró, copiado en el pedido.
+type Comprador struct {
+	Nombre   string  `json:"nombre"`
+	Email    *string `json:"email"`
+	Telefono *string `json:"telefono"`
+	Foto     *string `json:"foto"`
+}
+
+// Nuevo es lo necesario para crear un pedido.
+type Nuevo struct {
+	Comprador Comprador
+	Canal     string
+	Pago      string
+	Envio     string
+	Ciudad    string
+	Estado    string
+	Items     []Item
+	Hornero   bool
+	Mayorista bool
+	Creado    time.Time
+}
+
+// Crear da de alta un pedido con el próximo número de la tienda.
+func Crear(ctx context.Context, pool tx, tiendaID string, n Nuevo) (int, error) {
+	if len(n.Items) == 0 {
+		return 0, errors.New("el pedido no tiene productos")
+	}
+	if n.Estado == "" {
+		n.Estado = "Sin pagar"
+	}
+	if n.Creado.IsZero() {
+		n.Creado = time.Now()
+	}
+	var sub int64
+	for _, i := range n.Items {
+		sub += i.Precio * int64(i.Cantidad)
+	}
+	comprador, _ := json.Marshal(n.Comprador)
+	items, _ := json.Marshal(n.Items)
+	var numero int
+	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		// El número es correlativo por tienda: se toma la fila de la tienda para no repetirlo.
+		if _, err := t.Exec(ctx, `SELECT 1 FROM tiendas WHERE id = $1 FOR UPDATE`, tiendaID); err != nil {
+			return err
+		}
+		return t.QueryRow(ctx, `
+			INSERT INTO pedidos (tienda_id, numero, comprador, canal, pago, envio, ciudad_envio, estado,
+				items, subtotal, total, hornero, mayorista, creado_en)
+			SELECT $1, coalesce(max(numero), 1000) + 1, $2, $3, $4, $5, $6, $7, $8, $9, $9, $10, $11, $12
+			FROM pedidos WHERE tienda_id = $1
+			RETURNING numero`,
+			tiendaID, comprador, n.Canal, n.Pago, n.Envio, n.Ciudad, n.Estado, items, sub, n.Hornero, n.Mayorista, n.Creado,
+		).Scan(&numero)
+	})
+	return numero, err
+}
+
+// Filtros son los de la URL del panel.
+type Filtros struct {
+	Q                     string
+	Estado, Canal, Pago   []string
+	Envio                 []string
+	Fecha                 string
+	Minimo                int64
+	VIP, Hornero, Mayoris bool
+	Orden                 string
+	Desde, Cuantos        int
+}
+
+// Producto es la miniatura de la fila.
+type Producto struct {
+	Nombre string  `json:"nombre"`
+	Foto   *string `json:"foto"`
+}
+
+// Fila es un pedido en la lista.
+type Fila struct {
+	Numero            int        `json:"numero"`
+	Cliente           string     `json:"cliente"`
+	Foto              *string    `json:"foto"`
+	Ciudad            string     `json:"ciudad"`
+	Canal             string     `json:"canal"`
+	Pago              string     `json:"pago"`
+	Envio             string     `json:"envio"`
+	Estado            string     `json:"estado"`
+	Total             int64      `json:"total"`
+	Creado            time.Time  `json:"creado"`
+	Productos         []Producto `json:"productos"`
+	CantidadProductos int        `json:"cantidadProductos"`
+	VIP               bool       `json:"vip"`
+	Hornero           bool       `json:"hornero"`
+	Mayorista         bool       `json:"mayorista"`
+}
+
+// Lista es la respuesta de la lista.
+type Lista struct {
+	Total   int            `json:"total"`
+	Suma    int64          `json:"suma"`
+	Filas   []Fila         `json:"filas"`
+	Etapas  map[string]int `json:"etapas"`
+	Facetas struct {
+		Canal map[string]int `json:"canal"`
+		Pago  map[string]int `json:"pago"`
+		Envio map[string]int `json:"envio"`
+	} `json:"facetas"`
+}
+
+// condiciones arma el WHERE; `sin` deja afuera el filtro de esa faceta (para contarla).
+func condiciones(f Filtros, ahora time.Time, sin string) (string, []any) {
+	w := []string{"true"}
+	args := []any{}
+	arg := func(v any) string { args = append(args, v); return fmt.Sprintf("$%d", len(args)) }
+	switch f.Fecha {
+	case "hoy":
+		w = append(w, "creado_en >= "+arg(ahora.Add(-24*time.Hour)))
+	case "7d":
+		w = append(w, "creado_en >= "+arg(ahora.Add(-7*24*time.Hour)))
+	case "30d":
+		w = append(w, "creado_en >= "+arg(ahora.Add(-30*24*time.Hour)))
+	}
+	if f.Minimo > 0 {
+		w = append(w, "total >= "+arg(f.Minimo))
+	}
+	if f.VIP {
+		w = append(w, "vip")
+	}
+	if f.Hornero {
+		w = append(w, "hornero")
+	}
+	if f.Mayoris {
+		w = append(w, "mayorista")
+	}
+	if q := strings.TrimSpace(f.Q); q != "" {
+		p := arg("%" + strings.NewReplacer(`\`, `\\`, "%", `\%`, "_", `\_`).Replace(strings.TrimPrefix(q, "#")) + "%")
+		w = append(w, fmt.Sprintf(`(numero::text || ' ' || (comprador->>'nombre') || ' ' || ciudad_envio || ' ' ||
+			coalesce((SELECT string_agg(i->>'nombre', ' ') FROM jsonb_array_elements(items) i), '')) ILIKE %s`, p))
+	}
+	for _, c := range []struct {
+		col  string
+		vals []string
+	}{{"estado", f.Estado}, {"canal", f.Canal}, {"pago", f.Pago}, {"envio", f.Envio}} {
+		if c.col != sin && len(c.vals) > 0 {
+			w = append(w, c.col+" = ANY("+arg(c.vals)+")")
+		}
+	}
+	return strings.Join(w, " AND "), args
+}
+
+const columnasFila = `numero, comprador->>'nombre', comprador->>'foto', ciudad_envio, canal, pago, envio, estado,
+	total, creado_en, items, vip, hornero, mayorista`
+
+func escanearFila(r pgx.Row) (Fila, error) {
+	var f Fila
+	var items []Item
+	err := r.Scan(&f.Numero, &f.Cliente, &f.Foto, &f.Ciudad, &f.Canal, &f.Pago, &f.Envio, &f.Estado,
+		&f.Total, &f.Creado, &items, &f.VIP, &f.Hornero, &f.Mayorista)
+	f.CantidadProductos = len(items)
+	f.Productos = []Producto{}
+	for i, it := range items {
+		if i == 3 {
+			break
+		}
+		f.Productos = append(f.Productos, Producto{Nombre: it.Nombre, Foto: it.Foto})
+	}
+	return f, err
+}
+
+// Listar devuelve la ventana pedida con los conteos.
+func Listar(ctx context.Context, pool tx, tiendaID string, f Filtros, ahora time.Time) (Lista, error) {
+	l := Lista{Filas: []Fila{}, Etapas: map[string]int{}}
+	l.Facetas.Canal, l.Facetas.Pago, l.Facetas.Envio = map[string]int{}, map[string]int{}, map[string]int{}
+	if f.Cuantos <= 0 || f.Cuantos > 200 {
+		f.Cuantos = 60
+	}
+	orden := map[string]string{
+		"monto":  "total DESC, numero DESC",
+		"viejos": "creado_en, numero",
+		"urgentes": `CASE WHEN estado IN ('Para preparar', 'Listo para despachar') THEN
+				CASE WHEN creado_en > now() - interval '20 hours' THEN 3 ELSE 2 END
+			WHEN estado = 'Sin pagar' AND creado_en < now() - interval '24 hours' THEN 1 ELSE 0 END DESC, creado_en DESC`,
+	}[f.Orden]
+	if orden == "" {
+		orden = "creado_en DESC, numero DESC"
+	}
+	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		w, args := condiciones(f, ahora, "")
+		if err := t.QueryRow(ctx, `SELECT count(*), coalesce(sum(total), 0) FROM pedidos WHERE `+w, args...).Scan(&l.Total, &l.Suma); err != nil {
+			return err
+		}
+		filas, err := t.Query(ctx, fmt.Sprintf(`SELECT %s FROM pedidos WHERE %s ORDER BY %s LIMIT %d OFFSET %d`,
+			columnasFila, w, orden, f.Cuantos, max(0, f.Desde)), args...)
+		if err != nil {
+			return err
+		}
+		for filas.Next() {
+			fi, err := escanearFila(filas)
+			if err != nil {
+				return err
+			}
+			l.Filas = append(l.Filas, fi)
+		}
+		if err := filas.Err(); err != nil {
+			return err
+		}
+		for _, c := range []struct {
+			col string
+			m   map[string]int
+		}{{"estado", l.Etapas}, {"canal", l.Facetas.Canal}, {"pago", l.Facetas.Pago}, {"envio", l.Facetas.Envio}} {
+			w, args := condiciones(f, ahora, c.col)
+			r, err := t.Query(ctx, fmt.Sprintf(`SELECT %s, count(*) FROM pedidos WHERE %s GROUP BY 1`, c.col, w), args...)
+			if err != nil {
+				return err
+			}
+			for r.Next() {
+				var k string
+				var n int
+				if err := r.Scan(&k, &n); err != nil {
+					return err
+				}
+				c.m[k] = n
+			}
+			if err := r.Err(); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	return l, err
+}
+
+// Paso del historial.
+type Paso struct {
+	Texto  string     `json:"texto"`
+	Cuando *time.Time `json:"cuando"`
+	Hecho  bool       `json:"hecho"`
+}
+
+// Detalle es el pedido completo (la hoja).
+type Detalle struct {
+	Fila
+	Items      []Item `json:"items"`
+	Subtotal   int64  `json:"subtotal"`
+	CostoEnvio int64  `json:"costoEnvio"`
+	Comprador  struct {
+		Comprador
+		Desde   time.Time `json:"desde"`
+		Pedidos int       `json:"pedidos"`
+		Gastado int64     `json:"gastado"`
+	} `json:"comprador"`
+	EstadoPago  string  `json:"estadoPago"`
+	Factura     *string `json:"factura"`
+	Seguimiento *string `json:"seguimiento"`
+	Llega       *string `json:"llega"`
+	Nota        *string `json:"nota"`
+	Historial   []Paso  `json:"historial"`
+}
+
+// Obtener devuelve el detalle de un pedido.
+func Obtener(ctx context.Context, pool tx, tiendaID string, numero int) (Detalle, error) {
+	var d Detalle
+	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		var comprador Comprador
+		var estadosEn map[string]time.Time
+		err := t.QueryRow(ctx, `SELECT `+columnasFila+`, comprador, subtotal, costo_envio, estado_pago, factura,
+				seguimiento, nota, estados_en
+			FROM pedidos WHERE tienda_id = $1 AND numero = $2`, tiendaID, numero).Scan(
+			&d.Numero, &d.Cliente, &d.Foto, &d.Ciudad, &d.Canal, &d.Pago, &d.Envio, &d.Estado, &d.Total, &d.Creado,
+			&d.Items, &d.VIP, &d.Hornero, &d.Mayorista, &comprador, &d.Subtotal, &d.CostoEnvio, &d.EstadoPago,
+			&d.Factura, &d.Seguimiento, &d.Nota, &estadosEn)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrNoExiste
+		}
+		if err != nil {
+			return err
+		}
+		d.Comprador.Comprador = comprador
+		d.CantidadProductos = len(d.Items)
+		d.Productos = []Producto{}
+		for i, it := range d.Items {
+			if i < 3 {
+				d.Productos = append(d.Productos, Producto{Nombre: it.Nombre, Foto: it.Foto})
+			}
+		}
+		// Historia del comprador en la tienda (por email o, si no hay, por nombre).
+		if err := t.QueryRow(ctx, `SELECT min(creado_en), count(*), coalesce(sum(total), 0) FROM pedidos
+			WHERE tienda_id = $1 AND estado <> 'Cancelado' AND
+				CASE WHEN $2::text IS NOT NULL THEN comprador->>'email' = $2 ELSE comprador->>'nombre' = $3 END`,
+			tiendaID, comprador.Email, comprador.Nombre).Scan(&d.Comprador.Desde, &d.Comprador.Pedidos, &d.Comprador.Gastado); err != nil {
+			return err
+		}
+		d.Historial = historial(d.Fila, d.Canal, d.Pago, d.Envio, d.Factura != nil, estadosEn)
+		return nil
+	})
+	return d, err
+}
+
+func historial(f Fila, canal, pago, envio string, facturado bool, en map[string]time.Time) []Paso {
+	cuando := func(e string) *time.Time {
+		if t, ok := en[e]; ok {
+			return &t
+		}
+		return nil
+	}
+	creado := f.Creado
+	h := []Paso{{Texto: "Pedido creado por " + nombreCanal[canal], Cuando: &creado, Hecho: true}}
+	if f.Estado == "Cancelado" {
+		return append(h, Paso{Texto: "Pedido cancelado", Cuando: cuando("Cancelado"), Hecho: true})
+	}
+	paso := slices.Index(Circuito, f.Estado)
+	if paso >= 1 {
+		h = append(h, Paso{Texto: "Pago aprobado · " + nombrePago[pago], Cuando: cuando("Para preparar"), Hecho: true})
+	} else {
+		h = append(h, Paso{Texto: "Esperando el pago"})
+	}
+	if facturado {
+		h = append(h, Paso{Texto: "Factura B emitida", Cuando: cuando("Para preparar"), Hecho: true})
+	}
+	if paso >= 2 {
+		h = append(h, Paso{Texto: "Preparado", Cuando: cuando("Listo para despachar"), Hecho: true})
+	} else {
+		h = append(h, Paso{Texto: "Preparar y despachar"})
+	}
+	if envio != "retiro" {
+		h = append(h, Paso{Texto: "Despachado con " + nombreEnvio[envio], Cuando: cuando("En camino"), Hecho: paso >= 3})
+	}
+	texto := "Entregado"
+	if envio == "retiro" {
+		texto = "Retirado"
+	}
+	return append(h, Paso{Texto: texto, Cuando: cuando("Entregado"), Hecho: paso >= 4})
+}
+
+var (
+	nombreCanal = map[string]string{"web": "la tienda online", "wa": "WhatsApp", "ml": "Mercado Libre", "ig": "Instagram", "pos": "el local", "tg": "Telegram"}
+	nombrePago  = map[string]string{"mp": "Mercado Pago", "tarjeta": "tarjeta", "payway": "Payway", "modo": "MODO", "uala": "Ualá", "transf": "transferencia", "efectivo": "efectivo"}
+	nombreEnvio = map[string]string{"andreani": "Andreani", "oca": "OCA", "correo": "Correo Argentino", "moto": "Moto propia", "retiro": "Retiro en el local"}
+)
+
+// CambiarEstado avanza, vuelve atrás o cancela un pedido.
+func CambiarEstado(ctx context.Context, pool tx, tiendaID string, numero int, estado string) error {
+	return pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		var de string
+		err := t.QueryRow(ctx, `SELECT estado FROM pedidos WHERE tienda_id = $1 AND numero = $2 FOR UPDATE`, tiendaID, numero).Scan(&de)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrNoExiste
+		}
+		if err != nil {
+			return err
+		}
+		if !TransicionValida(de, estado) {
+			return ErrTransicion
+		}
+		_, err = t.Exec(ctx, `UPDATE pedidos SET estado = $3,
+				estados_en = estados_en || jsonb_build_object($3::text, now())
+			WHERE tienda_id = $1 AND numero = $2`, tiendaID, numero, estado)
+		return err
+	})
+}
+
+// Cambio es lo que deja una acción en lote (para deshacer).
+type Cambio struct {
+	Numero int    `json:"numero"`
+	Antes  string `json:"antes"`
+}
+
+// EnLote aplica una acción a varios pedidos; los que no están en la etapa justa se saltean.
+// Facturar y avisar necesitan ARCA y WhatsApp conectados: hasta entonces no hacen nada.
+func EnLote(ctx context.Context, pool tx, tiendaID string, numeros []int, accion string) ([]Cambio, error) {
+	paso := map[string][2]string{
+		"preparar":  {"Para preparar", "Listo para despachar"},
+		"etiquetas": {"Listo para despachar", "En camino"},
+	}[accion]
+	de, a := paso[0], paso[1]
+	cambios := []Cambio{}
+	if de == "" {
+		return cambios, nil
+	}
+	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		r, err := t.Query(ctx, `UPDATE pedidos SET estado = $4, estados_en = estados_en || jsonb_build_object($4::text, now())
+			WHERE tienda_id = $1 AND numero = ANY($2) AND estado = $3 RETURNING numero`, tiendaID, numeros, de, a)
+		if err != nil {
+			return err
+		}
+		for r.Next() {
+			var n int
+			if err := r.Scan(&n); err != nil {
+				return err
+			}
+			cambios = append(cambios, Cambio{Numero: n, Antes: de})
+		}
+		return r.Err()
+	})
+	return cambios, err
+}

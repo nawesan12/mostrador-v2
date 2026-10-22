@@ -16,9 +16,9 @@ import (
 // DiasPrueba: lo que dura la prueba gratis.
 const DiasPrueba = 14
 
-// Resumen es lo que muestra el armazón del panel (components/schemas/ResumenPanel). Las insignias y
-// las notificaciones se llenan a medida que llegan los dominios (pedidos, carritos, WhatsApp,
-// tareas); hasta entonces van en cero y vacías, nunca inventadas.
+// Resumen es lo que muestra el armazón del panel (components/schemas/ResumenPanel). La insignia de
+// pedidos ya es real; las demás y las notificaciones se llenan a medida que llegan los dominios
+// (carritos, WhatsApp, tareas); hasta entonces van en cero y vacías, nunca inventadas.
 type Resumen struct {
 	Insignias struct {
 		Pedidos   int `json:"pedidos"`
@@ -44,7 +44,11 @@ func ObtenerResumen(ctx context.Context, pool interface {
 	var creada time.Time
 	var plan string
 	err := pool.EnTienda(ctx, tiendaID, func(tx pgx.Tx) error {
-		return tx.QueryRow(ctx, `SELECT plan, creada_en FROM tiendas WHERE id = $1`, tiendaID).Scan(&plan, &creada)
+		if err := tx.QueryRow(ctx, `SELECT plan, creada_en FROM tiendas WHERE id = $1`, tiendaID).Scan(&plan, &creada); err != nil {
+			return err
+		}
+		return tx.QueryRow(ctx, `SELECT count(*) FROM pedidos WHERE tienda_id = $1 AND estado = 'Para preparar'`, tiendaID).
+			Scan(&r.Insignias.Pedidos)
 	})
 	if err != nil {
 		return r, err

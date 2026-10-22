@@ -13,8 +13,11 @@ import { fromB64url, randomToken, sha256 } from '../crypto.ts';
 import { rubro as buscarRubro, slugDe } from './rubros.ts';
 import { cambios, sandboxes } from './schema.ts';
 import type {
+	AccionLote,
 	ContextoHornero,
 	Datos,
+	ListaPedidos,
+	PedidoDetalle,
 	Idea,
 	Onboarding,
 	Periodo,
@@ -22,7 +25,15 @@ import type {
 	Tablero,
 	Tienda
 } from '../datos/tipos.ts';
-import { demoDe } from './demo.ts';
+import { demoDe, type Demo, type EstadoPedido } from './demo.ts';
+import {
+	detalleDemo,
+	listarDemo,
+	pedidosVivos,
+	transicionValida,
+	type CambioPedido,
+	type FiltrosPedidos
+} from './pedidos.ts';
 import { resumenDemo } from './resumen.ts';
 import { contextoDemo, tableroDemo, type CambiosTablero } from './tablero.ts';
 import RUBROS from '@mostrador/contrato/rubros.json';
@@ -191,13 +202,105 @@ export class DatosSandbox implements Datos {
 		});
 	}
 
+	/** Los datos de ejemplo con lo que cambió el visitante (estado y factura de cada pedido). */
+	private async demo(): Promise<Demo> {
+		const d = demoDe(this.plantilla(), this.sb.creadoEn)!;
+		const c = await this.cambiosPedidos();
+		if (!c.size) return d;
+		return {
+			...d,
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars -- se descarta `cambio`
+			pedidos: pedidosVivos(d, c, Number.MAX_SAFE_INTEGER).map(({ cambio, ...p }) => p)
+		};
+	}
+
+	private async cambiosPedidos() {
+		const c = await cambiosDe(this.db, this.sb.id, 'pedido');
+		return new Map([...c].filter(([, v]) => v).map(([k, v]) => [Number(k), v as CambioPedido]));
+	}
+
+	async listarPedidos(f: FiltrosPedidos): Promise<ListaPedidos> {
+		const d = demoDe(this.plantilla(), this.sb.creadoEn)!;
+		return listarDemo(d, await this.cambiosPedidos(), f, Date.now());
+	}
+
+	async pedido(numero: number): Promise<PedidoDetalle | null> {
+		const d = demoDe(this.plantilla(), this.sb.creadoEn)!;
+		return detalleDemo(d, await this.cambiosPedidos(), numero, Date.now());
+	}
+
+	/** Cambia el estado de un pedido (avanzar, deshacer o cancelar). */
+	async cambiarEstado(
+		numero: number,
+		estado: EstadoPedido
+	): Promise<'ok' | 'no-existe' | 'no-se-puede'> {
+		const d = demoDe(this.plantilla(), this.sb.creadoEn)!;
+		const cambios = await this.cambiosPedidos();
+		const p = pedidosVivos(d, cambios, Date.now()).find((x) => x.numero === numero);
+		if (!p) return 'no-existe';
+		if (!transicionValida(p.estado, estado)) return 'no-se-puede';
+		await guardarCambio(this.db, this.sb.id, 'pedido', String(numero), {
+			...p.cambio,
+			estado,
+			en: { ...p.cambio.en, [estado]: Date.now() }
+		} satisfies CambioPedido);
+		return 'ok';
+	}
+
+	async pedidosEnLote(numeros: number[], accion: AccionLote) {
+		const d = demoDe(this.plantilla(), this.sb.creadoEn)!;
+		const cambios = await this.cambiosPedidos();
+		const pedidos = new Map(pedidosVivos(d, cambios, Date.now()).map((p) => [p.numero, p]));
+		const hechos: { numero: number; antes: EstadoPedido }[] = [];
+		const ahora = Date.now();
+		for (const n of new Set(numeros)) {
+			const p = pedidos.get(n);
+			if (!p) continue;
+			let cambio: CambioPedido | null = null;
+			if (accion === 'preparar' && p.estado === 'Para preparar')
+				cambio = {
+					...p.cambio,
+					estado: 'Listo para despachar',
+					en: { ...p.cambio.en, 'Listo para despachar': ahora }
+				};
+			else if (accion === 'etiquetas' && p.estado === 'Listo para despachar')
+				cambio = { ...p.cambio, estado: 'En camino', en: { ...p.cambio.en, 'En camino': ahora } };
+			else if (
+				accion === 'facturar' &&
+				!p.facturado &&
+				p.estado !== 'Sin pagar' &&
+				p.estado !== 'Cancelado'
+			)
+				cambio = { ...p.cambio, facturado: true };
+			else if (accion === 'avisar' && p.estado !== 'Cancelado')
+				cambio = { ...p.cambio, recordado: ahora };
+			if (!cambio) continue;
+			await guardarCambio(this.db, this.sb.id, 'pedido', String(n), cambio);
+			hechos.push({ numero: n, antes: p.estado });
+		}
+		return { hechos: hechos.length, cambios: hechos };
+	}
+
+	async recordarPago(numero: number): Promise<'ok' | 'no-existe' | 'no-se-puede'> {
+		const d = demoDe(this.plantilla(), this.sb.creadoEn)!;
+		const cambios = await this.cambiosPedidos();
+		const p = pedidosVivos(d, cambios, Date.now()).find((x) => x.numero === numero);
+		if (!p) return 'no-existe';
+		if (p.estado !== 'Sin pagar') return 'no-se-puede';
+		await guardarCambio(this.db, this.sb.id, 'pedido', String(numero), {
+			...p.cambio,
+			recordado: Date.now()
+		});
+		return 'ok';
+	}
+
 	/** La plantilla del sandbox (o la del rubro). */
 	private plantilla() {
 		return this.sb.plantilla ?? buscarRubro(this.sb.rubro)!.plantilla;
 	}
 
 	async resumen(): Promise<ResumenPanel> {
-		const d = demoDe(this.plantilla(), this.sb.creadoEn)!;
+		const d = await this.demo();
 		const leidas = (await cambiosDe(this.db, this.sb.id, 'notificaciones')).get('leidas') as
 			{ hasta?: number } | undefined;
 		return resumenDemo(d, this.sb.creadoEn, leidas?.hasta ?? 0, Date.now());
@@ -208,7 +311,7 @@ export class DatosSandbox implements Datos {
 	}
 
 	async tablero(periodo: Periodo): Promise<Tablero> {
-		const d = demoDe(this.plantilla(), this.sb.creadoEn)!;
+		const d = await this.demo();
 		const c = await cambiosDe(this.db, this.sb.id, 'tablero');
 		const cambios: CambiosTablero = {
 			meta: (c.get('meta') as { objetivo: number } | undefined)?.objetivo,
@@ -238,7 +341,7 @@ export class DatosSandbox implements Datos {
 	}
 
 	async recordarCarritos() {
-		const d = demoDe(this.plantilla(), this.sb.creadoEn)!;
+		const d = await this.demo();
 		if ((await this.ideasHechas()).includes('carritos')) return 0;
 		await guardarCambio(this.db, this.sb.id, 'hornero', 'carritos', { en: Date.now() });
 		return d.carritos.length;
@@ -250,6 +353,6 @@ export class DatosSandbox implements Datos {
 	}
 
 	async contextoHornero(): Promise<ContextoHornero> {
-		return contextoDemo(demoDe(this.plantilla(), this.sb.creadoEn)!, Date.now());
+		return contextoDemo(await this.demo(), Date.now());
 	}
 }

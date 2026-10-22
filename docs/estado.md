@@ -13,6 +13,7 @@
 | #18 | Ingreso con Google, Mercado Pago, Mercado Libre y link por WhatsApp (apagados hasta tener credenciales) |
 | #19 | Datos de la demo: catálogo real de las 16 plantillas (`scripts/catalogos.ts`), clientes y pedidos sembrados |
 | #20 | Armazón del panel: rail, barra lateral, topbar, barra de abajo, notificaciones, ⌘K, tema y modo Simple/Completo |
+| #23 | Pedidos: vistas, embudo, filtros en la URL, lista virtual, acciones por fila y en lote, hoja de detalle, exportar CSV. Go: tabla `pedidos` (migración 00009) con RLS, lista con facetas, detalle, estados y lote |
 | #22 | Hornero con Workers AI (ver abajo) |
 | #21 | Resumen (dashboard) completo, meta del mes (migración Go 00008), demo con 60 días de pedidos, stock, carritos, reseñas y chats |
 
@@ -24,11 +25,17 @@
 - Al modelo se le pasa "ayer completo" (`ayerDiaCompleto`), no "ayer a esta hora": con ese dato confundía el total del día.
 - En modo API (Go) todavía no hay topes por plan: llegan con Cuenta / Plan.
 
+## Estados de un pedido
+
+El circuito es el de PanelPedidos del handoff: Sin pagar → Para preparar → Listo para despachar → En camino → Entregado (más Cancelado). Sólo se puede avanzar una etapa, volver una (deshacer) o cancelar. El Resumen, el menú y Hornero leen los mismos pedidos con los cambios del visitante (`DatosSandbox.demo()`).
+
 ## Lo que sigue (orden del plan)
 
-Pedidos (vistas, embudo, facetas, lista virtual, barra masiva, detalle, crear pedido, link de pago) → motor de listas (Clientes, Productos, Inventario, Facturación, Envíos) → Ventas (bandeja WhatsApp, Carritos, Devoluciones, POS, Reseñas) → Listas de precio → Cupones → Crecer → Operación → Cuenta → storefront y 16 plantillas → integraciones reales → MCP + OAuth → Marca → endurecimiento.
+Crear pedido y link de pago → motor de listas (Clientes, Productos, Inventario, Facturación, Envíos) → Ventas (bandeja WhatsApp, Carritos, Devoluciones, POS, Reseñas) → Listas de precio → Cupones → Crecer → Operación → Cuenta → storefront y 16 plantillas → integraciones reales → MCP + OAuth → Marca → endurecimiento.
 
 ## Trampas que ya mordieron
+
+- **Tests de Go sin Postgres se saltan (SKIP) en local:** antes de correrlos, `bun run db:up`; confirmar con `go test -v ./... | grep -c '^--- SKIP'` que dé 0. En CI no se saltan (fallan).
 
 - **`wrangler dev` con el binding de IA** pide credenciales al arrancar (en CI no hay). El script `preview` corre con `--local --var HORNERO:simulado`; no sacarlo.
 - **Deploy manual:** el job `deploy` del CI no hace nada (no hay `CLOUDFLARE_API_TOKEN` en GitHub). Después de mergear: `cd apps/web && bun run build && bunx wrangler deploy`. Preview: `bunx wrangler versions upload --preview-alias pr-N`.

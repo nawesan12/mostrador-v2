@@ -12,7 +12,7 @@ export type Canal = 'web' | 'wa' | 'ml' | 'ig' | 'pos' | 'tg';
 export type MedioPago = 'mp' | 'transf' | 'modo' | 'payway' | 'uala' | 'efectivo' | 'tarjeta';
 export type Envio = 'andreani' | 'oca' | 'correo' | 'moto' | 'retiro';
 export type EstadoPedido =
-	'Pago pendiente' | 'Para preparar' | 'Pagado' | 'Enviado' | 'Entregado' | 'Cancelado';
+	'Sin pagar' | 'Para preparar' | 'Listo para despachar' | 'En camino' | 'Entregado' | 'Cancelado';
 
 export type Cliente = {
 	id: string;
@@ -354,13 +354,13 @@ function generar(plantilla: string, base: number): Demo | null {
 		else if (edad < 6 * 3600_000)
 			estado = elegir(r, [
 				['Para preparar', 50],
-				['Pagado', 22],
-				['Pago pendiente', 14],
-				['Enviado', 14]
+				['Listo para despachar', 22],
+				['Sin pagar', 14],
+				['En camino', 14]
 			]);
 		else if (edad < 3 * DIA)
 			estado = elegir(r, [
-				['Enviado', 50],
+				['En camino', 50],
 				['Entregado', 35],
 				['Para preparar', 10],
 				['Cancelado', 5]
@@ -370,9 +370,9 @@ function generar(plantilla: string, base: number): Demo | null {
 				['Entregado', 94],
 				['Cancelado', 6]
 			]);
-		if (pago === 'transf' && estado === 'Para preparar' && r() < 0.3) estado = 'Pago pendiente';
+		if (pago === 'transf' && estado === 'Para preparar' && r() < 0.3) estado = 'Sin pagar';
 		const estadoPago =
-			estado === 'Pago pendiente'
+			estado === 'Sin pagar'
 				? 'Pendiente'
 				: pago === 'transf'
 					? 'Acreditada'
@@ -388,7 +388,7 @@ function generar(plantilla: string, base: number): Demo | null {
 			envio,
 			ciudadEnvio: envio === 'retiro' ? catalogo.ciudad : cliente.ciudad,
 			estado,
-			facturado: estado !== 'Pago pendiente' && estado !== 'Cancelado' && r() < 0.9,
+			facturado: estado !== 'Sin pagar' && estado !== 'Cancelado' && r() < 0.9,
 			items,
 			total: items.reduce((s, i) => s + i.precio * i.cantidad, 0),
 			creado: t
