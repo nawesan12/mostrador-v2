@@ -25,9 +25,9 @@ test('el armazón muestra la tienda de la demo y navega entre secciones', async 
 		await page.getByRole('link', { name: 'Ventas', exact: true }).click();
 		await expect(page).toHaveURL(/\/panel\/pedidos$/);
 	}
-	await page.goto('/panel/clientes');
-	await expect(page.locator('.pronto')).toContainText('Clientes');
-	await expect(page.locator('.barra a[aria-current="page"]')).toContainText('Clientes');
+	await page.goto('/panel/informes');
+	await expect(page.locator('.pronto')).toContainText('Informes');
+	await expect(page.locator('.barra a[aria-current="page"]')).toContainText('Informes');
 	expect(await sinDesborde(page)).toBeLessThanOrEqual(0);
 });
 

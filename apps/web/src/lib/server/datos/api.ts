@@ -5,6 +5,11 @@
 import { error } from '@sveltejs/kit';
 import type {
 	AccionLote,
+	FiltrosLista,
+	ListaGenerica,
+	NombreLista,
+	Producto,
+	ProductoEditable,
 	ContextoHornero,
 	EstadoPedido,
 	FiltrosPedidos,
@@ -117,8 +122,42 @@ export class DatosApi implements Datos {
 		return resultado(await this.intentar(`/v1/panel/pedidos/${numero}/recordatorio`, 'POST', {}));
 	}
 
+	listar(lista: NombreLista, f: FiltrosLista) {
+		const q = new URLSearchParams();
+		if (f.q) q.set('q', f.q);
+		if (f.seg?.length) q.set('seg', f.seg.join(','));
+		const facetas = Object.entries(f.facetas ?? {}).flatMap(([k, vs]) =>
+			vs.map((v) => `${k}:${v}`)
+		);
+		if (facetas.length) q.set('facetas', facetas.join(','));
+		if (f.rango) q.set('rango', String(f.rango));
+		if (f.banderas?.length) q.set('banderas', f.banderas.join(','));
+		if (f.orden) q.set('orden', f.orden);
+		q.set('desde', String(f.desde ?? 0));
+		q.set('cuantos', String(f.cuantos ?? 60));
+		return this.pedir<ListaGenerica>(`/v1/panel/listas/${lista}?${q}`);
+	}
+	async accionLista(lista: NombreLista, ids: string[], accion: string, valor?: unknown) {
+		return (
+			await this.pedir<{ hechos: number }>(`/v1/panel/listas/${lista}/acciones`, 'POST', {
+				ids,
+				accion,
+				valor
+			})
+		).hechos;
+	}
+	async producto(id: string) {
+		const r = await this.intentar(`/v1/panel/productos/${encodeURIComponent(id)}`, 'GET');
+		return r.ok ? ((await r.json()) as Producto) : null;
+	}
+	async guardarProducto(id: string | null, p: ProductoEditable) {
+		if (!id) return this.pedir<Producto>('/v1/panel/productos', 'POST', p);
+		const r = await this.intentar(`/v1/panel/productos/${encodeURIComponent(id)}`, 'PUT', p);
+		return r.ok ? ((await r.json()) as Producto) : null;
+	}
+
 	/** Como `pedir`, pero 404 y 409 vuelven como respuesta (son resultados, no errores). */
-	private async intentar(ruta: string, metodo: 'GET' | 'POST', cuerpo?: unknown) {
+	private async intentar(ruta: string, metodo: 'GET' | 'POST' | 'PUT', cuerpo?: unknown) {
 		const res = await this.f(this.base + ruta, {
 			method: metodo,
 			headers: {

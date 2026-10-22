@@ -425,6 +425,72 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/listas/{lista}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Motor de listas (Clientes, Productos, Inventario, Facturación, Envíos): filtros, conteos y una ventana de filas. */
+        get: operations["listar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/listas/{lista}/acciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Una acción sobre una o varias filas (o la sugerencia de Hornero de esa lista). */
+        post: operations["accionLista"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/productos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["crearProducto"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/productos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["obtenerProducto"];
+        put: operations["guardarProducto"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/tienda": {
         parameters: {
             query?: never;
@@ -499,6 +565,49 @@ export interface components {
                 canal: string;
                 ventas: number;
             }[];
+        };
+        /** @enum {string} */
+        NombreLista: "clientes" | "productos" | "inventario" | "facturacion" | "envios";
+        ListaGenerica: {
+            total: number;
+            /** @description Registros de la lista (la forma depende de la lista: ver FilaCliente, FilaProducto, …) */
+            filas: {
+                [key: string]: unknown;
+            }[];
+            /** @description Conteo por segmento, sin el filtro de segmento */
+            segmentos: {
+                [key: string]: number;
+            };
+            /** @description Por faceta, conteo de cada valor sin el filtro de esa faceta */
+            facetas: {
+                [key: string]: {
+                    [key: string]: number;
+                };
+            };
+            /** @description Números para el encabezado y la sugerencia de Hornero (dependen de la lista) */
+            resumen: {
+                [key: string]: number;
+            };
+        };
+        ProductoEditable: {
+            nombre: string;
+            descripcion?: string;
+            categoria?: string | null;
+            precio: number;
+            costo?: number;
+            sku?: string;
+            stock?: number;
+            foto?: string | null;
+            /** @description Dónde se publica: web, ml, ig, google */
+            canales?: {
+                [key: string]: boolean;
+            };
+        };
+        Producto: components["schemas"]["ProductoEditable"] & {
+            id: string;
+            publicado: boolean;
+            vendidos30d: number;
+            slug: string;
         };
         Tablero: {
             /** @enum {string} */
@@ -1493,6 +1602,155 @@ export interface operations {
             401: components["responses"]["Problema"];
             404: components["responses"]["Problema"];
             409: components["responses"]["Problema"];
+        };
+    };
+    listar: {
+        parameters: {
+            query?: {
+                q?: string;
+                /** @description Segmentos, separados por coma */
+                seg?: string;
+                /** @description clave:valor separados por coma (ch:wa,city:Rosario) */
+                facetas?: string;
+                rango?: number;
+                banderas?: string;
+                orden?: string;
+                desde?: number;
+                cuantos?: number;
+            };
+            header?: never;
+            path: {
+                lista: components["schemas"]["NombreLista"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Lista */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListaGenerica"];
+                };
+            };
+            401: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+        };
+    };
+    accionLista: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lista: components["schemas"]["NombreLista"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    ids: string[];
+                    accion: string;
+                    /** @description Lo que la acción necesite (ajuste de stock, publicado…) */
+                    valor?: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Cuántas filas cambiaron */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        hechos: number;
+                    };
+                };
+            };
+            401: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+        };
+    };
+    crearProducto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductoEditable"];
+            };
+        };
+        responses: {
+            /** @description Creado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Producto"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            401: components["responses"]["Problema"];
+        };
+    };
+    obtenerProducto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Producto */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Producto"];
+                };
+            };
+            401: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+        };
+    };
+    guardarProducto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductoEditable"];
+            };
+        };
+        responses: {
+            /** @description Guardado */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Producto"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            401: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
         };
     };
     obtenerTienda: {

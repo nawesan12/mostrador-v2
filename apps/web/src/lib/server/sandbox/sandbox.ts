@@ -14,6 +14,11 @@ import { rubro as buscarRubro, slugDe } from './rubros.ts';
 import { cambios, sandboxes } from './schema.ts';
 import type {
 	AccionLote,
+	FiltrosLista,
+	ListaGenerica,
+	NombreLista,
+	Producto,
+	ProductoEditable,
 	ContextoHornero,
 	Datos,
 	ListaPedidos,
@@ -26,6 +31,16 @@ import type {
 	Tienda
 } from '../datos/tipos.ts';
 import { demoDe, type Demo, type EstadoPedido } from './demo.ts';
+import {
+	DEF_CLIENTES,
+	DEF_PRODUCTOS,
+	listarGenerico,
+	registrosClientes,
+	registrosProductos,
+	slugProducto,
+	type CambioCliente,
+	type CambioProducto
+} from './listas.ts';
 import {
 	detalleDemo,
 	listarDemo,
@@ -292,6 +307,175 @@ export class DatosSandbox implements Datos {
 			recordado: Date.now()
 		});
 		return 'ok';
+	}
+
+	// ---------------------------------------------------------------- Listas
+
+	private async cambiosProductos() {
+		const c = await cambiosDe(this.db, this.sb.id, 'producto');
+		return new Map([...c].filter(([, v]) => v).map(([k, v]) => [k, v as CambioProducto]));
+	}
+	private async ajustesStock() {
+		const c = await cambiosDe(this.db, this.sb.id, 'stock');
+		return new Map(
+			[...c].map(([k, v]) => [k, Number((v as { delta: number } | null)?.delta ?? 0)])
+		);
+	}
+	private async regProductos() {
+		const d = await this.demo();
+		return registrosProductos(
+			d,
+			Date.now(),
+			await this.cambiosProductos(),
+			await this.ajustesStock()
+		);
+	}
+	private async regClientes() {
+		const d = await this.demo();
+		return registrosClientes(d, this.sb.creadoEn, Date.now(), await this.cambiosClientes());
+	}
+	private async cambiosClientes() {
+		const c = await cambiosDe(this.db, this.sb.id, 'cliente');
+		return new Map([...c].filter(([, v]) => v).map(([k, v]) => [k, v as CambioCliente]));
+	}
+
+	async listar(lista: NombreLista, f: FiltrosLista): Promise<ListaGenerica> {
+		if (lista === 'clientes') return listarGenerico(await this.regClientes(), DEF_CLIENTES, f);
+		if (lista === 'productos') return listarGenerico(await this.regProductos(), DEF_PRODUCTOS, f);
+		return { total: 0, filas: [], segmentos: {}, facetas: {}, resumen: {} };
+	}
+
+	async accionLista(lista: NombreLista, ids: string[], accion: string, valor?: unknown) {
+		const ahora = Date.now();
+		if (lista === 'clientes') {
+			const todos = await this.regClientes();
+			// La sugerencia de Hornero: cupón a los que están en riesgo.
+			const elegidos =
+				accion === 'cupon-riesgo'
+					? todos.filter((c) => c.seg === 'risk' && !c.cupon)
+					: todos.filter((c) => ids.includes(c.id));
+			const cambios = await this.cambiosClientes();
+			const guardar = (id: string, c: CambioCliente) =>
+				guardarCambio(this.db, this.sb.id, 'cliente', id, { ...cambios.get(id), ...c });
+			if (accion === 'cupon' || accion === 'cupon-riesgo') {
+				for (const c of elegidos) await guardar(c.id, { cupon: ahora });
+				return elegidos.length;
+			}
+			if (accion === 'sin-cupon') {
+				for (const c of elegidos) await guardar(c.id, { cupon: undefined });
+				return elegidos.length;
+			}
+			if (accion === 'etiquetar' && typeof valor === 'string' && valor.trim()) {
+				const e = valor.trim().slice(0, 30);
+				for (const c of elegidos)
+					await guardar(c.id, {
+						etiquetas: [...new Set([...(cambios.get(c.id)?.etiquetas ?? []), e])]
+					});
+				return elegidos.length;
+			}
+			if (accion === 'crear') {
+				const v = valor as {
+					nombre?: unknown;
+					telefono?: unknown;
+					email?: unknown;
+					ciudad?: unknown;
+				} | null;
+				const nombre = typeof v?.nombre === 'string' ? v.nombre.trim().slice(0, 80) : '';
+				if (nombre.length < 2) return 0;
+				const texto = (x: unknown, max: number) =>
+					typeof x === 'string' && x.trim() ? x.trim().slice(0, max) : null;
+				await guardar(`n${ahora.toString(36)}`, {
+					nuevo: {
+						nombre,
+						telefono: texto(v?.telefono, 30),
+						email: texto(v?.email, 120),
+						ciudad: texto(v?.ciudad, 60) ?? '',
+						creado: ahora
+					}
+				});
+				return 1;
+			}
+			// Escribir no cambia datos: abre la conversación.
+			return elegidos.length;
+		}
+		if (lista === 'productos') {
+			const todos = await this.regProductos();
+			const cambios = await this.cambiosProductos();
+			const elegidos =
+				accion === 'pausar-sin-stock-ml'
+					? todos.filter((p) => p.estado === 'out' && p.canales.includes('ml'))
+					: todos.filter((p) => ids.includes(p.id));
+			if (accion === 'precio' && typeof valor === 'number' && valor > -90 && valor <= 200) {
+				for (const p of elegidos) {
+					const precio = Math.max(0, Math.round((p.precio * (1 + valor / 100)) / 10) * 10);
+					await guardarCambio(this.db, this.sb.id, 'producto', p.id, {
+						...cambios.get(p.id),
+						precio
+					});
+				}
+				return elegidos.length;
+			}
+			const publicado =
+				accion === 'publicar'
+					? Boolean(valor)
+					: accion === 'pausar' || accion === 'pausar-sin-stock-ml'
+						? false
+						: null;
+			if (publicado === null) return elegidos.length;
+			for (const p of elegidos)
+				await guardarCambio(this.db, this.sb.id, 'producto', p.id, {
+					...cambios.get(p.id),
+					publicado
+				});
+			return elegidos.length;
+		}
+		return 0;
+	}
+
+	async producto(id: string): Promise<Producto | null> {
+		const p = (await this.regProductos()).find((x) => x.id === id);
+		if (!p) return null;
+		return {
+			id: p.id,
+			nombre: p.nombre,
+			descripcion: p.descripcion,
+			categoria: p.categoria === 'Sin categoría' ? null : p.categoria,
+			precio: p.precio,
+			costo: p.costo,
+			sku: p.sku,
+			stock: p.stock,
+			foto: p.foto,
+			canales: Object.fromEntries(
+				['web', 'ml', 'ig', 'google'].map((k) => [k, p.canales.includes(k)])
+			),
+			publicado: p.publicado,
+			vendidos30d: p.vendidos30,
+			slug: slugProducto(p.nombre)
+		};
+	}
+
+	async guardarProducto(id: string | null, p: ProductoEditable): Promise<Producto | null> {
+		const cambios = await this.cambiosProductos();
+		const clave = id ?? `n${Date.now().toString(36)}`;
+		if (id && !(await this.regProductos()).some((x) => x.id === id)) return null;
+		const antes = cambios.get(clave) ?? {};
+		// El stock que se escribe en la ficha reemplaza al de ejemplo y a los ajustes.
+		if (p.stock !== undefined) await borrarCambio(this.db, this.sb.id, 'stock', clave);
+		await guardarCambio(this.db, this.sb.id, 'producto', clave, {
+			...antes,
+			nombre: p.nombre,
+			descripcion: p.descripcion ?? antes.descripcion,
+			categoria: p.categoria ?? antes.categoria,
+			precio: p.precio,
+			costo: p.costo ?? antes.costo,
+			sku: p.sku ?? antes.sku,
+			stock: p.stock ?? antes.stock,
+			foto: p.foto !== undefined ? p.foto : antes.foto,
+			canales: p.canales ?? antes.canales,
+			publicado: true,
+			...(id ? {} : { nuevo: true, creado: Date.now() })
+		} satisfies CambioProducto);
+		return this.producto(clave);
 	}
 
 	/** La plantilla del sandbox (o la del rubro). */

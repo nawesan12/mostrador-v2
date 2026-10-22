@@ -23,6 +23,11 @@ export type AccionLote = 'preparar' | 'etiquetas' | 'facturar' | 'avisar';
 export type FiltrosPedidos = import('../sandbox/pedidos.ts').FiltrosPedidos;
 /** Resultado de una acción sobre un pedido. */
 export type Resultado = 'ok' | 'no-existe' | 'no-se-puede';
+export type ListaGenerica = components['schemas']['ListaGenerica'];
+export type NombreLista = components['schemas']['NombreLista'];
+export type Producto = components['schemas']['Producto'];
+export type ProductoEditable = components['schemas']['ProductoEditable'];
+export type FiltrosLista = import('../sandbox/listas.ts').FiltrosLista;
 
 export interface Datos {
 	rubros(): Promise<Rubro[]>;
@@ -54,4 +59,11 @@ export interface Datos {
 	): Promise<{ hechos: number; cambios: { numero: number; antes: EstadoPedido }[] }>;
 	/** Recordatorio de pago por WhatsApp. */
 	recordarPago(numero: number): Promise<Resultado>;
+	/** Motor de listas: Clientes, Productos, Inventario, Facturación y Envíos. */
+	listar(lista: NombreLista, f: FiltrosLista): Promise<ListaGenerica>;
+	/** Una acción sobre filas de una lista (o la sugerencia de Hornero); devuelve cuántas cambiaron. */
+	accionLista(lista: NombreLista, ids: string[], accion: string, valor?: unknown): Promise<number>;
+	producto(id: string): Promise<Producto | null>;
+	/** Crea (id null) o guarda un producto. null si el id no existe. */
+	guardarProducto(id: string | null, p: ProductoEditable): Promise<Producto | null>;
 }
