@@ -36,7 +36,7 @@ const SE_DESHACEN = new Set([
 ]);
 
 /** Quien atiende la caja del local en la demo (la dueña, Valeria, es quien la prueba). */
-export const EQUIPO = { nombre: 'Martín', foto: '1545262722-9e0d80a0bc01' };
+export const EQUIPO = { nombre: 'Carla', foto: '1520333789090-1afc82db536a' };
 
 function texto(f: FilaCambio, n: Nombres): [string, string] | null {
 	const d = (f.datos ?? {}) as Record<string, unknown>;

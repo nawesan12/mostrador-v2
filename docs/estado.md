@@ -13,6 +13,7 @@
 | #18 | Ingreso con Google, Mercado Pago, Mercado Libre y link por WhatsApp (apagados hasta tener credenciales) |
 | #19 | Datos de la demo: catálogo real de las 16 plantillas (`scripts/catalogos.ts`), clientes y pedidos sembrados |
 | #20 | Armazón del panel: rail, barra lateral, topbar, barra de abajo, notificaciones, ⌘K, tema y modo Simple/Completo |
+| #36 | Configuración (PanelOperacion sCfg): Negocio (se guarda), Equipo (invitar con rol), Seguridad (opciones y sesiones con Cerrar), Notificaciones y Plan (precios correctos: Gratis/Emprende/Pro/Negocio). La cuenta de la demo (sandbox/cuenta.ts) la va a reusar Cuenta. Equipo de la demo: Valeria (dueña), Nahuel, Martín y Carla (la caja). Go: tiendas.negocio/preferencias/plan_ciclo, invitaciones, membresías y sesiones reales de la persona |
 | #35 | Mi tienda (PanelOperacion sStore): secciones (subir, mostrar/ocultar), 4 paletas y la vista previa en vivo con los productos, categorías, reseña y fotos de la tienda; borrador que se guarda en fila y Publicar. Go: tiendas.diseno_borrador / diseno_publicado. CI: timeout-minutes 20 por job (una integración se colgó 30 min en el #34) |
 | #34 | Finanzas (PanelOperacion sFin): tarjeta de Caja (meta del mes), disponible en Mercado Pago, a liquidar, gastos, ganancia estimada, flujo de 14 días y movimientos; Transferir a mi banco (demo: queda en 0 y suma el movimiento). El plan se cobra cuando termina la prueba (DIAS_DE_PRUEBA). Go: ventas, margen por costos y transferencias conciliadas; retiro 409 hasta Mercado Pago. La cajera de la demo es Martín (Valeria es la dueña) |
 | #33 | Centro de ayuda público (/ayuda, /ayuda/[categoria], /ayuda/[categoria]/[articulo]): 25 artículos reales en 8 categorías (conteos y minutos salen del contenido), buscador en la URL, más leídos, FAQ, Hornero que responde buscando en los artículos (sin modelo). Ayuda del panel: preguntar abre Hornero, guías a los artículos, estado real del monitor |
@@ -43,7 +44,7 @@ El circuito es el de PanelPedidos del handoff: Sin pagar → Para preparar → L
 
 ## Lo que sigue (orden del plan)
 
-Operación → Cuenta → Ventas (bandeja WhatsApp, Carritos, Devoluciones, POS, Reseñas) → Listas de precio → Cupones → Crecer → Operación → Cuenta → storefront y 16 plantillas → integraciones reales → MCP + OAuth → Marca → endurecimiento.
+Cuenta → Integraciones → Cuenta → Ventas (bandeja WhatsApp, Carritos, Devoluciones, POS, Reseñas) → Listas de precio → Cupones → Crecer → Operación → Cuenta → storefront y 16 plantillas → integraciones reales → MCP + OAuth → Marca → endurecimiento.
 
 ## Trampas que ya mordieron
 

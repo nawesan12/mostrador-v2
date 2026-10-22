@@ -1067,6 +1067,106 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/configuracion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Negocio, equipo, seguridad, sesiones, avisos y plan. */
+        get: operations["configuracion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/configuracion/negocio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["guardarNegocio"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/configuracion/{grupo}/{clave}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Prende o apaga una opción de seguridad o un aviso. */
+        put: operations["fijarOpcion"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/sesiones/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Cierra otra sesión de la cuenta. */
+        delete: operations["cerrarSesion"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/equipo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Invita a alguien al equipo. */
+        post: operations["invitar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["cambiarPlan"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/tienda": {
         parameters: {
             query?: never;
@@ -1683,6 +1783,66 @@ export interface components {
                     foto: string | null;
                     titulo: string;
                 };
+            };
+        };
+        Negocio: {
+            nombre: string;
+            razonSocial: string;
+            cuit: string;
+            condicion: string;
+            direccion: string;
+            whatsapp: string;
+            email: string;
+            horario: string;
+        };
+        Miembro: {
+            id: string;
+            nombre: string;
+            contacto: string;
+            /** @enum {string} */
+            rol: "duenio" | "admin" | "ventas" | "deposito";
+            foto: string | null;
+            /** Format: date-time */
+            ultimo: string | null;
+            /** @description Invitación sin aceptar */
+            pendiente: boolean;
+            vos: boolean;
+            dobleFactor: boolean;
+        };
+        Configuracion: {
+            negocio: components["schemas"]["Negocio"];
+            equipo: components["schemas"]["Miembro"][];
+            seguridad: {
+                dobleFactor: boolean;
+                otroPais: boolean;
+                alertas: boolean;
+                inactivas: boolean;
+            };
+            sesiones: {
+                id: string;
+                /** @enum {string} */
+                tipo: "compu" | "celu" | "caja";
+                nombre: string;
+                donde: string;
+                /** Format: date-time */
+                cuando: string;
+                actual: boolean;
+            }[];
+            avisos: {
+                venta: boolean;
+                chats: boolean;
+                stock: boolean;
+                diario: boolean;
+                ideas: boolean;
+                novedades: boolean;
+            };
+            plan: {
+                /** @enum {string} */
+                actual: "gratis" | "emprende" | "pro" | "negocio";
+                /** @enum {string} */
+                ciclo: "mes" | "anio";
+                enPrueba: boolean;
+                diasPrueba: number;
             };
         };
         Tablero: {
@@ -3780,6 +3940,159 @@ export interface operations {
                 };
                 content?: never;
             };
+        };
+    };
+    configuracion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Configuración */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Configuracion"];
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    guardarNegocio: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Negocio"];
+            };
+        };
+        responses: {
+            /** @description Guardado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
+        };
+    };
+    fijarOpcion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                grupo: "seguridad" | "avisos";
+                clave: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    activo: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Guardado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["Problema"];
+        };
+    };
+    cerrarSesion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cerrada */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+        };
+    };
+    invitar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Email o WhatsApp */
+                    contacto: string;
+                    /** @enum {string} */
+                    rol: "admin" | "ventas" | "deposito";
+                };
+            };
+        };
+        responses: {
+            /** @description Invitado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Miembro"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+        };
+    };
+    cambiarPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    plan: "gratis" | "emprende" | "pro" | "negocio";
+                    /** @enum {string} */
+                    ciclo?: "mes" | "anio";
+                };
+            };
+        };
+        responses: {
+            /** @description Cambiado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            409: components["responses"]["Problema"];
         };
     };
     obtenerTienda: {

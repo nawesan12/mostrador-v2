@@ -1027,6 +1027,95 @@ paths:
       summary: Publica el borrador.
       responses:
         '204': { description: Publicado }
+  /v1/panel/configuracion:
+    get:
+      operationId: configuracion
+      summary: Negocio, equipo, seguridad, sesiones, avisos y plan.
+      responses:
+        '200':
+          description: Configuración
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Configuracion' }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/configuracion/negocio:
+    put:
+      operationId: guardarNegocio
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Negocio' }
+      responses:
+        '204': { description: Guardado }
+        '400': { $ref: '#/components/responses/Problema' }
+  /v1/panel/configuracion/{grupo}/{clave}:
+    put:
+      operationId: fijarOpcion
+      summary: Prende o apaga una opción de seguridad o un aviso.
+      parameters:
+        - { name: grupo, in: path, required: true, schema: { type: string, enum: [seguridad, avisos] } }
+        - { name: clave, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [activo]
+              properties:
+                activo: { type: boolean }
+      responses:
+        '204': { description: Guardado }
+        '404': { $ref: '#/components/responses/Problema' }
+  /v1/panel/sesiones/{id}:
+    delete:
+      operationId: cerrarSesion
+      summary: Cierra otra sesión de la cuenta.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '204': { description: Cerrada }
+        '404': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/equipo:
+    post:
+      operationId: invitar
+      summary: Invita a alguien al equipo.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [contacto, rol]
+              properties:
+                contacto: { type: string, minLength: 6, maxLength: 120, description: 'Email o WhatsApp' }
+                rol: { type: string, enum: [admin, ventas, deposito] }
+      responses:
+        '201':
+          description: Invitado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Miembro' }
+        '400': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/plan:
+    put:
+      operationId: cambiarPlan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [plan]
+              properties:
+                plan: { type: string, enum: [gratis, emprende, pro, negocio] }
+                ciclo: { type: string, enum: [mes, anio] }
+      responses:
+        '204': { description: Cambiado }
+        '409': { $ref: '#/components/responses/Problema' }
   /v1/panel/tienda:
     get:
       operationId: obtenerTienda
@@ -1751,6 +1840,75 @@ components:
               properties:
                 foto: { type: [string, 'null'] }
                 titulo: { type: string }
+    Negocio:
+      type: object
+      required: [nombre, razonSocial, cuit, condicion, direccion, whatsapp, email, horario]
+      properties:
+        nombre: { type: string, maxLength: 80 }
+        razonSocial: { type: string, maxLength: 120 }
+        cuit: { type: string, maxLength: 13 }
+        condicion: { type: string, maxLength: 60 }
+        direccion: { type: string, maxLength: 160 }
+        whatsapp: { type: string, maxLength: 30 }
+        email: { type: string, maxLength: 120 }
+        horario: { type: string, maxLength: 80 }
+    Miembro:
+      type: object
+      required: [id, nombre, contacto, rol, foto, ultimo, pendiente, vos, dobleFactor]
+      properties:
+        id: { type: string }
+        nombre: { type: string }
+        contacto: { type: string }
+        rol: { type: string, enum: [duenio, admin, ventas, deposito] }
+        foto: { type: [string, 'null'] }
+        ultimo: { type: [string, 'null'], format: date-time }
+        pendiente: { type: boolean, description: 'Invitación sin aceptar' }
+        vos: { type: boolean }
+        dobleFactor: { type: boolean }
+    Configuracion:
+      type: object
+      required: [negocio, equipo, seguridad, sesiones, avisos, plan]
+      properties:
+        negocio: { $ref: '#/components/schemas/Negocio' }
+        equipo: { type: array, items: { $ref: '#/components/schemas/Miembro' } }
+        seguridad:
+          type: object
+          required: [dobleFactor, otroPais, alertas, inactivas]
+          properties:
+            dobleFactor: { type: boolean }
+            otroPais: { type: boolean }
+            alertas: { type: boolean }
+            inactivas: { type: boolean }
+        sesiones:
+          type: array
+          items:
+            type: object
+            required: [id, tipo, nombre, donde, cuando, actual]
+            properties:
+              id: { type: string }
+              tipo: { type: string, enum: [compu, celu, caja] }
+              nombre: { type: string }
+              donde: { type: string }
+              cuando: { type: string, format: date-time }
+              actual: { type: boolean }
+        avisos:
+          type: object
+          required: [venta, chats, stock, diario, ideas, novedades]
+          properties:
+            venta: { type: boolean }
+            chats: { type: boolean }
+            stock: { type: boolean }
+            diario: { type: boolean }
+            ideas: { type: boolean }
+            novedades: { type: boolean }
+        plan:
+          type: object
+          required: [actual, ciclo, enPrueba, diasPrueba]
+          properties:
+            actual: { type: string, enum: [gratis, emprende, pro, negocio] }
+            ciclo: { type: string, enum: [mes, anio] }
+            enPrueba: { type: boolean }
+            diasPrueba: { type: integer }
     Tablero:
       type: object
       required: [periodo, desde, hasta, hola, ventas, serie, kpis, canales, meta, avisos, ultimosPedidos, paraHacer, enVivo, caja, liquidaciones, hornero, bandeja, integraciones, masVendidos, resenas, envios]

@@ -6,6 +6,13 @@
  * demo cuesta una escritura y no cientos, y el cupo gratis de D1 (100.000 escrituras por día)
  * alcanza para muchas visitas.
  */
+import {
+	configuracionDemo,
+	type EstadoCuenta,
+	type Invitado,
+	type Negocio,
+	type Plan
+} from './cuenta.ts';
 import { finanzasDemo, type Retiro } from './finanzas.ts';
 import { actividadDemo, type FilaCambio, type Nombres } from './actividad.ts';
 import { canalesDemo, informesDemo, marketingDemo, type CampanaDemo } from './crecer.ts';
@@ -20,6 +27,8 @@ import { fromB64url, randomToken, sha256 } from '../crypto.ts';
 import { rubro as buscarRubro, slugDe } from './rubros.ts';
 import { cambios, sandboxes } from './schema.ts';
 import type {
+	Configuracion,
+	Miembro,
 	DisenoTienda,
 	MiTienda,
 	Finanzas,
@@ -96,7 +105,7 @@ import {
 	type CambioPedido,
 	type FiltrosPedidos
 } from './pedidos.ts';
-import { resumenDemo } from './resumen.ts';
+import { DIAS_DE_PRUEBA, resumenDemo } from './resumen.ts';
 import { COSTO_MENSAJE, contextoDemo, tableroDemo, type CambiosTablero } from './tablero.ts';
 import RUBROS from '@mostrador/contrato/rubros.json';
 import { plantilla as buscarPlantilla } from '#lib/plantillas.ts';
@@ -274,6 +283,13 @@ const DISENO_INICIAL: DisenoTienda = {
 		visible: true
 	})),
 	paleta: 0
+};
+
+const NOMBRE_PLAN: Record<Plan, string> = {
+	gratis: 'Gratis',
+	emprende: 'Emprende',
+	pro: 'Pro',
+	negocio: 'Negocio'
 };
 
 type AumentoProgramado = { pct: number; redondeo: Redondeo; para: number };
@@ -1402,6 +1418,79 @@ export class DatosSandbox implements Datos {
 		return { monto: f.disponible, cuenta: f.banco ?? 'tu banco' };
 	}
 
+	// ---------------------------------------------------------------- Configuración
+
+	private async estadoCuenta(): Promise<EstadoCuenta> {
+		const c = await cambiosDe(this.db, this.sb.id, 'cuenta');
+		const g = <T>(k: string, def: T) => (c.get(k) as T | undefined) ?? def;
+		return {
+			negocio: g('negocio', {}),
+			seguridad: g('seguridad', {}),
+			avisos: g('avisos', {}),
+			cerradas: new Set(g<string[]>('cerradas', [])),
+			quitados: new Set(g<string[]>('quitados', [])),
+			roles: new Map(Object.entries(g<Record<string, Miembro['rol']>>('roles', {}))),
+			invitados: g<Invitado[]>('invitados', []),
+			plan: g('plan', {})
+		};
+	}
+
+	async configuracion(): Promise<Configuracion> {
+		const [d, t, e] = await Promise.all([this.demo(), this.tienda(), this.estadoCuenta()]);
+		return configuracionDemo(d, t.nombre, Date.now(), DIAS_DE_PRUEBA, e);
+	}
+
+	async guardarNegocio(n: Negocio) {
+		await guardarCambio(this.db, this.sb.id, 'cuenta', 'negocio', n);
+	}
+
+	async fijarOpcion(
+		grupo: 'seguridad' | 'avisos',
+		clave: string,
+		activo: boolean
+	): Promise<Resultado> {
+		const c = await this.configuracion();
+		if (!(clave in c[grupo])) return 'no-existe';
+		await guardarCambio(this.db, this.sb.id, 'cuenta', grupo, {
+			...(await this.estadoCuenta())[grupo],
+			[clave]: activo
+		});
+		return 'ok';
+	}
+
+	async cerrarSesion(id: string): Promise<Resultado> {
+		const s = (await this.configuracion()).sesiones.find((x) => x.id === id);
+		if (!s) return 'no-existe';
+		if (s.actual) return 'no-se-puede';
+		const e = await this.estadoCuenta();
+		await guardarCambio(this.db, this.sb.id, 'cuenta', 'cerradas', [...e.cerradas, id]);
+		return 'ok';
+	}
+
+	async invitar(contacto: string, rol: Miembro['rol']): Promise<Miembro | 'repetido'> {
+		const c = await this.configuracion();
+		const v = contacto.trim().toLowerCase();
+		if (c.equipo.some((m) => m.contacto.toLowerCase() === v)) return 'repetido';
+		const e = await this.estadoCuenta();
+		const nuevo: Invitado = {
+			id: `i${Date.now().toString(36)}`,
+			contacto: contacto.trim(),
+			rol,
+			en: Date.now()
+		};
+		await guardarCambio(this.db, this.sb.id, 'cuenta', 'invitados', [...e.invitados, nuevo]);
+		return (await this.configuracion()).equipo.find((m) => m.id === nuevo.id)!;
+	}
+
+	async cambiarPlan(plan: Plan, ciclo?: 'mes' | 'anio') {
+		const e = await this.estadoCuenta();
+		await guardarCambio(this.db, this.sb.id, 'cuenta', 'plan', {
+			...e.plan,
+			actual: plan,
+			...(ciclo ? { ciclo } : {})
+		});
+	}
+
 	// ---------------------------------------------------------------- Mi tienda
 
 	async miTienda(): Promise<MiTienda> {
@@ -1664,6 +1753,8 @@ export class DatosSandbox implements Datos {
 		const leidas = (await cambiosDe(this.db, this.sb.id, 'notificaciones')).get('leidas') as
 			{ hasta?: number } | undefined;
 		const r = resumenDemo(d, this.sb.creadoEn, leidas?.hasta ?? 0, Date.now());
+		const plan = (await this.estadoCuenta()).plan.actual ?? 'pro';
+		r.prueba.plan = NOMBRE_PLAN[plan];
 		// La insignia cuenta lo mismo que la pantalla: las tareas de hoy sin marcar.
 		const tareas = (await this.paraHacer()).grupos.flatMap((g) => g.tareas);
 		r.insignias.paraHacer = tareas.filter((t) => !t.hecha).length;
