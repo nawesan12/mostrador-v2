@@ -972,6 +972,33 @@ paths:
       responses:
         '204': { description: Guardado }
         '404': { $ref: '#/components/responses/Problema' }
+  /v1/panel/finanzas:
+    get:
+      operationId: finanzas
+      summary: Lo disponible, lo que se va a liquidar, los gastos, el flujo y los movimientos.
+      responses:
+        '200':
+          description: Finanzas
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Finanzas' }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/finanzas/retiro:
+    post:
+      operationId: retirar
+      summary: Transfiere lo disponible a la cuenta bancaria.
+      responses:
+        '200':
+          description: En camino
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [monto, cuenta]
+                properties:
+                  monto: { type: integer }
+                  cuenta: { type: string }
+        '409': { $ref: '#/components/responses/Problema' }
   /v1/panel/tienda:
     get:
       operationId: obtenerTienda
@@ -1593,6 +1620,58 @@ components:
                     aproximado: { type: boolean }
                     accion: { type: string }
                     hecha: { type: boolean }
+    Finanzas:
+      type: object
+      required: [disponible, cuenta, banco, caja, kpis, flujo, movimientos, conciliado]
+      properties:
+        disponible: { type: integer, description: 'En Mercado Pago, listo para transferir' }
+        cuenta: { type: [string, 'null'], description: 'Cómo se muestra la cuenta de cobro (CBU terminada en…)' }
+        banco: { type: [string, 'null'] }
+        caja:
+          type: [object, 'null']
+          description: null si Caja no está conectada
+          required: [ventas, liquidaciones, gastos, meta, metaPct, falta, sincronizado]
+          properties:
+            ventas: { type: integer }
+            liquidaciones: { type: integer }
+            gastos: { type: integer }
+            meta: { type: string }
+            metaPct: { type: integer }
+            falta: { type: integer }
+            sincronizado: { type: string, format: date-time }
+        kpis:
+          type: object
+          required: [aLiquidar, aLiquidarDetalle, gastos, gastosDetalle, ganancia, margen, mes]
+          properties:
+            aLiquidar: { type: integer }
+            aLiquidarDetalle: { type: string }
+            gastos: { type: integer }
+            gastosDetalle: { type: string }
+            ganancia: { type: integer }
+            margen: { type: [integer, 'null'] }
+            mes: { type: string }
+        flujo:
+          type: array
+          description: Próximos 14 días
+          items:
+            type: object
+            required: [dia, entra, sale]
+            properties:
+              dia: { type: integer }
+              entra: { type: integer }
+              sale: { type: integer }
+        movimientos:
+          type: array
+          items:
+            type: object
+            required: [id, tipo, titulo, detalle, monto]
+            properties:
+              id: { type: string }
+              tipo: { type: string, enum: [mp, payway, modo, uala, andreani, oca, correo, moto, transf, gasto, retiro] }
+              titulo: { type: string }
+              detalle: { type: string }
+              monto: { type: integer, description: 'Positivo entra, negativo sale' }
+        conciliado: { type: boolean }
     Tablero:
       type: object
       required: [periodo, desde, hasta, hola, ventas, serie, kpis, canales, meta, avisos, ultimosPedidos, paraHacer, enVivo, caja, liquidaciones, hornero, bandeja, integraciones, masVendidos, resenas, envios]

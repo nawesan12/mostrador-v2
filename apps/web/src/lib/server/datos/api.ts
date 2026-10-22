@@ -5,6 +5,7 @@
 import { error } from '@sveltejs/kit';
 import type {
 	AccionCupon,
+	Finanzas,
 	Evento,
 	ParaHacer,
 	Campana,
@@ -230,6 +231,14 @@ export class DatosApi implements Datos {
 		return (await this.pedir<{ codigo: string }>('/v1/panel/links', 'POST', l)).codigo;
 	}
 
+	finanzas() {
+		return this.pedir<Finanzas>('/v1/panel/finanzas');
+	}
+	async retirar() {
+		const r = await this.intentar('/v1/panel/finanzas/retiro', 'POST');
+		if (r.status === 409) return 'sin-cobros' as const;
+		return (await r.json()) as { monto: number; cuenta: string };
+	}
 	async actividad() {
 		return (await this.pedir<{ items: Evento[] }>('/v1/panel/actividad')).items;
 	}

@@ -6,6 +6,7 @@
  * demo cuesta una escritura y no cientos, y el cupo gratis de D1 (100.000 escrituras por día)
  * alcanza para muchas visitas.
  */
+import { finanzasDemo, type Retiro } from './finanzas.ts';
 import { actividadDemo, type FilaCambio, type Nombres } from './actividad.ts';
 import { canalesDemo, informesDemo, marketingDemo, type CampanaDemo } from './crecer.ts';
 import { cuando } from '#lib/panel/cupones.ts';
@@ -19,6 +20,7 @@ import { fromB64url, randomToken, sha256 } from '../crypto.ts';
 import { rubro as buscarRubro, slugDe } from './rubros.ts';
 import { cambios, sandboxes } from './schema.ts';
 import type {
+	Finanzas,
 	Evento,
 	ParaHacer,
 	Campana,
@@ -1346,6 +1348,46 @@ export class DatosSandbox implements Datos {
 		if (hecha) await guardarCambio(this.db, this.sb.id, 'tarea', clave, { en: Date.now() });
 		else await borrarCambio(this.db, this.sb.id, 'tarea', clave);
 		return 'ok';
+	}
+
+	// ---------------------------------------------------------------- Finanzas
+
+	async finanzas(): Promise<Finanzas> {
+		const [d, t, productos, retiros, campanas] = await Promise.all([
+			this.demo(),
+			this.tablero('7d'),
+			this.regProductos(),
+			cambiosDe(this.db, this.sb.id, 'retiro'),
+			cambiosDe(this.db, this.sb.id, 'campana')
+		]);
+		const vendidos = productos.reduce((s, p) => s + p.vendidos30, 0);
+		const margen = vendidos
+			? Math.round(productos.reduce((s, p) => s + p.margen * p.vendidos30, 0) / vendidos)
+			: 38;
+		return finanzasDemo(
+			d,
+			Date.now(),
+			t,
+			margen,
+			[...retiros.values()].filter(Boolean).map((r) => r as Retiro),
+			[...campanas.values()]
+				.filter(Boolean)
+				.map((c) => c as CampanaDemo)
+				.filter((c) => !c.programada || c.programada <= Date.now())
+				.map((c) => ({ personas: c.personas, en: c.programada ?? c.en })),
+			COSTO_MENSAJE
+		);
+	}
+
+	async retirar(): Promise<{ monto: number; cuenta: string } | 'nada'> {
+		const f = await this.finanzas();
+		if (!f.disponible) return 'nada';
+		const en = Date.now();
+		await guardarCambio(this.db, this.sb.id, 'retiro', String(en), {
+			monto: f.disponible,
+			en
+		} satisfies Retiro);
+		return { monto: f.disponible, cuenta: f.banco ?? 'tu banco' };
 	}
 
 	// ---------------------------------------------------------------- Listas de precio

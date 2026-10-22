@@ -998,6 +998,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/finanzas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lo disponible, lo que se va a liquidar, los gastos, el flujo y los movimientos. */
+        get: operations["finanzas"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/finanzas/retiro": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Transfiere lo disponible a la cuenta bancaria. */
+        post: operations["retirar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/tienda": {
         parameters: {
             query?: never;
@@ -1539,6 +1573,49 @@ export interface components {
                     hecha: boolean;
                 }[];
             }[];
+        };
+        Finanzas: {
+            /** @description En Mercado Pago, listo para transferir */
+            disponible: number;
+            /** @description Cómo se muestra la cuenta de cobro (CBU terminada en…) */
+            cuenta: string | null;
+            banco: string | null;
+            /** @description null si Caja no está conectada */
+            caja: {
+                ventas: number;
+                liquidaciones: number;
+                gastos: number;
+                meta: string;
+                metaPct: number;
+                falta: number;
+                /** Format: date-time */
+                sincronizado: string;
+            } | null;
+            kpis: {
+                aLiquidar: number;
+                aLiquidarDetalle: string;
+                gastos: number;
+                gastosDetalle: string;
+                ganancia: number;
+                margen: number | null;
+                mes: string;
+            };
+            /** @description Próximos 14 días */
+            flujo: {
+                dia: number;
+                entra: number;
+                sale: number;
+            }[];
+            movimientos: {
+                id: string;
+                /** @enum {string} */
+                tipo: "mp" | "payway" | "modo" | "uala" | "andreani" | "oca" | "correo" | "moto" | "transf" | "gasto" | "retiro";
+                titulo: string;
+                detalle: string;
+                /** @description Positivo entra, negativo sale */
+                monto: number;
+            }[];
+            conciliado: boolean;
         };
         Tablero: {
             /** @enum {string} */
@@ -3528,6 +3605,51 @@ export interface operations {
                 content?: never;
             };
             404: components["responses"]["Problema"];
+        };
+    };
+    finanzas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Finanzas */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Finanzas"];
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    retirar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description En camino */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        monto: number;
+                        cuenta: string;
+                    };
+                };
+            };
+            409: components["responses"]["Problema"];
         };
     };
     obtenerTienda: {
