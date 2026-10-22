@@ -5,6 +5,8 @@
 import { error } from '@sveltejs/kit';
 import type {
 	AccionCupon,
+	Evento,
+	ParaHacer,
 	Campana,
 	Canales,
 	Informes,
@@ -228,6 +230,22 @@ export class DatosApi implements Datos {
 		return (await this.pedir<{ codigo: string }>('/v1/panel/links', 'POST', l)).codigo;
 	}
 
+	async actividad() {
+		return (await this.pedir<{ items: Evento[] }>('/v1/panel/actividad')).items;
+	}
+	async deshacerEvento(id: string) {
+		return resultado(
+			await this.intentar(`/v1/panel/actividad/${encodeURIComponent(id)}/deshacer`, 'POST')
+		);
+	}
+	paraHacer() {
+		return this.pedir<ParaHacer>('/v1/panel/para-hacer');
+	}
+	async marcarTarea(id: string, hecha: boolean) {
+		return resultado(
+			await this.intentar(`/v1/panel/para-hacer/${encodeURIComponent(id)}`, 'PUT', { hecha })
+		);
+	}
 	marketing() {
 		return this.pedir<Marketing>('/v1/panel/marketing');
 	}

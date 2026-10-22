@@ -13,6 +13,7 @@
 | #18 | Ingreso con Google, Mercado Pago, Mercado Libre y link por WhatsApp (apagados hasta tener credenciales) |
 | #19 | Datos de la demo: catálogo real de las 16 plantillas (`scripts/catalogos.ts`), clientes y pedidos sembrados |
 | #20 | Armazón del panel: rail, barra lateral, topbar, barra de abajo, notificaciones, ⌘K, tema y modo Simple/Completo |
+| #32 | Actividad (lo que hizo el visitante sale de sus cambios reales, con Deshacer para lo que vuelve atrás borrando el cambio; Hornero, equipo y sistema de la demo; filtros) y Para hacer hoy (tareas de datos vivos: despachar, chats, carritos, transferencias, certificado, reponer; anillo; marcar por día; cada acción lleva a la lista filtrada; Recuperar carritos los manda de verdad). La insignia del menú cuenta lo mismo. Go: actividad = tabla auditoria; tareas de pedidos/productos, `tareas_hechas`. Arreglo: "leída" de la bandeja va en su propio cambio (pisaba el primer mensaje) |
 | #31 | Marketing (campaña por WhatsApp con audiencia, mensaje que reescribe Hornero, adjuntos, costo exacto y ventas estimadas, vista previa en el teléfono; campañas e historial; cupones activos), Canales (reparto del mes, pausar/activar, TikTok pide conectar) e Informes (12 meses: ventas, unidades, clientes nuevos, margen; KPIs; lo que notó Hornero; export CSV). Go: todo sale de los pedidos; campañas 409 hasta WhatsApp Business; canales externos sin conectar |
 | #30 | Cupones (PanelCupones): KPIs, consejo de Hornero (poner mínimo, con Deshacer), armador con objetivos, tipo, alcance, quién, mínimo, usos, vigencia, canales, opciones, vista del ticket y estimación de Hornero; tarjetas con pausar/activar, duplicar, copiar, mandar por WhatsApp; Automáticas (8, prender/apagar) y Relámpago (reloj, sumar hora, liberar, terminar con Deshacer). Go: tabla `cupones` y `tiendas.automaticas`; relámpago y segmentos llegan con el checkout. Falta `/c/[codigo]` (va con la tienda online) |
 | #29 | Listas de precio (PanelCatalogo sList): las 4 listas, aumento por inflación con redondeo (sin, en 90, múltiplo de 500), vista previa por lista, aplicar con Deshacer y programar para el lunes (se aplica al mirar las listas pasada la hora; cancelable). Go: tabla `aumentos`, todo en una transacción |
@@ -39,7 +40,7 @@ El circuito es el de PanelPedidos del handoff: Sin pagar → Para preparar → L
 
 ## Lo que sigue (orden del plan)
 
-Actividad y Para hacer hoy → Operación → Cuenta → Ventas (bandeja WhatsApp, Carritos, Devoluciones, POS, Reseñas) → Listas de precio → Cupones → Crecer → Operación → Cuenta → storefront y 16 plantillas → integraciones reales → MCP + OAuth → Marca → endurecimiento.
+Operación → Cuenta → Ventas (bandeja WhatsApp, Carritos, Devoluciones, POS, Reseñas) → Listas de precio → Cupones → Crecer → Operación → Cuenta → storefront y 16 plantillas → integraciones reales → MCP + OAuth → Marca → endurecimiento.
 
 ## Trampas que ya mordieron
 

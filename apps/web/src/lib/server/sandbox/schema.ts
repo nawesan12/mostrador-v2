@@ -28,5 +28,8 @@ export const cambios = sqliteTable(
 			.default(sql`0`),
 		actualizadoEn: integer('actualizado_en').notNull()
 	},
-	(t) => [primaryKey({ columns: [t.sandboxId, t.entidad, t.clave] })]
+	(t) => [
+		primaryKey({ columns: [t.sandboxId, t.entidad, t.clave] }),
+		index('cambios_por_clave').on(t.entidad, t.clave)
+	]
 );

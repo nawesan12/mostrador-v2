@@ -6,18 +6,21 @@
  * demo cuesta una escritura y no cientos, y el cupo gratis de D1 (100.000 escrituras por día)
  * alcanza para muchas visitas.
  */
+import { actividadDemo, type FilaCambio, type Nombres } from './actividad.ts';
 import { canalesDemo, informesDemo, marketingDemo, type CampanaDemo } from './crecer.ts';
 import { cuando } from '#lib/panel/cupones.ts';
 import { descripcionDe, lunes9, vigenciaDe } from '#lib/panel/cupones.ts';
 import { cuponesDemo, type CambioCupon, type EstadoRelampago } from './cupones.ts';
 import { aumentar, proximoLunes, type Redondeo } from '#lib/panel/precios.ts';
-import { and, eq, lt } from 'drizzle-orm';
+import { and, desc, eq, lt } from 'drizzle-orm';
 import { drizzle, type DrizzleD1Database } from 'drizzle-orm/d1';
 import { inArray } from './sql.ts';
 import { fromB64url, randomToken, sha256 } from '../crypto.ts';
 import { rubro as buscarRubro, slugDe } from './rubros.ts';
 import { cambios, sandboxes } from './schema.ts';
 import type {
+	Evento,
+	ParaHacer,
 	Campana,
 	Canales,
 	Informes,
@@ -750,8 +753,13 @@ export class DatosSandbox implements Datos {
 	// ---------------------------------------------------------------- Bandeja y carritos
 
 	private async cambiosConversaciones() {
-		const c = await cambiosDe(this.db, this.sb.id, 'conversacion');
-		return new Map([...c].filter(([, v]) => v).map(([k, v]) => [k, v as CambioConversacion]));
+		const [c, leidas] = await Promise.all([
+			cambiosDe(this.db, this.sb.id, 'conversacion'),
+			cambiosDe(this.db, this.sb.id, 'conversacion-leida')
+		]);
+		const m = new Map([...c].filter(([, v]) => v).map(([k, v]) => [k, v as CambioConversacion]));
+		for (const [k, v] of leidas) if (v) m.set(k, { ...m.get(k), leida: true });
+		return m;
 	}
 
 	async bandeja() {
@@ -768,6 +776,11 @@ export class DatosSandbox implements Datos {
 	): Promise<Resultado> {
 		const cambios = await this.cambiosConversaciones();
 		if (!conversacionDemo(await this.demo(), id, cambios)) return 'no-existe';
+		// "Leída" va aparte: llega junto con el primer mensaje y no tiene que pisarlo.
+		if (c.leida && !c.texto?.trim() && c.tomada === undefined) {
+			await guardarCambio(this.db, this.sb.id, 'conversacion-leida', id, true);
+			return 'ok';
+		}
 		const antes = cambios.get(id) ?? {};
 		const texto = c.texto?.trim().slice(0, 2000);
 		await guardarCambio(this.db, this.sb.id, 'conversacion', id, {
@@ -1124,6 +1137,217 @@ export class DatosSandbox implements Datos {
 		return informesDemo(d, Date.now(), margen);
 	}
 
+	// ---------------------------------------------------------------- Actividad y Para hacer hoy
+
+	/** Todos los cambios del visitante, del más nuevo al más viejo. */
+	private async historial(): Promise<FilaCambio[]> {
+		const filas = await this.db
+			.select()
+			.from(cambios)
+			.where(and(eq(cambios.sandboxId, this.sb.id), eq(cambios.borrado, false)))
+			.orderBy(desc(cambios.actualizadoEn))
+			.limit(200);
+		return filas.map((f) => ({
+			entidad: f.entidad,
+			clave: f.clave,
+			datos: JSON.parse(f.datos ?? 'null'),
+			en: f.actualizadoEn
+		}));
+	}
+
+	private async nombres(): Promise<Nombres> {
+		const [productos, cup, canales] = await Promise.all([
+			this.regProductos(),
+			this.cupones(),
+			this.canales()
+		]);
+		const d = await this.base();
+		return {
+			productos: new Map(productos.map((p) => [p.id, p.nombre])),
+			cupones: new Map(cup.cupones.map((c) => [c.id, c.codigo])),
+			automaticas: new Map(cup.automaticas.map((a) => [a.id, a.titulo])),
+			canales: new Map(canales.canales.map((c) => [c.id, c.nombre])),
+			totales: new Map(d.pedidos.map((p) => [p.numero, p.total]))
+		};
+	}
+
+	async actividad(): Promise<Evento[]> {
+		const [filas, nombres] = await Promise.all([this.historial(), this.nombres()]);
+		const deshechos = filas
+			.filter((f) => f.entidad === 'deshecho')
+			.map((f) => f.datos as { id: string; texto: string; donde: string; en: number });
+		return actividadDemo(
+			await this.demo(),
+			Date.now(),
+			this.sb.creadoEn,
+			filas,
+			deshechos,
+			nombres
+		);
+	}
+
+	async deshacerEvento(id: string): Promise<Resultado> {
+		const e = (await this.actividad()).find((x) => x.id === id);
+		if (!e) return 'no-existe';
+		if (!e.deshacer) return 'no-se-puede';
+		const i = id.indexOf(':');
+		const [entidad, clave] = [id.slice(0, i), id.slice(i + 1)];
+		await borrarCambio(this.db, this.sb.id, entidad, clave);
+		await guardarCambio(this.db, this.sb.id, 'deshecho', `${id}:${Date.parse(e.cuando)}`, {
+			id: `${id}:${Date.parse(e.cuando)}`,
+			texto: `${e.texto} — deshecho`,
+			donde: e.donde,
+			en: Date.parse(e.cuando)
+		});
+		return 'ok';
+	}
+
+	/** El día de Argentina (las tareas se marcan por día). */
+	private dia() {
+		return new Date(Date.now() - 3 * 3_600_000).toISOString().slice(0, 10);
+	}
+
+	private async tareasHechas() {
+		const hoy = this.dia();
+		const c = await cambiosDe(this.db, this.sb.id, 'tarea');
+		return new Set(
+			[...c].filter(([k, v]) => v && k.startsWith(`${hoy}:`)).map(([k]) => k.slice(11))
+		);
+	}
+
+	async paraHacer(): Promise<ParaHacer> {
+		const d = await this.base();
+		const ahora = Date.now();
+		const [vivosC, bandeja, carritos, tablero, productos, hechas] = await Promise.all([
+			this.cambiosPedidos(),
+			this.bandeja(),
+			this.carritos(),
+			cambiosDe(this.db, this.sb.id, 'tablero'),
+			this.regProductos(),
+			this.tareasHechas()
+		]);
+		const vivos = pedidosVivos(d, vivosC, ahora);
+		const preparar = vivos.filter((p) => p.estado === 'Para preparar');
+		const chats = bandeja.conversaciones.filter((c) => c.sinLeer > 0 || c.atiende === 'vos');
+		const pendientes = carritos.carritos.filter((c) => !c.recordado);
+		const transf = vivos.filter((p) => p.estado === 'Sin pagar' && p.pago === 'transf');
+		const reponer = registrosInventario(productos).filter((p) =>
+			['out', 'crit', 'low'].includes(p.st)
+		);
+		const conTicket = vivos.filter((p) => p.estado !== 'Cancelado');
+		const ticket = conTicket.length
+			? conTicket.reduce((s, p) => s + p.total, 0) / conTicket.length
+			: 0;
+		const pesosT = (n: number) => '$ ' + Math.round(n).toLocaleString('es-AR');
+		type Tarea = ParaHacer['grupos'][number]['tareas'][number];
+		const t = (x: Omit<Tarea, 'hecha'>, hay: boolean): Tarea[] =>
+			hay ? [{ ...x, hecha: hechas.has(x.id) }] : [];
+		const plural = (n: number, s: string, p: string) => `${n} ${n === 1 ? s : p}`;
+		return {
+			grupos: [
+				{
+					titulo: 'Urgente' as const,
+					tareas: [
+						...t(
+							{
+								id: 'preparar',
+								tipo: 'preparar',
+								titulo: `Despachar ${plural(preparar.length, 'pedido', 'pedidos')}`,
+								detalle: 'Andreani retira a las 15:00',
+								valor: preparar.reduce((s, p) => s + p.total, 0),
+								accion: 'Preparar'
+							},
+							preparar.length > 0
+						),
+						...t(
+							{
+								id: 'chats',
+								tipo: 'chats',
+								titulo: `Responder ${plural(chats.length, 'chat', 'chats')}`,
+								detalle: chats[0] ? `${chats[0].nombre.split(' ')[0]} espera respuesta` : '',
+								valor: Math.round(chats.length * ticket),
+								aproximado: true,
+								accion: 'Abrir bandeja'
+							},
+							chats.length > 0
+						)
+					]
+				},
+				{
+					titulo: 'Hoy' as const,
+					tareas: [
+						...t(
+							{
+								id: 'carritos',
+								tipo: 'carritos',
+								titulo: `Recuperar ${plural(pendientes.length, 'carrito', 'carritos')}`,
+								detalle: `Recordatorio por WhatsApp · ${pesosT(pendientes.length * carritos.costoMensaje)}`,
+								valor: pendientes.reduce((s, c) => s + c.total, 0),
+								aproximado: true,
+								accion: 'Enviar'
+							},
+							pendientes.length > 0
+						),
+						...t(
+							{
+								id: 'transferencias',
+								tipo: 'transferencias',
+								titulo: `Conciliar ${plural(transf.length, 'transferencia', 'transferencias')}`,
+								detalle:
+									transf.length === 1
+										? `Pedido #${transf[0].numero}`
+										: `Pedidos ${transf
+												.slice(0, 3)
+												.map((p) => `#${p.numero}`)
+												.join(', ')
+												.replace(/, ([^,]*)$/, ' y $1')}`,
+								valor: transf.reduce((s, p) => s + p.total, 0),
+								accion: 'Conciliar'
+							},
+							transf.length > 0
+						)
+					]
+				},
+				{
+					titulo: 'Esta semana' as const,
+					tareas: [
+						...t(
+							{
+								id: 'certificado',
+								tipo: 'certificado',
+								titulo: 'Renovar certificado de ARCA',
+								detalle: 'Vence en 5 días',
+								valor: null,
+								accion: 'Renovar'
+							},
+							!tablero.get('certificado')
+						),
+						...t(
+							{
+								id: 'reponer',
+								tipo: 'reponer',
+								titulo: `Reponer ${plural(reponer.length, 'producto', 'productos')}`,
+								detalle: 'Hornero armó el pedido al proveedor',
+								valor: null,
+								accion: 'Revisar'
+							},
+							reponer.length > 0
+						)
+					]
+				}
+			].filter((g) => g.tareas.length)
+		};
+	}
+
+	async marcarTarea(id: string, hecha: boolean): Promise<Resultado> {
+		if (!['preparar', 'chats', 'carritos', 'transferencias', 'certificado', 'reponer'].includes(id))
+			return 'no-existe';
+		const clave = `${this.dia()}:${id}`;
+		if (hecha) await guardarCambio(this.db, this.sb.id, 'tarea', clave, { en: Date.now() });
+		else await borrarCambio(this.db, this.sb.id, 'tarea', clave);
+		return 'ok';
+	}
+
 	// ---------------------------------------------------------------- Listas de precio
 
 	/** Aplica lo programado si ya llegó el día (la demo no tiene worker: se mira al entrar). */
@@ -1328,7 +1552,11 @@ export class DatosSandbox implements Datos {
 		const d = await this.demo();
 		const leidas = (await cambiosDe(this.db, this.sb.id, 'notificaciones')).get('leidas') as
 			{ hasta?: number } | undefined;
-		return resumenDemo(d, this.sb.creadoEn, leidas?.hasta ?? 0, Date.now());
+		const r = resumenDemo(d, this.sb.creadoEn, leidas?.hasta ?? 0, Date.now());
+		// La insignia cuenta lo mismo que la pantalla: las tareas de hoy sin marcar.
+		const tareas = (await this.paraHacer()).grupos.flatMap((g) => g.tareas);
+		r.insignias.paraHacer = tareas.filter((t) => !t.hecha).length;
+		return r;
 	}
 
 	async marcarNotificacionesLeidas() {
