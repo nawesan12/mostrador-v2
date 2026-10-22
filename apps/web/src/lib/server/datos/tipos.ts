@@ -40,6 +40,10 @@ export type Marketing = components['schemas']['Marketing'];
 export type Evento = components['schemas']['Evento'];
 export type Finanzas = components['schemas']['Finanzas'];
 export type MiTienda = components['schemas']['MiTienda'];
+export type Configuracion = components['schemas']['Configuracion'];
+export type Negocio = components['schemas']['Negocio'];
+export type Miembro = components['schemas']['Miembro'];
+export type IdPlan = Configuracion['plan']['actual'];
 export type DisenoTienda = components['schemas']['DisenoTienda'];
 export type ParaHacer = components['schemas']['ParaHacer'];
 export type Campana = components['schemas']['Campana'];
@@ -115,6 +119,12 @@ export interface Datos {
 	actividad(): Promise<Evento[]>;
 	finanzas(): Promise<Finanzas>;
 	miTienda(): Promise<MiTienda>;
+	configuracion(): Promise<Configuracion>;
+	guardarNegocio(n: Negocio): Promise<void>;
+	fijarOpcion(grupo: 'seguridad' | 'avisos', clave: string, activo: boolean): Promise<Resultado>;
+	cerrarSesion(id: string): Promise<Resultado>;
+	invitar(contacto: string, rol: Miembro['rol']): Promise<Miembro | 'repetido'>;
+	cambiarPlan(plan: IdPlan, ciclo?: 'mes' | 'anio'): Promise<void>;
 	guardarMiTienda(d: DisenoTienda): Promise<void>;
 	publicarTienda(): Promise<void>;
 	/** Pasa lo disponible al banco. */

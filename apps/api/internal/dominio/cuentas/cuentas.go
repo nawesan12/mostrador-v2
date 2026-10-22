@@ -269,6 +269,8 @@ type Datos struct {
 	TiendaID string    `json:"tiendaId"`
 	Rol      string    `json:"rol"`
 	VenceEn  time.Time `json:"venceEn"`
+	// SesionID identifica la sesión (un prefijo del hash del token) para listarla y cerrarla.
+	SesionID string `json:"-"`
 }
 
 // Sesion resuelve el token. Actualiza "visto" como mucho una vez por hora (como en Caja: no escribir
@@ -297,6 +299,7 @@ func (s *Servicio) Sesion(ctx context.Context, token string) (Datos, error) {
 	if tienda != nil && rol != nil {
 		d.TiendaID, d.Rol = *tienda, *rol
 	}
+	d.SesionID = hashToken(token)[:16]
 	if time.Since(visto) > time.Hour {
 		_, _ = s.Pool.Exec(ctx, `UPDATE auth.sesiones SET visto_en = now() WHERE token_hash = $1`, hashToken(token))
 	}

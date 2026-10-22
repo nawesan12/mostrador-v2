@@ -5,6 +5,10 @@
 import { error } from '@sveltejs/kit';
 import type {
 	AccionCupon,
+	Configuracion,
+	Miembro,
+	Negocio,
+	IdPlan,
 	DisenoTienda,
 	MiTienda,
 	Finanzas,
@@ -233,6 +237,30 @@ export class DatosApi implements Datos {
 		return (await this.pedir<{ codigo: string }>('/v1/panel/links', 'POST', l)).codigo;
 	}
 
+	configuracion() {
+		return this.pedir<Configuracion>('/v1/panel/configuracion');
+	}
+	async guardarNegocio(n: Negocio) {
+		await this.pedir<void>('/v1/panel/configuracion/negocio', 'PUT', n);
+	}
+	async fijarOpcion(grupo: 'seguridad' | 'avisos', clave: string, activo: boolean) {
+		return resultado(
+			await this.intentar(`/v1/panel/configuracion/${grupo}/${encodeURIComponent(clave)}`, 'PUT', {
+				activo
+			})
+		);
+	}
+	async cerrarSesion(id: string) {
+		return resultado(await this.intentar(`/v1/panel/sesiones/${encodeURIComponent(id)}`, 'DELETE'));
+	}
+	async invitar(contacto: string, rol: Miembro['rol']) {
+		const r = await this.intentar('/v1/panel/equipo', 'POST', { contacto, rol });
+		if (r.status === 409) return 'repetido' as const;
+		return (await r.json()) as Miembro;
+	}
+	async cambiarPlan(plan: IdPlan, ciclo?: 'mes' | 'anio') {
+		await this.pedir<void>('/v1/panel/plan', 'PUT', { plan, ciclo });
+	}
 	miTienda() {
 		return this.pedir<MiTienda>('/v1/panel/mi-tienda');
 	}
