@@ -508,6 +508,73 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/bandeja": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Conversaciones de WhatsApp, Instagram, Telegram y Mercado Libre. */
+        get: operations["bandeja"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/bandeja/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["conversacion"];
+        put?: never;
+        /** Manda un mensaje, o toma / devuelve la conversación a Hornero. */
+        post: operations["responder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/carritos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["carritos"];
+        /** Los recordatorios automáticos (a la hora, a las 24 h con 5% off, email al tercer día). */
+        put: operations["guardarAutomaticos"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/carritos/{id}/recordar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["recordarCarrito"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/tienda": {
         parameters: {
             query?: never;
@@ -634,6 +701,87 @@ export interface components {
             cantidad: number;
             /** Format: date-time */
             en: string;
+        };
+        ConversacionBreve: {
+            id: string;
+            nombre: string;
+            foto: string | null;
+            /** @enum {string} */
+            canal: "wa" | "ig" | "tg" | "ml";
+            /** @description El último mensaje */
+            ultimo: string;
+            /** Format: date-time */
+            creado: string;
+            /** @enum {string} */
+            atiende: "hornero" | "vos" | "resuelto";
+            sinLeer: number;
+        };
+        Conversacion: components["schemas"]["ConversacionBreve"] & {
+            mensajes: {
+                /** @enum {string} */
+                de: "cliente" | "hornero" | "vos";
+                texto: string;
+                /** Format: date-time */
+                en: string;
+                /** @description Tarjeta de producto que mandó Hornero */
+                producto?: {
+                    nombre: string;
+                    foto: string | null;
+                    precio: number;
+                    stock: number;
+                } | null;
+            }[];
+            /** @description Respuesta que propone Hornero */
+            sugerencia: string | null;
+            /** @description La atiende la persona (Hornero en pausa) */
+            tomada: boolean;
+            cliente: {
+                ciudad: string;
+                /** Format: date-time */
+                desde: string;
+                gastado: number;
+                pedidos: number;
+                etiquetas: string[];
+                ultimoPedido: {
+                    numero: number;
+                    resumen: string;
+                    total: number;
+                    estado: components["schemas"]["EstadoPedido"];
+                } | null;
+                /** @description Lo que Hornero aprendió de esta persona */
+                sabe: string | null;
+            };
+        };
+        AutomaticosCarritos: {
+            /** @description WhatsApp a la hora */
+            hora: boolean;
+            /** @description Segundo aviso a las 24 h con 5% off */
+            dia: boolean;
+            /** @description Email al tercer día */
+            email: boolean;
+        };
+        Carritos: {
+            carritos: {
+                id: string;
+                nombre: string;
+                foto: string | null;
+                /** @description Por dónde llegó: la tienda, Instagram… */
+                desde: string;
+                /** Format: date-time */
+                creado: string;
+                fotos: (string | null)[];
+                cantidad: number;
+                total: number;
+                recordado: boolean;
+            }[];
+            abiertos: number;
+            monto: number;
+            /** @description Recuperado este mes */
+            recuperado: number;
+            /** @description Porcentaje recuperado (0–100) */
+            tasa: number;
+            costoMensaje: number;
+            automaticos: components["schemas"]["AutomaticosCarritos"];
         };
         Tablero: {
             /** @enum {string} */
@@ -1798,6 +1946,154 @@ export interface operations {
                 };
             };
             401: components["responses"]["Problema"];
+        };
+    };
+    bandeja: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Conversaciones */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        conversaciones: components["schemas"]["ConversacionBreve"][];
+                        /** @description Conversaciones que atendió Hornero hoy */
+                        atendidasHoy: number;
+                    };
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    conversacion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Conversación */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Conversacion"];
+                };
+            };
+            401: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+        };
+    };
+    responder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    texto?: string;
+                    tomada?: boolean;
+                    /** @description Al abrirla: los mensajes quedan leídos */
+                    leida?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Hecho */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+        };
+    };
+    carritos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Carritos abandonados */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Carritos"];
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    guardarAutomaticos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AutomaticosCarritos"];
+            };
+        };
+        responses: {
+            /** @description Guardado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    recordarCarrito: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Enviado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
         };
     };
     obtenerTienda: {
