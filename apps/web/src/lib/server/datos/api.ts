@@ -5,6 +5,8 @@
 import { error } from '@sveltejs/kit';
 import type {
 	AccionCupon,
+	Permisos,
+	PlanCuenta,
 	Configuracion,
 	Miembro,
 	Negocio,
@@ -63,7 +65,7 @@ export class DatosApi implements Datos {
 
 	private async pedir<T>(
 		ruta: string,
-		metodo: 'GET' | 'PUT' | 'POST' = 'GET',
+		metodo: 'GET' | 'PUT' | 'POST' | 'DELETE' = 'GET',
 		cuerpo?: unknown
 	): Promise<T> {
 		const res = await this.f(this.base + ruta, {
@@ -237,6 +239,42 @@ export class DatosApi implements Datos {
 		return (await this.pedir<{ codigo: string }>('/v1/panel/links', 'POST', l)).codigo;
 	}
 
+	planCuenta() {
+		return this.pedir<PlanCuenta>('/v1/panel/cuenta/plan');
+	}
+	async comprarPack() {
+		await this.pedir<void>('/v1/panel/cuenta/pack', 'POST');
+	}
+	async devolverPack() {
+		return resultado(await this.intentar('/v1/panel/cuenta/pack', 'DELETE'));
+	}
+	cancelarPlan(motivo: number, accion: 'cancelar' | 'oferta') {
+		return this.pedir<{ hasta: string }>('/v1/panel/cuenta/cancelacion', 'POST', {
+			motivo,
+			accion
+		});
+	}
+	async reactivarPlan() {
+		await this.pedir<void>('/v1/panel/cuenta/cancelacion', 'DELETE');
+	}
+	permisos() {
+		return this.pedir<Permisos>('/v1/panel/permisos');
+	}
+	async fijarPermiso(permiso: string, rol: 'admin' | 'ventas' | 'deposito', activo: boolean) {
+		return resultado(
+			await this.intentar(`/v1/panel/permisos/${encodeURIComponent(permiso)}/${rol}`, 'PUT', {
+				activo
+			})
+		);
+	}
+	async cambiarRol(id: string, rol: 'admin' | 'ventas' | 'deposito') {
+		return resultado(
+			await this.intentar(`/v1/panel/equipo/${encodeURIComponent(id)}`, 'PUT', { rol })
+		);
+	}
+	async quitarDelEquipo(id: string) {
+		return resultado(await this.intentar(`/v1/panel/equipo/${encodeURIComponent(id)}`, 'DELETE'));
+	}
 	configuracion() {
 		return this.pedir<Configuracion>('/v1/panel/configuracion');
 	}

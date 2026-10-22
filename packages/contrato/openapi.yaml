@@ -1116,6 +1116,114 @@ paths:
       responses:
         '204': { description: Cambiado }
         '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/cuenta/plan:
+    get:
+      operationId: planCuenta
+      summary: Plan, uso del mes, medio de pago y facturas de Mostrador.
+      responses:
+        '200':
+          description: Plan
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlanCuenta' }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/cuenta/pack:
+    post:
+      operationId: comprarPack
+      summary: Suma 2.000 respuestas de Hornero este mes ($ 4.900).
+      responses:
+        '204': { description: Sumado }
+        '409': { $ref: '#/components/responses/Problema' }
+    delete:
+      operationId: devolverPack
+      summary: Deshace el último pack de este mes.
+      responses:
+        '204': { description: Devuelto }
+        '404': { $ref: '#/components/responses/Problema' }
+  /v1/panel/cuenta/cancelacion:
+    post:
+      operationId: cancelarPlan
+      summary: Cancela el plan al final del período (o acepta la oferta).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [motivo, accion]
+              properties:
+                motivo: { type: integer, minimum: 0, maximum: 4 }
+                accion: { type: string, enum: [cancelar, oferta] }
+      responses:
+        '200':
+          description: Hecho
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [hasta]
+                properties:
+                  hasta: { type: string, format: date-time }
+    delete:
+      operationId: reactivarPlan
+      summary: Deshace la cancelación.
+      responses:
+        '204': { description: Reactivado }
+  /v1/panel/permisos:
+    get:
+      operationId: permisos
+      summary: Qué puede hacer cada rol.
+      responses:
+        '200':
+          description: Matriz
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Permisos' }
+  /v1/panel/permisos/{permiso}/{rol}:
+    put:
+      operationId: fijarPermiso
+      parameters:
+        - { name: permiso, in: path, required: true, schema: { type: string } }
+        - { name: rol, in: path, required: true, schema: { type: string, enum: [admin, ventas, deposito] } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [activo]
+              properties:
+                activo: { type: boolean }
+      responses:
+        '204': { description: Guardado }
+        '404': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/equipo/{id}:
+    put:
+      operationId: cambiarRol
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rol]
+              properties:
+                rol: { type: string, enum: [admin, ventas, deposito] }
+      responses:
+        '204': { description: Cambiado }
+        '404': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+    delete:
+      operationId: quitarDelEquipo
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '204': { description: Quitado }
+        '404': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
   /v1/panel/tienda:
     get:
       operationId: obtenerTienda
@@ -1909,6 +2017,73 @@ components:
             ciclo: { type: string, enum: [mes, anio] }
             enPrueba: { type: boolean }
             diasPrueba: { type: integer }
+    PlanCuenta:
+      type: object
+      required: [actual, ciclo, enPrueba, diasPrueba, proximoCobro, uso, medio, facturacion, facturas, cancelado]
+      properties:
+        actual: { type: string, enum: [gratis, emprende, pro, negocio] }
+        ciclo: { type: string, enum: [mes, anio] }
+        enPrueba: { type: boolean }
+        diasPrueba: { type: integer }
+        proximoCobro: { type: string, format: date-time }
+        uso:
+          type: object
+          required: [productos, personas, hornero, packs, sinIa]
+          properties:
+            productos: { type: integer }
+            personas: { type: integer }
+            hornero: { type: integer, description: 'Respuestas con IA este mes' }
+            packs: { type: integer }
+            sinIa: { type: integer }
+        medio:
+          type: [object, 'null']
+          required: [marca, ultimos, vence]
+          properties:
+            marca: { type: string }
+            ultimos: { type: string }
+            vence: { type: string }
+        facturacion:
+          type: object
+          required: [razonSocial, cuit, tipo]
+          properties:
+            razonSocial: { type: string }
+            cuit: { type: string }
+            tipo: { type: string }
+        facturas:
+          type: array
+          items:
+            type: object
+            required: [numero, detalle, total]
+            properties:
+              numero: { type: string }
+              detalle: { type: string }
+              total: { type: integer }
+        cancelado:
+          type: [object, 'null']
+          required: [hasta]
+          properties:
+            hasta: { type: string, format: date-time }
+    Permisos:
+      type: object
+      required: [permisos]
+      properties:
+        permisos:
+          type: array
+          items:
+            type: object
+            required: [id, titulo, detalle, roles]
+            properties:
+              id: { type: string }
+              titulo: { type: string }
+              detalle: { type: string }
+              roles:
+                type: object
+                required: [duenio, admin, ventas, deposito]
+                properties:
+                  duenio: { type: boolean }
+                  admin: { type: boolean }
+                  ventas: { type: boolean }
+                  deposito: { type: boolean }
     Tablero:
       type: object
       required: [periodo, desde, hasta, hola, ventas, serie, kpis, canales, meta, avisos, ultimosPedidos, paraHacer, enVivo, caja, liquidaciones, hornero, bandeja, integraciones, masVendidos, resenas, envios]
