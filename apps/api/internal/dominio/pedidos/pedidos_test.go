@@ -42,8 +42,8 @@ func TestListarFiltraYCuentaFacetas(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if todo.Total != 3 || todo.Suma != 42900+21990+8000 || todo.Filas[0].Numero != 1003 {
-		t.Fatalf("lista: total %d suma %d primera %d", todo.Total, todo.Suma, todo.Filas[0].Numero)
+	if todo.Total != 3 || todo.Suma != 42900+21990+8000 || todo.Filas[0].Numero != 1001 {
+		t.Fatalf("lista: total %d suma %d primera %d (la más nueva es la de hace 1 h)", todo.Total, todo.Suma, todo.Filas[0].Numero)
 	}
 	// Con canal WhatsApp: el conteo de canal no se filtra a sí mismo; el de estado sí.
 	wa, _ := pedidos.Listar(ctx, b.App, una, pedidos.Filtros{Canal: []string{"wa"}}, time.Now())

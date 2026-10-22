@@ -35,6 +35,8 @@ Crear pedido y link de pago → motor de listas (Clientes, Productos, Inventario
 
 ## Trampas que ya mordieron
 
+- **Tests de Go sin Postgres se saltan (SKIP) en local:** antes de correrlos, `bun run db:up`; confirmar con `go test -v ./... | grep -c '^--- SKIP'` que dé 0. En CI no se saltan (fallan).
+
 - **`wrangler dev` con el binding de IA** pide credenciales al arrancar (en CI no hay). El script `preview` corre con `--local --var HORNERO:simulado`; no sacarlo.
 - **Deploy manual:** el job `deploy` del CI no hace nada (no hay `CLOUDFLARE_API_TOKEN` en GitHub). Después de mergear: `cd apps/web && bun run build && bunx wrangler deploy`. Preview: `bunx wrangler versions upload --preview-alias pr-N`.
 - **`bun scripts/icons.ts ph:nombre`** reescribe `src/lib/icons.ts` sin formato: correr `bunx prettier --write src/lib/icons.ts` y revisar que el diff sólo sume íconos.
