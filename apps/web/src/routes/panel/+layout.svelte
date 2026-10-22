@@ -6,6 +6,7 @@
 	import BarraLateral from '#lib/panel/BarraLateral.svelte';
 	import Cmdk from '#lib/panel/Cmdk.svelte';
 	import Hornero from '#lib/panel/Hornero.svelte';
+	import LinkPago from '#lib/panel/LinkPago.svelte';
 	import Notificaciones from '#lib/panel/Notificaciones.svelte';
 	import Rail from '#lib/panel/Rail.svelte';
 	import Topbar from '#lib/panel/Topbar.svelte';
@@ -88,6 +89,7 @@
 	<Notificaciones notificaciones={data.resumen.notificaciones} {marcarLeidas} />
 	<Cmdk />
 	<Hornero />
+	<LinkPago />
 </div>
 
 <style>

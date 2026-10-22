@@ -13,11 +13,13 @@
 	import { ESTADOS } from '#lib/marcas.ts';
 	import { rutaDe } from '#lib/panel/navegacion.ts';
 	import { SITE } from '#lib/site.ts';
+	import { getShell } from '#lib/panel/shell.svelte.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 
 	/** Bandeja (design/PanelVentas.dc.html, WhatsApp): conversaciones, hilo y ficha del cliente. */
 	let { data } = $props();
 	const ui = getUi();
+	const shell = getShell();
 	const tienda = $derived(page.data.tienda as { nombre: string; slug: string });
 
 	type Filtro = 'todas' | 'vos' | 'hornero' | 'resuelto';
@@ -282,11 +284,8 @@
 								onclick={() =>
 									texto
 										? mandar(texto)
-										: ui.toast({
-												k: 'link',
-												title: 'Link de pago',
-												desc: 'Armalo desde Pedidos › Crear pedido y mandalo por acá.'
-											})}><Icon icon={icono} size={14} style="color:#C24E25" />{t}</button
+										: shell.abrirLink({ para: c!.nombre, concepto: `Pedido de ${c!.nombre}` })}
+								><Icon icon={icono} size={14} style="color:#C24E25" />{t}</button
 							>
 						{/each}
 					</div>
@@ -351,11 +350,9 @@
 					type="button"
 					class="f-crear"
 					onclick={() =>
-						ui.toast({
-							k: 'info',
-							title: `Pedido para ${c!.nombre.split(' ')[0]}`,
-							desc: 'Crear pedidos desde la bandeja llega con Crear pedido.'
-						})}>Crear pedido para {c.nombre.split(' ')[0]}</button
+						// eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta del panel con query
+						goto(`/panel/pedidos/nuevo${c!.clienteId ? `?cliente=${c!.clienteId}` : ''}`)}
+					>Crear pedido para {c.nombre.split(' ')[0]}</button
 				>
 			</div>
 		{/if}

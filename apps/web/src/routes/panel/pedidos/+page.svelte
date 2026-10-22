@@ -395,6 +395,9 @@
 					desc: 'Con los filtros aplicados · en CSV para Excel'
 				})}><Icon icon={I.phDownloadSimpleBold} size={14} />Exportar {n}</a
 		>
+		<a class="nuevo" href="/panel/pedidos/nuevo"
+			><Icon icon={I.phPlusBold} size={14} />Crear pedido</a
+		>
 	</div>
 
 	<div class="vistas" use:anim={{ t: 'rise', delay: 50 }} role="group" aria-label="Vistas">
@@ -796,6 +799,19 @@
 		font-weight: 600;
 		box-shadow: var(--sh);
 		white-space: nowrap;
+	}
+	.nuevo {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 10px 16px;
+		border-radius: 999px;
+		background: var(--tx);
+		color: var(--sf);
+		font-size: 13.5px;
+		font-weight: 600;
+		white-space: nowrap;
+		text-decoration: none;
 	}
 	.vistas {
 		display: flex;

@@ -239,6 +239,7 @@ export function conversacionDemo(
 		atiende: b.atiende,
 		sinLeer: b.sinLeer,
 		mensajes: b.mensajes,
+		clienteId: c.id,
 		sugerencia: cambio?.mensajes?.length ? null : sugerencia,
 		tomada: !!cambio?.tomada,
 		cliente: {

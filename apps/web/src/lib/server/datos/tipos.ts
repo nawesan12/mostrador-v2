@@ -94,4 +94,11 @@ export interface Datos {
 	resolverDevolucion(id: string, accion: 'aprobar' | 'cambio' | 'deshacer'): Promise<Resultado>;
 	resenas(): Promise<ResenasYPreguntas>;
 	responderPregunta(id: string, respuesta: string): Promise<Resultado>;
+	/** Un link de pago; devuelve el código. */
+	crearLink(l: {
+		monto: number;
+		concepto: string;
+		cuotas: boolean;
+		pedido: number | null;
+	}): Promise<string>;
 }
