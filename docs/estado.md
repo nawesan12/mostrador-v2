@@ -44,7 +44,7 @@ El circuito es el de PanelPedidos del handoff: Sin pagar → Para preparar → L
 
 ## Lo que sigue (orden del plan)
 
-Cuenta → Integraciones → Cuenta → Ventas (bandeja WhatsApp, Carritos, Devoluciones, POS, Reseñas) → Listas de precio → Cupones → Crecer → Operación → Cuenta → storefront y 16 plantillas → integraciones reales → MCP + OAuth → Marca → endurecimiento.
+Cuenta (Plan y facturación con cancelación en 3 pasos, Usuarios y permisos con la matriz, Dominio, Notificaciones por canal, Mis datos) → Integraciones (hub con "Configurar" de cada una) → storefront y 16 plantillas (`/t/[tienda]`, `/c/[codigo]`) → integraciones reales (con credenciales) → MCP + OAuth → Marca → endurecimiento.
 
 ## Trampas que ya mordieron
 
@@ -59,3 +59,6 @@ Cuenta → Integraciones → Cuenta → Ventas (bandeja WhatsApp, Carritos, Devo
 - **Tests con miles de `expect`** en loops se pasan de los 5 s: juntar los errores y hacer un solo `expect`.
 - **Hora de Argentina:** UTC−3 fijo; `inicioDelDia` y `horaAr` en `sandbox/tablero.ts`, formatos en `lib/panel/formato.ts`.
 - **Handoff con desbordes en mobile** (leyenda del gráfico, aviso de ARCA): se corrige y se anota en el PR; nunca desbordar ni dejar palabras solas en el último renglón.
+- **Escrituras de la demo que leen y reescriben el mismo cambio** se pisan si llegan juntas (pasó con "leída" y el primer mensaje de la bandeja). Separar en cambios distintos o encadenar los guardados en el cliente (Mi tienda).
+- **Antes de commitear, `bun run format`**: el CI corre `prettier --check` y falla por un archivo sin formatear.
+- **El job `web` del CI tarda ~9 min** (e2e en dos proyectos). Los jobs tienen tope de 20 min.
