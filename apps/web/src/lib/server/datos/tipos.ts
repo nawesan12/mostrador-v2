@@ -37,6 +37,8 @@ export type PedidoNuevo = components['schemas']['PedidoNuevo'];
 export type ListasPrecio = components['schemas']['ListasPrecio'];
 export type Cupon = components['schemas']['Cupon'];
 export type Marketing = components['schemas']['Marketing'];
+export type Evento = components['schemas']['Evento'];
+export type ParaHacer = components['schemas']['ParaHacer'];
 export type Campana = components['schemas']['Campana'];
 export type Canales = components['schemas']['Canales'];
 export type Informes = components['schemas']['Informes'];
@@ -107,6 +109,10 @@ export interface Datos {
 	listasPrecio(): Promise<ListasPrecio>;
 	cupones(): Promise<Cupones>;
 	marketing(): Promise<Marketing>;
+	actividad(): Promise<Evento[]>;
+	deshacerEvento(id: string): Promise<Resultado>;
+	paraHacer(): Promise<ParaHacer>;
+	marcarTarea(id: string, hecha: boolean): Promise<Resultado>;
 	crearCampana(c: {
 		audiencia: 'todos' | 'vip' | 'riesgo' | 'categoria';
 		mensaje: string;

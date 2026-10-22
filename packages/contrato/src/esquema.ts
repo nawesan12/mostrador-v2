@@ -930,6 +930,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/actividad": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Todo lo que pasó en la cuenta, quién lo hizo y desde dónde. */
+        get: operations["actividad"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/actividad/{id}/deshacer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Vuelve atrás un cambio. */
+        post: operations["deshacerEvento"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/para-hacer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Las tareas de hoy, ordenadas por lo que más plata mueven. */
+        get: operations["paraHacer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/para-hacer/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Marca o desmarca una tarea de hoy. */
+        put: operations["marcarTarea"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/tienda": {
         parameters: {
             query?: never;
@@ -1439,6 +1507,38 @@ export interface components {
             /** @description Meses de historia */
             historia: number;
             insights: string[];
+        };
+        Evento: {
+            id: string;
+            /** @enum {string} */
+            tipo: "equipo" | "hornero" | "sistema";
+            quien: string;
+            foto: string | null;
+            texto: string;
+            /** Format: date-time */
+            cuando: string;
+            donde: string;
+            /** @description Se puede volver atrás */
+            deshacer: boolean;
+            deshecho: boolean;
+        };
+        ParaHacer: {
+            grupos: {
+                /** @enum {string} */
+                titulo: "Urgente" | "Hoy" | "Esta semana";
+                tareas: {
+                    id: string;
+                    /** @enum {string} */
+                    tipo: "preparar" | "chats" | "carritos" | "transferencias" | "certificado" | "reponer";
+                    titulo: string;
+                    detalle: string;
+                    /** @description Lo que mueve, en pesos */
+                    valor: number | null;
+                    aproximado?: boolean;
+                    accion: string;
+                    hecha: boolean;
+                }[];
+            }[];
         };
         Tablero: {
             /** @enum {string} */
@@ -3335,6 +3435,99 @@ export interface operations {
                 };
             };
             401: components["responses"]["Problema"];
+        };
+    };
+    actividad: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Actividad */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["Evento"][];
+                    };
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    deshacerEvento: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deshecho */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+        };
+    };
+    paraHacer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tareas */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParaHacer"];
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    marcarTarea: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    hecha: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Guardado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["Problema"];
         };
     };
     obtenerTienda: {

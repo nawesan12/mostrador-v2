@@ -918,6 +918,60 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Informes' }
         '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/actividad:
+    get:
+      operationId: actividad
+      summary: Todo lo que pasó en la cuenta, quién lo hizo y desde dónde.
+      responses:
+        '200':
+          description: Actividad
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/Evento' } }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/actividad/{id}/deshacer:
+    post:
+      operationId: deshacerEvento
+      summary: Vuelve atrás un cambio.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '204': { description: Deshecho }
+        '404': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/para-hacer:
+    get:
+      operationId: paraHacer
+      summary: Las tareas de hoy, ordenadas por lo que más plata mueven.
+      responses:
+        '200':
+          description: Tareas
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ParaHacer' }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/para-hacer/{id}:
+    put:
+      operationId: marcarTarea
+      summary: Marca o desmarca una tarea de hoy.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [hecha]
+              properties:
+                hecha: { type: boolean }
+      responses:
+        '204': { description: Guardado }
+        '404': { $ref: '#/components/responses/Problema' }
   /v1/panel/tienda:
     get:
       operationId: obtenerTienda
@@ -1501,6 +1555,44 @@ components:
             mesAnterior: { type: string }
         historia: { type: integer, description: 'Meses de historia' }
         insights: { type: array, items: { type: string } }
+    Evento:
+      type: object
+      required: [id, tipo, quien, foto, texto, cuando, donde, deshacer, deshecho]
+      properties:
+        id: { type: string }
+        tipo: { type: string, enum: [equipo, hornero, sistema] }
+        quien: { type: string }
+        foto: { type: [string, 'null'] }
+        texto: { type: string }
+        cuando: { type: string, format: date-time }
+        donde: { type: string }
+        deshacer: { type: boolean, description: 'Se puede volver atrás' }
+        deshecho: { type: boolean }
+    ParaHacer:
+      type: object
+      required: [grupos]
+      properties:
+        grupos:
+          type: array
+          items:
+            type: object
+            required: [titulo, tareas]
+            properties:
+              titulo: { type: string, enum: [Urgente, Hoy, Esta semana] }
+              tareas:
+                type: array
+                items:
+                  type: object
+                  required: [id, tipo, titulo, detalle, valor, accion, hecha]
+                  properties:
+                    id: { type: string }
+                    tipo: { type: string, enum: [preparar, chats, carritos, transferencias, certificado, reponer] }
+                    titulo: { type: string }
+                    detalle: { type: string }
+                    valor: { type: [integer, 'null'], description: 'Lo que mueve, en pesos' }
+                    aproximado: { type: boolean }
+                    accion: { type: string }
+                    hecha: { type: boolean }
     Tablero:
       type: object
       required: [periodo, desde, hasta, hola, ventas, serie, kpis, canales, meta, avisos, ultimosPedidos, paraHacer, enVivo, caja, liquidaciones, hornero, bandeja, integraciones, masVendidos, resenas, envios]
