@@ -37,7 +37,12 @@ const EXTRA = [
 	'simple-icons:microsoftexcel',
 	// /estado cuando algo falla o todavía no hay datos (el handoff sólo dibuja "todo funciona").
 	'ph:warning-bold',
-	'ph:hourglass-bold'
+	'ph:hourglass-bold',
+	// La meta del mes en el Resumen.
+	'ph:target',
+	// "¿Te sirvió este artículo?" en la ayuda.
+	'ph:thumbs-up-bold',
+	'ph:thumbs-down-bold'
 ];
 const names = new Set<string>([...EXTRA, ...process.argv.slice(2)]);
 for (const f of files)
