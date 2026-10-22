@@ -17,7 +17,12 @@ test('mi tienda: ocultar, reordenar y cambiar colores queda sin publicar hasta p
 	// Los tres cambios se guardan uno detrás del otro: se esperan los tres antes de recargar.
 	let guardados = 0;
 	page.on('response', (r) => {
-		if (r.url().endsWith('/panel/mi-tienda') && r.request().method() === 'PUT' && r.status() === 204) guardados++;
+		if (
+			r.url().endsWith('/panel/mi-tienda') &&
+			r.request().method() === 'PUT' &&
+			r.status() === 204
+		)
+			guardados++;
 	});
 	await page.getByRole('button', { name: 'Ocultar Botón de WhatsApp' }).click();
 	await expect(page.locator('.sitio .wa')).toHaveCount(0);
