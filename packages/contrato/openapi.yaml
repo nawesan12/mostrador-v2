@@ -749,6 +749,97 @@ paths:
       responses:
         '204': { description: Cancelado }
         '404': { $ref: '#/components/responses/Problema' }
+  /v1/panel/cupones:
+    get:
+      operationId: cupones
+      summary: Cupones, automáticas y oferta relámpago.
+      responses:
+        '200':
+          description: Cupones
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Cupones' }
+        '401': { $ref: '#/components/responses/Problema' }
+    post:
+      operationId: crearCupon
+      summary: Un cupón nuevo (activo o programado).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CuponNuevo' }
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Cupon' }
+        '400': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/cupones/{id}:
+    post:
+      operationId: accionCupon
+      summary: Pausar, activar, duplicar o ponerle un mínimo de compra.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accion]
+              properties:
+                accion: { type: string, enum: [pausar, activar, duplicar, minimo, deshacer-minimo] }
+                minimo: { type: integer, minimum: 0 }
+      responses:
+        '200':
+          description: El cupón como quedó (o la copia)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Cupon' }
+        '404': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/cupones/consejo:
+    delete:
+      operationId: descartarConsejo
+      summary: Oculta el consejo de Hornero (Ahora no).
+      responses:
+        '204': { description: Oculto }
+  /v1/panel/automaticas/{id}:
+    put:
+      operationId: fijarAutomatica
+      summary: Prende o apaga una promoción automática.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [activa]
+              properties:
+                activa: { type: boolean }
+      responses:
+        '204': { description: Guardado }
+        '404': { $ref: '#/components/responses/Problema' }
+  /v1/panel/relampago:
+    post:
+      operationId: accionRelampago
+      summary: Sumar una hora, liberar 20 unidades, terminar o deshacer el final.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accion]
+              properties:
+                accion: { type: string, enum: [sumar-hora, liberar, terminar, reanudar] }
+      responses:
+        '204': { description: Hecho }
+        '404': { $ref: '#/components/responses/Problema' }
   /v1/panel/tienda:
     get:
       operationId: obtenerTienda
@@ -1106,6 +1197,130 @@ components:
             pct: { type: integer }
             redondeo: { type: string, enum: ['no', '90', '500'] }
             para: { type: string, format: date-time }
+    Cupon:
+      type: object
+      required: [id, codigo, tipo, valor, descripcion, estado, usos, limite, vendio, desconto, canales, empieza, termina, minimo, consejo, creado]
+      properties:
+        id: { type: string }
+        codigo: { type: string }
+        tipo: { type: string, enum: [pct, fijo, envio, regalo] }
+        valor: { type: integer, description: 'Porcentaje o pesos (0 en envío y regalo)' }
+        descripcion: { type: string }
+        estado: { type: string, enum: [activo, programado, pausado, terminado] }
+        usos: { type: integer }
+        limite: { type: integer, description: '0 = sin límite' }
+        vendio: { type: integer }
+        desconto: { type: integer }
+        canales: { type: array, items: { type: string, enum: [web, wa, ig, pos] } }
+        empieza: { type: [string, 'null'], format: date-time }
+        termina: { type: [string, 'null'], format: date-time }
+        minimo: { type: integer }
+        consejo: { type: [string, 'null'], description: 'Lo que sugiere Hornero' }
+        creado: { type: string, format: date-time }
+    CuponNuevo:
+      type: object
+      required: [codigo, tipo, valor, alcance, quien, minimo, limite, porCliente, vigencia, canales, opciones]
+      properties:
+        codigo: { type: string, pattern: '^[A-Z0-9-]{3,20}$' }
+        tipo: { type: string, enum: [pct, fijo, envio, regalo] }
+        valor: { type: integer, minimum: 0, maximum: 100000 }
+        alcance: { type: string, enum: [todo, categoria, productos] }
+        productos: { type: array, maxItems: 50, items: { type: string } }
+        quien: { type: string, enum: [todos, nuevos, vip, riesgo] }
+        minimo: { type: integer, minimum: 0 }
+        limite: { type: integer, minimum: 0 }
+        porCliente: { type: string, enum: ['1', '3', libre] }
+        vigencia: { type: string, enum: ['7', finde, '30', hotsale, sin] }
+        canales: { type: array, minItems: 1, items: { type: string, enum: [web, wa, ig, pos] } }
+        opciones:
+          type: object
+          required: [hornero, combinable, unicos, link]
+          properties:
+            hornero: { type: boolean }
+            combinable: { type: boolean }
+            unicos: { type: boolean }
+            link: { type: boolean }
+        programar: { type: boolean, default: false }
+    Automatica:
+      type: object
+      required: [id, titulo, detalle, ejemplo, estado, aporte, activa]
+      properties:
+        id: { type: string, enum: [transf, envio, cantidad, '3x2', cuotas, mayorista, carrito, cumple] }
+        titulo: { type: string }
+        detalle: { type: string }
+        ejemplo: { type: string }
+        estado: { type: string }
+        aporte: { type: [integer, 'null'], description: 'Lo que vendió con esta promo este mes' }
+        activa: { type: boolean }
+    Cupones:
+      type: object
+      required: [cupones, kpis, consejo, segmentos, automaticas, relampago, tienda, productos, categoria]
+      properties:
+        cupones: { type: array, items: { $ref: '#/components/schemas/Cupon' } }
+        kpis:
+          type: object
+          required: [activos, usosMes, vendido, descontado, vsMesAnterior]
+          properties:
+            activos: { type: integer }
+            usosMes: { type: integer }
+            vendido: { type: integer }
+            descontado: { type: integer }
+            vsMesAnterior: { type: [integer, 'null'], description: 'Porcentaje' }
+        consejo:
+          type: [object, 'null']
+          required: [cuponId, codigo, titulo, texto, minimo]
+          properties:
+            cuponId: { type: string }
+            codigo: { type: string }
+            titulo: { type: string }
+            texto: { type: string }
+            minimo: { type: integer }
+        segmentos:
+          type: object
+          required: [vip, riesgo]
+          properties:
+            vip: { type: integer }
+            riesgo: { type: integer }
+        automaticas: { type: array, items: { $ref: '#/components/schemas/Automatica' } }
+        relampago:
+          type: object
+          required: [vivo, proximas]
+          properties:
+            vivo:
+              type: [object, 'null']
+              required: [producto, foto, pct, precio, oferta, termina, vendidos, unidades, terminada]
+              properties:
+                producto: { type: string }
+                foto: { type: [string, 'null'] }
+                pct: { type: integer }
+                precio: { type: integer }
+                oferta: { type: integer }
+                termina: { type: string, format: date-time }
+                vendidos: { type: integer }
+                unidades: { type: integer }
+                terminada: { type: boolean }
+            proximas:
+              type: array
+              items:
+                type: object
+                required: [titulo, detalle, cuando, foto]
+                properties:
+                  titulo: { type: string }
+                  detalle: { type: string }
+                  cuando: { type: string }
+                  foto: { type: [string, 'null'] }
+        tienda: { type: string }
+        productos:
+          type: array
+          description: Para elegir a qué productos aplica
+          items:
+            type: object
+            required: [id, nombre, foto]
+            properties:
+              id: { type: string }
+              nombre: { type: string }
+              foto: { type: [string, 'null'] }
+        categoria: { type: [string, 'null'], description: 'La categoría que más vende (alcance "una categoría")' }
     Tablero:
       type: object
       required: [periodo, desde, hasta, hola, ventas, serie, kpis, canales, meta, avisos, ultimosPedidos, paraHacer, enVivo, caja, liquidaciones, hornero, bandeja, integraciones, masVendidos, resenas, envios]

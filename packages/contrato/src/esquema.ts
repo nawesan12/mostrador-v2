@@ -759,6 +759,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/cupones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Cupones, automáticas y oferta relámpago. */
+        get: operations["cupones"];
+        put?: never;
+        /** Un cupón nuevo (activo o programado). */
+        post: operations["crearCupon"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/cupones/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pausar, activar, duplicar o ponerle un mínimo de compra. */
+        post: operations["accionCupon"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/cupones/consejo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Oculta el consejo de Hornero (Ahora no). */
+        delete: operations["descartarConsejo"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/automaticas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Prende o apaga una promoción automática. */
+        put: operations["fijarAutomatica"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/relampago": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sumar una hora, liberar 20 unidades, terminar o deshacer el final. */
+        post: operations["accionRelampago"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/tienda": {
         parameters: {
             query?: never;
@@ -1072,6 +1158,121 @@ export interface components {
                 /** Format: date-time */
                 para: string;
             } | null;
+        };
+        Cupon: {
+            id: string;
+            codigo: string;
+            /** @enum {string} */
+            tipo: "pct" | "fijo" | "envio" | "regalo";
+            /** @description Porcentaje o pesos (0 en envío y regalo) */
+            valor: number;
+            descripcion: string;
+            /** @enum {string} */
+            estado: "activo" | "programado" | "pausado" | "terminado";
+            usos: number;
+            /** @description 0 = sin límite */
+            limite: number;
+            vendio: number;
+            desconto: number;
+            canales: ("web" | "wa" | "ig" | "pos")[];
+            /** Format: date-time */
+            empieza: string | null;
+            /** Format: date-time */
+            termina: string | null;
+            minimo: number;
+            /** @description Lo que sugiere Hornero */
+            consejo: string | null;
+            /** Format: date-time */
+            creado: string;
+        };
+        CuponNuevo: {
+            codigo: string;
+            /** @enum {string} */
+            tipo: "pct" | "fijo" | "envio" | "regalo";
+            valor: number;
+            /** @enum {string} */
+            alcance: "todo" | "categoria" | "productos";
+            productos?: string[];
+            /** @enum {string} */
+            quien: "todos" | "nuevos" | "vip" | "riesgo";
+            minimo: number;
+            limite: number;
+            /** @enum {string} */
+            porCliente: "1" | "3" | "libre";
+            /** @enum {string} */
+            vigencia: "7" | "finde" | "30" | "hotsale" | "sin";
+            canales: ("web" | "wa" | "ig" | "pos")[];
+            opciones: {
+                hornero: boolean;
+                combinable: boolean;
+                unicos: boolean;
+                link: boolean;
+            };
+            /** @default false */
+            programar: boolean;
+        };
+        Automatica: {
+            /** @enum {string} */
+            id: "transf" | "envio" | "cantidad" | "3x2" | "cuotas" | "mayorista" | "carrito" | "cumple";
+            titulo: string;
+            detalle: string;
+            ejemplo: string;
+            estado: string;
+            /** @description Lo que vendió con esta promo este mes */
+            aporte: number | null;
+            activa: boolean;
+        };
+        Cupones: {
+            cupones: components["schemas"]["Cupon"][];
+            kpis: {
+                activos: number;
+                usosMes: number;
+                vendido: number;
+                descontado: number;
+                /** @description Porcentaje */
+                vsMesAnterior: number | null;
+            };
+            consejo: {
+                cuponId: string;
+                codigo: string;
+                titulo: string;
+                texto: string;
+                minimo: number;
+            } | null;
+            segmentos: {
+                vip: number;
+                riesgo: number;
+            };
+            automaticas: components["schemas"]["Automatica"][];
+            relampago: {
+                vivo: {
+                    producto: string;
+                    foto: string | null;
+                    pct: number;
+                    precio: number;
+                    oferta: number;
+                    /** Format: date-time */
+                    termina: string;
+                    vendidos: number;
+                    unidades: number;
+                    terminada: boolean;
+                } | null;
+                proximas: {
+                    titulo: string;
+                    detalle: string;
+                    cuando: string;
+                    foto: string | null;
+                }[];
+            };
+            tienda: string;
+            /** @description Para elegir a qué productos aplica */
+            productos: {
+                id: string;
+                nombre: string;
+                foto: string | null;
+            }[];
+            /** @description La categoría que más vende (alcance "una categoría") */
+            categoria: string | null;
         };
         Tablero: {
             /** @enum {string} */
@@ -2685,6 +2886,156 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Cancelado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["Problema"];
+        };
+    };
+    cupones: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cupones */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Cupones"];
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    crearCupon: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CuponNuevo"];
+            };
+        };
+        responses: {
+            /** @description Creado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Cupon"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+        };
+    };
+    accionCupon: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    accion: "pausar" | "activar" | "duplicar" | "minimo" | "deshacer-minimo";
+                    minimo?: number;
+                };
+            };
+        };
+        responses: {
+            /** @description El cupón como quedó (o la copia) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Cupon"];
+                };
+            };
+            404: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+        };
+    };
+    descartarConsejo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Oculto */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    fijarAutomatica: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    activa: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Guardado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["Problema"];
+        };
+    };
+    accionRelampago: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    accion: "sumar-hora" | "liberar" | "terminar" | "reanudar";
+                };
+            };
+        };
+        responses: {
+            /** @description Hecho */
             204: {
                 headers: {
                     [name: string]: unknown;

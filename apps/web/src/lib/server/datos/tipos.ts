@@ -35,6 +35,11 @@ export type Carritos = components['schemas']['Carritos'];
 export type AutomaticosCarritos = components['schemas']['AutomaticosCarritos'];
 export type PedidoNuevo = components['schemas']['PedidoNuevo'];
 export type ListasPrecio = components['schemas']['ListasPrecio'];
+export type Cupon = components['schemas']['Cupon'];
+export type Cupones = components['schemas']['Cupones'];
+export type CuponNuevo = components['schemas']['CuponNuevo'];
+export type AccionCupon = 'pausar' | 'activar' | 'duplicar' | 'minimo' | 'deshacer-minimo';
+export type AccionRelampago = 'sumar-hora' | 'liberar' | 'terminar' | 'reanudar';
 export type Devolucion = components['schemas']['Devolucion'];
 export type ResenasYPreguntas = components['schemas']['ResenasYPreguntas'];
 
@@ -96,6 +101,16 @@ export interface Datos {
 	resenas(): Promise<ResenasYPreguntas>;
 	responderPregunta(id: string, respuesta: string): Promise<Resultado>;
 	listasPrecio(): Promise<ListasPrecio>;
+	cupones(): Promise<Cupones>;
+	crearCupon(n: CuponNuevo): Promise<Cupon | 'repetido'>;
+	accionCupon(
+		id: string,
+		accion: AccionCupon,
+		minimo?: number
+	): Promise<Cupon | 'no-existe' | 'no-se-puede'>;
+	descartarConsejo(): Promise<void>;
+	fijarAutomatica(id: string, activa: boolean): Promise<Resultado>;
+	accionRelampago(accion: AccionRelampago): Promise<Resultado>;
 	/** Sube todos los precios ya, o lo programa para el lunes. */
 	aumentarPrecios(
 		pct: number,
