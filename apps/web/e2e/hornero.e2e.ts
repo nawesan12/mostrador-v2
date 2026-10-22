@@ -42,7 +42,8 @@ test('Hornero saluda, propone ideas y responde con los datos', async ({ page, is
 	await page.keyboard.press('Escape');
 	await expect(panel).toBeHidden();
 	await page.keyboard.press('ControlOrMeta+k');
-	await page.keyboard.type('Clientes que no vuelven');
+	await expect(page.getByRole('textbox', { name: 'Buscar' })).toBeFocused();
+	await page.keyboard.type('¿Quiénes no vuelven a comprar?');
 	await page.keyboard.press('Enter');
 	await expect(panel).toBeVisible();
 	await expect(panel.locator('.globo.persona')).toHaveCount(3);

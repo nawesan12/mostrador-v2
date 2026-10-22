@@ -13,7 +13,7 @@ export default defineConfig({
 	workers: 1,
 	use: { baseURL: 'http://localhost:4174', viewport: { width: 1440, height: 900 } },
 	webServer: {
-		command: `wrangler dev .svelte-kit/cloudflare/_worker.js --port 4174 --var DATA_SOURCE:api --var API_URL:${API} --var CLAVE_BFF:clave-bff-e2e`,
+		command: `wrangler dev --local --var HORNERO:simulado .svelte-kit/cloudflare/_worker.js --port 4174 --var DATA_SOURCE:api --var API_URL:${API} --var CLAVE_BFF:clave-bff-e2e`,
 		url: 'http://localhost:4174',
 		reuseExistingServer: false
 	}

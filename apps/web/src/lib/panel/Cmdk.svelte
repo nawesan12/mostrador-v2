@@ -13,16 +13,14 @@
 	 */
 	const shell = getShell();
 	let q = $state('');
-	let sel = $state(0);
 	const items = $derived(
 		AREAS.flatMap((a) =>
 			a.items.map((i) => ({ t: i.label, s: a.label, icon: i.icon, href: rutaDe(i.label) }))
 		).filter((i) => !q.trim() || `${i.t} ${i.s}`.toLowerCase().includes(q.trim().toLowerCase()))
 	);
-	$effect(() => {
-		// Si lo escrito coincide con una sección, Enter va ahí; si no, se lo pregunta a Hornero.
-		sel = q.trim() && items.length ? 1 : 0;
-	});
+	// Si lo escrito coincide con una sección, Enter va ahí; si no, se lo pregunta a Hornero. Las
+	// flechas la mueven (derived escribible: vuelve a calcularse al cambiar lo escrito).
+	let sel = $derived(q.trim() && items.length ? 1 : 0);
 	$effect(() => {
 		if (!shell.cmdk) q = '';
 	});

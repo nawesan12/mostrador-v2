@@ -45,10 +45,18 @@ func Nueva(t testing.TB) *Bases {
 		}
 		t.Skipf("sin Postgres local (bun run db:up): %v", err)
 	}
-	conn.Close(ctx)
+	defer conn.Close(ctx)
 
+	// sync.Once cubre un paquete, pero `go test ./...` corre los paquetes en procesos paralelos que
+	// crean los mismos roles a la vez ("tuple concurrently updated"): un advisory lock los pone en fila.
 	var errRoles error
-	rolesListos.Do(func() { errRoles = db.CrearRoles(ctx, admin, nil) })
+	rolesListos.Do(func() {
+		if _, errRoles = conn.Exec(ctx, "SELECT pg_advisory_lock(735100)"); errRoles != nil {
+			return
+		}
+		defer func() { _, _ = conn.Exec(ctx, "SELECT pg_advisory_unlock(735100)") }()
+		errRoles = db.CrearRoles(ctx, admin, nil)
+	})
 	if errRoles != nil {
 		t.Fatal(errRoles)
 	}
