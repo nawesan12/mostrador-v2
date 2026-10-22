@@ -76,6 +76,7 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string) {
 		return n, true
 	}
 
+	rutasNuevo(mux, pool, con)
 	mux.HandleFunc("GET /v1/panel/pedidos", con(func(w http.ResponseWriter, r *http.Request, id string) {
 		l, err := Listar(r.Context(), pool, id, FiltrosDe(r.URL.Query()), time.Now())
 		if err != nil {

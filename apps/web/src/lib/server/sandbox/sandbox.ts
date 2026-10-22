@@ -14,6 +14,7 @@ import { rubro as buscarRubro, slugDe } from './rubros.ts';
 import { cambios, sandboxes } from './schema.ts';
 import type {
 	AccionLote,
+	PedidoNuevo,
 	AutomaticosCarritos,
 	Resultado,
 	MovimientoStock,
@@ -33,7 +34,13 @@ import type {
 	Tablero,
 	Tienda
 } from '../datos/tipos.ts';
-import { demoDe, type Demo, type EstadoPedido } from './demo.ts';
+import { demoDe, type Demo, type EstadoPedido, type Pedido } from './demo.ts';
+import {
+	devolucionesDemo,
+	resenasDemo,
+	type EstadoDevolucion,
+	type PedidoNuevoDemo
+} from './resenas.ts';
 import {
 	DEF_CLIENTES,
 	DEF_ENVIOS,
@@ -238,8 +245,27 @@ export class DatosSandbox implements Datos {
 	}
 
 	/** Los datos de ejemplo con lo que cambió el visitante (estado y factura de cada pedido). */
-	private async demo(): Promise<Demo> {
+	/**
+	 * Los datos de ejemplo más los pedidos que cargó el visitante (punto de venta, crear pedido), sin
+	 * los cambios de estado. Los pedidos nuevos traen su comprador como cliente.
+	 */
+	private async base(): Promise<Demo> {
 		const d = demoDe(this.plantilla(), this.sb.creadoEn)!;
+		const nuevos = [...(await cambiosDe(this.db, this.sb.id, 'pedido-nuevo'))]
+			.map(([, v]) => v as PedidoNuevoDemo | null)
+			.filter((x): x is PedidoNuevoDemo => !!x)
+			.sort((a, b) => b.pedido.numero - a.pedido.numero);
+		if (!nuevos.length) return d;
+		return {
+			...d,
+			pedidos: [...nuevos.map((x) => x.pedido), ...d.pedidos],
+			clientes: [...d.clientes, ...nuevos.filter((x) => x.cliente).map((x) => x.cliente!)]
+		};
+	}
+
+	/** Los datos de ejemplo con lo que cambió el visitante (pedidos nuevos, estados y facturas). */
+	private async demo(): Promise<Demo> {
+		const d = await this.base();
 		const c = await this.cambiosPedidos();
 		if (!c.size) return d;
 		return {
@@ -255,12 +281,12 @@ export class DatosSandbox implements Datos {
 	}
 
 	async listarPedidos(f: FiltrosPedidos): Promise<ListaPedidos> {
-		const d = demoDe(this.plantilla(), this.sb.creadoEn)!;
+		const d = await this.base();
 		return listarDemo(d, await this.cambiosPedidos(), f, Date.now());
 	}
 
 	async pedido(numero: number): Promise<PedidoDetalle | null> {
-		const d = demoDe(this.plantilla(), this.sb.creadoEn)!;
+		const d = await this.base();
 		return detalleDemo(d, await this.cambiosPedidos(), numero, Date.now());
 	}
 
@@ -269,7 +295,7 @@ export class DatosSandbox implements Datos {
 		numero: number,
 		estado: EstadoPedido
 	): Promise<'ok' | 'no-existe' | 'no-se-puede'> {
-		const d = demoDe(this.plantilla(), this.sb.creadoEn)!;
+		const d = await this.base();
 		const cambios = await this.cambiosPedidos();
 		const p = pedidosVivos(d, cambios, Date.now()).find((x) => x.numero === numero);
 		if (!p) return 'no-existe';
@@ -283,7 +309,7 @@ export class DatosSandbox implements Datos {
 	}
 
 	async pedidosEnLote(numeros: number[], accion: AccionLote) {
-		const d = demoDe(this.plantilla(), this.sb.creadoEn)!;
+		const d = await this.base();
 		const cambios = await this.cambiosPedidos();
 		const pedidos = new Map(pedidosVivos(d, cambios, Date.now()).map((p) => [p.numero, p]));
 		const hechos: { numero: number; antes: EstadoPedido }[] = [];
@@ -317,7 +343,7 @@ export class DatosSandbox implements Datos {
 	}
 
 	async recordarPago(numero: number): Promise<'ok' | 'no-existe' | 'no-se-puede'> {
-		const d = demoDe(this.plantilla(), this.sb.creadoEn)!;
+		const d = await this.base();
 		const cambios = await this.cambiosPedidos();
 		const p = pedidosVivos(d, cambios, Date.now()).find((x) => x.numero === numero);
 		if (!p) return 'no-existe';
@@ -381,7 +407,7 @@ export class DatosSandbox implements Datos {
 	}
 
 	private async regEnvios() {
-		const d = demoDe(this.plantilla(), this.sb.creadoEn)!;
+		const d = await this.base();
 		const vivos = pedidosVivos(d, await this.cambiosPedidos(), Date.now());
 		const reclamados = new Set((await cambiosDe(this.db, this.sb.id, 'reclamo')).keys());
 		return registrosEnvios(vivos, d.clientes, Date.now(), reclamados);
@@ -731,6 +757,107 @@ export class DatosSandbox implements Datos {
 		const e = await this.estadoCarritos();
 		if (e.todos || e.recordados.has(id)) return 'no-se-puede';
 		await guardarCambio(this.db, this.sb.id, 'carrito', id, { en: Date.now() });
+		return 'ok';
+	}
+
+	// ---------------------------------------------------------------- Pedidos nuevos
+
+	async crearPedido(
+		n: PedidoNuevo
+	): Promise<{ numero: number; total: number } | 'sin-stock' | 'invalido'> {
+		const d = await this.base();
+		const productos = new Map((await this.regProductos()).map((p) => [p.id, p]));
+		const items: Pedido['items'] = [];
+		for (const i of n.items) {
+			const p = productos.get(i.productoId);
+			if (!p || !Number.isInteger(i.cantidad) || i.cantidad < 1) return 'invalido';
+			if (p.stock < i.cantidad) return 'sin-stock';
+			items.push({ productoId: p.id, nombre: p.nombre, cantidad: i.cantidad, precio: p.precio });
+		}
+		if (!items.length) return 'invalido';
+		const ahora = Date.now();
+		const numero = Math.max(...d.pedidos.map((p) => p.numero)) + 1;
+		const nombre = n.cliente?.trim().slice(0, 80);
+		const cliente: Demo['clientes'][number] | null = {
+			id: `v${numero}`,
+			nombre: nombre || 'Consumidor final',
+			email: null,
+			telefono: null,
+			ciudad: d.catalogo.ciudad,
+			foto: null,
+			mayorista: false,
+			alta: ahora
+		};
+		const envio = n.envio ?? 'retiro';
+		const pedido: Pedido = {
+			numero,
+			clienteId: cliente.id,
+			canal: n.canal,
+			pago: n.pago,
+			estadoPago:
+				n.pago === 'efectivo' ? 'Cobrado' : n.pago === 'transf' ? 'Acreditada' : 'Aprobado',
+			envio,
+			ciudadEnvio: d.catalogo.ciudad,
+			estado: n.canal === 'pos' && envio === 'retiro' ? 'Entregado' : 'Para preparar',
+			facturado: true,
+			items,
+			total: items.reduce((s, i) => s + i.precio * i.cantidad, 0),
+			creado: ahora
+		};
+		await guardarCambio(this.db, this.sb.id, 'pedido-nuevo', String(numero), {
+			pedido,
+			cliente
+		} satisfies PedidoNuevoDemo);
+		// La venta descuenta stock (el movimiento lo muestra el pedido).
+		const ajustes = await this.ajustesStock();
+		for (const i of items)
+			await guardarCambio(this.db, this.sb.id, 'stock', i.productoId, {
+				delta: (ajustes.get(i.productoId) ?? 0) - i.cantidad
+			});
+		return { numero, total: pedido.total };
+	}
+
+	// ---------------------------------------------------------------- Devoluciones y reseñas
+
+	async devoluciones() {
+		const d = await this.demo();
+		const c = await cambiosDe(this.db, this.sb.id, 'devolucion');
+		const estados = new Map(
+			[...c].filter(([, v]) => v).map(([k, v]) => [k, (v as { estado: EstadoDevolucion }).estado])
+		);
+		return devolucionesDemo(d, estados);
+	}
+
+	async resolverDevolucion(
+		id: string,
+		accion: 'aprobar' | 'cambio' | 'deshacer'
+	): Promise<Resultado> {
+		const dev = (await this.devoluciones()).devoluciones.find((x) => x.id === id);
+		if (!dev) return 'no-existe';
+		if (accion === 'deshacer') {
+			await borrarCambio(this.db, this.sb.id, 'devolucion', id);
+			return 'ok';
+		}
+		await guardarCambio(this.db, this.sb.id, 'devolucion', id, {
+			estado: accion === 'aprobar' ? 'Aprobada' : 'Cambio ofrecido'
+		});
+		return 'ok';
+	}
+
+	async resenas() {
+		const d = await this.demo();
+		const c = await cambiosDe(this.db, this.sb.id, 'pregunta');
+		const respuestas = new Map(
+			[...c].filter(([, v]) => v).map(([k, v]) => [k, (v as { respuesta: string }).respuesta])
+		);
+		return resenasDemo(d, Date.now(), respuestas);
+	}
+
+	async responderPregunta(id: string, respuesta: string): Promise<Resultado> {
+		if (!(await this.resenas()).preguntas.some((p) => p.id === id)) return 'no-existe';
+		await guardarCambio(this.db, this.sb.id, 'pregunta', id, {
+			respuesta: respuesta.trim().slice(0, 2000)
+		});
 		return 'ok';
 	}
 

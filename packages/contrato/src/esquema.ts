@@ -350,7 +350,8 @@ export interface paths {
         /** Pedidos con filtros (en la URL del panel), conteos por etapa y facetas, y una ventana de filas. */
         get: operations["listarPedidos"];
         put?: never;
-        post?: never;
+        /** Un pedido nuevo (venta en el local o cargado a mano). Descuenta el stock. */
+        post: operations["crearPedido"];
         delete?: never;
         options?: never;
         head?: never;
@@ -575,6 +576,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/devoluciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["devoluciones"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/devoluciones/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["resolverDevolucion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/resenas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["resenas"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/preguntas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["responderPregunta"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/tienda": {
         parameters: {
             query?: never;
@@ -782,6 +847,68 @@ export interface components {
             tasa: number;
             costoMensaje: number;
             automaticos: components["schemas"]["AutomaticosCarritos"];
+        };
+        PedidoNuevo: {
+            items: {
+                productoId: string;
+                cantidad: number;
+            }[];
+            /** @enum {string} */
+            pago: "mp" | "tarjeta" | "payway" | "modo" | "uala" | "transf" | "efectivo";
+            /** @enum {string} */
+            canal: "pos" | "wa" | "web" | "ig" | "ml" | "tg";
+            /**
+             * @default retiro
+             * @enum {string}
+             */
+            envio: "retiro" | "andreani" | "oca" | "correo" | "moto";
+            /** @description Nombre (en el local suele no haber) */
+            cliente?: string | null;
+            nota?: string | null;
+        };
+        Devolucion: {
+            id: string;
+            producto: string;
+            foto: string | null;
+            cliente: string;
+            pedido: number;
+            /** Format: date-time */
+            creada: string;
+            motivo: string;
+            monto: number;
+            /** @description Lo que pidió: reintegro, reemplazo, cambio */
+            resolucion: string;
+            /** @enum {string} */
+            estado: "Pendiente" | "Aprobada" | "Cambio ofrecido";
+        };
+        ResenasYPreguntas: {
+            preguntas: {
+                id: string;
+                producto: string;
+                foto: string | null;
+                pregunta: string;
+                /** Format: date-time */
+                creada: string;
+                /** @description La respuesta que propone Hornero */
+                sugerida: string;
+                /** @description La publicada */
+                respuesta: string | null;
+            }[];
+            resenas: {
+                autor: string;
+                estrellas: number;
+                texto: string;
+                /** @description Tienda, Mercado Libre, Google */
+                origen: string;
+                /** Format: date-time */
+                creada: string;
+            }[];
+            promedio: number | null;
+            total: number;
+            /** @description De 5 a 1 estrella */
+            porEstrellas: number[];
+            /** @description Porcentaje (4 y 5 estrellas) */
+            recomendaria: number;
         };
         Tablero: {
             /** @enum {string} */
@@ -1666,6 +1793,36 @@ export interface operations {
             401: components["responses"]["Problema"];
         };
     };
+    crearPedido: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PedidoNuevo"];
+            };
+        };
+        responses: {
+            /** @description Creado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        numero: number;
+                        total: number;
+                    };
+                };
+            };
+            400: components["responses"]["Problema"];
+            401: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+        };
+    };
     pedidosEnLote: {
         parameters: {
             query?: never;
@@ -2094,6 +2251,109 @@ export interface operations {
             401: components["responses"]["Problema"];
             404: components["responses"]["Problema"];
             409: components["responses"]["Problema"];
+        };
+    };
+    devoluciones: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Devoluciones */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        devoluciones: components["schemas"]["Devolucion"][];
+                        /** @description Porcentaje de pedidos con devolución */
+                        tasa: number;
+                    };
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    resolverDevolucion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    accion: "aprobar" | "cambio" | "deshacer";
+                };
+            };
+        };
+        responses: {
+            /** @description Hecho */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+        };
+    };
+    resenas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Reseñas y preguntas */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResenasYPreguntas"];
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    responderPregunta: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    respuesta: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Publicada */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
         };
     };
     obtenerTienda: {
