@@ -999,6 +999,34 @@ paths:
                   monto: { type: integer }
                   cuenta: { type: string }
         '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/mi-tienda:
+    get:
+      operationId: miTienda
+      summary: El editor de la tienda (borrador y si hay cambios sin publicar).
+      responses:
+        '200':
+          description: Mi tienda
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MiTienda' }
+        '401': { $ref: '#/components/responses/Problema' }
+    put:
+      operationId: guardarMiTienda
+      summary: Guarda el borrador (secciones y colores).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DisenoTienda' }
+      responses:
+        '204': { description: Guardado }
+        '400': { $ref: '#/components/responses/Problema' }
+  /v1/panel/mi-tienda/publicar:
+    post:
+      operationId: publicarTienda
+      summary: Publica el borrador.
+      responses:
+        '204': { description: Publicado }
   /v1/panel/tienda:
     get:
       operationId: obtenerTienda
@@ -1672,6 +1700,57 @@ components:
               detalle: { type: string }
               monto: { type: integer, description: 'Positivo entra, negativo sale' }
         conciliado: { type: boolean }
+    DisenoTienda:
+      type: object
+      required: [secciones, paleta]
+      properties:
+        secciones:
+          type: array
+          minItems: 6
+          maxItems: 6
+          items:
+            type: object
+            required: [id, visible]
+            properties:
+              id: { type: string, enum: [hero, cats, prods, revs, ig, wa] }
+              visible: { type: boolean }
+        paleta: { type: integer, minimum: 0, maximum: 3 }
+    MiTienda:
+      type: object
+      required: [plantilla, direccion, diseno, sinPublicar, vista]
+      properties:
+        plantilla: { type: string }
+        direccion: { type: string, description: 'Dónde se ve la tienda (dominio o dirección de Mostrador)' }
+        diseno: { $ref: '#/components/schemas/DisenoTienda' }
+        sinPublicar: { type: boolean }
+        vista:
+          type: object
+          required: [tienda, categorias, productos, resena, fotos, portada]
+          properties:
+            tienda: { type: string }
+            categorias: { type: array, items: { type: string } }
+            productos:
+              type: array
+              items:
+                type: object
+                required: [nombre, foto, precio]
+                properties:
+                  nombre: { type: string }
+                  foto: { type: [string, 'null'] }
+                  precio: { type: integer }
+            resena:
+              type: [object, 'null']
+              required: [promedio, texto]
+              properties:
+                promedio: { type: number }
+                texto: { type: string }
+            fotos: { type: array, items: { type: string } }
+            portada:
+              type: object
+              required: [foto, titulo]
+              properties:
+                foto: { type: [string, 'null'] }
+                titulo: { type: string }
     Tablero:
       type: object
       required: [periodo, desde, hasta, hola, ventas, serie, kpis, canales, meta, avisos, ultimosPedidos, paraHacer, enVivo, caja, liquidaciones, hornero, bandeja, integraciones, masVendidos, resenas, envios]
