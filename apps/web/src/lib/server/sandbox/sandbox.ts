@@ -6,6 +6,7 @@
  * demo cuesta una escritura y no cientos, y el cupo gratis de D1 (100.000 escrituras por día)
  * alcanza para muchas visitas.
  */
+import { PERMISOS, ROLES, fijo, type Rol } from '#lib/panel/permisos.ts';
 import {
 	configuracionDemo,
 	type EstadoCuenta,
@@ -27,6 +28,8 @@ import { fromB64url, randomToken, sha256 } from '../crypto.ts';
 import { rubro as buscarRubro, slugDe } from './rubros.ts';
 import { cambios, sandboxes } from './schema.ts';
 import type {
+	Permisos,
+	PlanCuenta,
 	Configuracion,
 	Miembro,
 	DisenoTienda,
@@ -1431,7 +1434,11 @@ export class DatosSandbox implements Datos {
 			quitados: new Set(g<string[]>('quitados', [])),
 			roles: new Map(Object.entries(g<Record<string, Miembro['rol']>>('roles', {}))),
 			invitados: g<Invitado[]>('invitados', []),
-			plan: g('plan', {})
+			plan: g('plan', {}),
+			permisos: g('permisos', {}),
+			packs: g('packs', {}),
+			cancelado: g('cancelado', null),
+			oferta: g('oferta', null)
 		};
 	}
 
@@ -1489,6 +1496,132 @@ export class DatosSandbox implements Datos {
 			actual: plan,
 			...(ciclo ? { ciclo } : {})
 		});
+	}
+
+	// ---------------------------------------------------------------- Cuenta
+
+	private mes() {
+		return new Date(Date.now() - 3 * 3_600_000).toISOString().slice(0, 7);
+	}
+
+	async planCuenta(): Promise<PlanCuenta> {
+		const [c, e, productos, uso] = await Promise.all([
+			this.configuracion(),
+			this.estadoCuenta(),
+			this.regProductos(),
+			cambiosDe(this.db, this.sb.id, 'hornero')
+		]);
+		const usado = (uso.get('uso') as { cuantos?: number } | undefined)?.cuantos ?? 0;
+		const fin = Date.now() + DIAS_DE_PRUEBA * 86_400_000;
+		return {
+			actual: c.plan.actual,
+			ciclo: c.plan.ciclo,
+			enPrueba: c.plan.enPrueba,
+			diasPrueba: c.plan.diasPrueba,
+			proximoCobro: new Date(fin).toISOString(),
+			uso: {
+				productos: productos.length,
+				personas: c.equipo.length,
+				// La tienda de ejemplo viene con su historia; se suma lo que le preguntó el visitante.
+				hornero: 1842 + usado,
+				packs: e.packs[this.mes()] ?? 0,
+				sinIa: 3912
+			},
+			medio: { marca: 'visa', ultimos: '4821', vence: '08/29' },
+			facturacion: { razonSocial: c.negocio.razonSocial, cuit: c.negocio.cuit, tipo: 'Factura A' },
+			// Está en prueba: la primera factura de Mostrador llega cuando termina.
+			facturas: [],
+			cancelado: e.cancelado ? { hasta: new Date(fin).toISOString() } : null
+		};
+	}
+
+	async comprarPack() {
+		const e = await this.estadoCuenta();
+		const mes = this.mes();
+		await guardarCambio(this.db, this.sb.id, 'cuenta', 'packs', {
+			...e.packs,
+			[mes]: (e.packs[mes] ?? 0) + 1
+		});
+	}
+
+	async devolverPack(): Promise<Resultado> {
+		const e = await this.estadoCuenta();
+		const mes = this.mes();
+		if (!e.packs[mes]) return 'no-existe';
+		await guardarCambio(this.db, this.sb.id, 'cuenta', 'packs', {
+			...e.packs,
+			[mes]: e.packs[mes] - 1
+		});
+		return 'ok';
+	}
+
+	async cancelarPlan(motivo: number, accion: 'cancelar' | 'oferta') {
+		const en = Date.now();
+		if (accion === 'oferta')
+			await guardarCambio(this.db, this.sb.id, 'cuenta', 'oferta', { motivo, en });
+		else await guardarCambio(this.db, this.sb.id, 'cuenta', 'cancelado', { motivo, en });
+		return { hasta: new Date(en + DIAS_DE_PRUEBA * 86_400_000).toISOString() };
+	}
+
+	async reactivarPlan() {
+		await guardarCambio(this.db, this.sb.id, 'cuenta', 'cancelado', null);
+	}
+
+	async permisos(): Promise<Permisos> {
+		const e = await this.estadoCuenta();
+		return {
+			permisos: PERMISOS.map((p) => ({
+				id: p.id,
+				titulo: p.titulo,
+				detalle: p.detalle,
+				roles: Object.fromEntries(
+					ROLES.map((r, i) => [
+						r,
+						fijo(p.id, r) ? !!p.def[i] : (e.permisos[`${p.id}:${r}`] ?? !!p.def[i])
+					])
+				) as Permisos['permisos'][number]['roles']
+			}))
+		};
+	}
+
+	async fijarPermiso(permiso: string, rol: Rol, activo: boolean): Promise<Resultado> {
+		if (!PERMISOS.some((p) => p.id === permiso)) return 'no-existe';
+		if (fijo(permiso, rol)) return 'no-se-puede';
+		const e = await this.estadoCuenta();
+		await guardarCambio(this.db, this.sb.id, 'cuenta', 'permisos', {
+			...e.permisos,
+			[`${permiso}:${rol}`]: activo
+		});
+		return 'ok';
+	}
+
+	async cambiarRol(id: string, rol: Miembro['rol']): Promise<Resultado> {
+		const m = (await this.configuracion()).equipo.find((x) => x.id === id);
+		if (!m) return 'no-existe';
+		if (m.vos || rol === 'duenio') return 'no-se-puede';
+		const e = await this.estadoCuenta();
+		await guardarCambio(this.db, this.sb.id, 'cuenta', 'roles', {
+			...Object.fromEntries(e.roles),
+			[id]: rol
+		});
+		return 'ok';
+	}
+
+	async quitarDelEquipo(id: string): Promise<Resultado> {
+		const m = (await this.configuracion()).equipo.find((x) => x.id === id);
+		if (!m) return 'no-existe';
+		if (m.vos) return 'no-se-puede';
+		const e = await this.estadoCuenta();
+		if (m.pendiente)
+			await guardarCambio(
+				this.db,
+				this.sb.id,
+				'cuenta',
+				'invitados',
+				e.invitados.filter((i) => i.id !== id)
+			);
+		else await guardarCambio(this.db, this.sb.id, 'cuenta', 'quitados', [...e.quitados, id]);
+		return 'ok';
 	}
 
 	// ---------------------------------------------------------------- Mi tienda

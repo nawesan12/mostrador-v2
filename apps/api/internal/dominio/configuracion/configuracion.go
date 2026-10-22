@@ -310,6 +310,7 @@ func Rutas(mux *http.ServeMux, pool tx) {
 		}
 		return true
 	}
+	rutasCuenta(mux, pool, con, errorDe, leer)
 	mux.HandleFunc("GET /v1/panel/configuracion", con(func(w http.ResponseWriter, r *http.Request, id string, q Quien) {
 		v, err := Leer(r.Context(), pool, id, q, time.Now())
 		if err != nil {

@@ -41,6 +41,8 @@ export type Evento = components['schemas']['Evento'];
 export type Finanzas = components['schemas']['Finanzas'];
 export type MiTienda = components['schemas']['MiTienda'];
 export type Configuracion = components['schemas']['Configuracion'];
+export type PlanCuenta = components['schemas']['PlanCuenta'];
+export type Permisos = components['schemas']['Permisos'];
 export type Negocio = components['schemas']['Negocio'];
 export type Miembro = components['schemas']['Miembro'];
 export type IdPlan = Configuracion['plan']['actual'];
@@ -120,6 +122,19 @@ export interface Datos {
 	finanzas(): Promise<Finanzas>;
 	miTienda(): Promise<MiTienda>;
 	configuracion(): Promise<Configuracion>;
+	planCuenta(): Promise<PlanCuenta>;
+	comprarPack(): Promise<void>;
+	devolverPack(): Promise<Resultado>;
+	cancelarPlan(motivo: number, accion: 'cancelar' | 'oferta'): Promise<{ hasta: string }>;
+	reactivarPlan(): Promise<void>;
+	permisos(): Promise<Permisos>;
+	fijarPermiso(
+		permiso: string,
+		rol: 'admin' | 'ventas' | 'deposito',
+		activo: boolean
+	): Promise<Resultado>;
+	cambiarRol(id: string, rol: 'admin' | 'ventas' | 'deposito'): Promise<Resultado>;
+	quitarDelEquipo(id: string): Promise<Resultado>;
 	guardarNegocio(n: Negocio): Promise<void>;
 	fijarOpcion(grupo: 'seguridad' | 'avisos', clave: string, activo: boolean): Promise<Resultado>;
 	cerrarSesion(id: string): Promise<Resultado>;

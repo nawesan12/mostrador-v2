@@ -60,6 +60,14 @@ export type EstadoCuenta = {
 	roles: Map<string, Miembro['rol']>;
 	invitados: Invitado[];
 	plan: { actual?: Plan; ciclo?: 'mes' | 'anio' };
+	/** Cambios a la matriz de permisos: "permiso:rol" → activo. */
+	permisos: Record<string, boolean>;
+	/** Packs de 2.000 respuestas comprados, por mes ("2026-10"). */
+	packs: Record<string, number>;
+	/** Cancelado al final del período (o null). */
+	cancelado: { en: number; motivo: number } | null;
+	/** Oferta aceptada para quedarse. */
+	oferta: { motivo: number; en: number } | null;
 };
 
 const dominio = (tienda: string) =>

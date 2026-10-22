@@ -1167,6 +1167,108 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/cuenta/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Plan, uso del mes, medio de pago y facturas de Mostrador. */
+        get: operations["planCuenta"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/cuenta/pack": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Suma 2.000 respuestas de Hornero este mes ($ 4.900). */
+        post: operations["comprarPack"];
+        /** Deshace el último pack de este mes. */
+        delete: operations["devolverPack"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/cuenta/cancelacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancela el plan al final del período (o acepta la oferta). */
+        post: operations["cancelarPlan"];
+        /** Deshace la cancelación. */
+        delete: operations["reactivarPlan"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/permisos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Qué puede hacer cada rol. */
+        get: operations["permisos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/permisos/{permiso}/{rol}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["fijarPermiso"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/equipo/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["cambiarRol"];
+        post?: never;
+        delete: operations["quitarDelEquipo"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/tienda": {
         parameters: {
             query?: never;
@@ -1844,6 +1946,56 @@ export interface components {
                 enPrueba: boolean;
                 diasPrueba: number;
             };
+        };
+        PlanCuenta: {
+            /** @enum {string} */
+            actual: "gratis" | "emprende" | "pro" | "negocio";
+            /** @enum {string} */
+            ciclo: "mes" | "anio";
+            enPrueba: boolean;
+            diasPrueba: number;
+            /** Format: date-time */
+            proximoCobro: string;
+            uso: {
+                productos: number;
+                personas: number;
+                /** @description Respuestas con IA este mes */
+                hornero: number;
+                packs: number;
+                sinIa: number;
+            };
+            medio: {
+                marca: string;
+                ultimos: string;
+                vence: string;
+            } | null;
+            facturacion: {
+                razonSocial: string;
+                cuit: string;
+                tipo: string;
+            };
+            facturas: {
+                numero: string;
+                detalle: string;
+                total: number;
+            }[];
+            cancelado: {
+                /** Format: date-time */
+                hasta: string;
+            } | null;
+        };
+        Permisos: {
+            permisos: {
+                id: string;
+                titulo: string;
+                detalle: string;
+                roles: {
+                    duenio: boolean;
+                    admin: boolean;
+                    ventas: boolean;
+                    deposito: boolean;
+                };
+            }[];
         };
         Tablero: {
             /** @enum {string} */
@@ -4092,6 +4244,214 @@ export interface operations {
                 };
                 content?: never;
             };
+            409: components["responses"]["Problema"];
+        };
+    };
+    planCuenta: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Plan */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanCuenta"];
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    comprarPack: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sumado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            409: components["responses"]["Problema"];
+        };
+    };
+    devolverPack: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Devuelto */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["Problema"];
+        };
+    };
+    cancelarPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    motivo: number;
+                    /** @enum {string} */
+                    accion: "cancelar" | "oferta";
+                };
+            };
+        };
+        responses: {
+            /** @description Hecho */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: date-time */
+                        hasta: string;
+                    };
+                };
+            };
+        };
+    };
+    reactivarPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Reactivado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    permisos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Matriz */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Permisos"];
+                };
+            };
+        };
+    };
+    fijarPermiso: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                permiso: string;
+                rol: "admin" | "ventas" | "deposito";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    activo: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Guardado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+        };
+    };
+    cambiarRol: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    rol: "admin" | "ventas" | "deposito";
+                };
+            };
+        };
+        responses: {
+            /** @description Cambiado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+        };
+    };
+    quitarDelEquipo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Quitado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["Problema"];
             409: components["responses"]["Problema"];
         };
     };
