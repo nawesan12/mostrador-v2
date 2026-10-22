@@ -125,7 +125,9 @@
 		<div class="i-cuerpo">
 			<div class="i-izq">
 				<div class="i-t">Actualizar precios por inflación</div>
-				<div class="i-d">Subí todo de una, con redondeo lindo ($&nbsp;8.990 en vez de $&nbsp;9.012).</div>
+				<div class="i-d">
+					Subí todo de una, con redondeo lindo ($&nbsp;8.990 en vez de $&nbsp;9.012).
+				</div>
 				<div class="i-slider">
 					<input
 						type="range"
