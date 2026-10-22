@@ -75,12 +75,23 @@ test('⌘K busca y lleva a la sección', async ({ page }) => {
 	await demo(page);
 	await page.keyboard.press('ControlOrMeta+k');
 	const cmdk = page.getByRole('dialog', { name: 'Buscar' });
-	await expect(cmdk).toBeVisible();
+	await expect(cmdk.getByRole('textbox', { name: 'Buscar' })).toBeFocused();
 	await page.keyboard.type('inform');
-	await expect(cmdk.getByRole('option')).toHaveCount(1);
+	// Hornero siempre arriba; la sección que coincide queda elegida.
+	await expect(cmdk.getByRole('option')).toHaveCount(2);
+	await expect(cmdk.getByRole('option', { name: /Informes/ })).toHaveAttribute(
+		'aria-selected',
+		'true'
+	);
 	await page.keyboard.press('Enter');
 	await expect(page).toHaveURL(/\/panel\/informes$/);
 	await expect(cmdk).toBeHidden();
+	// Sin coincidencias, Enter se lo pregunta a Hornero.
+	await page.keyboard.press('ControlOrMeta+k');
+	await expect(cmdk.getByRole('textbox', { name: 'Buscar' })).toBeFocused();
+	await page.keyboard.type('qué me conviene vender');
+	await page.keyboard.press('Enter');
+	await expect(page.getByRole('dialog', { name: 'Hornero' })).toBeVisible();
 });
 
 test.describe('celular', () => {

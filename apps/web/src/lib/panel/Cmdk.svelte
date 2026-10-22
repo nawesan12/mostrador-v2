@@ -20,8 +20,8 @@
 		).filter((i) => !q.trim() || `${i.t} ${i.s}`.toLowerCase().includes(q.trim().toLowerCase()))
 	);
 	$effect(() => {
-		void q;
-		sel = 0;
+		// Si lo escrito coincide con una sección, Enter va ahí; si no, se lo pregunta a Hornero.
+		sel = q.trim() && items.length ? 1 : 0;
 	});
 	$effect(() => {
 		if (!shell.cmdk) q = '';

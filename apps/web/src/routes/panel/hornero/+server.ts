@@ -46,17 +46,15 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	if (!cuerpo.success) error(400, 'Escribile algo a Hornero.');
 	const datos = datosDe(locals);
 
-	// En la demo pública hay topes: por visitante y para todos.
+	// En la demo pública hay topes: por visitante y para todos (ver cupo.ts).
+	let conModelo = env.HORNERO === 'workers-ai' && !!env.AI;
 	if (usaSandbox() && locals.sandbox) {
 		const n = await sumarUsoHornero(dbSandbox(env.SANDBOX), locals.sandbox.id, diaAr());
 		if (n > POR_VISITANTE)
 			return texto(
 				'Por hoy ya charlamos un montón en la demo. Mañana sigo respondiendo; mientras, recorré el panel con los datos de ejemplo.'
 			);
-		if (!(await cupoDemo()))
-			return texto(
-				'Hoy respondí muchísimas preguntas en la demo y me tomo un descanso. Volvé mañana y seguimos.'
-			);
+		if (conModelo && !(await cupoDemo())) conModelo = false;
 	}
 
 	const [tienda, hoy, semana, contexto] = await Promise.all([
@@ -68,7 +66,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	const d: DatosHornero = { tienda, hola: hoy.hola, hoy, semana, contexto };
 	const mensajes = cuerpo.output.mensajes;
 
-	if (env.HORNERO !== 'workers-ai' || !env.AI)
+	if (!conModelo || !env.AI)
 		return texto(responderSimulado(mensajes[mensajes.length - 1].texto, d));
 
 	const conversacion: Mensaje[] = [

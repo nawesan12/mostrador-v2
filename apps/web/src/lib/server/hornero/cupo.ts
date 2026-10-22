@@ -1,11 +1,13 @@
 /**
- * Topes de Hornero en la demo pública, para cuidar la cuota de Workers AI: por visitante (30 mensajes
- * por día, en su sandbox) y para toda la demo (1.500 por día).
+ * Topes de Hornero en la demo pública, para no salir nunca del límite gratis de Workers AI (10.000
+ * neurons por día para toda la cuenta; cada pregunta manda unos 3.000 tokens de contexto): 15 por
+ * visitante por día (en su sandbox) y 200 por día para toda la demo. Pasado el tope de la demo,
+ * Hornero sigue respondiendo con las respuestas armadas (simulado), sin llamar al modelo.
  */
 import { env } from 'cloudflare:workers';
 
-export const POR_VISITANTE = 30;
-export const POR_DIA = 1500;
+export const POR_VISITANTE = 15;
+export const POR_DIA = 200;
 
 const diaAr = (d = new Date()) =>
 	new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' }).format(d);

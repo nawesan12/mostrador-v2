@@ -43,7 +43,9 @@ export async function responderConIa(ai: Ai, mensajes: Mensaje[]) {
 			messages: mensajes,
 			stream: true,
 			max_tokens: 500,
-			temperature: 0.4
+			temperature: 0.4,
+			// Gemma 4 razona antes de responder y se gasta los tokens: sin razonamiento, contesta directo.
+			chat_template_kwargs: { enable_thinking: false }
 		} as never
 	)) as unknown as ReadableStream<Uint8Array>;
 	return soloTexto(sse);

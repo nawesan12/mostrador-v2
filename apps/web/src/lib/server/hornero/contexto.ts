@@ -18,11 +18,9 @@ export type DatosHornero = {
 export function datosParaElModelo(d: DatosHornero) {
 	const { hoy, semana, contexto } = d;
 	return {
-		ventasHoy: {
-			total: hoy.ventas.actual,
-			ayerALaMismaHora: hoy.ventas.anterior,
-			pedidos: hoy.kpis.pedidos.actual
-		},
+		// Hoy hasta ahora y ayer completo; el detalle de cada día va en ventasPorDia.
+		hoyHastaAhora: { ventas: hoy.ventas.actual, pedidos: hoy.kpis.pedidos.actual },
+		ayerDiaCompleto: contexto.ventasPorDia.at(-2) ?? null,
 		ultimos7Dias: {
 			ventas: semana.ventas.actual,
 			semanaAnterior: semana.ventas.anterior,

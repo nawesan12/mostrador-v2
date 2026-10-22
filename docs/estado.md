@@ -13,28 +13,16 @@
 | #18 | Ingreso con Google, Mercado Pago, Mercado Libre y link por WhatsApp (apagados hasta tener credenciales) |
 | #19 | Datos de la demo: catálogo real de las 16 plantillas (`scripts/catalogos.ts`), clientes y pedidos sembrados |
 | #20 | Armazón del panel: rail, barra lateral, topbar, barra de abajo, notificaciones, ⌘K, tema y modo Simple/Completo |
+| #22 | Hornero con Workers AI (ver abajo) |
 | #21 | Resumen (dashboard) completo, meta del mes (migración Go 00008), demo con 60 días de pedidos, stock, carritos, reseñas y chats |
 
-## En curso: PR #22, Hornero (rama `pr-22-hornero`, pusheada, sin PR abierto)
+## Hornero (PR #22)
 
-Hecho en la rama:
-- Panel lateral de Hornero (`lib/panel/Hornero.svelte`, handoff `ovAi`): saludo con ventas de hoy contra ayer, ideas (recuperar carritos, pausar sin stock, promo de fin de semana) con Aprobar / Editar / Deshacer, charla con chips y streaming.
-- Se abre desde el rail, la barra de abajo, el Resumen (avatar, "Ver las 3 ideas", "Responder con Hornero") y el ⌘K ("Preguntale a Hornero", opción 0).
-- Servidor: `lib/server/hornero/` (contexto para el modelo, ideas, respuestas simuladas, stream de Workers AI, cupo) y rutas `routes/panel/hornero/+server.ts` (GET inicio, POST charla) y `ideas/[idea]/+server.ts`.
-- Modelo: `@cf/google/gemma-4-26b-a4b-it` (binding `AI`, `remote: true`). Var `HORNERO`: `workers-ai` en producción, `simulado` en el preview local.
-- Cupos de la demo: 30 mensajes por visitante por día (en `cambios`) y 1.500 por día en total (`contadores`, clave `hornero:AAAA-MM-DD`).
-- Contrato: `GET /v1/panel/hornero/contexto`, `POST /v1/panel/hornero/ideas/{idea}`, y en `Tablero.hornero` se sumaron `audiencia` e `ideasHechas`. Go: contexto vacío e ideas 404 hasta que existan esos dominios.
-- Las ideas aprobadas se guardan en el sandbox (entidad `hornero`); los carritos recordados del Resumen salen de la misma idea.
-- vitest: 49 pasan. Check, lint y Go con `-race` pasan.
-
-Falta:
-1. Arreglar el e2e «aprobar una idea queda hecho y se puede deshacer» (`e2e/hornero.e2e.ts`). Los otros 2 e2e de Hornero pasan en desktop y mobile. Falla así:
-   - desktop: después de «Deshacer», el botón «Aprobar» no vuelve a aparecer (línea 64);
-   - mobile: después de «Aprobar», no aparece «Hecho» (línea 61).
-   Sospecha: el `cargar()` de `Hornero.svelte` o el `invalidateAll()` del layout no refrescan las ideas (o el layout las cierra con `cerrarTodo`). Después, correr la suite completa.
-2. Probar el modelo real con pocas llamadas (`bun run dev` con el binding remoto), verificar el formato del stream y que responda en rioplatense sin inventar.
-3. Comparar el panel contra el handoff a 1440 y barrer 375 px.
-4. Abrir el PR, pasar CI, mergear y desplegar (preview y deploy a mano).
+- Panel lateral (`lib/panel/Hornero.svelte`, handoff `ovAi`): saludo con ventas de hoy contra ayer, ideas (recuperar carritos, pausar sin stock, promo de fin de semana) con Aprobar / Editar / Deshacer, charla con chips y streaming. Se abre desde el rail, la barra de abajo, el Resumen y el ⌘K (opción 0; Enter va a la sección si lo escrito coincide con una).
+- Servidor: `lib/server/hornero/` y `routes/panel/hornero/`. Modelo `@cf/google/gemma-4-26b-a4b-it` con `chat_template_kwargs.enable_thinking = false` (si razona, se gasta los tokens y responde vacío).
+- **Límite gratis de Workers AI (10.000 neurons por día, toda la cuenta):** topes de 15 preguntas por visitante y 200 por día para toda la demo (`cupo.ts`). Pasado el tope de la demo, contesta con las respuestas armadas, sin llamar al modelo. Pedido de Nahuel: probar el modelo real sólo dentro del límite gratis, con pocas preguntas.
+- Al modelo se le pasa "ayer completo" (`ayerDiaCompleto`), no "ayer a esta hora": con ese dato confundía el total del día.
+- En modo API (Go) todavía no hay topes por plan: llegan con Cuenta / Plan.
 
 ## Lo que sigue (orden del plan)
 

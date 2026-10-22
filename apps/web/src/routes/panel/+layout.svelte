@@ -38,10 +38,12 @@
 		await fetch('/panel/notificaciones', { method: 'POST' });
 		await invalidateAll();
 	}
-	// Al cambiar de sección se cierra lo que haya abierto.
+	// Al cambiar de sección se cierra lo que haya abierto. Depende del texto de la ruta: al recargar
+	// los datos (invalidateAll) `page.url` es otro objeto con la misma ruta y no tiene que cerrar nada.
+	const ruta = $derived(page.url.pathname);
 	$effect(() => {
-		void page.url.pathname;
-		shell.cerrarTodo();
+		void ruta;
+		untrack(() => shell.cerrarTodo());
 	});
 </script>
 

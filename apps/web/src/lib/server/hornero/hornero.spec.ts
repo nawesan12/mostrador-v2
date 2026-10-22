@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { demoDe } from '../sandbox/demo.ts';
 import { contextoDemo, tableroDemo } from '../sandbox/tablero.ts';
-import { sistema, type DatosHornero } from './contexto.ts';
+import { datosParaElModelo, sistema, type DatosHornero } from './contexto.ts';
 import { ideasDe } from './ideas.ts';
 import { soloTexto } from './modelo.ts';
 import { responderSimulado } from './simulado.ts';
@@ -44,6 +44,12 @@ describe('Hornero', () => {
 		expect(s).toContain('nunca inventes');
 		expect(s).toContain('"ventasPorDia"');
 		expect(s.length).toBeLessThan(12_000);
+	});
+
+	it('le pasa al modelo ayer completo, no "ayer a esta hora" (lo confundía con el total)', () => {
+		const x = datosParaElModelo(datos());
+		expect(x.ayerDiaCompleto).toEqual(datos().contexto.ventasPorDia.at(-2));
+		expect(JSON.stringify(x)).not.toContain('MismaHora');
 	});
 
 	it('simulado responde con los datos', () => {
