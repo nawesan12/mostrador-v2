@@ -39,6 +39,8 @@ export type Cupon = components['schemas']['Cupon'];
 export type Marketing = components['schemas']['Marketing'];
 export type Evento = components['schemas']['Evento'];
 export type Finanzas = components['schemas']['Finanzas'];
+export type MiTienda = components['schemas']['MiTienda'];
+export type DisenoTienda = components['schemas']['DisenoTienda'];
 export type ParaHacer = components['schemas']['ParaHacer'];
 export type Campana = components['schemas']['Campana'];
 export type Canales = components['schemas']['Canales'];
@@ -112,6 +114,9 @@ export interface Datos {
 	marketing(): Promise<Marketing>;
 	actividad(): Promise<Evento[]>;
 	finanzas(): Promise<Finanzas>;
+	miTienda(): Promise<MiTienda>;
+	guardarMiTienda(d: DisenoTienda): Promise<void>;
+	publicarTienda(): Promise<void>;
 	/** Pasa lo disponible al banco. */
 	retirar(): Promise<{ monto: number; cuenta: string } | 'nada' | 'sin-cobros'>;
 	deshacerEvento(id: string): Promise<Resultado>;

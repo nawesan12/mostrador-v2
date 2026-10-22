@@ -20,6 +20,8 @@ import { fromB64url, randomToken, sha256 } from '../crypto.ts';
 import { rubro as buscarRubro, slugDe } from './rubros.ts';
 import { cambios, sandboxes } from './schema.ts';
 import type {
+	DisenoTienda,
+	MiTienda,
 	Finanzas,
 	Evento,
 	ParaHacer,
@@ -98,6 +100,7 @@ import { resumenDemo } from './resumen.ts';
 import { COSTO_MENSAJE, contextoDemo, tableroDemo, type CambiosTablero } from './tablero.ts';
 import RUBROS from '@mostrador/contrato/rubros.json';
 import { plantilla as buscarPlantilla } from '#lib/plantillas.ts';
+import { SITE } from '#lib/site.ts';
 
 export type DbSandbox = DrizzleD1Database<Record<string, never>>;
 
@@ -263,6 +266,15 @@ function sabado10(ahora: number) {
 	const dias = (6 - ar.getUTCDay() + 7) % 7 || 7;
 	return Date.UTC(ar.getUTCFullYear(), ar.getUTCMonth(), ar.getUTCDate() + dias, 13);
 }
+
+/** Las secciones de la portada y los colores, como vienen en la plantilla. */
+const DISENO_INICIAL: DisenoTienda = {
+	secciones: (['hero', 'cats', 'prods', 'revs', 'ig', 'wa'] as const).map((id) => ({
+		id,
+		visible: true
+	})),
+	paleta: 0
+};
 
 type AumentoProgramado = { pct: number; redondeo: Redondeo; para: number };
 
@@ -1388,6 +1400,63 @@ export class DatosSandbox implements Datos {
 			en
 		} satisfies Retiro);
 		return { monto: f.disponible, cuenta: f.banco ?? 'tu banco' };
+	}
+
+	// ---------------------------------------------------------------- Mi tienda
+
+	async miTienda(): Promise<MiTienda> {
+		const [d, t, c] = await Promise.all([
+			this.demo(),
+			this.tienda(),
+			cambiosDe(this.db, this.sb.id, 'mi-tienda')
+		]);
+		const borrador = (c.get('borrador') as DisenoTienda | undefined) ?? DISENO_INICIAL;
+		const publicado = (c.get('publicado') as DisenoTienda | undefined) ?? DISENO_INICIAL;
+		const p = buscarPlantilla(t.plantilla);
+		const vendidos = new Map<string, number>();
+		for (const x of d.pedidos)
+			for (const i of x.items)
+				vendidos.set(i.productoId, (vendidos.get(i.productoId) ?? 0) + i.cantidad);
+		const top = [...d.catalogo.productos].sort(
+			(a, b) => (vendidos.get(b.id) ?? 0) - (vendidos.get(a.id) ?? 0)
+		);
+		const buenas = d.resenas.filter((r) => r.estrellas === 5 && r.texto.length > 30);
+		const promedio = d.resenas.length
+			? d.resenas.reduce((s, r) => s + r.estrellas, 0) / d.resenas.length
+			: 0;
+		return {
+			plantilla: p?.nombre ?? t.plantilla,
+			direccion: `${SITE.replace(/^https?:\/\//, '')}/t/${t.slug}`,
+			diseno: borrador,
+			sinPublicar: JSON.stringify(borrador) !== JSON.stringify(publicado),
+			vista: {
+				tienda: t.nombre,
+				categorias: d.catalogo.categorias,
+				productos: top
+					.slice(0, 4)
+					.map((x) => ({ nombre: x.nombre, foto: x.foto, precio: x.precio })),
+				resena: d.resenas.length
+					? { promedio: Math.round(promedio * 10) / 10, texto: (buenas[0] ?? d.resenas[0]).texto }
+					: null,
+				fotos: [...new Set(top.flatMap((x) => (x.foto ? [x.foto] : [])))].slice(0, 6),
+				portada: { foto: p?.img ?? top[0]?.foto ?? null, titulo: p?.lema ?? t.nombre }
+			}
+		};
+	}
+
+	async guardarMiTienda(diseno: DisenoTienda) {
+		await guardarCambio(this.db, this.sb.id, 'mi-tienda', 'borrador', diseno);
+	}
+
+	async publicarTienda() {
+		const c = await cambiosDe(this.db, this.sb.id, 'mi-tienda');
+		await guardarCambio(
+			this.db,
+			this.sb.id,
+			'mi-tienda',
+			'publicado',
+			c.get('borrador') ?? DISENO_INICIAL
+		);
 	}
 
 	// ---------------------------------------------------------------- Listas de precio

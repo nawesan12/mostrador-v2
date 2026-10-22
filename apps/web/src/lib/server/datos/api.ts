@@ -5,6 +5,8 @@
 import { error } from '@sveltejs/kit';
 import type {
 	AccionCupon,
+	DisenoTienda,
+	MiTienda,
 	Finanzas,
 	Evento,
 	ParaHacer,
@@ -231,6 +233,15 @@ export class DatosApi implements Datos {
 		return (await this.pedir<{ codigo: string }>('/v1/panel/links', 'POST', l)).codigo;
 	}
 
+	miTienda() {
+		return this.pedir<MiTienda>('/v1/panel/mi-tienda');
+	}
+	async guardarMiTienda(d: DisenoTienda) {
+		await this.pedir<void>('/v1/panel/mi-tienda', 'PUT', d);
+	}
+	async publicarTienda() {
+		await this.pedir<void>('/v1/panel/mi-tienda/publicar', 'POST');
+	}
 	finanzas() {
 		return this.pedir<Finanzas>('/v1/panel/finanzas');
 	}

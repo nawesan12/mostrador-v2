@@ -1032,6 +1032,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/mi-tienda": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** El editor de la tienda (borrador y si hay cambios sin publicar). */
+        get: operations["miTienda"];
+        /** Guarda el borrador (secciones y colores). */
+        put: operations["guardarMiTienda"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/mi-tienda/publicar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publica el borrador. */
+        post: operations["publicarTienda"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/tienda": {
         parameters: {
             query?: never;
@@ -1616,6 +1651,39 @@ export interface components {
                 monto: number;
             }[];
             conciliado: boolean;
+        };
+        DisenoTienda: {
+            secciones: {
+                /** @enum {string} */
+                id: "hero" | "cats" | "prods" | "revs" | "ig" | "wa";
+                visible: boolean;
+            }[];
+            paleta: number;
+        };
+        MiTienda: {
+            plantilla: string;
+            /** @description Dónde se ve la tienda (dominio o dirección de Mostrador) */
+            direccion: string;
+            diseno: components["schemas"]["DisenoTienda"];
+            sinPublicar: boolean;
+            vista: {
+                tienda: string;
+                categorias: string[];
+                productos: {
+                    nombre: string;
+                    foto: string | null;
+                    precio: number;
+                }[];
+                resena: {
+                    promedio: number;
+                    texto: string;
+                } | null;
+                fotos: string[];
+                portada: {
+                    foto: string | null;
+                    titulo: string;
+                };
+            };
         };
         Tablero: {
             /** @enum {string} */
@@ -3650,6 +3718,68 @@ export interface operations {
                 };
             };
             409: components["responses"]["Problema"];
+        };
+    };
+    miTienda: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Mi tienda */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MiTienda"];
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    guardarMiTienda: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DisenoTienda"];
+            };
+        };
+        responses: {
+            /** @description Guardado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
+        };
+    };
+    publicarTienda: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Publicado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     obtenerTienda: {

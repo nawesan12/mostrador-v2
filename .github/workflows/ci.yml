@@ -12,6 +12,8 @@ concurrency:
 jobs:
   web:
     runs-on: ubuntu-latest
+    # Que una colgada (apt, un servidor que no arranca) no quede media hora corriendo.
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: apps/web
@@ -35,6 +37,7 @@ jobs:
 
   api:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: apps/api
@@ -63,6 +66,7 @@ jobs:
   # recuperar por mail, contraseña nueva, salir).
   integracion:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:17
@@ -116,6 +120,7 @@ jobs:
 
   jobs-worker:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -127,6 +132,7 @@ jobs:
     if: github.event_name == 'pull_request'
     needs: [web]
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       pull-requests: write
     env:
@@ -163,6 +169,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [web, api, jobs-worker, integracion]
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

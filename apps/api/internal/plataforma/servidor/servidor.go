@@ -17,6 +17,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/hoy"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/links"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/listas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/mitienda"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/precios"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/tiendas"
@@ -36,6 +37,8 @@ type Dependencias struct {
 	Arrepentimiento *arrepentimiento.Servicio
 	// Formularios públicos del sitio: contacto, partners y novedades.
 	Formularios *formularios.Servicio
+	// Sitio público (para armar la dirección de las tiendas).
+	Sitio string
 }
 
 // Nuevo devuelve el handler raíz de la API.
@@ -84,6 +87,7 @@ func Nuevo(d Dependencias) http.Handler {
 		crecer.Rutas(mux, d.App, tienda)
 		hoy.Rutas(mux, d.App, tienda)
 		finanzas.Rutas(mux, d.App, tienda)
+		mitienda.Rutas(mux, d.App, tienda, d.Sitio)
 		ip := func(r *http.Request) string { return cuentas.ClienteDe(r, d.ClaveBFF).IP }
 		if d.Arrepentimiento != nil {
 			d.Arrepentimiento.Rutas(mux, ip)
