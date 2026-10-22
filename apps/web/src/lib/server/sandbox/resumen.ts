@@ -12,6 +12,8 @@ type Notificacion = components['schemas']['Notificacion'];
 const MIN = 60_000;
 const fmt = (n: number) => '$ ' + Math.round(n).toLocaleString('es-AR');
 
+/** Lo que le queda de prueba a la tienda de ejemplo (Finanzas cobra el plan ese día). */
+export const DIAS_DE_PRUEBA = 9;
 export function resumenDemo(
 	d: Demo,
 	base: number,
@@ -100,6 +102,6 @@ export function resumenDemo(
 			)
 		],
 		canales: ['wa', 'ml', 'mp', 'ig', 'tg'],
-		prueba: { plan: 'Pro', diasRestantes: 9, diasTotales: 14 }
+		prueba: { plan: 'Pro', diasRestantes: DIAS_DE_PRUEBA, diasTotales: 14 }
 	};
 }
