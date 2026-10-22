@@ -33,6 +33,9 @@ export type ConversacionBreve = components['schemas']['ConversacionBreve'];
 export type Conversacion = components['schemas']['Conversacion'];
 export type Carritos = components['schemas']['Carritos'];
 export type AutomaticosCarritos = components['schemas']['AutomaticosCarritos'];
+export type PedidoNuevo = components['schemas']['PedidoNuevo'];
+export type Devolucion = components['schemas']['Devolucion'];
+export type ResenasYPreguntas = components['schemas']['ResenasYPreguntas'];
 
 export interface Datos {
 	rubros(): Promise<Rubro[]>;
@@ -83,4 +86,12 @@ export interface Datos {
 	carritos(): Promise<Carritos>;
 	guardarAutomaticos(a: AutomaticosCarritos): Promise<void>;
 	recordarCarrito(id: string): Promise<Resultado>;
+	/** Un pedido nuevo (punto de venta o cargado a mano); descuenta stock. */
+	crearPedido(
+		n: PedidoNuevo
+	): Promise<{ numero: number; total: number } | 'sin-stock' | 'invalido'>;
+	devoluciones(): Promise<{ devoluciones: Devolucion[]; tasa: number }>;
+	resolverDevolucion(id: string, accion: 'aprobar' | 'cambio' | 'deshacer'): Promise<Resultado>;
+	resenas(): Promise<ResenasYPreguntas>;
+	responderPregunta(id: string, respuesta: string): Promise<Resultado>;
 }

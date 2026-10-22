@@ -87,6 +87,20 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string) {
 		}
 		w.WriteHeader(http.StatusNoContent)
 	}))
+	// Devoluciones, reseñas y preguntas llegan con el checkout, Google y Mercado Libre.
+	mux.HandleFunc("GET /v1/panel/devoluciones", con(func(w http.ResponseWriter, _ *http.Request, _ string) {
+		escribir(w, map[string]any{"devoluciones": []any{}, "tasa": 0})
+	}))
+	mux.HandleFunc("POST /v1/panel/devoluciones/{id}", con(func(w http.ResponseWriter, _ *http.Request, _ string) {
+		problema.Escribir(w, problema.NoEncontrado("Esa devolución no existe."))
+	}))
+	mux.HandleFunc("GET /v1/panel/resenas", con(func(w http.ResponseWriter, _ *http.Request, _ string) {
+		escribir(w, map[string]any{"preguntas": []any{}, "resenas": []any{}, "promedio": nil, "total": 0,
+			"porEstrellas": []int{0, 0, 0, 0, 0}, "recomendaria": 0})
+	}))
+	mux.HandleFunc("POST /v1/panel/preguntas/{id}", con(func(w http.ResponseWriter, _ *http.Request, _ string) {
+		problema.Escribir(w, problema.NoEncontrado("Esa pregunta no existe."))
+	}))
 	mux.HandleFunc("POST /v1/panel/carritos/{id}/recordar", con(func(w http.ResponseWriter, _ *http.Request, _ string) {
 		problema.Escribir(w, problema.NoEncontrado("Ese carrito no existe."))
 	}))

@@ -290,6 +290,28 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ListaPedidos' }
         '401': { $ref: '#/components/responses/Problema' }
+    post:
+      operationId: crearPedido
+      summary: Un pedido nuevo (venta en el local o cargado a mano). Descuenta el stock.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PedidoNuevo' }
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [numero, total]
+                properties:
+                  numero: { type: integer }
+                  total: { type: integer }
+        '400': { $ref: '#/components/responses/Problema' }
+        '401': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
   /v1/panel/pedidos/lote:
     post:
       operationId: pedidosEnLote
@@ -560,6 +582,67 @@ paths:
         '401': { $ref: '#/components/responses/Problema' }
         '404': { $ref: '#/components/responses/Problema' }
         '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/devoluciones:
+    get:
+      operationId: devoluciones
+      responses:
+        '200':
+          description: Devoluciones
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [devoluciones, tasa]
+                properties:
+                  devoluciones: { type: array, items: { $ref: '#/components/schemas/Devolucion' } }
+                  tasa: { type: number, description: 'Porcentaje de pedidos con devolución' }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/devoluciones/{id}:
+    post:
+      operationId: resolverDevolucion
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accion]
+              properties:
+                accion: { type: string, enum: [aprobar, cambio, deshacer] }
+      responses:
+        '204': { description: Hecho }
+        '401': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+  /v1/panel/resenas:
+    get:
+      operationId: resenas
+      responses:
+        '200':
+          description: Reseñas y preguntas
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ResenasYPreguntas' }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/preguntas/{id}:
+    post:
+      operationId: responderPregunta
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [respuesta]
+              properties:
+                respuesta: { type: string, minLength: 2, maxLength: 2000 }
+      responses:
+        '204': { description: Publicada }
+        '401': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
   /v1/panel/tienda:
     get:
       operationId: obtenerTienda
@@ -805,6 +888,71 @@ components:
         tasa: { type: number, description: 'Porcentaje recuperado (0–100)' }
         costoMensaje: { type: integer }
         automaticos: { $ref: '#/components/schemas/AutomaticosCarritos' }
+    PedidoNuevo:
+      type: object
+      required: [items, pago, canal]
+      properties:
+        items:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items:
+            type: object
+            required: [productoId, cantidad]
+            properties:
+              productoId: { type: string }
+              cantidad: { type: integer, minimum: 1, maximum: 10000 }
+        pago: { type: string, enum: [mp, tarjeta, payway, modo, uala, transf, efectivo] }
+        canal: { type: string, enum: [pos, wa, web, ig, ml, tg] }
+        envio: { type: string, enum: [retiro, andreani, oca, correo, moto], default: retiro }
+        cliente: { type: [string, 'null'], maxLength: 80, description: 'Nombre (en el local suele no haber)' }
+        nota: { type: [string, 'null'], maxLength: 300 }
+    Devolucion:
+      type: object
+      required: [id, producto, foto, cliente, pedido, creada, motivo, monto, resolucion, estado]
+      properties:
+        id: { type: string }
+        producto: { type: string }
+        foto: { type: [string, 'null'] }
+        cliente: { type: string }
+        pedido: { type: integer }
+        creada: { type: string, format: date-time }
+        motivo: { type: string }
+        monto: { type: integer }
+        resolucion: { type: string, description: 'Lo que pidió: reintegro, reemplazo, cambio' }
+        estado: { type: string, enum: [Pendiente, Aprobada, Cambio ofrecido] }
+    ResenasYPreguntas:
+      type: object
+      required: [preguntas, resenas, promedio, total, porEstrellas, recomendaria]
+      properties:
+        preguntas:
+          type: array
+          items:
+            type: object
+            required: [id, producto, foto, pregunta, creada, sugerida, respuesta]
+            properties:
+              id: { type: string }
+              producto: { type: string }
+              foto: { type: [string, 'null'] }
+              pregunta: { type: string }
+              creada: { type: string, format: date-time }
+              sugerida: { type: string, description: 'La respuesta que propone Hornero' }
+              respuesta: { type: [string, 'null'], description: 'La publicada' }
+        resenas:
+          type: array
+          items:
+            type: object
+            required: [autor, estrellas, texto, origen, creada]
+            properties:
+              autor: { type: string }
+              estrellas: { type: integer }
+              texto: { type: string }
+              origen: { type: string, description: 'Tienda, Mercado Libre, Google' }
+              creada: { type: string, format: date-time }
+        promedio: { type: [number, 'null'] }
+        total: { type: integer }
+        porEstrellas: { type: array, items: { type: integer }, description: 'De 5 a 1 estrella' }
+        recomendaria: { type: integer, description: 'Porcentaje (4 y 5 estrellas)' }
     Tablero:
       type: object
       required: [periodo, desde, hasta, hola, ventas, serie, kpis, canales, meta, avisos, ultimosPedidos, paraHacer, enVivo, caja, liquidaciones, hornero, bandeja, integraciones, masVendidos, resenas, envios]

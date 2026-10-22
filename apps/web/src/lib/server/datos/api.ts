@@ -5,6 +5,9 @@
 import { error } from '@sveltejs/kit';
 import type {
 	AccionLote,
+	Devolucion,
+	PedidoNuevo,
+	ResenasYPreguntas,
 	AutomaticosCarritos,
 	Carritos,
 	Conversacion,
@@ -186,6 +189,28 @@ export class DatosApi implements Datos {
 	async recordarCarrito(id: string) {
 		return resultado(
 			await this.intentar(`/v1/panel/carritos/${encodeURIComponent(id)}/recordar`, 'POST', {})
+		);
+	}
+
+	async crearPedido(n: PedidoNuevo) {
+		const r = await this.intentar('/v1/panel/pedidos', 'POST', n);
+		if (r.status === 409) return 'sin-stock' as const;
+		return (await r.json()) as { numero: number; total: number };
+	}
+	devoluciones() {
+		return this.pedir<{ devoluciones: Devolucion[]; tasa: number }>('/v1/panel/devoluciones');
+	}
+	async resolverDevolucion(id: string, accion: 'aprobar' | 'cambio' | 'deshacer') {
+		return resultado(
+			await this.intentar(`/v1/panel/devoluciones/${encodeURIComponent(id)}`, 'POST', { accion })
+		);
+	}
+	resenas() {
+		return this.pedir<ResenasYPreguntas>('/v1/panel/resenas');
+	}
+	async responderPregunta(id: string, respuesta: string) {
+		return resultado(
+			await this.intentar(`/v1/panel/preguntas/${encodeURIComponent(id)}`, 'POST', { respuesta })
 		);
 	}
 

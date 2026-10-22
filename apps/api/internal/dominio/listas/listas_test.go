@@ -123,3 +123,35 @@ func TestInventarioYEnvios(t *testing.T) {
 		t.Fatalf("movimientos: %+v", movs)
 	}
 }
+
+func TestVentaEnElLocalDescuentaStock(t *testing.T) {
+	b := pruebadb.Nueva(t)
+	id := pruebadb.CrearTienda(t, b.App, "luna")
+	stock := 2
+	p, _ := listas.Guardar(ctx, b.App, id, "", listas.Editable{Nombre: "Termo", Precio: 42900, Stock: &stock})
+	venta := func(cant int) (int, error) {
+		var n pedidos.PedidoNuevo
+		n.Pago, n.Canal = "efectivo", "pos"
+		n.Items = append(n.Items, struct {
+			ProductoID string `json:"productoId"`
+			Cantidad   int    `json:"cantidad"`
+		}{p.ID, cant})
+		num, _, err := pedidos.CrearDesdeProductos(ctx, b.App, id, n)
+		return num, err
+	}
+	if _, err := venta(3); !errors.Is(err, pedidos.ErrSinStock) {
+		t.Fatalf("vendió más de lo que hay: %v", err)
+	}
+	num, err := venta(2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	d, _ := pedidos.Obtener(ctx, b.App, id, num)
+	if d.Estado != "Entregado" || d.Total != 85800 || d.Cliente != "Consumidor final" {
+		t.Fatalf("pedido: %+v", d.Fila)
+	}
+	p, _ = listas.Obtener(ctx, b.App, id, p.ID, time.Now())
+	if p.Stock != 0 {
+		t.Fatalf("stock: %d", p.Stock)
+	}
+}
