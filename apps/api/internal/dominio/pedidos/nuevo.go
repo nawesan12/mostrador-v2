@@ -32,7 +32,7 @@ type PedidoNuevo struct {
 	// ClienteID: en la API los clientes salen de los compradores, así que alcanza con nombre y teléfono.
 	ClienteID *string `json:"clienteId"`
 	Telefono  *string `json:"telefono"`
-	Nota    *string `json:"nota"`
+	Nota      *string `json:"nota"`
 	// Pagado en false: queda Sin pagar (se cobra con un link).
 	Pagado *bool `json:"pagado"`
 }
