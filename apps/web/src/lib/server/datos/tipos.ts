@@ -29,6 +29,10 @@ export type Producto = components['schemas']['Producto'];
 export type ProductoEditable = components['schemas']['ProductoEditable'];
 export type FiltrosLista = import('../sandbox/listas.ts').FiltrosLista;
 export type MovimientoStock = components['schemas']['MovimientoStock'];
+export type ConversacionBreve = components['schemas']['ConversacionBreve'];
+export type Conversacion = components['schemas']['Conversacion'];
+export type Carritos = components['schemas']['Carritos'];
+export type AutomaticosCarritos = components['schemas']['AutomaticosCarritos'];
 
 export interface Datos {
 	rubros(): Promise<Rubro[]>;
@@ -69,4 +73,14 @@ export interface Datos {
 	guardarProducto(id: string | null, p: ProductoEditable): Promise<Producto | null>;
 	/** Movimientos de stock de hoy (ventas, ajustes, conteos, ingresos). */
 	movimientosHoy(): Promise<MovimientoStock[]>;
+	bandeja(): Promise<{ conversaciones: ConversacionBreve[]; atendidasHoy: number }>;
+	conversacion(id: string): Promise<Conversacion | null>;
+	/** Mandar un mensaje, tomar o devolver la conversación, o marcarla leída. */
+	responder(
+		id: string,
+		c: { texto?: string; tomada?: boolean; leida?: boolean }
+	): Promise<Resultado>;
+	carritos(): Promise<Carritos>;
+	guardarAutomaticos(a: AutomaticosCarritos): Promise<void>;
+	recordarCarrito(id: string): Promise<Resultado>;
 }

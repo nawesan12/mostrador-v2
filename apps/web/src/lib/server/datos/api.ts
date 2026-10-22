@@ -5,6 +5,10 @@
 import { error } from '@sveltejs/kit';
 import type {
 	AccionLote,
+	AutomaticosCarritos,
+	Carritos,
+	Conversacion,
+	ConversacionBreve,
 	MovimientoStock,
 	FiltrosLista,
 	ListaGenerica,
@@ -159,6 +163,30 @@ export class DatosApi implements Datos {
 
 	movimientosHoy() {
 		return this.pedir<MovimientoStock[]>('/v1/panel/inventario/movimientos');
+	}
+
+	bandeja() {
+		return this.pedir<{ conversaciones: ConversacionBreve[]; atendidasHoy: number }>(
+			'/v1/panel/bandeja'
+		);
+	}
+	async conversacion(id: string) {
+		const r = await this.intentar(`/v1/panel/bandeja/${encodeURIComponent(id)}`, 'GET');
+		return r.ok ? ((await r.json()) as Conversacion) : null;
+	}
+	async responder(id: string, c: { texto?: string; tomada?: boolean; leida?: boolean }) {
+		return resultado(await this.intentar(`/v1/panel/bandeja/${encodeURIComponent(id)}`, 'POST', c));
+	}
+	carritos() {
+		return this.pedir<Carritos>('/v1/panel/carritos');
+	}
+	guardarAutomaticos(a: AutomaticosCarritos) {
+		return this.pedir<void>('/v1/panel/carritos', 'PUT', a);
+	}
+	async recordarCarrito(id: string) {
+		return resultado(
+			await this.intentar(`/v1/panel/carritos/${encodeURIComponent(id)}/recordar`, 'POST', {})
+		);
 	}
 
 	/** Como `pedir`, pero 404 y 409 vuelven como respuesta (son resultados, no errores). */

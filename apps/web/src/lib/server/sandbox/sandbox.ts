@@ -14,6 +14,8 @@ import { rubro as buscarRubro, slugDe } from './rubros.ts';
 import { cambios, sandboxes } from './schema.ts';
 import type {
 	AccionLote,
+	AutomaticosCarritos,
+	Resultado,
 	MovimientoStock,
 	FiltrosLista,
 	ListaGenerica,
@@ -52,6 +54,13 @@ import {
 	type Movimiento
 } from './listas.ts';
 import { inicioDelDia } from './tablero.ts';
+import {
+	bandejaDemo,
+	carritosDemo,
+	conversacionDemo,
+	type CambioConversacion,
+	type EstadoCarritos
+} from './ventas.ts';
 import {
 	detalleDemo,
 	listarDemo,
@@ -657,6 +666,72 @@ export class DatosSandbox implements Datos {
 			...(id ? {} : { nuevo: true, creado: Date.now() })
 		} satisfies CambioProducto);
 		return this.producto(clave);
+	}
+
+	// ---------------------------------------------------------------- Bandeja y carritos
+
+	private async cambiosConversaciones() {
+		const c = await cambiosDe(this.db, this.sb.id, 'conversacion');
+		return new Map([...c].filter(([, v]) => v).map(([k, v]) => [k, v as CambioConversacion]));
+	}
+
+	async bandeja() {
+		return bandejaDemo(await this.demo(), await this.cambiosConversaciones());
+	}
+
+	async conversacion(id: string) {
+		return conversacionDemo(await this.demo(), id, await this.cambiosConversaciones());
+	}
+
+	async responder(
+		id: string,
+		c: { texto?: string; tomada?: boolean; leida?: boolean }
+	): Promise<Resultado> {
+		const cambios = await this.cambiosConversaciones();
+		if (!conversacionDemo(await this.demo(), id, cambios)) return 'no-existe';
+		const antes = cambios.get(id) ?? {};
+		const texto = c.texto?.trim().slice(0, 2000);
+		await guardarCambio(this.db, this.sb.id, 'conversacion', id, {
+			...antes,
+			...(texto
+				? { mensajes: [...(antes.mensajes ?? []), { texto, en: Date.now() }], leida: true }
+				: {}),
+			...(c.tomada !== undefined ? { tomada: c.tomada } : {}),
+			...(c.leida ? { leida: true } : {})
+		} satisfies CambioConversacion);
+		return 'ok';
+	}
+
+	private async estadoCarritos(): Promise<EstadoCarritos> {
+		const c = await cambiosDe(this.db, this.sb.id, 'carrito');
+		const auto = (await cambiosDe(this.db, this.sb.id, 'carritos')).get('automaticos') as
+			EstadoCarritos['automaticos'] | undefined;
+		return {
+			recordados: new Set([...c].filter(([, v]) => v).map(([k]) => k)),
+			todos: (await this.ideasHechas()).includes('carritos'),
+			automaticos: auto ?? { hora: true, dia: true, email: false }
+		};
+	}
+
+	async carritos() {
+		return carritosDemo(await this.demo(), Date.now(), await this.estadoCarritos(), 120);
+	}
+
+	async guardarAutomaticos(a: AutomaticosCarritos) {
+		await guardarCambio(this.db, this.sb.id, 'carritos', 'automaticos', {
+			hora: !!a.hora,
+			dia: !!a.dia,
+			email: !!a.email
+		});
+	}
+
+	async recordarCarrito(id: string): Promise<Resultado> {
+		const d = await this.demo();
+		if (!d.carritos.some((k) => k.id === id)) return 'no-existe';
+		const e = await this.estadoCarritos();
+		if (e.todos || e.recordados.has(id)) return 'no-se-puede';
+		await guardarCambio(this.db, this.sb.id, 'carrito', id, { en: Date.now() });
+		return 'ok';
 	}
 
 	/** La plantilla del sandbox (o la del rubro). */

@@ -480,6 +480,86 @@ paths:
                 type: array
                 items: { $ref: '#/components/schemas/MovimientoStock' }
         '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/bandeja:
+    get:
+      operationId: bandeja
+      summary: Conversaciones de WhatsApp, Instagram, Telegram y Mercado Libre.
+      responses:
+        '200':
+          description: Conversaciones
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [conversaciones, atendidasHoy]
+                properties:
+                  conversaciones: { type: array, items: { $ref: '#/components/schemas/ConversacionBreve' } }
+                  atendidasHoy: { type: integer, description: 'Conversaciones que atendió Hornero hoy' }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/bandeja/{id}:
+    get:
+      operationId: conversacion
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Conversación
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Conversacion' }
+        '401': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+    post:
+      operationId: responder
+      summary: Manda un mensaje, o toma / devuelve la conversación a Hornero.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                texto: { type: string, minLength: 1, maxLength: 2000 }
+                tomada: { type: boolean }
+                leida: { type: boolean, description: 'Al abrirla: los mensajes quedan leídos' }
+      responses:
+        '204': { description: Hecho }
+        '401': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/carritos:
+    get:
+      operationId: carritos
+      responses:
+        '200':
+          description: Carritos abandonados
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Carritos' }
+        '401': { $ref: '#/components/responses/Problema' }
+    put:
+      operationId: guardarAutomaticos
+      summary: Los recordatorios automáticos (a la hora, a las 24 h con 5% off, email al tercer día).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AutomaticosCarritos' }
+      responses:
+        '204': { description: Guardado }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/carritos/{id}/recordar:
+    post:
+      operationId: recordarCarrito
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '204': { description: Enviado }
+        '401': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
   /v1/panel/tienda:
     get:
       operationId: obtenerTienda
@@ -637,6 +717,94 @@ components:
         texto: { type: string }
         cantidad: { type: integer, description: 'Negativo: sale; positivo: entra' }
         en: { type: string, format: date-time }
+    ConversacionBreve:
+      type: object
+      required: [id, nombre, foto, canal, ultimo, creado, atiende, sinLeer]
+      properties:
+        id: { type: string }
+        nombre: { type: string }
+        foto: { type: [string, 'null'] }
+        canal: { type: string, enum: [wa, ig, tg, ml] }
+        ultimo: { type: string, description: 'El último mensaje' }
+        creado: { type: string, format: date-time }
+        atiende: { type: string, enum: [hornero, vos, resuelto] }
+        sinLeer: { type: integer }
+    Conversacion:
+      allOf:
+        - { $ref: '#/components/schemas/ConversacionBreve' }
+        - type: object
+          required: [mensajes, sugerencia, tomada, cliente]
+          properties:
+            mensajes:
+              type: array
+              items:
+                type: object
+                required: [de, texto, en]
+                properties:
+                  de: { type: string, enum: [cliente, hornero, vos] }
+                  texto: { type: string }
+                  en: { type: string, format: date-time }
+                  producto:
+                    type: [object, 'null']
+                    description: 'Tarjeta de producto que mandó Hornero'
+                    required: [nombre, foto, precio, stock]
+                    properties:
+                      nombre: { type: string }
+                      foto: { type: [string, 'null'] }
+                      precio: { type: integer }
+                      stock: { type: integer }
+            sugerencia: { type: [string, 'null'], description: 'Respuesta que propone Hornero' }
+            tomada: { type: boolean, description: 'La atiende la persona (Hornero en pausa)' }
+            cliente:
+              type: object
+              required: [ciudad, desde, gastado, pedidos, etiquetas, ultimoPedido, sabe]
+              properties:
+                ciudad: { type: string }
+                desde: { type: string, format: date-time }
+                gastado: { type: integer }
+                pedidos: { type: integer }
+                etiquetas: { type: array, items: { type: string } }
+                ultimoPedido:
+                  type: [object, 'null']
+                  required: [numero, resumen, total, estado]
+                  properties:
+                    numero: { type: integer }
+                    resumen: { type: string }
+                    total: { type: integer }
+                    estado: { $ref: '#/components/schemas/EstadoPedido' }
+                sabe: { type: [string, 'null'], description: 'Lo que Hornero aprendió de esta persona' }
+    AutomaticosCarritos:
+      type: object
+      required: [hora, dia, email]
+      properties:
+        hora: { type: boolean, description: 'WhatsApp a la hora' }
+        dia: { type: boolean, description: 'Segundo aviso a las 24 h con 5% off' }
+        email: { type: boolean, description: 'Email al tercer día' }
+    Carritos:
+      type: object
+      required: [carritos, abiertos, monto, recuperado, tasa, costoMensaje, automaticos]
+      properties:
+        carritos:
+          type: array
+          items:
+            type: object
+            required: [id, nombre, foto, desde, creado, fotos, cantidad, total, recordado]
+            properties:
+              id: { type: string }
+              nombre: { type: string }
+              foto: { type: [string, 'null'] }
+              desde: { type: string, description: 'Por dónde llegó: la tienda, Instagram…' }
+              creado: { type: string, format: date-time }
+              fotos: { type: array, items: { type: [string, 'null'] } }
+              cantidad: { type: integer }
+              total: { type: integer }
+              recordado: { type: boolean }
+        abiertos: { type: integer }
+        monto: { type: integer }
+        recuperado: { type: integer, description: 'Recuperado este mes' }
+        tasa: { type: number, description: 'Porcentaje recuperado (0–100)' }
+        costoMensaje: { type: integer }
+        automaticos: { $ref: '#/components/schemas/AutomaticosCarritos' }
     Tablero:
       type: object
       required: [periodo, desde, hasta, hola, ventas, serie, kpis, canales, meta, avisos, ultimosPedidos, paraHacer, enVivo, caja, liquidaciones, hornero, bandeja, integraciones, masVendidos, resenas, envios]
