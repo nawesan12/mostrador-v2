@@ -14,6 +14,8 @@ export type ResumenPanel = components['schemas']['ResumenPanel'];
 export type Notificacion = components['schemas']['Notificacion'];
 export type Tablero = components['schemas']['Tablero'];
 export type Periodo = Tablero['periodo'];
+export type ContextoHornero = components['schemas']['ContextoHornero'];
+export type Idea = 'carritos' | 'stock' | 'promo';
 
 export interface Datos {
 	rubros(): Promise<Rubro[]>;
@@ -31,4 +33,8 @@ export interface Datos {
 	ocultarAviso(aviso: 'certificado'): Promise<void>;
 	/** Manda el recordatorio a los carritos abandonados; devuelve cuántos mensajes salieron. */
 	recordarCarritos(): Promise<number>;
+	/** Lo que Hornero sabe de la tienda para responder. */
+	contextoHornero(): Promise<ContextoHornero>;
+	/** Aprueba (o deshace) una idea de Hornero. */
+	marcarIdea(idea: Idea, hecha: boolean): Promise<void>;
 }

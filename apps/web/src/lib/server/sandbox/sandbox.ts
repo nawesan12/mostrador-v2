@@ -12,10 +12,19 @@ import { inArray } from './sql.ts';
 import { fromB64url, randomToken, sha256 } from '../crypto.ts';
 import { rubro as buscarRubro, slugDe } from './rubros.ts';
 import { cambios, sandboxes } from './schema.ts';
-import type { Datos, Onboarding, Periodo, ResumenPanel, Tablero, Tienda } from '../datos/tipos.ts';
+import type {
+	ContextoHornero,
+	Datos,
+	Idea,
+	Onboarding,
+	Periodo,
+	ResumenPanel,
+	Tablero,
+	Tienda
+} from '../datos/tipos.ts';
 import { demoDe } from './demo.ts';
 import { resumenDemo } from './resumen.ts';
-import { tableroDemo, type CambiosTablero } from './tablero.ts';
+import { contextoDemo, tableroDemo, type CambiosTablero } from './tablero.ts';
 import RUBROS from '@mostrador/contrato/rubros.json';
 import { plantilla as buscarPlantilla } from '#lib/plantillas.ts';
 
@@ -121,6 +130,31 @@ export async function guardarCambio(
 		});
 }
 
+/** Borra lo que el visitante cambió (vuelve al dato de ejemplo). */
+export async function borrarCambio(
+	db: DbSandbox,
+	sandboxId: string,
+	entidad: string,
+	clave: string
+) {
+	await db
+		.delete(cambios)
+		.where(
+			and(eq(cambios.sandboxId, sandboxId), eq(cambios.entidad, entidad), eq(cambios.clave, clave))
+		);
+}
+
+const IDEAS: Idea[] = ['carritos', 'stock', 'promo'];
+
+/** Suma un mensaje a Hornero en el día del visitante y devuelve cuántos lleva. */
+export async function sumarUsoHornero(db: DbSandbox, sandboxId: string, dia: string) {
+	const uso = (await cambiosDe(db, sandboxId, 'hornero')).get('uso') as
+		{ dia: string; n: number } | undefined;
+	const n = uso?.dia === dia ? uso.n + 1 : 1;
+	await guardarCambio(db, sandboxId, 'hornero', 'uso', { dia, n });
+	return n;
+}
+
 export class DatosSandbox implements Datos {
 	constructor(
 		private db: DbSandbox,
@@ -179,7 +213,7 @@ export class DatosSandbox implements Datos {
 		const cambios: CambiosTablero = {
 			meta: (c.get('meta') as { objetivo: number } | undefined)?.objetivo,
 			certificadoOculto: c.has('certificado'),
-			carritosRecordados: c.has('carritos')
+			ideasHechas: await this.ideasHechas()
 		};
 		// Quien prueba la demo es la dueña de la tienda de ejemplo (la del onboarding).
 		return tableroDemo(d, periodo, {
@@ -198,11 +232,24 @@ export class DatosSandbox implements Datos {
 		await guardarCambio(this.db, this.sb.id, 'tablero', aviso, true);
 	}
 
+	private async ideasHechas() {
+		const c = await cambiosDe(this.db, this.sb.id, 'hornero');
+		return IDEAS.filter((k) => c.get(k));
+	}
+
 	async recordarCarritos() {
 		const d = demoDe(this.plantilla(), this.sb.creadoEn)!;
-		const ya = (await cambiosDe(this.db, this.sb.id, 'tablero')).has('carritos');
-		if (ya) return 0;
-		await guardarCambio(this.db, this.sb.id, 'tablero', 'carritos', { en: Date.now() });
+		if ((await this.ideasHechas()).includes('carritos')) return 0;
+		await guardarCambio(this.db, this.sb.id, 'hornero', 'carritos', { en: Date.now() });
 		return d.carritos.length;
+	}
+
+	async marcarIdea(idea: Idea, hecha: boolean) {
+		if (hecha) await guardarCambio(this.db, this.sb.id, 'hornero', idea, { en: Date.now() });
+		else await borrarCambio(this.db, this.sb.id, 'hornero', idea);
+	}
+
+	async contextoHornero(): Promise<ContextoHornero> {
+		return contextoDemo(demoDe(this.plantilla(), this.sb.creadoEn)!, Date.now());
 	}
 }

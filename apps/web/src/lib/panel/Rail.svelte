@@ -37,11 +37,12 @@
 	<button
 		type="button"
 		class="hornero"
-		title="Hornero llega con la próxima versión del panel"
-		disabled
+		title="Preguntale a Hornero"
+		aria-label="Preguntale a Hornero"
+		onclick={() => shell.hornero()}
 	>
 		<span class="pulso"></span>
-		<span class="av"><img src="/hornero/avatar.png" alt="Hornero" /></span>
+		<span class="av"><img src="/hornero/avatar.png" alt="" /></span>
 	</button>
 	{#if foto}
 		<img
@@ -143,9 +144,6 @@
 		background: #fbf7f2;
 		padding: 0;
 		overflow: visible;
-	}
-	.hornero:disabled {
-		cursor: default;
 	}
 	.pulso {
 		position: absolute;

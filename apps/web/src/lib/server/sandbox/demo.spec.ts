@@ -37,12 +37,19 @@ describe('datos de la demo', () => {
 		for (const c of CATALOGOS) {
 			const d = demoDe(c.plantilla, BASE)!;
 			const ids = new Set(c.productos.map((p) => p.id));
-			for (const p of d.pedidos) {
-				expect(p.items.length).toBeGreaterThan(0);
-				for (const i of p.items) expect(ids.has(i.productoId)).toBe(true);
-				expect(p.total).toBe(p.items.reduce((s, i) => s + i.precio * i.cantidad, 0));
-				expect(d.clientes.some((x) => x.id === p.clienteId)).toBe(true);
-			}
+			const clientes = new Set(d.clientes.map((x) => x.id));
+			// Un solo expect por tienda: miles de expect sueltos hacen lento el test.
+			const malos = d.pedidos.filter(
+				(p) =>
+					!p.items.length ||
+					p.items.some((i) => !ids.has(i.productoId)) ||
+					p.total !== p.items.reduce((s, i) => s + i.precio * i.cantidad, 0) ||
+					!clientes.has(p.clienteId)
+			);
+			expect(
+				malos.map((p) => p.numero),
+				c.plantilla
+			).toEqual([]);
 		}
 	});
 
@@ -104,7 +111,7 @@ describe('tablero de la demo', () => {
 	});
 
 	it('respeta la meta, el aviso oculto y los carritos recordados', () => {
-		const t = tab('7d', { meta: 25_000_000, certificadoOculto: true, carritosRecordados: true });
+		const t = tab('7d', { meta: 25_000_000, certificadoOculto: true, ideasHechas: ['carritos'] });
 		expect(t.meta.objetivo).toBe(25_000_000);
 		expect(t.avisos.certificadoDias).toBeNull();
 		expect(t.hornero.recordados).toBe(true);

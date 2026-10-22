@@ -724,7 +724,10 @@
 				<div class="vacio chico">Todavía no hay reseñas.</div>
 			{/each}
 		</div>
-		<button type="button" class="b-ia abajo" onclick={() => shell.hornero()}
+		<button
+			type="button"
+			class="b-ia abajo"
+			onclick={() => shell.hornero('Escribí respuestas cortas para las reseñas nuevas.')}
 			><Icon icon={I.phSparkleFill} size={14} />Responder con Hornero</button
 		>
 	</div>

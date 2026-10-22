@@ -9,6 +9,7 @@ import type { components } from '@mostrador/contrato/esquema';
 import type { Demo, Pedido } from './demo.ts';
 
 type Tablero = components['schemas']['Tablero'];
+type ContextoHornero = components['schemas']['ContextoHornero'];
 export type Periodo = Tablero['periodo'];
 export const PERIODOS: Periodo[] = ['hoy', '7d', '30d'];
 
@@ -29,7 +30,8 @@ const vale = (p: Pedido) => p.estado !== 'Cancelado';
 export type CambiosTablero = {
 	meta?: number;
 	certificadoOculto?: boolean;
-	carritosRecordados?: boolean;
+	/** Ideas de Hornero aprobadas (carritos = recordatorio mandado). */
+	ideasHechas?: string[];
 };
 
 /** Días que faltan para que venza el certificado de ARCA de la tienda de ejemplo. */
@@ -261,11 +263,17 @@ export function tableroDemo(
 			.map(([medio, l]) => ({ medio, fecha: fechaAr(l.fecha), monto: l.monto })),
 		hornero: {
 			chatsHoy: online * 2 + d.conversaciones.length,
-			ideas: 3,
+			ideas: [
+				d.carritos.length > 0,
+				ph.sinStock > 0,
+				masVendidos.length > 0 && clientes.some((c) => c.telefono)
+			].filter(Boolean).length,
 			carritos: d.carritos.length,
 			carritosMonto: d.carritos.reduce((s, c) => s + c.total, 0),
 			costoMensaje: COSTO_MENSAJE,
-			recordados: cambios.carritosRecordados ?? false
+			recordados: cambios.ideasHechas?.includes('carritos') ?? false,
+			audiencia: clientes.filter((c) => c.telefono && !c.mayorista).length,
+			ideasHechas: cambios.ideasHechas ?? []
 		},
 		bandeja: d.conversaciones.map((v) => {
 			const c = cliente.get(v.clienteId)!;
@@ -305,5 +313,52 @@ export function tableroDemo(
 			})
 		},
 		envios: { paquetes: aDespachar.length, retiros }
+	};
+}
+
+/** Lo que Hornero sabe de la tienda de ejemplo (ver ContextoHornero en el contrato). */
+export function contextoDemo(d: Demo, ahora: number): ContextoHornero {
+	const hoy = inicioDelDia(ahora);
+	const vale30 = d.pedidos.filter(
+		(p) => vale(p) && p.creado >= ahora - 30 * DIA && p.creado <= ahora
+	);
+	const ventasPorDia = Array.from({ length: 14 }, (_, i) => {
+		const d0 = hoy - (13 - i) * DIA;
+		const ps = d.pedidos.filter(
+			(p) => vale(p) && p.creado >= d0 && p.creado < Math.min(d0 + DIA, ahora)
+		);
+		return { fecha: fechaAr(d0), ventas: ps.reduce((s, p) => s + p.total, 0), pedidos: ps.length };
+	});
+	const vendidos = new Map<string, number>();
+	for (const p of vale30)
+		for (const i of p.items)
+			vendidos.set(i.productoId, (vendidos.get(i.productoId) ?? 0) + i.cantidad);
+	const compras = new Map<string, number[]>();
+	for (const p of d.pedidos.filter(vale))
+		compras.set(p.clienteId, [...(compras.get(p.clienteId) ?? []), p.creado]);
+	const canales = new Map<string, number>();
+	for (const p of vale30) canales.set(p.canal, (canales.get(p.canal) ?? 0) + p.total);
+	const minoristas = d.clientes.filter((c) => !c.mayorista);
+	return {
+		ventasPorDia,
+		productos: d.catalogo.productos.map((p) => ({
+			nombre: p.nombre,
+			categoria: p.categoria,
+			precio: p.precio,
+			stock: d.stock[p.id] ?? 0,
+			vendidos30d: vendidos.get(p.id) ?? 0,
+			enMl: d.enMl.includes(p.id)
+		})),
+		clientes: {
+			total: minoristas.length,
+			nuevos30d: minoristas.filter((c) => c.alta >= ahora - 30 * DIA).length,
+			conWhatsApp: minoristas.filter((c) => c.telefono).length,
+			sinVolver: [...compras.values()].filter(
+				(v) => v.length > 1 && Math.max(...v) < ahora - 30 * DIA
+			).length
+		},
+		canales30d: [...canales]
+			.sort((a, b) => b[1] - a[1])
+			.map(([canal, ventas]) => ({ canal, ventas }))
 	};
 }

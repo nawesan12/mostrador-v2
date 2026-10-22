@@ -33,13 +33,27 @@ export class Shell {
 		guardarCookie('panel_modo', m);
 	}
 
-	/** Hornero (el panel de IA) llega en su propio PR; mientras, se avisa. */
-	hornero: () => void = () => {};
+	/** Panel de Hornero abierto. */
+	ia = $state(false);
+	/** Pregunta que llega de afuera (⌘K) para mandarle a Hornero al abrir. */
+	preguntaPendiente = $state<string | null>(null);
+	/** La charla con Hornero (queda mientras se navega por el panel). */
+	charla = $state<{ rol: 'persona' | 'hornero'; texto: string }[]>([]);
+
+	/** Abre Hornero (y, si viene, le manda la pregunta). */
+	hornero(pregunta?: string) {
+		this.barra = false;
+		this.notificaciones = false;
+		this.cmdk = false;
+		this.preguntaPendiente = pregunta?.trim() || null;
+		this.ia = true;
+	}
 
 	cerrarTodo() {
 		this.barra = false;
 		this.notificaciones = false;
 		this.cmdk = false;
+		this.ia = false;
 	}
 }
 

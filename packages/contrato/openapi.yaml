@@ -235,6 +235,36 @@ paths:
                 properties:
                   enviados: { type: integer }
         '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/hornero/contexto:
+    get:
+      operationId: contextoHornero
+      summary: Lo que Hornero sabe de la tienda para responder (ventas por día, productos, clientes, pendientes).
+      responses:
+        '200':
+          description: Contexto
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContextoHornero' }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/hornero/ideas/{idea}:
+    post:
+      operationId: marcarIdea
+      summary: Aprueba (o deshace) una idea de Hornero.
+      parameters:
+        - { name: idea, in: path, required: true, schema: { type: string, enum: [carritos, stock, promo] } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [hecha]
+              properties:
+                hecha: { type: boolean }
+      responses:
+        '204': { description: Hecho }
+        '401': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
   /v1/panel/tienda:
     get:
       operationId: obtenerTienda
@@ -292,6 +322,48 @@ components:
       properties:
         actual: { type: number }
         anterior: { type: number }
+    ContextoHornero:
+      type: object
+      required: [ventasPorDia, productos, clientes, canales30d]
+      properties:
+        ventasPorDia:
+          type: array
+          description: 'Últimos 14 días, del más viejo a hoy (hora de Argentina)'
+          items:
+            type: object
+            required: [fecha, ventas, pedidos]
+            properties:
+              fecha: { type: string, format: date }
+              ventas: { type: integer }
+              pedidos: { type: integer }
+        productos:
+          type: array
+          items:
+            type: object
+            required: [nombre, categoria, precio, stock, vendidos30d, enMl]
+            properties:
+              nombre: { type: string }
+              categoria: { type: [string, 'null'] }
+              precio: { type: integer }
+              stock: { type: integer }
+              vendidos30d: { type: integer }
+              enMl: { type: boolean }
+        clientes:
+          type: object
+          required: [total, nuevos30d, conWhatsApp, sinVolver]
+          properties:
+            total: { type: integer }
+            nuevos30d: { type: integer }
+            conWhatsApp: { type: integer }
+            sinVolver: { type: integer, description: 'Compraron más de una vez y hace 30 días que no vuelven' }
+        canales30d:
+          type: array
+          items:
+            type: object
+            required: [canal, ventas]
+            properties:
+              canal: { type: string }
+              ventas: { type: integer }
     Tablero:
       type: object
       required: [periodo, desde, hasta, hola, ventas, serie, kpis, canales, meta, avisos, ultimosPedidos, paraHacer, enVivo, caja, liquidaciones, hornero, bandeja, integraciones, masVendidos, resenas, envios]
@@ -392,7 +464,7 @@ components:
               monto: { type: integer }
         hornero:
           type: object
-          required: [chatsHoy, ideas, carritos, carritosMonto, costoMensaje, recordados]
+          required: [chatsHoy, ideas, carritos, carritosMonto, costoMensaje, recordados, audiencia, ideasHechas]
           properties:
             chatsHoy: { type: integer }
             ideas: { type: integer }
@@ -400,6 +472,11 @@ components:
             carritosMonto: { type: integer }
             costoMensaje: { type: integer, description: 'Lo que cuesta cada mensaje de WhatsApp' }
             recordados: { type: boolean, description: 'Ya se les mandó el recordatorio' }
+            audiencia: { type: integer, description: 'Clientes que aceptan mensajes por WhatsApp' }
+            ideasHechas:
+              type: array
+              description: 'Ideas de Hornero ya aprobadas (carritos, stock, promo)'
+              items: { type: string }
         bandeja:
           type: array
           items:
