@@ -13,6 +13,7 @@
 | #18 | Ingreso con Google, Mercado Pago, Mercado Libre y link por WhatsApp (apagados hasta tener credenciales) |
 | #19 | Datos de la demo: catálogo real de las 16 plantillas (`scripts/catalogos.ts`), clientes y pedidos sembrados |
 | #20 | Armazón del panel: rail, barra lateral, topbar, barra de abajo, notificaciones, ⌘K, tema y modo Simple/Completo |
+| #29 | Listas de precio (PanelCatalogo sList): las 4 listas, aumento por inflación con redondeo (sin, en 90, múltiplo de 500), vista previa por lista, aplicar con Deshacer y programar para el lunes (se aplica al mirar las listas pasada la hora; cancelable). Go: tabla `aumentos`, todo en una transacción |
 | #28 | Crear pedido (cliente existente o nuevo, productos, entrega; ya pagado o con link) y Link de pago: modal del handoff (Resumen, ⌘K, bandeja, crear pedido), página pública `/p/[código]` sin cookie, al pagar el pedido pasa a preparar. ⌘K con las acciones del handoff. Go: tabla `links` con RLS + `app.tienda_de_link` (definer con política por código); pagar da 409 hasta conectar Mercado Pago. D1: migración 0004 (índice por clave) |
 | #27 | Ventas en el local (punto de venta: grilla, ticket, medios de pago, dividir el pago; crea el pedido y descuenta stock), Devoluciones (aprobar, ofrecer cambio, deshacer) y Reseñas y preguntas (respuesta de Hornero para editar y publicar; resumen por estrellas). Go: pedido nuevo real con stock en la misma transacción |
 | #26 | Bandeja (conversaciones de WhatsApp, Instagram, Telegram y Mercado Libre; hilo, sugerencia de Hornero armada con los datos, tomar/devolver, respuestas rápidas, ficha del cliente) y Carritos abandonados (KPIs, recordar uno o todos, automáticos). Go: automáticos reales (00011); bandeja y carritos vacíos hasta conectar canales |
@@ -36,7 +37,7 @@ El circuito es el de PanelPedidos del handoff: Sin pagar → Para preparar → L
 
 ## Lo que sigue (orden del plan)
 
-Listas de precio → Cupones → Crecer → Operación → Cuenta → Ventas (bandeja WhatsApp, Carritos, Devoluciones, POS, Reseñas) → Listas de precio → Cupones → Crecer → Operación → Cuenta → storefront y 16 plantillas → integraciones reales → MCP + OAuth → Marca → endurecimiento.
+Cupones → Crecer → Operación → Cuenta → Ventas (bandeja WhatsApp, Carritos, Devoluciones, POS, Reseñas) → Listas de precio → Cupones → Crecer → Operación → Cuenta → storefront y 16 plantillas → integraciones reales → MCP + OAuth → Marca → endurecimiento.
 
 ## Trampas que ya mordieron
 

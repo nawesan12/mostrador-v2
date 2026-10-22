@@ -6,6 +6,7 @@
  * demo cuesta una escritura y no cientos, y el cupo gratis de D1 (100.000 escrituras por día)
  * alcanza para muchas visitas.
  */
+import { aumentar, proximoLunes, type Redondeo } from '#lib/panel/precios.ts';
 import { and, eq, lt } from 'drizzle-orm';
 import { drizzle, type DrizzleD1Database } from 'drizzle-orm/d1';
 import { inArray } from './sql.ts';
@@ -13,6 +14,7 @@ import { fromB64url, randomToken, sha256 } from '../crypto.ts';
 import { rubro as buscarRubro, slugDe } from './rubros.ts';
 import { cambios, sandboxes } from './schema.ts';
 import type {
+	ListasPrecio,
 	AccionLote,
 	PedidoNuevo,
 	AutomaticosCarritos,
@@ -238,6 +240,8 @@ export async function buscarLink(db: DbSandbox, cod: string, ahora = Date.now())
 	if (!sb) return null;
 	return { sb, link: JSON.parse(f.datos ?? 'null') as LinkDemo };
 }
+
+type AumentoProgramado = { pct: number; redondeo: Redondeo; para: number };
 
 export class DatosSandbox implements Datos {
 	constructor(
@@ -861,6 +865,121 @@ export class DatosSandbox implements Datos {
 				delta: (ajustes.get(i.productoId) ?? 0) - i.cantidad
 			});
 		return { numero, total: pedido.total };
+	}
+
+	// ---------------------------------------------------------------- Listas de precio
+
+	/** Aplica lo programado si ya llegó el día (la demo no tiene worker: se mira al entrar). */
+	private async programadoVigente() {
+		const p = (await cambiosDe(this.db, this.sb.id, 'aumento')).get('programado') as
+			AumentoProgramado | null | undefined;
+		if (!p) return null;
+		if (p.para > Date.now()) return p;
+		await borrarCambio(this.db, this.sb.id, 'aumento', 'programado');
+		await this.aplicarAumento(p.pct, p.redondeo);
+		return null;
+	}
+
+	async listasPrecio(): Promise<ListasPrecio> {
+		const programado = await this.programadoVigente();
+		const d = await this.demo();
+		const productos = await this.regProductos();
+		const mayoristas = d.clientes.filter((c) => c.mayorista).length;
+		return {
+			listas: [
+				{
+					id: 'minorista',
+					nombre: 'Minorista',
+					quien: 'Tienda y local',
+					ajuste: 0,
+					detalle: 'Precio de referencia'
+				},
+				{
+					id: 'mayorista',
+					nombre: 'Mayorista',
+					quien: 'Desde 10 unidades',
+					ajuste: -25,
+					detalle: `${mayoristas} ${mayoristas === 1 ? 'cliente mayorista' : 'clientes mayoristas'}`
+				},
+				{
+					id: 'ml',
+					nombre: 'Mercado Libre',
+					quien: 'Cubre la comisión',
+					ajuste: 10,
+					detalle: 'Se actualiza solo'
+				},
+				{
+					id: 'revendedoras',
+					nombre: 'Revendedoras',
+					quien: 'Para quienes revenden',
+					ajuste: -15,
+					detalle: 'Con link propio'
+				}
+			],
+			productos: productos.length,
+			muestra: [...productos]
+				.sort((a, b) => b.vendidos30 - a.vendidos30)
+				.slice(0, 4)
+				.map((p) => ({ id: p.id, nombre: p.nombre, precio: p.precio })),
+			programado: programado
+				? {
+						pct: programado.pct,
+						redondeo: programado.redondeo,
+						para: new Date(programado.para).toISOString()
+					}
+				: null
+		};
+	}
+
+	/** Sube todos los precios y guarda los de antes para deshacer. */
+	private async aplicarAumento(pct: number, redondeo: Redondeo) {
+		const productos = await this.regProductos();
+		const cambios = await this.cambiosProductos();
+		const antes: Record<string, number | null> = {};
+		for (const p of productos) {
+			const c = cambios.get(p.id) ?? {};
+			antes[p.id] = c.precio ?? null;
+			await guardarCambio(this.db, this.sb.id, 'producto', p.id, {
+				...c,
+				precio: aumentar(p.precio, pct, redondeo)
+			} satisfies CambioProducto);
+		}
+		await guardarCambio(this.db, this.sb.id, 'aumento', 'ultimo', { antes, en: Date.now() });
+		return productos.length;
+	}
+
+	async aumentarPrecios(pct: number, redondeo: Redondeo, programar: boolean) {
+		if (programar) {
+			const para = proximoLunes(Date.now());
+			await guardarCambio(this.db, this.sb.id, 'aumento', 'programado', {
+				pct,
+				redondeo,
+				para
+			} satisfies AumentoProgramado);
+			return { productos: (await this.regProductos()).length, para: new Date(para).toISOString() };
+		}
+		return { productos: await this.aplicarAumento(pct, redondeo), para: null };
+	}
+
+	async deshacerAumento(): Promise<Resultado> {
+		const u = (await cambiosDe(this.db, this.sb.id, 'aumento')).get('ultimo') as
+			{ antes: Record<string, number | null> } | null | undefined;
+		if (!u) return 'no-existe';
+		const cambios = await this.cambiosProductos();
+		for (const [id, precio] of Object.entries(u.antes)) {
+			const resto: CambioProducto = { ...cambios.get(id) };
+			if (precio === null) delete resto.precio;
+			else resto.precio = precio;
+			await guardarCambio(this.db, this.sb.id, 'producto', id, resto);
+		}
+		await borrarCambio(this.db, this.sb.id, 'aumento', 'ultimo');
+		return 'ok';
+	}
+
+	async cancelarAumento(): Promise<Resultado> {
+		if (!(await this.programadoVigente())) return 'no-existe';
+		await borrarCambio(this.db, this.sb.id, 'aumento', 'programado');
+		return 'ok';
 	}
 
 	// ---------------------------------------------------------------- Links de pago

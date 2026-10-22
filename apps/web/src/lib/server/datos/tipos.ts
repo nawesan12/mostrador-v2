@@ -34,6 +34,7 @@ export type Conversacion = components['schemas']['Conversacion'];
 export type Carritos = components['schemas']['Carritos'];
 export type AutomaticosCarritos = components['schemas']['AutomaticosCarritos'];
 export type PedidoNuevo = components['schemas']['PedidoNuevo'];
+export type ListasPrecio = components['schemas']['ListasPrecio'];
 export type Devolucion = components['schemas']['Devolucion'];
 export type ResenasYPreguntas = components['schemas']['ResenasYPreguntas'];
 
@@ -94,6 +95,15 @@ export interface Datos {
 	resolverDevolucion(id: string, accion: 'aprobar' | 'cambio' | 'deshacer'): Promise<Resultado>;
 	resenas(): Promise<ResenasYPreguntas>;
 	responderPregunta(id: string, respuesta: string): Promise<Resultado>;
+	listasPrecio(): Promise<ListasPrecio>;
+	/** Sube todos los precios ya, o lo programa para el lunes. */
+	aumentarPrecios(
+		pct: number,
+		redondeo: 'no' | '90' | '500',
+		programar: boolean
+	): Promise<{ productos: number; para: string | null }>;
+	deshacerAumento(): Promise<Resultado>;
+	cancelarAumento(): Promise<Resultado>;
 	/** Un link de pago; devuelve el código. */
 	crearLink(l: {
 		monto: number;
