@@ -89,3 +89,37 @@ func TestProductosYClientes(t *testing.T) {
 		t.Fatalf("la otra tienda ve clientes: %d", len(otros))
 	}
 }
+
+func TestInventarioYEnvios(t *testing.T) {
+	b := pruebadb.Nueva(t)
+	id := pruebadb.CrearTienda(t, b.App, "luna")
+	stock := 3
+	p, _ := listas.Guardar(ctx, b.App, id, "", listas.Editable{Nombre: "Termo", Precio: 1000, Stock: &stock})
+	if n, _ := listas.AjustarStock(ctx, b.App, id, []string{p.ID}, -10); n != 1 {
+		t.Fatalf("ajuste: %d", n)
+	}
+	prods, _ := listas.Productos(ctx, b.App, id, time.Now())
+	inv := listas.Inventario(prods)
+	if inv[0]["stock"] != 0 || inv[0]["st"] != "out" {
+		t.Fatalf("no queda negativo: %+v", inv[0])
+	}
+	if n, _ := listas.FijarStock(ctx, b.App, id, p.ID, 40); n != 1 {
+		t.Fatalf("conteo: %d", n)
+	}
+	n1, _ := pedidos.Crear(ctx, b.App, id, pedidos.Nuevo{Comprador: pedidos.Comprador{Nombre: "Ana"}, Canal: "web", Pago: "mp", Envio: "andreani", Ciudad: "Salta", Estado: "Listo para despachar", Items: []pedidos.Item{{Nombre: "Termo", Cantidad: 1, Precio: 1000}}})
+	envs, _ := listas.Envios(ctx, b.App, id, time.Now())
+	if len(envs) != 1 || envs[0]["estado"] != "todo" {
+		t.Fatalf("envíos: %+v", envs)
+	}
+	if n, _ := listas.Etiquetas(ctx, b.App, id, nil, true); n != 1 {
+		t.Fatalf("etiquetas: %d", n)
+	}
+	d, _ := pedidos.Obtener(ctx, b.App, id, n1)
+	if d.Estado != "En camino" {
+		t.Fatalf("estado: %s", d.Estado)
+	}
+	movs, _ := listas.MovimientosHoy(ctx, b.App, id, time.Now())
+	if len(movs) != 1 || movs[0].Cantidad != -1 {
+		t.Fatalf("movimientos: %+v", movs)
+	}
+}

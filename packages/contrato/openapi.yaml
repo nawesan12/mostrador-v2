@@ -467,6 +467,19 @@ paths:
         '400': { $ref: '#/components/responses/Problema' }
         '401': { $ref: '#/components/responses/Problema' }
         '404': { $ref: '#/components/responses/Problema' }
+  /v1/panel/inventario/movimientos:
+    get:
+      operationId: movimientosHoy
+      summary: Movimientos de stock de hoy (ventas, ajustes, conteos e ingresos), del más nuevo al más viejo.
+      responses:
+        '200':
+          description: Movimientos
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/MovimientoStock' }
+        '401': { $ref: '#/components/responses/Problema' }
   /v1/panel/tienda:
     get:
       operationId: obtenerTienda
@@ -616,6 +629,14 @@ components:
             publicado: { type: boolean }
             vendidos30d: { type: integer }
             slug: { type: string }
+    MovimientoStock:
+      type: object
+      required: [tipo, texto, cantidad, en]
+      properties:
+        tipo: { type: string, enum: [web, local, ml, ajuste, conteo, ingreso, devolucion] }
+        texto: { type: string }
+        cantidad: { type: integer, description: 'Negativo: sale; positivo: entra' }
+        en: { type: string, format: date-time }
     Tablero:
       type: object
       required: [periodo, desde, hasta, hola, ventas, serie, kpis, canales, meta, avisos, ultimosPedidos, paraHacer, enVivo, caja, liquidaciones, hornero, bandeja, integraciones, masVendidos, resenas, envios]

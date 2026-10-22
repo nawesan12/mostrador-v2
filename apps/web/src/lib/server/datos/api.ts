@@ -5,6 +5,7 @@
 import { error } from '@sveltejs/kit';
 import type {
 	AccionLote,
+	MovimientoStock,
 	FiltrosLista,
 	ListaGenerica,
 	NombreLista,
@@ -154,6 +155,10 @@ export class DatosApi implements Datos {
 		if (!id) return this.pedir<Producto>('/v1/panel/productos', 'POST', p);
 		const r = await this.intentar(`/v1/panel/productos/${encodeURIComponent(id)}`, 'PUT', p);
 		return r.ok ? ((await r.json()) as Producto) : null;
+	}
+
+	movimientosHoy() {
+		return this.pedir<MovimientoStock[]>('/v1/panel/inventario/movimientos');
 	}
 
 	/** Como `pedir`, pero 404 y 409 vuelven como respuesta (son resultados, no errores). */

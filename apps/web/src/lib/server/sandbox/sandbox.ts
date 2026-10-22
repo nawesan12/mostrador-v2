@@ -14,6 +14,7 @@ import { rubro as buscarRubro, slugDe } from './rubros.ts';
 import { cambios, sandboxes } from './schema.ts';
 import type {
 	AccionLote,
+	MovimientoStock,
 	FiltrosLista,
 	ListaGenerica,
 	NombreLista,
@@ -33,14 +34,24 @@ import type {
 import { demoDe, type Demo, type EstadoPedido } from './demo.ts';
 import {
 	DEF_CLIENTES,
+	DEF_ENVIOS,
+	DEF_FACTURACION,
+	DEF_INVENTARIO,
 	DEF_PRODUCTOS,
 	listarGenerico,
 	registrosClientes,
+	registrosEnvios,
+	registrosFacturacion,
+	registrosInventario,
 	registrosProductos,
 	slugProducto,
 	type CambioCliente,
-	type CambioProducto
+	type CambioFactura,
+	type CambioProducto,
+	type FacturaManual,
+	type Movimiento
 } from './listas.ts';
+import { inicioDelDia } from './tablero.ts';
 import {
 	detalleDemo,
 	listarDemo,
@@ -342,7 +353,69 @@ export class DatosSandbox implements Datos {
 	async listar(lista: NombreLista, f: FiltrosLista): Promise<ListaGenerica> {
 		if (lista === 'clientes') return listarGenerico(await this.regClientes(), DEF_CLIENTES, f);
 		if (lista === 'productos') return listarGenerico(await this.regProductos(), DEF_PRODUCTOS, f);
-		return { total: 0, filas: [], segmentos: {}, facetas: {}, resumen: {} };
+		if (lista === 'inventario')
+			return listarGenerico(registrosInventario(await this.regProductos()), DEF_INVENTARIO, f);
+		if (lista === 'facturacion')
+			return listarGenerico(await this.regFacturacion(), DEF_FACTURACION, f);
+		return listarGenerico(await this.regEnvios(), DEF_ENVIOS, f);
+	}
+
+	private async regFacturacion() {
+		const d = await this.demo();
+		const c = await cambiosDe(this.db, this.sb.id, 'factura');
+		const cambios = new Map([...c].filter(([, v]) => v).map(([k, v]) => [k, v as CambioFactura]));
+		const manuales = [...(await cambiosDe(this.db, this.sb.id, 'factura-manual'))]
+			.filter(([, v]) => v)
+			.map(([k, v]) => [k, v as FacturaManual] as [string, FacturaManual])
+			.sort((a, b) => a[1].en - b[1].en);
+		return registrosFacturacion(d, Date.now(), cambios, manuales);
+	}
+
+	private async regEnvios() {
+		const d = demoDe(this.plantilla(), this.sb.creadoEn)!;
+		const vivos = pedidosVivos(d, await this.cambiosPedidos(), Date.now());
+		const reclamados = new Set((await cambiosDe(this.db, this.sb.id, 'reclamo')).keys());
+		return registrosEnvios(vivos, d.clientes, Date.now(), reclamados);
+	}
+
+	/** Movimientos de stock de hoy: ventas (de los pedidos) y ajustes, conteos e ingresos. */
+	async movimientosHoy(): Promise<MovimientoStock[]> {
+		const d = await this.demo();
+		const ahora = Date.now();
+		const desde = inicioDelDia(ahora);
+		const nombres = new Map((await this.regProductos()).map((p) => [p.id, p.nombre]));
+		const ventas: MovimientoStock[] = d.pedidos
+			.filter((p) => p.estado !== 'Cancelado' && p.creado >= desde && p.creado <= ahora)
+			.flatMap((p) =>
+				p.items.map((i) => ({
+					tipo: p.canal === 'pos' ? 'local' : p.canal === 'ml' ? 'ml' : 'web',
+					texto: `${p.canal === 'pos' ? 'Venta en local' : p.canal === 'ml' ? `Mercado Libre #${p.numero}` : `Venta #${p.numero}`} · ${i.nombre}`,
+					cantidad: -i.cantidad,
+					en: new Date(p.creado).toISOString()
+				}))
+			);
+		const propios = [...(await cambiosDe(this.db, this.sb.id, 'movimiento'))]
+			.map(([, v]) => v as Movimiento | null)
+			.filter((m): m is Movimiento => !!m && m.en >= desde)
+			.map((m): MovimientoStock => ({
+				tipo: m.motivo,
+				texto: `${m.motivo === 'ingreso' ? 'Ingreso de proveedor' : m.motivo === 'conteo' ? 'Conteo' : 'Ajuste manual'} · ${nombres.get(m.productoId) ?? 'Producto'}`,
+				cantidad: m.q,
+				en: new Date(m.en).toISOString()
+			}));
+		return [...ventas, ...propios].sort((a, b) => b.en.localeCompare(a.en)).slice(0, 20);
+	}
+
+	private async ajustar(productoId: string, q: number, motivo: Movimiento['motivo']) {
+		const actual = (await this.ajustesStock()).get(productoId) ?? 0;
+		const ahora = Date.now();
+		await guardarCambio(this.db, this.sb.id, 'stock', productoId, { delta: actual + q });
+		await guardarCambio(this.db, this.sb.id, 'movimiento', `${ahora}-${productoId}`, {
+			productoId,
+			q,
+			motivo,
+			en: ahora
+		} satisfies Movimiento);
 	}
 
 	async accionLista(lista: NombreLista, ids: string[], accion: string, valor?: unknown) {
@@ -427,6 +500,114 @@ export class DatosSandbox implements Datos {
 					...cambios.get(p.id),
 					publicado
 				});
+			return elegidos.length;
+		}
+		if (lista === 'inventario') {
+			const productos = await this.regProductos();
+			if (
+				accion === 'ajustar' &&
+				typeof valor === 'number' &&
+				Number.isInteger(valor) &&
+				Math.abs(valor) <= 10_000
+			) {
+				let n = 0;
+				for (const p of productos.filter((x) => ids.includes(x.id))) {
+					// No puede quedar stock negativo.
+					const q = Math.max(-p.stock, valor);
+					if (!q) continue;
+					await this.ajustar(p.id, q, 'ajuste');
+					n++;
+				}
+				return n;
+			}
+			if (accion === 'conteo' && Array.isArray(valor)) {
+				let n = 0;
+				const stock = new Map(productos.map((p) => [p.id, p.stock]));
+				for (const c of valor as { id?: unknown; cantidad?: unknown }[]) {
+					const id = String(c?.id ?? '');
+					const cantidad = Number(c?.cantidad);
+					if (!stock.has(id) || !Number.isInteger(cantidad) || cantidad < 0 || cantidad > 1_000_000)
+						continue;
+					const q = cantidad - stock.get(id)!;
+					if (!q) continue;
+					await this.ajustar(id, q, 'conteo');
+					n++;
+				}
+				return n;
+			}
+			if (accion === 'ingreso' && typeof valor === 'number' && valor > 0 && valor <= 100_000) {
+				for (const id of ids) await this.ajustar(id, Math.round(valor), 'ingreso');
+				return ids.length;
+			}
+			// Pedir al proveedor, mover e imprimir códigos no cambian el stock.
+			return productos.filter((p) => ids.includes(p.id)).length;
+		}
+		if (lista === 'facturacion') {
+			const todos = await this.regFacturacion();
+			const c = await cambiosDe(this.db, this.sb.id, 'factura');
+			const guardar = (id: string, v: CambioFactura) =>
+				guardarCambio(this.db, this.sb.id, 'factura', id, {
+					...(c.get(id) as CambioFactura | null),
+					...v
+				});
+			const elegidos = todos.filter((f) => ids.includes(f.id));
+			if (accion === 'enviar') {
+				for (const f of elegidos.filter((x) => x.estado === 'ok'))
+					await guardar(f.id, { enviado: true });
+				return elegidos.filter((x) => x.estado === 'ok').length;
+			}
+			if (accion === 'reintentar') {
+				const a = elegidos.filter((x) => x.estado === 'pend' || x.estado === 'rej');
+				for (const f of a) await guardar(f.id, { autorizada: true });
+				return a.length;
+			}
+			if (accion === 'emitir') {
+				const v = valor as Partial<FacturaManual> | null;
+				const cliente = typeof v?.cliente === 'string' ? v.cliente.trim().slice(0, 80) : '';
+				const total = Number(v?.total);
+				const tipo = v?.tipo === 'A' ? 'A' : 'B';
+				const cuit = typeof v?.cuit === 'string' ? v.cuit.replace(/\D/g, '') : '';
+				if (cliente.length < 2 || !Number.isInteger(total) || total <= 0 || total > 1_000_000_000)
+					return 0;
+				if (tipo === 'A' && cuit.length !== 11) return 0;
+				await guardarCambio(this.db, this.sb.id, 'factura-manual', `M-${ahora.toString(36)}`, {
+					cliente,
+					tipo,
+					cuit: tipo === 'A' ? cuit : null,
+					concepto: typeof v?.concepto === 'string' ? v.concepto.slice(0, 200) : '',
+					total,
+					en: ahora
+				} satisfies FacturaManual);
+				return 1;
+			}
+			return elegidos.length;
+		}
+		if (lista === 'envios') {
+			const todos = await this.regEnvios();
+			const elegidos =
+				accion === 'reclamar-todos'
+					? todos.filter((e) => e.estado === 'late' && !e.reclamado)
+					: accion === 'etiquetas' && !ids.length
+						? todos.filter((e) => e.estado === 'todo')
+						: todos.filter((e) => ids.includes(e.id));
+			if (accion === 'reclamar' || accion === 'reclamar-todos') {
+				for (const e of elegidos)
+					await guardarCambio(this.db, this.sb.id, 'reclamo', e.id, { en: ahora });
+				return elegidos.length;
+			}
+			if (accion === 'etiquetas') {
+				let n = 0;
+				for (const e of elegidos.filter((x) => x.estado === 'todo'))
+					if ((await this.cambiarEstado(Number(e.id), 'En camino')) === 'ok') n++;
+				return n;
+			}
+			if (accion === 'sin-etiqueta') {
+				let n = 0;
+				for (const e of elegidos)
+					if ((await this.cambiarEstado(Number(e.id), 'Listo para despachar')) === 'ok') n++;
+				return n;
+			}
+			// Pedir retiro y avisar esperan a los transportes y a WhatsApp.
 			return elegidos.length;
 		}
 		return 0;
