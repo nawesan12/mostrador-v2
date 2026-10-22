@@ -6,6 +6,8 @@
  * demo cuesta una escritura y no cientos, y el cupo gratis de D1 (100.000 escrituras por día)
  * alcanza para muchas visitas.
  */
+import { descripcionDe, lunes9, vigenciaDe } from '#lib/panel/cupones.ts';
+import { cuponesDemo, type CambioCupon, type EstadoRelampago } from './cupones.ts';
 import { aumentar, proximoLunes, type Redondeo } from '#lib/panel/precios.ts';
 import { and, eq, lt } from 'drizzle-orm';
 import { drizzle, type DrizzleD1Database } from 'drizzle-orm/d1';
@@ -14,6 +16,9 @@ import { fromB64url, randomToken, sha256 } from '../crypto.ts';
 import { rubro as buscarRubro, slugDe } from './rubros.ts';
 import { cambios, sandboxes } from './schema.ts';
 import type {
+	Cupon,
+	Cupones,
+	CuponNuevo as CuponNuevoT,
 	ListasPrecio,
 	AccionLote,
 	PedidoNuevo,
@@ -865,6 +870,153 @@ export class DatosSandbox implements Datos {
 				delta: (ajustes.get(i.productoId) ?? 0) - i.cantidad
 			});
 		return { numero, total: pedido.total };
+	}
+
+	// ---------------------------------------------------------------- Cupones
+
+	private async cuponesNuevos() {
+		return [...(await cambiosDe(this.db, this.sb.id, 'cupon-nuevo'))]
+			.filter(([, v]) => v)
+			.map(([, v]) => v as Cupon)
+			.sort((a, b) => Date.parse(b.creado) - Date.parse(a.creado));
+	}
+
+	async cupones(): Promise<Cupones> {
+		const d = await this.demo();
+		const [cambios, nuevos, consejo, autos, rel, clientes] = await Promise.all([
+			cambiosDe(this.db, this.sb.id, 'cupon'),
+			this.cuponesNuevos(),
+			cambiosDe(this.db, this.sb.id, 'cupones'),
+			cambiosDe(this.db, this.sb.id, 'automatica'),
+			cambiosDe(this.db, this.sb.id, 'relampago'),
+			this.regClientes()
+		]);
+		return cuponesDemo(
+			d,
+			Date.now(),
+			this.sb.creadoEn,
+			new Map([...cambios].filter(([, v]) => v).map(([k, v]) => [k, v as CambioCupon])),
+			nuevos,
+			!!consejo.get('consejo'),
+			new Map(
+				[...autos].filter(([, v]) => v).map(([k, v]) => [k, (v as { activa: boolean }).activa])
+			),
+			(rel.get('vivo') as EstadoRelampago | undefined) ?? {
+				horas: 0,
+				liberadas: 0,
+				terminada: false
+			},
+			{
+				vip: clientes.filter((c) => c.seg === 'vip').length,
+				riesgo: clientes.filter((c) => c.seg === 'risk').length
+			}
+		);
+	}
+
+	async crearCupon(n: CuponNuevoT): Promise<Cupon | 'repetido'> {
+		const todos = await this.cupones();
+		if (todos.cupones.some((c) => c.codigo === n.codigo && c.estado !== 'terminado'))
+			return 'repetido';
+		const ahora = Date.now();
+		const v = vigenciaDe(n.vigencia, ahora);
+		const empieza = n.programar ? lunes9(ahora) : v.empieza;
+		const nombres = todos.productos.filter((p) => n.productos?.includes(p.id)).map((p) => p.nombre);
+		const c: Cupon = {
+			id: `n${ahora.toString(36)}`,
+			codigo: n.codigo,
+			tipo: n.tipo,
+			valor: n.tipo === 'pct' || n.tipo === 'fijo' ? n.valor : 0,
+			descripcion: descripcionDe(n, todos.categoria, nombres),
+			estado: empieza && empieza > ahora ? 'programado' : 'activo',
+			usos: 0,
+			limite: n.limite,
+			vendio: 0,
+			desconto: 0,
+			canales: n.canales,
+			empieza: empieza ? new Date(empieza).toISOString() : null,
+			termina: v.termina
+				? new Date(Math.max(v.termina, (empieza ?? 0) + 86_400_000)).toISOString()
+				: null,
+			minimo: n.minimo,
+			consejo: n.opciones.hornero ? 'Hornero ya lo puede ofrecer en el chat.' : null,
+			creado: new Date(ahora).toISOString()
+		};
+		await guardarCambio(this.db, this.sb.id, 'cupon-nuevo', c.id, c);
+		return c;
+	}
+
+	async accionCupon(
+		id: string,
+		accion: 'pausar' | 'activar' | 'duplicar' | 'minimo' | 'deshacer-minimo',
+		minimo = 0
+	): Promise<Cupon | 'no-existe' | 'no-se-puede'> {
+		const c = (await this.cupones()).cupones.find((x) => x.id === id);
+		if (!c) return 'no-existe';
+		const nuevo = id.startsWith('n');
+		const guardar = async (cambio: CambioCupon) => {
+			if (nuevo) await guardarCambio(this.db, this.sb.id, 'cupon-nuevo', id, { ...c, ...cambio });
+			else {
+				const antes = (await cambiosDe(this.db, this.sb.id, 'cupon')).get(id) as
+					CambioCupon | undefined;
+				await guardarCambio(this.db, this.sb.id, 'cupon', id, { ...antes, ...cambio });
+			}
+			return { ...c, ...cambio };
+		};
+		if (accion === 'duplicar') {
+			const copia: Cupon = {
+				...c,
+				id: `n${Date.now().toString(36)}`,
+				codigo: `${c.codigo}-2`.slice(0, 20),
+				estado: 'pausado',
+				usos: 0,
+				vendio: 0,
+				desconto: 0,
+				consejo: null,
+				empieza: null,
+				termina: null,
+				creado: new Date().toISOString()
+			};
+			await guardarCambio(this.db, this.sb.id, 'cupon-nuevo', copia.id, copia);
+			return copia;
+		}
+		if (c.estado === 'terminado') return 'no-se-puede';
+		if (accion === 'pausar') return guardar({ estado: 'pausado' });
+		if (accion === 'activar') return guardar({ estado: 'activo' });
+		if (accion === 'minimo')
+			return guardar({
+				minimo,
+				descripcion: `${c.descripcion.replace(/ · mín\. .*$/, '')} · mín. $ ${minimo.toLocaleString('es-AR')}`,
+				consejo: null
+			});
+		return guardar({ minimo: 0, descripcion: c.descripcion.replace(/ · mín\. .*$/, '') });
+	}
+
+	async descartarConsejo() {
+		await guardarCambio(this.db, this.sb.id, 'cupones', 'consejo', { oculto: true });
+	}
+
+	async fijarAutomatica(id: string, activa: boolean): Promise<Resultado> {
+		if (!(await this.cupones()).automaticas.some((a) => a.id === id)) return 'no-existe';
+		await guardarCambio(this.db, this.sb.id, 'automatica', id, { activa });
+		return 'ok';
+	}
+
+	async accionRelampago(
+		accion: 'sumar-hora' | 'liberar' | 'terminar' | 'reanudar'
+	): Promise<Resultado> {
+		const e = ((await cambiosDe(this.db, this.sb.id, 'relampago')).get('vivo') as
+			EstadoRelampago | undefined) ?? { horas: 0, liberadas: 0, terminada: false };
+		const r = (await this.cupones()).relampago.vivo;
+		if (!r) return 'no-existe';
+		if (r.terminada && accion !== 'reanudar') return 'no-se-puede';
+		const nuevo: EstadoRelampago =
+			accion === 'sumar-hora'
+				? { ...e, horas: e.horas + 1 }
+				: accion === 'liberar'
+					? { ...e, liberadas: e.liberadas + 1 }
+					: { ...e, terminada: accion === 'terminar' };
+		await guardarCambio(this.db, this.sb.id, 'relampago', 'vivo', nuevo);
+		return 'ok';
 	}
 
 	// ---------------------------------------------------------------- Listas de precio

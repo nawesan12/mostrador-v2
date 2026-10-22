@@ -4,7 +4,12 @@
  */
 import { error } from '@sveltejs/kit';
 import type {
+	AccionCupon,
 	AccionLote,
+	AccionRelampago,
+	Cupon,
+	Cupones,
+	CuponNuevo,
 	ListasPrecio,
 	Devolucion,
 	PedidoNuevo,
@@ -219,6 +224,34 @@ export class DatosApi implements Datos {
 		return (await this.pedir<{ codigo: string }>('/v1/panel/links', 'POST', l)).codigo;
 	}
 
+	cupones() {
+		return this.pedir<Cupones>('/v1/panel/cupones');
+	}
+	async crearCupon(n: CuponNuevo) {
+		const r = await this.intentar('/v1/panel/cupones', 'POST', n);
+		if (r.status === 409) return 'repetido' as const;
+		return (await r.json()) as Cupon;
+	}
+	async accionCupon(id: string, accion: AccionCupon, minimo?: number) {
+		const r = await this.intentar(`/v1/panel/cupones/${encodeURIComponent(id)}`, 'POST', {
+			accion,
+			minimo
+		});
+		if (r.status === 404) return 'no-existe' as const;
+		if (r.status === 409) return 'no-se-puede' as const;
+		return (await r.json()) as Cupon;
+	}
+	async descartarConsejo() {
+		await this.intentar('/v1/panel/cupones/consejo', 'DELETE');
+	}
+	async fijarAutomatica(id: string, activa: boolean) {
+		return resultado(
+			await this.intentar(`/v1/panel/automaticas/${encodeURIComponent(id)}`, 'PUT', { activa })
+		);
+	}
+	async accionRelampago(accion: AccionRelampago) {
+		return resultado(await this.intentar('/v1/panel/relampago', 'POST', { accion }));
+	}
 	listasPrecio() {
 		return this.pedir<ListasPrecio>('/v1/panel/listas-precio');
 	}
