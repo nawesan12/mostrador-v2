@@ -21,7 +21,9 @@ test('Hornero saluda, propone ideas y responde con los datos', async ({ page, is
 	else await page.getByRole('button', { name: 'Preguntale a Hornero' }).first().click();
 	const panel = page.getByRole('dialog', { name: 'Hornero' });
 	await expect(panel).toBeVisible();
-	await expect(panel.getByText(/Buen(o|a)s? .*, Valeria\. Hoy vendiste/)).toBeVisible();
+	await expect(
+		panel.getByText(/(Buen día|Buenas tardes|Buenas noches), Valeria\. Hoy vendiste/)
+	).toBeVisible();
 	await expect(panel.getByText('Recuperar 12 carritos')).toBeVisible();
 	expect(
 		await page.evaluate(

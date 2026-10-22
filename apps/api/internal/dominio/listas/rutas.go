@@ -53,8 +53,15 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string) {
 		case "productos":
 			regs, err = Productos(r.Context(), pool, id, time.Now())
 			def = DefProductos
-		case "inventario", "facturacion", "envios":
-			// Llegan con su dominio (inventario por ubicación, ARCA, transportes).
+		case "inventario":
+			var prods []Registro
+			prods, err = Productos(r.Context(), pool, id, time.Now())
+			regs, def = Inventario(prods), DefInventario
+		case "envios":
+			regs, err = Envios(r.Context(), pool, id, time.Now())
+			def = DefEnvios
+		case "facturacion":
+			// Los comprobantes llegan con ARCA.
 			escribir(w, Lista{Filas: []Registro{}, Segmentos: map[string]int{}, Facetas: map[string]map[string]int{}, Resumen: map[string]float64{}})
 			return
 		default:
@@ -92,12 +99,41 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string) {
 				n, err = Precio(r.Context(), pool, id, c.IDs, pct)
 			}
 		}
-		// Cupones, etiquetas y mensajes llegan con Cupones, Clientes y WhatsApp: hasta entonces, 0.
+		if r.PathValue("lista") == "inventario" {
+			switch c.Accion {
+			case "ajustar", "ingreso":
+				var q int
+				_ = json.Unmarshal(c.Valor, &q)
+				n, err = AjustarStock(r.Context(), pool, id, c.IDs, q)
+			case "conteo":
+				var conteos []struct {
+					ID       string `json:"id"`
+					Cantidad int    `json:"cantidad"`
+				}
+				_ = json.Unmarshal(c.Valor, &conteos)
+				for _, x := range conteos {
+					m, e := FijarStock(r.Context(), pool, id, x.ID, x.Cantidad)
+					n, err = n+m, errors.Join(err, e)
+				}
+			}
+		}
+		if r.PathValue("lista") == "envios" && (c.Accion == "etiquetas" || c.Accion == "sin-etiqueta") {
+			n, err = Etiquetas(r.Context(), pool, id, c.IDs, c.Accion == "etiquetas")
+		}
+		// Cupones, etiquetas de clientes, mensajes y facturas llegan con Cupones, WhatsApp y ARCA: hasta entonces, 0.
 		if err != nil {
 			problema.Escribir(w, problema.Invalido(err.Error()))
 			return
 		}
 		escribir(w, map[string]int{"hechos": n})
+	}))
+	mux.HandleFunc("GET /v1/panel/inventario/movimientos", con(func(w http.ResponseWriter, r *http.Request, id string) {
+		m, err := MovimientosHoy(r.Context(), pool, id, time.Now())
+		if err != nil {
+			problema.Escribir(w, problema.Interno())
+			return
+		}
+		escribir(w, m)
 	}))
 	guardar := func(w http.ResponseWriter, r *http.Request, tiendaID, id string, estado int) {
 		var e Editable

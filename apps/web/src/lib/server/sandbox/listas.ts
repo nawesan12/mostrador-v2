@@ -386,3 +386,312 @@ export const slugProducto = (nombre: string) =>
 		.replace(/[^a-z0-9]+/g, '-')
 		.replace(/^-|-$/g, '')
 		.slice(0, 60);
+
+// ---------------------------------------------------------------- Inventario
+
+export type Movimiento = {
+	productoId: string;
+	q: number;
+	motivo: 'ajuste' | 'conteo' | 'ingreso';
+	en: number;
+};
+
+export type RegInventario = {
+	id: string;
+	nombre: string;
+	foto: string | null;
+	sku: string;
+	stock: number;
+	min: number;
+	porDia: number;
+	cover: number;
+	st: 'out' | 'crit' | 'low' | 'ok' | 'over';
+	fast: boolean;
+	loc: string;
+	proveedor: string;
+	costo: number;
+	publicadoEnMl: boolean;
+};
+
+const UBICACIONES = ['Local', 'Depósito', 'Local + Depósito'];
+const PROVEEDORES = [
+	'Distribuidora Norte',
+	'Mayorista Sur',
+	'Importadora Andes',
+	'Fábrica del Litoral'
+];
+
+export function registrosInventario(productos: RegProducto[]): RegInventario[] {
+	return productos.map((p) => {
+		const r = semilla(p.id + 'inv');
+		const porDia = Math.max(0.1, Math.round((p.vendidos30 / 30) * 10) / 10);
+		const min = Math.max(5, Math.round(porDia * 10 + r * 10));
+		const st: RegInventario['st'] =
+			p.stock === 0
+				? 'out'
+				: p.stock < min * 0.5
+					? 'crit'
+					: p.stock < min
+						? 'low'
+						: p.stock > min * 3.2
+							? 'over'
+							: 'ok';
+		return {
+			id: p.id,
+			nombre: p.nombre,
+			foto: p.foto,
+			sku: p.sku,
+			stock: p.stock,
+			min,
+			porDia,
+			cover: Math.floor(p.stock / porDia),
+			st,
+			fast: porDia > 2,
+			loc: UBICACIONES[Math.floor(r * UBICACIONES.length)],
+			// Mismo proveedor para toda una categoría.
+			proveedor: PROVEEDORES[Math.floor(semilla(p.categoria) * PROVEEDORES.length)],
+			costo: p.costo,
+			publicadoEnMl: p.canales.includes('ml') && p.publicado
+		};
+	});
+}
+
+export const DEF_INVENTARIO: DefLista<RegInventario> = {
+	buscar: (r) => `${r.nombre} ${r.sku} ${r.proveedor}`,
+	segmento: 'st',
+	facetas: ['loc', 'proveedor'],
+	rango: { clave: 'cover', menor: true },
+	banderas: ['fast'],
+	ordenes: {
+		cover: (a, b) => a.cover - b.cover,
+		stock: (a, b) => a.stock - b.stock,
+		value: (a, b) => b.stock * b.costo - a.stock * a.costo
+	},
+	resumen: (todos, l) => {
+		const reponer = todos.filter((r) => r.st === 'out' || r.st === 'crit' || r.st === 'low');
+		const semana = todos.filter((r) => r.st === 'out' || r.cover < 7);
+		return {
+			unidades: l.reduce((s, r) => s + r.stock, 0),
+			valor: l.reduce((s, r) => s + r.stock * r.costo, 0),
+			valorTotal: todos.reduce((s, r) => s + r.stock * r.costo, 0),
+			sinStock: todos.filter((r) => r.st === 'out').length,
+			sinStockEnMl: todos.filter((r) => r.st === 'out' && r.publicadoEnMl).length,
+			bajo: todos.filter((r) => r.st === 'crit' || r.st === 'low').length,
+			rotacion: Math.round(
+				todos.reduce((s, r) => s + Math.min(120, r.cover), 0) / Math.max(1, todos.length)
+			),
+			reponer: reponer.length,
+			terminanSemana: semana.length,
+			proveedores: new Set(semana.map((r) => r.proveedor)).size
+		};
+	}
+};
+
+// ---------------------------------------------------------------- Facturación
+
+export type CambioFactura = { enviado?: boolean; autorizada?: boolean };
+export type FacturaManual = {
+	cliente: string;
+	tipo: 'A' | 'B';
+	cuit: string | null;
+	concepto: string;
+	total: number;
+	en: number;
+};
+
+export type RegComprobante = {
+	id: string;
+	numero: string;
+	tipo: 'A' | 'B';
+	cliente: string;
+	dias: number;
+	estado: 'ok' | 'pend' | 'rej' | 'void';
+	total: number;
+	canal: string;
+	enviado: boolean;
+	per: 'm' | 'q' | 'y';
+	nomail: boolean;
+	pedido: number | null;
+};
+
+export function registrosFacturacion(
+	d: Demo,
+	ahora: number,
+	cambios: Map<string, CambioFactura>,
+	manuales: [string, FacturaManual][]
+): RegComprobante[] {
+	const clientes = new Map(d.clientes.map((c) => [c.id, c]));
+	const facturados = d.pedidos.filter((p) => p.facturado && p.creado <= ahora);
+	const regs: RegComprobante[] = facturados.map((p, i) => {
+		const c = clientes.get(p.clienteId)!;
+		const tipo = c.mayorista ? 'A' : 'B';
+		const id = `${tipo}-${p.numero}`;
+		const cambio = cambios.get(id) ?? {};
+		const dias = (ahora - p.creado) / DIA;
+		const base: RegComprobante['estado'] =
+			p.estado === 'Cancelado'
+				? 'void'
+				: dias < 0.015
+					? 'pend'
+					: tipo === 'A' && p.numero % 7 === 0
+						? 'rej'
+						: 'ok';
+		const estado = cambio.autorizada && base !== 'void' ? 'ok' : base;
+		const enviado = cambio.enviado ?? semilla(id) < 0.85;
+		return {
+			id,
+			numero: `0004-${String(12812 - i).padStart(8, '0')}`,
+			tipo,
+			cliente:
+				tipo === 'A' ? `${c.nombre} SRL` : semilla(id + 'cf') < 0.4 ? 'Consumidor final' : c.nombre,
+			dias,
+			estado,
+			total: p.total,
+			canal: p.canal,
+			enviado,
+			per: dias < 30 ? 'm' : dias < 90 ? 'q' : 'y',
+			nomail: !enviado,
+			pedido: p.numero
+		};
+	});
+	const manualesReg = manuales.map(([id, m], k): RegComprobante => {
+		const dias = (ahora - m.en) / DIA;
+		const enviado = cambios.get(id)?.enviado ?? false;
+		return {
+			id,
+			numero: `0004-${String(12813 + k).padStart(8, '0')}`,
+			tipo: m.tipo,
+			cliente: m.cliente,
+			dias,
+			estado: 'ok',
+			total: m.total,
+			canal: 'pos',
+			enviado,
+			per: 'm',
+			nomail: !enviado,
+			pedido: null
+		};
+	});
+	return [...manualesReg.reverse(), ...regs];
+}
+
+export const DEF_FACTURACION: DefLista<RegComprobante> = {
+	buscar: (r) => `${r.cliente} ${r.numero} ${r.pedido ?? ''}`,
+	segmento: 'estado',
+	facetas: ['tipo', 'canal', 'per'],
+	rango: { clave: 'total' },
+	banderas: ['nomail'],
+	ordenes: {
+		new: (a, b) => a.dias - b.dias,
+		total: (a, b) => b.total - a.total
+	},
+	resumen: (todos, l) => ({
+		facturado: l.filter((r) => r.estado === 'ok').reduce((s, r) => s + r.total, 0),
+		ultimos30: todos
+			.filter((r) => r.estado === 'ok' && r.dias < 30)
+			.reduce((s, r) => s + r.total, 0),
+		porResolver: todos.filter((r) => r.estado === 'pend' || r.estado === 'rej').length
+	})
+};
+
+// ---------------------------------------------------------------- Envíos
+
+export type RegEnvio = {
+	id: string;
+	pedido: string;
+	cliente: string;
+	ciudad: string;
+	transporte: 'andreani' | 'oca' | 'correo' | 'moto';
+	step: number;
+	estado: 'todo' | 'way' | 'late' | 'done' | 'ret';
+	dias: number;
+	costo: number;
+	seguimiento: string;
+	reclamado: boolean;
+	wk: boolean;
+};
+
+const COSTO_ENVIO: Record<RegEnvio['transporte'], [number, number]> = {
+	andreani: [4200, 3600],
+	oca: [3800, 2700],
+	correo: [3500, 2500],
+	moto: [2500, 1000]
+};
+
+export function registrosEnvios(
+	pedidos: (Pedido & { cambio?: { en?: Partial<Record<string, number>> } })[],
+	clientes: Demo['clientes'],
+	ahora: number,
+	reclamados: Set<string>
+): RegEnvio[] {
+	const porId = new Map(clientes.map((c) => [c.id, c]));
+	return pedidos
+		.filter(
+			(p) =>
+				p.envio !== 'retiro' &&
+				p.creado <= ahora &&
+				(p.estado === 'Listo para despachar' ||
+					p.estado === 'En camino' ||
+					p.estado === 'Entregado')
+		)
+		.map((p) => {
+			const t = p.envio as RegEnvio['transporte'];
+			const id = String(p.numero);
+			const despachado = p.cambio?.en?.['En camino'] ?? p.creado + DIA;
+			const enViaje = Math.max(0, (ahora - despachado) / DIA);
+			const step =
+				p.estado === 'Listo para despachar'
+					? 0
+					: p.estado === 'Entregado'
+						? 4
+						: enViaje < 1
+							? 1
+							: enViaje < 2
+								? 2
+								: 3;
+			const estado: RegEnvio['estado'] =
+				step === 0
+					? 'todo'
+					: step === 4
+						? p.numero % 41 === 0
+							? 'ret'
+							: 'done'
+						: enViaje > 3 && t !== 'moto'
+							? 'late'
+							: 'way';
+			const [base, extra] = COSTO_ENVIO[t];
+			const dias = (ahora - p.creado) / DIA;
+			return {
+				id,
+				pedido: `#${p.numero}`,
+				cliente: porId.get(p.clienteId)?.nombre ?? '',
+				ciudad: p.ciudadEnvio,
+				transporte: t,
+				step,
+				estado,
+				dias,
+				costo: Math.round((base + semilla(id) * extra) / 100) * 100,
+				seguimiento: t === 'moto' ? 'Moto propia' : `AR${300000000 + p.numero * 37}`,
+				reclamado: reclamados.has(id),
+				wk: dias < 7
+			};
+		});
+}
+
+export const DEF_ENVIOS: DefLista<RegEnvio> = {
+	buscar: (r) => `${r.cliente} ${r.pedido} ${r.ciudad} ${r.seguimiento}`,
+	segmento: 'estado',
+	facetas: ['transporte', 'ciudad'],
+	rango: { clave: 'costo' },
+	banderas: ['wk'],
+	ordenes: {
+		new: (a, b) => a.dias - b.dias,
+		late: (a, b) => Number(b.estado === 'late') - Number(a.estado === 'late') || a.dias - b.dias,
+		cost: (a, b) => b.costo - a.costo
+	},
+	resumen: (todos, l) => ({
+		costos: l.reduce((s, r) => s + r.costo, 0),
+		demorados: todos.filter((r) => r.estado === 'late' && !r.reclamado).length,
+		porDespachar: todos.filter((r) => r.estado === 'todo').length
+	})
+};

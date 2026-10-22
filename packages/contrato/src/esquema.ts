@@ -491,6 +491,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/inventario/movimientos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Movimientos de stock de hoy (ventas, ajustes, conteos e ingresos), del más nuevo al más viejo. */
+        get: operations["movimientosHoy"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/tienda": {
         parameters: {
             query?: never;
@@ -608,6 +625,15 @@ export interface components {
             publicado: boolean;
             vendidos30d: number;
             slug: string;
+        };
+        MovimientoStock: {
+            /** @enum {string} */
+            tipo: "web" | "local" | "ml" | "ajuste" | "conteo" | "ingreso" | "devolucion";
+            texto: string;
+            /** @description Negativo: sale; positivo: entra */
+            cantidad: number;
+            /** Format: date-time */
+            en: string;
         };
         Tablero: {
             /** @enum {string} */
@@ -1751,6 +1777,27 @@ export interface operations {
             400: components["responses"]["Problema"];
             401: components["responses"]["Problema"];
             404: components["responses"]["Problema"];
+        };
+    };
+    movimientosHoy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Movimientos */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MovimientoStock"][];
+                };
+            };
+            401: components["responses"]["Problema"];
         };
     };
     obtenerTienda: {

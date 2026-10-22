@@ -28,6 +28,7 @@ export type NombreLista = components['schemas']['NombreLista'];
 export type Producto = components['schemas']['Producto'];
 export type ProductoEditable = components['schemas']['ProductoEditable'];
 export type FiltrosLista = import('../sandbox/listas.ts').FiltrosLista;
+export type MovimientoStock = components['schemas']['MovimientoStock'];
 
 export interface Datos {
 	rubros(): Promise<Rubro[]>;
@@ -66,4 +67,6 @@ export interface Datos {
 	producto(id: string): Promise<Producto | null>;
 	/** Crea (id null) o guarda un producto. null si el id no existe. */
 	guardarProducto(id: string | null, p: ProductoEditable): Promise<Producto | null>;
+	/** Movimientos de stock de hoy (ventas, ajustes, conteos, ingresos). */
+	movimientosHoy(): Promise<MovimientoStock[]>;
 }

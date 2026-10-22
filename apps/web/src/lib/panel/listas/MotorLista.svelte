@@ -22,7 +22,8 @@
 		lista,
 		abrir,
 		extra,
-		antes
+		antes,
+		despues
 	}: {
 		config: ConfigLista<R>;
 		lista: ListaGenerica;
@@ -32,6 +33,8 @@
 		extra?: Snippet;
 		/** Algo entre el encabezado y las vistas (banners). */
 		antes?: Snippet;
+		/** Algo debajo de la lista. */
+		despues?: Snippet;
 	} = $props();
 	const ui = getUi();
 	const f = $derived(leer(page.url.searchParams));
@@ -399,7 +402,7 @@
 						{#if r}
 							{@const v = config.fila(r)}
 							{@const sel = seleccion.has(r.id)}
-							<div class="f-in" class:sel>
+							<div class="f-in" class:sel class:con-stepper={v.stepper !== undefined}>
 								<button
 									type="button"
 									class="tilde"
@@ -546,6 +549,8 @@
 		{/if}
 	</div>
 </div>
+
+{@render despues?.()}
 
 {#if seleccion.size}
 	<div class="lote" use:anim={{ t: 'rise' }}>
@@ -1282,6 +1287,10 @@
 		}
 		/* En el celular el nombre manda: los íconos de canales y etiquetas se ven en la ficha. */
 		.tag {
+			display: none;
+		}
+		/* Con contador, las unidades ya se ven en el contador. */
+		.con-stepper .valor {
 			display: none;
 		}
 		.lote {

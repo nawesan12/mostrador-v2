@@ -2,9 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { demoDe } from './demo.ts';
 import {
 	DEF_CLIENTES,
+	DEF_ENVIOS,
+	DEF_FACTURACION,
+	DEF_INVENTARIO,
 	DEF_PRODUCTOS,
 	listarGenerico,
 	registrosClientes,
+	registrosEnvios,
+	registrosFacturacion,
+	registrosInventario,
 	registrosProductos
 } from './listas.ts';
 
@@ -79,5 +85,47 @@ describe('motor de listas de la demo', () => {
 			new Map()
 		);
 		expect(nuevo[0].nombre).toBe('Termo nuevo');
+	});
+
+	it('inventario: estado por mínimo y cobertura en días', () => {
+		const inv = registrosInventario(productos);
+		for (const r of inv) {
+			if (r.stock === 0) expect(r.st).toBe('out');
+			else if (r.stock < r.min * 0.5) expect(r.st).toBe('crit');
+			expect(r.cover).toBe(Math.floor(r.stock / r.porDia));
+		}
+		const l = listarGenerico(inv, DEF_INVENTARIO, { rango: 7 });
+		expect((l.filas as unknown as { cover: number }[]).every((r) => r.cover < 7)).toBe(true);
+		expect(l.resumen.sinStock).toBe(inv.filter((r) => r.st === 'out').length);
+	});
+
+	it('facturación: un comprobante por pedido facturado, A para mayoristas', () => {
+		const f = registrosFacturacion(d, AHORA, new Map(), []);
+		expect(f).toHaveLength(d.pedidos.filter((p) => p.facturado).length);
+		const mayoristas = new Set(d.clientes.filter((c) => c.mayorista).map((c) => c.id));
+		const pedido = d.pedidos.find((p) => p.facturado && mayoristas.has(p.clienteId));
+		if (pedido) expect(f.find((x) => x.pedido === pedido.numero)!.tipo).toBe('A');
+		const manual = registrosFacturacion(d, AHORA, new Map(), [
+			[
+				'M-1',
+				{ cliente: 'Estudio Paz', tipo: 'B', cuit: null, concepto: 'x', total: 5000, en: AHORA }
+			]
+		]);
+		expect(manual[0].cliente).toBe('Estudio Paz');
+		expect(listarGenerico(f, DEF_FACTURACION, { seg: ['ok'] }).total).toBe(
+			f.filter((x) => x.estado === 'ok').length
+		);
+	});
+
+	it('envíos: sólo los que se despachan, con su etapa', () => {
+		const e = registrosEnvios(d.pedidos, d.clientes, AHORA, new Set());
+		expect(e.every((x) => x.transporte !== ('retiro' as string))).toBe(true);
+		const listo = d.pedidos.find(
+			(p) => p.estado === 'Listo para despachar' && p.envio !== 'retiro'
+		);
+		if (listo) expect(e.find((x) => x.id === String(listo.numero))!.estado).toBe('todo');
+		const l = listarGenerico(e, DEF_ENVIOS, { orden: 'cost', cuantos: 3 });
+		const c = (l.filas as unknown as { costo: number }[]).map((x) => x.costo);
+		expect(c).toEqual([...c].sort((a, b) => b - a));
 	});
 });
