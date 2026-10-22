@@ -29,7 +29,12 @@ type PedidoNuevo struct {
 	Canal   string  `json:"canal"`
 	Envio   string  `json:"envio"`
 	Cliente *string `json:"cliente"`
+	// ClienteID: en la API los clientes salen de los compradores, así que alcanza con nombre y teléfono.
+	ClienteID *string `json:"clienteId"`
+	Telefono  *string `json:"telefono"`
 	Nota    *string `json:"nota"`
+	// Pagado en false: queda Sin pagar (se cobra con un link).
+	Pagado *bool `json:"pagado"`
 }
 
 var (
@@ -59,6 +64,9 @@ func CrearDesdeProductos(ctx context.Context, pool tx, tiendaID string, n Pedido
 	if estadoPago == "" {
 		estadoPago = "Aprobado"
 	}
+	if n.Pagado != nil && !*n.Pagado {
+		estado, estadoPago = "Sin pagar", "Pendiente"
+	}
 	var numero int
 	var total int64
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
@@ -87,7 +95,12 @@ func CrearDesdeProductos(ctx context.Context, pool tx, tiendaID string, n Pedido
 			total += it.Precio * int64(it.Cantidad)
 			items = append(items, it)
 		}
-		comprador, _ := json.Marshal(Comprador{Nombre: nombre})
+		var tel *string
+		if n.Telefono != nil && strings.TrimSpace(*n.Telefono) != "" {
+			t := strings.TrimSpace(*n.Telefono)
+			tel = &t
+		}
+		comprador, _ := json.Marshal(Comprador{Nombre: nombre, Telefono: tel})
 		js, _ := json.Marshal(items)
 		if _, err := t.Exec(ctx, `SELECT 1 FROM tiendas WHERE id = $1 FOR UPDATE`, tiendaID); err != nil {
 			return err

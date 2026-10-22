@@ -18,7 +18,10 @@ const Nuevo = v.object({
 	canal: v.picklist(['pos', 'wa', 'web', 'ig', 'ml', 'tg']),
 	envio: v.optional(v.picklist(['retiro', 'andreani', 'oca', 'correo', 'moto'])),
 	cliente: v.optional(v.nullable(v.pipe(v.string(), v.maxLength(80)))),
-	nota: v.optional(v.nullable(v.pipe(v.string(), v.maxLength(300))))
+	clienteId: v.optional(v.nullable(v.pipe(v.string(), v.maxLength(80)))),
+	telefono: v.optional(v.nullable(v.pipe(v.string(), v.maxLength(30)))),
+	nota: v.optional(v.nullable(v.pipe(v.string(), v.maxLength(300)))),
+	pagado: v.optional(v.boolean(), true)
 });
 
 /** Un pedido nuevo: venta en el local o cargado a mano. */

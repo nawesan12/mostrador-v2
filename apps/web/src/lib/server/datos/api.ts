@@ -214,6 +214,10 @@ export class DatosApi implements Datos {
 		);
 	}
 
+	async crearLink(l: { monto: number; concepto: string; cuotas: boolean; pedido: number | null }) {
+		return (await this.pedir<{ codigo: string }>('/v1/panel/links', 'POST', l)).codigo;
+	}
+
 	/** Como `pedir`, pero 404 y 409 vuelven como respuesta (son resultados, no errores). */
 	private async intentar(ruta: string, metodo: 'GET' | 'POST' | 'PUT', cuerpo?: unknown) {
 		const res = await this.f(this.base + ruta, {

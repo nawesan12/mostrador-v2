@@ -3,20 +3,68 @@
 	import { goto } from '$app/navigation';
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
+	import type { IconData } from '#lib/icons.ts';
 	import { AREAS, rutaDe } from './navegacion.ts';
 	import { getShell } from './shell.svelte.ts';
 
 	/**
-	 * ⌘K (handoff): preguntarle a Hornero y saltar a cualquier sección. Las acciones del handoff (crear
-	 * pedido, link de pago, cargar con foto, abrir caja) y los pedidos se suman con cada función.
-	 * La opción 0 es Hornero; las secciones van de la 1 en adelante.
+	 * ⌘K (handoff): preguntarle a Hornero, las acciones (crear pedido, link de pago, cargar con foto,
+	 * abrir caja) y saltar a cualquier sección. La opción 0 es Hornero; el resto va de la 1 en adelante.
 	 */
 	const shell = getShell();
 	let q = $state('');
+	type Item = { t: string; s: string; icon: IconData; id: string; grupo: string; go: () => void };
+	const ACCIONES: Item[] = [
+		{
+			t: 'Crear pedido',
+			s: 'Manual, por WhatsApp o en el local',
+			icon: I.phPlusBold,
+			id: 'a-pedido',
+			grupo: 'Acciones',
+			go: () => ir('/panel/pedidos/nuevo')
+		},
+		{
+			t: 'Crear link de pago',
+			s: 'Cobrá por WhatsApp en segundos',
+			icon: I.phLinkBold,
+			id: 'a-link',
+			grupo: 'Acciones',
+			go: () => shell.abrirLink()
+		},
+		{
+			t: 'Cargar producto con foto',
+			s: 'Hornero completa nombre, precio y categoría',
+			icon: I.phCameraBold,
+			id: 'a-foto',
+			grupo: 'Acciones',
+			go: () => ir(rutaDe('Productos'))
+		},
+		{
+			t: 'Abrir caja del local',
+			s: 'Punto de venta',
+			icon: I.phCashRegisterBold,
+			id: 'a-caja',
+			grupo: 'Acciones',
+			go: () => ir(rutaDe('Ventas en local'))
+		}
+	];
 	const items = $derived(
-		AREAS.flatMap((a) =>
-			a.items.map((i) => ({ t: i.label, s: a.label, icon: i.icon, href: rutaDe(i.label) }))
-		).filter((i) => !q.trim() || `${i.t} ${i.s}`.toLowerCase().includes(q.trim().toLowerCase()))
+		[
+			...ACCIONES,
+			...AREAS.flatMap((a) =>
+				a.items.map((i): Item => {
+					const href = rutaDe(i.label);
+					return {
+						t: i.label,
+						s: a.label,
+						icon: i.icon,
+						id: href,
+						grupo: 'Ir a',
+						go: () => ir(href)
+					};
+				})
+			)
+		].filter((i) => !q.trim() || `${i.t} ${i.s}`.toLowerCase().includes(q.trim().toLowerCase()))
 	);
 	// Si lo escrito coincide con una sección, Enter va ahí; si no, se lo pregunta a Hornero. Las
 	// flechas la mueven (derived escribible: vuelve a calcularse al cambiar lo escrito).
@@ -46,7 +94,7 @@
 		} else if (e.key === 'Enter') {
 			e.preventDefault();
 			if (sel === 0) preguntar();
-			else if (items[sel - 1]) ir(items[sel - 1].href);
+			else items[sel - 1]?.go();
 		}
 	}
 </script>
@@ -96,8 +144,8 @@
 					>
 					<kbd class="h-kbd">↵</kbd>
 				</button>
-				{#if items.length}<div class="g">Ir a</div>{/if}
-				{#each items as it, i (it.href)}
+				{#each items as it, i (it.id)}
+					{#if it.grupo !== items[i - 1]?.grupo}<div class="g">{it.grupo}</div>{/if}
 					<button
 						type="button"
 						id="cmdk-{i + 1}"
@@ -105,7 +153,7 @@
 						aria-selected={i + 1 === sel}
 						class:sel={i + 1 === sel}
 						onmouseenter={() => (sel = i + 1)}
-						onclick={() => ir(it.href)}
+						onclick={it.go}
 					>
 						<span class="ico"><Icon icon={it.icon} size={17} /></span>
 						<span class="txt"><span class="t">{it.t}</span><span class="s">{it.s}</span></span>

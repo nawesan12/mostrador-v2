@@ -131,7 +131,8 @@
 			k: 'Cobrá por WhatsApp',
 			bg: 'rgba(47,143,99,.13)',
 			fg: '#2F8F63',
-			href: rutaDe('Pedidos')
+			href: rutaDe('Pedidos'),
+			abrir: () => shell.abrirLink()
 		},
 		{
 			icon: I.phCashRegisterFill,
@@ -315,7 +316,15 @@
 
 <div class="accesos">
 	{#each accesos as q (q.t)}
-		<a class="acceso" href={q.href}>
+		<a
+			class="acceso"
+			href={q.href}
+			onclick={(e) => {
+				if (!('abrir' in q) || !q.abrir) return;
+				e.preventDefault();
+				q.abrir();
+			}}
+		>
 			<span class="q-ico" style:background={q.bg} style:color={q.fg}
 				><Icon icon={q.icon} size={20} /></span
 			>

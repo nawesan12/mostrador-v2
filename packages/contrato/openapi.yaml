@@ -643,6 +643,59 @@ paths:
         '204': { description: Publicada }
         '401': { $ref: '#/components/responses/Problema' }
         '404': { $ref: '#/components/responses/Problema' }
+  /v1/panel/links:
+    post:
+      operationId: crearLink
+      summary: Un link de pago para mandar por WhatsApp.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [monto, concepto]
+              properties:
+                monto: { type: integer, minimum: 1, maximum: 100000000 }
+                concepto: { type: string, minLength: 2, maxLength: 140 }
+                cuotas: { type: boolean, default: true }
+                pedido: { type: [integer, 'null'], description: 'Si es el cobro de un pedido, se marca pagado al pagar' }
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [codigo]
+                properties:
+                  codigo: { type: string }
+        '400': { $ref: '#/components/responses/Problema' }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/publico/links/{codigo}:
+    get:
+      operationId: verLink
+      summary: La página de pago (pública).
+      security: []
+      parameters:
+        - { name: codigo, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Link
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LinkPublico' }
+        '404': { $ref: '#/components/responses/Problema' }
+  /v1/publico/links/{codigo}/pagar:
+    post:
+      operationId: pagarLink
+      summary: Pagar (con Mercado Pago; en la demo se simula).
+      security: []
+      parameters:
+        - { name: codigo, in: path, required: true, schema: { type: string } }
+      responses:
+        '204': { description: Pagado }
+        '404': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
   /v1/panel/tienda:
     get:
       operationId: obtenerTienda
@@ -816,8 +869,9 @@ components:
       allOf:
         - { $ref: '#/components/schemas/ConversacionBreve' }
         - type: object
-          required: [mensajes, sugerencia, tomada, cliente]
+          required: [mensajes, sugerencia, tomada, cliente, clienteId]
           properties:
+            clienteId: { type: [string, 'null'], description: 'Su ficha, para crearle un pedido' }
             mensajes:
               type: array
               items:
@@ -906,7 +960,10 @@ components:
         canal: { type: string, enum: [pos, wa, web, ig, ml, tg] }
         envio: { type: string, enum: [retiro, andreani, oca, correo, moto], default: retiro }
         cliente: { type: [string, 'null'], maxLength: 80, description: 'Nombre (en el local suele no haber)' }
+        clienteId: { type: [string, 'null'], maxLength: 80, description: 'Un cliente que ya existe (el nombre sale de su ficha)' }
+        telefono: { type: [string, 'null'], maxLength: 30 }
         nota: { type: [string, 'null'], maxLength: 300 }
+        pagado: { type: boolean, default: true, description: 'false: queda Sin pagar (se cobra con un link)' }
     Devolucion:
       type: object
       required: [id, producto, foto, cliente, pedido, creada, motivo, monto, resolucion, estado]
@@ -953,6 +1010,17 @@ components:
         total: { type: integer }
         porEstrellas: { type: array, items: { type: integer }, description: 'De 5 a 1 estrella' }
         recomendaria: { type: integer, description: 'Porcentaje (4 y 5 estrellas)' }
+    LinkPublico:
+      type: object
+      required: [codigo, tienda, concepto, monto, cuotas, pagado, pedido]
+      properties:
+        codigo: { type: string }
+        tienda: { type: string }
+        concepto: { type: string }
+        monto: { type: integer }
+        cuotas: { type: boolean }
+        pagado: { type: boolean }
+        pedido: { type: [integer, 'null'] }
     Tablero:
       type: object
       required: [periodo, desde, hasta, hola, ventas, serie, kpis, canales, meta, avisos, ultimosPedidos, paraHacer, enVivo, caja, liquidaciones, hornero, bandeja, integraciones, masVendidos, resenas, envios]

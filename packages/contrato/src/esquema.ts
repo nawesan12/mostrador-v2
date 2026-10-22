@@ -640,6 +640,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Un link de pago para mandar por WhatsApp. */
+        post: operations["crearLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/publico/links/{codigo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** La página de pago (pública). */
+        get: operations["verLink"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/publico/links/{codigo}/pagar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pagar (con Mercado Pago; en la demo se simula). */
+        post: operations["pagarLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/tienda": {
         parameters: {
             query?: never;
@@ -782,6 +833,8 @@ export interface components {
             sinLeer: number;
         };
         Conversacion: components["schemas"]["ConversacionBreve"] & {
+            /** @description Su ficha, para crearle un pedido */
+            clienteId: string | null;
             mensajes: {
                 /** @enum {string} */
                 de: "cliente" | "hornero" | "vos";
@@ -864,7 +917,15 @@ export interface components {
             envio: "retiro" | "andreani" | "oca" | "correo" | "moto";
             /** @description Nombre (en el local suele no haber) */
             cliente?: string | null;
+            /** @description Un cliente que ya existe (el nombre sale de su ficha) */
+            clienteId?: string | null;
+            telefono?: string | null;
             nota?: string | null;
+            /**
+             * @description false: queda Sin pagar (se cobra con un link)
+             * @default true
+             */
+            pagado: boolean;
         };
         Devolucion: {
             id: string;
@@ -909,6 +970,15 @@ export interface components {
             porEstrellas: number[];
             /** @description Porcentaje (4 y 5 estrellas) */
             recomendaria: number;
+        };
+        LinkPublico: {
+            codigo: string;
+            tienda: string;
+            concepto: string;
+            monto: number;
+            cuotas: boolean;
+            pagado: boolean;
+            pedido: number | null;
         };
         Tablero: {
             /** @enum {string} */
@@ -2354,6 +2424,86 @@ export interface operations {
             };
             401: components["responses"]["Problema"];
             404: components["responses"]["Problema"];
+        };
+    };
+    crearLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    monto: number;
+                    concepto: string;
+                    /** @default true */
+                    cuotas?: boolean;
+                    /** @description Si es el cobro de un pedido, se marca pagado al pagar */
+                    pedido?: number | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Creado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        codigo: string;
+                    };
+                };
+            };
+            400: components["responses"]["Problema"];
+            401: components["responses"]["Problema"];
+        };
+    };
+    verLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                codigo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Link */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinkPublico"];
+                };
+            };
+            404: components["responses"]["Problema"];
+        };
+    };
+    pagarLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                codigo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Pagado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
         };
     };
     obtenerTienda: {

@@ -11,6 +11,15 @@ const guardarCookie = (k: string, v: string) => {
 	document.cookie = `${k}=${v}; path=/panel; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
 };
 
+export type LinkPrevio = {
+	monto?: number;
+	concepto?: string;
+	/** Nombre de quien paga (para el saludo). */
+	para?: string;
+	telefono?: string | null;
+	pedido?: number | null;
+};
+
 export class Shell {
 	barra = $state(false);
 	notificaciones = $state(false);
@@ -49,11 +58,21 @@ export class Shell {
 		this.ia = true;
 	}
 
+	/** Modal "Crear link de pago" y lo que llega precargado (desde un pedido o una charla). */
+	link = $state(false);
+	linkPrevio = $state<LinkPrevio>({});
+	abrirLink(previo: LinkPrevio = {}) {
+		this.cmdk = false;
+		this.linkPrevio = previo;
+		this.link = true;
+	}
+
 	cerrarTodo() {
 		this.barra = false;
 		this.notificaciones = false;
 		this.cmdk = false;
 		this.ia = false;
+		this.link = false;
 	}
 }
 

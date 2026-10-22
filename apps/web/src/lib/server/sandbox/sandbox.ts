@@ -208,6 +208,37 @@ export async function sumarUsoHornero(db: DbSandbox, sandboxId: string, dia: str
 	return n;
 }
 
+/** Un link de pago de la demo. */
+export type LinkDemo = {
+	monto: number;
+	concepto: string;
+	cuotas: boolean;
+	pedido: number | null;
+	creado: number;
+	pagado: number | null;
+};
+
+const ALFABETO = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+/** Código corto y sin letras que se confunden (0/O, 1/I). */
+function codigo() {
+	const b = crypto.getRandomValues(new Uint8Array(6));
+	return [...b].map((x) => ALFABETO[x % ALFABETO.length]).join('');
+}
+
+/** El link por su código (de cualquier visitante: lo abre quien paga, sin cookie). */
+export async function buscarLink(db: DbSandbox, cod: string, ahora = Date.now()) {
+	if (!/^[2-9A-Z]{6}$/.test(cod)) return null;
+	const [f] = await db
+		.select()
+		.from(cambios)
+		.where(and(eq(cambios.entidad, 'link'), eq(cambios.clave, cod)))
+		.limit(1);
+	if (!f || f.borrado) return null;
+	const sb = await leer(db, f.sandboxId, ahora);
+	if (!sb) return null;
+	return { sb, link: JSON.parse(f.datos ?? 'null') as LinkDemo };
+}
+
 export class DatosSandbox implements Datos {
 	constructor(
 		private db: DbSandbox,
@@ -778,28 +809,43 @@ export class DatosSandbox implements Datos {
 		const ahora = Date.now();
 		const numero = Math.max(...d.pedidos.map((p) => p.numero)) + 1;
 		const nombre = n.cliente?.trim().slice(0, 80);
-		const cliente: Demo['clientes'][number] | null = {
-			id: `v${numero}`,
-			nombre: nombre || 'Consumidor final',
-			email: null,
-			telefono: null,
-			ciudad: d.catalogo.ciudad,
-			foto: null,
-			mayorista: false,
-			alta: ahora
-		};
+		// Un cliente que ya existe: el pedido se suma a su ficha.
+		const existente = n.clienteId ? d.clientes.find((c) => c.id === n.clienteId) : undefined;
+		const cliente: Demo['clientes'][number] | null = existente
+			? null
+			: {
+					id: `v${numero}`,
+					nombre: nombre || 'Consumidor final',
+					email: null,
+					telefono: n.telefono?.trim() || null,
+					ciudad: d.catalogo.ciudad,
+					foto: null,
+					mayorista: false,
+					alta: ahora
+				};
 		const envio = n.envio ?? 'retiro';
 		const pedido: Pedido = {
 			numero,
-			clienteId: cliente.id,
+			clienteId: existente?.id ?? cliente!.id,
 			canal: n.canal,
 			pago: n.pago,
 			estadoPago:
-				n.pago === 'efectivo' ? 'Cobrado' : n.pago === 'transf' ? 'Acreditada' : 'Aprobado',
+				n.pagado === false
+					? 'Pendiente'
+					: n.pago === 'efectivo'
+						? 'Cobrado'
+						: n.pago === 'transf'
+							? 'Acreditada'
+							: 'Aprobado',
 			envio,
 			ciudadEnvio: d.catalogo.ciudad,
-			estado: n.canal === 'pos' && envio === 'retiro' ? 'Entregado' : 'Para preparar',
-			facturado: true,
+			estado:
+				n.pagado === false
+					? 'Sin pagar'
+					: n.canal === 'pos' && envio === 'retiro'
+						? 'Entregado'
+						: 'Para preparar',
+			facturado: n.pagado !== false,
 			items,
 			total: items.reduce((s, i) => s + i.precio * i.cantidad, 0),
 			creado: ahora
@@ -815,6 +861,42 @@ export class DatosSandbox implements Datos {
 				delta: (ajustes.get(i.productoId) ?? 0) - i.cantidad
 			});
 		return { numero, total: pedido.total };
+	}
+
+	// ---------------------------------------------------------------- Links de pago
+
+	async crearLink(l: { monto: number; concepto: string; cuotas: boolean; pedido: number | null }) {
+		const cod = codigo();
+		await guardarCambio(this.db, this.sb.id, 'link', cod, {
+			...l,
+			creado: Date.now(),
+			pagado: null
+		} satisfies LinkDemo);
+		return cod;
+	}
+
+	/** Pagar un link (en la demo se simula): queda pagado y, si cobra un pedido, el pedido pasa a preparar. */
+	async pagarLink(cod: string): Promise<Resultado> {
+		const c = (await cambiosDe(this.db, this.sb.id, 'link')).get(cod) as
+			LinkDemo | null | undefined;
+		if (!c) return 'no-existe';
+		if (c.pagado) return 'no-se-puede';
+		await guardarCambio(this.db, this.sb.id, 'link', cod, {
+			...c,
+			pagado: Date.now()
+		} satisfies LinkDemo);
+		if (c.pedido) {
+			await this.cambiarEstado(c.pedido, 'Para preparar');
+			// Si es un pedido cargado acá, queda cobrado y facturado.
+			const n = (await cambiosDe(this.db, this.sb.id, 'pedido-nuevo')).get(String(c.pedido)) as
+				PedidoNuevoDemo | undefined;
+			if (n)
+				await guardarCambio(this.db, this.sb.id, 'pedido-nuevo', String(c.pedido), {
+					...n,
+					pedido: { ...n.pedido, estadoPago: 'Aprobado', pago: 'mp', facturado: true }
+				} satisfies PedidoNuevoDemo);
+		}
+		return 'ok';
 	}
 
 	// ---------------------------------------------------------------- Devoluciones y reseñas
