@@ -16,6 +16,13 @@ export type Tablero = components['schemas']['Tablero'];
 export type Periodo = Tablero['periodo'];
 export type ContextoHornero = components['schemas']['ContextoHornero'];
 export type Idea = 'carritos' | 'stock' | 'promo';
+export type ListaPedidos = components['schemas']['ListaPedidos'];
+export type PedidoDetalle = components['schemas']['PedidoDetalle'];
+export type EstadoPedido = components['schemas']['EstadoPedido'];
+export type AccionLote = 'preparar' | 'etiquetas' | 'facturar' | 'avisar';
+export type FiltrosPedidos = import('../sandbox/pedidos.ts').FiltrosPedidos;
+/** Resultado de una acción sobre un pedido. */
+export type Resultado = 'ok' | 'no-existe' | 'no-se-puede';
 
 export interface Datos {
 	rubros(): Promise<Rubro[]>;
@@ -37,4 +44,14 @@ export interface Datos {
 	contextoHornero(): Promise<ContextoHornero>;
 	/** Aprueba (o deshace) una idea de Hornero. */
 	marcarIdea(idea: Idea, hecha: boolean): Promise<void>;
+	listarPedidos(f: FiltrosPedidos): Promise<ListaPedidos>;
+	/** null si no existe. */
+	pedido(numero: number): Promise<PedidoDetalle | null>;
+	cambiarEstado(numero: number, estado: EstadoPedido): Promise<Resultado>;
+	pedidosEnLote(
+		numeros: number[],
+		accion: AccionLote
+	): Promise<{ hechos: number; cambios: { numero: number; antes: EstadoPedido }[] }>;
+	/** Recordatorio de pago por WhatsApp. */
+	recordarPago(numero: number): Promise<Resultado>;
 }

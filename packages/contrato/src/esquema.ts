@@ -340,6 +340,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/pedidos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Pedidos con filtros (en la URL del panel), conteos por etapa y facetas, y una ventana de filas. */
+        get: operations["listarPedidos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/pedidos/lote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Acción sobre varios pedidos (preparar, etiquetas, facturar, avisar). */
+        post: operations["pedidosEnLote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/pedidos/{numero}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** El detalle de un pedido. */
+        get: operations["obtenerPedido"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/pedidos/{numero}/estado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Avanza el pedido una etapa, lo vuelve una atrás (deshacer) o lo cancela. */
+        post: operations["cambiarEstadoPedido"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/pedidos/{numero}/recordatorio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Le manda al cliente un recordatorio de pago por WhatsApp. */
+        post: operations["recordarPago"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/tienda": {
         parameters: {
             query?: never;
@@ -556,13 +641,96 @@ export interface components {
                 }[];
             };
         };
+        /** @enum {string} */
+        EstadoPedido: "Sin pagar" | "Para preparar" | "Listo para despachar" | "En camino" | "Entregado" | "Cancelado";
+        PedidoFila: {
+            numero: number;
+            cliente: string;
+            foto: string | null;
+            ciudad: string;
+            canal: string;
+            /** @description mp, tarjeta, payway, modo, uala, transf, efectivo */
+            pago: string;
+            /** @description andreani, oca, correo, moto, retiro */
+            envio: string;
+            estado: components["schemas"]["EstadoPedido"];
+            total: number;
+            /** Format: date-time */
+            creado: string;
+            /** @description Los primeros 3 */
+            productos: {
+                nombre: string;
+                foto: string | null;
+            }[];
+            cantidadProductos: number;
+            vip: boolean;
+            /** @description Lo vendió Hornero */
+            hornero: boolean;
+            mayorista: boolean;
+        };
+        ListaPedidos: {
+            /** @description Pedidos que cumplen los filtros */
+            total: number;
+            suma: number;
+            filas: components["schemas"]["PedidoFila"][];
+            /** @description Por estado, con todos los filtros salvo el de estado */
+            etapas: {
+                [key: string]: number;
+            };
+            /** @description Conteos de canal, pago y envío; cada uno sin su propio filtro */
+            facetas: {
+                canal: {
+                    [key: string]: number;
+                };
+                pago: {
+                    [key: string]: number;
+                };
+                envio: {
+                    [key: string]: number;
+                };
+            };
+        };
+        PedidoDetalle: components["schemas"]["PedidoFila"] & {
+            items: {
+                nombre: string;
+                foto: string | null;
+                cantidad: number;
+                precio: number;
+            }[];
+            subtotal: number;
+            costoEnvio: number;
+            comprador: {
+                nombre: string;
+                foto: string | null;
+                telefono: string | null;
+                email: string | null;
+                /** Format: date-time */
+                desde: string;
+                pedidos: number;
+                gastado: number;
+            };
+            /** @description Aprobado, Acreditada, Pendiente, Cobrado */
+            estadoPago: string;
+            /** @description B 0004-00000812 */
+            factura: string | null;
+            seguimiento: string | null;
+            /** Format: date */
+            llega: string | null;
+            /** @description Lo que anotó Hornero de la charla */
+            nota: string | null;
+            historial: {
+                texto: string;
+                /** Format: date-time */
+                cuando: string | null;
+                hecho: boolean;
+            }[];
+        };
         PedidoBreve: {
             numero: number;
             cliente: string;
             foto: string | null;
             canal: string;
-            /** @enum {string} */
-            estado: "Pago pendiente" | "Para preparar" | "Pagado" | "Enviado" | "Entregado" | "Cancelado";
+            estado: components["schemas"]["EstadoPedido"];
             total: number;
             /** Format: date-time */
             creado: string;
@@ -1176,6 +1344,155 @@ export interface operations {
             };
             401: components["responses"]["Problema"];
             404: components["responses"]["Problema"];
+        };
+    };
+    listarPedidos: {
+        parameters: {
+            query?: {
+                /** @description Cliente, número, producto o ciudad */
+                q?: string;
+                /** @description Separados por coma */
+                estado?: string;
+                canal?: string;
+                pago?: string;
+                envio?: string;
+                fecha?: "hoy" | "7d" | "30d" | "todo";
+                minimo?: number;
+                vip?: boolean;
+                hornero?: boolean;
+                mayorista?: boolean;
+                orden?: "nuevos" | "urgentes" | "monto" | "viejos";
+                desde?: number;
+                cuantos?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Lista */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListaPedidos"];
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    pedidosEnLote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    numeros: number[];
+                    /** @enum {string} */
+                    accion: "preparar" | "etiquetas" | "facturar" | "avisar";
+                };
+            };
+        };
+        responses: {
+            /** @description Cuántos se pudieron hacer (los que no estaban en la etapa justa se saltean) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        hechos: number;
+                        /** @description Para deshacer: número y estado anterior */
+                        cambios: {
+                            numero: number;
+                            antes: components["schemas"]["EstadoPedido"];
+                        }[];
+                    };
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    obtenerPedido: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                numero: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Pedido */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PedidoDetalle"];
+                };
+            };
+            401: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+        };
+    };
+    cambiarEstadoPedido: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                numero: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    estado: components["schemas"]["EstadoPedido"];
+                };
+            };
+        };
+        responses: {
+            /** @description Hecho */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+        };
+    };
+    recordarPago: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                numero: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Enviado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
         };
     };
     obtenerTienda: {

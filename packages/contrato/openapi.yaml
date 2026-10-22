@@ -265,6 +265,110 @@ paths:
         '204': { description: Hecho }
         '401': { $ref: '#/components/responses/Problema' }
         '404': { $ref: '#/components/responses/Problema' }
+  /v1/panel/pedidos:
+    get:
+      operationId: listarPedidos
+      summary: Pedidos con filtros (en la URL del panel), conteos por etapa y facetas, y una ventana de filas.
+      parameters:
+        - { name: q, in: query, schema: { type: string, maxLength: 100 }, description: 'Cliente, número, producto o ciudad' }
+        - { name: estado, in: query, schema: { type: string }, description: 'Separados por coma' }
+        - { name: canal, in: query, schema: { type: string } }
+        - { name: pago, in: query, schema: { type: string } }
+        - { name: envio, in: query, schema: { type: string } }
+        - { name: fecha, in: query, schema: { type: string, enum: [hoy, 7d, 30d, todo], default: todo } }
+        - { name: minimo, in: query, schema: { type: integer, minimum: 0 } }
+        - { name: vip, in: query, schema: { type: boolean } }
+        - { name: hornero, in: query, schema: { type: boolean } }
+        - { name: mayorista, in: query, schema: { type: boolean } }
+        - { name: orden, in: query, schema: { type: string, enum: [nuevos, urgentes, monto, viejos], default: nuevos } }
+        - { name: desde, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+        - { name: cuantos, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 60 } }
+      responses:
+        '200':
+          description: Lista
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ListaPedidos' }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/pedidos/lote:
+    post:
+      operationId: pedidosEnLote
+      summary: Acción sobre varios pedidos (preparar, etiquetas, facturar, avisar).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [numeros, accion]
+              properties:
+                numeros: { type: array, maxItems: 500, items: { type: integer } }
+                accion: { type: string, enum: [preparar, etiquetas, facturar, avisar] }
+      responses:
+        '200':
+          description: Cuántos se pudieron hacer (los que no estaban en la etapa justa se saltean)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [hechos, cambios]
+                properties:
+                  hechos: { type: integer }
+                  cambios:
+                    type: array
+                    description: 'Para deshacer: número y estado anterior'
+                    items:
+                      type: object
+                      required: [numero, antes]
+                      properties:
+                        numero: { type: integer }
+                        antes: { $ref: '#/components/schemas/EstadoPedido' }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/pedidos/{numero}:
+    get:
+      operationId: obtenerPedido
+      summary: El detalle de un pedido.
+      parameters:
+        - { name: numero, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: Pedido
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PedidoDetalle' }
+        '401': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+  /v1/panel/pedidos/{numero}/estado:
+    post:
+      operationId: cambiarEstadoPedido
+      summary: Avanza el pedido una etapa, lo vuelve una atrás (deshacer) o lo cancela.
+      parameters:
+        - { name: numero, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [estado]
+              properties:
+                estado: { $ref: '#/components/schemas/EstadoPedido' }
+      responses:
+        '204': { description: Hecho }
+        '401': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/pedidos/{numero}/recordatorio:
+    post:
+      operationId: recordarPago
+      summary: Le manda al cliente un recordatorio de pago por WhatsApp.
+      parameters:
+        - { name: numero, in: path, required: true, schema: { type: integer } }
+      responses:
+        '204': { description: Enviado }
+        '401': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
   /v1/panel/tienda:
     get:
       operationId: obtenerTienda
@@ -541,6 +645,98 @@ components:
                   paquetes: { type: integer }
                   ciudad: { type: [string, 'null'], description: 'Si todos van a la misma ciudad' }
                   proximo: { type: boolean }
+    EstadoPedido:
+      type: string
+      enum: [Sin pagar, Para preparar, Listo para despachar, En camino, Entregado, Cancelado]
+    PedidoFila:
+      type: object
+      required: [numero, cliente, foto, ciudad, canal, pago, envio, estado, total, creado, productos, cantidadProductos, vip, hornero, mayorista]
+      properties:
+        numero: { type: integer }
+        cliente: { type: string }
+        foto: { type: [string, 'null'] }
+        ciudad: { type: string }
+        canal: { type: string }
+        pago: { type: string, description: 'mp, tarjeta, payway, modo, uala, transf, efectivo' }
+        envio: { type: string, description: 'andreani, oca, correo, moto, retiro' }
+        estado: { $ref: '#/components/schemas/EstadoPedido' }
+        total: { type: integer }
+        creado: { type: string, format: date-time }
+        productos:
+          type: array
+          description: 'Los primeros 3'
+          items:
+            type: object
+            required: [nombre, foto]
+            properties:
+              nombre: { type: string }
+              foto: { type: [string, 'null'] }
+        cantidadProductos: { type: integer }
+        vip: { type: boolean }
+        hornero: { type: boolean, description: 'Lo vendió Hornero' }
+        mayorista: { type: boolean }
+    ListaPedidos:
+      type: object
+      required: [total, suma, filas, etapas, facetas]
+      properties:
+        total: { type: integer, description: 'Pedidos que cumplen los filtros' }
+        suma: { type: integer }
+        filas: { type: array, items: { $ref: '#/components/schemas/PedidoFila' } }
+        etapas:
+          type: object
+          description: 'Por estado, con todos los filtros salvo el de estado'
+          additionalProperties: { type: integer }
+        facetas:
+          type: object
+          description: 'Conteos de canal, pago y envío; cada uno sin su propio filtro'
+          required: [canal, pago, envio]
+          properties:
+            canal: { type: object, additionalProperties: { type: integer } }
+            pago: { type: object, additionalProperties: { type: integer } }
+            envio: { type: object, additionalProperties: { type: integer } }
+    PedidoDetalle:
+      allOf:
+        - { $ref: '#/components/schemas/PedidoFila' }
+        - type: object
+          required: [items, subtotal, costoEnvio, comprador, estadoPago, factura, seguimiento, llega, nota, historial]
+          properties:
+            items:
+              type: array
+              items:
+                type: object
+                required: [nombre, foto, cantidad, precio]
+                properties:
+                  nombre: { type: string }
+                  foto: { type: [string, 'null'] }
+                  cantidad: { type: integer }
+                  precio: { type: integer }
+            subtotal: { type: integer }
+            costoEnvio: { type: integer }
+            comprador:
+              type: object
+              required: [nombre, foto, telefono, email, desde, pedidos, gastado]
+              properties:
+                nombre: { type: string }
+                foto: { type: [string, 'null'] }
+                telefono: { type: [string, 'null'] }
+                email: { type: [string, 'null'] }
+                desde: { type: string, format: date-time }
+                pedidos: { type: integer }
+                gastado: { type: integer }
+            estadoPago: { type: string, description: 'Aprobado, Acreditada, Pendiente, Cobrado' }
+            factura: { type: [string, 'null'], description: 'B 0004-00000812' }
+            seguimiento: { type: [string, 'null'] }
+            llega: { type: [string, 'null'], format: date }
+            nota: { type: [string, 'null'], description: 'Lo que anotó Hornero de la charla' }
+            historial:
+              type: array
+              items:
+                type: object
+                required: [texto, cuando, hecho]
+                properties:
+                  texto: { type: string }
+                  cuando: { type: [string, 'null'], format: date-time }
+                  hecho: { type: boolean }
     PedidoBreve:
       type: object
       required: [numero, cliente, foto, canal, estado, total, creado]
@@ -549,7 +745,7 @@ components:
         cliente: { type: string }
         foto: { type: [string, 'null'] }
         canal: { type: string }
-        estado: { type: string, enum: [Pago pendiente, Para preparar, Pagado, Enviado, Entregado, Cancelado] }
+        estado: { $ref: '#/components/schemas/EstadoPedido' }
         total: { type: integer }
         creado: { type: string, format: date-time }
     Notificacion:

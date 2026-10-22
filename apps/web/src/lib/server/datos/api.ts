@@ -4,7 +4,13 @@
  */
 import { error } from '@sveltejs/kit';
 import type {
+	AccionLote,
 	ContextoHornero,
+	EstadoPedido,
+	FiltrosPedidos,
+	ListaPedidos,
+	PedidoDetalle,
+	Resultado,
 	Datos,
 	Idea,
 	Onboarding,
@@ -84,4 +90,51 @@ export class DatosApi implements Datos {
 	marcarIdea(idea: Idea, hecha: boolean) {
 		return this.pedir<void>(`/v1/panel/hornero/ideas/${idea}`, 'POST', { hecha });
 	}
+
+	listarPedidos(f: FiltrosPedidos) {
+		const q = new URLSearchParams();
+		for (const [k, v] of Object.entries(f)) {
+			if (v === undefined || v === '' || v === false || (Array.isArray(v) && !v.length)) continue;
+			q.set(k, Array.isArray(v) ? v.join(',') : String(v));
+		}
+		return this.pedir<ListaPedidos>(`/v1/panel/pedidos?${q}`);
+	}
+	async pedido(numero: number) {
+		const r = await this.intentar(`/v1/panel/pedidos/${numero}`, 'GET');
+		return r.ok ? ((await r.json()) as PedidoDetalle) : null;
+	}
+	async cambiarEstado(numero: number, estado: EstadoPedido) {
+		return resultado(await this.intentar(`/v1/panel/pedidos/${numero}/estado`, 'POST', { estado }));
+	}
+	pedidosEnLote(numeros: number[], accion: AccionLote) {
+		return this.pedir<{ hechos: number; cambios: { numero: number; antes: EstadoPedido }[] }>(
+			'/v1/panel/pedidos/lote',
+			'POST',
+			{ numeros, accion }
+		);
+	}
+	async recordarPago(numero: number) {
+		return resultado(await this.intentar(`/v1/panel/pedidos/${numero}/recordatorio`, 'POST', {}));
+	}
+
+	/** Como `pedir`, pero 404 y 409 vuelven como respuesta (son resultados, no errores). */
+	private async intentar(ruta: string, metodo: 'GET' | 'POST', cuerpo?: unknown) {
+		const res = await this.f(this.base + ruta, {
+			method: metodo,
+			headers: {
+				accept: 'application/json',
+				...(cuerpo === undefined ? {} : { 'content-type': 'application/json' }),
+				...(this.token ? { authorization: `Bearer ${this.token}` } : {})
+			},
+			body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo)
+		});
+		if (!res.ok && res.status !== 404 && res.status !== 409) {
+			const p = (await res.json().catch(() => null)) as { detail?: string; code?: string } | null;
+			error(res.status, { message: p?.detail ?? 'La API no respondió bien.', code: p?.code });
+		}
+		return res;
+	}
 }
+
+const resultado = (r: Response): Resultado =>
+	r.ok ? 'ok' : r.status === 404 ? 'no-existe' : 'no-se-puede';

@@ -11,6 +11,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/arrepentimiento"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/formularios"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/tiendas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
@@ -66,6 +67,7 @@ func Nuevo(d Dependencias) http.Handler {
 			h = d.Cuentas.Autenticar(mux)
 		}
 		tiendas.Rutas(mux, d.App, tienda)
+		pedidos.Rutas(mux, d.App, tienda)
 		ip := func(r *http.Request) string { return cuentas.ClienteDe(r, d.ClaveBFF).IP }
 		if d.Arrepentimiento != nil {
 			d.Arrepentimiento.Rutas(mux, ip)

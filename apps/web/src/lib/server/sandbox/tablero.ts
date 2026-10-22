@@ -44,9 +44,7 @@ const LIQUIDA: Record<string, number | null> = { mp: null, payway: 3, modo: 4, u
 const RETIROS = { andreani: '15:00', moto: '16:30', correo: '17:00', oca: '18:00' } as const;
 
 function paraHacer(d: Demo, ahora: number) {
-	const transferencias = d.pedidos.filter(
-		(p) => p.estado === 'Pago pendiente' && p.pago === 'transf'
-	);
+	const transferencias = d.pedidos.filter((p) => p.estado === 'Sin pagar' && p.pago === 'transf');
 	const sinStock = d.catalogo.productos.filter((p) => d.stock[p.id] === 0);
 	return {
 		preparar: d.pedidos.filter((p) => p.estado === 'Para preparar').length,
@@ -134,9 +132,7 @@ export function tableroDemo(
 	const liq = new Map<string, { fecha: number; monto: number }>();
 	const cobradoCon = (medio: string, d0: number, d1: number) =>
 		suma(
-			entre(d0, Math.min(d1, ahora)).filter(
-				(p) => p.pago === medio && p.estado !== 'Pago pendiente'
-			)
+			entre(d0, Math.min(d1, ahora)).filter((p) => p.pago === medio && p.estado !== 'Sin pagar')
 		);
 	for (const [medio, diaSemana] of Object.entries(LIQUIDA)) {
 		let fecha = hoy;
@@ -164,7 +160,8 @@ export function tableroDemo(
 
 	// Envíos de hoy: lo que hay que despachar, por transporte y horario de retiro.
 	const aDespachar = pedidos.filter(
-		(p) => (p.estado === 'Para preparar' || p.estado === 'Pagado') && p.envio !== 'retiro'
+		(p) =>
+			(p.estado === 'Para preparar' || p.estado === 'Listo para despachar') && p.envio !== 'retiro'
 	);
 	const ahoraHm = horaAr(ahora);
 	let hayProximo = false;
@@ -293,7 +290,7 @@ export function tableroDemo(
 			{ id: 'arca', valor: DIAS_CERTIFICADO },
 			{
 				id: 'andreani',
-				valor: pedidos.filter((p) => p.estado === 'Enviado' && p.envio === 'andreani').length
+				valor: pedidos.filter((p) => p.estado === 'En camino' && p.envio === 'andreani').length
 			}
 		],
 		masVendidos,
