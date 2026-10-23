@@ -74,5 +74,13 @@ reviews:
       instructions: |
         Contrato único entre el BFF y Go: cada cambio tiene que tener su implementación en los dos lados (DatosApi y Go) y su esquema con límites (maxLength, minimum, enum).
 
+# CLAUDE.md se carga solo; las otras dos guías del repo hay que nombrarlas.
+knowledge_base:
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - "docs/CONVENCIONES.md"
+      - "docs/decisiones.md"
+
 chat:
   auto_reply: false
