@@ -1,7 +1,15 @@
 import { error, json } from '@sveltejs/kit';
 import * as v from 'valibot';
 import { datosDe } from '#lib/server/datos/index.ts';
+import { errorOpciones, errorVariantes, MAX_FOTOS, MAX_VARIANTES } from '#lib/tienda/variantes.ts';
 import type { RequestHandler } from './$types';
+
+// Una foto de Unsplash (id) o una URL https (los productos importados de Empretienda).
+const Foto = v.union([
+	v.pipe(v.string(), v.regex(/^\d{10,}-[0-9a-f]+$/)),
+	v.pipe(v.string(), v.maxLength(500), v.url(), v.startsWith('https://'))
+]);
+const Texto20 = v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(20));
 
 const Editable = v.object({
 	nombre: v.pipe(v.string(), v.trim(), v.minLength(2, 'Poné un nombre.'), v.maxLength(120)),
@@ -11,13 +19,35 @@ const Editable = v.object({
 	costo: v.optional(v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(1_000_000_000))),
 	sku: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(40))),
 	stock: v.optional(v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(1_000_000))),
-	// Una foto de Unsplash (id) o una URL https (los productos importados de Empretienda).
-	foto: v.optional(
-		v.nullable(
-			v.union([
-				v.pipe(v.string(), v.regex(/^\d{10,}-[0-9a-f]+$/)),
-				v.pipe(v.string(), v.maxLength(500), v.url(), v.startsWith('https://'))
-			])
+	foto: v.optional(v.nullable(Foto)),
+	fotos: v.optional(v.pipe(v.array(Foto), v.maxLength(MAX_FOTOS, `Hasta ${MAX_FOTOS} fotos.`))),
+	opciones: v.optional(
+		v.pipe(
+			v.array(
+				v.object({
+					nombre: Texto20,
+					valores: v.pipe(v.array(Texto20), v.minLength(1), v.maxLength(20))
+				})
+			),
+			v.maxLength(3, 'Hasta 3 opciones.')
+		)
+	),
+	// Sólo las que se tocan, identificadas por sus valores (el id no cuenta).
+	variantes: v.optional(
+		v.pipe(
+			v.array(
+				v.object({
+					valores: v.record(Texto20, Texto20),
+					sku: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(40))),
+					precio: v.optional(
+						v.nullable(v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(1_000_000_000)))
+					),
+					stock: v.optional(v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(1_000_000))),
+					foto: v.optional(v.nullable(Foto)),
+					activa: v.optional(v.boolean())
+				})
+			),
+			v.maxLength(MAX_VARIANTES)
 		)
 	),
 	canales: v.optional(v.record(v.picklist(['web', 'ml', 'ig', 'google']), v.boolean()))
@@ -32,8 +62,26 @@ export const GET: RequestHandler = async ({ locals, params }) => {
 
 /** Guardar (o crear, con id "nuevo"). */
 export const PUT: RequestHandler = async ({ locals, params, request }) => {
-	const r = v.safeParse(Editable, await request.json().catch(() => null));
+	// Como la API Go: el cuerpo del editor llega hasta 128 KB.
+	const texto = await request.text();
+	if (texto.length > 128 * 1024) error(413, 'El producto tiene demasiados datos para guardar.');
+	let cuerpo: unknown = null;
+	try {
+		cuerpo = JSON.parse(texto);
+	} catch {
+		// queda null y falla la validación
+	}
+	const r = v.safeParse(Editable, cuerpo);
 	if (!r.success) error(400, r.issues[0].message);
+	const { opciones, variantes, fotos } = r.output;
+	// Las combinaciones las rearma quien guarda; acá se rechaza lo que no puede corresponder.
+	const mal = opciones
+		? (errorOpciones(opciones) ??
+			(variantes && fotos ? errorVariantes(opciones, variantes, fotos) : null))
+		: variantes?.length
+			? 'Sin opciones no hay variantes.'
+			: null;
+	if (mal) error(400, mal);
 	const datos = datosDe(locals);
 	const antes = params.id === 'nuevo' ? null : await datos.producto(params.id);
 	const p = await datos.guardarProducto(params.id === 'nuevo' ? null : params.id, r.output);

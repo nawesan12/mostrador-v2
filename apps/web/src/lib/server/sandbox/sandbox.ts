@@ -97,12 +97,14 @@ import {
 	registrosFacturacion,
 	registrosInventario,
 	registrosProductos,
+	claveStock,
 	slugProducto,
 	type CambioCliente,
 	type CambioFactura,
 	type CambioProducto,
 	type FacturaManual,
-	type Movimiento
+	type Movimiento,
+	type RegProducto
 } from './listas.ts';
 import { inicioDelDia } from './tablero.ts';
 import {
@@ -126,6 +128,7 @@ import RUBROS from '@mostrador/contrato/rubros.json';
 import { plantilla as buscarPlantilla } from '#lib/plantillas.ts';
 import { SITE } from '#lib/site.ts';
 import type { TiendaPublica } from '#lib/tienda/tipos.ts';
+import { generarVariantes, textoVariante, type Variante } from '#lib/tienda/variantes.ts';
 
 export type DbSandbox = DrizzleD1Database<Record<string, never>>;
 
@@ -227,6 +230,25 @@ export async function guardarCambio(
 			target: [cambios.sandboxId, cambios.entidad, cambios.clave],
 			set: { datos: fila.datos, borrado: false, actualizadoEn: ahora }
 		});
+}
+
+/** Borra varios cambios de una entidad en una sola consulta. */
+export async function borrarCambios(
+	db: DbSandbox,
+	sandboxId: string,
+	entidad: string,
+	claves: string[]
+) {
+	if (!claves.length) return;
+	await db
+		.delete(cambios)
+		.where(
+			and(
+				eq(cambios.sandboxId, sandboxId),
+				eq(cambios.entidad, entidad),
+				inArray(cambios.clave, claves)
+			)
+		);
 }
 
 /** Borra lo que el visitante cambió (vuelve al dato de ejemplo). */
@@ -514,7 +536,22 @@ export class DatosSandbox implements Datos {
 
 	async listar(lista: NombreLista, f: FiltrosLista): Promise<ListaGenerica> {
 		if (lista === 'clientes') return listarGenerico(await this.regClientes(), DEF_CLIENTES, f);
-		if (lista === 'productos') return listarGenerico(await this.regProductos(), DEF_PRODUCTOS, f);
+		if (lista === 'productos') {
+			const l = listarGenerico(await this.regProductos(), DEF_PRODUCTOS, f);
+			// Como la API Go: cada fila trae el resumen de sus variantes (las inactivas también).
+			const filas = (l.filas as unknown as RegProducto[]).map((r) => ({
+				...r,
+				variantes: r.variantes.map((v) => ({
+					id: v.id,
+					texto: textoVariante(r.opciones, v.valores),
+					sku: v.sku,
+					precio: v.precio,
+					stock: v.stock,
+					activa: v.activa
+				}))
+			}));
+			return { ...l, filas };
+		}
 		if (lista === 'inventario')
 			return listarGenerico(registrosInventario(await this.regProductos()), DEF_INVENTARIO, f);
 		if (lista === 'facturacion')
@@ -545,13 +582,24 @@ export class DatosSandbox implements Datos {
 		const d = await this.demo();
 		const ahora = Date.now();
 		const desde = inicioDelDia(ahora);
-		const nombres = new Map((await this.regProductos()).map((p) => [p.id, p.nombre]));
+		const nombres = new Map(
+			(await this.regProductos()).flatMap((p) => [
+				[p.id, p.nombre] as const,
+				...p.variantes.map(
+					(v) =>
+						[
+							claveStock(p.id, v.id),
+							`${p.nombre} (${textoVariante(p.opciones, v.valores)})`
+						] as const
+				)
+			])
+		);
 		const ventas: MovimientoStock[] = d.pedidos
 			.filter((p) => p.estado !== 'Cancelado' && p.creado >= desde && p.creado <= ahora)
 			.flatMap((p) =>
 				p.items.map((i) => ({
 					tipo: p.canal === 'pos' ? 'local' : p.canal === 'ml' ? 'ml' : 'web',
-					texto: `${p.canal === 'pos' ? 'Venta en local' : p.canal === 'ml' ? `Mercado Libre #${p.numero}` : `Venta #${p.numero}`} · ${i.nombre}`,
+					texto: `${p.canal === 'pos' ? 'Venta en local' : p.canal === 'ml' ? `Mercado Libre #${p.numero}` : `Venta #${p.numero}`} · ${i.nombre}${i.variante ? ` (${i.variante})` : ''}`,
 					cantidad: -i.cantidad,
 					en: new Date(p.creado).toISOString()
 				}))
@@ -568,6 +616,7 @@ export class DatosSandbox implements Datos {
 		return [...ventas, ...propios].sort((a, b) => b.en.localeCompare(a.en)).slice(0, 20);
 	}
 
+	/** Ajusta el stock de un producto sin opciones o de una variante (clave producto~variante). */
 	private async ajustar(productoId: string, q: number, motivo: Movimiento['motivo']) {
 		const actual = (await this.ajustesStock()).get(productoId) ?? 0;
 		const ahora = Date.now();
@@ -666,6 +715,12 @@ export class DatosSandbox implements Datos {
 		}
 		if (lista === 'inventario') {
 			const productos = await this.regProductos();
+			// Lo que tiene stock propio: los productos sin opciones y cada variante (producto~variante).
+			const unidades = productos.flatMap((p) =>
+				p.opciones.length
+					? p.variantes.map((v) => ({ id: claveStock(p.id, v.id), stock: v.stock }))
+					: [{ id: p.id, stock: p.stock }]
+			);
 			if (
 				accion === 'ajustar' &&
 				typeof valor === 'number' &&
@@ -673,7 +728,7 @@ export class DatosSandbox implements Datos {
 				Math.abs(valor) <= 10_000
 			) {
 				let n = 0;
-				for (const p of productos.filter((x) => ids.includes(x.id))) {
+				for (const p of unidades.filter((x) => ids.includes(x.id))) {
 					// No puede quedar stock negativo.
 					const q = Math.max(-p.stock, valor);
 					if (!q) continue;
@@ -684,7 +739,7 @@ export class DatosSandbox implements Datos {
 			}
 			if (accion === 'conteo' && Array.isArray(valor)) {
 				let n = 0;
-				const stock = new Map(productos.map((p) => [p.id, p.stock]));
+				const stock = new Map(unidades.map((p) => [p.id, p.stock]));
 				for (const c of valor as { id?: unknown; cantidad?: unknown }[]) {
 					const id = String(c?.id ?? '');
 					const cantidad = Number(c?.cantidad);
@@ -698,8 +753,9 @@ export class DatosSandbox implements Datos {
 				return n;
 			}
 			if (accion === 'ingreso' && typeof valor === 'number' && valor > 0 && valor <= 100_000) {
-				for (const id of ids) await this.ajustar(id, Math.round(valor), 'ingreso');
-				return ids.length;
+				const validos = ids.filter((id) => unidades.some((u) => u.id === id));
+				for (const id of validos) await this.ajustar(id, Math.round(valor), 'ingreso');
+				return validos.length;
 			}
 			// Pedir al proveedor, mover e imprimir códigos no cambian el stock.
 			return productos.filter((p) => ids.includes(p.id)).length;
@@ -788,6 +844,9 @@ export class DatosSandbox implements Datos {
 			sku: p.sku,
 			stock: p.stock,
 			foto: p.foto,
+			fotos: p.fotos,
+			opciones: p.opciones,
+			variantes: p.variantes,
 			canales: Object.fromEntries(
 				['web', 'ml', 'ig', 'google'].map((k) => [k, p.canales.includes(k)])
 			),
@@ -800,10 +859,63 @@ export class DatosSandbox implements Datos {
 	async guardarProducto(id: string | null, p: ProductoEditable): Promise<Producto | null> {
 		const cambios = await this.cambiosProductos();
 		const clave = id ?? `n${Date.now().toString(36)}`;
-		if (id && !(await this.regProductos()).some((x) => x.id === id)) return null;
+		const actual = id ? (await this.regProductos()).find((x) => x.id === id) : undefined;
+		if (id && !actual) return null;
 		const antes = cambios.get(clave) ?? {};
-		// El stock que se escribe en la ficha reemplaza al de ejemplo y a los ajustes.
-		if (p.stock !== undefined) await borrarCambio(this.db, this.sb.id, 'stock', clave);
+		// Galería (como la API Go): `fotos` la reemplaza (sin vacías ni repetidas); sin `fotos`, `foto`
+		// cambia la portada y deja el resto (null la vacía); sin ninguna, queda la que había.
+		const previa = actual?.fotos ?? [];
+		const fotos =
+			p.fotos !== undefined
+				? [...new Set(p.fotos.map((f) => f.trim()).filter(Boolean))].slice(0, 8)
+				: p.foto !== undefined
+					? p.foto === null
+						? []
+						: [p.foto, ...previa.slice(1).filter((f) => f !== p.foto)]
+					: previa;
+		// Opciones: sin mandar quedan las que había; [] las saca y el stock vuelve a ser editable.
+		const opciones =
+			p.opciones?.map((o) => ({
+				nombre: o.nombre.trim(),
+				valores: o.valores.map((v) => v.trim())
+			})) ??
+			actual?.opciones ??
+			[];
+		// Una variante por combinación: las que siguen conservan stock, precio, SKU y foto; las nuevas
+		// arrancan en 0 y activas; las que dejan de existir se van (sus pedidos guardaron el texto). Lo
+		// que manda el editor (identificado por los valores) pisa lo que había.
+		const nuevoId = (i: number) => `${clave}-n${Date.now().toString(36)}${i}`;
+		const variantes = generarVariantes(opciones, actual?.variantes ?? []).map((v, i): Variante => {
+			const e = p.variantes?.find((x) =>
+				opciones.every((o) => x.valores[o.nombre] === v.valores[o.nombre])
+			);
+			const r = e
+				? {
+						...v,
+						sku: e.sku?.trim() ?? v.sku,
+						precio: e.precio ?? null,
+						foto: e.foto ?? null,
+						stock: e.stock ?? v.stock,
+						activa: e.activa ?? v.activa
+					}
+				: v;
+			return {
+				...r,
+				id: r.id || nuevoId(i),
+				foto: r.foto && fotos.includes(r.foto) ? r.foto : null
+			};
+		});
+		// El stock que se escribe en la ficha reemplaza al de ejemplo y a los ajustes (el de cada
+		// variante ya viene con sus ajustes y ventas).
+		if (p.stock !== undefined || opciones.length)
+			await borrarCambio(this.db, this.sb.id, 'stock', clave);
+		if (actual?.variantes.length || variantes.length)
+			await borrarCambios(
+				this.db,
+				this.sb.id,
+				'stock',
+				[...(actual?.variantes ?? []), ...variantes].map((v) => claveStock(clave, v.id))
+			);
 		await guardarCambio(this.db, this.sb.id, 'producto', clave, {
 			...antes,
 			nombre: p.nombre,
@@ -812,8 +924,11 @@ export class DatosSandbox implements Datos {
 			precio: p.precio,
 			costo: p.costo ?? antes.costo,
 			sku: p.sku ?? antes.sku,
-			stock: p.stock ?? antes.stock,
-			foto: p.foto !== undefined ? p.foto : antes.foto,
+			stock: opciones.length ? antes.stock : (p.stock ?? antes.stock),
+			foto: fotos[0] ?? null,
+			fotos,
+			opciones,
+			variantes,
 			canales: p.canales ?? antes.canales,
 			publicado: true,
 			...(id ? {} : { nuevo: true, creado: Date.now() })
@@ -905,11 +1020,26 @@ export class DatosSandbox implements Datos {
 		const d = await this.base();
 		const productos = new Map((await this.regProductos()).map((p) => [p.id, p]));
 		const items: Pedido['items'] = [];
+		// Lo que se va a descontar, por clave de stock (dos líneas de la misma variante se suman).
+		const aDescontar = new Map<string, number>();
 		for (const i of n.items) {
 			const p = productos.get(i.productoId);
 			if (!p || !Number.isInteger(i.cantidad) || i.cantidad < 1) return 'invalido';
-			if (p.stock < i.cantidad) return 'sin-stock';
-			items.push({ productoId: p.id, nombre: p.nombre, cantidad: i.cantidad, precio: p.precio });
+			// Con opciones se vende por variante: tiene que ser de este producto y estar activa.
+			const v = p.opciones.length ? p.variantes.find((x) => x.id === i.varianteId) : undefined;
+			if (p.opciones.length ? !v?.activa : i.varianteId) return 'invalido';
+			const k = claveStock(p.id, v?.id);
+			const total = (aDescontar.get(k) ?? 0) + i.cantidad;
+			if ((v ? v.stock : p.stock) < total) return 'sin-stock';
+			aDescontar.set(k, total);
+			items.push({
+				productoId: p.id,
+				nombre: p.nombre,
+				cantidad: i.cantidad,
+				precio: v?.precio ?? p.precio,
+				varianteId: v?.id ?? null,
+				variante: v ? textoVariante(p.opciones, v.valores) : null
+			});
 		}
 		if (!items.length) return 'invalido';
 		const ahora = Date.now();
@@ -960,12 +1090,10 @@ export class DatosSandbox implements Datos {
 			pedido,
 			cliente
 		} satisfies PedidoNuevoDemo);
-		// La venta descuenta stock (el movimiento lo muestra el pedido).
+		// La venta descuenta stock, de la variante si tiene (el movimiento lo muestra el pedido).
 		const ajustes = await this.ajustesStock();
-		for (const i of items)
-			await guardarCambio(this.db, this.sb.id, 'stock', i.productoId, {
-				delta: (ajustes.get(i.productoId) ?? 0) - i.cantidad
-			});
+		for (const [k, q] of aDescontar)
+			await guardarCambio(this.db, this.sb.id, 'stock', k, { delta: (ajustes.get(k) ?? 0) - q });
 		return { numero, total: pedido.total };
 	}
 
@@ -2162,7 +2290,19 @@ export class DatosSandbox implements Datos {
 				foto: x.foto,
 				etiqueta:
 					delCatalogo.get(x.id)?.etiqueta ?? (x.stock > 0 && x.stock <= 3 ? 'Últimos' : null),
-				stock: x.stock
+				stock: x.stock,
+				fotos: x.fotos,
+				opciones: x.opciones,
+				// Sólo las activas, sin SKU.
+				variantes: x.variantes
+					.filter((v) => v.activa)
+					.map((v) => ({
+						id: v.id,
+						valores: v.valores,
+						precio: v.precio,
+						stock: v.stock,
+						foto: v.foto
+					}))
 			})),
 			masVendidos,
 			resenas,

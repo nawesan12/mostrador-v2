@@ -636,6 +636,10 @@ const MANEJADORES: Record<string, Manejador> = {
 		const p = await datos.producto(id);
 		if (!p) falla(`No existe el producto "${id}". Buscalo con listar_productos.`);
 		const antes = p!;
+		if ((stock !== undefined || sumar !== undefined) && antes.opciones?.length)
+			falla(
+				`"${antes.nombre}" tiene variantes (${antes.opciones.map((o) => o.nombre.toLowerCase()).join(', ')}): su stock se ajusta por variante en Inventario.`
+			);
 		const nuevoStock = sumar !== undefined ? (antes.stock ?? 0) + sumar : stock;
 		if (nuevoStock !== undefined && nuevoStock < 0)
 			falla(`El stock no puede quedar negativo (hay ${antes.stock ?? 0}).`);

@@ -52,12 +52,21 @@ describe('herramientas MCP', () => {
 
 	it('ajusta stock y precio, y valida los argumentos', async () => {
 		const c = await contexto();
-		const [prod] = datosDe(await llamar(c, 'listar_productos', { limite: 1 }))
-			.productos as unknown as { id: string; stock: number }[];
+		// En moda todo tiene talle o color: el stock de esos se ajusta por variante, no entero.
+		const [remera] = datosDe(await llamar(c, 'listar_productos', { limite: 1 }))
+			.productos as unknown as { id: string }[];
+		expect((await llamar(c, 'ajustar_producto', { id: remera.id, sumar_stock: 1 })).isError).toBe(
+			true
+		);
+		const prod = (await c.datos.guardarProducto(null, {
+			nombre: 'Gift card',
+			precio: 1000,
+			stock: 3
+		}))!;
 		const r = datosDe(
 			await llamar(c, 'ajustar_producto', { id: prod.id, sumar_stock: 5, precio: 12345 })
 		);
-		expect(r.stock).toEqual({ antes: prod.stock, ahora: prod.stock + 5 });
+		expect(r.stock).toEqual({ antes: 3, ahora: 8 });
 		expect((await c.datos.producto(prod.id))?.precio).toBe(12345);
 		expect((await llamar(c, 'ajustar_producto', { id: prod.id })).isError).toBe(true);
 		expect((await llamar(c, 'ajustar_producto', { id: prod.id, stock: -1 })).isError).toBe(true);

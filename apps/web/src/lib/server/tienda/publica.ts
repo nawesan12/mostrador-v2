@@ -43,7 +43,15 @@ export async function resolverTienda(
 		const r = await fetch(`${String(env.API_URL)}/v1/publico/tiendas/${slug}`);
 		if (r.status === 404) return null;
 		if (!r.ok) throw new Error(`API ${r.status}`);
-		return { tienda: (await r.json()) as TiendaPublica, datos: null, sandboxId: null };
+		const tienda = (await r.json()) as TiendaPublica;
+		// Una API sin variantes todavía: los productos se ven como sin opciones.
+		tienda.productos = tienda.productos.map((p) => ({
+			...p,
+			fotos: p.fotos ?? (p.foto ? [p.foto] : []),
+			opciones: p.opciones ?? [],
+			variantes: p.variantes ?? []
+		}));
+		return { tienda, datos: null, sandboxId: null };
 	}
 	const db = dbSandbox(env.SANDBOX);
 	const propio = await leer(db, cookie);
