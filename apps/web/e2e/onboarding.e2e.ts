@@ -47,7 +47,7 @@ test('el onboarding se recorre entero y termina en el panel con la demo armada',
 
 	// 5: plantilla desde la galería.
 	await seguir(page);
-	await page.getByRole('button', { name: /Ver las 16 plantillas/ }).click();
+	await page.getByRole('button', { name: /Ver las \d+ plantillas/ }).click();
 	const gal = page.getByRole('dialog');
 	await gal.getByRole('button', { name: /Moda/ }).first().click();
 	await gal.getByRole('button', { name: /^Ceibo/ }).click();
@@ -91,7 +91,7 @@ test('"Usar esta plantilla" de la landing arranca el onboarding con esa plantill
 }) => {
 	await page.goto('/');
 	await listo(page);
-	await page.getByRole('button', { name: /Ver las 16 plantillas/ }).click();
+	await page.getByRole('button', { name: /Ver las \d+ plantillas/ }).click();
 	await page
 		.getByRole('dialog')
 		.getByRole('link', { name: /Usar esta plantilla/ })

@@ -124,7 +124,7 @@ test('el modal de plantillas recorre, elige y lleva al registro con la plantilla
 }) => {
 	await page.goto('/');
 	await listo(page);
-	await page.getByRole('button', { name: /Ver las 16 plantillas/ }).click();
+	await page.getByRole('button', { name: /Ver las \d+ plantillas/ }).click();
 	const modal = page.getByRole('dialog');
 	await expect(modal).toBeVisible();
 	await expect(modal.getByText('Plantilla Ceibo')).toBeAttached();
@@ -132,7 +132,7 @@ test('el modal de plantillas recorre, elige y lleva al registro con la plantilla
 	await expect(modal.getByText('Plantilla Ceibo')).not.toBeAttached();
 	await page.keyboard.press('Escape');
 	await expect(modal).toBeHidden();
-	await page.getByRole('button', { name: /Ver las 16 plantillas/ }).click();
+	await page.getByRole('button', { name: /Ver las \d+ plantillas/ }).click();
 	await page
 		.getByRole('dialog')
 		.getByRole('link', { name: /Usar esta plantilla/ })
