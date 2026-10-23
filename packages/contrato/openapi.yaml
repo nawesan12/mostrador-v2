@@ -3270,8 +3270,8 @@ components:
       required: [dia, desde, hasta]
       properties:
         dia: { type: integer, minimum: 0, maximum: 6, description: '0 = domingo' }
-        desde: { type: string, pattern: '^([01]\d|2[0-3]):[0-5]\d$', description: 'Múltiplo de 15 min, menor que hasta' }
-        hasta: { type: string, pattern: '^(([01]\d|2[0-3]):[0-5]\d|24:00)$', description: 'Múltiplo de 15 min; se acepta 24:00' }
+        desde: { type: string, pattern: '^([01]\d|2[0-3]):(00|15|30|45)$', description: 'Múltiplo de 15 min, menor que hasta' }
+        hasta: { type: string, pattern: '^(([01]\d|2[0-3]):(00|15|30|45)|24:00)$', description: 'Múltiplo de 15 min; se acepta 24:00' }
     AjustesTurnos:
       type: object
       required: [activo, sena, anticipacionMin, diasVista, horario]
@@ -3289,7 +3289,7 @@ components:
         descripcion: { type: string, maxLength: 200 }
         precio: { type: integer, minimum: 1, description: 'Pesos enteros' }
         duracion: { type: integer, minimum: 15, maximum: 480, multipleOf: 15, description: 'Minutos' }
-        foto: { type: [string, 'null'] }
+        foto: { type: [string, 'null'], maxLength: 2048 }
         etiqueta: { type: [string, 'null'], maxLength: 20 }
         activo: { type: boolean }
         orden: { type: integer, minimum: 0 }
@@ -3307,8 +3307,8 @@ components:
       properties:
         nombre: { type: string, minLength: 2, maxLength: 40 }
         rol: { type: string, maxLength: 60 }
-        foto: { type: [string, 'null'] }
-        servicios: { type: array, items: { type: string }, description: 'Ids de los servicios que hace; vacío = todos' }
+        foto: { type: [string, 'null'], maxLength: 2048 }
+        servicios: { type: array, maxItems: 100, items: { type: string, pattern: '^[A-Za-z0-9_-]{1,64}$' }, description: 'Ids de los servicios que hace; vacío = todos' }
         activo: { type: boolean }
         orden: { type: integer, minimum: 0 }
     Profesional:
@@ -3355,24 +3355,24 @@ components:
       type: object
       required: [servicioId, profesionalId, inicio, nombre, telefono, email]
       properties:
-        servicioId: { type: string }
-        profesionalId: { type: string }
+        servicioId: { type: string, pattern: '^[A-Za-z0-9_-]{1,64}$' }
+        profesionalId: { type: string, pattern: '^[A-Za-z0-9_-]{1,64}$' }
         inicio: { type: string, format: date-time }
         nombre: { type: string, minLength: 2, maxLength: 80 }
         telefono: { type: string, maxLength: 20 }
-        email: { type: string, maxLength: 120 }
+        email: { type: string, maxLength: 120, description: 'Puede ir vacío desde el panel' }
         nota: { type: [string, 'null'], maxLength: 300 }
         forzar: { type: boolean, default: false, description: 'Reservar aunque se superponga' }
     ReservaTurno:
       type: object
       required: [servicioId, profesionalId, inicio, nombre, telefono, email]
       properties:
-        servicioId: { type: string }
-        profesionalId: { type: [string, 'null'], description: 'null = cualquiera (el primero libre por orden)' }
+        servicioId: { type: string, pattern: '^[A-Za-z0-9_-]{1,64}$' }
+        profesionalId: { type: [string, 'null'], pattern: '^[A-Za-z0-9_-]{1,64}$', description: 'null = cualquiera (el primero libre por orden)' }
         inicio: { type: string, format: date-time }
         nombre: { type: string, minLength: 2, maxLength: 80 }
         telefono: { type: string, maxLength: 20 }
-        email: { type: string, maxLength: 120 }
+        email: { type: string, format: email, maxLength: 120 }
     HorarioLibre:
       type: object
       required: [inicio, profesionalId]

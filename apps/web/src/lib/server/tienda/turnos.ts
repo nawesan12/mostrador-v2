@@ -100,18 +100,23 @@ export type Reserva = {
 export async function reservar(
 	r: TiendaResuelta,
 	b: Reserva,
-	esperar: (p: Promise<unknown>) => void
-): Promise<{ codigo: string; url?: string } | { error: string; estado: 400 | 409 }> {
+	esperar: (p: Promise<unknown>) => void,
+	/** IP de quien reserva: Go la usa (con la clave del BFF) para el tope de reservas. */
+	ip = ''
+): Promise<{ codigo: string; url?: string } | { error: string; estado: 400 | 409 | 429 }> {
 	if (!r.datos || !r.sandboxId) {
 		const res = await api(`/v1/publico/tiendas/${enc(r.tienda.slug)}/turnos`, {
 			method: 'POST',
-			headers: { 'content-type': 'application/json' },
+			headers: {
+				'content-type': 'application/json',
+				...(ip ? { 'x-mostrador-bff': String(env.CLAVE_BFF ?? ''), 'x-cliente-ip': ip } : {})
+			},
 			body: JSON.stringify(b)
 		});
 		if (!res.ok) {
 			const e = (await res.json().catch(() => null)) as { detail?: string } | null;
 			return {
-				estado: res.status === 409 ? 409 : 400,
+				estado: res.status === 409 ? 409 : res.status === 429 ? 429 : 400,
 				error: e?.detail ?? 'No pudimos reservar el turno. Probá de nuevo.'
 			};
 		}

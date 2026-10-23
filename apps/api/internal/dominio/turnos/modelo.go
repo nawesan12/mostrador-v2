@@ -25,6 +25,8 @@ var (
 	ErrSinSena     = errors.New("turnos: el turno no tiene seña pagada")
 	ErrSinCobros   = errors.New("turnos: la tienda no conectó Mercado Pago")
 	ErrMercadoPago = errors.New("turnos: Mercado Pago no respondió")
+	// ErrDevolucion: Mercado Pago no devolvió la seña (los errores de la base son internos).
+	ErrDevolucion = errors.New("turnos: Mercado Pago no devolvió la seña")
 )
 
 type tx interface {

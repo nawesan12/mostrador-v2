@@ -1,6 +1,7 @@
 package turnos
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -22,6 +23,11 @@ type Config struct {
 	Sitio string
 	Log   *slog.Logger
 	Ahora func() time.Time
+	// IP de quien reserva (la que manda el BFF con su clave) y el contador de intentos: tope de
+	// reservas públicas por IP y por teléfono, para que nadie ocupe la agenda a mano o con un script.
+	// nil = sin tope (tests).
+	IP        func(*http.Request) string
+	Permitido func(ctx context.Context, clave string, max int, ventana time.Duration) (bool, error)
 }
 
 func escribir(w http.ResponseWriter, estado int, v any) {
@@ -65,6 +71,10 @@ func Rutas(mux *http.ServeMux, pool tx, cfg Config) {
 			problema.Escribir(w, problema.Conflicto("sin_sena", "Este turno no tiene una seña pagada para devolver."))
 		case errors.Is(err, ErrSinCobros):
 			problema.Escribir(w, problema.Conflicto("sin_cobros", "La tienda todavía no conectó Mercado Pago."))
+		case errors.Is(err, ErrDevolucion):
+			log.Warn("turnos: Mercado Pago no devolvió la seña", "error", err)
+			problema.Escribir(w, &problema.Problema{Estado: http.StatusBadGateway, Codigo: "mercadopago",
+				Titulo: "Mercado Pago no respondió", Detalle: "No pudimos devolver la seña en Mercado Pago. Probá de nuevo en un rato."})
 		case errors.Is(err, ErrMercadoPago):
 			log.Warn("turnos: Mercado Pago no respondió", "error", err)
 			problema.Escribir(w, &problema.Problema{Estado: http.StatusBadGateway, Codigo: "mercadopago",
@@ -208,9 +218,6 @@ func Rutas(mux *http.ServeMux, pool tx, cfg Config) {
 			return
 		}
 		t, err := DevolverSena(r.Context(), pool, cfg.MP, id, r.PathValue("id"), ahora())
-		if err != nil && !errors.Is(err, ErrNoExiste) && !errors.Is(err, ErrSinSena) && !errors.Is(err, ErrSinCobros) {
-			err = errors.Join(ErrMercadoPago, err)
-		}
 		responder(w, http.StatusOK, t, err)
 	}))
 
@@ -226,7 +233,28 @@ func Rutas(mux *http.ServeMux, pool tx, cfg Config) {
 	})
 	mux.HandleFunc("POST /v1/publico/tiendas/{slug}/turnos", func(w http.ResponseWriter, r *http.Request) {
 		var b Reserva
-		if leer(w, r, &b) {
+		if !leer(w, r, &b) {
+			return
+		}
+		if cfg.Permitido != nil && cfg.IP != nil {
+			for _, l := range []struct {
+				clave string
+				max   int
+			}{{"turno:ip:" + cfg.IP(r), 10}, {"turno:tel:" + r.PathValue("slug") + ":" + b.Telefono, 3}} {
+				ok, err := cfg.Permitido(r.Context(), l.clave, l.max, time.Hour)
+				if err != nil {
+					errorDe(w, err)
+					return
+				}
+				if !ok {
+					w.Header().Set("Retry-After", "3600")
+					problema.Escribir(w, &problema.Problema{Estado: http.StatusTooManyRequests, Codigo: "demasiados",
+						Titulo: "Demasiadas reservas", Detalle: "Reservaste muchos turnos seguidos. Probá de nuevo en una hora o escribile a la tienda."})
+					return
+				}
+			}
+		}
+		{
 			res, err := Reservar(r.Context(), pool, cfg.MP, cfg.Sitio, r.PathValue("slug"), b, ahora())
 			responder(w, http.StatusCreated, res, err)
 		}

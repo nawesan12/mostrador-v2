@@ -389,4 +389,45 @@ func TestSenaDeTurno(t *testing.T) {
 	if _, err := turnos.DevolverSena(ctx, b.App, s, luna, l[0].ID, lunes8); !errors.Is(err, turnos.ErrSinSena) {
 		t.Fatalf("devolvió dos veces: %v", err)
 	}
+
+	// La seña llega tarde: la reserva ya venció y otra persona tomó el horario. El turno vencido no
+	// se confirma (sería un doble turno): queda cancelado con la seña pagada, para devolverla.
+	tarde, err := turnos.Reservar(ctx, b.App, s, s.Config.Sitio, "luna", turnos.Reserva{ServicioID: corte.ID, Inicio: "2026-11-02T11:00:00-03:00",
+		Nombre: "Tomás", Telefono: "1155550102", Email: "tomas@ejemplo.com"}, lunes8)
+	if err != nil {
+		t.Fatal(err)
+	}
+	refTarde := f.cuerpos["POST /checkout/preferences"]["external_reference"]
+	admin, err := pgx.Connect(ctx, b.AdminURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer admin.Close(ctx)
+	if _, err := admin.Exec(ctx, `UPDATE turnos SET vence_en = now() - interval '1 minute' WHERE codigo_publico = $1`, tarde.Codigo); err != nil {
+		t.Fatal(err)
+	}
+	otra, err := turnos.Reservar(ctx, b.App, s, s.Config.Sitio, "luna", turnos.Reserva{ServicioID: corte.ID, Inicio: "2026-11-02T11:00:00-03:00",
+		Nombre: "Paula", Telefono: "1155550103", Email: "paula@ejemplo.com"}, lunes8)
+	if err != nil {
+		t.Fatalf("el horario vencido no se liberó: %v", err)
+	}
+	f.pagos["557"] = map[string]any{"id": 557, "status": "approved", "external_reference": refTarde, "transaction_amount": 3600}
+	r = httptest.NewRequest(http.MethodPost, "/v1/webhooks/mercadopago?data.id=557&type=payment",
+		strings.NewReader(`{"type":"payment","action":"payment.created","user_id":778,"data":{"id":"557"}}`))
+	r.Header.Set("x-request-id", "req-3")
+	r.Header.Set("x-signature", firmar("whsec", "557", "req-3", ahora.UnixMilli()))
+	w = httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
+	if w.Code != http.StatusOK {
+		t.Fatalf("webhook tardío: %d", w.Code)
+	}
+	if _, err := wk.Pasada(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if v, _ := turnos.Ver(ctx, b.App, "luna", tarde.Codigo, lunes8); v.Estado != "cancelado" || !v.SenaPagada {
+		t.Fatalf("seña tardía: %+v", v)
+	}
+	if v, _ := turnos.Ver(ctx, b.App, "luna", otra.Codigo, lunes8); v.Estado != "reservado" {
+		t.Fatalf("el turno de la otra persona: %+v", v)
+	}
 }

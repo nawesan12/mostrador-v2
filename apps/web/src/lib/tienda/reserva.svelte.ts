@@ -3,6 +3,7 @@
  * todas las plantillas: cada una sólo la dibuja con sus piezas. Los horarios los pide al servidor
  * (/t/[tienda]/turnos/libres), que los calcula con lib/turnos/libres.ts o con Go.
  */
+import { browser } from '$app/env';
 import { diaAr, diaSemana, hace, senaDe, sumarDias, type Horario } from '#lib/turnos/libres.ts';
 import { DIAS_CORTOS, cuandoLargo, duracion, mesTitulo } from '#lib/turnos/formato.ts';
 import type { TurnosTienda } from './tipos.ts';
@@ -51,7 +52,8 @@ export class Reserva {
 			) / VENTANA
 		);
 		this.inicio = inicial.inicio ?? null;
-		if (this.servicioId) void this.cargar();
+		// En el servidor no: la URL es relativa y los horarios se piden al hidratar.
+		if (this.servicioId && browser) void this.cargar();
 	}
 
 	get servicio() {
@@ -165,8 +167,10 @@ export class Reserva {
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- local, sólo arma el pedido
 		const q = new URLSearchParams({ servicio: this.servicioId, dia: this.dia });
 		if (this.profesionalId) q.set('profesional', this.profesionalId);
-		const r = await fetch(`/t/${this.slug}/turnos/libres?${q}`).catch(() => null);
-		const h = r?.ok ? ((await r.json()) as Horario[]) : [];
+		// Si falla el pedido o la respuesta, sin horarios (y deja de cargar), no colgado.
+		const h = await fetch(`/t/${this.slug}/turnos/libres?${q}`)
+			.then((r) => (r.ok ? (r.json() as Promise<Horario[]>) : []))
+			.catch(() => [] as Horario[]);
 		if (n !== this.#pedido) return;
 		this.horarios = h;
 		this.cargando = false;

@@ -23,18 +23,22 @@ const Reserva = v.object({
 });
 
 export const actions: Actions = {
-	default: async ({ request, params, cookies, platform }) => {
+	default: async ({ request, params, cookies, platform, getClientAddress }) => {
 		const r = await resolverTienda(params.tienda, cookies.get(COOKIE));
 		if (!r || !r.tienda.turnos) error(404, 'Esta tienda no toma turnos online.');
 		if (r.tienda.vitrina)
 			return fail(409, { error: 'Es una tienda de ejemplo: no se reservan turnos de verdad.' });
 		const b = v.safeParse(Reserva, Object.fromEntries(await request.formData()));
 		if (!b.success) return fail(400, { error: b.issues[0].message });
+		// El tope de reservas lo pone Go (por IP y teléfono); en la demo cada reserva cae en el sandbox
+		// del propio visitante, así que no le ocupa la agenda a nadie.
+		const ip = request.headers.get('cf-connecting-ip') ?? getClientAddress();
 		// Precio, duración y seña salen del servicio en el servidor; el horario se vuelve a chequear.
 		const res = await reservar(
 			r,
 			{ ...b.output, profesionalId: b.output.profesionalId || null },
-			(p) => platform?.ctx?.waitUntil(p)
+			(p) => platform?.ctx?.waitUntil(p),
+			ip
 		);
 		if ('error' in res) return fail(res.estado, { error: res.error });
 		if (res.url && /^https:\/\/(www\.)?mercadopago\.com(\.ar)?\//.test(res.url))
