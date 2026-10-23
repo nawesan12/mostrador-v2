@@ -12,8 +12,6 @@
 	"routes": [{ "pattern": "mostrador.iamnaw.dev", "custom_domain": true }],
 	"workers_dev": false,
 	"preview_urls": false,
-	// Cada PR sube una versión con alias pr-N: https://pr-N-mostrador.<subdominio>.workers.dev
-	"preview_urls": true,
 	"observability": { "enabled": true },
 	// Sandbox de la demo (DATA_SOURCE=sandbox). En desarrollo se usa la D1 local (sin "remote"):
 	// las pruebas nunca tocan la base real.
