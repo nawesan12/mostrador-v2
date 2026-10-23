@@ -9,6 +9,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ventas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
@@ -134,7 +135,13 @@ func ObtenerTablero(ctx context.Context, pool interface {
 	t.Resenas.Nuevas, t.Envios.Retiros = []any{}, []any{}
 	t.Hornero.CostoMensaje, t.Hornero.IdeasHechas = 120, []string{}
 	err = pool.EnTienda(ctx, tiendaID, func(tx pgx.Tx) error {
-		return tx.QueryRow(ctx, `SELECT meta_mensual FROM tiendas WHERE id = $1`, tiendaID).Scan(&t.Meta.Objetivo)
+		if err := tx.QueryRow(ctx, `SELECT meta_mensual FROM tiendas WHERE id = $1`, tiendaID).Scan(&t.Meta.Objetivo); err != nil {
+			return err
+		}
+		// Carritos abandonados de la semana para recordar (Hornero los ofrece en el tablero).
+		return tx.QueryRow(ctx, `SELECT count(*), coalesce(sum(total), 0), bool_or(recordado_en IS NOT NULL) IS TRUE
+			FROM carritos WHERE tienda_id = $1 AND recuperado_en IS NULL AND actualizado > now() - interval '7 days'`, tiendaID).
+			Scan(&t.Hornero.Carritos, &t.Hornero.CarritosMonto, &t.Hornero.Recordados)
 	})
 	return t, err
 }
@@ -233,12 +240,18 @@ func rutasTablero(mux *http.ServeMux, pool interface {
 		}
 		problema.Escribir(w, problema.NoEncontrado("Esa idea no está disponible para tu tienda."))
 	})
-	// Sin carritos todavía (llegan con su dominio): no hay a quién recordarle nada.
+	// Recordar a todos los carritos abandonados de la semana que no se recordaron hoy.
 	mux.HandleFunc("POST /v1/panel/carritos/recordar", func(w http.ResponseWriter, r *http.Request) {
-		if tienda(r) == "" {
+		id := tienda(r)
+		if id == "" {
 			problema.Escribir(w, problema.SinSesion())
 			return
 		}
-		escribir(w, map[string]int{"enviados": 0})
+		n, err := ventas.RecordarTodos(r.Context(), pool, id, time.Now())
+		if err != nil {
+			problema.Escribir(w, problema.Interno())
+			return
+		}
+		escribir(w, map[string]int{"enviados": n})
 	})
 }

@@ -6,6 +6,7 @@ package ventas
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"time"
 
@@ -90,7 +91,12 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, pregu
 			problema.Escribir(w, problema.Interno())
 			return
 		}
-		escribir(w, map[string]any{"carritos": []any{}, "abiertos": 0, "monto": 0, "recuperado": 0, "tasa": 0,
+		cs, abiertos, monto, recuperado, tasa, err := CarritosPanel(r.Context(), pool, id, time.Now())
+		if err != nil {
+			problema.Escribir(w, problema.Interno())
+			return
+		}
+		escribir(w, map[string]any{"carritos": cs, "abiertos": abiertos, "monto": monto, "recuperado": recuperado, "tasa": tasa,
 			"costoMensaje": 120, "automaticos": a})
 	}))
 	mux.HandleFunc("PUT /v1/panel/carritos", con(func(w http.ResponseWriter, r *http.Request, id string) {
@@ -136,7 +142,17 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, pregu
 		}
 		w.WriteHeader(http.StatusNoContent)
 	}))
-	mux.HandleFunc("POST /v1/panel/carritos/{id}/recordar", con(func(w http.ResponseWriter, _ *http.Request, _ string) {
-		problema.Escribir(w, problema.NoEncontrado("Ese carrito no existe."))
+	mux.HandleFunc("POST /v1/panel/carritos/{id}/recordar", con(func(w http.ResponseWriter, r *http.Request, id string) {
+		err := RecordarCarrito(r.Context(), pool, id, r.PathValue("id"), time.Now())
+		switch {
+		case errors.Is(err, ErrNoExisteCarrito):
+			problema.Escribir(w, problema.NoEncontrado("Ese carrito no existe."))
+		case errors.Is(err, ErrRecienRecordado):
+			problema.Escribir(w, problema.Conflicto("recordado", "Ya le escribiste hoy: esperá un día para no cansar."))
+		case err != nil:
+			problema.Escribir(w, problema.Interno())
+		default:
+			w.WriteHeader(http.StatusNoContent)
+		}
 	}))
 }

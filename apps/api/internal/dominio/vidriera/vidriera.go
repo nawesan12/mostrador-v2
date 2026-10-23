@@ -18,6 +18,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ventas"
 )
 
 var (
@@ -322,6 +323,8 @@ func Comprar(ctx context.Context, pool tx, mp Pagador, sitio, slug string, c Com
 	if err != nil {
 		return Resultado{}, err
 	}
+	// Compró: su carrito abandonado (si había) queda recuperado.
+	_ = pool.EnTienda(ctx, id, func(t pgx.Tx) error { return ventas.CarritoRecuperado(ctx, t, c.Email) })
 	r := Resultado{Numero: numero, Codigo: n.CodigoPublico, Total: total}
 	if c.Pago == "mercadopago" {
 		r.URL, err = mp.PagarPedido(ctx, id, numero, fmt.Sprintf("%s/t/%s/pedido/%s", sitio, slug, r.Codigo))
