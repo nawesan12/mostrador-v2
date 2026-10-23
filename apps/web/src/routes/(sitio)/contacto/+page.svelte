@@ -28,20 +28,8 @@
 	};
 
 	const CANALES = [
-		[I.logosWhatsappIcon, 'WhatsApp', '11 5555-0100', 'Respondemos en minutos, de 8 a 22 h'],
 		[I.phEnvelopeSimpleFill, 'Email', 'ayuda@mostradorapp.com.ar', 'Respuesta en menos de 24 h'],
-		[
-			I.phChatsCircleFill,
-			'Chat del panel',
-			'Hablá con Hornero o con una persona',
-			'Disponible 24/7'
-		],
-		[
-			I.phMapPinFill,
-			'Oficina',
-			'Av. Corrientes 1234, piso 8, CABA',
-			'Lunes a viernes de 10 a 18 h, con turno'
-		]
+		[I.phChatsCircleFill, 'Chat del panel', 'Hablá con Hornero desde tu panel', 'Disponible 24/7']
 	] as const;
 	const CARAS = [
 		'1531058240690-006c446962d8',
@@ -99,10 +87,7 @@
 				<div class="exito" role="status">
 					<img src="/hornero/celebrando.png" alt="" width="140" height="140" />
 					<div class="ex-t">¡Listo, {form && 'nombre' in form ? form.nombre : ''}!</div>
-					<p>
-						Martín, de ventas, te escribe por WhatsApp en menos de 2 horas hábiles. Mientras tanto,
-						podés crear tu tienda gratis.
-					</p>
+					<p>Te respondemos en menos de 24 h. Mientras tanto, podés crear tu tienda&nbsp;gratis.</p>
 					<div class="ex-acc">
 						<a href="/onboarding">Crear mi tienda</a>
 						<button type="button" onclick={() => (otra = true)}>Enviar otra consulta</button>
