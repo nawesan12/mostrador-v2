@@ -3,6 +3,9 @@
 	import { goto } from '$app/navigation';
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
+	import FormResena from '../FormResena.svelte';
+	import PreguntasProducto from '../PreguntasProducto.svelte';
+	import type { TemaOpiniones } from '../opiniones.ts';
 	import { carritoDe } from '../carrito.svelte.ts';
 	import CampoCupon from '../CampoCupon.svelte';
 	import { CuponCheckout, totales } from '../cupon.svelte.ts';
@@ -54,6 +57,8 @@
 			nombre: string;
 			alias: string | null;
 			esCbu?: boolean;
+			/** El código del pedido: con él, la reseña queda con compra. */
+			codigo?: string;
 		} | null;
 		/** La confirmación de un turno (pagina 'turno'). */
 		turno?: import('../tipos.ts').TurnoPublico | null;
@@ -459,6 +464,21 @@
 				]
 			: [])
 	]);
+	// Reseñas y preguntas con las piezas de Andes: Sora en los títulos, tarjetas blancas redondeadas.
+	const tema: TemaOpiniones = {
+		texto: '#0E1116',
+		suave: '#69717E',
+		campo: '#F3F5F8',
+		tarjeta: '#fff',
+		borde: 'rgba(14,17,22,.12)',
+		acento: '#0E1116',
+		sobreAcento: '#fff',
+		estrella: '#F5A524',
+		radio: '14px',
+		fuente: "'Instrument Sans', sans-serif",
+		titulos: "'Sora', sans-serif",
+		pesoTitulos: 700
+	};
 	const estrellas = (n: number) =>
 		Array.from({ length: 5 }, (_, i) =>
 			n >= i + 1 ? I.phStarFill : n >= i + 0.5 ? I.phStarHalfFill : I.phStar
@@ -930,11 +950,14 @@
 									<div style="display:flex;align-items:center;gap:10px">
 										<div style="flex:1;min-width:0">
 											<div style="font-size:14px;font-weight:700">{r.autor}</div>
-											<div
-												style="font-size:12px;color:#14894B;font-weight:600;display:flex;align-items:center;gap:4px"
-											>
-												<Icon icon={I.phSealCheckFill} size={13} />Compró {r.producto}
-											</div>
+											{#if r.conCompra}<div
+													style="font-size:12px;color:#14894B;font-weight:600;display:flex;align-items:center;gap:4px"
+												>
+													<Icon icon={I.phSealCheckFill} size={13} />Compra verificada{#if r.producto}
+														· {r.producto}{/if}
+												</div>{:else if r.producto}<div style="font-size:12px;color:#69717E">
+													Sobre {r.producto}
+												</div>{/if}
 										</div>
 										<span style="display:flex;color:#F5A524;flex:none"
 											>{#each estrellas(r.estrellas) as e, j (j)}<Icon
@@ -944,6 +967,11 @@
 										>
 									</div>
 									<p style="margin:0;font-size:15px;line-height:1.5">{r.texto}</p>
+									{#if r.respuesta}<div
+											style="padding:12px;border-radius:14px;background:#F3F5F8;font-size:13.5px;line-height:1.5;color:#3B4250"
+										>
+											<b style="color:#0E1116">Respuesta de {tienda.nombre}</b><br />{r.respuesta}
+										</div>{/if}
 									{#if pr?.foto}<div style="display:flex;gap:6px">
 											<img
 												src={img(pr.foto, 140, 140)}
@@ -1268,6 +1296,19 @@
 										</p>{/if}
 								</div>{/each}
 						</div>
+					</div>
+				</section>
+				<section style="padding:clamp(28px,4cqw,48px) clamp(14px,3cqw,36px) 0">
+					<div
+						style="max-width:820px;padding:clamp(18px,3cqw,28px);border-radius:24px;background:#fff"
+					>
+						<PreguntasProducto
+							slug={tienda.slug}
+							productoId={producto.id}
+							preguntas={tienda.preguntas}
+							tema={{ ...tema, tarjeta: 'transparent' }}
+							titulo="Preguntas sobre este producto"
+						/>
 					</div>
 				</section>
 				{#if related.length}
@@ -2239,6 +2280,9 @@
 							style="display:inline-block;margin-top:22px;text-decoration:none;padding:15px 24px;border-radius:14px;background:#0E1116;color:#fff;font:700 14.5px 'Instrument Sans'"
 							>Volver a la tienda</a
 						>
+					</div>
+					<div style="margin-top:16px">
+						<FormResena slug={tienda.slug} {tema} codigo={pedido.codigo} nombre={pedido.nombre} />
 					</div>
 				</section>
 			{/if}

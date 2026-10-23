@@ -29,7 +29,12 @@ export const load: PageServerLoad = async ({ params, cookies, url }) => {
 		// Los datos para transferir son los que cargó la tienda (nunca inventados). Sin alias, el CBU/CVU.
 		const tr = c.pago === 'transferencia';
 		return {
-			pedido: { ...c, alias: tr ? (c.alias ?? c.cbu) : null, esCbu: tr && !c.alias && !!c.cbu }
+			pedido: {
+				...c,
+				codigo: params.codigo,
+				alias: tr ? (c.alias ?? c.cbu) : null,
+				esCbu: tr && !c.alias && !!c.cbu
+			}
 		};
 	}
 	const numero = Number(params.codigo.split('-')[0]);
@@ -48,6 +53,7 @@ export const load: PageServerLoad = async ({ params, cookies, url }) => {
 	return {
 		pedido: {
 			numero,
+			codigo: params.codigo,
 			total,
 			pago,
 			nombre: p.cliente.split(' ')[0],

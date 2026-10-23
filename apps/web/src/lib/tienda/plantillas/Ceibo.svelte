@@ -3,6 +3,9 @@
 	import { goto } from '$app/navigation';
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
+	import FormResena from '../FormResena.svelte';
+	import PreguntasProducto from '../PreguntasProducto.svelte';
+	import type { TemaOpiniones } from '../opiniones.ts';
 	import { carritoDe } from '../carrito.svelte.ts';
 	import CampoCupon from '../CampoCupon.svelte';
 	import { CuponCheckout, totales } from '../cupon.svelte.ts';
@@ -53,6 +56,8 @@
 			nombre: string;
 			alias: string | null;
 			esCbu?: boolean;
+			/** El código del pedido: con él, la reseña queda con compra. */
+			codigo?: string;
 		} | null;
 		/** La confirmación de un turno (pagina 'turno'). */
 		turno?: import('../tipos.ts').TurnoPublico | null;
@@ -301,6 +306,20 @@
 		})),
 		{ t: 'Nosotros', href: `${base}/nosotros`, on: pagina === 'nosotros' }
 	]);
+	// Reseñas y preguntas con las piezas de Ceibo: serif para los títulos, esquinas de 2 px.
+	const tema: TemaOpiniones = {
+		texto: '#1C1A17',
+		suave: '#6E655C',
+		campo: '#F4EFEA',
+		tarjeta: '#EDE6DE',
+		borde: 'rgba(28,26,23,.14)',
+		acento: '#1C1A17',
+		sobreAcento: '#F4EFEA',
+		radio: '2px',
+		fuente: "'Instrument Sans', sans-serif",
+		titulos: "'Instrument Serif', serif",
+		pesoTitulos: 400
+	};
 	const estrellas = (n: number) =>
 		Array.from({ length: 5 }, (_, i) =>
 			n >= i + 1 ? I.phStarFill : n >= i + 0.5 ? I.phStarHalfFill : I.phStar
@@ -577,8 +596,19 @@
 										“{r.texto}”
 									</p>
 									<div style="margin-top:8px;font-size:12.5px;color:#6E655C">
-										{r.autor} · compró {r.producto}
+										{r.autor}{#if r.producto}
+											· {r.conCompra ? 'compró' : 'sobre'} {r.producto}{/if}
 									</div>
+									{#if r.conCompra}<div
+											style="margin-top:6px;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:#2F6B47"
+										>
+											<Icon icon={I.phSealCheckFill} size={13} />Compra verificada
+										</div>{/if}
+									{#if r.respuesta}<div
+											style="margin-top:10px;padding-left:10px;border-left:2px solid #1C1A17;font-size:13px;line-height:1.5;color:#4A433C"
+										>
+											<b style="color:#1C1A17">Respuesta de {tienda.nombre}</b><br />{r.respuesta}
+										</div>{/if}
 								</div>
 							</div>
 						{/each}
@@ -844,6 +874,15 @@
 						</div>
 					</div>
 				</div>
+			</section>
+			<section style="padding:clamp(48px,7cqw,90px) clamp(16px,4cqw,48px) 0;max-width:820px">
+				<PreguntasProducto
+					slug={tienda.slug}
+					productoId={producto.id}
+					preguntas={tienda.preguntas}
+					tema={{ ...tema, tarjeta: 'transparent' }}
+					titulo="Preguntas sobre este producto"
+				/>
 			</section>
 			{#if related.length}
 				<section style="padding:clamp(56px,8cqw,100px) clamp(16px,4cqw,48px)">
@@ -1762,6 +1801,9 @@
 					style="display:inline-block;margin-top:28px;text-decoration:none;padding:15px 26px;border-radius:2px;background:#1C1A17;color:#F4EFEA;font:600 14px 'Instrument Sans';letter-spacing:.04em"
 					>Volver a la tienda</a
 				>
+				<div style="margin-top:clamp(40px,6cqw,64px)">
+					<FormResena slug={tienda.slug} {tema} codigo={pedido.codigo} nombre={pedido.nombre} />
+				</div>
 			</section>
 		{/if}
 

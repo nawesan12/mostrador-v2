@@ -5,6 +5,9 @@
 	import { untrack } from 'svelte';
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
+	import FormResena from '../FormResena.svelte';
+	import PreguntasProducto from '../PreguntasProducto.svelte';
+	import type { TemaOpiniones } from '../opiniones.ts';
 	import { carritoDe } from '../carrito.svelte.ts';
 	import CampoCupon from '../CampoCupon.svelte';
 	import { CuponCheckout, totales } from '../cupon.svelte.ts';
@@ -65,6 +68,8 @@
 			nombre: string;
 			alias: string | null;
 			esCbu?: boolean;
+			/** El código del pedido: con él, la reseña queda con compra. */
+			codigo?: string;
 		} | null;
 		/** La confirmación de un turno (pagina 'turno'). */
 		turno?: TurnoPublico | null;
@@ -323,6 +328,22 @@
 		})),
 		{ t: 'Nosotros', href: `${base}/nosotros`, on: pagina === 'nosotros' }
 	]);
+	// Reseñas y preguntas con las piezas de Tijera: Syne en los títulos, violeta, botones de píldora.
+	const tema: TemaOpiniones = {
+		texto: '#1E1B2E',
+		suave: '#5A566B',
+		campo: '#F6F4F1',
+		tarjeta: '#fff',
+		borde: 'rgba(30,27,46,.12)',
+		acento: '#1E1B2E',
+		sobreAcento: '#fff',
+		estrella: '#E3A93B',
+		radio: '12px',
+		radioBoton: '999px',
+		fuente: "'Instrument Sans', system-ui, sans-serif",
+		titulos: "'Syne', sans-serif",
+		pesoTitulos: 800
+	};
 	const estrellas = (n: number) =>
 		Array.from({ length: 5 }, (_, i) =>
 			n >= i + 1 ? I.phStarFill : n >= i + 0.5 ? I.phStarHalfFill : I.phStar
@@ -812,8 +833,19 @@
 									</div>
 									<p style="margin:8px 0 0;font-size:15px;line-height:1.45">“{r.texto}”</p>
 									<div style="margin-top:8px;font-size:12.5px;color:#5A566B">
-										{r.autor} · {r.producto}
+										{r.autor}{#if r.producto}
+											· {r.conCompra ? 'compró' : 'sobre'} {r.producto}{/if}
 									</div>
+									{#if r.conCompra}<span
+											style="margin-top:8px;display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;background:#EEEAFE;color:#5B3FD6;font-size:11.5px;font-weight:700"
+											><Icon icon={I.phSealCheckFill} size={13} />Compra verificada</span
+										>{/if}
+									{#if r.respuesta}<div
+											style="margin-top:10px;padding:12px 14px;border-radius:16px;background:#F6F4F1;font-size:13px;line-height:1.5;color:#4A4659"
+										>
+											<b style="display:block;color:#1E1B2E">Respuesta de {tienda.nombre}</b
+											>{r.respuesta}
+										</div>{/if}
 								</div>
 							</div>
 						{/each}
@@ -1523,6 +1555,17 @@
 									</p>{/if}
 							</div>{/each}
 					</div>
+					<div
+						style="margin-top:12px;padding:18px 14px;border-radius:20px;background:#fff;box-shadow:0 1px 2px rgba(30,27,46,.06)"
+					>
+						<PreguntasProducto
+							slug={tienda.slug}
+							productoId={producto.id}
+							preguntas={tienda.preguntas}
+							tema={{ ...tema, tarjeta: 'transparent' }}
+							titulo="Preguntas"
+						/>
+					</div>
 				</div>
 			</section>
 			{#if related.length}
@@ -1980,6 +2023,9 @@
 					style="display:inline-block;margin-top:28px;padding:16px 26px;border-radius:999px;background:#1E1B2E;color:#fff;font:700 15px 'Instrument Sans';text-decoration:none"
 					>Volver a la tienda</a
 				>
+				<div style="margin-top:clamp(36px,5cqw,56px)">
+					<FormResena slug={tienda.slug} {tema} codigo={pedido.codigo} nombre={pedido.nombre} />
+				</div>
 			</section>
 		{/if}
 

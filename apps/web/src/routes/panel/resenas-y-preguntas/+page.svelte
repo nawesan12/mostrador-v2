@@ -8,13 +8,17 @@
 	import { hace } from '#lib/panel/listas/clientes.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 
-	/** Reseñas y preguntas (design/PanelVentas.dc.html): responder preguntas de Mercado Libre y ver las reseñas. */
+	/**
+	 * Reseñas y preguntas (design/PanelVentas.dc.html): responder las preguntas de Mercado Libre y de
+	 * la tienda online, y moderar las reseñas (con compra o sin compra; ocultar, nunca borrar).
+	 */
 	let { data } = $props();
 	const ui = getUi();
 	let tab = $state<'q' | 'r'>('q');
 	const pendientes = $derived(data.preguntas.filter((p) => !p.respuesta).length);
 	let editando = $state<string | null>(null);
 	let texto = $state('');
+	const deTienda = (id: string) => id.startsWith('t-');
 
 	async function publicar(id: string, respuesta: string, producto: string) {
 		const r = await fetch(`/panel/resenas-y-preguntas/${id}`, {
@@ -25,7 +29,47 @@
 		if (!r.ok) return ui.toast({ k: 'err', title: 'No se publicó', desc: 'Revisá la respuesta.' });
 		editando = null;
 		await invalidateAll();
-		ui.toast({ k: 'ml', title: 'Respuesta publicada', desc: `${producto} · Mercado Libre` });
+		ui.toast(
+			deTienda(id)
+				? { k: 'ok', title: 'Respuesta publicada', desc: `${producto} · Tu tienda online` }
+				: { k: 'ml', title: 'Respuesta publicada', desc: `${producto} · Mercado Libre` }
+		);
+	}
+
+	// Reseñas: ocultar o mostrar (con Deshacer) y responder en público.
+	let respondiendo = $state<string | null>(null);
+	let respuesta = $state('');
+	async function accion(id: string, a: 'ocultar' | 'mostrar' | 'responder', r = '') {
+		const res = await fetch(`/panel/resenas-y-preguntas/resena/${id}`, {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ accion: a, respuesta: r })
+		});
+		if (!res.ok) {
+			ui.toast({ k: 'err', title: 'No se pudo', desc: 'Probá de nuevo en un rato.' });
+			return false;
+		}
+		await invalidateAll();
+		return true;
+	}
+	async function ocultar(id: string, oculta: boolean) {
+		if (!(await accion(id, oculta ? 'mostrar' : 'ocultar'))) return;
+		ui.undoable(
+			oculta ? 'Reseña visible otra vez' : 'Reseña oculta',
+			oculta ? 'Se ve de nuevo en tu tienda.' : 'No se ve en tu tienda. No se borró.',
+			() => {
+				accion(id, oculta ? 'ocultar' : 'mostrar');
+			}
+		);
+	}
+	async function responderResena(id: string) {
+		if (!(await accion(id, 'responder', respuesta))) return;
+		respondiendo = null;
+		ui.toast({
+			k: 'ok',
+			title: respuesta.trim() ? 'Respuesta publicada' : 'Respuesta quitada',
+			desc: respuesta.trim() ? 'Se ve debajo de la reseña, en tu tienda.' : undefined
+		});
 	}
 	const dias = (iso: string) => (Date.now() - Date.parse(iso)) / 86_400_000;
 	const cuando = (iso: string) => {
@@ -63,15 +107,41 @@
 					<div class="q-cab">
 						{#if q.foto}<img src={unsplash(q.foto, 96, '&h=96')} alt="" />{/if}
 						<span class="q-txt"
-							><span class="q-s"><span class="ml">ML</span>{q.producto} · {cuando(q.creada)}</span
+							><span class="q-s"
+								>{#if deTienda(q.id)}<span class="tn">Tienda</span>{:else}<span class="ml">ML</span
+									>{/if}{q.producto} · {cuando(q.creada)}</span
 							><span class="q-q">{q.pregunta}</span></span
 						>
 					</div>
 					{#if q.respuesta}
 						<div class="publicada">
-							<Icon icon={I.phCheckCircleFill} size={15} />Publicada en Mercado Libre
+							<Icon icon={I.phCheckCircleFill} size={15} />Publicada en {deTienda(q.id)
+								? 'tu tienda'
+								: 'Mercado Libre'}
 						</div>
 						<div class="r-txt">{q.respuesta}</div>
+					{:else if !q.sugerida}
+						<!-- Las de la tienda online no traen sugerencia: se responden escribiendo. -->
+						<div class="sugerida propia">
+							<label class="s-t" for="r-{q.id}">Tu respuesta (se ve en la ficha)</label>
+							<textarea
+								id="r-{q.id}"
+								value={editando === q.id ? texto : ''}
+								oninput={(e) => {
+									editando = q.id;
+									texto = e.currentTarget.value;
+								}}
+								maxlength="1000"
+								placeholder="¡Hola! Sí, …"></textarea>
+							<div class="s-acc">
+								<button
+									type="button"
+									class="pub"
+									disabled={editando !== q.id || texto.trim().length < 2}
+									onclick={() => publicar(q.id, texto, q.producto)}>Publicar</button
+								>
+							</div>
+						</div>
 					{:else}
 						<div class="sugerida">
 							<div class="s-t">✦ Respuesta de Hornero</div>
@@ -125,8 +195,9 @@
 				</div>
 			</div>
 			<div class="lista">
-				{#each data.resenas.slice(0, 20) as r, i (i)}
-					<div class="tarjeta resena">
+				{#each data.resenas.slice(0, 30) as r (r.id)}
+					{@const sospechosa = r.estrellas === 1 && !r.conCompra}
+					<div class="tarjeta resena" class:oculta={r.oculta} class:sospechosa>
 						<div class="re-cab">
 							<span class="estrellas" aria-label="{r.estrellas} estrellas"
 								>{'★'.repeat(r.estrellas)}{'☆'.repeat(5 - r.estrellas)}</span
@@ -134,7 +205,56 @@
 								>{hace(dias(r.creada))}</span
 							>
 						</div>
-						<div class="re-t">{r.texto}</div>
+						<div class="re-chips">
+							{#if r.conCompra}<span class="chip-estado ok"
+									><Icon icon={I.phSealCheckFill} size={13} />Compra verificada</span
+								>{:else}<span class="chip-estado sin">Sin compra</span>{/if}
+							{#if r.oculta}<span class="chip-estado oc"
+									><Icon icon={I.phEyeSlash} size={13} />Oculta en la tienda</span
+								>{/if}
+							{#if r.producto}<span class="re-p">{r.producto}</span>{/if}
+						</div>
+						{#if r.texto}<div class="re-t">{r.texto}</div>{/if}
+						{#if sospechosa && !r.oculta}
+							<div class="aviso">
+								Una estrella y sin compra: no hay un pedido detrás. No se borra sola; si no es de un
+								cliente, podés ocultarla.
+							</div>
+						{/if}
+						{#if respondiendo === r.id}
+							<div class="sugerida propia">
+								<label class="s-t" for="rr-{r.id}">Tu respuesta pública</label>
+								<textarea id="rr-{r.id}" bind:value={respuesta} maxlength="1000"></textarea>
+								<div class="s-acc">
+									<button type="button" class="pub" onclick={() => responderResena(r.id)}
+										>Publicar</button
+									><button type="button" class="ed" onclick={() => (respondiendo = null)}
+										>Cancelar</button
+									>
+								</div>
+							</div>
+						{:else if r.respuesta}
+							<div class="re-r"><b>Tu respuesta</b>{r.respuesta}</div>
+						{/if}
+						{#if respondiendo !== r.id}
+							<div class="re-acc">
+								<button
+									type="button"
+									class="ed"
+									onclick={() => {
+										respondiendo = r.id;
+										respuesta = r.respuesta ?? '';
+									}}
+									><Icon icon={I.phChatCircleDotsFill} size={14} />{r.respuesta
+										? 'Editar respuesta'
+										: 'Responder públicamente'}</button
+								><button type="button" class="ed" onclick={() => ocultar(r.id, r.oculta)}
+									><Icon icon={r.oculta ? I.phEye : I.phEyeSlash} size={14} />{r.oculta
+										? 'Mostrar'
+										: 'Ocultar'}</button
+								>
+							</div>
+						{/if}
 					</div>
 				{/each}
 			</div>
@@ -390,6 +510,109 @@
 		margin-top: 6px;
 		font-size: 14px;
 		line-height: 1.5;
+	}
+	.tn {
+		font-size: 8px;
+		font-weight: 800;
+		padding: 2px 4px;
+		border-radius: 4px;
+		background: var(--tx);
+		color: var(--sf);
+		text-transform: uppercase;
+	}
+	.propia {
+		background: var(--sf2, rgba(127, 127, 127, 0.06));
+		border-color: var(--ln2);
+	}
+	.propia .s-t {
+		display: block;
+		color: var(--tx);
+	}
+	.pub:disabled {
+		opacity: 0.5;
+	}
+	.re-chips {
+		margin-top: 8px;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		flex-wrap: wrap;
+	}
+	.re-chips .chip-estado::before {
+		display: none;
+	}
+	.chip-estado.ok {
+		--chip-bg: rgba(47, 143, 99, 0.12);
+		--chip-fg: #2f8f63;
+	}
+	.chip-estado.sin {
+		--chip-bg: var(--chip);
+		--chip-fg: var(--mu);
+	}
+	.chip-estado.oc {
+		--chip-bg: var(--chip);
+		--chip-fg: var(--tx);
+	}
+	.re-p {
+		font-size: 12.5px;
+		color: var(--mu);
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.resena.oculta > :not(.re-acc) {
+		opacity: 0.55;
+	}
+	.resena.sospechosa {
+		box-shadow:
+			inset 0 0 0 1.5px rgba(210, 88, 47, 0.45),
+			var(--shd);
+	}
+	.aviso {
+		margin-top: 10px;
+		padding: 10px 12px;
+		border-radius: 12px;
+		background: rgba(210, 88, 47, 0.08);
+		color: #c24e25;
+		font-size: 13px;
+		line-height: 1.45;
+		text-wrap: pretty;
+	}
+	.re-r {
+		margin-top: 10px;
+		padding: 10px 12px;
+		border-left: 2px solid var(--ln2);
+		font-size: 13.5px;
+		line-height: 1.45;
+		color: var(--mu);
+	}
+	.re-r b {
+		display: block;
+		color: var(--tx);
+		font-size: 12.5px;
+	}
+	.re-acc {
+		margin-top: 12px;
+		display: flex;
+		gap: 6px;
+		flex-wrap: wrap;
+	}
+	.re-acc button {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		min-height: 36px;
+		padding: 8px 14px;
+		border-radius: 999px;
+		font-size: 13px;
+		font-weight: 600;
+	}
+	@media (max-width: 760px) {
+		.re-acc button,
+		.s-acc button {
+			min-height: 44px;
+		}
 	}
 	.vacio {
 		padding: 28px;

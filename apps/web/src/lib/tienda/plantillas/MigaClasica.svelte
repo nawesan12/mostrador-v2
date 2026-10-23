@@ -7,6 +7,9 @@
 	import { cuandoLargo, duracion } from '#lib/turnos/formato.ts';
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
+	import FormResena from '../FormResena.svelte';
+	import PreguntasProducto from '../PreguntasProducto.svelte';
+	import type { TemaOpiniones } from '../opiniones.ts';
 	import { carritoDe } from '../carrito.svelte.ts';
 	import CampoCupon from '../CampoCupon.svelte';
 	import { CuponCheckout, totales } from '../cupon.svelte.ts';
@@ -54,6 +57,8 @@
 			nombre: string;
 			alias: string | null;
 			esCbu?: boolean;
+			/** El código del pedido: con él, la reseña queda con compra. */
+			codigo?: string;
 		} | null;
 		/** La confirmación de un turno (pagina 'turno'). */
 		turno?: import('../tipos.ts').TurnoPublico | null;
@@ -372,6 +377,22 @@
 		})),
 		{ t: 'Nosotros', href: `${base}/nosotros`, on: pagina === 'nosotros' }
 	]);
+	// Reseñas y preguntas con las piezas de Miga Clásica: Young Serif, tarjetas blancas y botones de píldora.
+	const tema: TemaOpiniones = {
+		texto: '#3A2414',
+		suave: '#7A5F4C',
+		campo: '#FBF1E6',
+		tarjeta: '#fff',
+		borde: 'rgba(58,36,20,.14)',
+		acento: '#B5651D',
+		sobreAcento: '#FBF1E6',
+		estrella: '#D98A2B',
+		radio: '12px',
+		radioBoton: '999px',
+		fuente: "'Instrument Sans', sans-serif",
+		titulos: "'Young Serif', serif",
+		pesoTitulos: 400
+	};
 	const estrellas = (n: number) =>
 		Array.from({ length: 5 }, (_, i) =>
 			n >= i + 1 ? I.phStarFill : n >= i + 0.5 ? I.phStarHalfFill : I.phStar
@@ -697,8 +718,18 @@
 									</div>
 									<p style="margin:8px 0 0;font-size:15px;line-height:1.45">“{r.texto}”</p>
 									<div style="margin-top:8px;font-size:12.5px;color:#7A5F4C">
-										{r.autor} · compró {r.producto}
+										{r.autor}{#if r.producto}
+											· {r.conCompra ? 'compró' : 'sobre'} {r.producto}{/if}
 									</div>
+									{#if r.conCompra}<span
+											style="margin-top:8px;display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;background:#E6F0E2;font-size:12px;font-weight:700;color:#2F7A43"
+											><Icon icon={I.phSealCheckFill} size={13} />Compra verificada</span
+										>{/if}
+									{#if r.respuesta}<div
+											style="margin-top:10px;padding:10px 12px;border-radius:14px;background:#FBF1E6;font-size:13.5px;line-height:1.5;color:#6A4F3C"
+										>
+											<b style="color:#3A2414">Respuesta de {tienda.nombre}</b><br />{r.respuesta}
+										</div>{/if}
 								</div>
 							</div>
 						{/each}
@@ -960,6 +991,19 @@
 									</p>{/if}
 							</div>{/each}
 					</div>
+				</div>
+			</section>
+			<section style="padding:clamp(40px,6cqw,72px) clamp(14px,3.5cqw,44px) 0">
+				<div
+					style="max-width:820px;padding:clamp(18px,3cqw,28px);border-radius:28px;background:#fff"
+				>
+					<PreguntasProducto
+						slug={tienda.slug}
+						productoId={producto.id}
+						preguntas={tienda.preguntas}
+						{tema}
+						titulo="Preguntas sobre este producto"
+					/>
 				</div>
 			</section>
 			{#if related.length}
@@ -1418,6 +1462,14 @@
 					style="display:inline-block;margin-top:28px;padding:15px 22px;border-radius:14px;background:#3A2414;color:#FBF1E6;font:700 15px 'Instrument Sans';text-decoration:none"
 					>Volver a la tienda</a
 				>
+				<div style="margin-top:clamp(40px,6cqw,64px)">
+					<FormResena
+						slug={tienda.slug}
+						tema={{ ...tema, borde: 'transparent' }}
+						codigo={pedido.codigo}
+						nombre={pedido.nombre}
+					/>
+				</div>
 			</section>
 		{/if}
 

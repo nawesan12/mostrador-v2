@@ -5,6 +5,9 @@
 	import { goto } from '$app/navigation';
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
+	import FormResena from '../FormResena.svelte';
+	import PreguntasProducto from '../PreguntasProducto.svelte';
+	import type { TemaOpiniones } from '../opiniones.ts';
 	import { carritoDe } from '../carrito.svelte.ts';
 	import CampoCupon from '../CampoCupon.svelte';
 	import { CuponCheckout, totales } from '../cupon.svelte.ts';
@@ -54,6 +57,8 @@
 			nombre: string;
 			alias: string | null;
 			esCbu?: boolean;
+			/** El código del pedido: con él, la reseña queda con compra. */
+			codigo?: string;
 		} | null;
 		/** La confirmación de un turno (pagina 'turno'). */
 		turno?: import('../tipos.ts').TurnoPublico | null;
@@ -336,6 +341,21 @@
 		})),
 		{ t: 'Nosotros', href: `${base}/nosotros`, on: pagina === 'nosotros' }
 	]);
+	// Reseñas y preguntas con las piezas de Pampa: afiche oscuro, esquinas rectas, verde lima.
+	const tema: TemaOpiniones = {
+		texto: '#F2F2F2',
+		suave: '#8A8A8A',
+		campo: '#111',
+		tarjeta: '#161616',
+		borde: '#2A2A2A',
+		acento: '#E6FF4D',
+		sobreAcento: '#111',
+		radio: '0px',
+		fuente: "'Archivo', system-ui, sans-serif",
+		titulos: "'Archivo Black', sans-serif",
+		pesoTitulos: 400,
+		mayusculas: true
+	};
 	const estrellas = (n: number) =>
 		Array.from({ length: 5 }, (_, i) =>
 			n >= i + 1 ? I.phStarFill : n >= i + 0.5 ? I.phStarHalfFill : I.phStar
@@ -658,15 +678,28 @@
 										style="width:92px;height:116px;object-fit:cover;flex:none;background:#1E1E1E"
 									/>{/if}
 								<div style="min-width:0">
-									<div
-										style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#E6FF4D"
-									>
-										{r.producto}
-									</div>
-									<p style="margin:8px 0 0;font-size:15px;line-height:1.4;font-weight:500">
+									{#if r.producto}<div
+											style="margin-bottom:8px;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#E6FF4D"
+										>
+											{r.producto}
+										</div>{/if}
+									<p style="margin:0;font-size:15px;line-height:1.4;font-weight:500">
 										“{r.texto}”
 									</p>
 									<div style="margin-top:8px;font-size:12.5px;color:#8A8A8A">{r.autor}</div>
+									{#if r.conCompra}<div
+											style="margin-top:8px;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#B9F27C"
+										>
+											<Icon icon={I.phSealCheckFill} size={13} />Compra verificada
+										</div>{/if}
+									{#if r.respuesta}<div
+											style="margin-top:10px;padding:10px 12px;border-left:2px solid #E6FF4D;background:#1E1E1E;font-size:13px;line-height:1.5;color:#BDBDBD"
+										>
+											<b
+												style="display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#F2F2F2"
+												>Respuesta de {tienda.nombre}</b
+											>{r.respuesta}
+										</div>{/if}
 								</div>
 							</div>
 						{/each}
@@ -887,6 +920,15 @@
 										{a.d}
 									</p>{/if}
 							</div>{/each}
+					</div>
+					<div style="margin-top:18px;padding:16px 14px;border:2px solid #2A2A2A">
+						<PreguntasProducto
+							slug={tienda.slug}
+							productoId={producto.id}
+							preguntas={tienda.preguntas}
+							tema={{ ...tema, tarjeta: 'transparent' }}
+							titulo="Preguntas"
+						/>
 					</div>
 				</div>
 			</section>
@@ -1380,6 +1422,11 @@
 						</p>
 					</div>
 				{/if}
+			</section>
+			<section
+				style="padding:clamp(28px,4cqw,56px) clamp(14px,2.4cqw,28px);border-bottom:2px solid #2A2A2A"
+			>
+				<FormResena slug={tienda.slug} {tema} codigo={pedido.codigo} nombre={pedido.nombre} />
 			</section>
 		{/if}
 

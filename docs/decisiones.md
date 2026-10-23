@@ -324,3 +324,19 @@ URL, para que no quede en el historial ni en logs.
   falso, pero el WSAA real sólo se prueba con un certificado de homologación de verdad (WSASS con la
   clave fiscal de Nahuel). Se cierra cargando ese certificado en una tienda de prueba y tocando
   "Probar conexión".
+## 27. Reseñas y preguntas de la tienda online (PR #76)
+
+- **Con compra se deriva del pedido**, no se marca a mano: una reseña es "con compra" si trae el
+  código del pedido (el público en Go, el firmado de la confirmación en la demo) y ese pedido está
+  cobrado (Aprobado, Acreditada o Cobrado). Una por pedido y producto (409 `ya_reseno`). Con un
+  código que no sirve se guarda igual, sin compra. Las de ejemplo de la demo que vienen de la tienda
+  online cuentan con compra.
+- **Ocultar, no borrar:** la tienda decide. Una oculta sale de la tienda y del promedio, pero queda
+  en el panel con "Mostrar" (y Deshacer). La de una estrella sin compra se destaca en el panel con
+  un aviso; no se oculta sola.
+- La respuesta de la tienda es pública y va debajo de la reseña; vacía, se saca. Las preguntas de la
+  ficha llegan al panel con id `t-…`, junto a las de Mercado Libre, y se ven en la ficha recién
+  cuando están respondidas.
+- **Tope por IP:** 10 reseñas y 10 preguntas por hora. En Go (`limite.Permitido`, con la IP que
+  manda el BFF en `X-Cliente-IP`); en la demo, `golpe` de `lib/server/limite.ts` sobre la D1. En la
+  vitrina de una plantilla no se guarda nada (responde que es una tienda de ejemplo).
