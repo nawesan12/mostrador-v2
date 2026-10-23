@@ -18,6 +18,7 @@
 			'Empresa',
 			[
 				['/nosotros', 'Sobre nosotros'],
+				['/marca', 'Marca'],
 				['/partners', 'Partners y agencias'],
 				['/seguridad', 'Seguridad'],
 				['/contacto', 'Contacto y ventas']

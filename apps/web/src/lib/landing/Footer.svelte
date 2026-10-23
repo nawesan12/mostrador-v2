@@ -22,6 +22,7 @@
 				['/estado', 'Estado del sistema'],
 				['/contacto', 'Contacto'],
 				['/nosotros', 'Sobre nosotros'],
+				['/marca', 'Marca'],
 				['/partners', 'Partners'],
 				['/novedades', 'Novedades']
 			]
