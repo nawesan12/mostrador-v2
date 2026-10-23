@@ -1,11 +1,15 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { page } from '$app/state';
+	import { untrack } from 'svelte';
 	import { goto } from '$app/navigation';
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
 	import { carritoDe } from '../carrito.svelte.ts';
 	import { cotizar, cpValido } from '../envio.ts';
 	import { partirTitulo } from '../titulo.ts';
+	import { Reserva } from '../reserva.svelte.ts';
+	import { cuandoLargo, duracion } from '#lib/turnos/formato.ts';
 	import type { OpcionEnvio, ProductoPublico, TiendaPublica } from '../tipos.ts';
 
 	/**
@@ -14,7 +18,17 @@
 	 * regresiva del drop, reserva de stock, aviso del próximo drop, cupón, seguidores) no se inventa:
 	 * esas partes no se dibujan.
 	 */
-	type Pagina = 'inicio' | 'catalogo' | 'producto' | 'carrito' | 'checkout' | 'nosotros' | 'listo';
+	type Pagina =
+		| 'inicio'
+		| 'catalogo'
+		| 'producto'
+		| 'carrito'
+		| 'checkout'
+		| 'nosotros'
+		| 'listo'
+		| 'turnos'
+		| 'turno';
+	// eslint-disable-next-line svelte/no-unused-props -- `proximos` (libres de hoy) sólo lo dibuja Tijera
 	let {
 		tienda,
 		pagina,
@@ -22,6 +36,8 @@
 		categoria = null,
 		orden = 'vendidos',
 		pedido = null,
+		turno = null,
+		aviso = null,
 		error = null
 	}: {
 		tienda: TiendaPublica;
@@ -36,6 +52,12 @@
 			nombre: string;
 			alias: string | null;
 		} | null;
+		/** La confirmación de un turno (pagina 'turno'). */
+		turno?: import('../tipos.ts').TurnoPublico | null;
+		/** Los libres de hoy y el próximo de cada profesional (portada). */
+		proximos?: import('../tipos.ts').ProximosTurnos | null;
+		/** Vuelta de Mercado Pago al pagar la seña: ok, pendiente o error. */
+		aviso?: string | null;
 		error?: string | null;
 	} = $props();
 
@@ -278,6 +300,15 @@
 		}
 	]);
 	const nav = $derived([
+		...(tienda.turnos
+			? [
+					{
+						t: 'Reservar turno',
+						href: `${base}/turnos`,
+						on: pagina === 'turnos' || pagina === 'turno'
+					}
+				]
+			: []),
 		{ t: 'Todo', href: `${base}/catalogo`, on: pagina === 'catalogo' && !categoria },
 		...tienda.categorias.slice(0, 3).map((c) => ({
 			t: c.nombre,
@@ -290,6 +321,26 @@
 		Array.from({ length: 5 }, (_, i) =>
 			n >= i + 1 ? I.phStarFill : n >= i + 0.5 ? I.phStarHalfFill : I.phStar
 		);
+	// ---- Turnos (reserva y confirmación, con las piezas del checkout y de 'listo') ----
+	// Se arma una vez al entrar a /turnos (lo que venga en la URL queda elegido).
+	const reserva = untrack(() =>
+		pagina === 'turnos' && tienda.turnos
+			? new Reserva(tienda.slug, tienda.turnos, {
+					servicio: page.url.searchParams.get('servicio'),
+					profesional: page.url.searchParams.get('profesional'),
+					dia: page.url.searchParams.get('dia'),
+					inicio: page.url.searchParams.get('inicio')
+				})
+			: null
+	);
+	const PASOS_TURNO = ['Servicio', 'Profesional', 'Horario', 'Pago'];
+	const anticipacion = $derived.by(() => {
+		const m = tienda.turnos?.anticipacionMin ?? 0;
+		return m >= 120 && m % 60 === 0 ? `${m / 60} h` : `${m} min`;
+	});
+	let reservando = $state(false);
+	let cancelando = $state(false);
+	let seguro = $state(false);
 </script>
 
 <svelte:window bind:innerWidth={ancho} />
@@ -400,6 +451,15 @@
 					aria-label="Catálogo"
 					style="display:grid;place-items:center;flex:none;width:58px;border-left:2px solid #2A2A2A;color:#F2F2F2"
 					><Icon icon={I.phListBold} size={22} /></a
+				>{/if}
+			{#if nar && tienda.turnos}<a
+					href="{base}/turnos"
+					aria-label="Reservar turno"
+					style="display:grid;place-items:center;flex:none;width:58px;border-left:2px solid #2A2A2A;background:{pagina ===
+					'turnos'
+						? '#F2F2F2'
+						: 'transparent'};color:{pagina === 'turnos' ? '#111' : '#F2F2F2'}"
+					><Icon icon={I.phCalendarPlusBold} size={22} /></a
 				>{/if}
 		</header>
 
@@ -1279,6 +1339,459 @@
 						</p>
 					</div>
 				{/if}
+			</section>
+		{/if}
+
+		<!-- ============ TURNOS (con las piezas del checkout) ============ -->
+		{#if pagina === 'turnos' && tienda.turnos && reserva}
+			<form
+				method="POST"
+				use:enhance={() => {
+					reservando = true;
+					return async ({ result, update }) => {
+						reservando = false;
+						// Mercado Pago es otro sitio: se navega de verdad.
+						if (result.type === 'redirect' && result.location.startsWith('https://'))
+							return void (location.href = result.location);
+						await update();
+						// Si otro tomó el horario mientras tanto, se ve al toque.
+						if (result.type === 'failure') void reserva.cargar();
+					};
+				}}
+				style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));border-bottom:2px solid #2A2A2A"
+			>
+				<input type="hidden" name="servicioId" value={reserva.servicioId ?? ''} />
+				<input type="hidden" name="profesionalId" value={reserva.profesionalId ?? ''} />
+				<input type="hidden" name="inicio" value={reserva.inicio ?? ''} />
+				<div
+					style="padding:clamp(22px,3.4cqw,44px);border-right:2px solid #2A2A2A;display:flex;flex-direction:column;gap:24px;min-width:0"
+				>
+					<div style="display:flex;border:2px solid #2A2A2A">
+						{#each PASOS_TURNO as t, i (t)}<span
+								style="flex:1;min-width:0;padding:11px 4px;text-align:center;{i <
+								PASOS_TURNO.length - 1
+									? 'border-right:2px solid #2A2A2A;'
+									: ''}background:{i <= reserva.paso ? '#F2F2F2' : 'transparent'};color:{i <=
+								reserva.paso
+									? '#111'
+									: '#8A8A8A'};font:800 10.5px 'Archivo';letter-spacing:.08em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis"
+								>{t}</span
+							>{/each}
+					</div>
+					<h1
+						style="margin:0;font-family:'Archivo Black',sans-serif;font-weight:400;font-size:min(clamp(48px,7cqw,100px),{cabe(
+							'Reservá tu turno',
+							wide ? 42 : 86
+						)});line-height:.85;letter-spacing:-.045em;text-transform:uppercase;overflow-wrap:anywhere"
+					>
+						Reservá<br /><span style="color:#E6FF4D">tu turno</span>
+					</h1>
+					<div>
+						<div
+							style="font-family:'Archivo Black',sans-serif;font-size:28px;text-transform:uppercase"
+						>
+							1 · Servicio
+						</div>
+						<div
+							style="margin-top:12px;display:flex;flex-direction:column;border:2px solid #2A2A2A;border-bottom:0"
+							role="radiogroup"
+							aria-label="Servicio"
+						>
+							{#each tienda.turnos.servicios as s (s.id)}{@const on =
+									reserva.servicioId === s.id}<button
+									type="button"
+									role="radio"
+									aria-checked={on}
+									onclick={() => reserva.elegirServicio(s.id)}
+									style="display:flex;align-items:center;gap:12px;width:100%;padding:15px;border:0;border-bottom:2px solid #2A2A2A;background:{on
+										? '#E6FF4D'
+										: '#111'};color:{on
+										? '#111'
+										: '#F2F2F2'};text-align:left;cursor:pointer;font-family:inherit"
+									><span
+										style="width:18px;height:18px;border:2px solid currentColor;display:grid;place-items:center;flex:none"
+										>{#if on}<span style="width:8px;height:8px;background:currentColor"
+											></span>{/if}</span
+									><span style="flex:1;min-width:0"
+										><span style="display:block;font-size:14.5px;font-weight:700">{s.nombre}</span
+										><span style="display:block;font-size:12.5px;opacity:.7;"
+											>{duracion(s.duracion)}</span
+										></span
+									><b style="white-space:nowrap">{fmt(s.precio)}</b></button
+								>{/each}
+						</div>
+					</div>
+					<div>
+						<div
+							style="font-family:'Archivo Black',sans-serif;font-size:28px;text-transform:uppercase"
+						>
+							2 · Profesional
+						</div>
+						<div
+							style="margin-top:12px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px"
+							role="radiogroup"
+							aria-label="Profesional"
+						>
+							{#each [null, ...reserva.profesionales] as p (p?.id ?? 'cualquiera')}{@const on =
+									reserva.profesionalId === (p?.id ?? null)}<button
+									type="button"
+									role="radio"
+									aria-checked={on}
+									onclick={() => reserva.elegirProfesional(p?.id ?? null)}
+									style="flex:none;width:110px;padding:10px;border:2px solid {on
+										? '#E6FF4D'
+										: '#2A2A2A'};background:{on ? '#E6FF4D' : '#111'};color:{on
+										? '#111'
+										: '#F2F2F2'};text-align:center;cursor:pointer;font-family:inherit"
+									>{#if p?.foto}<img
+											src={img(p.foto, 120, 120)}
+											alt=""
+											style="width:56px;height:56px;object-fit:cover;display:block;margin:0 auto"
+										/>{:else}<span
+											style="width:56px;height:56px;background:#1A1A1A;color:#E6FF4D;display:grid;place-items:center;margin:0 auto"
+											><Icon icon={p ? I.phUserFill : I.phShuffleBold} size={22} /></span
+										>{/if}<span
+										style="display:block;margin-top:8px;font-size:13.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+										>{p?.nombre ?? 'Cualquiera'}</span
+									><span
+										style="display:block;font-size:11.5px;opacity:.7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+										>{p ? p.rol.split(' · ')[0] : 'El primero libre'}</span
+									></button
+								>{/each}
+						</div>
+					</div>
+					<div>
+						<div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+							<div
+								style="font-family:'Archivo Black',sans-serif;font-size:28px;text-transform:uppercase"
+							>
+								3 · Día y horario
+							</div>
+							<span style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600"
+								>{#if reserva.hayAntes || reserva.hayDespues}<button
+										type="button"
+										aria-label="Días anteriores"
+										disabled={!reserva.hayAntes}
+										onclick={() => reserva.mover(-1)}
+										style="display:grid;padding:4px;border:0;background:transparent;color:inherit;cursor:pointer"
+										><Icon icon={I.phCaretLeftBold} size={14} /></button
+									>{/if}{reserva.mes}{#if reserva.hayAntes || reserva.hayDespues}<button
+										type="button"
+										aria-label="Días siguientes"
+										disabled={!reserva.hayDespues}
+										onclick={() => reserva.mover(1)}
+										style="display:grid;padding:4px;border:0;background:transparent;color:inherit;cursor:pointer"
+										><Icon icon={I.phCaretRightBold} size={14} /></button
+									>{/if}</span
+							>
+						</div>
+						<div
+							style="margin-top:10px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px"
+							role="radiogroup"
+							aria-label="Día"
+						>
+							{#each reserva.dias as d (d.dia)}{@const on = reserva.dia === d.dia}<button
+									type="button"
+									role="radio"
+									aria-checked={on}
+									aria-label="{d.w} {d.n}{d.abierto ? '' : ', cerrado'}"
+									disabled={!d.abierto}
+									onclick={() => reserva.elegirDia(d.dia)}
+									style="padding:9px 0;text-align:center;cursor:pointer;font-family:inherit;min-width:0;border:2px solid {on
+										? '#E6FF4D'
+										: '#2A2A2A'};background:{on ? '#E6FF4D' : '#111'};color:{on
+										? '#111'
+										: '#F2F2F2'}"
+									><span
+										style="display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase"
+										>{d.w}</span
+									><span style="display:block;font-size:17px;font-weight:700;margin-top:1px"
+										>{d.n}</span
+									></button
+								>{/each}
+						</div>
+						<div style="margin-top:14px;display:flex;flex-direction:column;gap:12px">
+							{#if !reserva.servicioId}
+								<p style="margin:0;font-size:14px;opacity:.7;">
+									Elegí un servicio para ver los horarios.
+								</p>
+							{:else if reserva.horarios && !reserva.grupos.length}
+								<p style="margin:0;font-size:14px;opacity:.7;">
+									No quedan horarios este día. Probá con otro día u otro&nbsp;profesional.
+								</p>
+							{/if}
+							{#each reserva.grupos as g (g.k)}<div>
+									<div
+										style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px;opacity:.7;"
+									>
+										{g.t}
+									</div>
+									<div
+										style="display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:6px"
+										role="radiogroup"
+										aria-label="Horarios a la {g.t.toLowerCase()}"
+									>
+										{#each g.s as h (h.inicio)}{@const on = reserva.inicio === h.inicio}<button
+												type="button"
+												role="radio"
+												aria-checked={on}
+												aria-label="{h.hora}{h.libre ? '' : ', ocupado'}"
+												disabled={!h.libre}
+												onclick={() => reserva.elegirHorario(h)}
+												style="padding:10px 0;text-align:center;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;text-decoration:{h.libre
+													? 'none'
+													: 'line-through'};border:2px solid {on
+													? '#E6FF4D'
+													: '#2A2A2A'};background:{on ? '#E6FF4D' : '#111'};color:{on
+													? '#111'
+													: '#F2F2F2'}">{h.hora}</button
+											>{/each}
+									</div>
+								</div>{/each}
+						</div>
+					</div>
+					{#if reserva.listo}
+						<div>
+							<div
+								style="font-family:'Archivo Black',sans-serif;font-size:28px;text-transform:uppercase"
+							>
+								4 · Tus datos
+							</div>
+							<div
+								style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2px;background:#2A2A2A;border:2px solid #2A2A2A"
+							>
+								{#each [['nombre', 'Nombre', 'text', 'name'], ['telefono', 'WhatsApp', 'tel', 'tel'], ['email', 'Email', 'email', 'email']] as [n, l, tipo, ac] (n)}
+									<label style="display:block;padding:11px 13px;background:#111"
+										><span
+											style="display:block;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#8A8A8A"
+											>{l}</span
+										><input
+											name={n}
+											type={tipo}
+											autocomplete={ac as 'email'}
+											required
+											maxlength="120"
+											style="width:100%;margin-top:3px;padding:0;border:0;background:transparent;font:400 15px 'Archivo';color:#F2F2F2;outline:none"
+										/></label
+									>
+								{/each}
+							</div>
+						</div>
+						<div>
+							<div
+								style="font-family:'Archivo Black',sans-serif;font-size:28px;text-transform:uppercase"
+							>
+								Pago
+							</div>
+							<div
+								style="margin-top:12px;display:flex;flex-direction:column;border:2px solid #2A2A2A;border-bottom:0"
+							>
+								<div
+									style="display:flex;align-items:center;gap:12px;width:100%;padding:15px;border:0;border-bottom:2px solid #2A2A2A;background:#E6FF4D;color:#111;text-align:left;cursor:pointer;font-family:inherit"
+								>
+									<span
+										style="width:18px;height:18px;border:2px solid currentColor;display:grid;place-items:center;flex:none"
+										><span style="width:8px;height:8px;background:currentColor"></span></span
+									>{#if reserva.sena}<Icon
+											icon={I.siMercadopago}
+											size={22}
+											style="color:#00B1EA;flex:none"
+										/><span style="flex:1;min-width:0"
+											><span style="display:block;font-size:14.5px;font-weight:700"
+												>Mercado Pago</span
+											><span style="display:block;font-size:12.5px;opacity:.7;"
+												>Seña de {fmt(reserva.sena)} para confirmar · el resto, en el local</span
+											></span
+										>{:else}<Icon icon={I.phStorefrontFill} size={22} style="flex:none" /><span
+											style="flex:1;min-width:0"
+											><span style="display:block;font-size:14.5px;font-weight:700"
+												>Pagás en el local</span
+											><span style="display:block;font-size:12.5px;opacity:.7;"
+												>No hace falta seña: el turno queda confirmado</span
+											></span
+										>{/if}
+								</div>
+							</div>
+						</div>
+					{/if}
+				</div>
+				<div style="padding:clamp(22px,3.4cqw,44px);background:#161616;min-width:0">
+					<div
+						style="font-family:'Archivo Black',sans-serif;font-size:26px;text-transform:uppercase"
+					>
+						Tu reserva
+					</div>
+					<div style="margin-top:14px;display:flex;align-items:center;gap:12px">
+						{#if reserva.profesional?.foto}<img
+								src={img(reserva.profesional.foto, 120, 120)}
+								alt=""
+								style="width:52px;height:52px;object-fit:cover;flex:none"
+							/>{/if}
+						<div style="min-width:0">
+							<div style="font-size:15px;font-weight:700">
+								{reserva.conQuien ? `Con ${reserva.conQuien}` : 'Con el primero libre'}
+							</div>
+							<div style="font-size:13px;color:#8A8A8A;">
+								{reserva.cuando ?? 'Elegí el día y el horario'}
+							</div>
+						</div>
+					</div>
+					{#if reserva.servicio}
+						<div
+							style="margin-top:16px;padding-top:14px;border-top:2px solid #2A2A2A;display:flex;flex-direction:column;gap:8px;font-size:14px"
+						>
+							<span style="display:flex;justify-content:space-between;gap:10px"
+								><span>{reserva.servicio.nombre}</span><span style="white-space:nowrap"
+									>{fmt(reserva.servicio.precio)}</span
+								></span
+							><span style="display:flex;justify-content:space-between;color:#8A8A8A;"
+								><span>Duración total</span><span>{reserva.duracion}</span></span
+							><span
+								style="display:flex;justify-content:space-between;align-items:baseline;margin-top:6px"
+								><b>Total</b><b
+									style="font-family:'Archivo Black',sans-serif;font-size:28px;font-weight:400"
+									>{fmt(reserva.servicio.precio)}</b
+								></span
+							>
+						</div>
+					{/if}
+					<p style="margin:14px 0 0;font-size:13px;line-height:1.5;color:#8A8A8A;">
+						{#if reserva.sena}Seña de {fmt(reserva.sena)} para confirmar. Podés cancelar desde el link
+							del turno hasta {anticipacion} antes; la seña te la devuelve la&nbsp;tienda.{:else}No
+							pagás nada ahora. Podés cancelar desde el link del turno hasta {anticipacion}&nbsp;antes.{/if}
+					</p>
+					{#if error}<div
+							role="alert"
+							style="margin-top:12px;padding:12px 14px;border:2px solid #FF4D2E;color:#FF4D2E;font-size:14px;font-weight:600"
+						>
+							{error}
+						</div>{/if}
+					<button
+						disabled={!reserva.listo || reservando || tienda.vitrina}
+						style="margin-top:16px;width:100%;padding:20px;border:0;background:#E6FF4D;color:#111;font:800 15px 'Archivo';letter-spacing:.12em;text-transform:uppercase;cursor:pointer"
+						>{tienda.vitrina
+							? 'Es una tienda de ejemplo'
+							: !reserva.listo
+								? 'Elegí servicio y horario'
+								: reserva.sena
+									? 'Confirmar y pagar seña'
+									: 'Confirmar turno'}</button
+					>
+				</div>
+			</form>
+		{/if}
+
+		<!-- ============ TURNO (no está en el diseño: con las piezas de 'listo') ============ -->
+		{#if pagina === 'turno' && turno}
+			{@const cancelado = turno.estado === 'cancelado'}
+			<section style="padding:clamp(22px,3.4cqw,44px);border-bottom:2px solid #2A2A2A">
+				<div
+					style="display:flex;align-items:center;gap:10px;font-size:12.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#E6FF4D"
+				>
+					<Icon icon={cancelado ? I.phCalendarX : I.phCheckBold} size={16} />Turno
+				</div>
+				<h1
+					style="margin:20px 0 0;font-family:'Archivo Black',sans-serif;font-weight:400;font-size:clamp(40px,6cqw,84px);line-height:.9;letter-spacing:-.045em;text-transform:uppercase;overflow-wrap:anywhere"
+				>
+					{cancelado
+						? 'Turno cancelado'
+						: turno.estado === 'reservado'
+							? `Falta la seña, ${turno.nombre}`
+							: `¡Listo, ${turno.nombre}!`}
+				</h1>
+				<p style="margin:20px 0 0;font-size:17px;line-height:1.5;color:#BDBDBD;max-width:460px">
+					{#if cancelado}Liberamos el horario{turno.senaPagada
+							? '. La seña te la devuelve la tienda por Mercado Pago'
+							: ''}. Si querés, reservá&nbsp;otro.{:else if turno.estado === 'reservado'}Te
+						guardamos el horario unos minutos mientras pagás la seña con Mercado&nbsp;Pago.{:else}Tu
+						turno está confirmado. Te esperamos en {turno.tienda}.{/if}
+				</p>
+				{#if aviso === 'pendiente' || aviso === 'error'}<div
+						role="status"
+						style="margin-top:14px;padding:12px 14px;border:2px solid #FF4D2E;color:#FF4D2E;font-size:14px;font-weight:600"
+					>
+						{aviso === 'pendiente'
+							? 'Mercado Pago todavía no acreditó la seña: te avisamos cuando entre.'
+							: 'El pago de la seña no salió. Podés reservar de nuevo.'}
+					</div>{/if}
+				<div
+					style="margin-top:22px;padding:clamp(18px,3cqw,28px);background:#161616;border:2px solid #2A2A2A;max-width:620px"
+				>
+					<div
+						style="font-size:16px;font-weight:700;text-decoration:{cancelado
+							? 'line-through'
+							: 'none'}"
+					>
+						{cuandoLargo(turno.inicio)} con {turno.profesional}
+					</div>
+					<div style="margin-top:4px;font-size:14px;color:#8A8A8A;">
+						{turno.servicio} · {fmt(turno.precio)}{turno.sena
+							? ` · seña ${fmt(turno.sena)}${turno.senaPagada ? ' pagada' : ''}`
+							: ' · pagás en el local'}
+					</div>
+					{#if turno.direccion}<div style="margin-top:8px;display:flex;gap:8px;font-size:14px">
+							<Icon icon={I.phMapPinFill} size={17} style="flex:none" />{turno.direccion}
+						</div>{/if}
+				</div>
+				{#if error}<div
+						role="alert"
+						style="margin-top:12px;padding:12px 14px;border:2px solid #FF4D2E;color:#FF4D2E;font-size:14px;font-weight:600"
+					>
+						{error}
+					</div>{/if}
+				<div style="margin-top:22px;display:flex;gap:10px;flex-wrap:wrap;">
+					{#if !cancelado}<a
+							href="{base}/turno/{turno.codigo}/turno.ics"
+							download="turno.ics"
+							data-sveltekit-reload
+							style="display:flex;align-items:center;gap:8px;padding:18px 28px;border:0;background:#E6FF4D;color:#111;font:800 14px 'Archivo';letter-spacing:.12em;text-transform:uppercase;text-decoration:none;cursor:pointer"
+							><Icon icon={I.phCalendarPlusBold} size={17} />Agregar al calendario</a
+						>{/if}
+					{#if turno.cancelable}
+						<form
+							method="POST"
+							action="?/cancelar"
+							use:enhance={() => {
+								cancelando = true;
+								return async ({ update }) => {
+									cancelando = false;
+									seguro = false;
+									await update();
+								};
+							}}
+						>
+							{#if seguro}<button
+									disabled={cancelando}
+									style="display:inline-block;padding:16px 26px;border:2px solid #2A2A2A;background:transparent;color:#F2F2F2;font:800 14px 'Archivo';letter-spacing:.12em;text-transform:uppercase;text-decoration:none;cursor:pointer"
+									>Sí, cancelar el turno</button
+								>{:else}<button
+									type="button"
+									onclick={() => (seguro = true)}
+									style="display:inline-block;padding:16px 26px;border:2px solid #2A2A2A;background:transparent;color:#F2F2F2;font:800 14px 'Archivo';letter-spacing:.12em;text-transform:uppercase;text-decoration:none;cursor:pointer"
+									>Cancelar turno</button
+								>{/if}
+						</form>
+					{:else if cancelado}<a
+							href="{base}/turnos"
+							style="padding:18px 28px;border:0;background:#E6FF4D;color:#111;font:800 14px 'Archivo';letter-spacing:.12em;text-transform:uppercase;text-decoration:none;cursor:pointer"
+							>Reservar otro</a
+						>{/if}
+					<a
+						href={base}
+						style="display:inline-block;padding:16px 26px;border:2px solid #2A2A2A;background:transparent;color:#F2F2F2;font:800 14px 'Archivo';letter-spacing:.12em;text-transform:uppercase;text-decoration:none;cursor:pointer"
+						>Volver a la tienda</a
+					>
+				</div>
+				{#if !cancelado && !turno.cancelable}<p
+						style="margin:14px 0 0;font-size:13.5px;opacity:.7;"
+					>
+						Para cambiarlo o cancelarlo, escribile a la&nbsp;tienda{#if whatsapp}&nbsp;<a
+								href={wa(`¡Hola! Tengo un turno el ${cuandoLargo(turno.inicio)}.`)}
+								target="_blank"
+								rel="noopener"
+								style="color:inherit;font-weight:700">por WhatsApp</a
+							>{/if}.
+					</p>{/if}
 			</section>
 		{/if}
 

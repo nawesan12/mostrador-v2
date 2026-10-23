@@ -4,7 +4,7 @@
 	import MarcaIcono from '#lib/components/MarcaIcono.svelte';
 	import * as I from '#lib/icons.ts';
 	import type { components } from '@mostrador/contrato/esquema';
-	import { AREAS, rutaDe, type Area, type Item } from './navegacion.ts';
+	import { AREAS, rutaDe, visible, type Area, type Item } from './navegacion.ts';
 	import { getShell } from './shell.svelte.ts';
 
 	/**
@@ -111,7 +111,9 @@
 			<div class="solo-ancho">
 				<div class="area">{area.label}</div>
 				<nav class="items">
-					{#each area.items as i (i.label)}{@render seccionLink(i)}{/each}
+					{#each area.items.filter( (i) => visible(i.label, shell.turnos) ) as i (i.label)}{@render seccionLink(
+							i
+						)}{/each}
 				</nav>
 			</div>
 		{:else}
@@ -134,7 +136,9 @@
 					</button>
 					{#if on}
 						<div class="items sub">
-							{#each a.items as i (i.label)}{@render seccionLink(i)}{/each}
+							{#each a.items.filter( (i) => visible(i.label, shell.turnos) ) as i (i.label)}{@render seccionLink(
+									i
+								)}{/each}
 						</div>
 					{/if}
 				{/each}
