@@ -103,3 +103,14 @@ test('productos: importar un CSV', async ({ page }) => {
 	await listo(page);
 	await expect(page.locator('.fila')).toHaveCount(2);
 });
+
+test('productos: importar desde Empretienda pide un link válido', async ({ page }) => {
+	await demo(page, '/panel/productos');
+	await page.getByRole('button', { name: 'Desde Empretienda' }).click();
+	const importar = page.getByRole('button', { name: 'Importar', exact: true });
+	await expect(importar).toBeDisabled();
+	await page.getByLabel('Link de tu tienda').fill('no existe nada');
+	await importar.click();
+	await expect(page.getByRole('alert')).toContainText('mitienda.empretienda.com.ar');
+	expect(await sinDesborde(page)).toBeLessThanOrEqual(0);
+});
