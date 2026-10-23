@@ -12,6 +12,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/avisos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/facturacion"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ia"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ventas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/cifrado"
@@ -69,8 +70,23 @@ func correr() error {
 	if cfg.ResendClave != "" {
 		mails = &correo.Resend{Clave: cfg.ResendClave, De: cfg.CorreoDe}
 	}
+	mc := &ventas.MailsCarritos{Pool: app, Correo: mails, Sitio: cfg.Sitio}
+	go func() {
+		t := time.NewTicker(time.Hour)
+		defer t.Stop()
+		for {
+			if _, err := ventas.RecordatoriosAutomaticos(ctx, app, time.Now()); err != nil && ctx.Err() == nil {
+				slog.Error("carritos: recordatorios", "error", err)
+			}
+			select {
+			case <-ctx.Done():
+				return
+			case <-t.C:
+			}
+		}
+	}()
 	av := &avisos.Servicio{Pool: app, Correo: mails, Sitio: cfg.Sitio}
-	for _, ms := range []map[string]outbox.Manejador{mp.Manejadores(), ml.Manejadores(), av.Manejadores()} {
+	for _, ms := range []map[string]outbox.Manejador{mp.Manejadores(), ml.Manejadores(), av.Manejadores(), mc.Manejadores()} {
 		for tipo, m := range ms {
 			w.Manejadores[tipo] = m
 		}
