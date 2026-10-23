@@ -4,6 +4,8 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
 	import { carritoDe } from '../carrito.svelte.ts';
+	import CampoCupon from '../CampoCupon.svelte';
+	import { CuponCheckout, totales } from '../cupon.svelte.ts';
 	import { cotizar, cpValido } from '../envio.ts';
 	import { partirTitulo } from '../titulo.ts';
 	import type { OpcionEnvio, ProductoPublico, TiendaPublica } from '../tipos.ts';
@@ -367,10 +369,18 @@
 	);
 	const elegida = $derived(opciones.find((o) => o.id === envio) ?? null);
 	const costoEnvio = $derived(elegida?.precio ?? 0);
-	const descuento = $derived(
-		pago === 'transferencia' ? Math.round((subtotal * tienda.cobros.transferencia) / 100) : 0
+	const cupon = new CuponCheckout(() => tienda.slug);
+	const cuenta = $derived(
+		totales({
+			subtotal,
+			envio: costoEnvio,
+			pago,
+			transferencia: tienda.cobros.transferencia,
+			cupon
+		})
 	);
-	const total = $derived(subtotal + costoEnvio - descuento);
+	const descuento = $derived(cuenta.transf);
+	const total = $derived(cuenta.total);
 	$effect(() => {
 		if (envio && !opciones.some((o) => o.id === envio)) envio = null;
 	});
@@ -1596,6 +1606,21 @@
 									><b style="font-size:14px">{fmt(c.subtotal)}</b>
 								</div>{/each}
 						</div>
+						<div style="margin-top:16px">
+							<CampoCupon
+								{cupon}
+								lineas={carrito.lineas}
+								tinta={T.ink}
+								suave={T.mu}
+								borde={T.ln}
+								fondo={T.bg}
+								acento={T.ink}
+								sobreAcento={T.bg}
+								radio={T.r}
+								fuente="'Instrument Sans',sans-serif"
+								error={tid === 'pampa' || tid === 'malbec' ? '#FFB4AB' : '#b3261e'}
+							/>
+						</div>
 						<div
 							style="margin-top:16px;padding-top:14px;border-top:1px solid {T.ln};display:flex;flex-direction:column;gap:8px;font-size:14px"
 						>
@@ -1603,9 +1628,12 @@
 								><span>Subtotal</span><span>{fmt(subtotal)}</span></span
 							><span style="display:flex;justify-content:space-between"
 								><span>Envío</span><span
-									>{elegida ? (elegida.precio ? fmt(elegida.precio) : 'Gratis') : '—'}</span
+									>{elegida ? (cuenta.envio ? fmt(cuenta.envio) : 'Gratis') : '—'}</span
 								></span
-							>{#if descuento}<span
+							>{#if cuenta.descCupon}<span
+									style="display:flex;justify-content:space-between;color:{T.ok};font-weight:600"
+									><span>Cupón {cupon.aplicado}</span><span>− {fmt(cuenta.descCupon)}</span></span
+								>{/if}{#if descuento}<span
 									style="display:flex;justify-content:space-between;color:{T.ok};font-weight:600"
 									><span>Transferencia −{tienda.cobros.transferencia}%</span><span
 										>− {fmt(descuento)}</span

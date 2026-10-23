@@ -126,6 +126,7 @@ import RUBROS from '@mostrador/contrato/rubros.json';
 import { plantilla as buscarPlantilla } from '#lib/plantillas.ts';
 import { SITE } from '#lib/site.ts';
 import type { TiendaPublica } from '#lib/tienda/tipos.ts';
+import type { CuponTienda, Historial } from '#lib/tienda/cupon.ts';
 
 export type DbSandbox = DrizzleD1Database<Record<string, never>>;
 
@@ -900,7 +901,9 @@ export class DatosSandbox implements Datos {
 	// ---------------------------------------------------------------- Pedidos nuevos
 
 	async crearPedido(
-		n: PedidoNuevo
+		n: PedidoNuevo,
+		/** Tienda online: email de quien compra y el cupón que usó (para "una vez por cliente"). */
+		web?: { email: string; cupon: string | null; descuentoCupon: number }
 	): Promise<{ numero: number; total: number } | 'sin-stock' | 'invalido'> {
 		const d = await this.base();
 		const productos = new Map((await this.regProductos()).map((p) => [p.id, p]));
@@ -922,7 +925,7 @@ export class DatosSandbox implements Datos {
 			: {
 					id: `v${numero}`,
 					nombre: nombre || 'Consumidor final',
-					email: null,
+					email: web?.email.toLowerCase() ?? null,
 					telefono: n.telefono?.trim() || null,
 					ciudad: d.catalogo.ciudad,
 					foto: null,
@@ -954,8 +957,10 @@ export class DatosSandbox implements Datos {
 			facturado: n.pagado !== false,
 			items,
 			total: items.reduce((s, i) => s + i.precio * i.cantidad, 0),
-			creado: ahora
+			creado: ahora,
+			...(web?.cupon ? { cupon: web.cupon } : {})
 		};
+		if (web?.cupon) await this.usarCupon(web.cupon, pedido.total, web.descuentoCupon);
 		await guardarCambio(this.db, this.sb.id, 'pedido-nuevo', String(numero), {
 			pedido,
 			cliente
@@ -1038,8 +1043,73 @@ export class DatosSandbox implements Datos {
 			consejo: n.opciones.hornero ? 'Hornero ya lo puede ofrecer en el chat.' : null,
 			creado: new Date(ahora).toISOString()
 		};
-		await guardarCambio(this.db, this.sb.id, 'cupon-nuevo', c.id, c);
+		// Las reglas que usa la tienda online (lib/tienda/cupon.ts) van guardadas con el cupón.
+		const regla: Partial<CuponTienda> = {
+			quien: n.quien,
+			porCliente: n.porCliente,
+			alcance: {
+				tipo: n.alcance,
+				productos: n.productos ?? [],
+				...(n.alcance === 'categoria' && todos.categoria ? { categoria: todos.categoria } : {})
+			},
+			combinable: n.opciones.combinable
+		};
+		await guardarCambio(this.db, this.sb.id, 'cupon-nuevo', c.id, { ...c, regla });
 		return c;
+	}
+
+	/** La tienda online: el cupón como lo evalúa lib/tienda/cupon.ts. */
+	async cuponTienda(codigo: string): Promise<CuponTienda | null> {
+		const c = (await this.cupones()).cupones.find(
+			(x) => x.codigo === codigo && x.estado !== 'terminado'
+		);
+		if (!c) return null;
+		// Los nuevos guardan sus reglas; los de ejemplo del handoff, abiertas.
+		const r = (c as Cupon & { regla?: Partial<CuponTienda> }).regla ?? {};
+		return {
+			codigo: c.codigo,
+			tipo: c.tipo,
+			valor: c.valor,
+			pausado: c.estado === 'pausado',
+			usos: c.usos,
+			limite: c.limite,
+			canales: c.canales,
+			empieza: c.empieza,
+			termina: c.termina,
+			minimo: c.minimo,
+			quien: r.quien ?? 'todos',
+			porCliente: r.porCliente ?? 'libre',
+			alcance: r.alcance ?? { tipo: 'todo', productos: [] },
+			combinable: r.combinable ?? false
+		};
+	}
+
+	/** Lo que se sabe de quien compra por su email: pedidos, usos de un cupón, VIP y última compra. */
+	async historialDe(email: string, codigo: string): Promise<Historial> {
+		const d = await this.demo();
+		const e = email.trim().toLowerCase();
+		const suyos = new Set(d.clientes.filter((c) => c.email?.toLowerCase() === e).map((c) => c.id));
+		const pedidos = d.pedidos.filter((p) => suyos.has(p.clienteId) && p.estado !== 'Cancelado');
+		const ultima = Math.max(0, ...pedidos.map((p) => p.creado));
+		return {
+			pedidos: pedidos.length,
+			usosDelCupon: pedidos.filter((p) => (p as { cupon?: string }).cupon === codigo).length,
+			vip: pedidos.some((p) => (p as { vip?: boolean }).vip),
+			ultimaCompra: ultima ? new Date(ultima).toISOString() : null
+		};
+	}
+
+	private async usarCupon(codigo: string, vendio: number, desconto: number) {
+		const c = (await this.cupones()).cupones.find((x) => x.codigo === codigo);
+		if (!c) return;
+		const cambio = { usos: c.usos + 1, vendio: c.vendio + vendio, desconto: c.desconto + desconto };
+		if (c.id.startsWith('n'))
+			await guardarCambio(this.db, this.sb.id, 'cupon-nuevo', c.id, { ...c, ...cambio });
+		else {
+			const antes = (await cambiosDe(this.db, this.sb.id, 'cupon')).get(c.id) as
+				CambioCupon | undefined;
+			await guardarCambio(this.db, this.sb.id, 'cupon', c.id, { ...antes, ...cambio });
+		}
 	}
 
 	async accionCupon(

@@ -217,3 +217,17 @@ URL, para que no quede en el historial ni en logs.
 - El BFF sigue siendo el que habla con las IA (nombres de OAuth, `/api/mcp` JSON-RPC); Go sólo ve
   su propio contrato (`/v1/ia/*`, `/v1/panel/ia*`).
 - Goose corre con migraciones fuera de orden: varias ramas suman migraciones a la vez.
+
+## 24. Cupones en la tienda online (PR #60)
+
+- Una sola regla en TS (`lib/tienda/cupon.ts`) y en Go (`vidriera/cupon.go`), con los mismos casos
+  en `vidriera/testdata/cupones.json`. El navegador la usa para mostrar el descuento; al comprar,
+  el servidor la vuelve a correr y nunca se cree el total del navegador.
+- El uso se cuenta en la misma transacción que crea el pedido (el pedido guarda `cupon` y el cupón
+  suma usos, vendido y descontado, migración 00028), así el límite de usos no se pasa.
+- "VIP" = quien tiene algún pedido VIP con el mismo email; "en riesgo" = su última compra fue hace
+  más de 60 días. Los dos se calculan en el servidor a partir de los pedidos.
+- El cupón por categoría guarda la categoría (antes se perdía); si no quedó guardada, vale para
+  toda la tienda.
+- La vista previa del cupón (`/t/[tienda]/cupon`) tiene un tope de 30 pruebas por IP cada 10 min,
+  con el limitador del #54, para que no se adivinen códigos probando.
