@@ -35,7 +35,13 @@ export type TiendaPublica = {
 	resenas: { texto: string; autor: string; producto: string; estrellas: number }[];
 	promedio: number | null;
 	fotos: string[];
-	cobros: { transferencia: number; cuotas: number; mercadoPago: boolean };
+	cobros: {
+		transferencia: number;
+		cuotas: number;
+		mercadoPago: boolean;
+		/** Datos para transferir que cargó la tienda (null: no ofrece transferencia). `ejemplo` en la demo. */
+		datosTransferencia: { alias: string; cbu: string; titular: string; ejemplo?: boolean } | null;
+	};
 	envios: { gratisDesde: number | null; retiro: boolean; moto: boolean; correo: boolean };
 	/** Sólo mirar: la vitrina de una plantilla (nadie la administra, no se compra). */
 	vitrina: boolean;

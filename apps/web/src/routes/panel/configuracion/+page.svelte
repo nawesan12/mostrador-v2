@@ -49,7 +49,10 @@
 		['direccion', 'Dirección'],
 		['whatsapp', 'WhatsApp'],
 		['email', 'Email'],
-		['horario', 'Horario']
+		['horario', 'Horario'],
+		['alias', 'Alias para transferencias'],
+		['cbu', 'CBU o CVU'],
+		['titular', 'Titular de la cuenta']
 	] as const;
 	let negocio = $derived({ ...data.negocio });
 	const cambiado = $derived(CAMPOS.some(([k]) => negocio[k] !== data.negocio[k]));
