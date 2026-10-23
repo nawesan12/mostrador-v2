@@ -37,13 +37,19 @@
 	// La vuelta del OAuth de Mercado Pago deja ?mercadopago=conectada|error.
 	let avisado = false;
 	$effect(() => {
-		const r = page.url.searchParams.get('mercadopago');
-		if (!r || avisado) return;
+		const mp = page.url.searchParams.get('mercadopago');
+		const ml = page.url.searchParams.get('mercadolibre');
+		if ((!mp && !ml) || avisado) return;
 		avisado = true;
+		const nombre = mp ? 'Mercado Pago' : 'Mercado Libre';
 		ui.toast(
-			r === 'conectada'
-				? { k: 'ok', title: 'Mercado Pago conectado', desc: 'Ya podés cobrar con tu cuenta' }
-				: { k: 'err', title: 'No se conectó Mercado Pago', desc: 'Probá de nuevo en un rato' }
+			(mp ?? ml) === 'conectada'
+				? {
+						k: 'ok',
+						title: `${nombre} conectado`,
+						desc: mp ? 'Ya podés cobrar con tu cuenta' : 'Publicá productos desde su ficha'
+					}
+				: { k: 'err', title: `No se conectó ${nombre}`, desc: 'Probá de nuevo en un rato' }
 		);
 		replaceState(resolve('/panel/integraciones'), {});
 	});
@@ -63,25 +69,51 @@
 		return true;
 	}
 
-	async function conectarMP() {
-		const r = await fetch('/panel/integraciones/mercadopago', { method: 'POST' });
+	const RUTA = {
+		mp: '/panel/integraciones/mercadopago',
+		ml: '/panel/integraciones/mercadolibre'
+	} as const;
+	async function conectarMP(id: 'mp' | 'ml' = 'mp') {
+		const r = await fetch(RUTA[id], { method: 'POST' });
 		if (!r.ok) {
 			const m = ((await r.json().catch(() => null)) as { message?: string } | null)?.message;
-			return ui.toast({ k: 'warn', title: 'Mercado Pago', desc: m ?? 'Probá de nuevo.' });
+			return ui.toast({
+				k: 'warn',
+				title: id === 'mp' ? 'Mercado Pago' : 'Mercado Libre',
+				desc: m ?? 'Probá de nuevo.'
+			});
 		}
 		location.href = ((await r.json()) as { url: string }).url;
 	}
 
-	async function desconectarMP() {
-		const r = await fetch('/panel/integraciones/mercadopago', { method: 'DELETE' });
+	async function desconectarMP(id: 'mp' | 'ml' = 'mp') {
+		const r = await fetch(RUTA[id], { method: 'DELETE' });
 		if (!r.ok) return ui.toast({ k: 'err', title: 'No se pudo', desc: 'Probá de nuevo.' });
 		modal = false;
 		await invalidateAll();
-		ui.toast({
-			k: 'info',
-			title: 'Mercado Pago desconectado',
-			desc: 'La tienda deja de cobrar con tarjeta hasta que lo conectes'
+		ui.toast(
+			id === 'mp'
+				? {
+						k: 'info',
+						title: 'Mercado Pago desconectado',
+						desc: 'La tienda deja de cobrar con tarjeta hasta que lo conectes'
+					}
+				: {
+						k: 'info',
+						title: 'Mercado Libre desconectado',
+						desc: 'Las publicaciones quedan, pero sin sincronizar stock ni precio'
+					}
+		);
+	}
+
+	async function ajustarML(recargo: number, pausarSinStock: boolean) {
+		const r = await fetch(RUTA.ml, {
+			method: 'PUT',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ recargo, pausarSinStock })
 		});
+		if (!r.ok) return ui.toast({ k: 'err', title: 'No se pudo', desc: 'Probá de nuevo.' });
+		await invalidateAll();
 	}
 
 	async function boton(i: Integracion) {
@@ -91,7 +123,7 @@
 			modal = true;
 			return;
 		}
-		if (i.id === 'mp') return conectarMP();
+		if (i.id === 'mp' || i.id === 'ml') return conectarMP(i.id);
 		if (i.pronto)
 			return ui.toast({ k: 'info', title: i.nombre, desc: 'Llega pronto. Te avisamos.' });
 		if (await ajustar({ tipo: 'conexion', id: i.id, valor: true }))
@@ -103,7 +135,7 @@
 	}
 
 	async function desconectar(i: Integracion) {
-		if (i.id === 'mp') return desconectarMP();
+		if (i.id === 'mp' || i.id === 'ml') return desconectarMP(i.id);
 		if (!(await ajustar({ tipo: 'conexion', id: i.id, valor: false }))) return;
 		modal = false;
 		ui.toast({ k: 'info', title: `${i.nombre} desconectada`, desc: 'Podés volver a conectarla' });
@@ -295,7 +327,42 @@
 				Mostrador no cobra&nbsp;comisión.
 			</div>
 		{/if}
-		{#if abierta.opciones.length}
+		{#if abierta.id === 'ml'}
+			<div class="m-cuenta">
+				Cuenta <b>{data.ml.apodo}</b> · {data.ml.publicaciones}
+				{data.ml.publicaciones === 1 ? 'publicación' : 'publicaciones'} desde Mostrador.
+				{#if data.ml.preguntas}
+					<a href={resolve('/panel/resenas-y-preguntas')}
+						>{data.ml.preguntas}
+						{data.ml.preguntas === 1 ? 'pregunta' : 'preguntas'} sin&nbsp;responder</a
+					>{/if}
+			</div>
+			<div class="m-sec">Precio en Mercado Libre</div>
+			<div class="recargos" role="group" aria-label="Recargo por comisión">
+				{#each [0, 5, 10, 15, 20] as r (r)}
+					<button
+						type="button"
+						class:on={data.ml.recargo === r}
+						aria-pressed={data.ml.recargo === r}
+						onclick={() => ajustarML(r, data.ml.pausarSinStock)}>{r ? `+${r}%` : 'Igual'}</button
+					>
+				{/each}
+			</div>
+			<div class="m-ops">
+				<div class="m-op">
+					<span class="g-txt"
+						><span class="g-t">Pausar sin stock</span><span class="g-d"
+							>Las publicaciones se pausan solas y vuelven cuando hay</span
+						></span
+					>
+					<Interruptor
+						label="Pausar sin stock"
+						checked={data.ml.pausarSinStock}
+						onchange={(v) => void ajustarML(data.ml.recargo, v)}
+					/>
+				</div>
+			</div>
+		{:else if abierta.opciones.length}
 			<div class="m-sec">Opciones</div>
 			<div class="m-ops">
 				{#each abierta.opciones as o (o.id)}
@@ -315,8 +382,10 @@
 			<button type="button" class="b-sec rojo" onclick={() => abierta && desconectar(abierta)}
 				>Desconectar</button
 			>
-			{#if mp && data.mp.reautorizar}
-				<button type="button" class="b-pri" onclick={conectarMP}>Volver a conectar</button>
+			{#if (mp && data.mp.reautorizar) || (abierta.id === 'ml' && data.ml.reautorizar)}
+				<button type="button" class="b-pri" onclick={() => conectarMP(mp ? 'mp' : 'ml')}
+					>Volver a conectar</button
+				>
 			{:else}
 				<button type="button" class="b-pri" onclick={() => (modal = false)}>Listo</button>
 			{/if}
@@ -680,6 +749,32 @@
 	}
 	.m-cuenta b {
 		color: var(--tx);
+	}
+	.m-cuenta a {
+		color: #c24e25;
+		font-weight: 600;
+	}
+	.recargos {
+		margin-top: 8px;
+		display: flex;
+		gap: 6px;
+		flex-wrap: wrap;
+	}
+	.recargos button {
+		border: 1px solid var(--ln2);
+		background: transparent;
+		color: var(--tx);
+		padding: 8px 14px;
+		border-radius: 999px;
+		font:
+			600 13px 'Instrument Sans',
+			sans-serif;
+		cursor: pointer;
+	}
+	.recargos button.on {
+		background: var(--tx);
+		color: var(--sf);
+		border-color: var(--tx);
 	}
 	.m-ops {
 		margin-top: 4px;

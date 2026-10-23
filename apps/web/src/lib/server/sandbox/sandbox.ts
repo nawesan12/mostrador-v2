@@ -34,7 +34,9 @@ import {
 	type EstadoIntegraciones
 } from '#lib/panel/integraciones.ts';
 import type {
+	ConexionML,
 	ConexionMP,
+	PublicacionML,
 	Dominios,
 	MisDatos,
 	PreferenciasAvisos,
@@ -1743,12 +1745,13 @@ export class DatosSandbox implements Datos {
 		Object.assign(e.ia, g('ia'));
 		Object.assign(e.permisosIa, g('permisosIa'));
 		e.conectadas.mp = mp.conectada;
+		e.conectadas.ml = (await this.mercadoLibre()).conectada;
 		return e;
 	}
 	async ajustarIntegracion(a: AjusteIntegracion): Promise<Resultado> {
 		const e = await this.integraciones();
 		if (a.tipo === 'conexion') {
-			if (a.id === 'mp' || !INTEGRACIONES.some((i) => i.id === a.id && !i.pronto))
+			if (a.id === 'mp' || a.id === 'ml' || !INTEGRACIONES.some((i) => i.id === a.id && !i.pronto))
 				return 'no-se-puede';
 			e.conectadas[a.id] = a.valor;
 			await guardarCambio(this.db, this.sb.id, 'integraciones', 'conectadas', e.conectadas);
@@ -1767,6 +1770,63 @@ export class DatosSandbox implements Datos {
 		}
 		return 'ok';
 	}
+
+	/** En la demo Mercado Libre arranca conectado (como en el handoff) y todo se simula. */
+	async mercadoLibre(): Promise<ConexionML> {
+		const c = await cambiosDe(this.db, this.sb.id, 'cuenta');
+		const ml = c.get('ml') as
+			{ conectada: boolean; desde: number; recargo?: number; pausar?: boolean } | undefined;
+		const conectada = ml?.conectada ?? true;
+		const productos = await this.regProductos();
+		return {
+			disponible: true,
+			conectada,
+			...(conectada
+				? {
+						apodo: 'MATEYCO_OFICIAL',
+						desde: new Date(ml?.desde ?? Date.now() - 60 * 86_400_000).toISOString()
+					}
+				: {}),
+			reautorizar: false,
+			recargo: ml?.recargo ?? 10,
+			pausarSinStock: ml?.pausar ?? true,
+			publicaciones: conectada ? productos.filter((p) => p.canales.includes('ml')).length : 0,
+			preguntas: conectada ? 3 : 0
+		};
+	}
+	async conectarMercadoLibre() {
+		return '/integraciones/mercadolibre/callback?code=demo&state=demo';
+	}
+	async volverMercadoLibre(codigo: string, estado: string): Promise<Resultado> {
+		if (codigo !== 'demo' || estado !== 'demo') return 'no-se-puede';
+		const c = await cambiosDe(this.db, this.sb.id, 'cuenta');
+		const ml = (c.get('ml') as Record<string, unknown> | undefined) ?? {};
+		await guardarCambio(this.db, this.sb.id, 'cuenta', 'ml', {
+			...ml,
+			conectada: true,
+			desde: Date.now()
+		});
+		return 'ok';
+	}
+	async desconectarMercadoLibre() {
+		const c = await cambiosDe(this.db, this.sb.id, 'cuenta');
+		const ml = (c.get('ml') as Record<string, unknown> | undefined) ?? {};
+		await guardarCambio(this.db, this.sb.id, 'cuenta', 'ml', { ...ml, conectada: false });
+	}
+	async ajustarMercadoLibre(recargo: number, pausar: boolean): Promise<Resultado> {
+		if (!(await this.mercadoLibre()).conectada) return 'no-se-puede';
+		const c = await cambiosDe(this.db, this.sb.id, 'cuenta');
+		const ml = (c.get('ml') as Record<string, unknown> | undefined) ?? {};
+		await guardarCambio(this.db, this.sb.id, 'cuenta', 'ml', { ...ml, recargo, pausar });
+		return 'ok';
+	}
+	async publicarEnMercadoLibre(productoId: string): Promise<PublicacionML | { error: string }> {
+		if (!(await this.mercadoLibre()).conectada) return { error: 'Conectá Mercado Libre primero.' };
+		const n = parseInt(productoId.replace(/\D/g, '').slice(-6) || '1', 10);
+		const item = `MLA${1_400_000_000 + n}`;
+		return { itemId: item, permalink: `https://articulo.mercadolibre.com.ar/MLA-${item.slice(3)}` };
+	}
+	async despublicarDeMercadoLibre() {}
 
 	/** En la demo la tienda arranca con Mercado Pago conectado (el onboarding lo conecta). */
 	async mercadoPago(): Promise<ConexionMP> {

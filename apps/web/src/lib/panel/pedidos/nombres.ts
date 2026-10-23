@@ -25,7 +25,8 @@ export const NOMBRE_ENVIO: Record<string, string> = {
 	oca: 'OCA',
 	correo: 'Correo Argentino',
 	moto: 'Moto',
-	retiro: 'Retiro'
+	retiro: 'Retiro',
+	mercadoenvios: 'Mercado Envíos'
 };
 /** Ícono y color de cada medio de pago en la lista (handoff `PAY`). */
 export const ICONO_PAGO: Record<string, [IconData, string]> = {
@@ -42,7 +43,8 @@ export const ICONO_ENVIO: Record<string, IconData> = {
 	oca: I.phTruckFill,
 	correo: I.phTruckFill,
 	moto: I.phMopedFill,
-	retiro: I.phStorefrontFill
+	retiro: I.phStorefrontFill,
+	mercadoenvios: I.phTruckFill
 };
 
 /** Las etapas del handoff (`ST`) con su color e ícono; Cancelado aparte. */

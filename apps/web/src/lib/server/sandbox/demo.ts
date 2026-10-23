@@ -10,7 +10,7 @@ import { catalogoDe, type Catalogo, type ProductoEjemplo } from '#lib/catalogos.
 
 export type Canal = 'web' | 'wa' | 'ml' | 'ig' | 'pos' | 'tg';
 export type MedioPago = 'mp' | 'transf' | 'modo' | 'payway' | 'uala' | 'efectivo' | 'tarjeta';
-export type Envio = 'andreani' | 'oca' | 'correo' | 'moto' | 'retiro';
+export type Envio = 'andreani' | 'oca' | 'correo' | 'moto' | 'retiro' | 'mercadoenvios';
 export type EstadoPedido =
 	'Sin pagar' | 'Para preparar' | 'Listo para despachar' | 'En camino' | 'Entregado' | 'Cancelado';
 

@@ -716,6 +716,91 @@ paths:
       summary: Borra los tokens de la tienda.
       responses:
         '204': { description: Desconectada }
+  /v1/panel/integraciones/mercadolibre:
+    get:
+      operationId: conexionMercadoLibre
+      summary: Si la tienda conectó su cuenta de Mercado Libre, y cuánto publicó.
+      responses:
+        '200':
+          description: Estado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConexionML' }
+    put:
+      operationId: ajustarMercadoLibre
+      summary: Recargo sobre el precio (comisión) y pausar sin stock.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [recargo, pausarSinStock]
+              properties:
+                recargo: { type: integer, minimum: 0, maximum: 60 }
+                pausarSinStock: { type: boolean }
+      responses:
+        '204': { description: Guardado }
+        '409': { $ref: '#/components/responses/Problema' }
+    delete:
+      operationId: desconectarMercadoLibre
+      responses:
+        '204': { description: Desconectada }
+  /v1/panel/integraciones/mercadolibre/conectar:
+    post:
+      operationId: conectarMercadoLibre
+      summary: La URL de autorización (PKCE, state de un solo uso).
+      responses:
+        '200':
+          description: Adónde mandar a la persona
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UrlExterna' }
+        '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/integraciones/mercadolibre/vuelta:
+    post:
+      operationId: volverMercadoLibre
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [codigo, estado]
+              properties:
+                codigo: { type: string, maxLength: 512 }
+                estado: { type: string, maxLength: 512 }
+      responses:
+        '204': { description: Conectada }
+        '400': { $ref: '#/components/responses/Problema' }
+  /v1/panel/productos/{id}/mercadolibre:
+    post:
+      operationId: publicarEnMercadoLibre
+      summary: Publica el producto (categoría sugerida, precio con recargo, stock, foto y descripción).
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '201':
+          description: Publicado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicacionML' }
+        '409': { $ref: '#/components/responses/Problema' }
+        '422': { $ref: '#/components/responses/Problema' }
+    delete:
+      operationId: despublicarDeMercadoLibre
+      summary: Pausa la publicación y deja de sincronizarla.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '204': { description: Pausada }
+  /v1/webhooks/mercadolibre:
+    post:
+      operationId: webhookMercadoLibre
+      summary: Avisos de Mercado Libre (orders_v2, questions, items). Se encolan y se traen con el token de la tienda.
+      security: []
+      responses:
+        '200': { description: Recibido }
   /v1/panel/integraciones/mercadopago/conectar:
     post:
       operationId: conectarMercadoPago
@@ -1744,7 +1829,7 @@ components:
               cantidad: { type: integer, minimum: 1, maximum: 10000 }
         pago: { type: string, enum: [mp, tarjeta, payway, modo, uala, transf, efectivo] }
         canal: { type: string, enum: [pos, wa, web, ig, ml, tg] }
-        envio: { type: string, enum: [retiro, andreani, oca, correo, moto], default: retiro }
+        envio: { type: string, enum: [retiro, andreani, oca, correo, moto, mercadoenvios], default: retiro }
         cliente: { type: [string, 'null'], maxLength: 80, description: 'Nombre (en el local suele no haber)' }
         clienteId: { type: [string, 'null'], maxLength: 80, description: 'Un cliente que ya existe (el nombre sale de su ficha)' }
         telefono: { type: [string, 'null'], maxLength: 30 }
@@ -2347,6 +2432,25 @@ components:
       required: [url]
       properties:
         url: { type: string, format: uri }
+    ConexionML:
+      type: object
+      required: [disponible, conectada, reautorizar, recargo, pausarSinStock, publicaciones, preguntas]
+      properties:
+        disponible: { type: boolean }
+        conectada: { type: boolean }
+        apodo: { type: string }
+        desde: { type: string, format: date-time }
+        reautorizar: { type: boolean }
+        recargo: { type: integer }
+        pausarSinStock: { type: boolean }
+        publicaciones: { type: integer }
+        preguntas: { type: integer, description: 'Sin responder' }
+    PublicacionML:
+      type: object
+      required: [itemId, permalink]
+      properties:
+        itemId: { type: string }
+        permalink: { type: string }
     ConexionMP:
       type: object
       required: [disponible, conectada, reautorizar, cajaQR]

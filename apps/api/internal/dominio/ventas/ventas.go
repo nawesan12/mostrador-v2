@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 
@@ -47,7 +48,24 @@ func escribir(w http.ResponseWriter, v any) {
 }
 
 // Rutas registra la bandeja y los carritos.
-func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string) {
+// PreguntaPanel es una pregunta de la pantalla Reseñas y preguntas.
+type PreguntaPanel struct {
+	ID        string    `json:"id"`
+	Producto  string    `json:"producto"`
+	Foto      *string   `json:"foto"`
+	Pregunta  string    `json:"pregunta"`
+	Creada    time.Time `json:"creada"`
+	Sugerida  string    `json:"sugerida"`
+	Respuesta *string   `json:"respuesta"`
+}
+
+// Preguntas de los canales (por ahora, Mercado Libre). nil: no hay canal conectado.
+type Preguntas interface {
+	PreguntasPanel(ctx context.Context, tiendaID string) ([]PreguntaPanel, error)
+	ResponderPanel(ctx context.Context, tiendaID, id, texto string) error
+}
+
+func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, preguntas Preguntas) {
 	con := func(h func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			id := tienda(r)
@@ -94,12 +112,29 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string) {
 	mux.HandleFunc("POST /v1/panel/devoluciones/{id}", con(func(w http.ResponseWriter, _ *http.Request, _ string) {
 		problema.Escribir(w, problema.NoEncontrado("Esa devolución no existe."))
 	}))
-	mux.HandleFunc("GET /v1/panel/resenas", con(func(w http.ResponseWriter, _ *http.Request, _ string) {
-		escribir(w, map[string]any{"preguntas": []any{}, "resenas": []any{}, "promedio": nil, "total": 0,
+	mux.HandleFunc("GET /v1/panel/resenas", con(func(w http.ResponseWriter, r *http.Request, id string) {
+		ps := []PreguntaPanel{}
+		if preguntas != nil {
+			var err error
+			if ps, err = preguntas.PreguntasPanel(r.Context(), id); err != nil {
+				problema.Escribir(w, problema.Interno())
+				return
+			}
+		}
+		escribir(w, map[string]any{"preguntas": ps, "resenas": []any{}, "promedio": nil, "total": 0,
 			"porEstrellas": []int{0, 0, 0, 0, 0}, "recomendaria": 0})
 	}))
-	mux.HandleFunc("POST /v1/panel/preguntas/{id}", con(func(w http.ResponseWriter, _ *http.Request, _ string) {
-		problema.Escribir(w, problema.NoEncontrado("Esa pregunta no existe."))
+	mux.HandleFunc("POST /v1/panel/preguntas/{id}", con(func(w http.ResponseWriter, r *http.Request, id string) {
+		var b struct{ Respuesta string }
+		if preguntas == nil || json.NewDecoder(http.MaxBytesReader(w, r.Body, 8<<10)).Decode(&b) != nil {
+			problema.Escribir(w, problema.NoEncontrado("Esa pregunta no existe."))
+			return
+		}
+		if err := preguntas.ResponderPanel(r.Context(), id, r.PathValue("id"), b.Respuesta); err != nil {
+			problema.Escribir(w, problema.NoEncontrado("No se pudo responder esa pregunta."))
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
 	}))
 	mux.HandleFunc("POST /v1/panel/carritos/{id}/recordar", con(func(w http.ResponseWriter, _ *http.Request, _ string) {
 		problema.Escribir(w, problema.NoEncontrado("Ese carrito no existe."))
