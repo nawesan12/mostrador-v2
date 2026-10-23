@@ -12,6 +12,16 @@ export const POST: RequestHandler = async ({ request }) => {
 	if (!usaSandbox()) {
 		const out = await tokenApi(p);
 		if (out === undefined) return json({ error: 'unsupported_grant_type' }, 400);
+		if (out && 'fallo' in out)
+			// No es invalid_grant: con eso la IA tiraría sus tokens. Que reintente.
+			return json(
+				{
+					error: out.fallo === 429 ? 'slow_down' : 'temporarily_unavailable',
+					error_description: 'Mostrador no puede responder ahora. Probá en un rato.'
+				},
+				out.fallo === 429 ? 429 : 503,
+				{ 'Retry-After': out.fallo === 429 ? '60' : '30' }
+			);
 		return out ? json(out) : json({ error: 'invalid_grant' }, 400);
 	}
 	const db = dbSandbox(env.SANDBOX);

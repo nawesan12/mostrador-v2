@@ -5,7 +5,7 @@
 CREATE TABLE auth.ia_clientes (
 	id text PRIMARY KEY CHECK (id ~ '^[A-Za-z0-9_-]{16,64}$'),
 	nombre text NOT NULL CHECK (length(nombre) BETWEEN 1 AND 80),
-	redirecciones text[] NOT NULL CHECK (cardinality(redirecciones) BETWEEN 1 AND 5),
+	redirecciones text[] NOT NULL CHECK (cardinality(redirecciones) BETWEEN 1 AND 5 AND pg_column_size(redirecciones) <= 2600),
 	creado_en timestamptz NOT NULL DEFAULT now(),
 	usado_en timestamptz
 );
@@ -13,7 +13,8 @@ GRANT SELECT, INSERT, UPDATE (usado_en), DELETE ON auth.ia_clientes TO mostrador
 
 -- Códigos de autorización: un solo uso (se borran al canjear) y 5 minutos.
 CREATE TABLE auth.ia_codigos (
-	hash text PRIMARY KEY,
+	-- sha256 en base64url: 43 caracteres.
+	hash text PRIMARY KEY CHECK (length(hash) = 43),
 	cliente_id text NOT NULL REFERENCES auth.ia_clientes (id) ON DELETE CASCADE,
 	usuario_id uuid NOT NULL REFERENCES auth.usuarios (id) ON DELETE CASCADE,
 	tienda_id uuid NOT NULL REFERENCES public.tiendas (id) ON DELETE CASCADE,
@@ -32,10 +33,10 @@ CREATE TABLE auth.ia_conexiones (
 	usuario_id uuid NOT NULL REFERENCES auth.usuarios (id) ON DELETE CASCADE,
 	tienda_id uuid NOT NULL REFERENCES public.tiendas (id) ON DELETE CASCADE,
 	acciones boolean NOT NULL,
-	acceso_hash text NOT NULL UNIQUE,
+	acceso_hash text NOT NULL UNIQUE CHECK (length(acceso_hash) = 43),
 	acceso_vence timestamptz NOT NULL,
-	refresco_hash text NOT NULL UNIQUE,
-	refresco_previo text,
+	refresco_hash text NOT NULL UNIQUE CHECK (length(refresco_hash) = 43),
+	refresco_previo text CHECK (length(refresco_previo) = 43),
 	creada_en timestamptz NOT NULL DEFAULT now(),
 	usada_en timestamptz NOT NULL DEFAULT now()
 );

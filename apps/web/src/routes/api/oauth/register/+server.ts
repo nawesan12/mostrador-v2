@@ -11,8 +11,15 @@ import type { RequestHandler } from './$types';
 export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	if (!usaSandbox()) {
 		const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
-		const c = await registrarApi(body ?? {});
+		const ip = request.headers.get('cf-connecting-ip') ?? getClientAddress();
+		const c = await registrarApi(body ?? {}, ip);
 		if (typeof c !== 'number') return json(c, 201);
+		if (c >= 500)
+			return json(
+				{ error: 'temporarily_unavailable', error_description: 'Probá de nuevo en un rato.' },
+				503,
+				{ 'Retry-After': '30' }
+			);
 		return c === 429
 			? json(
 					{ error: 'slow_down', error_description: 'Demasiados registros. Probá en un rato.' },

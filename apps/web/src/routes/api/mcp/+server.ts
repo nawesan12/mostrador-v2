@@ -54,6 +54,13 @@ async function conexion(request: Request, url: URL) {
 		const token = auth?.startsWith('Bearer ') ? auth.slice(7).trim() : '';
 		const cx = token && token.length <= 200 ? await conexionApi(token) : null;
 		if (!cx) return sinToken(url);
+		if ('fallo' in cx)
+			// El token puede estar bien: no pedir que vuelva a conectar, sólo que reintente.
+			return json(
+				errorRpc(null, -32000, 'Mostrador no puede responder ahora. Probá en un rato.'),
+				cx.fallo === 429 ? 429 : 503,
+				{ 'Retry-After': cx.fallo === 429 ? '60' : '30' }
+			);
 		const c: Contexto = {
 			datos: new DatosApi(String(env.API_URL), token),
 			permisos: cx.permisos,
