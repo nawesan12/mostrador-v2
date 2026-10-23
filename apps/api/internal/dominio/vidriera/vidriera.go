@@ -76,7 +76,15 @@ type Tienda struct {
 	Envios      Envios            `json:"envios"`
 	Vitrina     bool              `json:"vitrina"`
 	// Turnos: servicios, profesionales, seña y horario; null si la tienda no toma turnos.
-	Turnos *turnos.Resumen `json:"turnos"`
+	Turnos   *turnos.Resumen `json:"turnos"`
+	Medicion Medicion        `json:"medicion"`
+}
+
+// Medicion son los IDs de GA4 y del píxel de Meta de la tienda (la tienda online los carga sólo con
+// el consentimiento de quien compra).
+type Medicion struct {
+	GA4   *string `json:"ga4"`
+	Pixel *string `json:"pixel"`
 }
 
 type Envios struct {
@@ -124,8 +132,9 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 		var diseno, negocio []byte
 		var mp bool
 		if err := t.QueryRow(ctx, `SELECT nombre, plantilla, diseno_publicado, negocio,
-				EXISTS (SELECT 1 FROM mp_conexiones WHERE tienda_id = $1 AND NOT reautorizar)
-			FROM tiendas WHERE id = $1`, id).Scan(&out.Nombre, &out.Plantilla, &diseno, &negocio, &mp); err != nil {
+				EXISTS (SELECT 1 FROM mp_conexiones WHERE tienda_id = $1 AND NOT reautorizar), ga4, pixel_meta
+			FROM tiendas WHERE id = $1`, id).Scan(&out.Nombre, &out.Plantilla, &diseno, &negocio, &mp,
+			&out.Medicion.GA4, &out.Medicion.Pixel); err != nil {
 			return err
 		}
 		var d struct {

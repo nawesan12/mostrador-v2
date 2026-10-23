@@ -265,3 +265,21 @@ URL, para que no quede en el historial ni en logs.
   toda la tienda.
 - La vista previa del cupón (`/t/[tienda]/cupon`) tiene un tope de 30 pruebas por IP cada 10 min,
   con el limitador del #54, para que no se adivinen códigos probando.
+## 25. Medición de la tienda: consentimiento primero y sin API de conversiones todavía (PR #66)
+
+- Google Shopping, Google Analytics y Meta Ads usan las cuentas de la tienda, no credenciales de
+  Mostrador: la tienda pega sus IDs (GA4 y píxel) y carga el feed `/t/{slug}/feed.xml` en Merchant
+  Center y en Commerce Manager. "Conectada" es el ID guardado o el "Ya lo cargué" del feed: no hay
+  API que confirme que Google o Meta lo leyeron.
+- gtag.js y fbevents.js se cargan sólo si la tienda tiene IDs y quien compra aceptó las cookies de
+  medición en el aviso de esa tienda (se recuerda por tienda en el navegador). Sin elección no se
+  pide nada a Google ni a Meta; la vitrina de una plantilla no mide nunca. Un solo módulo
+  (`lib/tienda/medicion.ts`) manda los eventos desde el layout, las rutas y el carrito compartido:
+  las plantillas no se tocan.
+- La compra se mide en la página del pedido con el número de pedido como `transaction_id` (GA4) y
+  `eventID` (Meta), para que deduplique cuando llegue la API de conversiones.
+- La API de conversiones de Meta queda para otro PR: necesita un token de acceso de la tienda
+  guardado cifrado (como Mercado Pago) y mandar las compras desde Go con los datos de quien compra
+  hasheados. Hasta entonces, Configurar la nombra como "Próximamente" sin prometer fecha.
+- La CSP se suma sólo en `/t/`: scripts y conexiones al propio sitio, a Google y a Meta. El resto
+  del sitio sigue sin CSP hasta el PR de endurecimiento.

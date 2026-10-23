@@ -1,5 +1,16 @@
 <script lang="ts">
-	let { children } = $props();
+	import { afterNavigate } from '$app/navigation';
+	import AvisoCookies from '#lib/tienda/AvisoCookies.svelte';
+	import { pagina, preparar } from '#lib/tienda/medicion.ts';
+
+	let { data, children } = $props();
+
+	// La medición de la tienda (GA4 y píxel de Meta, sólo con consentimiento): una página vista por
+	// navegación. Las plantillas no saben nada de esto.
+	afterNavigate(() => {
+		preparar(data.tienda);
+		pagina();
+	});
 </script>
 
 <svelte:head>
@@ -11,3 +22,6 @@
 </svelte:head>
 
 {@render children()}
+{#key data.tienda.slug}
+	<AvisoCookies tienda={data.tienda} />
+{/key}

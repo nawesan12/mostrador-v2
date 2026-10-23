@@ -3,6 +3,7 @@
  * cerrar la compra (precios y stock salen de la base, nunca de acá).
  */
 import { browser } from '$app/env';
+import { agregado, recordarCompra } from './medicion.ts';
 import type { ProductoPublico } from './tipos.ts';
 
 export type Linea = { id: string; cantidad: number };
@@ -12,8 +13,10 @@ const MAX_LINEAS = 50;
 export class Carrito {
 	lineas = $state<Linea[]>([]);
 	#clave: string;
+	#slug: string;
 
 	constructor(slug: string) {
+		this.#slug = slug;
 		this.#clave = `carrito:${slug}`;
 		if (!browser) return;
 		try {
@@ -40,10 +43,13 @@ export class Carrito {
 
 	sumar(id: string, cantidad = 1, tope = 99) {
 		const l = this.lineas.find((x) => x.id === id);
+		const antes = l?.cantidad ?? 0;
 		if (l) l.cantidad = Math.min(tope, l.cantidad + cantidad);
 		else if (this.lineas.length < MAX_LINEAS)
 			this.lineas.push({ id, cantidad: Math.min(tope, cantidad) });
 		this.#guardar();
+		// add_to_cart / AddToCart (sólo con medición y consentimiento: lib/tienda/medicion.ts).
+		agregado(this.#slug, id, (this.lineas.find((x) => x.id === id)?.cantidad ?? 0) - antes);
 	}
 
 	fijar(id: string, cantidad: number) {
@@ -54,7 +60,9 @@ export class Carrito {
 		this.#guardar();
 	}
 
+	/** Se vacía cuando el pedido salió: lo comprado queda para medir la compra en el pedido. */
 	vaciar() {
+		if (this.lineas.length) recordarCompra(this.#slug, $state.snapshot(this.lineas));
 		this.lineas = [];
 		this.#guardar();
 	}

@@ -1,8 +1,14 @@
 <script lang="ts">
 	import Seo from '#lib/components/Seo.svelte';
+	import { onMount } from 'svelte';
 	import Plantilla from '#lib/tienda/Plantilla.svelte';
+	import { compra, preparar } from '#lib/tienda/medicion.ts';
 
 	let { data } = $props();
+	onMount(() => {
+		preparar(data.tienda);
+		compra(data.pedido);
+	});
 </script>
 
 <Seo

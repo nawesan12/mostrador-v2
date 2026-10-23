@@ -6,6 +6,7 @@
 import { env } from 'cloudflare:workers';
 import RUBROS from '@mostrador/contrato/rubros.json';
 import { PLANTILLAS } from '#lib/plantillas.ts';
+import { validarGa4, validarPixel } from '#lib/tienda/medicion.ts';
 import type { TiendaPublica } from '#lib/tienda/tipos.ts';
 import { usaSandbox } from '../datos/index.ts';
 import { slugDe } from '../sandbox/rubros.ts';
@@ -28,6 +29,16 @@ function vitrinaDe(slug: string): Sandbox | null {
 	};
 }
 
+/** Los IDs van a una URL de script: sólo pasan los que tienen el formato exacto. */
+function medicionSegura(t: Partial<TiendaPublica>): TiendaPublica['medicion'] {
+	const ga4 = validarGa4(t.medicion?.ga4);
+	const pixel = validarPixel(t.medicion?.pixel);
+	return {
+		ga4: !t.vitrina && ga4.ok ? ga4.valor : null,
+		pixel: !t.vitrina && pixel.ok ? pixel.valor : null
+	};
+}
+
 export type TiendaResuelta = {
 	tienda: TiendaPublica;
 	datos: DatosSandbox | null;
@@ -44,7 +55,11 @@ export async function resolverTienda(
 		if (r.status === 404) return null;
 		if (!r.ok) throw new Error(`API ${r.status}`);
 		const tienda = (await r.json()) as TiendaPublica;
-		return { tienda: { ...tienda, turnos: tienda.turnos ?? null }, datos: null, sandboxId: null };
+		return {
+			tienda: { ...tienda, turnos: tienda.turnos ?? null, medicion: medicionSegura(tienda) },
+			datos: null,
+			sandboxId: null
+		};
 	}
 	const db = dbSandbox(env.SANDBOX);
 	const propio = await leer(db, cookie);

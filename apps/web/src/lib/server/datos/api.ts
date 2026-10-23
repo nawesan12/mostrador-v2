@@ -3,7 +3,11 @@
  * (BFF), con el token de la sesión. Los errores problem+json se convierten en errores de SvelteKit.
  */
 import { error } from '@sveltejs/kit';
-import { estadoInicial, type AjusteIntegracion } from '#lib/panel/integraciones.ts';
+import {
+	conectadasDeMedicion,
+	estadoInicial,
+	type AjusteIntegracion
+} from '#lib/panel/integraciones.ts';
 import type {
 	AjustesTurnos,
 	EstadoTurno,
@@ -15,6 +19,7 @@ import type {
 	TurnoNuevo,
 	AccionCupon,
 	ConexionML,
+	Medicion,
 	ConexionMP,
 	PublicacionML,
 	Dominios,
@@ -365,18 +370,26 @@ export class DatosApi implements Datos {
 			ciclo: ciclo ?? 'mes'
 		});
 	}
-	// Las demás integraciones llegan una por PR: por ahora sólo Mercado Pago es real.
+	// Las demás integraciones llegan una por PR: Mercado Pago, Mercado Libre y la medición son reales.
 	async integraciones() {
 		const e = estadoInicial(false);
-		const [mp, ml, ia] = await Promise.all([
+		const [mp, ml, ia, m] = await Promise.all([
 			this.mercadoPago(),
 			this.mercadoLibre(),
-			this.pedir<{ permisos: Record<string, boolean> }>('/v1/panel/ia')
+			this.pedir<{ permisos: Record<string, boolean> }>('/v1/panel/ia'),
+			this.medicion()
 		]);
 		e.conectadas.mp = mp.conectada;
 		e.conectadas.ml = ml.conectada;
+		Object.assign(e.conectadas, conectadasDeMedicion(m));
 		e.permisosIa = { ...e.permisosIa, ...ia.permisos };
 		return e;
+	}
+	medicion() {
+		return this.pedir<Medicion>('/v1/panel/integraciones/medicion');
+	}
+	async guardarMedicion(m: Medicion) {
+		return resultado(await this.intentar('/v1/panel/integraciones/medicion', 'PUT', m));
 	}
 	async ajustarIntegracion(a: AjusteIntegracion) {
 		// Por ahora sólo los permisos de las IA se guardan en la API; el resto llega con cada integración.

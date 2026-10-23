@@ -54,6 +54,11 @@ export type TiendaPublica = {
 	turnos: TurnosTienda | null;
 	/** Sólo mirar: la vitrina de una plantilla (nadie la administra, no se compra). */
 	vitrina: boolean;
+	/**
+	 * Los IDs de GA4 y del píxel de Meta de la tienda (lib/tienda/medicion.ts). Se cargan sólo con
+	 * el consentimiento de quien compra; la vitrina nunca los tiene.
+	 */
+	medicion: { ga4: string | null; pixel: string | null };
 };
 
 /** Lo que muestra la portada de los turnos: los libres de hoy y el próximo libre de cada uno. */
