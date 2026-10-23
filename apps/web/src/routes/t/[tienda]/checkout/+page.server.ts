@@ -4,6 +4,7 @@ import { env } from 'cloudflare:workers';
 import { codigoPedido } from '#lib/server/tienda/pedido.ts';
 import { COOKIE, dbSandbox } from '#lib/server/sandbox/sandbox.ts';
 import { avisarVenta } from '#lib/server/telegram.ts';
+import { evaluarCupon } from '#lib/server/tienda/cupon.ts';
 import { resolverTienda } from '#lib/server/tienda/publica.ts';
 import { cotizar, cpValido } from '#lib/tienda/envio.ts';
 import type { Actions } from './$types';
@@ -26,7 +27,8 @@ const Pedido = v.object({
 	cp: v.pipe(v.string(), v.trim(), v.maxLength(4)),
 	direccion: v.pipe(v.string(), v.trim(), v.maxLength(160)),
 	envio: v.picklist(['andreani', 'correo', 'moto', 'retiro'], 'Elegí cómo te llega.'),
-	pago: v.picklist(['transferencia', 'mercadopago'])
+	pago: v.picklist(['transferencia', 'mercadopago']),
+	cupon: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(30)), '')
 });
 
 export const actions: Actions = {
@@ -82,27 +84,43 @@ export const actions: Actions = {
 			(o) => o.id === p.envio
 		);
 		if (!opcion) return fail(400, { error: 'Esa forma de entrega no llega a tu código postal.' });
+		// Cupón: se vuelve a evaluar acá (el carrito sólo lo mostró).
+		const cupon = p.cupon ? await evaluarCupon(r, p.cupon, p.email, p.carrito) : null;
+		if (cupon && !cupon.ok) return fail(409, { error: cupon.motivo });
+		const descCupon = cupon?.ok ? cupon.descuento : 0;
+		const envio = cupon?.ok && cupon.envioGratis ? 0 : opcion.precio;
 		const descuento =
-			p.pago === 'transferencia' ? Math.round((subtotal * r.tienda.cobros.transferencia) / 100) : 0;
-		const total = subtotal + opcion.precio - descuento;
-		const res = await r.datos.crearPedido({
-			items: p.carrito.map((l) => ({ productoId: l.id, cantidad: l.cantidad })),
-			pago: p.pago === 'transferencia' ? 'transf' : 'mp',
-			canal: 'web',
-			envio: p.envio,
-			cliente: p.nombre,
-			telefono: p.telefono,
-			nota: [
-				`Email: ${p.email}`,
-				p.dni && `DNI: ${p.dni}`,
-				p.envio !== 'retiro' && `Entrega: ${p.direccion} (${p.cp})`,
-				`Total cobrado: $ ${total.toLocaleString('es-AR')}`
-			]
-				.filter(Boolean)
-				.join(' · '),
-			// En la demo, Mercado Pago se aprueba al toque; la transferencia queda esperando el comprobante.
-			pagado: p.pago === 'mercadopago'
-		});
+			descCupon +
+			(p.pago === 'transferencia' && (!cupon || (cupon.ok && cupon.combinable))
+				? Math.round(((subtotal - descCupon) * r.tienda.cobros.transferencia) / 100)
+				: 0);
+		const total = subtotal + envio - descuento;
+		const res = await r.datos.crearPedido(
+			{
+				items: p.carrito.map((l) => ({ productoId: l.id, cantidad: l.cantidad })),
+				pago: p.pago === 'transferencia' ? 'transf' : 'mp',
+				canal: 'web',
+				envio: p.envio,
+				cliente: p.nombre,
+				telefono: p.telefono,
+				nota: [
+					`Email: ${p.email}`,
+					p.dni && `DNI: ${p.dni}`,
+					p.envio !== 'retiro' && `Entrega: ${p.direccion} (${p.cp})`,
+					cupon?.ok && `Cupón: ${p.cupon.toUpperCase()}`,
+					`Total cobrado: $ ${total.toLocaleString('es-AR')}`
+				]
+					.filter(Boolean)
+					.join(' · '),
+				// En la demo, Mercado Pago se aprueba al toque; la transferencia queda esperando el comprobante.
+				pagado: p.pago === 'mercadopago'
+			},
+			{
+				email: p.email,
+				cupon: cupon?.ok ? p.cupon.toUpperCase() : null,
+				descuentoCupon: descCupon
+			}
+		);
 		if (res === 'sin-stock')
 			return fail(409, { error: 'Algún producto se quedó sin stock. Revisá el carrito.' });
 		if (res === 'invalido') return fail(400, { error: 'Revisá el carrito.' });

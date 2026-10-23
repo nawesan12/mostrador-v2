@@ -3,12 +3,14 @@ package vidriera_test
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/configuracion"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cupones"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/listas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/vidriera"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db/pruebadb"
@@ -114,5 +116,75 @@ func TestCotizar(t *testing.T) {
 	}
 	if o := vidriera.Cotizar("x", 1, e, lunes); len(o) != 1 || o[0].ID != "retiro" {
 		t.Fatalf("CP inválido: %+v", o)
+	}
+}
+
+func TestCompraConCupon(t *testing.T) {
+	ctx := context.Background()
+	b := pruebadb.Nueva(t)
+	luna := pruebadb.CrearTienda(t, b.App, "luna")
+	stock := 50
+	p, err := listas.Guardar(ctx, b.App, luna, "", listas.Editable{Nombre: "Mate", Precio: 10000, Stock: &stock})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ahora := time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)
+	nuevo := func(codigo, tipo string, valor int, limite int, porCliente string) {
+		t.Helper()
+		if _, err := cupones.Crear(ctx, b.App, luna, cupones.Nuevo{Codigo: codigo, Tipo: tipo, Valor: valor, Alcance: "todo",
+			Quien: "todos", Limite: limite, PorCliente: porCliente, Vigencia: "sin", Canales: []string{"web"}}, ahora); err != nil {
+			t.Fatal(err)
+		}
+	}
+	nuevo("DIEZ", "pct", 10, 0, "1")
+	nuevo("UNO", "fijo", 1000, 1, "libre")
+	nuevo("ENVIO", "envio", 0, 0, "libre")
+
+	// 10 % sobre $ 20.000 con transferencia: 2.000 de cupón y 15 % de lo que queda (2.700). Sin
+	// "combinable" en el cupón, la transferencia no se suma: sólo el cupón.
+	c := compra(p.ID, 2, "transferencia")
+	c.Cupon = "diez"
+	r, err := vidriera.Comprar(ctx, b.App, nil, "", "luna", c, ahora)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := int64(20000 + 6900 - 2000); r.Total != want {
+		t.Fatalf("total con cupón: %d, quería %d", r.Total, want)
+	}
+	// Una vez por cliente: el mismo email ya no puede.
+	var ec vidriera.ErrCupon
+	if _, err := vidriera.Comprar(ctx, b.App, nil, "", "luna", c, ahora); !errors.As(err, &ec) || ec.Motivo != "Ya usaste este cupón." {
+		t.Fatalf("segundo uso: %v", err)
+	}
+	// Límite total de 1: el segundo, aunque sea otra persona, ya no.
+	c2 := compra(p.ID, 1, "mercadopago")
+	c2.Pago, c2.Cupon = "transferencia", "UNO"
+	if _, err := vidriera.Comprar(ctx, b.App, nil, "", "luna", c2, ahora); err != nil {
+		t.Fatal(err)
+	}
+	c2.Email = "otra@ejemplo.com"
+	if _, err := vidriera.Comprar(ctx, b.App, nil, "", "luna", c2, ahora); !errors.As(err, &ec) {
+		t.Fatalf("límite: %v", err)
+	}
+	// Envío gratis y código inexistente.
+	c3 := compra(p.ID, 1, "transferencia")
+	c3.Email, c3.Cupon = "tres@ejemplo.com", "ENVIO"
+	r3, err := vidriera.Comprar(ctx, b.App, nil, "", "luna", c3, ahora)
+	// No combinable: el envío sale gratis pero no se suma el 15 % de transferencia.
+	if err != nil || r3.Total != 10000 {
+		t.Fatalf("envío gratis: %+v %v", r3, err)
+	}
+	c3.Cupon = "NOEXISTE"
+	if _, err := vidriera.Comprar(ctx, b.App, nil, "", "luna", c3, ahora); !errors.As(err, &ec) || !strings.Contains(ec.Motivo, "no existe") {
+		t.Fatalf("inexistente: %v", err)
+	}
+	// El cupón suma usos y lo que descontó.
+	var usos int
+	var desconto int64
+	_ = b.App.EnTienda(ctx, luna, func(tx pgx.Tx) error {
+		return tx.QueryRow(ctx, `SELECT usos, desconto FROM cupones WHERE codigo = 'DIEZ'`).Scan(&usos, &desconto)
+	})
+	if usos != 1 || desconto != 2000 {
+		t.Fatalf("contadores: %d %d", usos, desconto)
 	}
 }
