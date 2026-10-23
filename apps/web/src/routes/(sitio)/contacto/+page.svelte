@@ -28,19 +28,12 @@
 	};
 
 	const CANALES = [
-		[I.logosWhatsappIcon, 'WhatsApp', '11 5555-0100', 'Respondemos en minutos, de 8 a 22 h'],
 		[I.phEnvelopeSimpleFill, 'Email', 'ayuda@mostradorapp.com.ar', 'Respuesta en menos de 24 h'],
 		[
 			I.phChatsCircleFill,
 			'Chat del panel',
-			'Hablá con Hornero o con una persona',
+			'Hablá con Hornero desde tu panel',
 			'Disponible 24/7'
-		],
-		[
-			I.phMapPinFill,
-			'Oficina',
-			'Av. Corrientes 1234, piso 8, CABA',
-			'Lunes a viernes de 10 a 18 h, con turno'
 		]
 	] as const;
 	const CARAS = [
