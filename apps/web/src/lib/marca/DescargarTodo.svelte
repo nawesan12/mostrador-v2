@@ -34,5 +34,5 @@
 
 <button type="button" class="btn btn-dark" onclick={todo} disabled={hecho >= 0 || !fam.total}>
 	<Icon icon={phFileZipBold} size={17} />
-	{#if hecho >= 0}Armando {hecho + 1} de {fam.total}…{:else}Descargar todo{/if}
+	{#if hecho >= 0}Armando {Math.min(hecho + 1, fam.total)} de {fam.total}…{:else}Descargar todo{/if}
 </button>

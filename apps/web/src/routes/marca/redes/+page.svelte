@@ -993,7 +993,7 @@
 						<div
 							contenteditable="true"
 							spellcheck="false"
-							style="outline:none;position:absolute;left:590px;top:110px"
+							style="position:absolute;left:590px;top:110px"
 						>
 							<div style="font-size:50px;font-weight:600;color:#6B5244">Nombre de la tienda</div>
 							<div

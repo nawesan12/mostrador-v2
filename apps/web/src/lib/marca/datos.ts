@@ -86,6 +86,8 @@ const zona = 'America/Argentina/Buenos_Aires';
 /** "23 de octubre de 2026" */
 export const fechaLarga = (d = new Date()) =>
 	d.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: zona });
+/** "2026-10-23", en hora de Argentina. */
+export const fechaIso = (d = new Date()) => d.toLocaleDateString('en-CA', { timeZone: zona });
 /** "23/10/2026" */
 export const fechaCorta = (d = new Date()) =>
 	d.toLocaleDateString('es-AR', {

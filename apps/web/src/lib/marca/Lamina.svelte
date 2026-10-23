@@ -111,7 +111,7 @@
 			class="btn btn-secondary btn-sm"
 			onclick={png}
 			disabled={!!ocupado}
-			aria-label={compacta ? `Descargar ${nombre} en PNG` : undefined}
+			aria-label={`Descargar ${nombre} en PNG`}
 			><Icon icon={phImageBold} size={15} />{#if !compacta}{ocupado === 'png'
 					? 'Armando…'
 					: 'PNG'}{/if}</button
@@ -122,6 +122,7 @@
 				class="btn btn-secondary btn-sm"
 				onclick={pdf}
 				disabled={!!ocupado}
+				aria-label={`Descargar ${nombre} en PDF`}
 				title="Se abre la impresión: elegí «Guardar como PDF»"
 				><Icon icon={phFilePdfBold} size={15} />PDF</button
 			>

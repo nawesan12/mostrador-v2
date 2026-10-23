@@ -112,4 +112,8 @@
 		position: relative;
 		cursor: pointer;
 	}
+	.foto label:has(input:focus-visible) {
+		outline: 2px solid var(--terracota);
+		outline-offset: 2px;
+	}
 </style>

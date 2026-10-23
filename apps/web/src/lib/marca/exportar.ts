@@ -68,7 +68,7 @@ export async function imprimir(
 
 	const hoja = document.createElement('div');
 	hoja.id = 'marca-imprimir';
-	hoja.style.cssText = `position:relative;overflow:hidden;width:${ancho}mm;height:${alto}mm;background-color:${fondo.backgroundColor};background-image:${fondo.backgroundImage};background-size:${fondo.backgroundSize};background-position:center`;
+	hoja.style.cssText = `position:relative;overflow:hidden;width:${ancho}mm;height:${alto}mm;background-color:${fondo.backgroundColor};background-image:${fondo.backgroundImage};background-size:${fondo.backgroundSize};background-position:center;color:${fondo.color};font-family:${fondo.fontFamily};font-variant-numeric:${fondo.fontVariantNumeric}`;
 	const copia = nodo.cloneNode(true) as HTMLElement;
 	copia.style.position = 'absolute';
 	copia.style.left = `${sangrado}mm`;
@@ -92,7 +92,13 @@ body>:not(#marca-imprimir){display:none!important}
 
 	await Promise.all(
 		[...hoja.querySelectorAll('img')].map((i) =>
-			i.complete ? null : new Promise((r) => i.addEventListener('load', r, { once: true }))
+			i.complete
+				? null
+				: new Promise((r) => {
+						// Una imagen que no carga no traba la impresión.
+						i.addEventListener('load', r, { once: true });
+						i.addEventListener('error', r, { once: true });
+					})
 		)
 	);
 	const antes = document.title;
