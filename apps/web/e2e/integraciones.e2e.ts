@@ -82,3 +82,33 @@ test('mercado libre: ajustes y publicar un producto desde su ficha', async ({ pa
 		page.getByRole('status').filter({ hasText: 'Publicado en Mercado Libre' })
 	).toBeVisible();
 });
+
+test('telegram: vincular con el código y rechazar un secreto falso', async ({ page, request }) => {
+	await demo(page, '/panel/integraciones');
+	// Desde la página (mismo origen), como lo hace el botón Vincular.
+	const { url } = await page.evaluate(async () => {
+		const r = await fetch('/panel/integraciones/telegram', { method: 'POST' });
+		return (await r.json()) as { url: string };
+	});
+	const cod = new URL(url).searchParams.get('start');
+	expect(cod).toMatch(/^[2-9A-Z]{8}$/);
+
+	const mensaje = (texto: string, secreto = 'secreto-de-prueba-e2e') =>
+		request.post('/api/webhooks/telegram', {
+			headers: { 'x-telegram-bot-api-secret-token': secreto },
+			data: {
+				message: { chat: { id: 4242, type: 'private' }, from: { first_name: 'Vale' }, text: texto }
+			}
+		});
+	expect((await mensaje('/start ' + cod, 'otro-secreto')).status()).toBe(401);
+	expect((await mensaje('/start ' + cod)).status()).toBe(200);
+
+	await page.reload();
+	await listo(page);
+	const tg = page.locator('.tarjeta', { hasText: 'Telegram' });
+	await expect(tg.getByText('● Conectada')).toBeVisible();
+	await tg.getByRole('button', { name: 'Configurar' }).click();
+	await expect(page.getByRole('dialog')).toContainText('Vinculado con Vale');
+	// El código ya se usó: no vincula otro chat.
+	expect((await mensaje('/start ' + cod)).status()).toBe(200);
+});

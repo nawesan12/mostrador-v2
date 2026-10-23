@@ -106,6 +106,25 @@
 		);
 	}
 
+	// Telegram: el link al bot con el código; Telegram se abre aparte y el chat se vincula al tocar Iniciar.
+	let esperandoTg = $state(false);
+	async function vincularTelegram() {
+		const r = await fetch('/panel/integraciones/telegram', { method: 'POST' });
+		if (!r.ok) {
+			const m = ((await r.json().catch(() => null)) as { message?: string } | null)?.message;
+			return ui.toast({ k: 'info', title: 'Telegram', desc: m ?? 'Probá de nuevo.' });
+		}
+		window.open(((await r.json()) as { url: string }).url, '_blank', 'noopener');
+		esperandoTg = true;
+	}
+	async function desvincularTelegram() {
+		const r = await fetch('/panel/integraciones/telegram', { method: 'DELETE' });
+		if (!r.ok) return ui.toast({ k: 'err', title: 'No se pudo', desc: 'Probá de nuevo.' });
+		modal = false;
+		await invalidateAll();
+		ui.toast({ k: 'info', title: 'Telegram desvinculado', desc: 'Hornero ya no te escribe ahí' });
+	}
+
 	async function ajustarML(recargo: number, pausarSinStock: boolean) {
 		const r = await fetch(RUTA.ml, {
 			method: 'PUT',
@@ -124,6 +143,7 @@
 			return;
 		}
 		if (i.id === 'mp' || i.id === 'ml') return conectarMP(i.id);
+		if (i.id === 'tg') return vincularTelegram();
 		if (i.pronto)
 			return ui.toast({ k: 'info', title: i.nombre, desc: 'Llega pronto. Te avisamos.' });
 		if (await ajustar({ tipo: 'conexion', id: i.id, valor: true }))
@@ -136,6 +156,7 @@
 
 	async function desconectar(i: Integracion) {
 		if (i.id === 'mp' || i.id === 'ml') return desconectarMP(i.id);
+		if (i.id === 'tg') return desvincularTelegram();
 		if (!(await ajustar({ tipo: 'conexion', id: i.id, valor: false }))) return;
 		modal = false;
 		ui.toast({ k: 'info', title: `${i.nombre} desconectada`, desc: 'Podés volver a conectarla' });
@@ -236,6 +257,14 @@
 		</div>
 	</section>
 
+	{#if esperandoTg && !data.estado.conectadas.tg}
+		<div class="espera" role="status">
+			<Icon icon={I.logosTelegram} size={20} />
+			<span>Tocá <b>Iniciar</b> en Telegram y volvé acá.</span>
+			<button type="button" onclick={() => invalidateAll()}>Ya lo hice</button>
+		</div>
+	{/if}
+
 	<div class="cats" role="group" aria-label="Categoría" use:anim={{ t: 'rise', delay: 100 }}>
 		{#each CATEGORIAS as [id, t] (id)}
 			<button
@@ -327,7 +356,14 @@
 				Mostrador no cobra&nbsp;comisión.
 			</div>
 		{/if}
-		{#if abierta.id === 'ml'}
+		{#if abierta.id === 'tg'}
+			<div class="m-cuenta">
+				Vinculado con <b>{data.telegram.nombre}</b> en
+				<a href="https://t.me/{data.telegram.bot}" target="_blank" rel="noopener"
+					>@{data.telegram.bot}</a
+				>. Probá preguntarle "¿qué se vendió&nbsp;hoy?".
+			</div>
+		{:else if abierta.id === 'ml'}
 			<div class="m-cuenta">
 				Cuenta <b>{data.ml.apodo}</b> · {data.ml.publicaciones}
 				{data.ml.publicaciones === 1 ? 'publicación' : 'publicaciones'} desde Mostrador.
@@ -753,6 +789,31 @@
 	.m-cuenta a {
 		color: #c24e25;
 		font-weight: 600;
+	}
+	.espera {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 12px 16px;
+		border-radius: 16px;
+		background: #e8f4fb;
+		font-size: 14px;
+		flex-wrap: wrap;
+	}
+	.espera span {
+		flex: 1;
+		min-width: 180px;
+	}
+	.espera button {
+		border: 0;
+		border-radius: 999px;
+		padding: 8px 14px;
+		background: var(--tx);
+		color: var(--sf);
+		font:
+			600 12.5px 'Instrument Sans',
+			sans-serif;
+		cursor: pointer;
 	}
 	.recargos {
 		margin-top: 8px;
