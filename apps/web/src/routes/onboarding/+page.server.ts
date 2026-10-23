@@ -4,6 +4,7 @@ import { dev } from '$app/env';
 import * as v from 'valibot';
 import { plantilla as buscarPlantilla } from '#lib/plantillas.ts';
 import { datosDe, usaSandbox } from '#lib/server/datos/index.ts';
+import { COOKIE_ORIGEN, leerOrigen } from '#lib/server/origen.ts';
 import { RUBROS } from '#lib/server/sandbox/rubros.ts';
 import { esProveedor, irAlProveedor } from '#lib/server/auth/social.ts';
 import { COOKIE, crear, DatosSandbox, dbSandbox, VIDA_MS } from '#lib/server/sandbox/sandbox.ts';
@@ -14,7 +15,17 @@ import type { Actions, PageServerLoad } from './$types';
  * recorre con el negocio de ejemplo y al terminar se crea el sandbox con la plantilla elegida. Con
  * la API, el paso 1 crea la cuenta (en /ingresar) y cada paso se guarda en la tienda.
  */
-export const load: PageServerLoad = ({ locals, url }) => {
+export const load: PageServerLoad = async ({ locals, url, cookies }) => {
+	// La cuenta ya existe: el origen de /empezar (si lo hay) queda en la tienda, una sola vez.
+	const origen = !usaSandbox() && locals.token ? leerOrigen(cookies) : null;
+	if (origen) {
+		const r = await fetch(`${String(env.API_URL)}/v1/panel/tienda/origen`, {
+			method: 'PUT',
+			headers: { 'content-type': 'application/json', authorization: `Bearer ${locals.token}` },
+			body: JSON.stringify(origen)
+		}).catch(() => null);
+		if (r?.ok || r?.status === 400) cookies.delete(COOKIE_ORIGEN, { path: '/' });
+	}
 	// Sin ?paso= manda lo guardado en el navegador (ojo: Number(null) es 0).
 	const crudo = url.searchParams.get('paso');
 	const paso = crudo === null ? NaN : Number(crudo);
