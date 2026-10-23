@@ -19,26 +19,26 @@ reviews:
   auto_review:
     enabled: true
     drafts: false
-    base_branches: ['main']
+    base_branches: ["main"]
 
   # Generado, vendorizado o diseño de referencia: no se revisa.
   path_filters:
-    - '!design/**'
-    - '!**/*.dc.html'
-    - '!bun.lock'
-    - '!apps/api/go.sum'
-    - '!packages/contrato/src/esquema.ts'
-    - '!apps/web/src/lib/catalogos.ts'
-    - '!apps/web/src/lib/plantillas.ts'
-    - '!apps/web/static/**'
+    - "!design/**"
+    - "!**/*.dc.html"
+    - "!bun.lock"
+    - "!apps/api/go.sum"
+    - "!packages/contrato/src/esquema.ts"
+    - "!apps/web/src/lib/catalogos.ts"
+    - "!apps/web/src/lib/plantillas.ts"
+    - "!apps/web/static/**"
 
   path_instructions:
-    - path: '**/*'
+    - path: "**/*"
       instructions: |
         - Nunca secretos en el código, en logs ni en mensajes de error. `CREDENCIALES.md` jamás entra al repo.
         - Cloudflare: nada de `wrangler versions upload`, `--remote`, previews, crons nuevos ni polling contra producción; todo dentro de los límites gratis.
         - Textos visibles en español rioplatense (vos, "tenés", "elegí").
-    - path: 'apps/api/**/*.go'
+    - path: "apps/api/**/*.go"
       instructions: |
         API Go (pgx, Postgres con RLS forzada por tienda).
         - Toda consulta de datos de una tienda va por `EnTienda` (RLS); `EnTx` sólo para lo que no es de una tienda (ej. resolver un slug con una función SECURITY DEFINER). Marcá cualquier camino que pueda leer o escribir datos de otra tienda.
@@ -46,10 +46,10 @@ reviews:
         - Errores HTTP con `problema` (problem+json); efectos secundarios por el outbox, no en la request.
         - Integraciones: tokens cifrados con `plataforma/cifrado`; webhooks con firma verificada (Mercado Pago x-signature) o, si el proveedor no firma, verificando contra su API con el token de la tienda.
         - Cada cambio de comportamiento con su test (con `pruebadb`), incluido el de aislamiento entre tiendas cuando aplica.
-    - path: 'apps/api/db/migraciones/*.sql'
+    - path: "apps/api/db/migraciones/*.sql"
       instructions: |
         Migraciones goose con Up y Down. Tablas de una tienda con `app.aplicar_rls(...)` y grants mínimos al rol `mostrador_app` (columnas explícitas en UPDATE). Funciones SECURITY DEFINER con `SET search_path` y `REVOKE ALL ... FROM PUBLIC`. Checks en columnas de texto y jsonb con tamaño acotado.
-    - path: 'apps/web/src/**/*.svelte'
+    - path: "apps/web/src/**/*.svelte"
       instructions: |
         SvelteKit con Svelte 5 (runes: $state, $derived, $props, $effect). Revisá:
         - La UI es fiel al handoff de `design/` (no inventar estilos; lo no diseñado se arma con piezas existentes).
@@ -57,16 +57,16 @@ reviews:
         - Sin palabras sueltas en el último renglón de textos fijos (se usa `&nbsp;` antes de la última palabra o `text-wrap`).
         - `{#each}` siempre con clave; links internos con `resolve()` o con el disable de `svelte/no-navigation-without-resolve` justificado.
         - Accesibilidad: botones con nombre, labels en inputs, foco visible.
-    - path: 'apps/web/src/lib/server/**'
+    - path: "apps/web/src/lib/server/**"
       instructions: |
         Código de servidor del BFF. Las páginas piden `datosDe(locals)`; hay dos implementaciones de `Datos` (sandbox D1 y API Go) que tienen que comportarse igual. Validá entradas con valibot. `env` se importa de `cloudflare:workers`. En el sandbox, cada lectura/escritura va acotada al `sandbox_id` del visitante.
-    - path: 'apps/web/src/routes/**/+server.ts'
+    - path: "apps/web/src/routes/**/+server.ts"
       instructions: |
         Endpoints: CSRF (sólo los webhooks y OAuth están exentos en hooks.server.ts), límites de intentos donde haya abuso posible, y nada de datos personales en la URL.
-    - path: 'apps/web/e2e/**'
+    - path: "apps/web/e2e/**"
       instructions: |
         Playwright con proyectos desktop y mobile. Esperar la hidratación (`html[data-listo]`) antes de interactuar; nada de `waitForTimeout` para sincronizar; no depender de la hora del día ni de números que cambian con el catálogo.
-    - path: 'packages/contrato/openapi.yaml'
+    - path: "packages/contrato/openapi.yaml"
       instructions: |
         Contrato único entre el BFF y Go: cada cambio tiene que tener su implementación en los dos lados (DatosApi y Go) y su esquema con límites (maxLength, minimum, enum).
 
