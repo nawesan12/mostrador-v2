@@ -211,3 +211,39 @@ func SolicitarCAE(ctx context.Context, cli *http.Client, dir Direcciones, t Tick
 	}
 	return a, nil
 }
+
+// Consultado es lo que ARCA tiene de un comprobante ya emitido.
+type Consultado struct {
+	CAE      string
+	VenceCAE time.Time
+	Total    string
+}
+
+// Consultar trae un comprobante por tipo, punto de venta y número (FECompConsultar). Sirve para
+// recuperar el CAE cuando ARCA autorizó pero la respuesta no llegó: reintentar a ciegas emitiría
+// otro comprobante por la misma venta.
+func Consultar(ctx context.Context, cli *http.Client, dir Direcciones, t Ticket, cuit string, pv, tipo, numero int) (Consultado, error) {
+	b, err := soap(ctx, cli, dir.WSFE, "http://ar.gov.afip.dif.FEV1/FECompConsultar", sobre(fmt.Sprintf(
+		`<ar:FECompConsultar>%s<ar:FeCompConsReq><ar:CbteTipo>%d</ar:CbteTipo><ar:CbteNro>%d</ar:CbteNro><ar:PtoVta>%d</ar:PtoVta></ar:FeCompConsReq></ar:FECompConsultar>`,
+		auth(t, cuit), tipo, numero, pv)))
+	if err != nil {
+		return Consultado{}, err
+	}
+	var r struct {
+		CAE    string   `xml:"Body>FECompConsultarResponse>FECompConsultarResult>ResultGet>CodAutorizacion"`
+		Vence  string   `xml:"Body>FECompConsultarResponse>FECompConsultarResult>ResultGet>FchVto"`
+		Total  string   `xml:"Body>FECompConsultarResponse>FECompConsultarResult>ResultGet>ImpTotal"`
+		Errors errsARCA `xml:"Body>FECompConsultarResponse>FECompConsultarResult>Errors"`
+	}
+	if err := xml.Unmarshal(b, &r); err != nil {
+		return Consultado{}, err
+	}
+	if err := r.Errors.primero(); err != nil {
+		return Consultado{}, err
+	}
+	v, _ := time.ParseInLocation("20060102", r.Vence, arg)
+	return Consultado{CAE: r.CAE, VenceCAE: v, Total: r.Total}, nil
+}
+
+// TotalDec es el total como lo manda (y lo devuelve) ARCA: "12100.00".
+func (c Comprobante) TotalDec() string { _, _, t := c.importes(); return dec(t) }

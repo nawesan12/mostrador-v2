@@ -13,6 +13,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/crecer"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cupones"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/facturacion"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/finanzas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/formularios"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/hoy"
@@ -52,6 +53,8 @@ type Dependencias struct {
 	MercadoLibre *mercadolibre.Servicio
 	// IA conectadas por MCP (OAuth 2.1). Sin esto, los tokens de IA no entran.
 	IA *ia.Servicio
+	// Facturación con ARCA (comprobantes, certificado, factura manual).
+	Facturacion *facturacion.Servicio
 }
 
 // Nuevo devuelve el handler raíz de la API.
@@ -98,7 +101,12 @@ func Nuevo(d Dependencias) http.Handler {
 		}
 		tiendas.Rutas(mux, d.App, tienda)
 		pedidos.Rutas(mux, d.App, tienda)
-		listas.Rutas(mux, d.App, tienda)
+		var fact listas.Facturas
+		if d.Facturacion != nil {
+			fact = facturacion.ParaListas{S: d.Facturacion}
+			d.Facturacion.Rutas(mux)
+		}
+		listas.Rutas(mux, d.App, tienda, fact)
 		var preguntas ventas.Preguntas
 		if d.MercadoLibre != nil {
 			preguntas = d.MercadoLibre
