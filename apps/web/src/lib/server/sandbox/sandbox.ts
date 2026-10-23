@@ -1767,6 +1767,8 @@ export class DatosSandbox implements Datos {
 		Object.assign(e.permisosIa, g('permisosIa'));
 		e.conectadas.mp = mp.conectada;
 		e.conectadas.ml = (await this.mercadoLibre()).conectada;
+		// Telegram cuenta si hay un chat vinculado (lib/server/telegram.ts).
+		e.conectadas.tg = !!(await cambiosDe(this.db, this.sb.id, 'cuenta')).get('telegram');
 		return e;
 	}
 	async ajustarIntegracion(a: AjusteIntegracion): Promise<Resultado> {
@@ -2316,6 +2318,9 @@ export class DatosSandbox implements Datos {
 		// La insignia cuenta lo mismo que la pantalla: las tareas de hoy sin marcar.
 		const tareas = (await this.paraHacer()).grupos.flatMap((g) => g.tareas);
 		r.insignias.paraHacer = tareas.filter((t) => !t.hecha).length;
+		// Los canales de la barra son los que están conectados en Integraciones.
+		const { conectadas } = await this.integraciones();
+		r.canales = r.canales.filter((c) => conectadas[c]);
 		return r;
 	}
 
