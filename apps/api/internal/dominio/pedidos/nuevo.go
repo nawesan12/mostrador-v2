@@ -10,6 +10,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/listas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
@@ -19,12 +20,22 @@ var ErrSinStock = errors.New("no alcanza el stock")
 // ErrProducto: algún producto no existe en la tienda.
 var ErrProducto = errors.New("el producto no existe")
 
+// ErrSinVariante: el producto tiene opciones y la línea no dice cuál variante.
+var ErrSinVariante = errors.New("elegí una variante")
+
+// ErrVariante: la variante no es de ese producto, no existe o no está a la venta.
+var ErrVariante = errors.New("la variante no está a la venta")
+
+// Linea es un producto del pedido nuevo. Con opciones, VarianteID es obligatoria.
+type Linea struct {
+	ProductoID string `json:"productoId"`
+	VarianteID string `json:"varianteId"`
+	Cantidad   int    `json:"cantidad"`
+}
+
 // PedidoNuevo es lo que manda el punto de venta o Crear pedido (components/schemas/PedidoNuevo).
 type PedidoNuevo struct {
-	Items []struct {
-		ProductoID string `json:"productoId"`
-		Cantidad   int    `json:"cantidad"`
-	} `json:"items"`
+	Items   []Linea `json:"items"`
 	Pago    string  `json:"pago"`
 	Canal   string  `json:"canal"`
 	Envio   string  `json:"envio"`
@@ -35,7 +46,8 @@ type PedidoNuevo struct {
 	Nota      *string `json:"nota"`
 	// Pagado en false: queda Sin pagar (se cobra con un link).
 	Pagado *bool `json:"pagado"`
-	// Precios cobrados en otro canal (Mercado Libre), por producto. Nunca viene del navegador.
+	// Precios cobrados en otro canal (Mercado Libre), por producto o "producto:variante". Nunca viene
+	// del navegador.
 	Precios map[string]int64 `json:"-"`
 	// La tienda online: envío, descuento por transferencia, email y el código de la confirmación.
 	// Los calcula el servidor (vidriera), nunca vienen del navegador.
@@ -85,34 +97,35 @@ func CrearDesdeProductos(ctx context.Context, pool tx, tiendaID string, n Pedido
 	}
 	var numero int
 	var total int64
+	// Se descuenta en un orden fijo (producto, variante): dos ventas con los mismos productos en otro
+	// orden no se traban entre sí. Los ítems quedan en el orden en que vinieron.
+	orden := make([]int, len(n.Items))
+	for i := range orden {
+		orden[i] = i
+	}
+	slices.SortStableFunc(orden, func(a, b int) int {
+		x, y := n.Items[a], n.Items[b]
+		return strings.Compare(x.ProductoID+":"+x.VarianteID, y.ProductoID+":"+y.VarianteID)
+	})
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		items := []Item{}
-		for _, i := range n.Items {
+		items := make([]Item, len(n.Items))
+		for _, k := range orden {
+			i := n.Items[k]
 			if i.Cantidad < 1 || i.Cantidad > 10000 {
 				return errors.New("cantidad inválida")
 			}
-			var it Item
-			// Descuenta sólo si alcanza: la condición evita vender lo que no hay con dos cajas a la vez.
-			err := t.QueryRow(ctx, `UPDATE productos SET stock = stock - $3
-				WHERE tienda_id = $1 AND id::text = $2 AND stock >= $3
-				RETURNING nombre, foto, precio`, tiendaID, i.ProductoID, i.Cantidad).Scan(&it.Nombre, &it.Foto, &it.Precio)
-			if errors.Is(err, pgx.ErrNoRows) {
-				var existe bool
-				_ = t.QueryRow(ctx, `SELECT true FROM productos WHERE tienda_id = $1 AND id::text = $2`, tiendaID, i.ProductoID).Scan(&existe)
-				if existe {
-					return ErrSinStock
-				}
-				return ErrProducto
-			}
+			it, err := descontar(ctx, t, tiendaID, i)
 			if err != nil {
 				return err
 			}
-			if p, ok := n.Precios[i.ProductoID]; ok {
+			if p, ok := n.Precios[i.ProductoID+":"+i.VarianteID]; ok && i.VarianteID != "" {
+				it.Precio = p
+			} else if p, ok := n.Precios[i.ProductoID]; ok {
 				it.Precio = p
 			}
 			it.Cantidad = i.Cantidad
 			total += it.Precio * int64(it.Cantidad)
-			items = append(items, it)
+			items[k] = it
 		}
 		var tel *string
 		if n.Telefono != nil && strings.TrimSpace(*n.Telefono) != "" {
@@ -175,6 +188,56 @@ func CrearDesdeProductos(ctx context.Context, pool tx, tiendaID string, n Pedido
 	return numero, total + n.CostoEnvio - n.Descuento, err
 }
 
+// descontar baja el stock de la línea sólo si alcanza (la condición del UPDATE evita vender lo que no
+// hay con dos cajas a la vez) y devuelve el ítem con el precio y la foto de la tienda.
+func descontar(ctx context.Context, t pgx.Tx, tiendaID string, i Linea) (Item, error) {
+	var it Item
+	if i.VarianteID == "" {
+		err := t.QueryRow(ctx, `UPDATE productos SET stock = stock - $3
+			WHERE tienda_id = $1 AND id::text = $2 AND stock >= $3 AND opciones = '[]'::jsonb
+			RETURNING nombre, foto, precio`, tiendaID, i.ProductoID, i.Cantidad).Scan(&it.Nombre, &it.Foto, &it.Precio)
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return it, err
+		}
+		var conOpciones *bool
+		_ = t.QueryRow(ctx, `SELECT opciones <> '[]'::jsonb FROM productos WHERE tienda_id = $1 AND id::text = $2`,
+			tiendaID, i.ProductoID).Scan(&conOpciones)
+		switch {
+		case conOpciones == nil:
+			return it, ErrProducto
+		case *conOpciones:
+			return it, ErrSinVariante
+		}
+		return it, ErrSinStock
+	}
+	// La variante: activa, de ese producto y de esta tienda (RLS además lo asegura).
+	var opciones []listas.Opcion
+	var valores map[string]string
+	var id string
+	err := t.QueryRow(ctx, `UPDATE variantes v SET stock = v.stock - $4
+		FROM productos p
+		WHERE v.tienda_id = $1 AND v.producto_id::text = $2 AND v.id::text = $3 AND v.activa AND v.stock >= $4
+			AND p.tienda_id = v.tienda_id AND p.id = v.producto_id AND p.opciones <> '[]'::jsonb
+		RETURNING p.nombre, coalesce(v.foto, p.foto), coalesce(v.precio, p.precio), v.id::text, v.valores, p.opciones`,
+		tiendaID, i.ProductoID, i.VarianteID, i.Cantidad).Scan(&it.Nombre, &it.Foto, &it.Precio, &id, &valores, &opciones)
+	if errors.Is(err, pgx.ErrNoRows) {
+		var activa *bool
+		_ = t.QueryRow(ctx, `SELECT v.activa FROM variantes v JOIN productos p ON p.tienda_id = v.tienda_id AND p.id = v.producto_id
+			WHERE v.tienda_id = $1 AND v.producto_id::text = $2 AND v.id::text = $3 AND p.opciones <> '[]'::jsonb`,
+			tiendaID, i.ProductoID, i.VarianteID).Scan(&activa)
+		if activa != nil && *activa {
+			return it, ErrSinStock
+		}
+		return it, ErrVariante
+	}
+	if err != nil {
+		return it, err
+	}
+	texto := listas.TextoVariante(opciones, valores)
+	it.VarianteID, it.Variante = &id, &texto
+	return it, nil
+}
+
 func rutasNuevo(mux *http.ServeMux, pool tx, con func(func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc) {
 	mux.HandleFunc("POST /v1/panel/pedidos", con(func(w http.ResponseWriter, r *http.Request, id string) {
 		var n PedidoNuevo
@@ -188,6 +251,10 @@ func rutasNuevo(mux *http.ServeMux, pool tx, con func(func(http.ResponseWriter, 
 			problema.Escribir(w, problema.Conflicto("sin_stock", "No alcanza el stock de algún producto."))
 		case errors.Is(err, ErrProducto):
 			problema.Escribir(w, problema.Invalido("Hay un producto que no existe."))
+		case errors.Is(err, ErrSinVariante):
+			problema.Escribir(w, problema.Invalido("Elegí la variante de los productos con opciones (talle, color…)."))
+		case errors.Is(err, ErrVariante):
+			problema.Escribir(w, problema.Invalido("Hay una variante que no existe o no está a la venta."))
 		case err != nil && strings.Contains(err.Error(), "inválid"):
 			problema.Escribir(w, problema.Invalido("Revisá el pedido."))
 		case err != nil:

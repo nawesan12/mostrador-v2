@@ -155,7 +155,7 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, fact 
 	}))
 	guardar := func(w http.ResponseWriter, r *http.Request, tiendaID, id string, estado int) {
 		var e Editable
-		if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 16<<10)).Decode(&e); err != nil {
+		if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 128<<10)).Decode(&e); err != nil {
 			problema.Escribir(w, problema.Invalido("Mandá el producto."))
 			return
 		}

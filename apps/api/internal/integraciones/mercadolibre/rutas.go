@@ -14,6 +14,7 @@ import (
 // falta a la publicación), nunca el cuerpo entero.
 func (s *Servicio) Problema(w http.ResponseWriter, err error) {
 	var em *ErrorML
+	var ev *ErrVariaciones
 	switch {
 	case err == nil:
 		w.WriteHeader(http.StatusNoContent)
@@ -29,6 +30,8 @@ func (s *Servicio) Problema(w http.ResponseWriter, err error) {
 		problema.Escribir(w, problema.Invalido("La conexión venció. Probá de nuevo."))
 	case errors.Is(err, ErrInvalido):
 		problema.Escribir(w, problema.Invalido("Revisá los datos (para publicar hace falta precio y stock)."))
+	case errors.As(err, &ev):
+		problema.Escribir(w, problema.NoProcesable("variantes_ml", ev.Mensaje))
 	case errors.As(err, &em) && em.Estado < 500:
 		msg := em.Mensaje
 		if msg == "" {

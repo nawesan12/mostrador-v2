@@ -17,6 +17,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/listas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/turnos"
 )
@@ -46,7 +47,20 @@ type ProductoPublico struct {
 	Anterior    *int64  `json:"anterior"`
 	Foto        *string `json:"foto"`
 	Etiqueta    *string `json:"etiqueta"`
-	Stock       int     `json:"stock"`
+	// Stock: con opciones, la suma de las variantes activas.
+	Stock     int               `json:"stock"`
+	Fotos     []string          `json:"fotos"`
+	Opciones  []listas.Opcion   `json:"opciones"`
+	Variantes []VariantePublica `json:"variantes"`
+}
+
+// VariantePublica: sólo las activas, sin SKU. Precio nil = el del producto.
+type VariantePublica struct {
+	ID      string            `json:"id"`
+	Valores map[string]string `json:"valores"`
+	Precio  *int64            `json:"precio"`
+	Stock   int               `json:"stock"`
+	Foto    *string           `json:"foto"`
 }
 
 type Categoria struct {
@@ -183,15 +197,41 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 			return err
 		}
 
-		filas, err := t.Query(ctx, `SELECT id::text, nombre, descripcion, categoria, precio, foto, stock FROM productos
+		variantes := map[string][]listas.Variante{}
+		vs, err := t.Query(ctx, `SELECT producto_id::text, id::text, valores, precio, stock, foto FROM variantes
+			WHERE tienda_id = $1 AND activa`, id)
+		if err != nil {
+			return err
+		}
+		for vs.Next() {
+			var p string
+			v := listas.Variante{Activa: true}
+			if err := vs.Scan(&p, &v.ID, &v.Valores, &v.Precio, &v.Stock, &v.Foto); err != nil {
+				vs.Close()
+				return err
+			}
+			variantes[p] = append(variantes[p], v)
+		}
+		if err := vs.Err(); err != nil {
+			return err
+		}
+		filas, err := t.Query(ctx, `SELECT id::text, nombre, descripcion, categoria, precio, foto, stock, fotos, opciones FROM productos
 			WHERE tienda_id = $1 AND publicado AND coalesce((canales->>'web')::boolean, true) ORDER BY creado_en DESC LIMIT 500`, id)
 		if err != nil {
 			return err
 		}
 		for filas.Next() {
 			var p ProductoPublico
-			if err := filas.Scan(&p.ID, &p.Nombre, &p.Descripcion, &p.Categoria, &p.Precio, &p.Foto, &p.Stock); err != nil {
+			if err := filas.Scan(&p.ID, &p.Nombre, &p.Descripcion, &p.Categoria, &p.Precio, &p.Foto, &p.Stock, &p.Fotos, &p.Opciones); err != nil {
 				return err
+			}
+			p.Variantes = []VariantePublica{}
+			if len(p.Opciones) > 0 {
+				vs := variantes[p.ID]
+				listas.OrdenarVariantes(p.Opciones, vs)
+				for _, v := range vs {
+					p.Variantes = append(p.Variantes, VariantePublica{ID: v.ID, Valores: v.Valores, Precio: v.Precio, Stock: v.Stock, Foto: v.Foto})
+				}
 			}
 			if p.Stock > 0 && p.Stock <= 3 {
 				u := "Últimos"
@@ -304,21 +344,25 @@ func contiene(l []string, s string) bool {
 	return false
 }
 
+// LineaCarrito: un producto (y, si tiene opciones, su variante) del carrito.
+type LineaCarrito struct {
+	ID         string `json:"id"`
+	VarianteID string `json:"varianteId"`
+	Cantidad   int    `json:"cantidad"`
+}
+
 // Compra es lo que manda el checkout (precios y envío NO vienen: se calculan acá).
 type Compra struct {
-	Carrito []struct {
-		ID       string `json:"id"`
-		Cantidad int    `json:"cantidad"`
-	} `json:"carrito"`
-	Email     string `json:"email"`
-	Nombre    string `json:"nombre"`
-	Telefono  string `json:"telefono"`
-	DNI       string `json:"dni"`
-	CP        string `json:"cp"`
-	Direccion string `json:"direccion"`
-	Envio     string `json:"envio"`
-	Pago      string `json:"pago"`
-	Cupon     string `json:"cupon"`
+	Carrito   []LineaCarrito `json:"carrito"`
+	Email     string         `json:"email"`
+	Nombre    string         `json:"nombre"`
+	Telefono  string         `json:"telefono"`
+	DNI       string         `json:"dni"`
+	CP        string         `json:"cp"`
+	Direccion string         `json:"direccion"`
+	Envio     string         `json:"envio"`
+	Pago      string         `json:"pago"`
+	Cupon     string         `json:"cupon"`
 }
 
 // Resultado de comprar: el pedido, su código público y (con Mercado Pago) adónde pagar.
@@ -360,11 +404,12 @@ func Comprar(ctx context.Context, pool tx, mp Pagador, sitio, slug string, c Com
 		if !ok || l.Cantidad < 1 || l.Cantidad > 99 {
 			return Resultado{}, ErrInvalido
 		}
-		subtotal += p.Precio * int64(l.Cantidad)
-		n.Items = append(n.Items, struct {
-			ProductoID string `json:"productoId"`
-			Cantidad   int    `json:"cantidad"`
-		}{l.ID, l.Cantidad})
+		precio, ok := precioDe(p, l.VarianteID)
+		if !ok {
+			return Resultado{}, ErrInvalido
+		}
+		subtotal += precio * int64(l.Cantidad)
+		n.Items = append(n.Items, pedidos.Linea{ProductoID: l.ID, VarianteID: l.VarianteID, Cantidad: l.Cantidad})
 	}
 	var opcion *Opcion
 	for _, o := range Cotizar(c.CP, subtotal, t.Envios, hoy) {
@@ -418,6 +463,9 @@ func Comprar(ctx context.Context, pool tx, mp Pagador, sitio, slug string, c Com
 	if errors.Is(err, pedidos.ErrCupon) {
 		return Resultado{}, ErrCupon{Motivo: "Este cupón se acaba de agotar."}
 	}
+	if errors.Is(err, pedidos.ErrVariante) || errors.Is(err, pedidos.ErrSinVariante) || errors.Is(err, pedidos.ErrProducto) {
+		return Resultado{}, ErrInvalido
+	}
 	if err != nil {
 		return Resultado{}, err
 	}
@@ -426,6 +474,23 @@ func Comprar(ctx context.Context, pool tx, mp Pagador, sitio, slug string, c Com
 		r.URL, err = mp.PagarPedido(ctx, id, numero, fmt.Sprintf("%s/t/%s/pedido/%s", sitio, slug, r.Codigo))
 	}
 	return r, err
+}
+
+// precioDe la línea: el de la variante si tiene, si no el del producto. Con opciones exige una
+// variante activa del producto; sin opciones no acepta ninguna.
+func precioDe(p ProductoPublico, varianteID string) (int64, bool) {
+	if len(p.Opciones) == 0 {
+		return p.Precio, varianteID == ""
+	}
+	for _, v := range p.Variantes {
+		if v.ID == varianteID {
+			if v.Precio != nil {
+				return *v.Precio, true
+			}
+			return p.Precio, true
+		}
+	}
+	return 0, false
 }
 
 // Confirmacion es lo que muestra la página del pedido (y su seguimiento).

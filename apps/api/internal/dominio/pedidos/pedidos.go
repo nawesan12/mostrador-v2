@@ -50,6 +50,10 @@ type Item struct {
 	Foto     *string `json:"foto"`
 	Cantidad int     `json:"cantidad"`
 	Precio   int64   `json:"precio"`
+	// La variante vendida y su texto ("Talle M · Color Negro"), copiado al vender: sobrevive a que
+	// la variante se borre o cambie.
+	VarianteID *string `json:"varianteId"`
+	Variante   *string `json:"variante"`
 }
 
 // Comprador es quien compró, copiado en el pedido.

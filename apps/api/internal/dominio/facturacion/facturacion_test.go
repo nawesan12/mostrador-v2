@@ -93,10 +93,7 @@ func TestFacturacionConARCA(t *testing.T) {
 	vender := func(nombre string, total int64) int {
 		t.Helper()
 		n := pedidos.PedidoNuevo{Canal: "web", Pago: "mp", Envio: "retiro", Cliente: &nombre, Precios: map[string]int64{prod.ID: total}}
-		n.Items = append(n.Items, struct {
-			ProductoID string `json:"productoId"`
-			Cantidad   int    `json:"cantidad"`
-		}{prod.ID, 1})
+		n.Items = append(n.Items, pedidos.Linea{ProductoID: prod.ID, Cantidad: 1})
 		numero, _, err := pedidos.CrearDesdeProductos(ctx, b.App, luna, n)
 		if err != nil {
 			t.Fatal(err)

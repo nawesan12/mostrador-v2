@@ -19,10 +19,7 @@ func TestFinanzasConLoQueSeSabe(t *testing.T) {
 	p, _ := listas.Guardar(ctx, b.App, id, "", listas.Editable{Nombre: "Termo", Precio: 40000, Costo: &costo, Stock: &stock})
 	var n pedidos.PedidoNuevo
 	n.Pago, n.Canal, n.Envio = "transf", "web", "retiro"
-	n.Items = append(n.Items, struct {
-		ProductoID string `json:"productoId"`
-		Cantidad   int    `json:"cantidad"`
-	}{p.ID, 2})
+	n.Items = append(n.Items, pedidos.Linea{ProductoID: p.ID, Cantidad: 2})
 	if _, _, err := pedidos.CrearDesdeProductos(ctx, b.App, id, n); err != nil {
 		t.Fatal(err)
 	}

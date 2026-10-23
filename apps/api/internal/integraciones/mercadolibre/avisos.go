@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -107,7 +108,8 @@ type orden struct {
 	Status     string `json:"status"`
 	OrderItems []struct {
 		Item struct {
-			ID string `json:"id"`
+			ID          string `json:"id"`
+			VariationID int64  `json:"variation_id"`
 		} `json:"item"`
 		Quantity  int     `json:"quantity"`
 		UnitPrice float64 `json:"unit_price"`
@@ -149,10 +151,13 @@ func (s *Servicio) traerPedido(ctx context.Context, tiendaID, token, recurso str
 	nota := fmt.Sprintf("Venta de Mercado Libre #%d", o.ID)
 	n.Nota = &nota
 	for _, it := range o.OrderItems {
-		var producto string
+		var producto, variante string
 		err := s.Pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-			return t.QueryRow(ctx, `SELECT producto_id::text FROM ml_publicaciones WHERE tienda_id = $1 AND item_id = $2`,
-				tiendaID, it.Item.ID).Scan(&producto)
+			// La variación vendida es una variante: se busca en el mapa que se guardó al publicar.
+			return t.QueryRow(ctx, `SELECT producto_id::text, coalesce((SELECT key FROM jsonb_each_text(variaciones)
+					WHERE value = $3 LIMIT 1), '')
+				FROM ml_publicaciones WHERE tienda_id = $1 AND item_id = $2`,
+				tiendaID, it.Item.ID, strconv.FormatInt(it.Item.VariationID, 10)).Scan(&producto, &variante)
 		})
 		if errors.Is(err, pgx.ErrNoRows) {
 			continue // una publicación que no salió de Mostrador
@@ -160,11 +165,12 @@ func (s *Servicio) traerPedido(ctx context.Context, tiendaID, token, recurso str
 		if err != nil {
 			return s.liberar(ctx, tiendaID, o.ID, err)
 		}
-		n.Items = append(n.Items, struct {
-			ProductoID string `json:"productoId"`
-			Cantidad   int    `json:"cantidad"`
-		}{producto, it.Quantity})
-		n.Precios[producto] = int64(it.UnitPrice + 0.5)
+		n.Items = append(n.Items, pedidos.Linea{ProductoID: producto, VarianteID: variante, Cantidad: it.Quantity})
+		if variante != "" {
+			n.Precios[producto+":"+variante] = int64(it.UnitPrice + 0.5)
+		} else {
+			n.Precios[producto] = int64(it.UnitPrice + 0.5)
+		}
 	}
 	if len(n.Items) == 0 {
 		return nil
@@ -173,6 +179,11 @@ func (s *Servicio) traerPedido(ctx context.Context, tiendaID, token, recurso str
 	if errors.Is(err, pedidos.ErrSinStock) {
 		// Se vendió en Mercado Libre algo que acá ya no estaba: queda anotado para que la tienda lo vea.
 		s.log().Warn("mercadolibre: venta sin stock en Mostrador", "tienda", tiendaID, "orden", o.ID)
+		return nil
+	}
+	if errors.Is(err, pedidos.ErrSinVariante) || errors.Is(err, pedidos.ErrVariante) {
+		// Una variación que no corresponde a ninguna variante a la venta: reintentar no lo arregla.
+		s.log().Warn("mercadolibre: venta de una variación sin variante en Mostrador", "tienda", tiendaID, "orden", o.ID)
 		return nil
 	}
 	if err != nil {

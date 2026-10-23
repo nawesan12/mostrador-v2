@@ -23,10 +23,7 @@ func TestResenasYPreguntas(t *testing.T) {
 	}
 	// Una compra cobrada con su código público.
 	n := pedidos.PedidoNuevo{Canal: "web", Pago: "mp", Envio: "retiro", CodigoPublico: "codigo-de-la-compra-123"}
-	n.Items = append(n.Items, struct {
-		ProductoID string `json:"productoId"`
-		Cantidad   int    `json:"cantidad"`
-	}{p.ID, 1})
+	n.Items = append(n.Items, pedidos.Linea{ProductoID: p.ID, Cantidad: 1})
 	if _, _, err := pedidos.CrearDesdeProductos(ctx, b.App, luna, n); err != nil {
 		t.Fatal(err)
 	}

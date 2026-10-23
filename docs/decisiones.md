@@ -340,3 +340,39 @@ URL, para que no quede en el historial ni en logs.
 - **Tope por IP:** 10 reseñas y 10 preguntas por hora. En Go (`limite.Permitido`, con la IP que
   manda el BFF en `X-Cliente-IP`); en la demo, `golpe` de `lib/server/limite.ts` sobre la D1. En la
   vitrina de una plantilla no se guarda nada (responde que es una tienda de ejemplo).
+
+## 28. Variantes y galería de fotos
+
+- Un producto tiene hasta 3 **opciones** (`productos.opciones`, jsonb `[{nombre, valores}]`, hasta 20
+  valores cada una) y, con opciones, se vende por **variante**: una fila de `variantes` por
+  combinación (`valores` = `{"Talle": "M", "Color": "Negro"}`), con PK/FK compuestas con productos
+  (como `ml_publicaciones`), única por `(tienda_id, producto_id, valores)` y RLS por tienda. Tope de
+  100 combinaciones por producto (lo mismo que admite Mercado Libre por publicación).
+- **El stock vive en la variante.** Es lo que se vende y lo que se cuenta: si viviera en el producto
+  habría que repartirlo, y dos ventas de talles distintos competirían por el mismo número. El
+  `productos.stock` de un producto con opciones es la suma de sus variantes activas y lo mantiene un
+  trigger (`app.variantes_stock`), así que ningún camino (venta, ajuste, conteo, edición) lo deja
+  desparejo, y como toca `productos.stock`, el trigger de Mercado Libre se entera solo. Las acciones
+  de stock sobre el producto entero no lo tocan si tiene opciones.
+- Al guardar opciones se generan o ajustan las combinaciones: las que siguen conservan stock, precio,
+  SKU y foto; las nuevas arrancan en 0 y activas; las que dejan de existir se borran (los pedidos ya
+  guardaron el texto). El editor manda sólo las variantes que toca, identificadas por sus valores.
+  `opciones` sin mandar deja las que había; `[]` vuelve a producto simple.
+- Vender una variante es un `UPDATE … WHERE activa AND stock >= n` sobre esa fila, unida a su producto:
+  dos cajas no sobrevenden y nunca se acepta una variante inactiva o de otro producto. Un producto con
+  opciones exige `varianteId`. Las líneas se descuentan en orden (producto, variante) para que dos
+  ventas con los mismos productos en otro orden no se traben. El ítem guarda `varianteId` y el texto
+  ("Talle M · Color Negro", nombre y valor de cada opción en orden).
+- Inventario: la fila del producto trae `variantes` y las acciones `ajustar`/`ingreso`/`conteo`
+  aceptan ids `producto:variante` (el `id` de cada variante en la lista ya viene así).
+- **Galería**: `productos.fotos` (hasta 8); `foto` sigue siendo la primera, para todo lo que ya la
+  usa. Un editor que no manda `fotos` reemplaza la portada con `foto` y deja el resto. La migración
+  arranca `fotos` con la foto que había.
+- Mercado Libre: con variantes se publica con `variations`. Cada opción se mapea a un atributo de la
+  categoría que admita variaciones (por nombre o alias: talle→SIZE, color→COLOR…); la que no mapea va
+  con su nombre como atributo personalizado y, si Mercado Libre lo rechaza, no se publica y se avisa.
+  También se avisa si la categoría no admite variaciones o si las variantes tienen precios distintos
+  (Mercado Libre pide uno solo). Qué variación es cada variante queda en
+  `ml_publicaciones.variaciones`; con eso se sincroniza el stock por variación y las ventas entran
+  como su variante. Una variante creada después de publicar no se agrega sola: hay que volver a
+  publicar.

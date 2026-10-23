@@ -26,10 +26,7 @@ func TestArrepentimientoDeLaTienda(t *testing.T) {
 		t.Fatal(err)
 	}
 	n := pedidos.PedidoNuevo{Canal: "web", Pago: "mp", Envio: "retiro", Email: "lucia@ejemplo.com", CodigoPublico: "codigo-publico-del-pedido"}
-	n.Items = append(n.Items, struct {
-		ProductoID string `json:"productoId"`
-		Cantidad   int    `json:"cantidad"`
-	}{p.ID, 1})
+	n.Items = append(n.Items, pedidos.Linea{ProductoID: p.ID, Cantidad: 1})
 	numero, _, err := pedidos.CrearDesdeProductos(ctx, b.App, luna, n)
 	if err != nil {
 		t.Fatal(err)
@@ -96,10 +93,7 @@ func TestArrepentimientoConcurrente(t *testing.T) {
 		t.Fatal(err)
 	}
 	n := pedidos.PedidoNuevo{Canal: "web", Pago: "mp", Envio: "retiro", Email: "lucia@ejemplo.com", CodigoPublico: "codigo-concurrente"}
-	n.Items = append(n.Items, struct {
-		ProductoID string `json:"productoId"`
-		Cantidad   int    `json:"cantidad"`
-	}{p.ID, 1})
+	n.Items = append(n.Items, pedidos.Linea{ProductoID: p.ID, Cantidad: 1})
 	if _, _, err := pedidos.CrearDesdeProductos(ctx, b.App, luna, n); err != nil {
 		t.Fatal(err)
 	}
