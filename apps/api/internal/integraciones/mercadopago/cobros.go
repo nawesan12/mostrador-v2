@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 
@@ -38,6 +39,9 @@ type preferencia struct {
 	AutoReturn        string            `json:"auto_return,omitempty"`
 	PaymentMethods    map[string]any    `json:"payment_methods,omitempty"`
 	StatementDesc     string            `json:"statement_descriptor,omitempty"`
+	// La seña de un turno vence: después, Mercado Pago ya no deja pagarla.
+	Expires          bool   `json:"expires,omitempty"`
+	ExpirationDateTo string `json:"expiration_date_to,omitempty"`
 }
 
 // PagarLink crea (o reusa) la preferencia de Checkout Pro de un link de pago, con el token de la
@@ -164,6 +168,85 @@ func (s *Servicio) PagarPedido(ctx context.Context, tiendaID string, numero int,
 	return r.InitPoint, nil
 }
 
+// PagarTurno crea la preferencia por la seña de un turno reservado (monto sacado de la base) y
+// devuelve el init_point. La preferencia vence con el turno: pasado venceEn el horario ya se liberó.
+// vuelta es la página del turno en la tienda.
+func (s *Servicio) PagarTurno(ctx context.Context, tiendaID, turnoID, vuelta string) (string, error) {
+	var sena int64
+	var servicio, tienda string
+	var vence *time.Time
+	err := s.Pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		return t.QueryRow(ctx, `SELECT u.sena, u.servicio, u.vence_en, t.nombre FROM turnos u JOIN tiendas t ON t.id = u.tienda_id
+			WHERE u.id = $1 AND u.estado = 'reservado' AND NOT u.sena_pagada AND u.sena > 0`, turnoID).Scan(&sena, &servicio, &vence, &tienda)
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", ErrNoExiste
+	}
+	if err != nil {
+		return "", err
+	}
+	token, _, err := s.tokenDe(ctx, tiendaID)
+	if err != nil {
+		return "", err
+	}
+	ref := nuevaReferencia(tiendaID)
+	if err := s.Pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		_, err := t.Exec(ctx, `INSERT INTO mp_cobros (referencia, tienda_id, tipo, objetivo, monto) VALUES ($1, $2, 'turno', $3, $4)`,
+			ref, tiendaID, turnoID, sena)
+		return err
+	}); err != nil {
+		return "", err
+	}
+	p := preferencia{
+		Items:             []item{{Title: recortar("Seña: "+servicio+" en "+tienda, 250), Quantity: 1, UnitPrice: sena, CurrencyID: "ARS"}},
+		ExternalReference: ref,
+		BackURLs:          map[string]string{"success": vuelta + "?pago=ok", "pending": vuelta + "?pago=pendiente", "failure": vuelta + "?pago=error"},
+		StatementDesc:     recortar(tienda, 22),
+		// Una seña no se paga en cuotas.
+		PaymentMethods: map[string]any{"installments": 1},
+	}
+	if vence != nil {
+		p.Expires, p.ExpirationDateTo = true, vence.Format("2006-01-02T15:04:05.000-07:00")
+	}
+	if s.publico() {
+		p.AutoReturn = "approved"
+	}
+	var r struct {
+		InitPoint string `json:"init_point"`
+	}
+	if err := s.cliente().JSON(ctx, http.MethodPost, "/checkout/preferences", token, ref, p, &r); err != nil {
+		return "", err
+	}
+	if r.InitPoint == "" {
+		return "", errors.New("mercadopago: la preferencia no trajo init_point")
+	}
+	return r.InitPoint, nil
+}
+
+// DevolverSena devuelve entera la seña pagada de un turno. Idempotente: la clave es el turno.
+func (s *Servicio) DevolverSena(ctx context.Context, tiendaID, turnoID string) error {
+	var pagoID *int64
+	err := s.Pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		return t.QueryRow(ctx, `SELECT pago FROM mp_cobros WHERE tipo = 'turno' AND objetivo = $1 AND estado IN ('approved', 'processed')
+			ORDER BY actualizado_en DESC LIMIT 1`, turnoID).Scan(&pagoID)
+	})
+	if errors.Is(err, pgx.ErrNoRows) || (err == nil && pagoID == nil) {
+		return ErrNoExiste
+	}
+	if err != nil {
+		return err
+	}
+	token, _, err := s.tokenDe(ctx, tiendaID)
+	if err != nil {
+		return err
+	}
+	if err := s.cliente().JSON(ctx, http.MethodPost, fmt.Sprintf("/v1/payments/%d/refunds", *pagoID), token,
+		"reembolso:turno:"+tiendaID+":"+turnoID, map[string]any{}, nil); err != nil {
+		return err
+	}
+	return s.ConciliarPago(ctx, tiendaID, *pagoID)
+}
+
 func recortar(s string, n int) string {
 	r := []rune(s)
 	if len(r) > n {
@@ -234,6 +317,25 @@ func (s *Servicio) aplicar(ctx context.Context, tiendaID, ref string, pagoID int
 			}
 		case "pedido", "qr":
 			pedido = objetivo
+		case "turno":
+			// Seña aprobada: el turno queda confirmado. Si alguien lo canceló mientras, o la reserva ya
+			// venció (el horario quedó libre y otra persona pudo tomarlo), sólo se marca pagada y queda
+			// cancelado, para que la tienda devuelva la seña. Devuelta: se anota.
+			switch {
+			case aprobado:
+				if _, err := t.Exec(ctx, `UPDATE turnos SET sena_pagada = true, vence_en = NULL,
+						estado = CASE
+							WHEN estado = 'reservado' AND (vence_en IS NULL OR vence_en > now()) THEN 'confirmado'
+							WHEN estado = 'reservado' THEN 'cancelado'
+							ELSE estado END
+					WHERE id = $1::uuid`, objetivo); err != nil {
+					return err
+				}
+			case devuelto:
+				if _, err := t.Exec(ctx, `UPDATE turnos SET sena_devuelta = true WHERE id = $1::uuid`, objetivo); err != nil {
+					return err
+				}
+			}
 		}
 		if pedido != "" && (aprobado || devuelto) {
 			if aprobado {

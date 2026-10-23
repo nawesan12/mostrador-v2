@@ -18,6 +18,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/turnos"
 )
 
 var (
@@ -74,6 +75,8 @@ type Tienda struct {
 	Cobros      map[string]any    `json:"cobros"`
 	Envios      Envios            `json:"envios"`
 	Vitrina     bool              `json:"vitrina"`
+	// Turnos: servicios, profesionales, seña y horario; null si la tienda no toma turnos.
+	Turnos *turnos.Resumen `json:"turnos"`
 }
 
 type Envios struct {
@@ -145,6 +148,10 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 		_ = json.Unmarshal(negocio, &n)
 		out.Direccion, out.Whatsapp = n.Direccion, n.Whatsapp
 		out.Cobros = map[string]any{"transferencia": transferencia, "cuotas": cuotas, "mercadoPago": mp}
+		var err error
+		if out.Turnos, err = turnos.ResumenDe(ctx, t, id, mp); err != nil {
+			return err
+		}
 
 		filas, err := t.Query(ctx, `SELECT id::text, nombre, descripcion, categoria, precio, foto, stock FROM productos
 			WHERE tienda_id = $1 AND publicado AND coalesce((canales->>'web')::boolean, true) ORDER BY creado_en DESC LIMIT 500`, id)

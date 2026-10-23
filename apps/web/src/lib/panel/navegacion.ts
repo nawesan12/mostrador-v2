@@ -43,6 +43,7 @@ export const AREAS: Area[] = [
 		punto: true,
 		items: [
 			it('Pedidos', I.phPackage, I.phPackageFill, 'pedidos'),
+			it('Turnos', I.phCalendarBlank, I.phCalendarBlankFill),
 			it('Devoluciones', I.phArrowUUpLeft, I.phArrowUUpLeftFill),
 			it('Ventas en local', I.phStorefront, I.phStorefrontFill),
 			it('Carritos abandonados', I.phShoppingCartSimple, I.phShoppingCartSimpleFill, 'carritos'),
@@ -110,6 +111,12 @@ export const AREAS: Area[] = [
 		]
 	}
 ];
+
+/**
+ * Secciones que sólo se ven si la tienda las usa: Turnos, con turnos activos o rubro de servicios.
+ * (La ruta existe igual; esto decide qué se muestra en el menú y en ⌘K.)
+ */
+export const visible = (label: string, turnos: boolean) => label !== 'Turnos' || turnos;
 
 /** Modo Simple: una sola lista ("Día a día"). */
 export const SIMPLE: Item[] = [

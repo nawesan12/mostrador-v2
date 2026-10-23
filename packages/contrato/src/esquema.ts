@@ -1695,6 +1695,197 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/turnos/ajustes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Turnos con seña — si están activos, la seña, la anticipación, los días de vista y el horario. */
+        get: operations["ajustesTurnos"];
+        /** Guarda los ajustes de turnos. */
+        put: operations["guardarAjustesTurnos"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/turnos/servicios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Los servicios que se reservan (activos e inactivos), por orden. */
+        get: operations["serviciosTurnos"];
+        put?: never;
+        /** Un servicio nuevo (va al final del orden si no trae uno). */
+        post: operations["crearServicio"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/turnos/servicios/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["guardarServicio"];
+        post?: never;
+        /** Lo saca (los turnos ya tomados quedan con el nombre copiado). */
+        delete: operations["borrarServicio"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/turnos/profesionales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Quienes atienden (activos e inactivos), por orden. */
+        get: operations["profesionalesTurnos"];
+        put?: never;
+        post: operations["crearProfesional"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/turnos/profesionales/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["guardarProfesional"];
+        post?: never;
+        delete: operations["borrarProfesional"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/turnos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** La agenda entre dos días (inclusive), opcionalmente de un profesional; por inicio. */
+        get: operations["agendaTurnos"];
+        put?: never;
+        /** Un turno cargado a mano (origen panel, sin seña). Si se superpone, 409 salvo que venga forzar. */
+        post: operations["crearTurno"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/turnos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Cualquiera de los cinco estados (también sirve para deshacer). */
+        patch: operations["estadoTurno"];
+        trace?: never;
+    };
+    "/v1/panel/turnos/{id}/devolver-sena": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Devuelve la seña pagada con Mercado Pago (Reembolsar). Cancelar no la devuelve sola. */
+        post: operations["devolverSena"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/publico/tiendas/{slug}/turnos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Servicios y profesionales activos y los ajustes públicos. 404 si la tienda no tiene turnos activos. */
+        get: operations["turnosPublicos"];
+        put?: never;
+        /** Reserva desde la tienda. Precio, duración y seña salen del servicio; la disponibilidad se re-chequea en una transacción. Con seña y Mercado Pago devuelve el checkout (url). */
+        post: operations["reservarTurno"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/publico/tiendas/{slug}/turnos/libres": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Los horarios libres de un día (regla 1). Sin profesional (o "cualquiera") sirve si alguno está libre. */
+        get: operations["turnosLibres"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/publico/tiendas/{slug}/turnos/{codigo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** El turno por su código público (la confirmación). */
+        get: operations["turnoPublico"];
+        put?: never;
+        post?: never;
+        /** Cancela el turno (hasta anticipacionMin antes; cancelar uno cancelado no es error). Con seña pagada, la devolución la hace la tienda. */
+        delete: operations["cancelarTurnoPublico"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2838,6 +3029,169 @@ export interface components {
             plan: components["schemas"]["Plan"];
             /** Format: date-time */
             creadaEn: string;
+        };
+        /** @description Un tramo de atención de un día de la semana, en hora de Argentina (UTC−3) */
+        Franja: {
+            /** @description 0 = domingo */
+            dia: number;
+            /** @description Múltiplo de 15 min, menor que hasta */
+            desde: string;
+            /** @description Múltiplo de 15 min; se acepta 24:00 */
+            hasta: string;
+        };
+        AjustesTurnos: {
+            activo: boolean;
+            /** @description Porcentaje del precio (0 = sin seña); por defecto 30 */
+            sena: number;
+            /** @description Minutos mínimos para reservar; por defecto 60 */
+            anticipacionMin: number;
+            /** @description Días hacia adelante que se pueden reservar (hoy cuenta como el primero); por defecto 14 */
+            diasVista: number;
+            horario: components["schemas"]["Franja"][];
+        };
+        ServicioEditable: {
+            nombre: string;
+            descripcion: string;
+            /** @description Pesos enteros */
+            precio: number;
+            /** @description Minutos */
+            duracion: number;
+            foto: string | null;
+            etiqueta: string | null;
+            activo: boolean;
+            orden?: number;
+        };
+        Servicio: components["schemas"]["ServicioEditable"] & {
+            id: string;
+            orden: number;
+        };
+        ProfesionalEditable: {
+            nombre: string;
+            rol: string;
+            foto: string | null;
+            /** @description Ids de los servicios que hace; vacío = todos */
+            servicios: string[];
+            activo: boolean;
+            orden?: number;
+        };
+        Profesional: components["schemas"]["ProfesionalEditable"] & {
+            id: string;
+            orden: number;
+        };
+        /** @enum {string} */
+        EstadoTurno: "reservado" | "confirmado" | "cancelado" | "atendido" | "ausente";
+        Turno: {
+            id: string;
+            /** @description Público, aleatorio (≥ 16 caracteres url-safe) */
+            codigo: string;
+            servicioId: string;
+            /** @description Nombre copiado al reservar */
+            servicio: string;
+            profesionalId: string;
+            /** @description Nombre copiado al reservar */
+            profesional: string;
+            /**
+             * Format: date-time
+             * @description ISO con offset −03:00
+             */
+            inicio: string;
+            /** Format: date-time */
+            fin: string;
+            cliente: {
+                nombre: string;
+                telefono: string;
+                email: string;
+            };
+            /** @description Pesos */
+            precio: number;
+            /** @description Monto de la seña en pesos (0 = sin seña) */
+            sena: number;
+            estado: components["schemas"]["EstadoTurno"];
+            senaPagada: boolean;
+            /** @description Se devolvió con Mercado Pago (Devolver la seña) */
+            senaDevuelta: boolean;
+            /** @enum {string} */
+            origen: "tienda" | "panel";
+            nota: string | null;
+            /** Format: date-time */
+            creadoEn: string;
+            /**
+             * Format: date-time
+             * @description Sólo mientras espera la seña
+             */
+            venceEn: string | null;
+            /** @description Reservado, sin seña y pasado venceEn: ya no ocupa el horario */
+            vencido: boolean;
+        };
+        TurnoNuevo: {
+            servicioId: string;
+            profesionalId: string;
+            /** Format: date-time */
+            inicio: string;
+            nombre: string;
+            telefono: string;
+            /** @description Puede ir vacío desde el panel */
+            email: string;
+            nota?: string | null;
+            /**
+             * @description Reservar aunque se superponga
+             * @default false
+             */
+            forzar: boolean;
+        };
+        ReservaTurno: {
+            servicioId: string;
+            /** @description null = cualquiera (el primero libre por orden) */
+            profesionalId: string | null;
+            /** Format: date-time */
+            inicio: string;
+            nombre: string;
+            telefono: string;
+            /** Format: email */
+            email: string;
+        };
+        HorarioLibre: {
+            /**
+             * Format: date-time
+             * @description ISO con offset −03:00
+             */
+            inicio: string;
+            /** @description El profesional pedido (null = cualquiera); al reservar se asigna el primero libre por orden */
+            profesionalId: string | null;
+        };
+        /** @description TiendaPublica.turnos (null si la tienda no toma turnos): sólo servicios y profesionales activos */
+        TurnosPublicos: {
+            servicios: components["schemas"]["Servicio"][];
+            profesionales: components["schemas"]["Profesional"][];
+            /** @description Porcentaje que se cobra al reservar (0 si no hay seña o la tienda no tiene Mercado Pago) */
+            sena: number;
+            anticipacionMin: number;
+            diasVista: number;
+            horario: components["schemas"]["Franja"][];
+        };
+        /** @description Lo que ve quien reservó (/t/{slug}/turno/{codigo}): sin los datos de contacto */
+        TurnoPublico: {
+            codigo: string;
+            servicio: string;
+            profesional: string;
+            /** Format: date-time */
+            inicio: string;
+            /** Format: date-time */
+            fin: string;
+            /** @description Sólo el primer nombre de quien reservó */
+            nombre: string;
+            precio: number;
+            sena: number;
+            senaPagada: boolean;
+            estado: components["schemas"]["EstadoTurno"];
+            /** Format: date-time */
+            venceEn: string | null;
+            vencido: boolean;
+            /** @description Reservado sin vencer o confirmado, y falta más que la anticipación mínima */
+            cancelable: boolean;
+            tienda: string;
+            direccion: string;
+            whatsapp: string;
         };
         Problema: {
             type: string;
@@ -5763,6 +6117,511 @@ export interface operations {
             };
             /** @description Sin sesión */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problema"];
+                };
+            };
+        };
+    };
+    ajustesTurnos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ajustes (los de por defecto si nunca se guardaron) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AjustesTurnos"];
+                };
+            };
+        };
+    };
+    guardarAjustesTurnos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AjustesTurnos"];
+            };
+        };
+        responses: {
+            /** @description Como quedaron */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AjustesTurnos"];
+                };
+            };
+            400: components["responses"]["Problema"];
+        };
+    };
+    serviciosTurnos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Servicios */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Servicio"][];
+                };
+            };
+        };
+    };
+    crearServicio: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServicioEditable"];
+            };
+        };
+        responses: {
+            /** @description Creado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Servicio"];
+                };
+            };
+            400: components["responses"]["Problema"];
+        };
+    };
+    guardarServicio: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServicioEditable"];
+            };
+        };
+        responses: {
+            /** @description Como quedó */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Servicio"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+        };
+    };
+    borrarServicio: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Borrado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["Problema"];
+        };
+    };
+    profesionalesTurnos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Profesionales */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profesional"][];
+                };
+            };
+        };
+    };
+    crearProfesional: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfesionalEditable"];
+            };
+        };
+        responses: {
+            /** @description Creado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profesional"];
+                };
+            };
+            400: components["responses"]["Problema"];
+        };
+    };
+    guardarProfesional: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfesionalEditable"];
+            };
+        };
+        responses: {
+            /** @description Como quedó */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profesional"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+        };
+    };
+    borrarProfesional: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Borrado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["Problema"];
+        };
+    };
+    agendaTurnos: {
+        parameters: {
+            query: {
+                desde: string;
+                hasta: string;
+                profesional?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Turnos */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Turno"][];
+                };
+            };
+            400: components["responses"]["Problema"];
+        };
+    };
+    crearTurno: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TurnoNuevo"];
+            };
+        };
+        responses: {
+            /** @description Creado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Turno"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            /** @description ocupado: se superpone con otro turno (mandar forzar para tomarlo igual) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problema"];
+                };
+            };
+        };
+    };
+    estadoTurno: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    estado: components["schemas"]["EstadoTurno"];
+                };
+            };
+        };
+        responses: {
+            /** @description Como quedó */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Turno"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+        };
+    };
+    devolverSena: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description El turno con la seña devuelta */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Turno"];
+                };
+            };
+            403: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+            /** @description sin_sena (no hay seña pagada) o sin_cobros (sin Mercado Pago) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problema"];
+                };
+            };
+            502: components["responses"]["Problema"];
+        };
+    };
+    turnosPublicos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Turnos de la tienda */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TurnosPublicos"];
+                };
+            };
+            404: components["responses"]["Problema"];
+        };
+    };
+    reservarTurno: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReservaTurno"];
+            };
+        };
+        responses: {
+            /** @description Reservado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        codigo: string;
+                        url?: string;
+                    };
+                };
+            };
+            400: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+            /** @description ocupado: el horario ya no está libre */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problema"];
+                };
+            };
+            502: components["responses"]["Problema"];
+        };
+    };
+    turnosLibres: {
+        parameters: {
+            query: {
+                servicio: string;
+                profesional?: string;
+                dia: string;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Horarios libres, por hora */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HorarioLibre"][];
+                };
+            };
+            400: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+        };
+    };
+    turnoPublico: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+                codigo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Turno */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TurnoPublico"];
+                };
+            };
+            404: components["responses"]["Problema"];
+        };
+    };
+    cancelarTurnoPublico: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+                codigo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cancelado */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TurnoPublico"];
+                };
+            };
+            404: components["responses"]["Problema"];
+            /** @description tarde: falta menos que la anticipación mínima */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

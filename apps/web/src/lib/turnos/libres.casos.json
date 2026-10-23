@@ -1,0 +1,1101 @@
+{
+	"descripcion": "Casos de disponibilidad de turnos (ESPEC, regla 1). Los usan libres_test.go (Go) y libres.spec.ts (web): las dos implementaciones tienen que dar exactamente esto. Horas de Argentina (−03:00); profesionalId del resultado = el pedido (null = cualquiera).",
+	"casos": [
+		{
+			"nombre": "franja cortada: mañana y tarde, nada en el medio",
+			"entrada": {
+				"ajustes": {
+					"activo": true,
+					"sena": 30,
+					"anticipacionMin": 0,
+					"diasVista": 14,
+					"horario": [
+						{
+							"dia": 1,
+							"desde": "09:00",
+							"hasta": "10:00"
+						},
+						{
+							"dia": 1,
+							"desde": "14:00",
+							"hasta": "15:00"
+						}
+					]
+				},
+				"servicio": {
+					"id": "s-corte",
+					"nombre": "Corte",
+					"descripcion": "",
+					"precio": 12000,
+					"duracion": 30,
+					"foto": null,
+					"etiqueta": null,
+					"activo": true,
+					"orden": 0
+				},
+				"profesionales": [
+					{
+						"id": "p-ana",
+						"nombre": "Ana",
+						"rol": "",
+						"foto": null,
+						"servicios": [],
+						"activo": true,
+						"orden": 0
+					}
+				],
+				"turnos": [],
+				"profesionalId": "p-ana",
+				"dia": "2026-10-26",
+				"ahora": "2026-10-26T08:00:00-03:00"
+			},
+			"esperado": [
+				{
+					"inicio": "2026-10-26T09:00:00-03:00",
+					"profesionalId": "p-ana"
+				},
+				{
+					"inicio": "2026-10-26T09:15:00-03:00",
+					"profesionalId": "p-ana"
+				},
+				{
+					"inicio": "2026-10-26T09:30:00-03:00",
+					"profesionalId": "p-ana"
+				},
+				{
+					"inicio": "2026-10-26T14:00:00-03:00",
+					"profesionalId": "p-ana"
+				},
+				{
+					"inicio": "2026-10-26T14:15:00-03:00",
+					"profesionalId": "p-ana"
+				},
+				{
+					"inicio": "2026-10-26T14:30:00-03:00",
+					"profesionalId": "p-ana"
+				}
+			]
+		},
+		{
+			"nombre": "el servicio no entra al final de la franja",
+			"entrada": {
+				"ajustes": {
+					"activo": true,
+					"sena": 30,
+					"anticipacionMin": 0,
+					"diasVista": 14,
+					"horario": [
+						{
+							"dia": 1,
+							"desde": "09:00",
+							"hasta": "10:00"
+						},
+						{
+							"dia": 1,
+							"desde": "10:00",
+							"hasta": "10:30"
+						}
+					]
+				},
+				"servicio": {
+					"id": "s-corte",
+					"nombre": "Corte",
+					"descripcion": "",
+					"precio": 12000,
+					"duracion": 45,
+					"foto": null,
+					"etiqueta": null,
+					"activo": true,
+					"orden": 0
+				},
+				"profesionales": [
+					{
+						"id": "p-ana",
+						"nombre": "Ana",
+						"rol": "",
+						"foto": null,
+						"servicios": [],
+						"activo": true,
+						"orden": 0
+					}
+				],
+				"turnos": [],
+				"profesionalId": "p-ana",
+				"dia": "2026-10-26",
+				"ahora": "2026-10-26T08:00:00-03:00"
+			},
+			"esperado": [
+				{
+					"inicio": "2026-10-26T09:00:00-03:00",
+					"profesionalId": "p-ana"
+				},
+				{
+					"inicio": "2026-10-26T09:15:00-03:00",
+					"profesionalId": "p-ana"
+				}
+			]
+		},
+		{
+			"nombre": "turno superpuesto bloquea; cancelado no",
+			"entrada": {
+				"ajustes": {
+					"activo": true,
+					"sena": 30,
+					"anticipacionMin": 0,
+					"diasVista": 14,
+					"horario": [
+						{
+							"dia": 1,
+							"desde": "09:00",
+							"hasta": "11:00"
+						}
+					]
+				},
+				"servicio": {
+					"id": "s-corte",
+					"nombre": "Corte",
+					"descripcion": "",
+					"precio": 12000,
+					"duracion": 30,
+					"foto": null,
+					"etiqueta": null,
+					"activo": true,
+					"orden": 0
+				},
+				"profesionales": [
+					{
+						"id": "p-ana",
+						"nombre": "Ana",
+						"rol": "",
+						"foto": null,
+						"servicios": [],
+						"activo": true,
+						"orden": 0
+					}
+				],
+				"turnos": [
+					{
+						"profesionalId": "p-ana",
+						"inicio": "2026-10-26T09:30:00-03:00",
+						"fin": "2026-10-26T10:00:00-03:00",
+						"estado": "confirmado",
+						"senaPagada": false,
+						"venceEn": null
+					},
+					{
+						"profesionalId": "p-ana",
+						"inicio": "2026-10-26T10:30:00-03:00",
+						"fin": "2026-10-26T11:00:00-03:00",
+						"estado": "cancelado",
+						"senaPagada": false,
+						"venceEn": null
+					},
+					{
+						"profesionalId": "p-beto",
+						"inicio": "2026-10-26T10:00:00-03:00",
+						"fin": "2026-10-26T10:30:00-03:00",
+						"estado": "confirmado",
+						"senaPagada": false,
+						"venceEn": null
+					}
+				],
+				"profesionalId": "p-ana",
+				"dia": "2026-10-26",
+				"ahora": "2026-10-26T08:00:00-03:00"
+			},
+			"esperado": [
+				{
+					"inicio": "2026-10-26T09:00:00-03:00",
+					"profesionalId": "p-ana"
+				},
+				{
+					"inicio": "2026-10-26T10:00:00-03:00",
+					"profesionalId": "p-ana"
+				},
+				{
+					"inicio": "2026-10-26T10:15:00-03:00",
+					"profesionalId": "p-ana"
+				},
+				{
+					"inicio": "2026-10-26T10:30:00-03:00",
+					"profesionalId": "p-ana"
+				}
+			]
+		},
+		{
+			"nombre": "reservado vencido ya no bloquea; el que no venció, sí",
+			"entrada": {
+				"ajustes": {
+					"activo": true,
+					"sena": 30,
+					"anticipacionMin": 0,
+					"diasVista": 14,
+					"horario": [
+						{
+							"dia": 1,
+							"desde": "09:00",
+							"hasta": "10:00"
+						}
+					]
+				},
+				"servicio": {
+					"id": "s-corte",
+					"nombre": "Corte",
+					"descripcion": "",
+					"precio": 12000,
+					"duracion": 30,
+					"foto": null,
+					"etiqueta": null,
+					"activo": true,
+					"orden": 0
+				},
+				"profesionales": [
+					{
+						"id": "p-ana",
+						"nombre": "Ana",
+						"rol": "",
+						"foto": null,
+						"servicios": [],
+						"activo": true,
+						"orden": 0
+					}
+				],
+				"turnos": [
+					{
+						"profesionalId": "p-ana",
+						"inicio": "2026-10-26T09:00:00-03:00",
+						"fin": "2026-10-26T09:30:00-03:00",
+						"estado": "reservado",
+						"senaPagada": false,
+						"venceEn": "2026-10-26T07:50:00-03:00"
+					},
+					{
+						"profesionalId": "p-ana",
+						"inicio": "2026-10-26T09:30:00-03:00",
+						"fin": "2026-10-26T10:00:00-03:00",
+						"estado": "reservado",
+						"senaPagada": false,
+						"venceEn": "2026-10-26T08:10:00-03:00"
+					}
+				],
+				"profesionalId": "p-ana",
+				"dia": "2026-10-26",
+				"ahora": "2026-10-26T08:00:00-03:00"
+			},
+			"esperado": [
+				{
+					"inicio": "2026-10-26T09:00:00-03:00",
+					"profesionalId": "p-ana"
+				}
+			]
+		},
+		{
+			"nombre": "reservado con seña pagada bloquea aunque haya pasado venceEn",
+			"entrada": {
+				"ajustes": {
+					"activo": true,
+					"sena": 30,
+					"anticipacionMin": 0,
+					"diasVista": 14,
+					"horario": [
+						{
+							"dia": 1,
+							"desde": "09:00",
+							"hasta": "10:00"
+						}
+					]
+				},
+				"servicio": {
+					"id": "s-corte",
+					"nombre": "Corte",
+					"descripcion": "",
+					"precio": 12000,
+					"duracion": 30,
+					"foto": null,
+					"etiqueta": null,
+					"activo": true,
+					"orden": 0
+				},
+				"profesionales": [
+					{
+						"id": "p-ana",
+						"nombre": "Ana",
+						"rol": "",
+						"foto": null,
+						"servicios": [],
+						"activo": true,
+						"orden": 0
+					}
+				],
+				"turnos": [
+					{
+						"profesionalId": "p-ana",
+						"inicio": "2026-10-26T09:00:00-03:00",
+						"fin": "2026-10-26T09:30:00-03:00",
+						"estado": "reservado",
+						"senaPagada": true,
+						"venceEn": "2026-10-26T07:50:00-03:00"
+					}
+				],
+				"profesionalId": "p-ana",
+				"dia": "2026-10-26",
+				"ahora": "2026-10-26T08:00:00-03:00"
+			},
+			"esperado": [
+				{
+					"inicio": "2026-10-26T09:30:00-03:00",
+					"profesionalId": "p-ana"
+				}
+			]
+		},
+		{
+			"nombre": "cualquiera: sirve si algún profesional está libre",
+			"entrada": {
+				"ajustes": {
+					"activo": true,
+					"sena": 30,
+					"anticipacionMin": 0,
+					"diasVista": 14,
+					"horario": [
+						{
+							"dia": 1,
+							"desde": "09:00",
+							"hasta": "10:00"
+						}
+					]
+				},
+				"servicio": {
+					"id": "s-corte",
+					"nombre": "Corte",
+					"descripcion": "",
+					"precio": 12000,
+					"duracion": 30,
+					"foto": null,
+					"etiqueta": null,
+					"activo": true,
+					"orden": 0
+				},
+				"profesionales": [
+					{
+						"id": "p-beto",
+						"nombre": "Beto",
+						"rol": "",
+						"foto": null,
+						"servicios": [],
+						"activo": true,
+						"orden": 1
+					},
+					{
+						"id": "p-ana",
+						"nombre": "Ana",
+						"rol": "",
+						"foto": null,
+						"servicios": [],
+						"activo": true,
+						"orden": 0
+					}
+				],
+				"turnos": [
+					{
+						"profesionalId": "p-ana",
+						"inicio": "2026-10-26T09:00:00-03:00",
+						"fin": "2026-10-26T09:30:00-03:00",
+						"estado": "confirmado",
+						"senaPagada": false,
+						"venceEn": null
+					},
+					{
+						"profesionalId": "p-beto",
+						"inicio": "2026-10-26T09:30:00-03:00",
+						"fin": "2026-10-26T10:00:00-03:00",
+						"estado": "confirmado",
+						"senaPagada": false,
+						"venceEn": null
+					}
+				],
+				"profesionalId": null,
+				"dia": "2026-10-26",
+				"ahora": "2026-10-26T08:00:00-03:00"
+			},
+			"esperado": [
+				{
+					"inicio": "2026-10-26T09:00:00-03:00",
+					"profesionalId": null
+				},
+				{
+					"inicio": "2026-10-26T09:30:00-03:00",
+					"profesionalId": null
+				}
+			]
+		},
+		{
+			"nombre": "un profesional puntual con el otro libre",
+			"entrada": {
+				"ajustes": {
+					"activo": true,
+					"sena": 30,
+					"anticipacionMin": 0,
+					"diasVista": 14,
+					"horario": [
+						{
+							"dia": 1,
+							"desde": "09:00",
+							"hasta": "10:00"
+						}
+					]
+				},
+				"servicio": {
+					"id": "s-corte",
+					"nombre": "Corte",
+					"descripcion": "",
+					"precio": 12000,
+					"duracion": 30,
+					"foto": null,
+					"etiqueta": null,
+					"activo": true,
+					"orden": 0
+				},
+				"profesionales": [
+					{
+						"id": "p-ana",
+						"nombre": "Ana",
+						"rol": "",
+						"foto": null,
+						"servicios": [],
+						"activo": true,
+						"orden": 0
+					},
+					{
+						"id": "p-beto",
+						"nombre": "Beto",
+						"rol": "",
+						"foto": null,
+						"servicios": [],
+						"activo": true,
+						"orden": 1
+					}
+				],
+				"turnos": [
+					{
+						"profesionalId": "p-ana",
+						"inicio": "2026-10-26T09:00:00-03:00",
+						"fin": "2026-10-26T09:30:00-03:00",
+						"estado": "confirmado",
+						"senaPagada": false,
+						"venceEn": null
+					},
+					{
+						"profesionalId": "p-beto",
+						"inicio": "2026-10-26T09:30:00-03:00",
+						"fin": "2026-10-26T10:00:00-03:00",
+						"estado": "confirmado",
+						"senaPagada": false,
+						"venceEn": null
+					}
+				],
+				"profesionalId": "p-beto",
+				"dia": "2026-10-26",
+				"ahora": "2026-10-26T08:00:00-03:00"
+			},
+			"esperado": [
+				{
+					"inicio": "2026-10-26T09:00:00-03:00",
+					"profesionalId": "p-beto"
+				}
+			]
+		},
+		{
+			"nombre": "cualquiera no cuenta profesionales pausados",
+			"entrada": {
+				"ajustes": {
+					"activo": true,
+					"sena": 30,
+					"anticipacionMin": 0,
+					"diasVista": 14,
+					"horario": [
+						{
+							"dia": 1,
+							"desde": "09:00",
+							"hasta": "10:00"
+						}
+					]
+				},
+				"servicio": {
+					"id": "s-corte",
+					"nombre": "Corte",
+					"descripcion": "",
+					"precio": 12000,
+					"duracion": 30,
+					"foto": null,
+					"etiqueta": null,
+					"activo": true,
+					"orden": 0
+				},
+				"profesionales": [
+					{
+						"id": "p-ana",
+						"nombre": "Ana",
+						"rol": "",
+						"foto": null,
+						"servicios": [],
+						"activo": true,
+						"orden": 0
+					},
+					{
+						"id": "p-beto",
+						"nombre": "Beto",
+						"rol": "",
+						"foto": null,
+						"servicios": [],
+						"activo": false,
+						"orden": 1
+					}
+				],
+				"turnos": [
+					{
+						"profesionalId": "p-ana",
+						"inicio": "2026-10-26T09:00:00-03:00",
+						"fin": "2026-10-26T09:30:00-03:00",
+						"estado": "confirmado",
+						"senaPagada": false,
+						"venceEn": null
+					}
+				],
+				"profesionalId": null,
+				"dia": "2026-10-26",
+				"ahora": "2026-10-26T08:00:00-03:00"
+			},
+			"esperado": [
+				{
+					"inicio": "2026-10-26T09:30:00-03:00",
+					"profesionalId": null
+				}
+			]
+		},
+		{
+			"nombre": "anticipación mínima: nada antes de ahora + 90 min",
+			"entrada": {
+				"ajustes": {
+					"activo": true,
+					"sena": 30,
+					"anticipacionMin": 90,
+					"diasVista": 14,
+					"horario": [
+						{
+							"dia": 1,
+							"desde": "09:00",
+							"hasta": "10:30"
+						}
+					]
+				},
+				"servicio": {
+					"id": "s-corte",
+					"nombre": "Corte",
+					"descripcion": "",
+					"precio": 12000,
+					"duracion": 30,
+					"foto": null,
+					"etiqueta": null,
+					"activo": true,
+					"orden": 0
+				},
+				"profesionales": [
+					{
+						"id": "p-ana",
+						"nombre": "Ana",
+						"rol": "",
+						"foto": null,
+						"servicios": [],
+						"activo": true,
+						"orden": 0
+					}
+				],
+				"turnos": [],
+				"profesionalId": "p-ana",
+				"dia": "2026-10-26",
+				"ahora": "2026-10-26T08:00:00-03:00"
+			},
+			"esperado": [
+				{
+					"inicio": "2026-10-26T09:30:00-03:00",
+					"profesionalId": "p-ana"
+				},
+				{
+					"inicio": "2026-10-26T09:45:00-03:00",
+					"profesionalId": "p-ana"
+				},
+				{
+					"inicio": "2026-10-26T10:00:00-03:00",
+					"profesionalId": "p-ana"
+				}
+			]
+		},
+		{
+			"nombre": "hoy, ya empezado el día",
+			"entrada": {
+				"ajustes": {
+					"activo": true,
+					"sena": 30,
+					"anticipacionMin": 0,
+					"diasVista": 14,
+					"horario": [
+						{
+							"dia": 1,
+							"desde": "09:00",
+							"hasta": "10:00"
+						}
+					]
+				},
+				"servicio": {
+					"id": "s-corte",
+					"nombre": "Corte",
+					"descripcion": "",
+					"precio": 12000,
+					"duracion": 30,
+					"foto": null,
+					"etiqueta": null,
+					"activo": true,
+					"orden": 0
+				},
+				"profesionales": [
+					{
+						"id": "p-ana",
+						"nombre": "Ana",
+						"rol": "",
+						"foto": null,
+						"servicios": [],
+						"activo": true,
+						"orden": 0
+					}
+				],
+				"turnos": [],
+				"profesionalId": "p-ana",
+				"dia": "2026-10-26",
+				"ahora": "2026-10-26T09:10:00-03:00"
+			},
+			"esperado": [
+				{
+					"inicio": "2026-10-26T09:15:00-03:00",
+					"profesionalId": "p-ana"
+				},
+				{
+					"inicio": "2026-10-26T09:30:00-03:00",
+					"profesionalId": "p-ana"
+				}
+			]
+		},
+		{
+			"nombre": "días de vista: el último día que entra (hoy + diasVista − 1)",
+			"entrada": {
+				"ajustes": {
+					"activo": true,
+					"sena": 30,
+					"anticipacionMin": 0,
+					"diasVista": 3,
+					"horario": [
+						{
+							"dia": 3,
+							"desde": "09:00",
+							"hasta": "09:30"
+						}
+					]
+				},
+				"servicio": {
+					"id": "s-corte",
+					"nombre": "Corte",
+					"descripcion": "",
+					"precio": 12000,
+					"duracion": 30,
+					"foto": null,
+					"etiqueta": null,
+					"activo": true,
+					"orden": 0
+				},
+				"profesionales": [
+					{
+						"id": "p-ana",
+						"nombre": "Ana",
+						"rol": "",
+						"foto": null,
+						"servicios": [],
+						"activo": true,
+						"orden": 0
+					}
+				],
+				"turnos": [],
+				"profesionalId": "p-ana",
+				"dia": "2026-10-28",
+				"ahora": "2026-10-26T08:00:00-03:00"
+			},
+			"esperado": [
+				{
+					"inicio": "2026-10-28T09:00:00-03:00",
+					"profesionalId": "p-ana"
+				}
+			]
+		},
+		{
+			"nombre": "días de vista: hoy + diasVista ya no",
+			"entrada": {
+				"ajustes": {
+					"activo": true,
+					"sena": 30,
+					"anticipacionMin": 0,
+					"diasVista": 3,
+					"horario": [
+						{
+							"dia": 4,
+							"desde": "09:00",
+							"hasta": "09:30"
+						}
+					]
+				},
+				"servicio": {
+					"id": "s-corte",
+					"nombre": "Corte",
+					"descripcion": "",
+					"precio": 12000,
+					"duracion": 30,
+					"foto": null,
+					"etiqueta": null,
+					"activo": true,
+					"orden": 0
+				},
+				"profesionales": [
+					{
+						"id": "p-ana",
+						"nombre": "Ana",
+						"rol": "",
+						"foto": null,
+						"servicios": [],
+						"activo": true,
+						"orden": 0
+					}
+				],
+				"turnos": [],
+				"profesionalId": "p-ana",
+				"dia": "2026-10-29",
+				"ahora": "2026-10-26T08:00:00-03:00"
+			},
+			"esperado": []
+		},
+		{
+			"nombre": "un día que ya pasó",
+			"entrada": {
+				"ajustes": {
+					"activo": true,
+					"sena": 30,
+					"anticipacionMin": 0,
+					"diasVista": 14,
+					"horario": [
+						{
+							"dia": 0,
+							"desde": "09:00",
+							"hasta": "10:00"
+						}
+					]
+				},
+				"servicio": {
+					"id": "s-corte",
+					"nombre": "Corte",
+					"descripcion": "",
+					"precio": 12000,
+					"duracion": 30,
+					"foto": null,
+					"etiqueta": null,
+					"activo": true,
+					"orden": 0
+				},
+				"profesionales": [
+					{
+						"id": "p-ana",
+						"nombre": "Ana",
+						"rol": "",
+						"foto": null,
+						"servicios": [],
+						"activo": true,
+						"orden": 0
+					}
+				],
+				"turnos": [],
+				"profesionalId": "p-ana",
+				"dia": "2026-10-25",
+				"ahora": "2026-10-26T08:00:00-03:00"
+			},
+			"esperado": []
+		},
+		{
+			"nombre": "el profesional no hace el servicio",
+			"entrada": {
+				"ajustes": {
+					"activo": true,
+					"sena": 30,
+					"anticipacionMin": 0,
+					"diasVista": 14,
+					"horario": [
+						{
+							"dia": 1,
+							"desde": "09:00",
+							"hasta": "10:00"
+						}
+					]
+				},
+				"servicio": {
+					"id": "s-corte",
+					"nombre": "Corte",
+					"descripcion": "",
+					"precio": 12000,
+					"duracion": 30,
+					"foto": null,
+					"etiqueta": null,
+					"activo": true,
+					"orden": 0
+				},
+				"profesionales": [
+					{
+						"id": "p-ana",
+						"nombre": "Ana",
+						"rol": "",
+						"foto": null,
+						"servicios": ["s-color"],
+						"activo": true,
+						"orden": 0
+					}
+				],
+				"turnos": [],
+				"profesionalId": "p-ana",
+				"dia": "2026-10-26",
+				"ahora": "2026-10-26T08:00:00-03:00"
+			},
+			"esperado": []
+		},
+		{
+			"nombre": "el profesional hace el servicio (está en su lista)",
+			"entrada": {
+				"ajustes": {
+					"activo": true,
+					"sena": 30,
+					"anticipacionMin": 0,
+					"diasVista": 14,
+					"horario": [
+						{
+							"dia": 1,
+							"desde": "09:00",
+							"hasta": "09:30"
+						}
+					]
+				},
+				"servicio": {
+					"id": "s-corte",
+					"nombre": "Corte",
+					"descripcion": "",
+					"precio": 12000,
+					"duracion": 30,
+					"foto": null,
+					"etiqueta": null,
+					"activo": true,
+					"orden": 0
+				},
+				"profesionales": [
+					{
+						"id": "p-ana",
+						"nombre": "Ana",
+						"rol": "",
+						"foto": null,
+						"servicios": ["s-color", "s-corte"],
+						"activo": true,
+						"orden": 0
+					}
+				],
+				"turnos": [],
+				"profesionalId": "p-ana",
+				"dia": "2026-10-26",
+				"ahora": "2026-10-26T08:00:00-03:00"
+			},
+			"esperado": [
+				{
+					"inicio": "2026-10-26T09:00:00-03:00",
+					"profesionalId": "p-ana"
+				}
+			]
+		},
+		{
+			"nombre": "servicio pausado",
+			"entrada": {
+				"ajustes": {
+					"activo": true,
+					"sena": 30,
+					"anticipacionMin": 0,
+					"diasVista": 14,
+					"horario": [
+						{
+							"dia": 1,
+							"desde": "09:00",
+							"hasta": "10:00"
+						}
+					]
+				},
+				"servicio": {
+					"id": "s-corte",
+					"nombre": "Corte",
+					"descripcion": "",
+					"precio": 12000,
+					"duracion": 30,
+					"foto": null,
+					"etiqueta": null,
+					"activo": false,
+					"orden": 0
+				},
+				"profesionales": [
+					{
+						"id": "p-ana",
+						"nombre": "Ana",
+						"rol": "",
+						"foto": null,
+						"servicios": [],
+						"activo": true,
+						"orden": 0
+					}
+				],
+				"turnos": [],
+				"profesionalId": "p-ana",
+				"dia": "2026-10-26",
+				"ahora": "2026-10-26T08:00:00-03:00"
+			},
+			"esperado": []
+		},
+		{
+			"nombre": "domingo cerrado",
+			"entrada": {
+				"ajustes": {
+					"activo": true,
+					"sena": 30,
+					"anticipacionMin": 0,
+					"diasVista": 14,
+					"horario": [
+						{
+							"dia": 1,
+							"desde": "09:00",
+							"hasta": "19:00"
+						},
+						{
+							"dia": 2,
+							"desde": "09:00",
+							"hasta": "19:00"
+						},
+						{
+							"dia": 3,
+							"desde": "09:00",
+							"hasta": "19:00"
+						},
+						{
+							"dia": 4,
+							"desde": "09:00",
+							"hasta": "19:00"
+						},
+						{
+							"dia": 5,
+							"desde": "09:00",
+							"hasta": "19:00"
+						},
+						{
+							"dia": 6,
+							"desde": "09:00",
+							"hasta": "19:00"
+						}
+					]
+				},
+				"servicio": {
+					"id": "s-corte",
+					"nombre": "Corte",
+					"descripcion": "",
+					"precio": 12000,
+					"duracion": 30,
+					"foto": null,
+					"etiqueta": null,
+					"activo": true,
+					"orden": 0
+				},
+				"profesionales": [
+					{
+						"id": "p-ana",
+						"nombre": "Ana",
+						"rol": "",
+						"foto": null,
+						"servicios": [],
+						"activo": true,
+						"orden": 0
+					}
+				],
+				"turnos": [],
+				"profesionalId": "p-ana",
+				"dia": "2026-11-01",
+				"ahora": "2026-10-26T08:00:00-03:00"
+			},
+			"esperado": []
+		},
+		{
+			"nombre": "franjas superpuestas no repiten horarios",
+			"entrada": {
+				"ajustes": {
+					"activo": true,
+					"sena": 30,
+					"anticipacionMin": 0,
+					"diasVista": 14,
+					"horario": [
+						{
+							"dia": 1,
+							"desde": "09:00",
+							"hasta": "09:45"
+						},
+						{
+							"dia": 1,
+							"desde": "09:15",
+							"hasta": "10:00"
+						}
+					]
+				},
+				"servicio": {
+					"id": "s-corte",
+					"nombre": "Corte",
+					"descripcion": "",
+					"precio": 12000,
+					"duracion": 30,
+					"foto": null,
+					"etiqueta": null,
+					"activo": true,
+					"orden": 0
+				},
+				"profesionales": [
+					{
+						"id": "p-ana",
+						"nombre": "Ana",
+						"rol": "",
+						"foto": null,
+						"servicios": [],
+						"activo": true,
+						"orden": 0
+					}
+				],
+				"turnos": [],
+				"profesionalId": "p-ana",
+				"dia": "2026-10-26",
+				"ahora": "2026-10-26T08:00:00-03:00"
+			},
+			"esperado": [
+				{
+					"inicio": "2026-10-26T09:00:00-03:00",
+					"profesionalId": "p-ana"
+				},
+				{
+					"inicio": "2026-10-26T09:15:00-03:00",
+					"profesionalId": "p-ana"
+				},
+				{
+					"inicio": "2026-10-26T09:30:00-03:00",
+					"profesionalId": "p-ana"
+				}
+			]
+		}
+	]
+}
