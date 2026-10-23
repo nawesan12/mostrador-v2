@@ -27,9 +27,9 @@ export class Shell {
 	tema = $state<Tema>('light');
 	modo = $state<Modo>('completo');
 
-	constructor(tema: Tema, modo: Modo) {
+	// El modo Simple ya no se ofrece (confundía): quien lo tenía guardado vuelve al completo.
+	constructor(tema: Tema) {
 		this.tema = tema;
-		this.modo = modo;
 	}
 
 	cambiarTema() {

@@ -16,13 +16,8 @@
 
 	/** Armazón del panel (design/Mostrador v4.dc.html, vista Panel). */
 	let { data, children } = $props();
-	// Tema y modo se toman al entrar; después los maneja el armazón (y los guarda en cookies).
-	const shell = setShell(
-		new Shell(
-			untrack(() => data.tema),
-			untrack(() => data.modo)
-		)
-	);
+	// El tema se toma al entrar; después lo maneja el armazón (y lo guarda en una cookie).
+	const shell = setShell(new Shell(untrack(() => data.tema)));
 	const donde = $derived(ubicar(page.url.pathname) ?? { seccion: 'Resumen', area: AREAS[0] });
 	const sinLeer = $derived(data.resumen.notificaciones.some((n) => !n.leida));
 	const dominio = $derived(`${SITE.replace(/^https?:\/\//, '')}/t/${data.tienda.slug}`);
