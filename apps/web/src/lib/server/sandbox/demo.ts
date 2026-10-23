@@ -7,6 +7,8 @@
  * Canales, medios de pago, envíos y estados son los del panel del handoff.
  */
 import { catalogoDe, type Catalogo, type ProductoEjemplo } from '#lib/catalogos.ts';
+import { textoVariante } from '#lib/tienda/variantes.ts';
+import { variantesDemo, type VariantesDemo } from './variantes.ts';
 
 export type Canal = 'web' | 'wa' | 'ml' | 'ig' | 'pos' | 'tg';
 export type MedioPago = 'mp' | 'transf' | 'modo' | 'payway' | 'uala' | 'efectivo' | 'tarjeta';
@@ -36,10 +38,20 @@ export type Pedido = {
 	ciudadEnvio: string;
 	estado: EstadoPedido;
 	facturado: boolean;
-	items: { productoId: string; nombre: string; cantidad: number; precio: number }[];
+	items: ItemPedido[];
 	total: number;
 	/** Milisegundos (epoch). */
 	creado: number;
+};
+
+export type ItemPedido = {
+	productoId: string;
+	nombre: string;
+	cantidad: number;
+	precio: number;
+	/** La variante vendida y su texto al momento de la compra ("Talle M · Negro"). */
+	varianteId?: string | null;
+	variante?: string | null;
 };
 
 export type Carrito = {
@@ -75,8 +87,10 @@ export type Demo = {
 	clientes: Cliente[];
 	/** Del más nuevo al más viejo. */
 	pedidos: Pedido[];
-	/** Unidades por producto. */
+	/** Unidades por producto (con opciones, la suma de sus variantes). */
 	stock: Record<string, number>;
+	/** Opciones, galería y variantes de los productos que las tienen. */
+	variantes: Map<string, VariantesDemo>;
 	/** Productos publicados en Mercado Libre. */
 	enMl: string[];
 	carritos: Carrito[];
@@ -418,6 +432,22 @@ function generar(plantilla: string, base: number): Demo | null {
 		stock[productos[i].id] = 0;
 	const enMl = productos.filter(() => r() < 0.75).map((p) => p.id);
 
+	// Variantes: su propio azar, para no correr la semilla de lo demás. El stock del producto es la
+	// suma de sus variantes, y cada venta de un producto con opciones lleva su variante (una de las
+	// que cuestan lo mismo que el producto: los totales de los pedidos no cambian).
+	const variantes = variantesDemo(catalogo);
+	for (const [id, v] of variantes) stock[id] = v.variantes.reduce((s, x) => s + x.stock, 0);
+	const rv = azar(hash(plantilla + ':variantes'));
+	for (const p of pedidos)
+		for (const i of p.items) {
+			const v = variantes.get(i.productoId);
+			const mismas = v?.variantes.filter((x) => x.precio === null) ?? [];
+			if (!v || !mismas.length) continue;
+			const x = mismas[Math.floor(rv() * mismas.length)];
+			i.varianteId = x.id;
+			i.variante = textoVariante(v.opciones, x.valores);
+		}
+
 	// Carritos abandonados de los últimos 3 días, de gente con WhatsApp.
 	const conTelefono = clientes.filter((c) => c.telefono && !c.mayorista);
 	const carritos: Carrito[] = Array.from({ length: 12 }, (_, k) => {
@@ -491,7 +521,7 @@ function generar(plantilla: string, base: number): Demo | null {
 		}
 	];
 
-	return { catalogo, clientes, pedidos, stock, enMl, carritos, resenas, conversaciones };
+	return { catalogo, clientes, pedidos, stock, variantes, enMl, carritos, resenas, conversaciones };
 }
 
 // Por isolate: generar es barato (unos 600 pedidos), pero se repite en cada pedido del panel.

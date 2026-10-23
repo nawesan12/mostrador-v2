@@ -288,9 +288,14 @@ export function detalleDemo(
 		...fila(p, clientes, productos, vipsDe(d)),
 		items: p.items.map((i) => ({
 			nombre: i.nombre,
-			foto: productos.get(i.productoId)?.foto ?? null,
+			foto:
+				d.variantes?.get(i.productoId)?.variantes.find((v) => v.id === i.varianteId)?.foto ??
+				productos.get(i.productoId)?.foto ??
+				null,
 			cantidad: i.cantidad,
-			precio: i.precio
+			precio: i.precio,
+			varianteId: i.varianteId ?? null,
+			variante: i.variante ?? null
 		})),
 		subtotal,
 		costoEnvio: p.total - subtotal,

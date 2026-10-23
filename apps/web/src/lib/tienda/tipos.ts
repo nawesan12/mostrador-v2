@@ -13,7 +13,24 @@ export type ProductoPublico = {
 	/** URL de la foto (o id de Unsplash en la demo). */
 	foto: string | null;
 	etiqueta: string | null;
+	/** Con opciones, la suma del stock de sus variantes. */
 	stock: number;
+	/** Galería (la primera es `foto`). */
+	fotos: string[];
+	/** Talle, Color, Presentación… (vacío: se vende sin elegir nada). */
+	opciones: OpcionProducto[];
+	/** Sólo las activas. `precio` null: el del producto. */
+	variantes: VariantePublica[];
+};
+
+export type OpcionProducto = { nombre: string; valores: string[] };
+
+export type VariantePublica = {
+	id: string;
+	valores: Record<string, string>;
+	precio: number | null;
+	stock: number;
+	foto: string | null;
 };
 
 export type TiendaPublica = {

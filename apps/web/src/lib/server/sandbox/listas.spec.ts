@@ -65,7 +65,8 @@ describe('motor de listas de la demo', () => {
 		expect(top.vendidos30).toBe(Math.max(...productos.map((p) => p.vendidos30)));
 		const sinStock = productos.filter((p) => p.stock === 0);
 		expect(sinStock.every((p) => p.estado === 'out')).toBe(true);
-		const id = d.catalogo.productos[0].id;
+		// Uno sin opciones: los de opciones llevan el stock por variante (sandbox.spec.ts).
+		const id = d.catalogo.productos.find((x) => !d.variantes.has(x.id))!.id;
 		const cambiado = registrosProductos(
 			d,
 			AHORA,

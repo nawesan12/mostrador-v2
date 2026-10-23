@@ -741,7 +741,7 @@ paths:
               type: object
               required: [carrito, email, nombre, telefono, envio, pago]
               properties:
-                carrito: { type: array, maxItems: 50, items: { type: object, required: [id, cantidad], properties: { id: { type: string }, cantidad: { type: integer, minimum: 1, maximum: 99 } } } }
+                carrito: { type: array, maxItems: 50, items: { type: object, required: [id, cantidad], properties: { id: { type: string }, varianteId: { type: [string, 'null'] }, cantidad: { type: integer, minimum: 1, maximum: 99 } } } }
                 email: { type: string }
                 nombre: { type: string }
                 telefono: { type: string }
@@ -1729,7 +1729,7 @@ components:
         total: { type: integer }
         filas:
           type: array
-          description: 'Registros de la lista (la forma depende de la lista: ver FilaCliente, FilaProducto, …)'
+          description: 'Registros de la lista (la forma depende de la lista: ver FilaCliente, FilaProducto, …). Productos: cada fila trae `variantes: {id, texto, sku, precio, stock, activa}[]`. Inventario: `variantes: {id: "producto:variante", varianteId, texto, sku, stock, activa}[]` y el stock de la fila es el total; ajustar, ingreso y conteo aceptan esos ids'
           items: { type: object, additionalProperties: true }
         segmentos:
           type: object
@@ -1754,21 +1754,77 @@ components:
         costo: { type: integer, minimum: 0 }
         sku: { type: string, maxLength: 40 }
         stock: { type: integer, minimum: 0 }
-        foto: { type: [string, 'null'] }
+        foto: { type: [string, 'null'], description: 'La portada (fotos[0]). Sin `fotos`: reemplaza la portada y deja el resto; null vacía la galería' }
+        fotos:
+          type: array
+          maxItems: 8
+          description: 'Galería: la primera es la portada (ids de foto o URLs https). Sin vacías; las repetidas se descartan'
+          items: { type: string }
+        opciones:
+          type: array
+          maxItems: 3
+          description: 'Talle, Color, Presentación… Con opciones se vende por variante y el `stock` del producto se ignora (es la suma de las activas). Sin mandar: quedan las que había; [] las saca. Hasta 100 combinaciones; nombres y valores repetidos se comparan sin mayúsculas ni tildes'
+          items: { $ref: '#/components/schemas/OpcionProducto' }
+        variantes:
+          type: array
+          maxItems: 100
+          description: 'Sólo las que se tocan, identificadas por sus valores. Al guardar se generan las combinaciones: las nuevas arrancan con stock 0 y activas; las que dejan de existir se borran'
+          items: { $ref: '#/components/schemas/VarianteEditable' }
         canales:
           type: object
           description: 'Dónde se publica: web, ml, ig, google'
           additionalProperties: { type: boolean }
+    OpcionProducto:
+      type: object
+      required: [nombre, valores]
+      properties:
+        nombre: { type: string, minLength: 1, maxLength: 20 }
+        valores:
+          type: array
+          minItems: 1
+          maxItems: 20
+          description: 'Sin repetidos'
+          items: { type: string, minLength: 1, maxLength: 20 }
+    VarianteEditable:
+      type: object
+      required: [valores]
+      properties:
+        valores:
+          type: object
+          description: 'Una clave por opción, con un valor de esa opción: identifica la combinación'
+          additionalProperties: { type: string }
+        sku: { type: string, maxLength: 40 }
+        precio: { type: [integer, 'null'], minimum: 0, description: 'null: usa el precio del producto' }
+        stock: { type: integer, minimum: 0, maximum: 1000000, description: 'Sin mandar: el que tenía (0 si es nueva)' }
+        foto: { type: [string, 'null'], description: 'Una de las fotos del producto' }
+        activa: { type: boolean, description: 'Sin mandar: la que tenía (true si es nueva)' }
+    Variante:
+      type: object
+      required: [id, valores, sku, precio, stock, foto, activa]
+      properties:
+        id: { type: string }
+        valores:
+          type: object
+          description: 'Una clave por opción del producto, con un valor de esa opción'
+          additionalProperties: { type: string }
+        sku: { type: string, maxLength: 40 }
+        precio: { type: [integer, 'null'], minimum: 0, description: 'null: usa el precio del producto' }
+        stock: { type: integer, minimum: 0 }
+        foto: { type: [string, 'null'], description: 'Una de las fotos del producto' }
+        activa: { type: boolean }
     Producto:
       allOf:
         - { $ref: '#/components/schemas/ProductoEditable' }
         - type: object
-          required: [id, publicado, vendidos30d, slug]
+          required: [id, publicado, vendidos30d, slug, fotos, opciones, variantes]
           properties:
             id: { type: string }
             publicado: { type: boolean }
             vendidos30d: { type: integer }
             slug: { type: string }
+            fotos: { type: array, items: { type: string } }
+            opciones: { type: array, items: { $ref: '#/components/schemas/OpcionProducto' } }
+            variantes: { type: array, description: 'En el orden de las combinaciones', items: { $ref: '#/components/schemas/Variante' } }
     MovimientoStock:
       type: object
       required: [tipo, texto, cantidad, en]
@@ -1879,6 +1935,7 @@ components:
             required: [productoId, cantidad]
             properties:
               productoId: { type: string }
+              varianteId: { type: [string, 'null'], description: 'Obligatoria si el producto tiene opciones; activa y de ese producto' }
               cantidad: { type: integer, minimum: 1, maximum: 10000 }
         pago: { type: string, enum: [mp, tarjeta, payway, modo, uala, transf, efectivo] }
         canal: { type: string, enum: [pos, wa, web, ig, ml, tg] }
@@ -2839,12 +2896,14 @@ components:
               type: array
               items:
                 type: object
-                required: [nombre, foto, cantidad, precio]
+                required: [nombre, foto, cantidad, precio, varianteId, variante]
                 properties:
                   nombre: { type: string }
                   foto: { type: [string, 'null'] }
                   cantidad: { type: integer }
                   precio: { type: integer }
+                  varianteId: { type: [string, 'null'] }
+                  variante: { type: [string, 'null'], description: 'Texto de la variante al comprar: "Talle M · Color Negro"' }
             subtotal: { type: integer }
             costoEnvio: { type: integer }
             comprador:
