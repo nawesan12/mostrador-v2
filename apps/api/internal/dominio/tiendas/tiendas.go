@@ -52,6 +52,28 @@ func Rutas(mux *http.ServeMux, pool *db.Pool, tienda func(*http.Request) string)
 	mux.HandleFunc("GET /v1/rubros", func(w http.ResponseWriter, _ *http.Request) {
 		escribir(w, Rubros)
 	})
+	mux.HandleFunc("PUT /v1/panel/tienda/origen", func(w http.ResponseWriter, r *http.Request) {
+		id := tienda(r)
+		if id == "" {
+			problema.Escribir(w, problema.SinSesion())
+			return
+		}
+		var o Origen
+		if json.NewDecoder(http.MaxBytesReader(w, r.Body, 4<<10)).Decode(&o) != nil {
+			problema.Escribir(w, problema.Invalido("Origen inválido."))
+			return
+		}
+		fijado, err := FijarOrigen(r.Context(), pool, id, o)
+		if errors.Is(err, ErrOrigen) {
+			problema.Escribir(w, problema.Invalido("Origen inválido."))
+			return
+		}
+		if err != nil {
+			problema.Escribir(w, problema.Interno())
+			return
+		}
+		escribir(w, map[string]bool{"fijado": fijado})
+	})
 	mux.HandleFunc("GET /v1/panel/tienda", func(w http.ResponseWriter, r *http.Request) {
 		id := tienda(r)
 		if id == "" {
