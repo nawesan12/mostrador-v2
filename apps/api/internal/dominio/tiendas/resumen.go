@@ -47,8 +47,13 @@ func ObtenerResumen(ctx context.Context, pool interface {
 		if err := tx.QueryRow(ctx, `SELECT plan, creada_en FROM tiendas WHERE id = $1`, tiendaID).Scan(&plan, &creada); err != nil {
 			return err
 		}
-		return tx.QueryRow(ctx, `SELECT count(*) FROM pedidos WHERE tienda_id = $1 AND estado = 'Para preparar'`, tiendaID).
-			Scan(&r.Insignias.Pedidos)
+		if err := tx.QueryRow(ctx, `SELECT count(*) FROM pedidos WHERE tienda_id = $1 AND estado = 'Para preparar'`, tiendaID).
+			Scan(&r.Insignias.Pedidos); err != nil {
+			return err
+		}
+		// Carritos abandonados abiertos de la última semana, sin recordar todavía.
+		return tx.QueryRow(ctx, `SELECT count(*) FROM carritos WHERE tienda_id = $1 AND recuperado_en IS NULL
+			AND recordado_en IS NULL AND actualizado > now() - interval '7 days'`, tiendaID).Scan(&r.Insignias.Carritos)
 	})
 	if err != nil {
 		return r, err

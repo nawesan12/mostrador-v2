@@ -7,10 +7,13 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ventas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/config"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/outbox"
 )
@@ -52,7 +55,27 @@ func correr() error {
 	}
 	ml := mercadolibre.DesdeConfig(app, cfg.OAuth["mercadolibre"][0], cfg.OAuth["mercadolibre"][1], cfg.Sitio,
 		cfg.ClaveCifrado, slog.Default())
-	for _, ms := range []map[string]outbox.Manejador{mp.Manejadores(), ml.Manejadores()} {
+	// Carritos abandonados: el mail del recordatorio y el automático del tercer día.
+	var mails correo.Correo = &correo.SMTP{Direccion: cfg.SMTP, De: cfg.CorreoDe}
+	if cfg.ResendClave != "" {
+		mails = &correo.Resend{Clave: cfg.ResendClave, De: cfg.CorreoDe}
+	}
+	mc := &ventas.MailsCarritos{Pool: app, Correo: mails, Sitio: cfg.Sitio}
+	go func() {
+		t := time.NewTicker(time.Hour)
+		defer t.Stop()
+		for {
+			if _, err := ventas.RecordatoriosAutomaticos(ctx, app, time.Now()); err != nil && ctx.Err() == nil {
+				slog.Error("carritos: recordatorios", "error", err)
+			}
+			select {
+			case <-ctx.Done():
+				return
+			case <-t.C:
+			}
+		}
+	}()
+	for _, ms := range []map[string]outbox.Manejador{mp.Manejadores(), ml.Manejadores(), mc.Manejadores()} {
 		for tipo, m := range ms {
 			w.Manejadores[tipo] = m
 		}
