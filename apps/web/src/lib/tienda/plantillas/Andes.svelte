@@ -339,14 +339,18 @@
 		rc: on ? '#2F6BFF' : '#C5CCD6'
 	});
 	const pagos = $derived([
-		{
-			id: 'transferencia' as const,
-			t: 'Transferencia',
-			d: `${tienda.cobros.transferencia}% off · te mandamos el alias al confirmar`,
-			i: I.phBankFill,
-			c: '#14894B',
-			p: fmt(subtotal * (1 - tienda.cobros.transferencia / 100))
-		},
+		...(tienda.cobros.datosTransferencia
+			? [
+					{
+						id: 'transferencia' as const,
+						t: 'Transferencia',
+						d: `${tienda.cobros.transferencia}% off · te mandamos el alias al confirmar`,
+						i: I.phBankFill,
+						c: '#14894B',
+						p: fmt(subtotal * (1 - tienda.cobros.transferencia / 100))
+					}
+				]
+			: []),
 		...(tienda.cobros.mercadoPago
 			? [
 					{
@@ -360,6 +364,10 @@
 				]
 			: [])
 	]);
+	// Sin datos de transferencia cargados, el medio de pago es el primero disponible.
+	$effect(() => {
+		if (pagos.length && !pagos.some((x) => x.id === pago)) pago = pagos[0].id;
+	});
 
 	const foot = $derived([
 		{

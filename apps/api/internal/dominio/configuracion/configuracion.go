@@ -43,6 +43,35 @@ type Negocio struct {
 	Whatsapp    string `json:"whatsapp"`
 	Email       string `json:"email"`
 	Horario     string `json:"horario"`
+	// Datos para cobrar por transferencia (los ve quien compra). Sin alias ni CBU, la tienda online
+	// no ofrece transferencia.
+	Alias   string `json:"alias"`
+	CBU     string `json:"cbu"`
+	Titular string `json:"titular"`
+}
+
+var aliasValido = regexp.MustCompile(`^[a-zA-Z0-9.-]{6,20}$`)
+
+// CBUValido comprueba los dos dígitos verificadores del CBU/CVU (22 dígitos).
+func CBUValido(c string) bool {
+	if len(c) != 22 {
+		return false
+	}
+	for _, r := range c {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	d := func(i int) int { return int(c[i] - '0') }
+	verif := func(desde int, pesos []int) int {
+		s := 0
+		for i, p := range pesos {
+			s += d(desde+i) * p
+		}
+		return (10 - s%10) % 10
+	}
+	return verif(0, []int{7, 1, 3, 9, 7, 1, 3}) == d(7) &&
+		verif(8, []int{3, 9, 7, 1, 3, 9, 7, 1, 3, 9, 7, 1, 3}) == d(21)
 }
 
 // Miembro es components/schemas/Miembro.
@@ -200,7 +229,9 @@ func Leer(ctx context.Context, pool tx, tiendaID string, q Quien, ahora time.Tim
 // GuardarNegocio guarda los datos (el nombre va en la columna de la tienda).
 func GuardarNegocio(ctx context.Context, pool tx, tiendaID string, n Negocio) error {
 	n.Nombre = strings.TrimSpace(n.Nombre)
-	if n.Nombre == "" || len(n.Nombre) > 80 {
+	n.Alias, n.CBU, n.Titular = strings.TrimSpace(n.Alias), strings.ReplaceAll(strings.TrimSpace(n.CBU), " ", ""), strings.TrimSpace(n.Titular)
+	if n.Nombre == "" || len(n.Nombre) > 80 || (n.Alias != "" && !aliasValido.MatchString(n.Alias)) ||
+		(n.CBU != "" && !CBUValido(n.CBU)) || len(n.Titular) > 80 {
 		return ErrInvalido
 	}
 	resto := n

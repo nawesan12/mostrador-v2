@@ -295,13 +295,17 @@
 		if (envio && !opciones.some((o) => o.id === envio)) envio = null;
 	});
 	const pagos = $derived([
-		{
-			id: 'transferencia' as const,
-			t: 'Transferencia',
-			d: `${tienda.cobros.transferencia}% off · te mandamos el alias al confirmar`,
-			i: I.phBankBold,
-			c: '#2F5D50'
-		},
+		...(tienda.cobros.datosTransferencia
+			? [
+					{
+						id: 'transferencia' as const,
+						t: 'Transferencia',
+						d: `${tienda.cobros.transferencia}% off · te mandamos el alias al confirmar`,
+						i: I.phBankBold,
+						c: '#2F5D50'
+					}
+				]
+			: []),
 		...(tienda.cobros.mercadoPago
 			? [
 					{
@@ -314,6 +318,10 @@
 				]
 			: [])
 	]);
+	// Sin datos de transferencia cargados, el medio de pago es el primero disponible.
+	$effect(() => {
+		if (pagos.length && !pagos.some((x) => x.id === pago)) pago = pagos[0].id;
+	});
 
 	const foot = $derived([
 		{

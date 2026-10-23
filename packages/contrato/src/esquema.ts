@@ -2305,6 +2305,11 @@ export interface components {
             whatsapp: string;
             email: string;
             horario: string;
+            /** @description Alias para cobrar por transferencia (6 a 20 caracteres) */
+            alias?: string;
+            /** @description CBU o CVU de 22 dígitos, con sus verificadores */
+            cbu?: string;
+            titular?: string;
         };
         Miembro: {
             id: string;
@@ -4157,7 +4162,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Pedido */
+            /** @description Pedido y su seguimiento */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -4169,6 +4174,12 @@ export interface operations {
                         pago: string;
                         nombre: string;
                         estadoPago: string;
+                        estado: string;
+                        envio: string;
+                        seguimiento: string | null;
+                        alias: string | null;
+                        cbu: string | null;
+                        titular: string | null;
                     };
                 };
             };

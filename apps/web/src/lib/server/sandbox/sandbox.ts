@@ -2168,7 +2168,25 @@ export class DatosSandbox implements Datos {
 			resenas,
 			promedio,
 			fotos: [...new Set(visibles.flatMap((x) => (x.foto ? [x.foto] : [])))].slice(0, 6),
-			cobros: { transferencia: 15, cuotas: 6, mercadoPago: mp.conectada },
+			cobros: {
+				transferencia: 15,
+				cuotas: 6,
+				mercadoPago: mp.conectada,
+				// Lo que cargó el visitante en Configuración › Negocio, o uno de ejemplo rotulado así.
+				datosTransferencia:
+					conf.negocio.alias || conf.negocio.cbu
+						? {
+								alias: conf.negocio.alias ?? '',
+								cbu: conf.negocio.cbu ?? '',
+								titular: conf.negocio.titular ?? ''
+							}
+						: {
+								alias: `${t.slug.slice(0, 12)}.ejemplo`,
+								cbu: '',
+								titular: 'Tienda de ejemplo',
+								ejemplo: true
+							}
+			},
 			envios: { gratisDesde: 240_000, retiro: true, moto: true, correo: true },
 			vitrina
 		};

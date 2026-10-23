@@ -8,9 +8,11 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/avisos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/config"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/outbox"
 )
@@ -52,7 +54,13 @@ func correr() error {
 	}
 	ml := mercadolibre.DesdeConfig(app, cfg.OAuth["mercadolibre"][0], cfg.OAuth["mercadolibre"][1], cfg.Sitio,
 		cfg.ClaveCifrado, slog.Default())
-	for _, ms := range []map[string]outbox.Manejador{mp.Manejadores(), ml.Manejadores()} {
+	// Mails a quien compra (confirmación, pago, en camino, retiro): el mismo correo que la API.
+	var mails correo.Correo = &correo.SMTP{Direccion: cfg.SMTP, De: cfg.CorreoDe}
+	if cfg.ResendClave != "" {
+		mails = &correo.Resend{Clave: cfg.ResendClave, De: cfg.CorreoDe}
+	}
+	av := &avisos.Servicio{Pool: app, Correo: mails, Sitio: cfg.Sitio}
+	for _, ms := range []map[string]outbox.Manejador{mp.Manejadores(), ml.Manejadores(), av.Manejadores()} {
 		for tipo, m := range ms {
 			w.Manejadores[tipo] = m
 		}
