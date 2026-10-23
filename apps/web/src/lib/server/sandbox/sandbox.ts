@@ -34,6 +34,14 @@ import {
 	type EstadoIntegraciones
 } from '#lib/panel/integraciones.ts';
 import type {
+	AjustesTurnos,
+	EstadoTurno,
+	Profesional,
+	ProfesionalEditable,
+	Servicio,
+	ServicioEditable,
+	Turno,
+	TurnoNuevo,
 	ConexionML,
 	ConexionMP,
 	PublicacionML,
@@ -125,7 +133,25 @@ import { COSTO_MENSAJE, contextoDemo, tableroDemo, type CambiosTablero } from '.
 import RUBROS from '@mostrador/contrato/rubros.json';
 import { plantilla as buscarPlantilla } from '#lib/plantillas.ts';
 import { SITE } from '#lib/site.ts';
-import type { TiendaPublica } from '#lib/tienda/tipos.ts';
+import type {
+	ProximosTurnos,
+	TiendaPublica,
+	TurnoPublico,
+	TurnosTienda
+} from '#lib/tienda/tipos.ts';
+import {
+	asignar,
+	diaAr,
+	hace,
+	horaAr,
+	horariosDelDia,
+	isoAr,
+	libres,
+	ocupa,
+	sumarDias,
+	superpone
+} from '#lib/turnos/libres.ts';
+import { ENTIDAD as ENTIDAD_TURNOS, turnosDemo } from './turnos.ts';
 
 export type DbSandbox = DrizzleD1Database<Record<string, never>>;
 
@@ -244,6 +270,16 @@ export async function borrarCambio(
 }
 
 const IDEAS: Idea[] = ['carritos', 'stock', 'promo'];
+
+/** "jueves 23/10 a las 17:30" (hora de Argentina), para avisos de turnos. */
+export function cuandoTurno(iso: string) {
+	const t = Date.parse(iso);
+	const d = new Date(t - 3 * 3_600_000);
+	const dia = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'][
+		d.getUTCDay()
+	];
+	return `${dia} ${d.getUTCDate()}/${d.getUTCMonth() + 1} a las ${horaAr(t)}`;
+}
 
 /** Suma un mensaje a Hornero en el día del visitante y devuelve cuántos lleva. */
 export async function sumarUsoHornero(db: DbSandbox, sandboxId: string, dia: string) {
@@ -2099,13 +2135,14 @@ export class DatosSandbox implements Datos {
 	 * ejemplo de una plantilla para mirar, sin carrito real.
 	 */
 	async tiendaPublica(vitrina = false): Promise<TiendaPublica> {
-		const [d, t, c, conf, productos, mp] = await Promise.all([
+		const [d, t, c, conf, productos, mp, turnos] = await Promise.all([
 			this.demo(),
 			this.tienda(),
 			cambiosDe(this.db, this.sb.id, 'mi-tienda'),
 			this.configuracion(),
 			this.regProductos(),
-			this.mercadoPago()
+			this.mercadoPago(),
+			this.turnosTienda()
 		]);
 		const diseno = (c.get('publicado') as DisenoTienda | undefined) ?? DISENO_INICIAL;
 		const p = buscarPlantilla(t.plantilla);
@@ -2188,6 +2225,7 @@ export class DatosSandbox implements Datos {
 							}
 			},
 			envios: { gratisDesde: 240_000, retiro: true, moto: true, correo: true },
+			turnos,
 			vitrina
 		};
 	}
@@ -2420,6 +2458,20 @@ export class DatosSandbox implements Datos {
 		// Los canales de la barra son los que están conectados en Integraciones.
 		const { conectadas } = await this.integraciones();
 		r.canales = r.canales.filter((c) => conectadas[c]);
+		// Cada turno que entró desde la tienda avisa en el panel.
+		const turnos = (await this.turnosNuevosDeLaTienda())
+			.sort((a, b) => (a.creadoEn < b.creadoEn ? 1 : -1))
+			.slice(0, 5)
+			.map((t) => ({
+				id: `turno-${t.id}`,
+				tipo: 'ok',
+				titulo: `Turno nuevo: ${t.servicio} con ${t.profesional}`,
+				detalle: `${t.cliente.nombre} · ${cuandoTurno(t.inicio)}`,
+				creada: t.creadoEn,
+				leida: Date.parse(t.creadoEn) <= (leidas?.hasta ?? 0),
+				grupo: 'ventas' as const
+			}));
+		r.notificaciones = [...turnos, ...r.notificaciones];
 		return r;
 	}
 
@@ -2471,5 +2523,311 @@ export class DatosSandbox implements Datos {
 
 	async contextoHornero(): Promise<ContextoHornero> {
 		return contextoDemo(await this.demo(), Date.now());
+	}
+
+	// ---------------------------------------------------------------- Turnos
+
+	/** Ajustes, servicios, profesionales y turnos: los de ejemplo con lo que cambió el visitante. */
+	private async estadoTurnos(ahora = Date.now()) {
+		const c = await cambiosDe(this.db, this.sb.id, ENTIDAD_TURNOS);
+		const ej = turnosDemo(this.plantilla(), this.sb.creadoEn);
+		function mezclar<T extends { id: string }>(base: T[], pre: string) {
+			const m = new Map(base.map((x) => [x.id, x]));
+			for (const [k, v] of c)
+				if (k.startsWith(pre)) {
+					if (v) m.set(k.slice(pre.length), v as T);
+					else m.delete(k.slice(pre.length));
+				}
+			return [...m.values()];
+		}
+		const porOrden = (a: { orden: number }, b: { orden: number }) => a.orden - b.orden;
+		return {
+			ajustes: (c.get('ajustes') as AjustesTurnos | undefined) ?? ej.ajustes,
+			servicios: mezclar(ej.servicios, 's:').sort(porOrden),
+			profesionales: mezclar(ej.profesionales, 'p:').sort(porOrden),
+			turnos: mezclar(ej.turnos, 't:')
+				.map((t) => ({ ...t, vencido: !ocupa(t, ahora) && t.estado === 'reservado' }))
+				.sort((a, b) => (a.inicio < b.inicio ? -1 : a.inicio > b.inicio ? 1 : 0)),
+			codigos: c
+		};
+	}
+
+	private async guardarTurno(t: Turno) {
+		await guardarCambio(this.db, this.sb.id, ENTIDAD_TURNOS, `t:${t.id}`, t);
+	}
+
+	async ajustesTurnos(): Promise<AjustesTurnos> {
+		return (await this.estadoTurnos()).ajustes;
+	}
+
+	async guardarAjustesTurnos(a: AjustesTurnos) {
+		await guardarCambio(this.db, this.sb.id, ENTIDAD_TURNOS, 'ajustes', a);
+		return a;
+	}
+
+	async serviciosTurnos() {
+		return (await this.estadoTurnos()).servicios;
+	}
+
+	async guardarServicio(id: string | null, s: ServicioEditable): Promise<Servicio | null> {
+		const { servicios } = await this.estadoTurnos();
+		const antes = id ? servicios.find((x) => x.id === id) : undefined;
+		if (id && !antes) return null;
+		const nuevo: Servicio = {
+			...s,
+			id: id ?? randomToken(9),
+			orden: s.orden ?? antes?.orden ?? Math.max(-1, ...servicios.map((x) => x.orden)) + 1
+		};
+		await guardarCambio(this.db, this.sb.id, ENTIDAD_TURNOS, `s:${nuevo.id}`, nuevo);
+		return nuevo;
+	}
+
+	async borrarServicio(id: string): Promise<Resultado> {
+		if (!(await this.estadoTurnos()).servicios.some((x) => x.id === id)) return 'no-existe';
+		await guardarCambio(this.db, this.sb.id, ENTIDAD_TURNOS, `s:${id}`, null);
+		return 'ok';
+	}
+
+	async profesionalesTurnos() {
+		return (await this.estadoTurnos()).profesionales;
+	}
+
+	async guardarProfesional(id: string | null, p: ProfesionalEditable): Promise<Profesional | null> {
+		const { profesionales } = await this.estadoTurnos();
+		const antes = id ? profesionales.find((x) => x.id === id) : undefined;
+		if (id && !antes) return null;
+		const nuevo: Profesional = {
+			...p,
+			id: id ?? randomToken(9),
+			orden: p.orden ?? antes?.orden ?? Math.max(-1, ...profesionales.map((x) => x.orden)) + 1
+		};
+		await guardarCambio(this.db, this.sb.id, ENTIDAD_TURNOS, `p:${nuevo.id}`, nuevo);
+		return nuevo;
+	}
+
+	async borrarProfesional(id: string): Promise<Resultado> {
+		if (!(await this.estadoTurnos()).profesionales.some((x) => x.id === id)) return 'no-existe';
+		await guardarCambio(this.db, this.sb.id, ENTIDAD_TURNOS, `p:${id}`, null);
+		return 'ok';
+	}
+
+	async agendaTurnos(desde: string, hasta: string, profesional?: string) {
+		return (await this.estadoTurnos()).turnos.filter((t) => {
+			const dia = diaAr(Date.parse(t.inicio));
+			return dia >= desde && dia <= hasta && (!profesional || t.profesionalId === profesional);
+		});
+	}
+
+	async crearTurno(n: TurnoNuevo, ahora = Date.now()): Promise<Turno | 'ocupado' | 'invalido'> {
+		const e = await this.estadoTurnos(ahora);
+		const s = e.servicios.find((x) => x.id === n.servicioId);
+		const p = e.profesionales.find((x) => x.id === n.profesionalId);
+		const inicio = Date.parse(n.inicio);
+		if (!s || !p || !Number.isFinite(inicio)) return 'invalido';
+		const fin = inicio + s.duracion * 60_000;
+		if (!n.forzar && superpone(e.turnos, p.id, inicio, fin, ahora)) return 'ocupado';
+		const t: Turno = {
+			id: randomToken(9),
+			codigo: randomToken(18),
+			servicioId: s.id,
+			servicio: s.nombre,
+			profesionalId: p.id,
+			profesional: p.nombre,
+			inicio: isoAr(inicio),
+			fin: isoAr(fin),
+			cliente: { nombre: n.nombre, telefono: n.telefono, email: n.email },
+			precio: s.precio,
+			sena: 0,
+			estado: 'confirmado',
+			senaPagada: false,
+			senaDevuelta: false,
+			origen: 'panel',
+			nota: n.nota ?? null,
+			creadoEn: new Date(ahora).toISOString(),
+			venceEn: null,
+			vencido: false
+		};
+		await this.guardarTurnoNuevo(t);
+		return t;
+	}
+
+	/** El turno y su código (para encontrarlo sin la cookie, desde el link de la confirmación). */
+	private async guardarTurnoNuevo(t: Turno) {
+		await Promise.all([
+			this.guardarTurno(t),
+			guardarCambio(this.db, this.sb.id, ENTIDAD_TURNOS, `c:${t.codigo}`, { id: t.id })
+		]);
+	}
+
+	async estadoTurno(id: string, estado: EstadoTurno): Promise<Turno | 'no-existe'> {
+		const t = (await this.estadoTurnos()).turnos.find((x) => x.id === id);
+		if (!t) return 'no-existe';
+		const nuevo: Turno = { ...t, estado, venceEn: estado === 'reservado' ? t.venceEn : null };
+		await this.guardarTurno(nuevo);
+		return nuevo;
+	}
+
+	async devolverSena(id: string): Promise<Turno | 'no-existe' | 'sin-sena' | 'sin-cobros'> {
+		const [e, mp] = await Promise.all([this.estadoTurnos(), this.mercadoPago()]);
+		const t = e.turnos.find((x) => x.id === id);
+		if (!t) return 'no-existe';
+		if (!t.senaPagada || t.senaDevuelta || !t.sena) return 'sin-sena';
+		if (!mp.conectada) return 'sin-cobros';
+		const nuevo = { ...t, senaDevuelta: true };
+		await this.guardarTurno(nuevo);
+		return nuevo;
+	}
+
+	/** Lo que la tienda pública muestra de los turnos (null si no toma). */
+	async turnosTienda(): Promise<TurnosTienda | null> {
+		const e = await this.estadoTurnos();
+		if (!e.ajustes.activo) return null;
+		return {
+			servicios: e.servicios.filter((s) => s.activo),
+			profesionales: e.profesionales.filter((p) => p.activo),
+			// En la demo no hay Mercado Pago de verdad: el turno se confirma sin seña.
+			sena: 0,
+			horario: e.ajustes.horario,
+			anticipacionMin: e.ajustes.anticipacionMin,
+			diasVista: e.ajustes.diasVista
+		};
+	}
+
+	/** La grilla de un día para la tienda: cada horario con si está libre (los otros, tachados). */
+	async horariosTurnos(
+		servicio: string,
+		profesional: string | null,
+		dia: string,
+		ahora = Date.now()
+	) {
+		const e = await this.estadoTurnos(ahora);
+		const s = e.servicios.find((x) => x.id === servicio);
+		if (!e.ajustes.activo || !s) return null;
+		return horariosDelDia({ ...e, servicio: s, profesionalId: profesional, dia, ahora });
+	}
+
+	/** Los libres de hoy (portada) y el próximo libre de cada profesional (El equipo). */
+	async proximosTurnos(ahora = Date.now()): Promise<ProximosTurnos> {
+		const e = await this.estadoTurnos(ahora);
+		const activos = e.servicios.filter((s) => s.activo);
+		const hoy = diaAr(ahora);
+		const base = { ...e, ahora };
+		const porProfesional: Record<string, string | null> = {};
+		for (const p of e.profesionales.filter((x) => x.activo)) {
+			const s = activos.find((x) => hace(p, x.id));
+			porProfesional[p.id] = null;
+			for (let d = 0; s && d < e.ajustes.diasVista && !porProfesional[p.id]; d++)
+				porProfesional[p.id] =
+					libres({ ...base, servicio: s, profesionalId: p.id, dia: sumarDias(hoy, d) })[0]
+						?.inicio ?? null;
+		}
+		return {
+			hoy: activos[0]
+				? libres({ ...base, servicio: activos[0], profesionalId: null, dia: hoy }).map(
+						(h) => h.inicio
+					)
+				: [],
+			porProfesional
+		};
+	}
+
+	/**
+	 * Reserva desde la tienda: precio, duración y seña salen del servicio, y el horario se re-chequea
+	 * acá. En la demo no hay Mercado Pago real: queda confirmado sin seña.
+	 */
+	async reservarTurno(
+		r: {
+			servicioId: string;
+			profesionalId: string | null;
+			inicio: string;
+			nombre: string;
+			telefono: string;
+			email: string;
+		},
+		ahora = Date.now()
+	): Promise<Turno | 'ocupado' | 'invalido' | 'apagado'> {
+		const e = await this.estadoTurnos(ahora);
+		if (!e.ajustes.activo) return 'apagado';
+		const s = e.servicios.find((x) => x.id === r.servicioId && x.activo);
+		if (!s) return 'invalido';
+		const quien = asignar({ ...e, servicio: s, profesionalId: r.profesionalId, ahora }, r.inicio);
+		const p = quien && e.profesionales.find((x) => x.id === quien);
+		if (!p) return 'ocupado';
+		const inicio = Date.parse(r.inicio);
+		const t: Turno = {
+			id: randomToken(9),
+			codigo: randomToken(18),
+			servicioId: s.id,
+			servicio: s.nombre,
+			profesionalId: p.id,
+			profesional: p.nombre,
+			inicio: isoAr(inicio),
+			fin: isoAr(inicio + s.duracion * 60_000),
+			cliente: { nombre: r.nombre, telefono: r.telefono, email: r.email },
+			precio: s.precio,
+			sena: 0,
+			estado: 'confirmado',
+			senaPagada: false,
+			senaDevuelta: false,
+			origen: 'tienda',
+			nota: null,
+			creadoEn: new Date(ahora).toISOString(),
+			venceEn: null,
+			vencido: false
+		};
+		await this.guardarTurnoNuevo(t);
+		return t;
+	}
+
+	/** El turno por su código público, como lo ve quien reservó. */
+	async turnoPublico(codigo: string, ahora = Date.now()): Promise<TurnoPublico | null> {
+		const [e, conf, t] = await Promise.all([
+			this.estadoTurnos(ahora),
+			this.configuracion(),
+			this.tienda()
+		]);
+		const ref = e.codigos.get(`c:${codigo}`) as { id: string } | undefined;
+		const x = ref && e.turnos.find((y) => y.id === ref.id);
+		if (!x) return null;
+		const cancelable =
+			((x.estado === 'reservado' && !x.vencido) || x.estado === 'confirmado') &&
+			ahora <= Date.parse(x.inicio) - e.ajustes.anticipacionMin * 60_000;
+		return {
+			codigo: x.codigo,
+			servicio: x.servicio,
+			profesional: x.profesional,
+			inicio: x.inicio,
+			fin: x.fin,
+			nombre: x.cliente.nombre.split(' ')[0],
+			precio: x.precio,
+			sena: x.sena,
+			senaPagada: x.senaPagada,
+			estado: x.estado,
+			venceEn: x.venceEn,
+			vencido: x.vencido,
+			cancelable,
+			tienda: t.nombre,
+			direccion: conf.negocio.direccion,
+			whatsapp: conf.negocio.whatsapp
+		};
+	}
+
+	/** Cancela desde la confirmación (hasta la anticipación mínima). Uno cancelado no es error. */
+	async cancelarTurnoPublico(codigo: string, ahora = Date.now()) {
+		const p = await this.turnoPublico(codigo, ahora);
+		if (!p) return 'no-existe' as const;
+		if (p.estado === 'cancelado') return p;
+		if (!p.cancelable) return 'tarde' as const;
+		const e = await this.estadoTurnos(ahora);
+		const id = (e.codigos.get(`c:${codigo}`) as { id: string }).id;
+		const t = e.turnos.find((y) => y.id === id)!;
+		await this.guardarTurno({ ...t, estado: 'cancelado', venceEn: null });
+		return { ...p, estado: 'cancelado' as const, cancelable: false };
+	}
+
+	/** Turnos que entraron desde la tienda (lo que reservó el visitante): avisos del panel. */
+	private async turnosNuevosDeLaTienda() {
+		const { turnos } = await this.estadoTurnos();
+		return turnos.filter((t) => t.origen === 'tienda' && !t.id.startsWith('ej-'));
 	}
 }

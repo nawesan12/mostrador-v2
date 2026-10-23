@@ -1,19 +1,44 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
+	import { untrack } from 'svelte';
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
 	import { carritoDe } from '../carrito.svelte.ts';
 	import { cotizar, cpValido } from '../envio.ts';
 	import { partirTitulo } from '../titulo.ts';
-	import type { OpcionEnvio, ProductoPublico, TiendaPublica } from '../tipos.ts';
+	import { Reserva } from '../reserva.svelte.ts';
+	import {
+		cuandoCorto,
+		cuandoLargo as cuandoLargoT,
+		duracion,
+		horarioPorDias
+	} from '#lib/turnos/formato.ts';
+	import type {
+		OpcionEnvio,
+		ProductoPublico,
+		ProximosTurnos,
+		TiendaPublica,
+		TurnoPublico
+	} from '../tipos.ts';
 
 	/**
 	 * Plantilla Tijera (design/Plantilla Tijera.dc.html), con los datos de la tienda en lugar de los
-	 * de ejemplo. Lo que el diseño muestra sin datos atrás (turnos, equipo, pase mensual, seña,
-	 * horarios, cupón, cuenta regresiva, seguidores) no se inventa: esas partes no se dibujan.
+	 * de ejemplo. Con turnos activos dibuja la reserva (pTurnos), los servicios, el equipo, los
+	 * horarios y los libres de hoy. Lo que el diseño muestra sin datos atrás (pase mensual, cupón,
+	 * cuenta regresiva, seguidores, puntaje de cada profesional) no se inventa: no se dibuja.
 	 */
-	type Pagina = 'inicio' | 'catalogo' | 'producto' | 'carrito' | 'checkout' | 'nosotros' | 'listo';
+	type Pagina =
+		| 'inicio'
+		| 'catalogo'
+		| 'producto'
+		| 'carrito'
+		| 'checkout'
+		| 'nosotros'
+		| 'listo'
+		| 'turnos'
+		| 'turno';
 	let {
 		tienda,
 		pagina,
@@ -21,6 +46,9 @@
 		categoria = null,
 		orden = 'vendidos',
 		pedido = null,
+		turno = null,
+		proximos = null,
+		aviso = null,
 		error = null
 	}: {
 		tienda: TiendaPublica;
@@ -36,6 +64,12 @@
 			alias: string | null;
 			esCbu?: boolean;
 		} | null;
+		/** La confirmación de un turno (pagina 'turno'). */
+		turno?: TurnoPublico | null;
+		/** Los libres de hoy y el próximo de cada profesional (portada). */
+		proximos?: ProximosTurnos | null;
+		/** Vuelta de Mercado Pago al pagar la seña: ok, pendiente o error. */
+		aviso?: string | null;
 		error?: string | null;
 	} = $props();
 
@@ -233,6 +267,17 @@
 	});
 
 	const foot = $derived([
+		...(tienda.turnos
+			? [
+					{
+						t: 'Turnos',
+						l: [
+							{ t: 'Reservar', href: `${base}/turnos` },
+							{ t: 'Horarios', href: `${base}/nosotros` }
+						]
+					}
+				]
+			: []),
 		{
 			t: 'Tienda',
 			l: [
@@ -257,6 +302,9 @@
 		}
 	]);
 	const nav = $derived([
+		...(tienda.turnos
+			? [{ t: 'Turnos', href: `${base}/turnos`, on: pagina === 'turnos' || pagina === 'turno' }]
+			: []),
 		{ t: 'Todo', href: `${base}/catalogo`, on: pagina === 'catalogo' && !categoria },
 		...tienda.categorias.slice(0, 3).map((c) => ({
 			t: c.nombre,
@@ -272,6 +320,67 @@
 	const sumar = (p: { id: string; stock: number }) => {
 		if (p.stock > 0 && !tienda.vitrina) carrito.sumar(p.id, 1, p.stock);
 	};
+
+	// ---- Turnos (pTurnos del diseño) ----
+	const T = $derived(tienda.turnos);
+	const cara = (f: string | null, w: number, h: number) =>
+		!f
+			? null
+			: f.startsWith('https://')
+				? f
+				: `https://images.unsplash.com/photo-${f}?auto=format&fit=crop&w=${w}&h=${h}&q=70&crop=faces`;
+	const reservaUrl = (q: Record<string, string>) =>
+		`${base}/turnos?${new URLSearchParams(q).toString()}`;
+	// La portada: los libres de hoy (heroSlots) y el próximo de cada uno (team.next).
+	const heroSlots = $derived(
+		(proximos?.hoy ?? []).slice(0, 6).map((inicio, i) => ({
+			inicio,
+			t: inicio.slice(11, 16),
+			on: i === 0,
+			href: reservaUrl({ servicio: T?.servicios[0]?.id ?? '', dia: inicio.slice(0, 10), inicio })
+		}))
+	);
+	const horas = $derived(T ? horarioPorDias(T.horario) : []);
+	// Se arma una vez al entrar a /turnos (lo que venga en la URL queda elegido).
+	const reserva = untrack(() =>
+		pagina === 'turnos' && tienda.turnos
+			? new Reserva(tienda.slug, tienda.turnos, {
+					servicio: page.url.searchParams.get('servicio'),
+					profesional: page.url.searchParams.get('profesional'),
+					dia: page.url.searchParams.get('dia'),
+					inicio: page.url.searchParams.get('inicio')
+				})
+			: null
+	);
+	const PASOS = ['Servicio', 'Profesional', 'Horario', 'Pago'];
+	const pasos = $derived(
+		PASOS.map((t, i) => {
+			const p = reserva?.paso ?? 0;
+			const k = i < p ? 'done' : i === p ? 'on' : '';
+			return {
+				t,
+				n: k === 'done' ? '✓' : String(i + 1),
+				bg: k === 'on' ? '#1E1B2E' : k === 'done' ? '#EEE9FF' : '#fff',
+				fg: k === 'on' ? '#fff' : k === 'done' ? '#5B3FD6' : '#8B879A',
+				nbg: k === 'on' || k === 'done' ? '#5B3FD6' : '#EAE6F2',
+				nfg: k === '' ? '#8B879A' : '#fff'
+			};
+		})
+	);
+	const ICONO_FRANJA = { manana: I.phSunHorizon, tarde: I.phSun, noche: I.phMoon } as const;
+	const slot = (k: 'on' | 'off' | '') => ({
+		bg: k === 'on' ? '#5B3FD6' : k === 'off' ? 'transparent' : '#fff',
+		fg: k === 'on' ? '#fff' : k === 'off' ? '#B7B3C4' : '#1E1B2E',
+		bd: k === 'on' ? '#5B3FD6' : k === 'off' ? 'rgba(30,27,46,.06)' : 'rgba(30,27,46,.12)',
+		td: k === 'off' ? 'line-through' : 'none'
+	});
+	const anticipacion = $derived.by(() => {
+		const m = T?.anticipacionMin ?? 0;
+		return m >= 120 && m % 60 === 0 ? `${m / 60} h` : `${m} min`;
+	});
+	let reservando = $state(false);
+	let cancelando = $state(false);
+	let seguro = $state(false);
 </script>
 
 <svelte:window bind:innerWidth={ancho} />
@@ -353,7 +462,9 @@
 
 		<!-- header -->
 		<header
-			style="position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:16px;padding:14px clamp(14px,3.5cqw,44px);background:rgba(246,244,241,.92);backdrop-filter:blur(10px);border-bottom:1px solid rgba(30,27,46,.08)"
+			style="position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:{nar && T
+				? 10
+				: 16}px;padding:14px clamp(14px,3.5cqw,44px);background:rgba(246,244,241,.92);backdrop-filter:blur(10px);border-bottom:1px solid rgba(30,27,46,.08)"
 		>
 			<a
 				href={base}
@@ -384,11 +495,18 @@
 						>{carrito.unidades}</span
 					>{/if}</a
 			>
-			{#if nar}<a
+			{#if nar && !T}<a
 					href="{base}/catalogo"
 					aria-label="Productos"
 					style="display:grid;place-items:center;flex:none;width:40px;height:40px;border-radius:999px;background:#1E1B2E;color:#F6F4F1"
 					><Icon icon={I.phList} size={16} /></a
+				>{/if}
+			{#if T}<a
+					href="{base}/turnos"
+					style="display:flex;align-items:center;gap:8px;flex:none;padding:11px {nar
+						? 13
+						: 18}px;border-radius:999px;background:#1E1B2E;color:#F6F4F1;font:700 14px 'Instrument Sans';white-space:nowrap;text-decoration:none"
+					><Icon icon={I.phCalendarPlusBold} size={16} />Reservar</a
 				>{/if}
 		</header>
 
@@ -430,11 +548,19 @@
 								{tienda.portada.lema}
 							</p>{/if}
 						<div style="display:flex;gap:10px;flex-wrap:wrap">
-							<a
-								href="{base}/catalogo"
-								style="display:flex;align-items:center;gap:8px;padding:16px 26px;border:0;border-radius:999px;background:#5B3FD6;color:#fff;font:700 15px 'Instrument Sans';text-decoration:none;box-shadow:0 14px 30px -12px rgba(91,63,214,.7)"
-								><Icon icon={I.phShoppingBagFill} size={17} />Ver productos</a
-							>{#if whatsapp}<a
+							{#if T}<a
+									href="{base}/turnos"
+									style="display:flex;align-items:center;gap:8px;padding:16px 26px;border:0;border-radius:999px;background:#5B3FD6;color:#fff;font:700 15px 'Instrument Sans';text-decoration:none;box-shadow:0 14px 30px -12px rgba(91,63,214,.7)"
+									><Icon icon={I.phCalendarCheckBold} size={17} />Reservar turno</a
+								><a
+									href="{base}/catalogo"
+									style="padding:16px 22px;border:1.5px solid rgba(30,27,46,.18);border-radius:999px;background:transparent;color:#1E1B2E;font:700 15px 'Instrument Sans';text-decoration:none"
+									>Ver productos</a
+								>{:else}<a
+									href="{base}/catalogo"
+									style="display:flex;align-items:center;gap:8px;padding:16px 26px;border:0;border-radius:999px;background:#5B3FD6;color:#fff;font:700 15px 'Instrument Sans';text-decoration:none;box-shadow:0 14px 30px -12px rgba(91,63,214,.7)"
+									><Icon icon={I.phShoppingBagFill} size={17} />Ver productos</a
+								>{/if}{#if whatsapp && !T}<a
 									href={wa('¡Hola!')}
 									target="_blank"
 									rel="noopener"
@@ -451,6 +577,121 @@
 								alt=""
 								style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
 							/>{/if}
+						{#if heroSlots.length}
+							<div
+								style="position:absolute;left:16px;right:16px;bottom:16px;padding:16px;border-radius:22px;background:rgba(246,244,241,.95);backdrop-filter:blur(8px);box-shadow:0 20px 40px -16px rgba(30,27,46,.4)"
+							>
+								<div
+									style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"
+								>
+									<b style="font-size:14px">Próximos turnos libres hoy</b><span
+										style="font-size:12.5px;color:#2F7D4F;font-weight:700"
+										>● {proximos?.hoy.length}
+										{proximos?.hoy.length === 1 ? 'disponible' : 'disponibles'}</span
+									>
+								</div>
+								<div
+									style="margin-top:10px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none"
+								>
+									{#each heroSlots as h (h.inicio)}{@const st = slot(h.on ? 'on' : '')}<a
+											href={h.href}
+											style="flex:none;padding:9px 13px;border-radius:12px;border:1.5px solid {st.bd};background:{st.bg};color:{st.fg};font:700 13.5px 'Instrument Sans';text-decoration:none"
+											>{h.t}</a
+										>{/each}
+								</div>
+							</div>
+						{/if}
+					</div>
+				</section>
+			{/if}
+
+			{#if T && T.servicios.length}
+				<section style="padding:clamp(48px,7cqw,96px) clamp(14px,3.5cqw,44px) 0">
+					<div
+						style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap"
+					>
+						<h2
+							style="margin:0;font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(34px,4.6cqw,58px);line-height:.95;letter-spacing:-.035em"
+						>
+							Servicios
+						</h2>
+						<span style="font-size:14px;color:#5A566B"
+							>{T.sena
+								? 'Precios finales · pagás en el local o seña online'
+								: 'Precios finales · pagás en el local'}</span
+						>
+					</div>
+					<div
+						style="margin-top:22px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:12px"
+					>
+						{#each T.servicios as s (s.id)}<a
+								href={reservaUrl({ servicio: s.id })}
+								class="sube"
+								style="display:flex;gap:14px;align-items:center;padding:14px;border-radius:22px;background:#fff;text-align:left;text-decoration:none;color:#1E1B2E;box-shadow:0 1px 2px rgba(30,27,46,.06);transition:transform .2s"
+								>{#if s.foto}<img
+										src={img(s.foto, 200, 200)}
+										alt=""
+										style="width:76px;height:76px;border-radius:16px;object-fit:cover;flex:none;background:#E4E1EA"
+									/>{:else}<span
+										style="width:76px;height:76px;border-radius:16px;flex:none;background:#E4E1EA"
+									></span>{/if}<span style="flex:1;min-width:0"
+									><span style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"
+										><span style="font-size:16px;font-weight:700">{s.nombre}</span
+										>{#if s.etiqueta}<span
+												style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:#EEE9FF;color:#5B3FD6"
+												>{s.etiqueta}</span
+											>{/if}</span
+									>{#if s.descripcion}<span
+											style="display:block;font-size:13px;color:#5A566B;margin-top:3px"
+											>{s.descripcion}</span
+										>{/if}<span style="display:flex;gap:10px;margin-top:8px;font-size:13px"
+										><b>{fmt(s.precio)}</b><span
+											style="color:#8B879A;display:flex;align-items:center;gap:4px"
+											><Icon icon={I.phClock} size={13} />{duracion(s.duracion)}</span
+										></span
+									></span
+								><Icon icon={I.phPlusCircleFill} size={28} style="color:#5B3FD6;flex:none" /></a
+							>{/each}
+					</div>
+				</section>
+			{/if}
+
+			{#if T && T.profesionales.length}
+				<section style="padding:clamp(48px,7cqw,96px) clamp(14px,3.5cqw,44px) 0">
+					<h2
+						style="margin:0;font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(34px,4.6cqw,58px);line-height:.95;letter-spacing:-.035em"
+					>
+						El equipo
+					</h2>
+					<div
+						style="margin-top:22px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(46%,220px),1fr));gap:12px"
+					>
+						{#each T.profesionales as p (p.id)}
+							{@const prox = proximos?.porProfesional[p.id]}
+							<a
+								href={reservaUrl({ profesional: p.id })}
+								style="display:block;border-radius:24px;overflow:hidden;background:#fff;box-shadow:0 1px 2px rgba(30,27,46,.06);text-decoration:none;color:#1E1B2E;min-width:0"
+							>
+								<div style="aspect-ratio:4/5;background:#E4E1EA">
+									{#if p.foto}<img
+											src={cara(p.foto, 500, 620)}
+											alt=""
+											style="width:100%;height:100%;object-fit:cover;display:block"
+										/>{/if}
+								</div>
+								<div style="padding:14px">
+									<div style="font-size:16px;font-weight:700">{p.nombre}</div>
+									{#if p.rol}<div style="font-size:13px;color:#5A566B;margin-top:2px">
+											{p.rol}
+										</div>{/if}
+									{#if prox}<div
+											style="margin-top:10px;display:flex;justify-content:flex-end;align-items:center;font-size:12.5px"
+										>
+											<span style="color:#2F7D4F;font-weight:700">{cuandoCorto(prox)}</span>
+										</div>{/if}
+								</div>
+							</a>
+						{/each}
 					</div>
 				</section>
 			{/if}
@@ -594,6 +835,465 @@
 			{:else}
 				<div style="height:clamp(48px,7cqw,96px)"></div>
 			{/if}
+		{/if}
+
+		<!-- ============ TURNOS (pTurnos) ============ -->
+		{#if pagina === 'turnos' && T && reserva}
+			<form
+				method="POST"
+				use:enhance={() => {
+					reservando = true;
+					return async ({ result, update }) => {
+						reservando = false;
+						// Mercado Pago es otro sitio: se navega de verdad.
+						if (result.type === 'redirect' && result.location.startsWith('https://'))
+							return void (location.href = result.location);
+						await update();
+						// Si otro tomó el horario mientras tanto, se ve al toque.
+						if (result.type === 'failure') void reserva.cargar();
+					};
+				}}
+				style="display:block;padding:24px clamp(14px,3.5cqw,44px) clamp(48px,7cqw,90px)"
+			>
+				<input type="hidden" name="servicioId" value={reserva.servicioId ?? ''} />
+				<input type="hidden" name="profesionalId" value={reserva.profesionalId ?? ''} />
+				<input type="hidden" name="inicio" value={reserva.inicio ?? ''} />
+				<div
+					style="display:flex;gap:6px;font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;flex-wrap:wrap"
+				>
+					{#each pasos as s (s.t)}<span
+							style="display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;background:{s.bg};color:{s.fg}"
+							><span
+								style="width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:{s.nbg};color:{s.nfg};font-size:10.5px"
+								>{s.n}</span
+							>{s.t}</span
+						>{/each}
+				</div>
+				<h1
+					style="margin:18px 0 0;font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(36px,5cqw,68px);line-height:.95;letter-spacing:-.04em;overflow-wrap:anywhere"
+				>
+					Reservá tu turno
+				</h1>
+				<div
+					style="margin-top:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:clamp(16px,3cqw,36px);align-items:start"
+				>
+					<div style="display:flex;flex-direction:column;gap:24px;min-width:0">
+						<div>
+							<div style="font-size:15px;font-weight:700;margin-bottom:10px">1 · Servicio</div>
+							<div
+								style="display:flex;flex-direction:column;gap:8px"
+								role="radiogroup"
+								aria-label="Servicio"
+							>
+								{#each T.servicios as s (s.id)}{@const on = reserva.servicioId === s.id}<button
+										type="button"
+										role="radio"
+										aria-checked={on}
+										onclick={() => reserva.elegirServicio(s.id)}
+										style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:18px;border:1.5px solid {on
+											? '#5B3FD6'
+											: 'rgba(30,27,46,.1)'};background:{on
+											? '#F3F0FF'
+											: '#fff'};text-align:left;cursor:pointer;font-family:inherit;color:#1E1B2E"
+										><span
+											style="width:22px;height:22px;border-radius:7px;border:1.5px solid {on
+												? '#5B3FD6'
+												: 'rgba(30,27,46,.25)'};background:{on
+												? '#5B3FD6'
+												: '#fff'};color:#fff;display:grid;place-items:center;flex:none"
+											>{#if on}<Icon icon={I.phCheckBold} size={13} />{/if}</span
+										><span style="flex:1;min-width:0"
+											><span style="display:block;font-size:15px;font-weight:600">{s.nombre}</span
+											><span style="display:block;font-size:12.5px;color:#5A566B"
+												>{duracion(s.duracion)}</span
+											></span
+										><b style="font-size:15px;white-space:nowrap">{fmt(s.precio)}</b></button
+									>{/each}
+							</div>
+						</div>
+						<div>
+							<div style="font-size:15px;font-weight:700;margin-bottom:10px">2 · Profesional</div>
+							<div
+								style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px"
+								role="radiogroup"
+								aria-label="Profesional"
+							>
+								{#each [null, ...reserva.profesionales] as p (p?.id ?? 'cualquiera')}{@const on =
+										reserva.profesionalId === (p?.id ?? null)}<button
+										type="button"
+										role="radio"
+										aria-checked={on}
+										onclick={() => reserva.elegirProfesional(p?.id ?? null)}
+										style="flex:none;width:110px;padding:10px;border-radius:18px;border:1.5px solid {on
+											? '#5B3FD6'
+											: 'rgba(30,27,46,.1)'};background:{on
+											? '#F3F0FF'
+											: '#fff'};text-align:center;cursor:pointer;font-family:inherit;color:#1E1B2E"
+										>{#if p?.foto}<img
+												src={cara(p.foto, 120, 120)}
+												alt=""
+												style="width:56px;height:56px;border-radius:50%;object-fit:cover;display:block;margin:0 auto"
+											/>{:else}<span
+												style="width:56px;height:56px;border-radius:50%;background:#EEE9FF;color:#5B3FD6;display:grid;place-items:center;margin:0 auto"
+												><Icon icon={p ? I.phUserFill : I.phShuffleBold} size={22} /></span
+											>{/if}<span
+											style="display:block;margin-top:8px;font-size:13.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+											>{p?.nombre ?? 'Cualquiera'}</span
+										><span
+											style="display:block;font-size:11.5px;color:#5A566B;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+											>{p ? p.rol.split(' · ')[0] : 'El primero libre'}</span
+										></button
+									>{/each}
+							</div>
+						</div>
+						<div>
+							<div
+								style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"
+							>
+								<span style="font-size:15px;font-weight:700">3 · Día y horario</span><span
+									style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600"
+									>{#if reserva.hayAntes || reserva.hayDespues}<button
+											type="button"
+											aria-label="Días anteriores"
+											disabled={!reserva.hayAntes}
+											onclick={() => reserva.mover(-1)}
+											style="display:grid;padding:4px;border:0;background:transparent;color:#1E1B2E;cursor:pointer"
+											><Icon icon={I.phCaretLeftBold} size={14} /></button
+										>{/if}{reserva.mes}{#if reserva.hayAntes || reserva.hayDespues}<button
+											type="button"
+											aria-label="Días siguientes"
+											disabled={!reserva.hayDespues}
+											onclick={() => reserva.mover(1)}
+											style="display:grid;padding:4px;border:0;background:transparent;color:#1E1B2E;cursor:pointer"
+											><Icon icon={I.phCaretRightBold} size={14} /></button
+										>{/if}</span
+								>
+							</div>
+							<div
+								style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px"
+								role="radiogroup"
+								aria-label="Día"
+							>
+								{#each reserva.dias as d (d.dia)}{@const sel = reserva.dia === d.dia}<button
+										type="button"
+										role="radio"
+										aria-checked={sel}
+										aria-label="{d.w} {d.n}{d.abierto ? '' : ', cerrado'}"
+										disabled={!d.abierto}
+										onclick={() => reserva.elegirDia(d.dia)}
+										style="padding:9px 0;border-radius:14px;text-align:center;background:{sel
+											? '#5B3FD6'
+											: '#fff'};color:{sel ? '#fff' : '#1E1B2E'};border:1.5px solid {sel
+											? '#5B3FD6'
+											: 'rgba(30,27,46,.08)'};opacity:{d.abierto
+											? 1
+											: 0.35};cursor:pointer;font-family:inherit;min-width:0"
+										><span
+											style="display:block;font-size:11px;font-weight:600;text-transform:uppercase"
+											>{d.w}</span
+										><span style="display:block;font-size:17px;font-weight:700;margin-top:1px"
+											>{d.n}</span
+										><span
+											style="display:block;width:5px;height:5px;border-radius:50%;margin:3px auto 0;background:{!d.abierto
+												? 'transparent'
+												: sel
+													? '#fff'
+													: '#3F9A50'}"
+										></span></button
+									>{/each}
+							</div>
+							<div style="margin-top:16px;display:flex;flex-direction:column;gap:12px">
+								{#if !reserva.servicioId}
+									<p style="margin:0;font-size:14px;color:#5A566B">
+										Elegí un servicio para ver los horarios.
+									</p>
+								{:else if reserva.horarios && !reserva.grupos.length}
+									<p style="margin:0;font-size:14px;color:#5A566B">
+										No quedan horarios este día. Probá con otro día u otro&nbsp;profesional.
+									</p>
+								{/if}
+								{#each reserva.grupos as g (g.k)}<div>
+										<div
+											style="font-size:12.5px;font-weight:700;color:#5A566B;margin-bottom:7px;display:flex;align-items:center;gap:6px"
+										>
+											<Icon icon={ICONO_FRANJA[g.k]} size={14} />{g.t}
+										</div>
+										<div
+											style="display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:6px"
+											role="radiogroup"
+											aria-label="Horarios a la {g.t.toLowerCase()}"
+										>
+											{#each g.s as h (h.inicio)}{@const st = slot(
+													reserva.inicio === h.inicio ? 'on' : h.libre ? '' : 'off'
+												)}<button
+													type="button"
+													role="radio"
+													aria-checked={reserva.inicio === h.inicio}
+													aria-label="{h.hora}{h.libre ? '' : ', ocupado'}"
+													disabled={!h.libre}
+													onclick={() => reserva.elegirHorario(h)}
+													style="padding:10px 0;text-align:center;border-radius:12px;border:1.5px solid {st.bd};background:{st.bg};color:{st.fg};font:700 14px 'Instrument Sans';text-decoration:{st.td};cursor:pointer"
+													>{h.hora}</button
+												>{/each}
+										</div>
+									</div>{/each}
+							</div>
+						</div>
+						{#if reserva.listo}
+							<div>
+								<div style="font-size:15px;font-weight:700;margin-bottom:10px">4 · Tus datos</div>
+								<div
+									style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px"
+								>
+									{#each [['nombre', 'Nombre', 'text', 'name'], ['telefono', 'WhatsApp', 'tel', 'tel'], ['email', 'Email', 'email', 'email']] as [n, l, tipo, ac] (n)}
+										<label
+											style="display:block;padding:11px 14px;border-radius:16px;background:#fff;box-shadow:inset 0 0 0 1.5px rgba(30,27,46,.1)"
+											><span style="display:block;font-size:11.5px;color:#8B879A">{l}</span><input
+												name={n}
+												type={tipo}
+												autocomplete={ac as 'email'}
+												required
+												maxlength="120"
+												style="width:100%;margin-top:2px;padding:0;border:0;background:transparent;font:400 14.5px 'Instrument Sans';color:#1E1B2E;outline:none"
+											/></label
+										>
+									{/each}
+								</div>
+							</div>
+							<div>
+								<div style="font-size:15px;font-weight:700;margin-bottom:10px">Pago</div>
+								<div
+									style="display:flex;align-items:center;gap:12px;padding:15px;border-radius:18px;border:1.5px solid #5B3FD6;background:#F3F0FF"
+								>
+									<span
+										style="width:20px;height:20px;border-radius:50%;border:2px solid #5B3FD6;display:grid;place-items:center;flex:none"
+										><span style="width:10px;height:10px;border-radius:50%;background:#5B3FD6"
+										></span></span
+									>{#if reserva.sena}<Icon
+											icon={I.siMercadopago}
+											size={22}
+											style="color:#00B1EA;flex:none"
+										/><span style="flex:1;min-width:0"
+											><span style="display:block;font-size:14.5px;font-weight:600"
+												>Mercado Pago</span
+											><span style="display:block;font-size:12.5px;color:#5A566B"
+												>Seña de {fmt(reserva.sena)} para confirmar · el resto, en el local</span
+											></span
+										>{:else}<Icon
+											icon={I.phStorefrontFill}
+											size={22}
+											style="color:#1E1B2E;flex:none"
+										/><span style="flex:1;min-width:0"
+											><span style="display:block;font-size:14.5px;font-weight:600"
+												>Pagás en el local</span
+											><span style="display:block;font-size:12.5px;color:#5A566B"
+												>No hace falta seña: el turno queda confirmado</span
+											></span
+										>{/if}
+								</div>
+							</div>
+						{/if}
+					</div>
+					<div
+						style="position:sticky;top:90px;padding:22px;border-radius:28px;background:#1E1B2E;color:#F6F4F1;min-width:0"
+					>
+						<div style="font-family:'Syne',sans-serif;font-weight:700;font-size:24px">
+							Tu reserva
+						</div>
+						<div style="margin-top:16px;display:flex;align-items:center;gap:12px">
+							{#if reserva.profesional?.foto}<img
+									src={cara(reserva.profesional.foto, 120, 120)}
+									alt=""
+									style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex:none"
+								/>{:else}<span
+									style="width:52px;height:52px;border-radius:50%;background:rgba(246,244,241,.08);color:#A996FF;display:grid;place-items:center;flex:none"
+									><Icon icon={I.phShuffleBold} size={22} /></span
+								>{/if}
+							<div style="min-width:0">
+								<div style="font-size:15px;font-weight:700">
+									{reserva.conQuien ? `Con ${reserva.conQuien}` : 'Con el primero libre'}
+								</div>
+								<div style="font-size:13px;color:#B3AEC6">
+									{reserva.cuando ?? 'Elegí el día y el horario'}
+								</div>
+							</div>
+						</div>
+						{#if reserva.servicio}
+							<div
+								style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(246,244,241,.12);display:flex;flex-direction:column;gap:9px;font-size:14px"
+							>
+								<span style="display:flex;justify-content:space-between;gap:10px"
+									><span>{reserva.servicio.nombre}</span><span style="white-space:nowrap"
+										>{fmt(reserva.servicio.precio)}</span
+									></span
+								><span style="display:flex;justify-content:space-between;color:#B3AEC6"
+									><span>Duración total</span><span>{reserva.duracion}</span></span
+								><span
+									style="display:flex;justify-content:space-between;align-items:baseline;margin-top:6px"
+									><b>Total</b><b style="font-size:24px">{fmt(reserva.servicio.precio)}</b></span
+								>
+							</div>
+						{/if}
+						<div
+							style="margin-top:14px;padding:12px;border-radius:16px;background:rgba(246,244,241,.08);font-size:13px;line-height:1.45;display:flex;gap:10px"
+						>
+							<Icon icon={I.phShieldCheckFill} size={20} style="color:#A996FF;flex:none" />
+							<span
+								>{#if reserva.sena}Seña de {fmt(reserva.sena)} para confirmar. Podés cancelar desde el
+									link del turno hasta {anticipacion} antes; la seña te la devuelve la&nbsp;tienda.{:else}No
+									pagás nada ahora. Podés cancelar desde el link del turno hasta {anticipacion}
+									antes.{/if}</span
+							>
+						</div>
+						{#if error}<div
+								role="alert"
+								style="margin-top:12px;padding:12px 14px;border-radius:16px;background:#FDECEC;color:#B3261E;font-size:14px"
+							>
+								{error}
+							</div>{/if}
+						<button
+							disabled={!reserva.listo || reservando || tienda.vitrina}
+							style="margin-top:16px;width:100%;padding:16px;border:0;border-radius:999px;background:#5B3FD6;color:#fff;font:700 15px 'Instrument Sans';cursor:pointer"
+							>{tienda.vitrina
+								? 'Es una tienda de ejemplo'
+								: !reserva.listo
+									? 'Elegí servicio y horario'
+									: reserva.sena
+										? 'Confirmar y pagar seña'
+										: 'Confirmar turno'}</button
+						>
+					</div>
+				</div>
+			</form>
+		{/if}
+
+		<!-- ============ TURNO (no está en el diseño: con las piezas de "Tu reserva" y la confirmación) ============ -->
+		{#if pagina === 'turno' && turno}
+			{@const cancelado = turno.estado === 'cancelado'}
+			<section
+				style="padding:clamp(40px,6cqw,80px) clamp(14px,3.5cqw,44px);max-width:720px;margin:0 auto;text-align:center"
+			>
+				<span
+					style="display:inline-grid;place-items:center;width:64px;height:64px;border-radius:50%;background:{cancelado
+						? '#1E1B2E'
+						: '#5B3FD6'};color:#fff;box-shadow:0 14px 30px -12px rgba(91,63,214,.7)"
+					><Icon icon={cancelado ? I.phCalendarX : I.phCheckBold} size={28} /></span
+				>
+				<h1
+					style="margin:20px 0 0;font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(36px,5cqw,60px);line-height:.95;letter-spacing:-.04em;overflow-wrap:anywhere"
+				>
+					{cancelado
+						? 'Turno cancelado'
+						: turno.estado === 'reservado'
+							? `Falta la seña, ${turno.nombre}`
+							: `¡Listo, ${turno.nombre}!`}
+				</h1>
+				<p style="margin:14px 0 0;font-size:16px;line-height:1.55;color:#5A566B">
+					{#if cancelado}Liberamos el horario{turno.senaPagada
+							? '. La seña te la devuelve la tienda por Mercado Pago'
+							: ''}. Si querés, reservá&nbsp;otro.{:else if turno.estado === 'reservado'}Te
+						guardamos el horario unos minutos mientras pagás la seña con Mercado&nbsp;Pago.{:else}Tu
+						turno está confirmado. Te esperamos en
+						{turno.tienda}.{/if}
+				</p>
+				{#if aviso === 'pendiente' || aviso === 'error'}<div
+						role="status"
+						style="margin-top:16px;padding:12px 14px;border-radius:16px;background:#FDECEC;color:#B3261E;font-size:14px"
+					>
+						{aviso === 'pendiente'
+							? 'Mercado Pago todavía no acreditó la seña: te avisamos cuando entre.'
+							: 'El pago de la seña no salió. Podés reservar de nuevo.'}
+					</div>{/if}
+				<div
+					style="margin-top:24px;padding:22px;border-radius:28px;background:#1E1B2E;color:#F6F4F1;text-align:left"
+				>
+					<div
+						style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#A996FF"
+					>
+						<Icon icon={I.phCalendarCheckFill} size={15} />Turno
+					</div>
+					<div
+						style="margin-top:8px;font-size:17px;font-weight:700;text-decoration:{cancelado
+							? 'line-through'
+							: 'none'}"
+					>
+						{cuandoLargoT(turno.inicio)} con {turno.profesional}
+					</div>
+					<div style="font-size:13.5px;color:#B3AEC6;margin-top:2px">
+						{turno.servicio} · {fmt(turno.precio)}{turno.sena
+							? ` · seña ${fmt(turno.sena)}${turno.senaPagada ? ' pagada' : ''}`
+							: ' · pagás en el local'}
+					</div>
+					{#if turno.direccion}<div
+							style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(246,244,241,.12);display:flex;gap:10px;font-size:14px"
+						>
+							<Icon
+								icon={I.phMapPinFill}
+								size={18}
+								style="color:#A996FF;flex:none"
+							/>{turno.direccion}
+						</div>{/if}
+				</div>
+				{#if error}<div
+						role="alert"
+						style="margin-top:12px;padding:12px 14px;border-radius:16px;background:#FDECEC;color:#B3261E;font-size:14px"
+					>
+						{error}
+					</div>{/if}
+				<div style="margin-top:22px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap">
+					{#if !cancelado}<a
+							href="{base}/turno/{turno.codigo}/turno.ics"
+							download="turno.ics"
+							data-sveltekit-reload
+							style="display:flex;align-items:center;gap:8px;padding:16px 26px;border-radius:999px;background:#5B3FD6;color:#fff;font:700 15px 'Instrument Sans';text-decoration:none;box-shadow:0 14px 30px -12px rgba(91,63,214,.7)"
+							><Icon icon={I.phCalendarPlusBold} size={17} />Agregar al calendario</a
+						>{/if}
+					{#if turno.cancelable}
+						<form
+							method="POST"
+							action="?/cancelar"
+							use:enhance={() => {
+								cancelando = true;
+								return async ({ update }) => {
+									cancelando = false;
+									seguro = false;
+									await update();
+								};
+							}}
+						>
+							{#if seguro}<button
+									disabled={cancelando}
+									style="padding:16px 22px;border:0;border-radius:999px;background:#1E1B2E;color:#fff;font:700 15px 'Instrument Sans';cursor:pointer"
+									>Sí, cancelar el turno</button
+								>{:else}<button
+									type="button"
+									onclick={() => (seguro = true)}
+									style="padding:16px 22px;border:1.5px solid rgba(30,27,46,.18);border-radius:999px;background:transparent;color:#1E1B2E;font:700 15px 'Instrument Sans';cursor:pointer"
+									>Cancelar turno</button
+								>{/if}
+						</form>
+					{:else if cancelado}<a
+							href="{base}/turnos"
+							style="display:flex;align-items:center;gap:8px;padding:16px 26px;border-radius:999px;background:#5B3FD6;color:#fff;font:700 15px 'Instrument Sans';text-decoration:none"
+							><Icon icon={I.phCalendarPlusBold} size={17} />Reservar otro</a
+						>{/if}
+					<a
+						href={base}
+						style="padding:16px 22px;border:1.5px solid rgba(30,27,46,.18);border-radius:999px;color:#1E1B2E;font:700 15px 'Instrument Sans';text-decoration:none"
+						>Volver a la tienda</a
+					>
+				</div>
+				{#if !cancelado && !turno.cancelable}<p
+						style="margin:14px 0 0;font-size:13.5px;color:#5A566B"
+					>
+						Para cambiarlo o cancelarlo, escribile a la&nbsp;tienda{#if whatsapp}&nbsp;<a
+								href={wa(`¡Hola! Tengo un turno el ${cuandoLargoT(turno.inicio)}.`)}
+								target="_blank"
+								rel="noopener"
+								style="color:#5B3FD6">por WhatsApp</a
+							>{/if}.
+					</p>{/if}
+			</section>
 		{/if}
 
 		<!-- ============ CATÁLOGO ============ -->
@@ -1342,6 +2042,22 @@
 										style="color:#5B3FD6;flex:none"
 									/>Retiro en el local sin costo</span
 								>{/if}
+						</div>
+					</div>
+				{/if}
+				{#if T}
+					<div
+						style="padding:22px;border-radius:28px;background:#fff;box-shadow:0 1px 2px rgba(30,27,46,.06)"
+					>
+						<div style="font-family:'Syne',sans-serif;font-weight:700;font-size:24px">Horarios</div>
+						<div style="margin-top:12px;display:flex;flex-direction:column">
+							{#each horas as h (h.dias)}<div
+									style="display:flex;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid rgba(30,27,46,.06);font-size:14.5px;font-weight:{h.hoy
+										? 700
+										: 500};color:{h.cerrado ? '#8B879A' : '#1E1B2E'}"
+								>
+									<span>{h.dias}</span><span style="text-align:right">{h.horas}</span>
+								</div>{/each}
 						</div>
 					</div>
 				{/if}
