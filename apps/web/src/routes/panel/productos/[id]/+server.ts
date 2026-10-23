@@ -11,7 +11,15 @@ const Editable = v.object({
 	costo: v.optional(v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(1_000_000_000))),
 	sku: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(40))),
 	stock: v.optional(v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(1_000_000))),
-	foto: v.optional(v.nullable(v.pipe(v.string(), v.regex(/^\d{10,}-[0-9a-f]+$/)))),
+	// Una foto de Unsplash (id) o una URL https (los productos importados de Empretienda).
+	foto: v.optional(
+		v.nullable(
+			v.union([
+				v.pipe(v.string(), v.regex(/^\d{10,}-[0-9a-f]+$/)),
+				v.pipe(v.string(), v.maxLength(500), v.url(), v.startsWith('https://'))
+			])
+		)
+	),
 	canales: v.optional(v.record(v.picklist(['web', 'ml', 'ig', 'google']), v.boolean()))
 });
 
@@ -26,10 +34,23 @@ export const GET: RequestHandler = async ({ locals, params }) => {
 export const PUT: RequestHandler = async ({ locals, params, request }) => {
 	const r = v.safeParse(Editable, await request.json().catch(() => null));
 	if (!r.success) error(400, r.issues[0].message);
-	const p = await datosDe(locals).guardarProducto(
-		params.id === 'nuevo' ? null : params.id,
-		r.output
-	);
+	const datos = datosDe(locals);
+	const antes = params.id === 'nuevo' ? null : await datos.producto(params.id);
+	const p = await datos.guardarProducto(params.id === 'nuevo' ? null : params.id, r.output);
 	if (!p) error(404, 'Ese producto no existe.');
-	return json(p);
+	// Mercado Libre: prenderlo publica el producto y apagarlo pausa la publicación.
+	const ml = !!r.output.canales?.ml;
+	let mercadoLibre: { publicado?: string; error?: string } | undefined;
+	if (ml !== !!antes?.canales?.ml && r.output.canales) {
+		if (ml) {
+			const pub = await datos.publicarEnMercadoLibre(p.id);
+			mercadoLibre = 'error' in pub ? { error: pub.error } : { publicado: pub.permalink };
+			if ('error' in pub)
+				await datos.guardarProducto(p.id, {
+					...r.output,
+					canales: { ...r.output.canales, ml: false }
+				});
+		} else await datos.despublicarDeMercadoLibre(p.id);
+	}
+	return json({ ...p, ...(mercadoLibre ? { mercadoLibre } : {}) });
 };

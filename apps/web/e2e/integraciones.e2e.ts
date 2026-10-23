@@ -51,3 +51,34 @@ test('integraciones: conectar, configurar y desconectar', async ({ page }) => {
 	await responder.click();
 	await expect(responder).toHaveAttribute('aria-checked', 'true');
 });
+
+test('mercado libre: ajustes y publicar un producto desde su ficha', async ({ page }) => {
+	await demo(page, '/panel/integraciones');
+	const ml = page.locator('.tarjeta', { hasText: 'Mercado Libre' });
+	await ml.getByRole('button', { name: 'Configurar' }).click();
+	const d = page.getByRole('dialog');
+	await expect(d).toContainText('MATEYCO_OFICIAL');
+	await d.getByRole('button', { name: '+15%' }).click();
+	await expect(d.getByRole('button', { name: '+15%' })).toHaveAttribute('aria-pressed', 'true');
+	await d.getByRole('button', { name: 'Listo' }).click();
+
+	await page.goto('/panel/productos');
+	await listo(page);
+	await page.locator('.fila .abrir').first().click();
+	const ficha = page.getByRole('dialog');
+	const sw = ficha.getByRole('switch', { name: 'Mercado Libre' });
+	await expect(sw).toBeVisible();
+	if ((await sw.getAttribute('aria-checked')) === 'true') {
+		await sw.click();
+		await ficha.getByRole('button', { name: /Guardar/ }).click();
+		await page.locator('.fila .abrir').first().click();
+	}
+	await page.getByRole('dialog').getByRole('switch', { name: 'Mercado Libre' }).click();
+	await page
+		.getByRole('dialog')
+		.getByRole('button', { name: /Guardar/ })
+		.click();
+	await expect(
+		page.getByRole('status').filter({ hasText: 'Publicado en Mercado Libre' })
+	).toBeVisible();
+});

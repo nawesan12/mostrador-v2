@@ -6,7 +6,9 @@ import { error } from '@sveltejs/kit';
 import { estadoInicial } from '#lib/panel/integraciones.ts';
 import type {
 	AccionCupon,
+	ConexionML,
 	ConexionMP,
+	PublicacionML,
 	Dominios,
 	MisDatos,
 	PreferenciasAvisos,
@@ -358,11 +360,60 @@ export class DatosApi implements Datos {
 	// Las demás integraciones llegan una por PR: por ahora sólo Mercado Pago es real.
 	async integraciones() {
 		const e = estadoInicial(false);
-		e.conectadas.mp = (await this.mercadoPago()).conectada;
+		const [mp, ml] = await Promise.all([this.mercadoPago(), this.mercadoLibre()]);
+		e.conectadas.mp = mp.conectada;
+		e.conectadas.ml = ml.conectada;
 		return e;
 	}
 	async ajustarIntegracion() {
 		return 'no-se-puede' as const;
+	}
+	mercadoLibre() {
+		return this.pedir<ConexionML>('/v1/panel/integraciones/mercadolibre');
+	}
+	async conectarMercadoLibre() {
+		const res = await this.intentar('/v1/panel/integraciones/mercadolibre/conectar', 'POST');
+		if (!res.ok) return null;
+		return ((await res.json()) as { url: string }).url;
+	}
+	async volverMercadoLibre(codigo: string, estado: string) {
+		const res = await this.intentar('/v1/panel/integraciones/mercadolibre/vuelta', 'POST', {
+			codigo,
+			estado
+		});
+		return res.ok ? 'ok' : 'no-se-puede';
+	}
+	async desconectarMercadoLibre() {
+		await this.pedir<void>('/v1/panel/integraciones/mercadolibre', 'DELETE');
+	}
+	async ajustarMercadoLibre(recargo: number, pausarSinStock: boolean) {
+		return resultado(
+			await this.intentar('/v1/panel/integraciones/mercadolibre', 'PUT', {
+				recargo,
+				pausarSinStock
+			})
+		);
+	}
+	async publicarEnMercadoLibre(productoId: string) {
+		const res = await this.f(
+			`${this.base}/v1/panel/productos/${encodeURIComponent(productoId)}/mercadolibre`,
+			{
+				method: 'POST',
+				headers: {
+					accept: 'application/json',
+					...(this.token ? { authorization: `Bearer ${this.token}` } : {})
+				}
+			}
+		);
+		if (res.ok) return (await res.json()) as PublicacionML;
+		const p = (await res.json().catch(() => null)) as { detail?: string } | null;
+		return { error: p?.detail ?? 'Mercado Libre no respondió.' };
+	}
+	async despublicarDeMercadoLibre(productoId: string) {
+		await this.intentar(
+			`/v1/panel/productos/${encodeURIComponent(productoId)}/mercadolibre`,
+			'DELETE'
+		);
 	}
 	mercadoPago() {
 		return this.pedir<ConexionMP>('/v1/panel/integraciones/mercadopago');

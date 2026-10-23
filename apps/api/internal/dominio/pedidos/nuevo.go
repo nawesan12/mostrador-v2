@@ -35,12 +35,14 @@ type PedidoNuevo struct {
 	Nota      *string `json:"nota"`
 	// Pagado en false: queda Sin pagar (se cobra con un link).
 	Pagado *bool `json:"pagado"`
+	// Precios cobrados en otro canal (Mercado Libre), por producto. Nunca viene del navegador.
+	Precios map[string]int64 `json:"-"`
 }
 
 var (
 	pagos   = []string{"mp", "tarjeta", "payway", "modo", "uala", "transf", "efectivo"}
 	canales = []string{"web", "wa", "ml", "ig", "pos", "tg"}
-	envios  = []string{"andreani", "oca", "correo", "moto", "retiro"}
+	envios  = []string{"andreani", "oca", "correo", "moto", "retiro", "mercadoenvios"}
 )
 
 // CrearDesdeProductos arma el pedido con los precios de la tienda y descuenta el stock, todo en una
@@ -90,6 +92,9 @@ func CrearDesdeProductos(ctx context.Context, pool tx, tiendaID string, n Pedido
 			}
 			if err != nil {
 				return err
+			}
+			if p, ok := n.Precios[i.ProductoID]; ok {
+				it.Precio = p
 			}
 			it.Cantidad = i.Cantidad
 			total += it.Precio * int64(it.Cantidad)

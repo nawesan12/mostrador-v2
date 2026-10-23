@@ -23,6 +23,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/precios"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/tiendas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ventas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
@@ -43,6 +44,8 @@ type Dependencias struct {
 	Sitio string
 	// Mercado Pago: conexión de las tiendas, cobros, abono y webhook. Sin credenciales, responde 409.
 	MercadoPago *mercadopago.Servicio
+	// Mercado Libre como canal: conexión, publicaciones, pedidos y preguntas.
+	MercadoLibre *mercadolibre.Servicio
 }
 
 // Nuevo devuelve el handler raíz de la API.
@@ -84,7 +87,11 @@ func Nuevo(d Dependencias) http.Handler {
 		tiendas.Rutas(mux, d.App, tienda)
 		pedidos.Rutas(mux, d.App, tienda)
 		listas.Rutas(mux, d.App, tienda)
-		ventas.Rutas(mux, d.App, tienda)
+		var preguntas ventas.Preguntas
+		if d.MercadoLibre != nil {
+			preguntas = d.MercadoLibre
+		}
+		ventas.Rutas(mux, d.App, tienda, preguntas)
 		var pagar links.Pagar
 		if d.MercadoPago != nil {
 			pagar = d.MercadoPago.PagarLink
@@ -99,6 +106,9 @@ func Nuevo(d Dependencias) http.Handler {
 		configuracion.Rutas(mux, d.App, d.Sitio, d.MercadoPago != nil && d.MercadoPago.Config.TokenPlataforma != "")
 		if d.MercadoPago != nil {
 			d.MercadoPago.Rutas(mux)
+		}
+		if d.MercadoLibre != nil {
+			d.MercadoLibre.Rutas(mux)
 		}
 		ip := func(r *http.Request) string { return cuentas.ClienteDe(r, d.ClaveBFF).IP }
 		if d.Arrepentimiento != nil {

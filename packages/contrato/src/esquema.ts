@@ -709,6 +709,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/integraciones/mercadolibre": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Si la tienda conectó su cuenta de Mercado Libre, y cuánto publicó. */
+        get: operations["conexionMercadoLibre"];
+        /** Recargo sobre el precio (comisión) y pausar sin stock. */
+        put: operations["ajustarMercadoLibre"];
+        post?: never;
+        delete: operations["desconectarMercadoLibre"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/integraciones/mercadolibre/conectar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** La URL de autorización (PKCE, state de un solo uso). */
+        post: operations["conectarMercadoLibre"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/integraciones/mercadolibre/vuelta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["volverMercadoLibre"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/productos/{id}/mercadolibre": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publica el producto (categoría sugerida, precio con recargo, stock, foto y descripción). */
+        post: operations["publicarEnMercadoLibre"];
+        /** Pausa la publicación y deja de sincronizarla. */
+        delete: operations["despublicarDeMercadoLibre"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/webhooks/mercadolibre": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Avisos de Mercado Libre (orders_v2, questions, items). Se encolan y se traen con el token de la tienda. */
+        post: operations["webhookMercadoLibre"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/integraciones/mercadopago/conectar": {
         parameters: {
             query?: never;
@@ -1764,7 +1850,7 @@ export interface components {
              * @default retiro
              * @enum {string}
              */
-            envio: "retiro" | "andreani" | "oca" | "correo" | "moto";
+            envio: "retiro" | "andreani" | "oca" | "correo" | "moto" | "mercadoenvios";
             /** @description Nombre (en el local suele no haber) */
             cliente?: string | null;
             /** @description Un cliente que ya existe (el nombre sale de su ficha) */
@@ -2272,6 +2358,23 @@ export interface components {
         UrlExterna: {
             /** Format: uri */
             url: string;
+        };
+        ConexionML: {
+            disponible: boolean;
+            conectada: boolean;
+            apodo?: string;
+            /** Format: date-time */
+            desde?: string;
+            reautorizar: boolean;
+            recargo: number;
+            pausarSinStock: boolean;
+            publicaciones: number;
+            /** @description Sin responder */
+            preguntas: number;
+        };
+        PublicacionML: {
+            itemId: string;
+            permalink: string;
         };
         ConexionMP: {
             /** @description La aplicación de Mostrador tiene credenciales */
@@ -3911,6 +4014,179 @@ export interface operations {
         responses: {
             /** @description Desconectada */
             204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    conexionMercadoLibre: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Estado */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConexionML"];
+                };
+            };
+        };
+    };
+    ajustarMercadoLibre: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    recargo: number;
+                    pausarSinStock: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Guardado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            409: components["responses"]["Problema"];
+        };
+    };
+    desconectarMercadoLibre: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Desconectada */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    conectarMercadoLibre: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Adónde mandar a la persona */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UrlExterna"];
+                };
+            };
+            409: components["responses"]["Problema"];
+        };
+    };
+    volverMercadoLibre: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    codigo: string;
+                    estado: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Conectada */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
+        };
+    };
+    publicarEnMercadoLibre: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Publicado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicacionML"];
+                };
+            };
+            409: components["responses"]["Problema"];
+            422: components["responses"]["Problema"];
+        };
+    };
+    despublicarDeMercadoLibre: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Pausada */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    webhookMercadoLibre: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Recibido */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

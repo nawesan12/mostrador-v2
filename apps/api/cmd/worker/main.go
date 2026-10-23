@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/config"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
@@ -49,8 +50,12 @@ func correr() error {
 		// Los dominios registran acá sus manejadores a medida que se suman.
 		Manejadores: map[string]outbox.Manejador{},
 	}
-	for tipo, m := range mp.Manejadores() {
-		w.Manejadores[tipo] = m
+	ml := mercadolibre.DesdeConfig(app, cfg.OAuth["mercadolibre"][0], cfg.OAuth["mercadolibre"][1], cfg.Sitio,
+		cfg.ClaveCifrado, slog.Default())
+	for _, ms := range []map[string]outbox.Manejador{mp.Manejadores(), ml.Manejadores()} {
+		for tipo, m := range ms {
+			w.Manejadores[tipo] = m
+		}
 	}
 	slog.Info("worker consumiendo el outbox", "entorno", cfg.Entorno)
 	return w.Correr(ctx)

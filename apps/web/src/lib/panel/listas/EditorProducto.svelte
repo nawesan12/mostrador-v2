@@ -132,7 +132,19 @@
 			return;
 		}
 		open = false;
-		guardado((await r.json()) as Producto, !producto);
+		const g = (await r.json()) as Producto & {
+			mercadoLibre?: { publicado?: string; error?: string };
+		};
+		guardado(g, !producto);
+		// Mercado Libre contesta al publicar: si rechazó, se dice por qué (y el canal queda apagado).
+		if (g.mercadoLibre?.error)
+			ui.toast({ k: 'warn', title: 'No se publicó en Mercado Libre', desc: g.mercadoLibre.error });
+		else if (g.mercadoLibre?.publicado)
+			ui.toast({
+				k: 'ok',
+				title: 'Publicado en Mercado Libre',
+				desc: 'El stock y el precio se sincronizan solos'
+			});
 	}
 
 	const fotoPronto = () =>

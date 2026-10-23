@@ -45,6 +45,8 @@ export type Configuracion = components['schemas']['Configuracion'];
 export type PlanCuenta = components['schemas']['PlanCuenta'];
 export type Dominios = components['schemas']['Dominios'];
 export type ConexionMP = components['schemas']['ConexionMP'];
+export type ConexionML = components['schemas']['ConexionML'];
+export type PublicacionML = components['schemas']['PublicacionML'];
 export type PreferenciasAvisos = components['schemas']['PreferenciasAvisos'];
 export type MisDatos = components['schemas']['MisDatos'];
 export type TipoExport =
@@ -133,6 +135,15 @@ export interface Datos {
 	/** El hub de Integraciones (Mercado Pago se lee de mercadoPago()). */
 	integraciones(): Promise<EstadoIntegraciones>;
 	ajustarIntegracion(a: AjusteIntegracion): Promise<Resultado>;
+	/** Mercado Libre como canal (OAuth de la tienda). */
+	mercadoLibre(): Promise<ConexionML>;
+	conectarMercadoLibre(): Promise<string | null>;
+	volverMercadoLibre(codigo: string, estado: string): Promise<Resultado>;
+	desconectarMercadoLibre(): Promise<void>;
+	ajustarMercadoLibre(recargo: number, pausarSinStock: boolean): Promise<Resultado>;
+	/** Publicar o despublicar un producto; el texto de error es el que da Mercado Libre. */
+	publicarEnMercadoLibre(productoId: string): Promise<PublicacionML | { error: string }>;
+	despublicarDeMercadoLibre(productoId: string): Promise<void>;
 	/** Mercado Pago de la tienda (marketplace por OAuth). */
 	mercadoPago(): Promise<ConexionMP>;
 	/** Adónde mandar a la persona para autorizar (o null si la aplicación no tiene credenciales). */
