@@ -18,7 +18,8 @@
 		acento,
 		sobreAcento,
 		radio = '12px',
-		fuente = 'inherit'
+		fuente = 'inherit',
+		error = '#b3261e'
 	}: {
 		cupon: CuponCheckout;
 		lineas: { id: string; cantidad: number }[];
@@ -31,6 +32,8 @@
 		sobreAcento: string;
 		radio?: string;
 		fuente?: string;
+		/** El color del motivo cuando no aplica (en paneles oscuros, uno claro). */
+		error?: string;
 	} = $props();
 
 	const fmt = (n: number) => '$ ' + Math.round(n).toLocaleString('es-AR');
@@ -43,7 +46,7 @@
 
 <div
 	class="cupon"
-	style="--t:{tinta};--s:{suave};--b:{borde};--f:{fondo};--a:{acento};--sa:{sobreAcento};--r:{radio};font-family:{fuente}"
+	style="--t:{tinta};--s:{suave};--b:{borde};--f:{fondo};--a:{acento};--sa:{sobreAcento};--r:{radio};--e:{error};font-family:{fuente}"
 >
 	<input type="hidden" name="cupon" value={cupon.aplicado ?? ''} />
 	{#if cupon.ok}
@@ -158,7 +161,7 @@
 	.motivo {
 		margin: 0;
 		font-size: 13px;
-		color: #b3261e;
+		color: var(--e);
 		text-wrap: pretty;
 	}
 </style>

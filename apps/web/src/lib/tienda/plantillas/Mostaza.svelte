@@ -4,6 +4,8 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
 	import { carritoDe } from '../carrito.svelte.ts';
+	import CampoCupon from '../CampoCupon.svelte';
+	import { CuponCheckout, totales } from '../cupon.svelte.ts';
 	import { cotizar, cpValido } from '../envio.ts';
 	import { partirTitulo } from '../titulo.ts';
 	import type { OpcionEnvio, ProductoPublico, TiendaPublica } from '../tipos.ts';
@@ -258,10 +260,18 @@
 	);
 	const elegida = $derived(opciones.find((o) => o.id === envio) ?? null);
 	const costoEnvio = $derived(elegida?.precio ?? 0);
-	const descuento = $derived(
-		pago === 'transferencia' ? Math.round((subtotal * tienda.cobros.transferencia) / 100) : 0
+	const cupon = new CuponCheckout(() => tienda.slug);
+	const cuenta = $derived(
+		totales({
+			subtotal,
+			envio: costoEnvio,
+			pago,
+			transferencia: tienda.cobros.transferencia,
+			cupon
+		})
 	);
-	const total = $derived(subtotal + costoEnvio - descuento);
+	const descuento = $derived(cuenta.transf);
+	const total = $derived(cuenta.total);
 	$effect(() => {
 		if (envio && !opciones.some((o) => o.id === envio)) envio = null;
 	});
@@ -1379,14 +1389,31 @@
 							><span>Subtotal</span><span>{fmt(subtotal)}</span></span
 						><span style="display:flex;justify-content:space-between;font-size:14px"
 							><span>Envío</span><span
-								>{elegida ? (elegida.precio ? fmt(elegida.precio) : 'Gratis') : '—'}</span
+								>{elegida ? (cuenta.envio ? fmt(cuenta.envio) : 'Gratis') : '—'}</span
 							></span
-						>{#if descuento}<span
+						>{#if cuenta.descCupon}<span
+								style="display:flex;justify-content:space-between;font-size:14px;color:#2F6B3A;font-weight:600"
+								><span>Cupón {cupon.aplicado}</span><span>− {fmt(cuenta.descCupon)}</span></span
+							>{/if}{#if descuento}<span
 								style="display:flex;justify-content:space-between;font-size:14px;color:#2F6B3A;font-weight:600"
 								><span>Transferencia −{tienda.cobros.transferencia}%</span><span
 									>− {fmt(descuento)}</span
 								></span
 							>{/if}
+						<div style="margin:6px 0 2px">
+							<CampoCupon
+								{cupon}
+								lineas={carrito.lineas}
+								tinta="#3B2416"
+								suave="#7A5A44"
+								borde="rgba(59,36,22,.14)"
+								fondo="#FBF3E4"
+								acento="#3B2416"
+								sobreAcento="#FBF3E4"
+								radio="14px"
+								fuente="'Instrument Sans',sans-serif"
+							/>
+						</div>
 						<div style="display:flex;justify-content:space-between;align-items:baseline">
 							<b>Total</b><b style="{B};font-size:28px;font-weight:800">{fmt(total)}</b>
 						</div>
