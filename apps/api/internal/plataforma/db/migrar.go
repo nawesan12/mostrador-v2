@@ -22,7 +22,8 @@ func Migrar(ctx context.Context, migradorURL string) error {
 	if err != nil {
 		return err
 	}
-	prov, err := goose.NewProvider(goose.DialectPostgres, conn, archivos)
+	// Fuera de orden: varias ramas suman migraciones en paralelo y se mergean en cualquier orden.
+	prov, err := goose.NewProvider(goose.DialectPostgres, conn, archivos, goose.WithAllowOutofOrder(true))
 	if err != nil {
 		return err
 	}

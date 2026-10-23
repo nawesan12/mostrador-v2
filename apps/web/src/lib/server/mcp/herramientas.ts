@@ -315,7 +315,13 @@ const conError = (text: string): Resultado => ({
 	isError: true
 });
 
-export type Contexto = { datos: Datos; permisos: Permiso[]; sitio: string };
+export type Contexto = {
+	datos: Datos;
+	permisos: Permiso[];
+	sitio: string;
+	/** Los interruptores del panel, si ya se conocen (con la API real los trae la conexión). */
+	permisosPanel?: Record<string, boolean>;
+};
 type Args = Record<string, unknown>;
 type Manejador = (c: Contexto, a: Args) => Promise<Record<string, unknown>>;
 
@@ -329,7 +335,7 @@ export async function llamar(c: Contexto, nombre: string, args: Args): Promise<R
 		);
 	try {
 		if (h.panel) {
-			const { permisosIa } = await c.datos.integraciones();
+			const permisosIa = c.permisosPanel ?? (await c.datos.integraciones()).permisosIa;
 			if (!permisosIa[h.panel])
 				falla(
 					`En Mostrador › Integraciones está apagado "${PERMISO_PANEL[h.panel]}". Prendelo para que la IA pueda hacer esto.`

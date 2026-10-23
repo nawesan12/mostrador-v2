@@ -42,7 +42,11 @@ func token(r *http.Request) string {
 func (s *Servicio) Autenticar(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if t := token(r); t != "" {
-			if d, err := s.Sesion(r.Context(), t); err == nil {
+			d, err := s.Sesion(r.Context(), t)
+			if errors.Is(err, ErrSinSesion) && s.SesionIA != nil {
+				d, err = s.SesionIA(r.Context(), t)
+			}
+			if err == nil {
 				r = r.WithContext(context.WithValue(r.Context(), claveCtx{}, d))
 			} else if !errors.Is(err, ErrSinSesion) {
 				slog.Error("cuentas: leer sesión", "error", err)

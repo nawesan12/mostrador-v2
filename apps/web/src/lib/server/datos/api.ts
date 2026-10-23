@@ -3,7 +3,7 @@
  * (BFF), con el token de la sesión. Los errores problem+json se convierten en errores de SvelteKit.
  */
 import { error } from '@sveltejs/kit';
-import { estadoInicial } from '#lib/panel/integraciones.ts';
+import { estadoInicial, type AjusteIntegracion } from '#lib/panel/integraciones.ts';
 import type {
 	AccionCupon,
 	ConexionML,
@@ -360,13 +360,24 @@ export class DatosApi implements Datos {
 	// Las demás integraciones llegan una por PR: por ahora sólo Mercado Pago es real.
 	async integraciones() {
 		const e = estadoInicial(false);
-		const [mp, ml] = await Promise.all([this.mercadoPago(), this.mercadoLibre()]);
+		const [mp, ml, ia] = await Promise.all([
+			this.mercadoPago(),
+			this.mercadoLibre(),
+			this.pedir<{ permisos: Record<string, boolean> }>('/v1/panel/ia')
+		]);
 		e.conectadas.mp = mp.conectada;
 		e.conectadas.ml = ml.conectada;
+		e.permisosIa = { ...e.permisosIa, ...ia.permisos };
 		return e;
 	}
-	async ajustarIntegracion() {
-		return 'no-se-puede' as const;
+	async ajustarIntegracion(a: AjusteIntegracion) {
+		// Por ahora sólo los permisos de las IA se guardan en la API; el resto llega con cada integración.
+		if (a.tipo !== 'permisoIa') return 'no-se-puede' as const;
+		return resultado(
+			await this.intentar(`/v1/panel/ia/permisos/${encodeURIComponent(a.id)}`, 'PUT', {
+				valor: a.valor
+			})
+		);
 	}
 	mercadoLibre() {
 		return this.pedir<ConexionML>('/v1/panel/integraciones/mercadolibre');

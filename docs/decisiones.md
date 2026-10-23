@@ -203,3 +203,17 @@ URL, para que no quede en el historial ni en logs.
   cuenta y la tienda, no al sandbox) la va a atender Go.
 - `/api/mcp` queda fuera del chequeo de CSRF (no usa cookies, sólo el token Bearer), como los
   endpoints de OAuth. La pantalla de consentimiento sí lo pasa.
+
+## 22. El MCP en producción: OAuth en Go y el token de la IA como sesión limitada (PR #58)
+
+- Con `DATA_SOURCE=api`, clientes, códigos y conexiones viven en Postgres (`auth.ia_*`, sólo hashes).
+  La conexión es de una persona en una tienda: si le sacan la membresía, el token deja de servir.
+- El token de acceso entra por el mismo `Autenticar` que las sesiones (no hay otra puerta), pero
+  `ia.Guardia` lo deja pasar sólo a las rutas que usan las herramientas (lista explícita), con GET
+  si la conexión es de lectura, y controla en el servidor los interruptores del panel ("Cargar y
+  editar productos", "Reembolsos y descuentos"): el BFF también los mira, pero no es el que manda.
+  Cuenta, usuarios, plan, sesiones y cobros quedan afuera aunque quien autorizó sea la dueña.
+- Sólo dueña o admin autorizan. Refresco rotativo: si llega uno ya usado, se borra la conexión.
+- El BFF sigue siendo el que habla con las IA (nombres de OAuth, `/api/mcp` JSON-RPC); Go sólo ve
+  su propio contrato (`/v1/ia/*`, `/v1/panel/ia*`).
+- Goose corre con migraciones fuera de orden: varias ramas suman migraciones a la vez.

@@ -8,8 +8,10 @@ import {
 	SERVER_INFO,
 	type Contexto
 } from '#lib/server/mcp/herramientas.ts';
-import { CORS, json, noDisponible, preflight } from '#lib/server/mcp/http.ts';
-import { autenticar, LIMITE_POR_MINUTO, NO_DISPONIBLE } from '#lib/server/mcp/oauth.ts';
+import { conexionApi } from '#lib/server/mcp/api.ts';
+import { CORS, json, preflight } from '#lib/server/mcp/http.ts';
+import { autenticar, LIMITE_POR_MINUTO } from '#lib/server/mcp/oauth.ts';
+import { DatosApi } from '#lib/server/datos/api.ts';
 import { DatosSandbox, dbSandbox, leer } from '#lib/server/sandbox/sandbox.ts';
 import type { RequestHandler } from './$types';
 
@@ -32,23 +34,47 @@ const errorRpc = (id: Mensaje['id'], code: number, message: string) => ({
 	error: { code, message }
 });
 
-export const POST: RequestHandler = async ({ request, url }) => {
-	if (!usaSandbox()) return json(errorRpc(null, -32601, NO_DISPONIBLE), 501);
+const sinToken = (url: URL) =>
+	json(
+		errorRpc(
+			null,
+			-32001,
+			'Token inválido, vencido o revocado. Volvé a conectar Mostrador desde tu IA.'
+		),
+		401,
+		{
+			'WWW-Authenticate': `Bearer realm="mostrador", error="invalid_token", resource_metadata="${url.origin}/.well-known/oauth-protected-resource"`
+		}
+	);
+
+/** La conexión del pedido: en la demo, el sandbox; con la API real, el token va a Go tal cual. */
+async function conexion(request: Request, url: URL) {
+	const auth = request.headers.get('authorization');
+	if (!usaSandbox()) {
+		// El esquema no distingue mayúsculas (RFC 7235), igual que en la demo.
+		const token = auth && /^Bearer\s+/i.test(auth) ? auth.replace(/^Bearer\s+/i, '').trim() : '';
+		const cx = token && token.length <= 200 ? await conexionApi(token) : null;
+		if (!cx) return sinToken(url);
+		if ('fallo' in cx)
+			// El token puede estar bien: no pedir que vuelva a conectar, sólo que reintente.
+			return json(
+				errorRpc(null, -32000, 'Mostrador no puede responder ahora. Probá en un rato.'),
+				cx.fallo === 429 ? 429 : 503,
+				{ 'Retry-After': cx.fallo === 429 ? '60' : '30' }
+			);
+		const c: Contexto = {
+			datos: new DatosApi(String(env.API_URL), token),
+			permisos: cx.permisos,
+			permisosPanel: cx.permisosPanel,
+			sitio: url.origin
+		};
+		// El límite por minuto lo pone la API (Guardia del paquete ia).
+		return { c, nombre: 'tu tienda' };
+	}
 	const db = dbSandbox(env.SANDBOX);
-	const cx = await autenticar(db, request.headers.get('authorization'));
+	const cx = await autenticar(db, auth);
 	const sb = cx && (await leer(db, cx.sandboxId));
-	if (!cx || !sb)
-		return json(
-			errorRpc(
-				null,
-				-32001,
-				'Token inválido, vencido o revocado. Volvé a conectar Mostrador desde tu IA.'
-			),
-			401,
-			{
-				'WWW-Authenticate': `Bearer realm="mostrador", error="invalid_token", resource_metadata="${url.origin}/.well-known/oauth-protected-resource"`
-			}
-		);
+	if (!cx || !sb) return sinToken(url);
 	if (cx.pedidos > LIMITE_POR_MINUTO)
 		return json(
 			errorRpc(
@@ -59,6 +85,14 @@ export const POST: RequestHandler = async ({ request, url }) => {
 			429,
 			{ 'Retry-After': '60' }
 		);
+	const c: Contexto = { datos: new DatosSandbox(db, sb), permisos: cx.permisos, sitio: url.origin };
+	return { c, nombre: cx.nombre };
+}
+
+export const POST: RequestHandler = async ({ request, url }) => {
+	const cx = await conexion(request, url);
+	if (cx instanceof Response) return cx;
+	const { c } = cx;
 
 	let body: unknown;
 	try {
@@ -71,11 +105,6 @@ export const POST: RequestHandler = async ({ request, url }) => {
 	if (!mensajes.length) return json(errorRpc(null, -32600, 'Lote vacío'), 400);
 	if (mensajes.length > 10) return json(errorRpc(null, -32600, 'Máximo 10 mensajes por lote'), 400);
 
-	const c: Contexto = {
-		datos: new DatosSandbox(db, sb),
-		permisos: cx.permisos,
-		sitio: url.origin
-	};
 	const respuestas = [];
 	for (const m of mensajes) {
 		const r = await atender(c, cx.nombre, m);
@@ -129,12 +158,10 @@ async function atender(c: Contexto, nombre: string, m: Mensaje) {
 
 /** Sin streams SSE (servidor sin estado). */
 export const GET: RequestHandler = () =>
-	usaSandbox()
-		? new Response('Este servidor MCP no ofrece stream SSE: usá POST.', {
-				status: 405,
-				headers: { Allow: 'POST', ...CORS }
-			})
-		: noDisponible();
+	new Response('Este servidor MCP no ofrece stream SSE: usá POST.', {
+		status: 405,
+		headers: { Allow: 'POST', ...CORS }
+	});
 
 export const DELETE: RequestHandler = () =>
 	new Response(null, { status: 405, headers: { Allow: 'POST', ...CORS } });

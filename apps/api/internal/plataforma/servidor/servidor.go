@@ -16,6 +16,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/finanzas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/formularios"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/hoy"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ia"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/links"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/listas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/mitienda"
@@ -47,6 +48,8 @@ type Dependencias struct {
 	MercadoPago *mercadopago.Servicio
 	// Mercado Libre como canal: conexión, publicaciones, pedidos y preguntas.
 	MercadoLibre *mercadolibre.Servicio
+	// IA conectadas por MCP (OAuth 2.1). Sin esto, los tokens de IA no entran.
+	IA *ia.Servicio
 }
 
 // Nuevo devuelve el handler raíz de la API.
@@ -83,7 +86,13 @@ func Nuevo(d Dependencias) http.Handler {
 		if d.Cuentas != nil {
 			d.Cuentas.Rutas(mux, d.ClaveBFF)
 			tienda = cuentas.TiendaDe
-			h = d.Cuentas.Autenticar(mux)
+			var conGuardia http.Handler = mux
+			if d.IA != nil {
+				d.Cuentas.SesionIA = d.IA.ParaCuentas
+				d.IA.Rutas(mux, func(r *http.Request) string { return cuentas.ClienteDe(r, d.ClaveBFF).IP })
+				conGuardia = d.IA.Guardia(mux)
+			}
+			h = d.Cuentas.Autenticar(conGuardia)
 		}
 		tiendas.Rutas(mux, d.App, tienda)
 		pedidos.Rutas(mux, d.App, tienda)

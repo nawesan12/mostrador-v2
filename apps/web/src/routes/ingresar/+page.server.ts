@@ -12,7 +12,27 @@ import {
 } from '#lib/server/auth/esquemas.ts';
 import { esProveedor, irAlProveedor } from '#lib/server/auth/social.ts';
 import { guardarSesion } from '#lib/server/auth/sesion.ts';
-import type { Actions } from './$types';
+import type { Actions, PageServerLoad } from './$types';
+
+/**
+ * Volver a donde se pidió entrar (hoy, sólo el consentimiento de una IA): el formulario postea a
+ * `?/ingresar` y pierde la consulta, así que va en una cookie corta.
+ */
+const VOLVER = 'mostrador-volver';
+const volverValido = (v: string | null | undefined) =>
+	!!v && v.startsWith('/oauth/autorizar?') && v.length < 2000;
+
+export const load: PageServerLoad = ({ url, cookies }) => {
+	const v = url.searchParams.get('volver');
+	if (volverValido(v))
+		cookies.set(VOLVER, v!, { path: '/', httpOnly: true, sameSite: 'lax', maxAge: 600 });
+};
+
+function destino(cookies: RequestEvent['cookies']) {
+	const v = cookies.get(VOLVER);
+	cookies.delete(VOLVER, { path: '/' });
+	return volverValido(v) ? v! : '/panel';
+}
 
 const datos = async (request: Request) => Object.fromEntries(await request.formData());
 
@@ -46,7 +66,7 @@ export const actions: Actions = {
 			const x = deApi(e);
 			return fail(x.estado, { modo: 'login', email: r.output.email, errores: x.errores });
 		}
-		redirect(303, '/panel');
+		redirect(303, destino(event.cookies));
 	},
 	registro: async (event) => {
 		const f = await datos(event.request);
@@ -109,7 +129,7 @@ export const actions: Actions = {
 			const x = deApi(e);
 			return fail(x.estado, { modo: 'enlace', errores: x.errores });
 		}
-		redirect(303, '/panel');
+		redirect(303, destino(event.cookies));
 	},
 	recuperar: async (event: RequestEvent) => {
 		const f = await datos(event.request);
