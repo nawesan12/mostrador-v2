@@ -28,6 +28,9 @@ import { fromB64url, randomToken, sha256 } from '../crypto.ts';
 import { rubro as buscarRubro, slugDe } from './rubros.ts';
 import { cambios, sandboxes } from './schema.ts';
 import type {
+	Dominios,
+	MisDatos,
+	PreferenciasAvisos,
 	Permisos,
 	PlanCuenta,
 	Configuracion,
@@ -294,6 +297,10 @@ const NOMBRE_PLAN: Record<Plan, string> = {
 	pro: 'Pro',
 	negocio: 'Negocio'
 };
+
+type DominioDemo = { nombre: string; en: number };
+export type TipoExport =
+	'productos' | 'clientes' | 'pedidos' | 'facturas' | 'resenas' | 'conversaciones';
 
 type AumentoProgramado = { pct: number; redondeo: Redondeo; para: number };
 
@@ -1621,6 +1628,256 @@ export class DatosSandbox implements Datos {
 				e.invitados.filter((i) => i.id !== id)
 			);
 		else await guardarCambio(this.db, this.sb.id, 'cuenta', 'quitados', [...e.quitados, id]);
+		return 'ok';
+	}
+
+	// ---------------------------------------------------------------- Dominio, avisos y mis datos
+
+	async dominios(): Promise<Dominios> {
+		const [t, c] = await Promise.all([this.tienda(), cambiosDe(this.db, this.sb.id, 'cuenta')]);
+		const lista = (c.get('dominios') as DominioDemo[] | undefined) ?? [];
+		const ahora = Date.now();
+		const gratis = `${SITE.replace(/^https?:\/\//, '')}/t/${t.slug}`;
+		const principal = (c.get('principal') as string | undefined) ?? gratis;
+		// En la demo los registros "aparecen" a los 1, 3 y 5 minutos de agregar el dominio.
+		const paso = (d: DominioDemo, min: number) => ahora - d.en > min * 60_000;
+		return {
+			gratis,
+			dominios: [
+				{
+					nombre: gratis,
+					detalle: 'La dirección gratis de tu tienda',
+					estado: 'activo',
+					principal: principal === gratis
+				},
+				...lista.map((d) => {
+					const listo = paso(d, 5);
+					return {
+						nombre: d.nombre,
+						detalle: listo ? 'Conectado' : 'Agregado recién · revisando DNS',
+						estado: listo ? ('activo' as const) : ('verificando' as const),
+						principal: principal === d.nombre,
+						chequeos: [
+							{
+								titulo: 'Registro CNAME de www',
+								estado: paso(d, 1) ? ('ok' as const) : ('esperando' as const)
+							},
+							{
+								titulo: 'Verificación TXT',
+								estado: paso(d, 3)
+									? ('ok' as const)
+									: paso(d, 1)
+										? ('esperando' as const)
+										: ('pendiente' as const)
+							},
+							{
+								titulo: 'Certificado SSL',
+								estado: listo ? ('ok' as const) : ('pendiente' as const)
+							}
+						]
+					};
+				})
+			],
+			registros: [
+				{ tipo: 'CNAME', nombre: 'www', valor: `tiendas.${SITE.replace(/^https?:\/\//, '')}` },
+				{ tipo: 'TXT', nombre: '_mostrador', valor: `mostrador-verificacion=${t.slug}` }
+			]
+		};
+	}
+
+	async conectarDominio(nombre: string): Promise<Resultado> {
+		const c = await cambiosDe(this.db, this.sb.id, 'cuenta');
+		const lista = (c.get('dominios') as DominioDemo[] | undefined) ?? [];
+		if (lista.some((d) => d.nombre === nombre)) return 'no-se-puede';
+		await guardarCambio(this.db, this.sb.id, 'cuenta', 'dominios', [
+			...lista,
+			{ nombre, en: Date.now() }
+		]);
+		return 'ok';
+	}
+
+	async dominioPrincipal(nombre: string): Promise<Resultado> {
+		const d = (await this.dominios()).dominios.find((x) => x.nombre === nombre);
+		if (!d) return 'no-existe';
+		if (d.estado !== 'activo') return 'no-se-puede';
+		await guardarCambio(this.db, this.sb.id, 'cuenta', 'principal', nombre);
+		return 'ok';
+	}
+
+	async quitarDominio(nombre: string): Promise<Resultado> {
+		const c = await cambiosDe(this.db, this.sb.id, 'cuenta');
+		const lista = (c.get('dominios') as DominioDemo[] | undefined) ?? [];
+		if (!lista.some((d) => d.nombre === nombre)) return 'no-existe';
+		await guardarCambio(
+			this.db,
+			this.sb.id,
+			'cuenta',
+			'dominios',
+			lista.filter((d) => d.nombre !== nombre)
+		);
+		if (c.get('principal') === nombre)
+			await guardarCambio(this.db, this.sb.id, 'cuenta', 'principal', null);
+		return 'ok';
+	}
+
+	async preferenciasAvisos(): Promise<PreferenciasAvisos> {
+		const c = await cambiosDe(this.db, this.sb.id, 'cuenta');
+		return (
+			(c.get('avisos-canales') as PreferenciasAvisos | undefined) ?? {
+				matriz: {},
+				silencio: true,
+				resumen: 'whatsapp'
+			}
+		);
+	}
+
+	async guardarPreferenciasAvisos(p: PreferenciasAvisos) {
+		await guardarCambio(this.db, this.sb.id, 'cuenta', 'avisos-canales', p);
+	}
+
+	private async inactivos() {
+		// Sin compras en 3 años: en la demo, con dos meses de historia, no hay.
+		return (await this.regClientes()).filter((c) => c.ultima > 3 * 365);
+	}
+
+	async misDatos(): Promise<MisDatos> {
+		const [productos, clientes, d, facturas, conv, exps, c] = await Promise.all([
+			this.regProductos(),
+			this.regClientes(),
+			this.base(),
+			this.regFacturacion(),
+			this.bandeja(),
+			cambiosDe(this.db, this.sb.id, 'exportacion'),
+			cambiosDe(this.db, this.sb.id, 'cuenta')
+		]);
+		return {
+			conteos: {
+				productos: productos.length,
+				clientes: clientes.length,
+				pedidos: d.pedidos.filter((p) => p.creado <= Date.now()).length,
+				facturas: facturas.length,
+				resenas: d.resenas.length,
+				conversaciones: conv.conversaciones.length
+			},
+			recientes: [...exps.values()]
+				.filter(Boolean)
+				.map((x) => x as { tipo: string; formato: string; en: number })
+				.sort((a, b) => b.en - a.en)
+				.slice(0, 5)
+				.map((x) => ({ ...x, en: new Date(x.en).toISOString() })),
+			inactivos: clientes.filter((x) => x.ultima > 3 * 365).length,
+			borrado: (c.get('borrado') as MisDatos['borrado'] | undefined) ?? null
+		};
+	}
+
+	/** Filas de cada exportación. */
+	async exportar(tipo: TipoExport): Promise<(string | number | null)[][]> {
+		const fecha = (t: number) => new Date(t).toISOString().slice(0, 10);
+		await guardarCambio(this.db, this.sb.id, 'exportacion', String(Date.now()), {
+			tipo,
+			formato: '',
+			en: Date.now()
+		});
+		if (tipo === 'productos')
+			return [
+				['SKU', 'Nombre', 'Categoría', 'Precio', 'Costo', 'Stock', 'Publicado'],
+				...(await this.regProductos()).map((p) => [
+					p.sku,
+					p.nombre,
+					p.categoria,
+					p.precio,
+					p.costo,
+					p.stock,
+					p.publicado ? 'Sí' : 'No'
+				])
+			];
+		if (tipo === 'clientes')
+			return [
+				['Nombre', 'Ciudad', 'Teléfono', 'Pedidos', 'Gastado'],
+				...(await this.regClientes()).map((c) => [
+					c.nombre,
+					c.ciudad,
+					c.telefono,
+					c.pedidos,
+					c.gastado
+				])
+			];
+		if (tipo === 'facturas')
+			return [
+				['Número', 'Tipo', 'Cliente', 'Total', 'Estado', 'Pedido'],
+				...(await this.regFacturacion()).map((f) => [
+					f.numero,
+					f.tipo,
+					f.cliente,
+					f.total,
+					f.estado,
+					f.pedido
+				])
+			];
+		const d = await this.base();
+		const nombre = new Map(d.clientes.map((c) => [c.id, c.nombre]));
+		if (tipo === 'pedidos')
+			return [
+				['Número', 'Fecha', 'Cliente', 'Canal', 'Pago', 'Envío', 'Estado', 'Total'],
+				...d.pedidos
+					.filter((p) => p.creado <= Date.now())
+					.map((p) => [
+						p.numero,
+						fecha(p.creado),
+						nombre.get(p.clienteId) ?? '',
+						p.canal,
+						p.pago,
+						p.envio,
+						p.estado,
+						p.total
+					])
+			];
+		if (tipo === 'resenas')
+			return [
+				['Fecha', 'Cliente', 'Producto', 'Estrellas', 'Reseña'],
+				...d.resenas.map((r) => [
+					fecha(r.creada),
+					nombre.get(r.clienteId) ?? '',
+					r.producto,
+					r.estrellas,
+					r.texto
+				])
+			];
+		const filas: (string | number | null)[][] = [
+			['Conversación', 'Cliente', 'De', 'Mensaje', 'Fecha']
+		];
+		for (const c of (await this.bandeja()).conversaciones) {
+			const conv = await this.conversacion(c.id);
+			for (const m of conv?.mensajes ?? [])
+				if (m.texto) filas.push([c.id, c.nombre, m.de, m.texto, m.en.slice(0, 16)]);
+		}
+		return filas;
+	}
+
+	async borrarInactivos(): Promise<number> {
+		const n = (await this.inactivos()).length;
+		await guardarCambio(
+			this.db,
+			this.sb.id,
+			'cuenta',
+			'borrado',
+			n ? { clientes: n, el: new Date(Date.now() + 7 * 86_400_000).toISOString() } : null
+		);
+		return n;
+	}
+
+	async frenarBorrado() {
+		await guardarCambio(this.db, this.sb.id, 'cuenta', 'borrado', null);
+	}
+
+	/** Cerrar la cuenta en la demo: se borra todo lo del visitante y vuelve a empezar. */
+	async cerrarCuenta(confirmacion: string): Promise<Resultado> {
+		const t = await this.tienda();
+		if (confirmacion.trim().toLowerCase() !== t.nombre.toLowerCase()) return 'no-se-puede';
+		await this.db.batch([
+			this.db.delete(cambios).where(eq(cambios.sandboxId, this.sb.id)),
+			this.db.delete(sandboxes).where(eq(sandboxes.id, this.sb.id))
+		]);
 		return 'ok';
 	}
 

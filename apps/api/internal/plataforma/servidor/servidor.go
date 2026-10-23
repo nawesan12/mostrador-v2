@@ -89,7 +89,7 @@ func Nuevo(d Dependencias) http.Handler {
 		hoy.Rutas(mux, d.App, tienda)
 		finanzas.Rutas(mux, d.App, tienda)
 		mitienda.Rutas(mux, d.App, tienda, d.Sitio)
-		configuracion.Rutas(mux, d.App)
+		configuracion.Rutas(mux, d.App, d.Sitio)
 		ip := func(r *http.Request) string { return cuentas.ClienteDe(r, d.ClaveBFF).IP }
 		if d.Arrepentimiento != nil {
 			d.Arrepentimiento.Rutas(mux, ip)

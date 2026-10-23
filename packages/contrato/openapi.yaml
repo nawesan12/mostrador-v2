@@ -1224,6 +1224,128 @@ paths:
         '204': { description: Quitado }
         '404': { $ref: '#/components/responses/Problema' }
         '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/dominios:
+    get:
+      operationId: dominios
+      summary: Dónde se ve la tienda y los dominios propios.
+      responses:
+        '200':
+          description: Dominios
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Dominios' }
+    post:
+      operationId: conectarDominio
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [dominio]
+              properties:
+                dominio: { type: string, maxLength: 253 }
+      responses:
+        '201': { description: Agregado }
+        '400': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/dominios/{dominio}:
+    put:
+      operationId: dominioPrincipal
+      summary: Lo hace principal.
+      parameters:
+        - { name: dominio, in: path, required: true, schema: { type: string } }
+      responses:
+        '204': { description: Hecho }
+        '404': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+    delete:
+      operationId: quitarDominio
+      parameters:
+        - { name: dominio, in: path, required: true, schema: { type: string } }
+      responses:
+        '204': { description: Quitado }
+        '404': { $ref: '#/components/responses/Problema' }
+  /v1/panel/notificaciones/preferencias:
+    get:
+      operationId: preferenciasAvisos
+      responses:
+        '200':
+          description: Preferencias
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PreferenciasAvisos' }
+    put:
+      operationId: guardarPreferenciasAvisos
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PreferenciasAvisos' }
+      responses:
+        '204': { description: Guardado }
+  /v1/panel/datos:
+    get:
+      operationId: misDatos
+      summary: Cuánto hay de cada cosa para exportar y lo exportado.
+      responses:
+        '200':
+          description: Datos
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MisDatos' }
+  /v1/panel/datos/{tipo}:
+    get:
+      operationId: exportar
+      summary: Exporta productos, clientes, pedidos, facturas, reseñas o conversaciones.
+      parameters:
+        - { name: tipo, in: path, required: true, schema: { type: string, enum: [productos, clientes, pedidos, facturas, resenas, conversaciones] } }
+      responses:
+        '200':
+          description: Las filas (el BFF arma el CSV, el Excel o el ZIP)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [filas]
+                properties:
+                  filas:
+                    type: array
+                    items: { type: array, items: { type: [string, number, 'null'] } }
+  /v1/panel/datos/inactivos:
+    delete:
+      operationId: borrarInactivos
+      summary: Programa el borrado de los clientes sin compras en 3 años (7 días para frenarlo).
+      responses:
+        '200':
+          description: Programado
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [clientes]
+                properties:
+                  clientes: { type: integer }
+    post:
+      operationId: frenarBorrado
+      responses:
+        '204': { description: Frenado }
+  /v1/panel/cuenta:
+    delete:
+      operationId: cerrarCuenta
+      summary: Cierra la tienda. 90 días para arrepentirse.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [confirmacion]
+              properties:
+                confirmacion: { type: string }
+      responses:
+        '204': { description: Cerrada }
+        '400': { $ref: '#/components/responses/Problema' }
   /v1/panel/tienda:
     get:
       operationId: obtenerTienda
@@ -2084,6 +2206,78 @@ components:
                   admin: { type: boolean }
                   ventas: { type: boolean }
                   deposito: { type: boolean }
+    Dominios:
+      type: object
+      required: [gratis, dominios, registros]
+      properties:
+        gratis: { type: string, description: 'La dirección que viene con la tienda' }
+        dominios:
+          type: array
+          items:
+            type: object
+            required: [nombre, detalle, estado, principal]
+            properties:
+              nombre: { type: string }
+              detalle: { type: string }
+              estado: { type: string, enum: [activo, verificando] }
+              principal: { type: boolean }
+              chequeos:
+                type: array
+                items:
+                  type: object
+                  required: [titulo, estado]
+                  properties:
+                    titulo: { type: string }
+                    estado: { type: string, enum: [ok, esperando, pendiente] }
+        registros:
+          type: array
+          items:
+            type: object
+            required: [tipo, nombre, valor]
+            properties:
+              tipo: { type: string }
+              nombre: { type: string }
+              valor: { type: string }
+    PreferenciasAvisos:
+      type: object
+      required: [matriz, silencio, resumen]
+      properties:
+        matriz:
+          type: object
+          description: '"aviso:canal" → activo (los que no están, van por defecto)'
+          additionalProperties: { type: boolean }
+        silencio: { type: boolean }
+        resumen: { type: string, enum: [whatsapp, email, off] }
+    MisDatos:
+      type: object
+      required: [conteos, recientes, inactivos, borrado]
+      properties:
+        conteos:
+          type: object
+          required: [productos, clientes, pedidos, facturas, resenas, conversaciones]
+          properties:
+            productos: { type: integer }
+            clientes: { type: integer }
+            pedidos: { type: integer }
+            facturas: { type: integer }
+            resenas: { type: integer }
+            conversaciones: { type: integer }
+        recientes:
+          type: array
+          items:
+            type: object
+            required: [tipo, formato, en]
+            properties:
+              tipo: { type: string }
+              formato: { type: string }
+              en: { type: string, format: date-time }
+        inactivos: { type: integer }
+        borrado:
+          type: [object, 'null']
+          required: [clientes, el]
+          properties:
+            clientes: { type: integer }
+            el: { type: string, format: date-time }
     Tablero:
       type: object
       required: [periodo, desde, hasta, hola, ventas, serie, kpis, canales, meta, avisos, ultimosPedidos, paraHacer, enVivo, caja, liquidaciones, hornero, bandeja, integraciones, masVendidos, resenas, envios]

@@ -1269,6 +1269,124 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/dominios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Dónde se ve la tienda y los dominios propios. */
+        get: operations["dominios"];
+        put?: never;
+        post: operations["conectarDominio"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/dominios/{dominio}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Lo hace principal. */
+        put: operations["dominioPrincipal"];
+        post?: never;
+        delete: operations["quitarDominio"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/notificaciones/preferencias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["preferenciasAvisos"];
+        put: operations["guardarPreferenciasAvisos"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/datos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Cuánto hay de cada cosa para exportar y lo exportado. */
+        get: operations["misDatos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/datos/{tipo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Exporta productos, clientes, pedidos, facturas, reseñas o conversaciones. */
+        get: operations["exportar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/datos/inactivos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["frenarBorrado"];
+        /** Programa el borrado de los clientes sin compras en 3 años (7 días para frenarlo). */
+        delete: operations["borrarInactivos"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/cuenta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Cierra la tienda. 90 días para arrepentirse. */
+        delete: operations["cerrarCuenta"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/tienda": {
         parameters: {
             query?: never;
@@ -1996,6 +2114,58 @@ export interface components {
                     deposito: boolean;
                 };
             }[];
+        };
+        Dominios: {
+            /** @description La dirección que viene con la tienda */
+            gratis: string;
+            dominios: {
+                nombre: string;
+                detalle: string;
+                /** @enum {string} */
+                estado: "activo" | "verificando";
+                principal: boolean;
+                chequeos?: {
+                    titulo: string;
+                    /** @enum {string} */
+                    estado: "ok" | "esperando" | "pendiente";
+                }[];
+            }[];
+            registros: {
+                tipo: string;
+                nombre: string;
+                valor: string;
+            }[];
+        };
+        PreferenciasAvisos: {
+            /** @description "aviso:canal" → activo (los que no están, van por defecto) */
+            matriz: {
+                [key: string]: boolean;
+            };
+            silencio: boolean;
+            /** @enum {string} */
+            resumen: "whatsapp" | "email" | "off";
+        };
+        MisDatos: {
+            conteos: {
+                productos: number;
+                clientes: number;
+                pedidos: number;
+                facturas: number;
+                resenas: number;
+                conversaciones: number;
+            };
+            recientes: {
+                tipo: string;
+                formato: string;
+                /** Format: date-time */
+                en: string;
+            }[];
+            inactivos: number;
+            borrado: {
+                clientes: number;
+                /** Format: date-time */
+                el: string;
+            } | null;
         };
         Tablero: {
             /** @enum {string} */
@@ -4453,6 +4623,246 @@ export interface operations {
             };
             404: components["responses"]["Problema"];
             409: components["responses"]["Problema"];
+        };
+    };
+    dominios: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Dominios */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Dominios"];
+                };
+            };
+        };
+    };
+    conectarDominio: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    dominio: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Agregado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+        };
+    };
+    dominioPrincipal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dominio: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Hecho */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+        };
+    };
+    quitarDominio: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dominio: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Quitado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["Problema"];
+        };
+    };
+    preferenciasAvisos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Preferencias */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreferenciasAvisos"];
+                };
+            };
+        };
+    };
+    guardarPreferenciasAvisos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreferenciasAvisos"];
+            };
+        };
+        responses: {
+            /** @description Guardado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    misDatos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Datos */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MisDatos"];
+                };
+            };
+        };
+    };
+    exportar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tipo: "productos" | "clientes" | "pedidos" | "facturas" | "resenas" | "conversaciones";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Las filas (el BFF arma el CSV, el Excel o el ZIP) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        filas: (string | number | null)[][];
+                    };
+                };
+            };
+        };
+    };
+    frenarBorrado: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Frenado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    borrarInactivos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Programado */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        clientes: number;
+                    };
+                };
+            };
+        };
+    };
+    cerrarCuenta: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    confirmacion: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Cerrada */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
         };
     };
     obtenerTienda: {

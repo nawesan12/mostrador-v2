@@ -5,6 +5,10 @@
 import { error } from '@sveltejs/kit';
 import type {
 	AccionCupon,
+	Dominios,
+	MisDatos,
+	PreferenciasAvisos,
+	TipoExport,
 	Permisos,
 	PlanCuenta,
 	Configuracion,
@@ -239,6 +243,44 @@ export class DatosApi implements Datos {
 		return (await this.pedir<{ codigo: string }>('/v1/panel/links', 'POST', l)).codigo;
 	}
 
+	dominios() {
+		return this.pedir<Dominios>('/v1/panel/dominios');
+	}
+	async conectarDominio(dominio: string) {
+		return resultado(await this.intentar('/v1/panel/dominios', 'POST', { dominio }));
+	}
+	async dominioPrincipal(dominio: string) {
+		return resultado(
+			await this.intentar(`/v1/panel/dominios/${encodeURIComponent(dominio)}`, 'PUT')
+		);
+	}
+	async quitarDominio(dominio: string) {
+		return resultado(
+			await this.intentar(`/v1/panel/dominios/${encodeURIComponent(dominio)}`, 'DELETE')
+		);
+	}
+	preferenciasAvisos() {
+		return this.pedir<PreferenciasAvisos>('/v1/panel/notificaciones/preferencias');
+	}
+	async guardarPreferenciasAvisos(p: PreferenciasAvisos) {
+		await this.pedir<void>('/v1/panel/notificaciones/preferencias', 'PUT', p);
+	}
+	misDatos() {
+		return this.pedir<MisDatos>('/v1/panel/datos');
+	}
+	async exportar(tipo: TipoExport) {
+		return (await this.pedir<{ filas: (string | number | null)[][] }>(`/v1/panel/datos/${tipo}`))
+			.filas;
+	}
+	async borrarInactivos() {
+		return (await this.pedir<{ clientes: number }>('/v1/panel/datos/inactivos', 'DELETE')).clientes;
+	}
+	async frenarBorrado() {
+		await this.pedir<void>('/v1/panel/datos/inactivos', 'POST');
+	}
+	async cerrarCuenta(confirmacion: string) {
+		return resultado(await this.intentar('/v1/panel/cuenta', 'DELETE', { confirmacion }));
+	}
 	planCuenta() {
 		return this.pedir<PlanCuenta>('/v1/panel/cuenta/plan');
 	}
