@@ -84,9 +84,10 @@ for (const id of [...PROPIAS.filter((x) => x !== 'tijera'), 'ceibo', 'patio']) {
 		await page.goto(`/t/${slug}`);
 		await expect(page.locator(`a[href="/t/${slug}/turnos"]`).first()).toBeVisible();
 		await page.goto(`/t/${slug}/turnos`);
-		// Malbec pregunta la edad antes de mostrar la tienda.
-		const mayor = page.getByRole('button', { name: 'Sí, soy mayor' });
-		if (await mayor.isVisible()) await mayor.click();
+		await page.locator('html[data-listo]').waitFor({ state: 'attached' });
+		// Malbec pregunta la edad antes de mostrar la tienda (el cartel sale al hidratar: se espera,
+		// no se mira si ya está, porque si aparece después tapa el clic).
+		if (id === 'malbec') await page.getByRole('button', { name: 'Sí, soy mayor' }).click();
 		await page.getByRole('radiogroup', { name: 'Servicio' }).getByRole('radio').first().click();
 		await expect(page.locator('[role=radiogroup][aria-label^="Horarios"]').first()).toBeVisible();
 		const desborde = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
