@@ -7,6 +7,7 @@ import { redirect, type RequestEvent } from '@sveltejs/kit';
 import { CuentasApi } from '../auth/cuentas.ts';
 import { DatosApi } from './api.ts';
 import { FormulariosApi } from '../formularios.ts';
+import { VidrieraApi } from '../tienda/vidriera.ts';
 import { DatosSandbox, dbSandbox } from '../sandbox/sandbox.ts';
 import type { Datos } from './tipos.ts';
 
@@ -43,3 +44,7 @@ export const cuentasDe = (event: Evento) =>
 /** Formularios públicos en la API Go (arrepentimiento, contacto, partners, novedades). */
 export const formulariosDe = (event: Evento) =>
 	new FormulariosApi(String(env.API_URL), String(env.CLAVE_BFF ?? ''), clienteDe(event));
+
+/** Reseñas y preguntas de la tienda online en la API Go, con la IP del visitante (tope por IP). */
+export const vidrieraDe = (event: Evento) =>
+	new VidrieraApi(String(env.API_URL), String(env.CLAVE_BFF ?? ''), clienteDe(event));

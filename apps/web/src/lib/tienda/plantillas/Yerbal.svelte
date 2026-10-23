@@ -4,6 +4,9 @@
 	import { page } from '$app/state';
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
+	import FormResena from '../FormResena.svelte';
+	import PreguntasProducto from '../PreguntasProducto.svelte';
+	import type { TemaOpiniones } from '../opiniones.ts';
 	import { carritoDe } from '../carrito.svelte.ts';
 	import { cotizar, cpValido } from '../envio.ts';
 	import { partirTitulo } from '../titulo.ts';
@@ -37,6 +40,8 @@
 			pago: string;
 			nombre: string;
 			alias: string | null;
+			/** El código del pedido: con él, la reseña queda con compra. */
+			codigo?: string;
 		} | null;
 		error?: string | null;
 	} = $props();
@@ -339,6 +344,21 @@
 			]
 		}
 	]);
+	// Reseñas y preguntas con las piezas de Yerbal: Schibsted Grotesk, tarjetas blancas, esquinas de 10 px.
+	const tema: TemaOpiniones = {
+		texto: '#1E2B22',
+		suave: '#6B7A6E',
+		campo: '#EEF1E8',
+		tarjeta: '#fff',
+		borde: 'rgba(30,43,34,.14)',
+		acento: '#1E2B22',
+		sobreAcento: '#EEF1E8',
+		estrella: '#D9A400',
+		radio: '10px',
+		fuente: "'Schibsted Grotesk', sans-serif",
+		titulos: "'Schibsted Grotesk', sans-serif",
+		pesoTitulos: 800
+	};
 	const estrellas = (n: number) =>
 		Array.from({ length: 5 }, (_, i) =>
 			n >= i + 1 ? I.phStarFill : n >= i + 0.5 ? I.phStarHalfFill : I.phStar
@@ -760,8 +780,19 @@
 									</div>
 									<p style="margin:5px 0 0;font-size:13.5px;line-height:1.4">{r.texto}</p>
 									<div style="margin-top:4px;font-size:12px;color:#6B7A6E">
-										{r.autor} · compró {r.producto}
+										{r.autor}{#if r.producto}
+											· {r.conCompra ? 'compró' : 'sobre'} {r.producto}{/if}
 									</div>
+									{#if r.conCompra}<div
+											style="margin-top:5px;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#2F5D50"
+										>
+											<Icon icon={I.phSealCheckFill} size={13} />Compra verificada
+										</div>{/if}
+									{#if r.respuesta}<div
+											style="margin-top:8px;padding:8px 10px;border-radius:10px;background:#EEF1E8;font-size:12.5px;line-height:1.45;color:#56645A"
+										>
+											<b style="color:#1E2B22">Respuesta de {tienda.nombre}</b><br />{r.respuesta}
+										</div>{/if}
 								</div>
 							</div>
 						{/each}
@@ -1169,6 +1200,19 @@
 								</div>{/each}
 						</div>
 					</div>
+				</div>
+			</section>
+			<section style="padding:clamp(24px,4cqw,40px) clamp(12px,3cqw,32px) 0">
+				<div
+					style="max-width:820px;padding:clamp(16px,2.6cqw,24px);border-radius:16px;background:#fff"
+				>
+					<PreguntasProducto
+						slug={tienda.slug}
+						productoId={producto.id}
+						preguntas={tienda.preguntas}
+						{tema}
+						titulo="Preguntas sobre este producto"
+					/>
 				</div>
 			</section>
 			{#if juntos.length}
@@ -1614,6 +1658,14 @@
 					style="padding:15px;border-radius:10px;background:#1E2B22;color:#EEF1E8;font:800 15px 'Schibsted Grotesk';text-align:center;text-decoration:none"
 					>Volver a la tienda</a
 				>
+				<div style="margin-top:clamp(16px,3cqw,32px)">
+					<FormResena
+						slug={tienda.slug}
+						tema={{ ...tema, borde: 'transparent', radio: '14px', radioBoton: '10px' }}
+						codigo={pedido.codigo}
+						nombre={pedido.nombre}
+					/>
+				</div>
 			</section>
 		{/if}
 

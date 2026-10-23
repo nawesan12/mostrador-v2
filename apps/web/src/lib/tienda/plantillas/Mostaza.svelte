@@ -3,6 +3,9 @@
 	import { goto } from '$app/navigation';
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
+	import FormResena from '../FormResena.svelte';
+	import PreguntasProducto from '../PreguntasProducto.svelte';
+	import type { TemaOpiniones } from '../opiniones.ts';
 	import { carritoDe } from '../carrito.svelte.ts';
 	import { cotizar, cpValido } from '../envio.ts';
 	import { partirTitulo } from '../titulo.ts';
@@ -35,6 +38,8 @@
 			pago: string;
 			nombre: string;
 			alias: string | null;
+			/** El código del pedido: con él, la reseña queda con compra. */
+			codigo?: string;
 		} | null;
 		error?: string | null;
 	} = $props();
@@ -324,6 +329,22 @@
 			n >= i + 1 ? I.phStarFill : n >= i + 0.5 ? I.phStarHalfFill : I.phStar
 		);
 	const B = "font-family:'Bricolage Grotesque',sans-serif";
+	// Reseñas y preguntas con las piezas de Mostaza: Bricolage pesada, tarjetas blancas, píldoras.
+	const tema: TemaOpiniones = {
+		texto: '#3B2416',
+		suave: '#7A5A44',
+		campo: '#FBF3E4',
+		tarjeta: '#fff',
+		borde: 'rgba(59,36,22,.14)',
+		acento: '#3B2416',
+		sobreAcento: '#FBF3E4',
+		estrella: '#C9821A',
+		radio: '14px',
+		radioBoton: '999px',
+		fuente: "'Instrument Sans', sans-serif",
+		titulos: "'Bricolage Grotesque', sans-serif",
+		pesoTitulos: 800
+	};
 </script>
 
 <svelte:window bind:innerWidth={ancho} />
@@ -652,8 +673,18 @@
 								</div>
 								<p style="margin:0;font-size:15px;line-height:1.5">“{r.texto}”</p>
 								<span style="font-size:13px;color:#7A5A44;font-weight:600"
-									>{r.autor} · compró {r.producto}</span
+									>{r.autor}{#if r.producto}
+										· {r.conCompra ? 'compró' : 'sobre'} {r.producto}{/if}</span
 								>
+								{#if r.conCompra}<span
+										style="align-self:flex-start;display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;background:#E7F0DF;font-size:12px;font-weight:700;color:#2F6B3A"
+										><Icon icon={I.phSealCheckFill} size={13} />Compra verificada</span
+									>{/if}
+								{#if r.respuesta}<div
+										style="padding:10px 12px;border-radius:14px;background:#F1E2C8;font-size:13.5px;line-height:1.5;color:#5E4332"
+									>
+										<b style="color:#3B2416">Respuesta de {tienda.nombre}</b><br />{r.respuesta}
+									</div>{/if}
 							</div>
 						{/each}
 					</div>
@@ -1024,6 +1055,19 @@
 									</p>{/if}
 							</div>{/each}
 					</div>
+				</div>
+			</section>
+			<section style="padding:clamp(40px,6cqw,72px) clamp(14px,3.5cqw,40px) 0">
+				<div
+					style="max-width:820px;padding:clamp(18px,3cqw,28px);border-radius:24px;background:#fff"
+				>
+					<PreguntasProducto
+						slug={tienda.slug}
+						productoId={producto.id}
+						preguntas={tienda.preguntas}
+						{tema}
+						titulo="Preguntas sobre este producto"
+					/>
 				</div>
 			</section>
 			{#if related.length}
@@ -1452,6 +1496,14 @@
 					style="margin-top:6px;padding:15px 24px;border-radius:999px;background:#3B2416;color:#FBF3E4;font:700 15px 'Instrument Sans';text-decoration:none"
 					>Volver a la tienda</a
 				>
+				<div style="margin-top:clamp(24px,5cqw,48px);align-self:stretch">
+					<FormResena
+						slug={tienda.slug}
+						tema={{ ...tema, borde: 'transparent' }}
+						codigo={pedido.codigo}
+						nombre={pedido.nombre}
+					/>
+				</div>
 			</section>
 		{/if}
 

@@ -80,11 +80,17 @@ import type {
 } from '../datos/tipos.ts';
 import { demoDe, type Demo, type EstadoPedido, type Pedido } from './demo.ts';
 import {
+	COBRADO,
 	devolucionesDemo,
 	resenasDemo,
+	todasLasResenas,
+	type CambiosResenas,
 	type EstadoDevolucion,
-	type PedidoNuevoDemo
+	type PedidoNuevoDemo,
+	type PreguntaTiendaDemo,
+	type ResenaNuevaDemo
 } from './resenas.ts';
+import { codigoPedido } from '../tienda/pedido.ts';
 import {
 	DEF_CLIENTES,
 	DEF_ENVIOS,
@@ -2099,13 +2105,15 @@ export class DatosSandbox implements Datos {
 	 * ejemplo de una plantilla para mirar, sin carrito real.
 	 */
 	async tiendaPublica(vitrina = false): Promise<TiendaPublica> {
-		const [d, t, c, conf, productos, mp] = await Promise.all([
+		const [d, t, c, conf, productos, mp, cr, respuestasQ] = await Promise.all([
 			this.demo(),
 			this.tienda(),
 			cambiosDe(this.db, this.sb.id, 'mi-tienda'),
 			this.configuracion(),
 			this.regProductos(),
-			this.mercadoPago()
+			this.mercadoPago(),
+			this.cambiosResenas(),
+			this.respuestasPreguntas()
 		]);
 		const diseno = (c.get('publicado') as DisenoTienda | undefined) ?? DISENO_INICIAL;
 		const p = buscarPlantilla(t.plantilla);
@@ -2121,22 +2129,31 @@ export class DatosSandbox implements Datos {
 				return { nombre, cantidad: de.length, foto: de.find((x) => x.foto)?.foto ?? null };
 			}
 		);
-		const nombres = new Map(d.clientes.map((x) => [x.id, x.nombre]));
-		const ciudades = new Map(d.clientes.map((x) => [x.id, x.ciudad]));
-		const resenas = d.resenas
-			.filter((r) => r.estrellas >= 4 && r.texto.length > 25)
-			.slice(0, 6)
-			.map((r) => ({
-				texto: r.texto,
-				autor: [nombres.get(r.clienteId)?.split(' ')[0], ciudades.get(r.clienteId)]
-					.filter(Boolean)
-					.join(', '),
-				producto: r.producto,
-				estrellas: r.estrellas
-			}));
-		const promedio = d.resenas.length
-			? Math.round((d.resenas.reduce((s, r) => s + r.estrellas, 0) / d.resenas.length) * 10) / 10
+		// Las del visitante se ven todas (como en Go); de las de ejemplo, las seis mejores escritas.
+		cr.productos = new Map(productos.map((x) => [x.id, { nombre: x.nombre, foto: x.foto }]));
+		const aLaVista = todasLasResenas(d, cr).filter((r) => !r.oculta);
+		const resenas = [
+			...aLaVista.filter((r) => !r.ejemplo),
+			...aLaVista.filter((r) => r.ejemplo && r.estrellas >= 4 && r.texto.length > 25).slice(0, 6)
+		].map((r) => ({
+			texto: r.texto,
+			autor: r.firma,
+			producto: r.producto ?? '',
+			estrellas: r.estrellas,
+			conCompra: r.conCompra,
+			respuesta: r.respuesta
+		}));
+		const promedio = aLaVista.length
+			? Math.round((aLaVista.reduce((s, r) => s + r.estrellas, 0) / aLaVista.length) * 10) / 10
 			: null;
+		const publicados = new Set(visibles.map((x) => x.id));
+		const preguntas = cr.preguntas
+			.filter((q) => publicados.has(q.productoId) && respuestasQ.get(q.id))
+			.map((q) => ({
+				productoId: q.productoId,
+				pregunta: q.pregunta,
+				respuesta: respuestasQ.get(q.id)!
+			}));
 		return {
 			slug: t.slug,
 			nombre: t.nombre,
@@ -2167,6 +2184,7 @@ export class DatosSandbox implements Datos {
 			masVendidos,
 			resenas,
 			promedio,
+			preguntas,
 			fotos: [...new Set(visibles.flatMap((x) => (x.foto ? [x.foto] : [])))].slice(0, 6),
 			cobros: { transferencia: 15, cuotas: 6, mercadoPago: mp.conectada },
 			envios: { gratisDesde: 240_000, retiro: true, moto: true, correo: true },
@@ -2367,20 +2385,164 @@ export class DatosSandbox implements Datos {
 		return 'ok';
 	}
 
-	async resenas() {
-		const d = await this.demo();
+	/** Respuestas publicadas a las preguntas (de Mercado Libre y de la tienda), por id. */
+	private async respuestasPreguntas() {
 		const c = await cambiosDe(this.db, this.sb.id, 'pregunta');
-		const respuestas = new Map(
+		return new Map(
 			[...c].filter(([, v]) => v).map(([k, v]) => [k, (v as { respuesta: string }).respuesta])
 		);
-		return resenasDemo(d, Date.now(), respuestas);
+	}
+
+	/**
+	 * Reseñas y preguntas que dejó el visitante en su tienda online, más lo que hizo con ellas. Cada
+	 * acción va en su propio cambio (ocultar y responder no se pisan si llegan juntas).
+	 */
+	private async cambiosResenas(): Promise<CambiosResenas> {
+		const [nuevas, ocultas, respuestas, preguntas] = await Promise.all([
+			cambiosDe(this.db, this.sb.id, 'resena-nueva'),
+			cambiosDe(this.db, this.sb.id, 'resena-oculta'),
+			cambiosDe(this.db, this.sb.id, 'resena-respuesta'),
+			cambiosDe(this.db, this.sb.id, 'pregunta-tienda')
+		]);
+		return {
+			nuevas: [...nuevas.values()].filter(Boolean) as ResenaNuevaDemo[],
+			ocultas: new Set([...ocultas].filter(([, v]) => v).map(([k]) => k)),
+			respuestas: new Map(
+				[...respuestas]
+					.filter(([, v]) => v)
+					.map(([k, v]) => [k, (v as { respuesta: string }).respuesta])
+			),
+			preguntas: [...preguntas.values()].filter(Boolean) as PreguntaTiendaDemo[]
+		};
+	}
+
+	async resenas() {
+		const [d, respuestas, cambios, productos] = await Promise.all([
+			this.demo(),
+			this.respuestasPreguntas(),
+			this.cambiosResenas(),
+			this.regProductos()
+		]);
+		// Con los productos que sumó el visitante (el catálogo de ejemplo no los tiene).
+		cambios.productos = new Map(productos.map((p) => [p.id, { nombre: p.nombre, foto: p.foto }]));
+		return resenasDemo(d, Date.now(), respuestas, cambios);
 	}
 
 	async responderPregunta(id: string, respuesta: string): Promise<Resultado> {
 		if (!(await this.resenas()).preguntas.some((p) => p.id === id)) return 'no-existe';
 		await guardarCambio(this.db, this.sb.id, 'pregunta', id, {
-			respuesta: respuesta.trim().slice(0, 2000)
+			respuesta: respuesta.trim().slice(0, id.startsWith('t-') ? 1000 : 2000)
 		});
+		return 'ok';
+	}
+
+	/** Ocultar o mostrar una reseña (nunca se borra), o responderla en público (vacía, la saca). */
+	async accionResena(
+		id: string,
+		accion: 'ocultar' | 'mostrar' | 'responder',
+		respuesta = ''
+	): Promise<Resultado> {
+		const d = await this.demo();
+		if (!todasLasResenas(d, await this.cambiosResenas()).some((r) => r.id === id))
+			return 'no-existe';
+		if (accion === 'ocultar') await guardarCambio(this.db, this.sb.id, 'resena-oculta', id, true);
+		else if (accion === 'mostrar') await borrarCambio(this.db, this.sb.id, 'resena-oculta', id);
+		else {
+			const r = respuesta.trim();
+			if (r.length > 1000) return 'no-se-puede';
+			if (r) await guardarCambio(this.db, this.sb.id, 'resena-respuesta', id, { respuesta: r });
+			else await borrarCambio(this.db, this.sb.id, 'resena-respuesta', id);
+		}
+		return 'ok';
+	}
+
+	/**
+	 * La reseña que deja alguien en la tienda online. Con el código de un pedido cobrado (el firmado
+	 * de la confirmación) queda con compra, una por pedido y producto; con un código que no es de un
+	 * pedido cobrado, se guarda igual pero sin compra (como Go).
+	 */
+	async dejarResena(n: {
+		codigo?: string;
+		productoId?: string;
+		autor: string;
+		estrellas: number;
+		texto?: string;
+	}): Promise<'ok' | 'ya-reseno' | 'invalido'> {
+		const autor = n.autor.trim();
+		const texto = (n.texto ?? '').trim();
+		if (
+			autor.length < 2 ||
+			autor.length > 60 ||
+			!Number.isInteger(n.estrellas) ||
+			n.estrellas < 1 ||
+			n.estrellas > 5 ||
+			texto.length > 1000
+		)
+			return 'invalido';
+		let pedido: number | null = null;
+		const numero = Number(n.codigo?.split('-')[0]);
+		if (
+			n.codigo &&
+			Number.isInteger(numero) &&
+			(await codigoPedido(this.sb.id, numero)) === n.codigo
+		) {
+			const p = await this.pedido(numero);
+			if (p && COBRADO.includes(p.estadoPago)) pedido = numero;
+		}
+		const productoId =
+			n.productoId && (await this.regProductos()).some((p) => p.id === n.productoId)
+				? n.productoId
+				: null;
+		const ahora = Date.now();
+		// Con compra, la clave es el pedido y el producto: así hay una sola por compra.
+		const id =
+			pedido !== null
+				? `p${pedido}-${productoId ?? 'tienda'}`
+				: `n${ahora.toString(36)}${randomToken(4).replace(/[^a-z0-9]/gi, '')}`;
+		if (pedido !== null && (await cambiosDe(this.db, this.sb.id, 'resena-nueva')).get(id))
+			return 'ya-reseno';
+		await guardarCambio(this.db, this.sb.id, 'resena-nueva', id, {
+			id,
+			autor,
+			estrellas: n.estrellas,
+			texto,
+			productoId,
+			pedido,
+			creada: ahora
+		} satisfies ResenaNuevaDemo);
+		return 'ok';
+	}
+
+	/** Una pregunta sobre un producto publicado; aparece en el panel junto a las de Mercado Libre. */
+	async preguntar(q: {
+		productoId: string;
+		nombre: string;
+		email?: string;
+		pregunta: string;
+	}): Promise<'ok' | 'invalido'> {
+		const nombre = q.nombre.trim();
+		const pregunta = q.pregunta.trim();
+		const email = (q.email ?? '').trim();
+		if (
+			nombre.length < 2 ||
+			nombre.length > 60 ||
+			pregunta.length < 3 ||
+			pregunta.length > 500 ||
+			email.length > 120
+		)
+			return 'invalido';
+		const p = (await this.regProductos()).find((x) => x.id === q.productoId);
+		if (!p?.publicado) return 'invalido';
+		const ahora = Date.now();
+		const id = `t-${ahora.toString(36)}${randomToken(4).replace(/[^a-z0-9]/gi, '')}`;
+		await guardarCambio(this.db, this.sb.id, 'pregunta-tienda', id, {
+			id,
+			productoId: p.id,
+			nombre,
+			email: email || null,
+			pregunta,
+			creada: ahora
+		} satisfies PreguntaTiendaDemo);
 		return 'ok';
 	}
 

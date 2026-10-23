@@ -3,6 +3,9 @@
 	import { goto } from '$app/navigation';
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
+	import FormResena from '../FormResena.svelte';
+	import PreguntasProducto from '../PreguntasProducto.svelte';
+	import type { TemaOpiniones } from '../opiniones.ts';
 	import { carritoDe } from '../carrito.svelte.ts';
 	import { cotizar, cpValido } from '../envio.ts';
 	import { partirTitulo } from '../titulo.ts';
@@ -35,6 +38,8 @@
 			pago: string;
 			nombre: string;
 			alias: string | null;
+			/** El código del pedido: con él, la reseña queda con compra. */
+			codigo?: string;
 		} | null;
 		error?: string | null;
 	} = $props();
@@ -162,6 +167,24 @@
 			logoSz: tt === 'uppercase' ? '22px' : '26px',
 			hb: dark ? 'rgba(20,14,14,.88)' : 'rgba(255,255,255,.72)'
 		};
+	});
+	// Reseñas y preguntas con los tokens del tema elegido.
+	const tema = $derived<TemaOpiniones>({
+		texto: T.ink,
+		suave: T.mu,
+		campo: T.bg,
+		tarjeta: T.sf,
+		borde: T.ln,
+		acento: T.ink,
+		sobreAcento: T.bg,
+		estrella: T.star,
+		radio: T.r,
+		radioBoton: T.rb,
+		fuente: "'Instrument Sans', sans-serif",
+		titulos: T.f,
+		pesoTitulos: Number(T.fw) || 600,
+		mayusculas: T.tt === 'uppercase',
+		error: tid === 'pampa' || tid === 'malbec' ? '#FF9C8A' : undefined
 	});
 	const fam = $derived(TH[tid][0] as Familia);
 	const isEd = $derived(fam === 'ed');
@@ -882,8 +905,19 @@
 									</div>
 									<p style="margin:8px 0 0;font-size:15px;line-height:1.45">“{r.texto}”</p>
 									<div style="margin-top:8px;font-size:12.5px;color:{T.mu}">
-										{r.autor} · compró {r.producto.toLowerCase()}
+										{r.autor}{#if r.producto}
+											· {r.conCompra ? 'compró' : 'sobre'} {r.producto.toLowerCase()}{/if}
 									</div>
+									{#if r.conCompra}<div
+											style="margin-top:6px;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:{T.ok}"
+										>
+											<Icon icon={I.phSealCheckFill} size={13} />Compra verificada
+										</div>{/if}
+									{#if r.respuesta}<div
+											style="margin-top:10px;padding:10px 12px;border-radius:{T.r};background:{T.sf2};font-size:13px;line-height:1.5;color:{T.mu}"
+										>
+											<b style="color:{T.ink}">Respuesta de {tienda.nombre}</b><br />{r.respuesta}
+										</div>{/if}
 								</div>
 							</div>
 						{/each}
@@ -1180,6 +1214,15 @@
 						</div>
 					</div>
 				</div>
+			</section>
+			<section style="padding:clamp(44px,6cqw,84px) clamp(14px,3.5cqw,44px) 0;max-width:820px">
+				<PreguntasProducto
+					slug={tienda.slug}
+					productoId={producto.id}
+					preguntas={tienda.preguntas}
+					tema={{ ...tema, tarjeta: 'transparent' }}
+					titulo="Preguntas sobre este producto"
+				/>
 			</section>
 			{#if related.length}
 				<section style="padding:clamp(52px,7cqw,96px) clamp(14px,3.5cqw,44px)">
@@ -1663,6 +1706,9 @@
 					style="display:inline-block;margin-top:28px;text-decoration:none;padding:15px 26px;border-radius:{T.rb};background:{T.ink};color:{T.bg};font:700 15px 'Instrument Sans'"
 					>Volver a la tienda</a
 				>
+				<div style="margin-top:clamp(40px,6cqw,64px)">
+					<FormResena slug={tienda.slug} {tema} codigo={pedido.codigo} nombre={pedido.nombre} />
+				</div>
 			</section>
 		{/if}
 

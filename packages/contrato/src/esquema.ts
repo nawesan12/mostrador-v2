@@ -640,6 +640,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/resenas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ocultar o mostrar una reseña (no se borra), o responderla públicamente (vacía, la saca). */
+        post: operations["accionResena"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/links": {
         parameters: {
             query?: never;
@@ -737,6 +754,40 @@ export interface paths {
         put?: never;
         /** Arma el pedido de la tienda online. Precios y envío los calcula la API; con Mercado Pago devuelve el checkout. */
         post: operations["comprarEnTienda"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/publico/tiendas/{slug}/resenas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Una reseña de la tienda (409 ya_reseno si ese pedido ya tiene). Con el código público de un pedido cobrado queda con compra (una por pedido y producto). Tope de 10 por hora por IP. */
+        post: operations["dejarResena"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/publico/tiendas/{slug}/preguntas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Una pregunta sobre un producto publicado; se ve en la ficha cuando la tienda la responde. Tope de 10 por hora por IP. */
+        post: operations["preguntarEnTienda"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1931,6 +1982,7 @@ export interface components {
         };
         ResenasYPreguntas: {
             preguntas: {
+                /** @description Las de la tienda online empiezan con "t-"; las demás son de Mercado Libre */
                 id: string;
                 producto: string;
                 foto: string | null;
@@ -1943,6 +1995,7 @@ export interface components {
                 respuesta: string | null;
             }[];
             resenas: {
+                id: string;
                 autor: string;
                 estrellas: number;
                 texto: string;
@@ -1950,6 +2003,14 @@ export interface components {
                 origen: string;
                 /** Format: date-time */
                 creada: string;
+                /** @description El producto reseñado (si sigue existiendo) */
+                producto: string | null;
+                /** @description La dejó quien compró: trajo el código de un pedido cobrado */
+                conCompra: boolean;
+                /** @description La tienda la ocultó (no se borra) */
+                oculta: boolean;
+                /** @description La respuesta pública de la tienda */
+                respuesta: string | null;
             }[];
             promedio: number | null;
             total: number;
@@ -3951,6 +4012,36 @@ export interface operations {
             404: components["responses"]["Problema"];
         };
     };
+    accionResena: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    accion: "ocultar" | "mostrar" | "responder";
+                    respuesta?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Hecho */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+        };
+    };
     crearLink: {
         parameters: {
             query?: never;
@@ -4143,6 +4234,73 @@ export interface operations {
             };
             400: components["responses"]["Problema"];
             409: components["responses"]["Problema"];
+        };
+    };
+    dejarResena: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description El código público del pedido */
+                    codigo?: string;
+                    productoId?: string;
+                    autor: string;
+                    estrellas: number;
+                    texto?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Guardada */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+            429: components["responses"]["Problema"];
+        };
+    };
+    preguntarEnTienda: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    productoId: string;
+                    nombre: string;
+                    email?: string;
+                    pregunta: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Guardada */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+            429: components["responses"]["Problema"];
         };
     };
     confirmacionPedido: {

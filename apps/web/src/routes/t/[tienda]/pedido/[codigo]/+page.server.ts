@@ -18,6 +18,7 @@ export const load: PageServerLoad = async ({ params, cookies, url }) => {
 		return {
 			pedido: {
 				...c,
+				codigo: params.codigo,
 				alias: c.pago === 'transferencia' ? `${r.tienda.slug.replace(/-/g, '.')}.mp` : null
 			}
 		};
@@ -37,6 +38,7 @@ export const load: PageServerLoad = async ({ params, cookies, url }) => {
 	return {
 		pedido: {
 			numero,
+			codigo: params.codigo,
 			total,
 			pago,
 			nombre: p.cliente.split(' ')[0],

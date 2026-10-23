@@ -242,6 +242,14 @@ export class DatosApi implements Datos {
 			await this.intentar(`/v1/panel/preguntas/${encodeURIComponent(id)}`, 'POST', { respuesta })
 		);
 	}
+	async accionResena(id: string, accion: 'ocultar' | 'mostrar' | 'responder', respuesta = '') {
+		return resultado(
+			await this.intentar(`/v1/panel/resenas/${encodeURIComponent(id)}`, 'POST', {
+				accion,
+				respuesta
+			})
+		);
+	}
 
 	async crearLink(l: { monto: number; concepto: string; cuotas: boolean; pedido: number | null }) {
 		return (await this.pedir<{ codigo: string }>('/v1/panel/links', 'POST', l)).codigo;

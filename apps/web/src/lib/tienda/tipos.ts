@@ -16,6 +16,20 @@ export type ProductoPublico = {
 	stock: number;
 };
 
+export type ResenaPublica = {
+	texto: string;
+	autor: string;
+	/** El nombre del producto ('' si es de la tienda en general). */
+	producto: string;
+	estrellas: number;
+	/** La dejó quien compró (con el código de un pedido cobrado). */
+	conCompra: boolean;
+	/** La respuesta pública de la tienda. */
+	respuesta: string | null;
+};
+
+export type PreguntaPublica = { productoId: string; pregunta: string; respuesta: string };
+
 export type TiendaPublica = {
 	slug: string;
 	nombre: string;
@@ -32,8 +46,11 @@ export type TiendaPublica = {
 	productos: ProductoPublico[];
 	/** Ids de los más vendidos, del más al menos. */
 	masVendidos: string[];
-	resenas: { texto: string; autor: string; producto: string; estrellas: number }[];
+	/** Las visibles, de la más nueva a la más vieja. */
+	resenas: ResenaPublica[];
 	promedio: number | null;
+	/** Preguntas ya respondidas por la tienda (las demás no se muestran). */
+	preguntas: PreguntaPublica[];
 	fotos: string[];
 	cobros: { transferencia: number; cuotas: number; mercadoPago: boolean };
 	envios: { gratisDesde: number | null; retiro: boolean; moto: boolean; correo: boolean };

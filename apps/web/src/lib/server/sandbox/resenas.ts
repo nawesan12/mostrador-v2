@@ -1,6 +1,8 @@
 /**
  * Devoluciones y reseñas de la demo (design/PanelVentas.dc.html): salen de pedidos entregados, y las
- * preguntas de Mercado Libre de los productos publicados, con la respuesta que propone Hornero.
+ * preguntas de Mercado Libre de los productos publicados, con la respuesta que propone Hornero. Las
+ * reseñas y preguntas que deja el visitante en su tienda online se suman con las mismas reglas que
+ * Go (ventas/resenas.go): con compra si traen el código de un pedido cobrado, ocultar sin borrar.
  */
 import type { components } from '@mostrador/contrato/esquema';
 import type { Demo, Pedido } from './demo.ts';
@@ -83,12 +85,105 @@ const ORIGEN: Record<string, string> = {
 	tg: 'Tienda'
 };
 
+/** Una reseña que dejó el visitante en su tienda online (cambio `resena-nueva`). */
+export type ResenaNuevaDemo = {
+	id: string;
+	autor: string;
+	estrellas: number;
+	texto: string;
+	productoId: string | null;
+	/** El pedido cobrado del que viene (con compra), o null. */
+	pedido: number | null;
+	creada: number;
+};
+
+/** Una pregunta que dejó el visitante en una ficha (cambio `pregunta-tienda`, id "t-…"). */
+export type PreguntaTiendaDemo = {
+	id: string;
+	productoId: string;
+	nombre: string;
+	email: string | null;
+	pregunta: string;
+	creada: number;
+};
+
+/** Lo que cambió el visitante en reseñas y preguntas de su tienda. */
+export type CambiosResenas = {
+	nuevas: ResenaNuevaDemo[];
+	ocultas: Set<string>;
+	/** Respuesta pública de cada reseña. */
+	respuestas: Map<string, string>;
+	preguntas: PreguntaTiendaDemo[];
+	/** Nombre y foto de los productos de la tienda (con los que sumó el visitante). */
+	productos?: Map<string, { nombre: string; foto: string | null }>;
+};
+export const SIN_CAMBIOS: CambiosResenas = {
+	nuevas: [],
+	ocultas: new Set(),
+	respuestas: new Map(),
+	preguntas: []
+};
+
+/** Los estados de pago con los que un pedido cuenta como cobrado (igual que Go). */
+export const COBRADO = ['Aprobado', 'Acreditada', 'Cobrado'];
+
+const productosDe = (d: Demo, c: CambiosResenas) =>
+	c.productos ??
+	new Map(d.catalogo.productos.map((p) => [p.id, { nombre: p.nombre, foto: p.foto }]));
+
+/**
+ * Todas las reseñas de la tienda (las de ejemplo y las del visitante), de la más nueva a la más
+ * vieja. Las de ejemplo que vienen de la tienda online cuentan como con compra: salen de un pedido.
+ */
+export function todasLasResenas(d: Demo, c: CambiosResenas) {
+	const clientes = new Map(d.clientes.map((x) => [x.id, x]));
+	const productos = productosDe(d, c);
+	const ejemplo = d.resenas.map((r, k) => {
+		const cliente = clientes.get(r.clienteId);
+		const [n, a] = (cliente?.nombre ?? 'Cliente').split(' ');
+		// Una de cada cinco llega desde Google.
+		const origen = k % 5 === 2 ? 'Google' : (ORIGEN[r.canal] ?? 'Tienda');
+		const id = `r${r.pedido}`;
+		return {
+			id,
+			autor: `${n} ${a?.[0] ?? ''}.`,
+			/** Como se firma en la tienda: nombre y ciudad. */
+			firma: [n, cliente?.ciudad].filter(Boolean).join(', '),
+			estrellas: r.estrellas,
+			texto: r.texto,
+			origen,
+			creada: r.creada,
+			producto: r.producto as string | null,
+			conCompra: origen === 'Tienda',
+			oculta: c.ocultas.has(id),
+			respuesta: c.respuestas.get(id) ?? null,
+			ejemplo: true
+		};
+	});
+	const nuevas = c.nuevas.map((r) => ({
+		id: r.id,
+		autor: r.autor,
+		firma: r.autor,
+		estrellas: r.estrellas,
+		texto: r.texto,
+		origen: 'Tienda',
+		creada: r.creada,
+		producto: r.productoId ? (productos.get(r.productoId)?.nombre ?? null) : null,
+		conCompra: r.pedido !== null,
+		oculta: c.ocultas.has(r.id),
+		respuesta: c.respuestas.get(r.id) ?? null,
+		ejemplo: false
+	}));
+	return [...nuevas, ...ejemplo].sort((a, b) => b.creada - a.creada);
+}
+
 export function resenasDemo(
 	d: Demo,
 	ahora: number,
-	respuestas: Map<string, string>
+	respuestas: Map<string, string>,
+	cambios: CambiosResenas = SIN_CAMBIOS
 ): ResenasYPreguntas {
-	const clientes = new Map(d.clientes.map((c) => [c.id, c]));
+	const delCatalogo = productosDe(d, cambios);
 	const enMl = d.catalogo.productos.filter((p) => d.enMl.includes(p.id)).slice(0, 3);
 	const preguntas = enMl.map((p, k) => {
 		const [pregunta, respuesta] = PREGUNTAS[k % PREGUNTAS.length];
@@ -103,28 +198,51 @@ export function resenasDemo(
 			respuesta: respuestas.get(id) ?? null
 		};
 	});
-	const resenas = d.resenas.map((r, k) => {
-		const [n, a] = (clientes.get(r.clienteId)?.nombre ?? 'Cliente').split(' ');
-		return {
-			autor: `${n} ${a?.[0] ?? ''}.`,
-			estrellas: r.estrellas,
-			texto: r.texto,
-			// Una de cada cinco llega desde Google.
-			origen: k % 5 === 2 ? 'Google' : (ORIGEN[r.canal] ?? 'Tienda'),
-			creada: iso(r.creada)
-		};
-	});
-	const porEstrellas = [5, 4, 3, 2, 1].map((n) => resenas.filter((r) => r.estrellas === n).length);
+	// Las de la tienda online: primero las sin responder, después las más nuevas (como Go).
+	const deLaTienda = cambios.preguntas
+		.filter((q) => delCatalogo.has(q.productoId))
+		.map((q) => {
+			const p = delCatalogo.get(q.productoId)!;
+			return {
+				id: q.id,
+				producto: p.nombre,
+				foto: p.foto,
+				pregunta: q.pregunta,
+				creada: iso(q.creada),
+				sugerida: '',
+				respuesta: respuestas.get(q.id) ?? null
+			};
+		})
+		.sort(
+			(a, b) =>
+				Number(a.respuesta !== null) - Number(b.respuesta !== null) ||
+				Date.parse(b.creada) - Date.parse(a.creada)
+		);
+	const resenas = todasLasResenas(d, cambios).map((r) => ({
+		id: r.id,
+		autor: r.autor,
+		estrellas: r.estrellas,
+		texto: r.texto,
+		origen: r.origen,
+		creada: iso(r.creada),
+		producto: r.producto,
+		conCompra: r.conCompra,
+		oculta: r.oculta,
+		respuesta: r.respuesta
+	}));
+	// El resumen cuenta sólo las visibles.
+	const visibles = resenas.filter((r) => !r.oculta);
+	const porEstrellas = [5, 4, 3, 2, 1].map((n) => visibles.filter((r) => r.estrellas === n).length);
 	return {
-		preguntas,
+		preguntas: [...deLaTienda, ...preguntas],
 		resenas,
-		promedio: resenas.length
-			? Math.round((resenas.reduce((s, r) => s + r.estrellas, 0) / resenas.length) * 10) / 10
+		promedio: visibles.length
+			? Math.round((visibles.reduce((s, r) => s + r.estrellas, 0) / visibles.length) * 10) / 10
 			: null,
-		total: resenas.length,
+		total: visibles.length,
 		porEstrellas,
-		recomendaria: resenas.length
-			? Math.round(((porEstrellas[0] + porEstrellas[1]) / resenas.length) * 100)
+		recomendaria: visibles.length
+			? Math.round(((porEstrellas[0] + porEstrellas[1]) / visibles.length) * 100)
 			: 0
 	};
 }

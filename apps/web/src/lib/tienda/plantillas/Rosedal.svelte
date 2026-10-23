@@ -3,6 +3,9 @@
 	import { goto } from '$app/navigation';
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
+	import FormResena from '../FormResena.svelte';
+	import PreguntasProducto from '../PreguntasProducto.svelte';
+	import type { TemaOpiniones } from '../opiniones.ts';
 	import { carritoDe } from '../carrito.svelte.ts';
 	import { cotizar, cpValido } from '../envio.ts';
 	import { partirTitulo } from '../titulo.ts';
@@ -35,6 +38,8 @@
 			pago: string;
 			nombre: string;
 			alias: string | null;
+			/** El código del pedido: con él, la reseña queda con compra. */
+			codigo?: string;
 		} | null;
 		error?: string | null;
 	} = $props();
@@ -305,6 +310,22 @@
 		{ t: 'Todo', href: `${base}/catalogo`, on: pagina === 'catalogo' && !categoria },
 		{ t: 'Nosotros', href: `${base}/nosotros`, on: pagina === 'nosotros' }
 	]);
+	// Reseñas y preguntas con las piezas de Rosedal: tarjetas blancas, botones de píldora, rosa.
+	const tema: TemaOpiniones = {
+		texto: '#3A1F25',
+		suave: '#8C6A70',
+		campo: '#FBF4F1',
+		tarjeta: '#fff',
+		borde: '#EAD3CF',
+		acento: '#3A1F25',
+		sobreAcento: '#fff',
+		estrella: '#B4475B',
+		radio: '14px',
+		radioBoton: '999px',
+		fuente: "'Hanken Grotesk', system-ui, sans-serif",
+		titulos: "'Hanken Grotesk', system-ui, sans-serif",
+		pesoTitulos: 800
+	};
 	const estrellas = (n: number) =>
 		Array.from({ length: 5 }, (_, i) =>
 			n >= i + 1 ? I.phStarFill : n >= i + 0.5 ? I.phStarHalfFill : I.phStar
@@ -687,8 +708,21 @@
 										“{r.texto}”
 									</p>
 									<div style="margin-top:10px;font-size:12.5px;color:#8C6A70">
-										{r.autor} · compró {r.producto}
+										{r.autor}{#if r.producto}
+											· {r.conCompra ? 'compró' : 'sobre'} {r.producto}{/if}
 									</div>
+									{#if r.conCompra}<span
+											style="margin-top:8px;display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;background:#F3D9DE;color:#B4475B;font-size:11.5px;font-weight:800"
+											><Icon icon={I.phSealCheckFill} size={13} />Compra verificada</span
+										>{/if}
+									{#if r.respuesta}<div
+											style="margin-top:10px;padding:12px 14px;border-radius:18px;background:#FBF4F1;font-size:13px;line-height:1.5;color:#6E4F55"
+										>
+											<b
+												style="display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#B4475B"
+												>Respuesta de {tienda.nombre}</b
+											>{r.respuesta}
+										</div>{/if}
 								</div>
 							</div>
 						{/each}
@@ -978,6 +1012,15 @@
 										{a.d}
 									</p>{/if}
 							</div>{/each}
+					</div>
+					<div style="margin-top:12px;padding:18px 16px;border-radius:22px;background:#fff">
+						<PreguntasProducto
+							slug={tienda.slug}
+							productoId={producto.id}
+							preguntas={tienda.preguntas}
+							tema={{ ...tema, tarjeta: 'transparent' }}
+							titulo="Preguntas"
+						/>
 					</div>
 				</div>
 			</section>
@@ -1417,6 +1460,9 @@
 					style="display:inline-block;margin-top:26px;padding:16px 26px;border-radius:999px;background:#3A1F25;color:#fff;font:800 15px 'Hanken Grotesk';text-decoration:none"
 					>Volver a la tienda</a
 				>
+				<div style="margin-top:clamp(36px,5cqw,56px)">
+					<FormResena slug={tienda.slug} {tema} codigo={pedido.codigo} nombre={pedido.nombre} />
+				</div>
 			</section>
 		{/if}
 
