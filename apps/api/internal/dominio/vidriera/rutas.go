@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/devoluciones"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/limite"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
@@ -18,7 +20,7 @@ func escribir(w http.ResponseWriter, estado int, v any) {
 }
 
 // Rutas públicas de la tienda online (sin sesión: las pide el BFF de /t/{slug}).
-func Rutas(mux *http.ServeMux, pool tx, mp Pagador, sitio string) {
+func Rutas(mux *http.ServeMux, pool tx, mp Pagador, sitio string, dev *devoluciones.Servicio, ip func(*http.Request) string) {
 	error404 := func(w http.ResponseWriter, err error) {
 		var ec ErrCupon
 		switch {
@@ -79,6 +81,40 @@ func Rutas(mux *http.ServeMux, pool tx, mp Pagador, sitio string) {
 			return
 		}
 		escribir(w, http.StatusOK, res)
+	})
+	// Botón de arrepentimiento de la tienda (Ley 24.240): devuelve el código de trámite.
+	mux.HandleFunc("POST /v1/publico/tiendas/{slug}/arrepentimiento", func(w http.ResponseWriter, r *http.Request) {
+		if c, ok := pool.(limite.Consultor); ok {
+			if ok, err := limite.Permitido(r.Context(), c, "tienda:arrepentimiento:"+ip(r), 10, time.Hour); err == nil && !ok {
+				problema.Escribir(w, &problema.Problema{Estado: http.StatusTooManyRequests, Codigo: "demasiados",
+					Titulo: "Demasiados pedidos", Detalle: "Probá de nuevo en un rato."})
+				return
+			}
+		}
+		var p devoluciones.Pedido
+		if dev == nil || json.NewDecoder(http.MaxBytesReader(w, r.Body, 8<<10)).Decode(&p) != nil {
+			error404(w, ErrInvalido)
+			return
+		}
+		t, err := Publica(r.Context(), pool, r.PathValue("slug"))
+		if err != nil {
+			error404(w, err)
+			return
+		}
+		id, _ := tiendaDe(r.Context(), pool, r.PathValue("slug"))
+		codigo, err := dev.Arrepentirse(r.Context(), id, t.Nombre, p, time.Now())
+		switch {
+		case errors.Is(err, devoluciones.ErrInvalido):
+			problema.Escribir(w, problema.Invalido("Revisá tu nombre y tu email."))
+		case errors.Is(err, devoluciones.ErrNoEncontrado):
+			problema.Escribir(w, problema.NoEncontrado("No encontramos ese pedido. Revisá el número y que el email sea el de la compra."))
+		case errors.Is(err, devoluciones.ErrFueraDePlazo):
+			problema.Escribir(w, problema.Conflicto("fuera_de_plazo", "Pasaron más de 10 días desde que recibiste la compra. Escribile a la tienda para ver qué se puede hacer."))
+		case err != nil:
+			error404(w, err)
+		default:
+			escribir(w, http.StatusCreated, map[string]string{"codigo": codigo})
+		}
 	})
 	mux.HandleFunc("GET /v1/publico/tiendas/{slug}/pedidos/{codigo}", func(w http.ResponseWriter, r *http.Request) {
 		c, err := VerPedido(r.Context(), pool, r.PathValue("slug"), r.PathValue("codigo"))

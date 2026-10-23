@@ -13,6 +13,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/crecer"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cupones"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/devoluciones"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/facturacion"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/finanzas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/formularios"
@@ -29,6 +30,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/vidriera"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/limite"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
@@ -55,6 +57,8 @@ type Dependencias struct {
 	IA *ia.Servicio
 	// Facturación con ARCA (comprobantes, certificado, factura manual).
 	Facturacion *facturacion.Servicio
+	// Correo para los avisos de la tienda (arrepentimiento). nil: no se manda.
+	Correo correo.Correo
 }
 
 // Nuevo devuelve el handler raíz de la API.
@@ -134,7 +138,6 @@ func Nuevo(d Dependencias) http.Handler {
 		if d.MercadoPago != nil {
 			pagador = d.MercadoPago
 		}
-		vidriera.Rutas(mux, d.App, pagador, d.Sitio)
 		var cobrador turnos.Cobrador
 		if d.MercadoPago != nil {
 			cobrador = d.MercadoPago
@@ -149,6 +152,9 @@ func Nuevo(d Dependencias) http.Handler {
 				return ok && (s.Rol == "duenio" || s.Rol == "admin")
 			}})
 		ip := func(r *http.Request) string { return cuentas.ClienteDe(r, d.ClaveBFF).IP }
+		dev := &devoluciones.Servicio{Pool: d.App, Correo: d.Correo}
+		dev.Rutas(mux, tienda)
+		vidriera.Rutas(mux, d.App, pagador, d.Sitio, dev, ip)
 		if d.Arrepentimiento != nil {
 			d.Arrepentimiento.Rutas(mux, ip)
 		}
