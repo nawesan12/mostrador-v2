@@ -37,7 +37,8 @@ func (o Origen) valido() bool {
 }
 
 // FijarOrigen guarda el origen de la tienda una sola vez (después no se pisa: una comisión no se
-// cambia de dueño). Devuelve false si ya tenía uno.
+// cambia de dueño) y sólo en el alta: una tienda de más de un día ya no se puede atribuir a un
+// partner pasando por /empezar. Devuelve false si ya tenía uno o si es vieja.
 func FijarOrigen(ctx context.Context, pool *db.Pool, tiendaID string, o Origen) (bool, error) {
 	if !o.valido() {
 		return false, ErrOrigen
@@ -45,7 +46,8 @@ func FijarOrigen(ctx context.Context, pool *db.Pool, tiendaID string, o Origen) 
 	b, _ := json.Marshal(o)
 	var fijado bool
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		tag, err := t.Exec(ctx, `UPDATE tiendas SET origen = $2 WHERE id = $1 AND origen IS NULL`, tiendaID, b)
+		tag, err := t.Exec(ctx, `UPDATE tiendas SET origen = $2
+			WHERE id = $1 AND origen IS NULL AND creada_en > now() - interval '1 day'`, tiendaID, b)
 		fijado = tag.RowsAffected() == 1
 		return err
 	})

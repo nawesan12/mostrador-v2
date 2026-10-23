@@ -22,7 +22,9 @@ export const load: PageServerLoad = async ({ locals, url, cookies }) => {
 		const r = await fetch(`${String(env.API_URL)}/v1/panel/tienda/origen`, {
 			method: 'PUT',
 			headers: { 'content-type': 'application/json', authorization: `Bearer ${locals.token}` },
-			body: JSON.stringify(origen)
+			body: JSON.stringify(origen),
+			// Que Go lento no demore el onboarding: si no contesta, la cookie queda para la próxima.
+			signal: AbortSignal.timeout(8000)
 		}).catch(() => null);
 		if (r?.ok || r?.status === 400) cookies.delete(COOKIE_ORIGEN, { path: '/' });
 	}
