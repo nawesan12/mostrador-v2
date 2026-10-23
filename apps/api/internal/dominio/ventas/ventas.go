@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -113,20 +114,51 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, pregu
 		problema.Escribir(w, problema.NoEncontrado("Esa devolución no existe."))
 	}))
 	mux.HandleFunc("GET /v1/panel/resenas", con(func(w http.ResponseWriter, r *http.Request, id string) {
-		ps := []PreguntaPanel{}
+		rs, ps, err := ResenasPanel(r.Context(), pool, id)
+		if err != nil {
+			problema.Escribir(w, problema.Interno())
+			return
+		}
 		if preguntas != nil {
-			var err error
-			if ps, err = preguntas.PreguntasPanel(r.Context(), id); err != nil {
+			ml, err := preguntas.PreguntasPanel(r.Context(), id)
+			if err != nil {
 				problema.Escribir(w, problema.Interno())
 				return
 			}
+			ps = append(ps, ml...)
 		}
-		escribir(w, map[string]any{"preguntas": ps, "resenas": []any{}, "promedio": nil, "total": 0,
-			"porEstrellas": []int{0, 0, 0, 0, 0}, "recomendaria": 0})
+		prom, total, por, rec := Resumen(rs)
+		escribir(w, map[string]any{"preguntas": ps, "resenas": rs, "promedio": prom, "total": total,
+			"porEstrellas": por, "recomendaria": rec})
+	}))
+	mux.HandleFunc("POST /v1/panel/resenas/{id}", con(func(w http.ResponseWriter, r *http.Request, id string) {
+		var b struct{ Accion, Respuesta string }
+		if json.NewDecoder(http.MaxBytesReader(w, r.Body, 8<<10)).Decode(&b) != nil {
+			problema.Escribir(w, problema.Invalido("Pedido inválido."))
+			return
+		}
+		if err := AccionResena(r.Context(), pool, id, r.PathValue("id"), b.Accion, b.Respuesta); err != nil {
+			problema.Escribir(w, problema.NoEncontrado("Esa reseña no existe."))
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
 	}))
 	mux.HandleFunc("POST /v1/panel/preguntas/{id}", con(func(w http.ResponseWriter, r *http.Request, id string) {
 		var b struct{ Respuesta string }
-		if preguntas == nil || json.NewDecoder(http.MaxBytesReader(w, r.Body, 8<<10)).Decode(&b) != nil {
+		if json.NewDecoder(http.MaxBytesReader(w, r.Body, 8<<10)).Decode(&b) != nil {
+			problema.Escribir(w, problema.NoEncontrado("Esa pregunta no existe."))
+			return
+		}
+		// Las de la tienda online empiezan con "t-"; las demás son de Mercado Libre.
+		if strings.HasPrefix(r.PathValue("id"), "t-") {
+			if err := ResponderPregunta(r.Context(), pool, id, r.PathValue("id"), b.Respuesta); err != nil {
+				problema.Escribir(w, problema.NoEncontrado("No se pudo responder esa pregunta."))
+				return
+			}
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		if preguntas == nil {
 			problema.Escribir(w, problema.NoEncontrado("Esa pregunta no existe."))
 			return
 		}

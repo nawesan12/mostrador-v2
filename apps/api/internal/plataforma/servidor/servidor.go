@@ -115,8 +115,8 @@ func Nuevo(d Dependencias) http.Handler {
 		if d.MercadoPago != nil {
 			pagador = d.MercadoPago
 		}
-		vidriera.Rutas(mux, d.App, pagador, d.Sitio)
 		ip := func(r *http.Request) string { return cuentas.ClienteDe(r, d.ClaveBFF).IP }
+		vidriera.Rutas(mux, d.App, pagador, d.Sitio, ip)
 		if d.Arrepentimiento != nil {
 			d.Arrepentimiento.Rutas(mux, ip)
 		}
