@@ -10,15 +10,19 @@ early_access: false
 reviews:
   profile: assertive
   request_changes_workflow: false
-  high_level_summary: true
-  review_status: true
+  # Una sola revisión por PR, sin comentarios de estado ni resúmenes (cada uno es un mail).
+  high_level_summary: false
+  review_status: false
   collapse_walkthrough: true
-  changed_files_summary: true
+  changed_files_summary: false
+  in_progress_fortune: false
   sequence_diagrams: false
   poem: false
   auto_review:
     enabled: true
     drafts: false
+    # No re-revisa en cada push: si hace falta, se pide con `@coderabbitai review`.
+    auto_incremental_review: false
     base_branches: ["main"]
 
   # Generado, vendorizado o diseño de referencia: no se revisa.
@@ -71,4 +75,4 @@ reviews:
         Contrato único entre el BFF y Go: cada cambio tiene que tener su implementación en los dos lados (DatosApi y Go) y su esquema con límites (maxLength, minimum, enum).
 
 chat:
-  auto_reply: true
+  auto_reply: false
