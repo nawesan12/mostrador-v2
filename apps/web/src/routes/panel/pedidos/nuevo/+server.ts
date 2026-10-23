@@ -1,6 +1,9 @@
 import { error, json } from '@sveltejs/kit';
 import * as v from 'valibot';
+import { env } from 'cloudflare:workers';
 import { datosDe } from '#lib/server/datos/index.ts';
+import { dbSandbox } from '#lib/server/sandbox/sandbox.ts';
+import { avisarVenta } from '#lib/server/telegram.ts';
 import type { RequestHandler } from './$types';
 
 const Nuevo = v.object({
@@ -25,11 +28,29 @@ const Nuevo = v.object({
 });
 
 /** Un pedido nuevo: venta en el local o cargado a mano. */
-export const POST: RequestHandler = async ({ locals, request }) => {
+export const POST: RequestHandler = async ({ locals, request, platform }) => {
 	const r = v.safeParse(Nuevo, await request.json().catch(() => null));
 	if (!r.success) error(400, r.issues[0].message);
 	const res = await datosDe(locals).crearPedido({ ...r.output, envio: r.output.envio ?? 'retiro' });
 	if (res === 'sin-stock') error(409, 'No alcanza el stock de algún producto.');
 	if (res === 'invalido') error(400, 'Hay un producto que no existe.');
+	// Aviso de la venta por Telegram (si la tienda vinculó su chat). No demora la respuesta.
+	if (locals.sandbox) {
+		const total = '$ ' + Math.round(res.total).toLocaleString('es-AR');
+		const canal = {
+			pos: 'en el local',
+			wa: 'por WhatsApp',
+			web: 'en la tienda',
+			ig: 'por Instagram',
+			ml: 'en Mercado Libre',
+			tg: 'por Telegram'
+		}[r.output.canal];
+		const aviso = avisarVenta(
+			dbSandbox(env.SANDBOX),
+			locals.sandbox.id,
+			`🛒 Nueva venta ${canal}: pedido #${res.numero} por ${total}.`
+		).catch(() => {});
+		if (platform?.ctx) platform.ctx.waitUntil(aviso);
+	}
 	return json(res, { status: 201 });
 };

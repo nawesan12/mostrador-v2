@@ -101,12 +101,16 @@ export const INTEGRACIONES: Integracion[] = [
 	{
 		id: 'tg',
 		nombre: 'Telegram',
-		detalle: 'Bot de pedidos',
+		detalle: 'Hornero y avisos',
 		categoria: 'canales',
 		marca: 'tg',
-		hace: ['Un bot con tu catálogo que toma pedidos', 'Los chats llegan a la bandeja'],
-		opciones: [{ id: 'hornero', t: 'Hornero responde', d: 'Con el tono de tu tienda', def: true }],
-		demo: true
+		hace: [
+			'Preguntale a Hornero por ventas, pedidos y stock desde Telegram',
+			'Te avisa cada venta al momento',
+			'Sólo ve la tienda que vinculaste'
+		],
+		opciones: [],
+		demo: false
 	},
 	{
 		id: 'arca',

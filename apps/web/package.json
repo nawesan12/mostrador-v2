@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "sh -c 'set -a; [ -f .dev.vars ] && . ./.dev.vars; set +a; exec \"$0\" \"$@\"' vite dev --port 5173",
 		"build": "vite build",
-		"preview": "wrangler d1 migrations apply mostrador-sandbox --local >/dev/null && wrangler d1 migrations apply mostrador-estado --local >/dev/null && wrangler dev --local --var HORNERO:simulado .svelte-kit/cloudflare/_worker.js --port 4173",
+		"preview": "wrangler d1 migrations apply mostrador-sandbox --local >/dev/null && wrangler d1 migrations apply mostrador-estado --local >/dev/null && wrangler dev --local --var HORNERO:simulado --var TELEGRAM_BOT_TOKEN:prueba --var TELEGRAM_WEBHOOK_SECRET:secreto-de-prueba-e2e .svelte-kit/cloudflare/_worker.js --port 4173",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"gen": "wrangler types && sed -i.bak '/mainModule: typeof import/d' worker-configuration.d.ts && rm -f worker-configuration.d.ts.bak",

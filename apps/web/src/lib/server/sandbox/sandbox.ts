@@ -186,7 +186,7 @@ export async function purgar(db: DbSandbox, ahora = Date.now(), tanda = 50) {
 }
 
 /** Lo que el visitante cambió de una entidad, por clave. `null` = borrado. */
-async function cambiosDe(db: DbSandbox, sandboxId: string, entidad: string) {
+export async function cambiosDe(db: DbSandbox, sandboxId: string, entidad: string) {
 	const filas = await db
 		.select()
 		.from(cambios)
@@ -282,6 +282,27 @@ export async function buscarLink(db: DbSandbox, cod: string, ahora = Date.now())
 	const sb = await leer(db, f.sandboxId, ahora);
 	if (!sb) return null;
 	return { sb, link: JSON.parse(f.datos ?? 'null') as LinkDemo };
+}
+
+/**
+ * Un cambio buscado por su clave en todos los sandboxes (el link de pago o el chat de Telegram no
+ * traen la cookie de la demo). Sólo devuelve sandboxes que no vencieron.
+ */
+export async function buscarCambio<T>(
+	db: DbSandbox,
+	entidad: string,
+	clave: string,
+	ahora = Date.now()
+) {
+	const [f] = await db
+		.select()
+		.from(cambios)
+		.where(and(eq(cambios.entidad, entidad), eq(cambios.clave, clave)))
+		.limit(1);
+	if (!f || f.borrado) return null;
+	const sb = await leer(db, f.sandboxId, ahora);
+	if (!sb) return null;
+	return { sb, datos: JSON.parse(f.datos ?? 'null') as T };
 }
 
 /** El sábado que viene a las 10 de Argentina (el mejor horario para campañas). */
@@ -1751,7 +1772,12 @@ export class DatosSandbox implements Datos {
 	async ajustarIntegracion(a: AjusteIntegracion): Promise<Resultado> {
 		const e = await this.integraciones();
 		if (a.tipo === 'conexion') {
-			if (a.id === 'mp' || a.id === 'ml' || !INTEGRACIONES.some((i) => i.id === a.id && !i.pronto))
+			if (
+				a.id === 'mp' ||
+				a.id === 'ml' ||
+				a.id === 'tg' ||
+				!INTEGRACIONES.some((i) => i.id === a.id && !i.pronto)
+			)
 				return 'no-se-puede';
 			e.conectadas[a.id] = a.valor;
 			await guardarCambio(this.db, this.sb.id, 'integraciones', 'conectadas', e.conectadas);

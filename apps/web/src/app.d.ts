@@ -10,6 +10,10 @@ declare global {
 			message: string;
 			code?: string;
 		}
+		interface Platform {
+			/** El contexto del Worker (adapter-cloudflare): waitUntil para terminar después de responder. */
+			ctx?: ExecutionContext;
+		}
 	}
 
 	namespace Cloudflare {
@@ -29,6 +33,10 @@ declare global {
 			AI?: Ai;
 			/** workers-ai en producción; simulado en desarrollo y pruebas (no llama al modelo). */
 			HORNERO?: 'workers-ai' | 'simulado';
+			/** Bot de Telegram de la plataforma (@mostradorhornero_bot). Secreto. */
+			TELEGRAM_BOT_TOKEN?: string;
+			/** Lo manda Telegram en X-Telegram-Bot-Api-Secret-Token. Secreto (lo generamos nosotros). */
+			TELEGRAM_WEBHOOK_SECRET?: string;
 		}
 	}
 }
