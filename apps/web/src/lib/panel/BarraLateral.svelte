@@ -1,9 +1,10 @@
 <script lang="ts">
+	import { afterNavigate } from '$app/navigation';
 	import Icon from '#lib/components/Icon.svelte';
 	import MarcaIcono from '#lib/components/MarcaIcono.svelte';
 	import * as I from '#lib/icons.ts';
 	import type { components } from '@mostrador/contrato/esquema';
-	import { SIMPLE, rutaDe, type Area } from './navegacion.ts';
+	import { AREAS, SIMPLE, rutaDe, type Area } from './navegacion.ts';
 	import { getShell } from './shell.svelte.ts';
 
 	/**
@@ -28,7 +29,15 @@
 	} = $props();
 	const shell = getShell();
 	const simple = $derived(shell.modo === 'simple');
-	const items = $derived(simple ? SIMPLE : area.items);
+	// En el celular no hay rail: arriba del menú van las áreas, y tocar una muestra sus secciones.
+	let vista = $state<string | null>(null);
+	const mostrada = $derived(AREAS.find((a) => a.id === vista) ?? area);
+	const items = $derived(simple ? SIMPLE : mostrada.items);
+	// Cualquier navegación (una sección, el "+", Elegir plan…) cierra el menú.
+	afterNavigate(() => {
+		shell.barra = false;
+		vista = null;
+	});
 	const activo = (label: string) =>
 		label === seccion ||
 		(label === 'Inicio' && seccion === 'Resumen') ||
@@ -72,7 +81,17 @@
 		</button>
 	</div>
 	<div class="medio">
-		<div class="area">{simple ? 'Día a día' : area.label}</div>
+		{#if !simple}
+			<div class="areas" role="group" aria-label="Áreas">
+				{#each AREAS as a (a.id)}
+					{@const on = mostrada.id === a.id}
+					<button type="button" class:on aria-pressed={on} onclick={() => (vista = a.id)}>
+						<Icon icon={on ? a.iconFill : a.icon} size={16} />{a.label}
+					</button>
+				{/each}
+			</div>
+		{/if}
+		<div class="area">{simple ? 'Día a día' : mostrada.label}</div>
 		<nav class="items">
 			{#each items as i (i.label)}
 				{@const on = activo(i.label)}
@@ -240,6 +259,9 @@
 		flex: 1;
 		overflow: auto;
 	}
+	.areas {
+		display: none;
+	}
 	.area {
 		padding: 6px 12px 10px;
 		font-size: 22px;
@@ -403,11 +425,36 @@
 			box-shadow: 30px 0 60px -20px rgba(42, 20, 12, 0.5);
 		}
 	}
-	/* Celular: sin rail, desde el borde. */
+	/* Celular: sin rail, desde el borde, con las áreas arriba (las piezas del rail en chips). */
 	@media (max-width: 759px) {
 		.barra {
 			left: 0;
 			width: min(320px, 86vw);
+		}
+		.areas {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 6px;
+			padding: 4px 8px 14px;
+		}
+		.areas button {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			border: 0;
+			cursor: pointer;
+			padding: 8px 12px;
+			border-radius: 999px;
+			background: var(--sf);
+			color: var(--tx);
+			box-shadow: var(--sh);
+			font:
+				600 13px 'Instrument Sans',
+				sans-serif;
+		}
+		.areas button.on {
+			background: #2a140c;
+			color: #fff;
 		}
 	}
 	@media (min-width: 1100px) {
