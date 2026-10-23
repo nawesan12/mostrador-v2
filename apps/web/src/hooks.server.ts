@@ -5,8 +5,11 @@ import { csrfForbidden } from '#lib/server/csrf.ts';
 import { COOKIE, dbSandbox, leer } from '#lib/server/sandbox/sandbox.ts';
 import { COOKIE_SESION } from '#lib/server/auth/sesion.ts';
 
-/** Rutas que usan el sandbox de la demo: sólo ahí se lee D1 (la landing no gasta lecturas). */
-const CON_SANDBOX = /^\/(demo|panel|integraciones)(\/|$)/;
+/**
+ * Rutas que usan el sandbox de la demo: sólo ahí se lee D1 (la landing no gasta lecturas).
+ * /oauth/autorizar ata la IA al sandbox del visitante; /api/mcp lo saca del token, no de la cookie.
+ */
+const CON_SANDBOX = /^\/(demo|panel|integraciones|oauth)(\/|$)/;
 
 /**
  * Encabezados de seguridad en todas las respuestas (también las tempranas, como el rechazo por CSRF).

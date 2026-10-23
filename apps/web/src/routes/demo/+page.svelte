@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { page } from '$app/state';
 	import Alerta from '#lib/components/Alerta.svelte';
 	import Grano from '#lib/components/Grano.svelte';
 	import Icon from '#lib/components/Icon.svelte';
@@ -13,6 +14,8 @@
 	 * onboarding (design/Onboarding Mostrador.dc.html, `gallery`), tal cual, como página.
 	 */
 	let { data, form } = $props();
+	// Viene del consentimiento de una IA: después de elegir, vuelve ahí.
+	const volver = $derived(page.url.searchParams.get('volver') ?? '');
 
 	let rubro = $state<string>('Todos');
 	let q = $state('');
@@ -85,6 +88,7 @@
 			};
 		}}
 	>
+		{#if volver}<input type="hidden" name="volver" value={volver} />{/if}
 		<div class="grilla">
 			{#each lista as t (t.id)}
 				{@const sel = data.actual === t.id}

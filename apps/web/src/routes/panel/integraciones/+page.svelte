@@ -31,7 +31,6 @@
 	let cat = $state<(typeof CATEGORIAS)[number][0]>('todas');
 	const lista = $derived(INTEGRACIONES.filter((i) => cat === 'todas' || i.categoria === cat));
 	const conectadas = $derived(Object.values(data.estado.conectadas).filter(Boolean).length);
-	let autorizando = $state<string | null>(null);
 	let abierta = $state<Integracion | null>(null);
 	let modal = $state(false);
 
@@ -163,23 +162,78 @@
 		ui.toast({ k: 'info', title: `${i.nombre} desconectada`, desc: 'Podés volver a conectarla' });
 	}
 
-	async function ia(id: string, nombre: string) {
-		const on = data.estado.ia[id];
-		if (on) {
-			if (await ajustar({ tipo: 'ia', id, valor: false }))
-				ui.toast({
-					k: 'info',
-					title: `${nombre} desconectado`,
-					desc: 'Ya no puede ver ni tocar tu negocio'
-				});
-			return;
-		}
-		autorizando = id;
-		await new Promise((r) => setTimeout(r, 1300));
-		autorizando = null;
-		if (await ajustar({ tipo: 'ia', id, valor: true }))
-			ui.toast({ k: 'ok', title: `${nombre} conectado`, desc: 'Probá: "¿qué se vendió hoy?"' });
+	// Manejá Mostrador desde tu IA: el servidor MCP con OAuth. Cada IA se conecta desde su lado con
+	// la dirección del servidor; el permiso se da en /oauth/autorizar y acá se listan y desconectan.
+	let iaAbierta = $state<(typeof IAS)[number] | null>(null);
+	let modalIa = $state(false);
+	const conexionesDe = (id: string) => data.mcp.conexiones.filter((c) => c.ia === id);
+
+	function abrirIa(p: (typeof IAS)[number]) {
+		if (!data.mcp.disponible)
+			return ui.toast({
+				k: 'info',
+				title: p.nombre,
+				desc: 'Con tu cuenta real llega pronto. Probalo en la demo.'
+			});
+		iaAbierta = p;
+		modalIa = true;
 	}
+
+	async function copiarUrl() {
+		try {
+			await navigator.clipboard.writeText(data.mcp.url);
+			ui.toast({ k: 'ok', title: 'Dirección copiada', desc: 'Pegala en tu IA' });
+		} catch {
+			ui.toast({
+				k: 'warn',
+				title: 'No se pudo copiar',
+				desc: 'Seleccioná la dirección y copiala'
+			});
+		}
+	}
+
+	async function desconectarIa(id: string, nombre: string) {
+		const r = await fetch('/panel/integraciones/ia', {
+			method: 'DELETE',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ id })
+		});
+		if (!r.ok) return ui.toast({ k: 'err', title: 'No se pudo', desc: 'Probá de nuevo.' });
+		await invalidateAll();
+		ui.toast({
+			k: 'info',
+			title: `${nombre} desconectado`,
+			desc: 'Ya no puede ver ni tocar tu negocio'
+		});
+	}
+
+	const PASOS: Record<(typeof IAS)[number]['id'], string[]> = {
+		claude: [
+			'En Claude, abrí Configuración\u00a0›\u00a0Conectores.',
+			'Tocá Agregar conector personalizado, ponele Mostrador de nombre y pegá la\u00a0dirección.',
+			'Tocá Conectar: Claude te trae acá para que permitas el\u00a0acceso.'
+		],
+		chatgpt: [
+			'En ChatGPT, abrí Configuración\u00a0› Aplicaciones y conectores\u00a0› Configuración avanzada y prendé el modo\u00a0desarrollador.',
+			'Volvé a Aplicaciones y conectores, tocá Crear, ponele Mostrador de nombre, pegá la dirección y elegí\u00a0OAuth.',
+			'Tocá Crear: ChatGPT te trae acá para que permitas el\u00a0acceso.'
+		],
+		gemini: [
+			'Gemini se conecta desde Gemini CLI: en settings.json sumá Mostrador en mcpServers, con httpUrl y la\u00a0dirección.',
+			'Corré /mcp auth mostrador: se abre esta página para que permitas el\u00a0acceso.'
+		],
+		mcp: [
+			'En tu IA, buscá dónde se agregan servidores MCP remotos (a veces dice conectores o\u00a0integraciones).',
+			'Pegá la dirección. Usa OAuth: la IA te trae acá para que permitas el\u00a0acceso.'
+		]
+	};
+
+	const hora = (ms: number) =>
+		new Date(ms).toLocaleTimeString('es-AR', {
+			hour: '2-digit',
+			minute: '2-digit',
+			timeZone: 'America/Argentina/Buenos_Aires'
+		});
 
 	const fecha = (iso?: string) =>
 		iso
@@ -220,20 +274,11 @@
 		<div class="provs">
 			{#each IAS as p (p.id)}
 				{@const on = data.estado.ia[p.id]}
-				{@const espera = autorizando === p.id}
-				<button
-					type="button"
-					class="prov"
-					class:on
-					onclick={() => ia(p.id, p.nombre)}
-					disabled={espera}
-				>
+				<button type="button" class="prov" class:on onclick={() => abrirIa(p)}>
 					<span class="p-ico" style:color={p.col}><Icon icon={p.icon} size={19} /></span>
 					<span class="p-txt">
 						<span class="p-t">{p.nombre}</span>
-						<span class="p-st"
-							>{on ? 'Conectado' : espera ? 'Autorizando…' : 'Conectar con tu cuenta'}</span
-						>
+						<span class="p-st">{on ? 'Conectado' : 'Conectar con tu cuenta'}</span>
 					</span>
 					<Icon icon={on ? I.phCheckCircleFill : I.phArrowRightBold} size={16} />
 				</button>
@@ -256,6 +301,28 @@
 				</button>
 			{/each}
 		</div>
+		{#if data.mcp.conexiones.length}
+			<div class="conexiones" aria-label="IAs conectadas">
+				{#each data.mcp.conexiones as c (c.id)}
+					{@const p = IAS.find((x) => x.id === c.ia) ?? IAS[3]}
+					<div class="cx">
+						<span class="p-ico" style:color={p.col}><Icon icon={p.icon} size={17} /></span>
+						<span class="g-txt"
+							><span class="g-t">{c.nombre}</span><span class="g-d"
+								>{c.acciones ? 'Lectura y acciones' : 'Sólo lectura'} · desde las {hora(
+									c.desde
+								)}{#if c.usada}&nbsp;· usada a las {hora(c.usada)}{/if}</span
+							></span
+						>
+						<button
+							type="button"
+							class="t-btn on rojo"
+							onclick={() => desconectarIa(c.id, c.nombre)}>Desconectar</button
+						>
+					</div>
+				{/each}
+			</div>
+		{/if}
 	</section>
 
 	{#if esperandoTg && !data.estado.conectadas.tg}
@@ -432,6 +499,70 @@
 			{:else}
 				<button type="button" class="b-pri" onclick={() => (modal = false)}>Listo</button>
 			{/if}
+		</div>
+	{/if}
+</Modal>
+
+<Modal
+	bind:open={modalIa}
+	titulo={iaAbierta ? `Conectar ${iaAbierta.nombre}` : 'Conectar tu IA'}
+	ancho={480}
+	padding={24}
+>
+	{#if iaAbierta}
+		{@const p = iaAbierta}
+		{@const activas = conexionesDe(p.id)}
+		<div class="m-cab">
+			<span class="logo grande" style:background="var(--sf3)" style:color={p.col}
+				><Icon icon={p.icon} size={26} /></span
+			>
+			<div>
+				<div class="m-t">{p.nombre}</div>
+				<div class="m-st" class:apagado={!activas.length}>
+					{activas.length ? '● Conectado' : 'Servidor MCP con tu\u00a0cuenta'}
+				</div>
+			</div>
+		</div>
+		<div class="m-sec">Dirección del servidor</div>
+		<div class="m-url">
+			<code>{data.mcp.url}</code>
+			<button type="button" class="b-sec" onclick={copiarUrl}
+				><Icon icon={I.phCopyBold} size={15} />Copiar</button
+			>
+		</div>
+		<div class="m-sec">Cómo conectarla</div>
+		<ol class="m-pasos">
+			{#each PASOS[p.id] as paso, i (i)}
+				<li><span class="n">{i + 1}</span>{paso}</li>
+			{/each}
+		</ol>
+		<div class="m-cuenta">
+			Al permitir el acceso elegís si sólo puede leer o también hacer cambios. En la demo, la
+			conexión vence con tu tienda de prueba, a las 24&nbsp;horas.
+		</div>
+		{#if activas.length}
+			<div class="m-sec">Conectadas</div>
+			<div class="m-ops">
+				{#each activas as c (c.id)}
+					<div class="m-op">
+						<span class="g-txt"
+							><span class="g-t">{c.nombre}</span><span class="g-d"
+								>{c.acciones ? 'Lectura y acciones' : 'Sólo lectura'} · desde las {hora(
+									c.desde
+								)}</span
+							></span
+						>
+						<button
+							type="button"
+							class="t-btn on rojo"
+							onclick={() => desconectarIa(c.id, c.nombre)}>Desconectar</button
+						>
+					</div>
+				{/each}
+			</div>
+		{/if}
+		<div class="m-acc">
+			<button type="button" class="b-pri" onclick={() => (modalIa = false)}>Listo</button>
 		</div>
 	{/if}
 </Modal>
@@ -885,5 +1016,83 @@
 		border: 0;
 		background: var(--tx);
 		color: var(--sf);
+	}
+	/* Servidor MCP: piezas del mismo modal (m-cuenta, b-sec, t-btn) y de la lista de permisos. */
+	.conexiones {
+		display: flex;
+		flex-direction: column;
+		border-top: 1px solid var(--ln);
+	}
+	.cx {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 10px 0;
+		border-bottom: 1px solid var(--ln);
+	}
+	.cx:last-child {
+		border-bottom: 0;
+	}
+	.t-btn.rojo {
+		color: #b83a2e;
+	}
+	.m-st.apagado {
+		color: var(--fa);
+	}
+	.m-url {
+		margin-top: 8px;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 8px 8px 8px 14px;
+		border-radius: 14px;
+		background: var(--sf2);
+	}
+	.m-url code {
+		flex: 1;
+		min-width: 0;
+		font-size: 13px;
+		overflow-wrap: anywhere;
+		user-select: all;
+	}
+	.m-url .b-sec {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		flex: none;
+		min-height: 44px;
+		padding: 0 14px;
+		border-radius: 999px;
+		font:
+			600 13px 'Instrument Sans',
+			sans-serif;
+		cursor: pointer;
+	}
+	.m-pasos {
+		margin: 8px 0 0;
+		padding: 0;
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+	.m-pasos li {
+		display: flex;
+		gap: 10px;
+		align-items: flex-start;
+		font-size: 14px;
+		line-height: 1.45;
+	}
+	.m-pasos .n {
+		width: 22px;
+		height: 22px;
+		flex: none;
+		border-radius: 50%;
+		display: grid;
+		place-items: center;
+		background: var(--tx);
+		color: var(--sf);
+		font-size: 12px;
+		font-weight: 700;
 	}
 </style>
