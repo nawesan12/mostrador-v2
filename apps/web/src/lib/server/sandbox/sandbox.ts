@@ -28,6 +28,8 @@ import { fromB64url, randomToken, sha256 } from '../crypto.ts';
 import { rubro as buscarRubro, slugDe } from './rubros.ts';
 import { cambios, sandboxes } from './schema.ts';
 import {
+	conectadasDeMedicion,
+	DE_MEDICION,
 	estadoInicial,
 	INTEGRACIONES,
 	type AjusteIntegracion,
@@ -35,6 +37,7 @@ import {
 } from '#lib/panel/integraciones.ts';
 import type {
 	ConexionML,
+	Medicion,
 	ConexionMP,
 	PublicacionML,
 	Dominios,
@@ -126,6 +129,7 @@ import RUBROS from '@mostrador/contrato/rubros.json';
 import { plantilla as buscarPlantilla } from '#lib/plantillas.ts';
 import { SITE } from '#lib/site.ts';
 import type { TiendaPublica } from '#lib/tienda/tipos.ts';
+import { validarGa4, validarPixel } from '#lib/tienda/medicion.ts';
 
 export type DbSandbox = DrizzleD1Database<Record<string, never>>;
 
@@ -334,6 +338,17 @@ export type TipoExport =
 	'productos' | 'clientes' | 'pedidos' | 'facturas' | 'resenas' | 'conversaciones';
 
 type AumentoProgramado = { pct: number; redondeo: Redondeo; para: number };
+
+/** La medición guardada en los cambios de Integraciones (la demo arranca sin IDs). */
+function medicionDe(c: Map<string, unknown>): Medicion {
+	const m = c.get('medicion') as Medicion | undefined;
+	const demo = (c.get('conectadas') as Record<string, boolean> | undefined) ?? {};
+	return {
+		ga4: m?.ga4 ?? null,
+		pixel: m?.pixel ?? null,
+		feeds: { gm: m?.feeds.gm ?? demo.gm ?? true, meta: m?.feeds.meta ?? false }
+	};
+}
 
 export class DatosSandbox implements Datos {
 	constructor(
@@ -1768,6 +1783,7 @@ export class DatosSandbox implements Datos {
 		Object.assign(e.permisosIa, g('permisosIa'));
 		e.conectadas.mp = mp.conectada;
 		e.conectadas.ml = (await this.mercadoLibre()).conectada;
+		Object.assign(e.conectadas, conectadasDeMedicion(medicionDe(c)));
 		// Telegram cuenta si hay un chat vinculado (lib/server/telegram.ts).
 		e.conectadas.tg = !!(await cambiosDe(this.db, this.sb.id, 'cuenta')).get('telegram');
 		return e;
@@ -1779,6 +1795,7 @@ export class DatosSandbox implements Datos {
 				a.id === 'mp' ||
 				a.id === 'ml' ||
 				a.id === 'tg' ||
+				(DE_MEDICION as readonly string[]).includes(a.id) ||
 				!INTEGRACIONES.some((i) => i.id === a.id && !i.pronto)
 			)
 				return 'no-se-puede';
@@ -1797,6 +1814,22 @@ export class DatosSandbox implements Datos {
 			e.permisosIa[a.id] = a.valor;
 			await guardarCambio(this.db, this.sb.id, 'integraciones', 'permisosIa', e.permisosIa);
 		}
+		return 'ok';
+	}
+
+	/** La demo arranca sin IDs (y con el feed de Google cargado, como la tienda del handoff). */
+	async medicion(): Promise<Medicion> {
+		return medicionDe(await cambiosDe(this.db, this.sb.id, 'integraciones'));
+	}
+	async guardarMedicion(m: Medicion): Promise<Resultado> {
+		const ga4 = validarGa4(m.ga4);
+		const pixel = validarPixel(m.pixel);
+		if (!ga4.ok || !pixel.ok) return 'no-se-puede';
+		await guardarCambio(this.db, this.sb.id, 'integraciones', 'medicion', {
+			ga4: ga4.valor,
+			pixel: pixel.valor,
+			feeds: { gm: !!m.feeds.gm, meta: !!m.feeds.meta }
+		} satisfies Medicion);
 		return 'ok';
 	}
 
@@ -2099,13 +2132,14 @@ export class DatosSandbox implements Datos {
 	 * ejemplo de una plantilla para mirar, sin carrito real.
 	 */
 	async tiendaPublica(vitrina = false): Promise<TiendaPublica> {
-		const [d, t, c, conf, productos, mp] = await Promise.all([
+		const [d, t, c, conf, productos, mp, medicion] = await Promise.all([
 			this.demo(),
 			this.tienda(),
 			cambiosDe(this.db, this.sb.id, 'mi-tienda'),
 			this.configuracion(),
 			this.regProductos(),
-			this.mercadoPago()
+			this.mercadoPago(),
+			vitrina ? null : this.medicion()
 		]);
 		const diseno = (c.get('publicado') as DisenoTienda | undefined) ?? DISENO_INICIAL;
 		const p = buscarPlantilla(t.plantilla);
@@ -2170,7 +2204,9 @@ export class DatosSandbox implements Datos {
 			fotos: [...new Set(visibles.flatMap((x) => (x.foto ? [x.foto] : [])))].slice(0, 6),
 			cobros: { transferencia: 15, cuotas: 6, mercadoPago: mp.conectada },
 			envios: { gratisDesde: 240_000, retiro: true, moto: true, correo: true },
-			vitrina
+			vitrina,
+			// La vitrina de una plantilla nunca mide: no es de nadie.
+			medicion: { ga4: medicion?.ga4 ?? null, pixel: medicion?.pixel ?? null }
 		};
 	}
 

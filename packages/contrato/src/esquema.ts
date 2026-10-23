@@ -709,6 +709,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/integraciones/medicion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GA4, el píxel de Meta y los feeds de productos que la tienda ya cargó (con sus propias cuentas). */
+        get: operations["medicion"];
+        /** Reemplaza los IDs (vacío o null los borra) y qué feeds se cargaron. */
+        put: operations["guardarMedicion"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/publico/tiendas/{slug}": {
         parameters: {
             query?: never;
@@ -2410,6 +2428,18 @@ export interface components {
             /** Format: uri */
             url: string;
         };
+        Medicion: {
+            /** @description ID de medición de GA4 */
+            ga4: string | null;
+            /** @description ID del píxel de Meta */
+            pixel: string | null;
+            feeds: {
+                /** @description Cargó el feed en Google Merchant Center */
+                gm: boolean;
+                /** @description Cargó el feed en Meta Commerce Manager */
+                meta: boolean;
+            };
+        };
         ConexionML: {
             disponible: boolean;
             conectada: boolean;
@@ -4070,6 +4100,49 @@ export interface operations {
                 };
                 content?: never;
             };
+        };
+    };
+    medicion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Medición */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Medicion"];
+                };
+            };
+        };
+    };
+    guardarMedicion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Medicion"];
+            };
+        };
+        responses: {
+            /** @description Guardado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
         };
     };
     tiendaPublica: {

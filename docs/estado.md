@@ -1,6 +1,6 @@
 # Estado del trabajo
 
-Última actualización: 20/10/2026. Plan completo: `~/.claude/plans/claude-vamos-con-algo-encapsulated-alpaca.md`.
+Última actualización: 23/10/2026. Plan completo: `~/.claude/plans/claude-vamos-con-algo-encapsulated-alpaca.md`.
 
 ## Hecho (mergeado y desplegado en mostrador.iamnaw.dev)
 
@@ -13,6 +13,7 @@
 | #18 | Ingreso con Google, Mercado Pago, Mercado Libre y link por WhatsApp (apagados hasta tener credenciales) |
 | #19 | Datos de la demo: catálogo real de las 16 plantillas (`scripts/catalogos.ts`), clientes y pedidos sembrados |
 | #20 | Armazón del panel: rail, barra lateral, topbar, barra de abajo, notificaciones, ⌘K, tema y modo Simple/Completo |
+| #57 | Google Shopping, Google Analytics y Meta Ads reales, con las cuentas de la tienda (decisiones §21). Feed de productos en `/t/{slug}/feed.xml` (RSS 2.0 con `g:` de Merchant Center; Meta lo acepta igual): lo publicado en la web, precio y oferta en ARS, stock, envío gratis desde el mínimo, una hora de caché. Configurar muestra el link y los pasos de Merchant Center y Commerce Manager; "Ya lo cargué" la marca conectada. GA4 (`G-…`) y píxel de Meta (15–16 dígitos) se guardan en la tienda (Go: migración 00025, `GET/PUT /v1/panel/integraciones/medicion`; demo: sandbox) y llegan en `TiendaPublica.medicion`. La tienda los carga sólo con su propio aviso de cookies aceptado (`lib/tienda/medicion.ts`, `AvisoCookies.svelte`): page_view, view_item, add_to_cart, begin_checkout y purchase con el número de pedido como transaction_id/eventID. CSP sólo en `/t/`. La vitrina nunca mide. Pendiente: API de conversiones de Meta (necesita el token de la tienda) |
 | #53 | Las 10 plantillas con diseño propio (Andes, Quebracho, Rosedal, Malbec, Mostaza, Yerbal, Tijera, Pampa, Miga y Miga Clásica, nueva en el catálogo): mismas props y lógica que Ceibo, datos reales; lo que no tiene datos no se dibuja. Funciones propias en el navegador: comparador (Andes), aviso +18 (Malbec), pedido desde el menú (Mostaza), buscador y filtro de ofertas (Yerbal). Pendientes con backend: turnos y seña (Tijera), drops y reserva (Pampa), club de vinos (Malbec), configurador y seña (Quebracho), suscripciones, combos, mayoristas, cupones, factura A. Schibsted Grotesk con tabular-nums ensanchaba la puntuación: font-variant-numeric normal en Yerbal y Miga. El lema de Tijera no promete turnos online hasta que existan |
 | #52 | Dominio: mostradorapp.com.ar (mostrador.com.ar está tomado; la marca no cambia) en los mails públicos; el sitio sigue en mostrador.iamnaw.dev hasta comprarlo (decisiones §20). Cerrar la cuenta hace una carga completa: una carga del panel en vuelo redirigía a /demo |
 | #51 | Motor de plantillas (Plantillas Tienda.dc.html) para las plantillas sin archivo propio; el título de la portada se parte sin dejar palabras cortas colgando (lib/tienda/titulo.ts) |

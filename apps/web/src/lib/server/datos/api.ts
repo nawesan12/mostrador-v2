@@ -3,10 +3,11 @@
  * (BFF), con el token de la sesión. Los errores problem+json se convierten en errores de SvelteKit.
  */
 import { error } from '@sveltejs/kit';
-import { estadoInicial } from '#lib/panel/integraciones.ts';
+import { conectadasDeMedicion, estadoInicial } from '#lib/panel/integraciones.ts';
 import type {
 	AccionCupon,
 	ConexionML,
+	Medicion,
 	ConexionMP,
 	PublicacionML,
 	Dominios,
@@ -357,13 +358,24 @@ export class DatosApi implements Datos {
 			ciclo: ciclo ?? 'mes'
 		});
 	}
-	// Las demás integraciones llegan una por PR: por ahora sólo Mercado Pago es real.
+	// Las demás integraciones llegan una por PR: Mercado Pago, Mercado Libre y la medición son reales.
 	async integraciones() {
 		const e = estadoInicial(false);
-		const [mp, ml] = await Promise.all([this.mercadoPago(), this.mercadoLibre()]);
+		const [mp, ml, m] = await Promise.all([
+			this.mercadoPago(),
+			this.mercadoLibre(),
+			this.medicion()
+		]);
 		e.conectadas.mp = mp.conectada;
 		e.conectadas.ml = ml.conectada;
+		Object.assign(e.conectadas, conectadasDeMedicion(m));
 		return e;
+	}
+	medicion() {
+		return this.pedir<Medicion>('/v1/panel/integraciones/medicion');
+	}
+	async guardarMedicion(m: Medicion) {
+		return resultado(await this.intentar('/v1/panel/integraciones/medicion', 'PUT', m));
 	}
 	async ajustarIntegracion() {
 		return 'no-se-puede' as const;

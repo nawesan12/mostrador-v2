@@ -9,6 +9,25 @@ import { COOKIE_SESION } from '#lib/server/auth/sesion.ts';
 const CON_SANDBOX = /^\/(demo|panel|integraciones)(\/|$)/;
 
 /**
+ * CSP de la tienda online (/t/...): los scripts y las conexiones sólo pueden ir al propio sitio y a
+ * lo que necesitan GA4 (gtag.js) y el píxel de Meta (fbevents.js), que la tienda carga con el
+ * consentimiento de quien compra (lib/tienda/medicion.ts). 'unsafe-inline' es por el arranque de
+ * SvelteKit; las fotos pueden venir de cualquier https (Unsplash, el CDN de la tienda).
+ */
+const CSP_TIENDA = [
+	"default-src 'self'",
+	"script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://connect.facebook.net https://static.cloudflareinsights.com",
+	"connect-src 'self' https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://connect.facebook.net https://www.facebook.com https://cloudflareinsights.com",
+	"img-src 'self' data: https:",
+	"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+	"font-src 'self' data: https://fonts.gstatic.com",
+	'frame-src https://www.facebook.com https://www.googletagmanager.com',
+	"object-src 'none'",
+	"base-uri 'self'",
+	"frame-ancestors 'self'"
+].join('; ');
+
+/**
  * Encabezados de seguridad en todas las respuestas (también las tempranas, como el rechazo por CSRF).
  * Nadie puede meter el panel en un iframe, el navegador no adivina tipos y siempre se usa HTTPS.
  * El iframe "Panel de Mostrador en el celular" de la landing es del mismo origen: SAMEORIGIN.
@@ -49,6 +68,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const res = secure(await resolve(event));
 	try {
 		res.headers.set('Server-Timing', `app;dur=${Date.now() - started}`);
+		// En desarrollo, Vite inyecta scripts y un websocket propios: la CSP va sólo en el build.
+		if (!dev && event.url.pathname.startsWith('/t/'))
+			res.headers.set('Content-Security-Policy', CSP_TIENDA);
 	} catch {
 		// Respuesta inmutable: el diagnóstico no vale una copia.
 	}

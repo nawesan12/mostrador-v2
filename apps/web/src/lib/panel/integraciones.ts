@@ -214,8 +214,8 @@ export const INTEGRACIONES: Integracion[] = [
 		categoria: 'gestion',
 		marca: 'ga',
 		hace: [
-			'Visitas y conversiones de la tienda en GA4',
-			'Sólo con el consentimiento de cookies del visitante'
+			'Visitas, productos vistos, carritos y ventas de tu tienda en tu GA4',
+			'Sólo se carga si quien compra acepta las cookies de medición'
 		],
 		opciones: [],
 		demo: false
@@ -226,7 +226,10 @@ export const INTEGRACIONES: Integracion[] = [
 		detalle: 'Merchant Center',
 		categoria: 'canales',
 		marca: 'gg',
-		hace: ['Tus productos en Google gratis', 'Precio y stock al día'],
+		hace: [
+			'Tus productos en Google Shopping, gratis',
+			'Precio, oferta y stock al día con un feed que Google lee solo'
+		],
 		opciones: [],
 		demo: true
 	},
@@ -236,7 +239,10 @@ export const INTEGRACIONES: Integracion[] = [
 		detalle: 'Píxel y conversiones',
 		categoria: 'gestion',
 		marca: 'meta',
-		hace: ['Píxel y API de conversiones para tus anuncios', 'Catálogo para anuncios dinámicos'],
+		hace: [
+			'El píxel mide visitas, carritos y ventas de tus anuncios',
+			'Tu catálogo para anuncios dinámicos, con el mismo feed'
+		],
 		opciones: [],
 		demo: false
 	},
@@ -314,6 +320,18 @@ export type AjusteIntegracion =
 	| { tipo: 'opcion'; id: string; clave: string; valor: boolean }
 	| { tipo: 'ia'; id: string; valor: boolean }
 	| { tipo: 'permisoIa'; id: string; valor: boolean };
+
+/** Las integraciones que se configuran con la medición (lib/tienda/medicion.ts). */
+export const DE_MEDICION = ['ga', 'gm', 'meta'] as const;
+
+/** Conectada = el ID cargado (GA4, píxel) o el feed marcado como cargado (Shopping, catálogo). */
+export function conectadasDeMedicion(m: {
+	ga4: string | null;
+	pixel: string | null;
+	feeds: { gm: boolean; meta: boolean };
+}) {
+	return { ga: !!m.ga4, gm: m.feeds.gm, meta: !!m.pixel || m.feeds.meta };
+}
 
 /** El estado de fábrica (demo: lo conectado en la tienda de ejemplo; real: nada conectado). */
 export function estadoInicial(demo: boolean): EstadoIntegraciones {

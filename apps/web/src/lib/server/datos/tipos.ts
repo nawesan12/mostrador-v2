@@ -46,6 +46,7 @@ export type PlanCuenta = components['schemas']['PlanCuenta'];
 export type Dominios = components['schemas']['Dominios'];
 export type ConexionMP = components['schemas']['ConexionMP'];
 export type ConexionML = components['schemas']['ConexionML'];
+export type Medicion = components['schemas']['Medicion'];
 export type PublicacionML = components['schemas']['PublicacionML'];
 export type PreferenciasAvisos = components['schemas']['PreferenciasAvisos'];
 export type MisDatos = components['schemas']['MisDatos'];
@@ -135,6 +136,9 @@ export interface Datos {
 	/** El hub de Integraciones (Mercado Pago se lee de mercadoPago()). */
 	integraciones(): Promise<EstadoIntegraciones>;
 	ajustarIntegracion(a: AjusteIntegracion): Promise<Resultado>;
+	/** GA4, el píxel de Meta y los feeds de productos cargados (Google Shopping y Meta Ads). */
+	medicion(): Promise<Medicion>;
+	guardarMedicion(m: Medicion): Promise<Resultado>;
 	/** Mercado Libre como canal (OAuth de la tienda). */
 	mercadoLibre(): Promise<ConexionML>;
 	conectarMercadoLibre(): Promise<string | null>;

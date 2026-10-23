@@ -1,8 +1,14 @@
 <script lang="ts">
 	import Seo from '#lib/components/Seo.svelte';
+	import { afterNavigate } from '$app/navigation';
 	import Plantilla from '#lib/tienda/Plantilla.svelte';
+	import { preparar, verProducto } from '#lib/tienda/medicion.ts';
 
 	let { data } = $props();
+	afterNavigate(() => {
+		preparar(data.tienda);
+		verProducto(data.producto);
+	});
 </script>
 
 <Seo
