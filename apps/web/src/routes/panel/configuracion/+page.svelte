@@ -134,7 +134,13 @@
 	// ---- Plan ----
 	async function elegir(id: (typeof PLANES)[number]['id'], nombre: string) {
 		if (id === data.plan.actual) return;
-		if (!(await pedir('/panel/plan', 'PUT', { plan: id }))) return;
+		const r0 = await pedir('/panel/plan', 'PUT', { plan: id });
+		if (!r0) return;
+		// Plan pago con el abono real: se carga la tarjeta en Mercado Pago.
+		if (r0.status === 200) {
+			location.href = ((await r0.json()) as { url: string }).url;
+			return;
+		}
 		await invalidateAll();
 		ui.toast({
 			k: 'ok',

@@ -691,6 +691,160 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/integraciones/mercadopago": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Si la tienda conectó su cuenta de Mercado Pago (marketplace por OAuth). */
+        get: operations["conexionMercadoPago"];
+        put?: never;
+        post?: never;
+        /** Borra los tokens de la tienda. */
+        delete: operations["desconectarMercadoPago"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/integraciones/mercadopago/conectar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** La URL de autorización (state de un solo uso y PKCE). Sólo dueña o admin. */
+        post: operations["conectarMercadoPago"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/integraciones/mercadopago/vuelta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Canjea el código de la vuelta del OAuth y guarda los tokens cifrados. */
+        post: operations["volverMercadoPago"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/integraciones/mercadopago/caja": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Da de alta la sucursal y la caja para cobrar con QR (con la dirección real del local). */
+        post: operations["crearCajaMercadoPago"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/pedidos/{numero}/qr": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Orden dinámica de QR por el total del pedido (Orders API). */
+        post: operations["cobrarConQR"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/cobros/qr/{referencia}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Consulta la orden en Mercado Pago y la aplica (created, processed, canceled…). */
+        get: operations["estadoCobroQR"];
+        put?: never;
+        post?: never;
+        delete: operations["cancelarCobroQR"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/pedidos/{numero}/reembolso": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Devuelve el pago del pedido por Mercado Pago (total, o parcial con monto). Pide Idempotency-Key. */
+        post: operations["reembolsarPedido"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/cuenta/suscripcion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** El abono de Mostrador. Crea la suscripción pendiente y devuelve dónde cargar la tarjeta; el plan cambia cuando Mercado Pago avisa. */
+        post: operations["suscribirPlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/webhooks/mercadopago": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Avisos de Mercado Pago, con x-signature (HMAC-SHA256). Sin firma válida, 401. */
+        post: operations["webhookMercadoPago"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/listas-precio": {
         parameters: {
             query?: never;
@@ -2114,6 +2268,36 @@ export interface components {
                     deposito: boolean;
                 };
             }[];
+        };
+        UrlExterna: {
+            /** Format: uri */
+            url: string;
+        };
+        ConexionMP: {
+            /** @description La aplicación de Mostrador tiene credenciales */
+            disponible: boolean;
+            conectada: boolean;
+            /** @description user_id de la cuenta de Mercado Pago */
+            usuario?: string;
+            /** Format: date-time */
+            desde?: string;
+            /** @description El refresh falló: hay que volver a conectar */
+            reautorizar: boolean;
+            cajaQR: boolean;
+        };
+        UbicacionMP: {
+            calle: string;
+            numero: string;
+            ciudad: string;
+            provincia: string;
+            latitud: number;
+            longitud: number;
+        };
+        CobroQR: {
+            referencia: string;
+            /** @description qr_data para dibujar */
+            qr: string;
+            estado: string;
         };
         Dominios: {
             /** @description La dirección que viene con la tienda */
@@ -3682,7 +3866,216 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Pagado */
+            /** @description El checkout de Mercado Pago (init_point) para mandar a quien paga */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UrlExterna"];
+                };
+            };
+            404: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+            502: components["responses"]["Problema"];
+        };
+    };
+    conexionMercadoPago: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Estado */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConexionMP"];
+                };
+            };
+        };
+    };
+    desconectarMercadoPago: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Desconectada */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    conectarMercadoPago: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Adónde mandar a la persona */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UrlExterna"];
+                };
+            };
+            409: components["responses"]["Problema"];
+        };
+    };
+    volverMercadoPago: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    codigo: string;
+                    estado: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Conectada */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
+        };
+    };
+    crearCajaMercadoPago: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UbicacionMP"];
+            };
+        };
+        responses: {
+            /** @description Creada */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+        };
+    };
+    cobrarConQR: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                numero: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description El QR para mostrar */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CobroQR"];
+                };
+            };
+            409: components["responses"]["Problema"];
+        };
+    };
+    estadoCobroQR: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                referencia: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Estado */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        estado: string;
+                    };
+                };
+            };
+        };
+    };
+    cancelarCobroQR: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                referencia: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cancelada */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reembolsarPedido: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                numero: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    monto?: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Devuelto */
             204: {
                 headers: {
                     [name: string]: unknown;
@@ -3691,6 +4084,61 @@ export interface operations {
             };
             404: components["responses"]["Problema"];
             409: components["responses"]["Problema"];
+        };
+    };
+    suscribirPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    plan: "emprende" | "pro" | "negocio";
+                    /** @enum {string} */
+                    ciclo: "mes" | "anio";
+                    diasPrueba?: number;
+                };
+            };
+        };
+        responses: {
+            /** @description El checkout de la suscripción */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UrlExterna"];
+                };
+            };
+        };
+    };
+    webhookMercadoPago: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Recibido */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Firma inválida */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     listasPrecio: {

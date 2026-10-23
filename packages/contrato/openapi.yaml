@@ -693,9 +693,145 @@ paths:
       parameters:
         - { name: codigo, in: path, required: true, schema: { type: string } }
       responses:
-        '204': { description: Pagado }
+        '200':
+          description: El checkout de Mercado Pago (init_point) para mandar a quien paga
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UrlExterna' }
         '404': { $ref: '#/components/responses/Problema' }
         '409': { $ref: '#/components/responses/Problema' }
+        '502': { $ref: '#/components/responses/Problema' }
+  /v1/panel/integraciones/mercadopago:
+    get:
+      operationId: conexionMercadoPago
+      summary: Si la tienda conectó su cuenta de Mercado Pago (marketplace por OAuth).
+      responses:
+        '200':
+          description: Estado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConexionMP' }
+    delete:
+      operationId: desconectarMercadoPago
+      summary: Borra los tokens de la tienda.
+      responses:
+        '204': { description: Desconectada }
+  /v1/panel/integraciones/mercadopago/conectar:
+    post:
+      operationId: conectarMercadoPago
+      summary: La URL de autorización (state de un solo uso y PKCE). Sólo dueña o admin.
+      responses:
+        '200':
+          description: Adónde mandar a la persona
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UrlExterna' }
+        '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/integraciones/mercadopago/vuelta:
+    post:
+      operationId: volverMercadoPago
+      summary: Canjea el código de la vuelta del OAuth y guarda los tokens cifrados.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [codigo, estado]
+              properties:
+                codigo: { type: string, maxLength: 512 }
+                estado: { type: string, maxLength: 512 }
+      responses:
+        '204': { description: Conectada }
+        '400': { $ref: '#/components/responses/Problema' }
+  /v1/panel/integraciones/mercadopago/caja:
+    post:
+      operationId: crearCajaMercadoPago
+      summary: Da de alta la sucursal y la caja para cobrar con QR (con la dirección real del local).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UbicacionMP' }
+      responses:
+        '204': { description: Creada }
+        '400': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/pedidos/{numero}/qr:
+    post:
+      operationId: cobrarConQR
+      summary: Orden dinámica de QR por el total del pedido (Orders API).
+      parameters:
+        - { name: numero, in: path, required: true, schema: { type: integer } }
+      responses:
+        '201':
+          description: El QR para mostrar
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CobroQR' }
+        '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/cobros/qr/{referencia}:
+    get:
+      operationId: estadoCobroQR
+      summary: Consulta la orden en Mercado Pago y la aplica (created, processed, canceled…).
+      parameters:
+        - { name: referencia, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Estado
+          content:
+            application/json:
+              schema: { type: object, required: [estado], properties: { estado: { type: string } } }
+    delete:
+      operationId: cancelarCobroQR
+      parameters:
+        - { name: referencia, in: path, required: true, schema: { type: string } }
+      responses:
+        '204': { description: Cancelada }
+  /v1/panel/pedidos/{numero}/reembolso:
+    post:
+      operationId: reembolsarPedido
+      summary: Devuelve el pago del pedido por Mercado Pago (total, o parcial con monto). Pide Idempotency-Key.
+      parameters:
+        - { name: numero, in: path, required: true, schema: { type: integer } }
+        - { name: Idempotency-Key, in: header, required: true, schema: { type: string, minLength: 8, maxLength: 255 } }
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, properties: { monto: { type: integer, minimum: 1 } } }
+      responses:
+        '204': { description: Devuelto }
+        '404': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/cuenta/suscripcion:
+    post:
+      operationId: suscribirPlan
+      summary: El abono de Mostrador. Crea la suscripción pendiente y devuelve dónde cargar la tarjeta; el plan cambia cuando Mercado Pago avisa.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [plan, ciclo]
+              properties:
+                plan: { type: string, enum: [emprende, pro, negocio] }
+                ciclo: { type: string, enum: [mes, anio] }
+                diasPrueba: { type: integer, minimum: 0, maximum: 14 }
+      responses:
+        '200':
+          description: El checkout de la suscripción
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UrlExterna' }
+  /v1/webhooks/mercadopago:
+    post:
+      operationId: webhookMercadoPago
+      summary: Avisos de Mercado Pago, con x-signature (HMAC-SHA256). Sin firma válida, 401.
+      security: []
+      responses:
+        '200': { description: Recibido }
+        '401': { description: Firma inválida }
   /v1/panel/listas-precio:
     get:
       operationId: listasPrecio
@@ -2206,6 +2342,38 @@ components:
                   admin: { type: boolean }
                   ventas: { type: boolean }
                   deposito: { type: boolean }
+    UrlExterna:
+      type: object
+      required: [url]
+      properties:
+        url: { type: string, format: uri }
+    ConexionMP:
+      type: object
+      required: [disponible, conectada, reautorizar, cajaQR]
+      properties:
+        disponible: { type: boolean, description: 'La aplicación de Mostrador tiene credenciales' }
+        conectada: { type: boolean }
+        usuario: { type: string, description: 'user_id de la cuenta de Mercado Pago' }
+        desde: { type: string, format: date-time }
+        reautorizar: { type: boolean, description: 'El refresh falló: hay que volver a conectar' }
+        cajaQR: { type: boolean }
+    UbicacionMP:
+      type: object
+      required: [calle, numero, ciudad, provincia, latitud, longitud]
+      properties:
+        calle: { type: string, maxLength: 120 }
+        numero: { type: string, maxLength: 20 }
+        ciudad: { type: string, maxLength: 80 }
+        provincia: { type: string, maxLength: 80 }
+        latitud: { type: number }
+        longitud: { type: number }
+    CobroQR:
+      type: object
+      required: [referencia, qr, estado]
+      properties:
+        referencia: { type: string }
+        qr: { type: string, description: 'qr_data para dibujar' }
+        estado: { type: string }
     Dominios:
       type: object
       required: [gratis, dominios, registros]

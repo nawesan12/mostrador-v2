@@ -28,6 +28,11 @@ type Config struct {
 	OAuth map[string][2]string
 	// WhatsApp Cloud de la plataforma (links de ingreso y de contraseña nueva).
 	WhatsAppToken, WhatsAppNumeroID string
+	// Mercado Pago: token de la cuenta de la plataforma (el abono) y clave de los webhooks. El OAuth
+	// de las tiendas usa el mismo client id y secreto que el ingreso.
+	MPToken, MPSecretoWebhook string
+	// Clave maestra (32 bytes en base64) para cifrar tokens de terceros en la base.
+	ClaveCifrado string
 }
 
 // Desarrollo dice si se está corriendo en local.
@@ -55,6 +60,9 @@ func Leer() (Config, error) {
 		},
 		WhatsAppToken:    os.Getenv("MOSTRADOR_WHATSAPP_TOKEN"),
 		WhatsAppNumeroID: os.Getenv("MOSTRADOR_WHATSAPP_NUMERO_ID"),
+		MPToken:          os.Getenv("MOSTRADOR_MP_TOKEN"),
+		MPSecretoWebhook: os.Getenv("MOSTRADOR_MP_SECRETO_WEBHOOK"),
+		ClaveCifrado:     os.Getenv("MOSTRADOR_CLAVE_CIFRADO"),
 	}
 	switch c.Entorno {
 	case "desarrollo", "staging", "produccion":

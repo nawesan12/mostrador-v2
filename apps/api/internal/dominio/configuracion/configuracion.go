@@ -275,8 +275,9 @@ func CambiarPlan(ctx context.Context, pool tx, tiendaID, plan, ciclo string) err
 	})
 }
 
-// Rutas del panel.
-func Rutas(mux *http.ServeMux, pool tx, sitio string) {
+// Rutas del panel. cobraAbono: con Mercado Pago activo, un plan pago sólo se activa por la
+// suscripción (POST /v1/panel/cuenta/suscripcion); acá sólo se puede bajar al gratis.
+func Rutas(mux *http.ServeMux, pool tx, sitio string, cobraAbono bool) {
 	con := func(h func(http.ResponseWriter, *http.Request, string, Quien)) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			d, ok := cuentas.SesionDe(r)
@@ -354,8 +355,13 @@ func Rutas(mux *http.ServeMux, pool tx, sitio string) {
 	}))
 	mux.HandleFunc("PUT /v1/panel/plan", con(func(w http.ResponseWriter, r *http.Request, id string, _ Quien) {
 		var b struct{ Plan, Ciclo string }
-		if leer(w, r, &b) {
-			errorDe(w, CambiarPlan(r.Context(), pool, id, b.Plan, b.Ciclo))
+		if !leer(w, r, &b) {
+			return
 		}
+		if cobraAbono && b.Plan != "gratis" {
+			problema.Escribir(w, problema.Conflicto("pagar", "Los planes pagos se activan con la suscripción de Mercado Pago."))
+			return
+		}
+		errorDe(w, CambiarPlan(r.Context(), pool, id, b.Plan, b.Ciclo))
 	}))
 }

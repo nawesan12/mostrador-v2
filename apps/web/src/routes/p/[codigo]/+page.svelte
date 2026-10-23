@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import Grano from '#lib/components/Grano.svelte';
 	import Icon from '#lib/components/Icon.svelte';
@@ -14,6 +15,9 @@
 	let { data, form } = $props();
 	const l = $derived(data.link);
 	const pagado = $derived(l.pagado || !!form?.pagado);
+	// La vuelta de Mercado Pago (?pago=ok|pendiente|error). El "ok" se confirma con el aviso de
+	// Mercado Pago: hasta que llega, se muestra como en camino.
+	const vuelta = $derived(page.url.searchParams.get('pago'));
 	let pagando = $state(false);
 	const pesos = (n: number) => '$ ' + n.toLocaleString('es-AR');
 	const MEDIOS = ['mp', 'visa', 'master', 'modo', 'uala'];
@@ -65,18 +69,35 @@
 					>
 				{/each}
 			</div>
+			{#if vuelta === 'ok' || vuelta === 'pendiente'}
+				<div class="aviso" role="status">
+					{vuelta === 'ok'
+						? 'Estamos confirmando tu pago con Mercado Pago. Actualizá en un ratito.'
+						: 'Tu pago quedó pendiente. Te avisamos por mail cuando se acredite.'}
+				</div>
+			{:else if vuelta === 'error'}
+				<div class="error" role="alert">
+					Mercado Pago no aprobó el pago. Probá con otro medio o con otra&nbsp;tarjeta.
+				</div>
+			{/if}
 			{#if form?.error}<div class="error" role="alert">{form.error}</div>{/if}
 			<form
 				method="POST"
 				use:enhance={() => {
 					pagando = true;
-					return async ({ update }) => {
+					return async ({ result, update }) => {
+						// El checkout de Mercado Pago es otro sitio: se navega de verdad, no con goto.
+						if (result.type === 'redirect') return void (location.href = result.location);
 						await update({ reset: false });
 						pagando = false;
 					};
 				}}
 			>
-				<button class="pagar" disabled={pagando}
+				<button
+					class="pagar"
+					disabled={pagando}
+					data-mp-checkout-cta="checkout-pro"
+					data-mp-marketplace-checkout="checkout-pro"
 					><Icon icon={I.phLockSimpleFill} size={16} />Pagar {pesos(l.monto)}</button
 				>
 			</form>
@@ -243,5 +264,14 @@
 		font-size: 13px;
 		color: var(--mu);
 		text-decoration: none;
+	}
+	.aviso {
+		margin-top: 14px;
+		padding: 12px 14px;
+		border-radius: 14px;
+		background: rgba(62, 107, 253, 0.08);
+		color: var(--tx);
+		font-size: 13.5px;
+		line-height: 1.5;
 	}
 </style>

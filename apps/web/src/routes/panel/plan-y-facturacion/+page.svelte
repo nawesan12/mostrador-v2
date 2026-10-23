@@ -37,7 +37,13 @@
 	async function cambiar(id: (typeof PLANES)[number]['id'], c = ciclo) {
 		const antes = data.actual;
 		const antesCiclo = data.ciclo;
-		if (!(await pedir('/panel/plan', 'PUT', { plan: id, ciclo: c }))) return false;
+		const r0 = await pedir('/panel/plan', 'PUT', { plan: id, ciclo: c });
+		if (!r0) return false;
+		// Plan pago con el abono real: se carga la tarjeta en Mercado Pago.
+		if (r0.status === 200) {
+			location.href = ((await r0.json()) as { url: string }).url;
+			return false;
+		}
 		await invalidateAll();
 		return { antes, antesCiclo };
 	}
