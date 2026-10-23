@@ -145,9 +145,6 @@
 		font-size: 12.5px;
 		color: #7a6252;
 	}
-	.barra b {
-		color: #9a6a10;
-	}
 	.legal {
 		display: flex;
 		gap: 8px 16px;
