@@ -276,7 +276,7 @@ func CambiarPlan(ctx context.Context, pool tx, tiendaID, plan, ciclo string) err
 }
 
 // Rutas del panel.
-func Rutas(mux *http.ServeMux, pool tx) {
+func Rutas(mux *http.ServeMux, pool tx, sitio string) {
 	con := func(h func(http.ResponseWriter, *http.Request, string, Quien)) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			d, ok := cuentas.SesionDe(r)
@@ -311,6 +311,7 @@ func Rutas(mux *http.ServeMux, pool tx) {
 		return true
 	}
 	rutasCuenta(mux, pool, con, errorDe, leer)
+	rutasDatos(mux, pool, sitio, con, errorDe, leer)
 	mux.HandleFunc("GET /v1/panel/configuracion", con(func(w http.ResponseWriter, r *http.Request, id string, q Quien) {
 		v, err := Leer(r.Context(), pool, id, q, time.Now())
 		if err != nil {
