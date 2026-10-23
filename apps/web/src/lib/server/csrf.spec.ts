@@ -25,8 +25,9 @@ describe('csrfForbidden (misma regla que SvelteKit)', () => {
 		expect(csrfForbidden(req('POST', 'application/json', null), U('/api/x'))).toBe(false);
 		expect(csrfForbidden(req('GET', null, null), U('/panel'))).toBe(false);
 	});
-	it('OAuth del conector y webhooks pasan sin origen', () => {
+	it('OAuth del conector, el servidor MCP y webhooks pasan sin origen', () => {
 		for (const p of [
+			'/api/mcp',
 			'/api/oauth/token',
 			'/api/oauth/revoke',
 			'/api/oauth/register',

@@ -42,11 +42,12 @@ test('integraciones: conectar, configurar y desconectar', async ({ page }) => {
 	);
 	await expect(mp.getByRole('button', { name: 'Configurar' })).toBeVisible();
 
-	// IA: conectar Claude y prender un permiso.
+	// IA: Claude muestra la dirección del servidor MCP y los pasos (el flujo OAuth está en mcp.e2e.ts).
 	await page.getByRole('button', { name: /Claude/ }).click();
-	await expect(page.getByRole('button', { name: /Claude/ })).toContainText('Conectado', {
-		timeout: 5000
-	});
+	const dlg = page.getByRole('dialog');
+	await expect(dlg).toContainText('/api/mcp');
+	await expect(dlg.getByRole('button', { name: 'Copiar' })).toBeVisible();
+	await dlg.getByRole('button', { name: 'Listo' }).click();
 	const responder = page.getByRole('switch', { name: /Responder mensajes/ });
 	await responder.click();
 	await expect(responder).toHaveAttribute('aria-checked', 'true');

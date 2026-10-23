@@ -261,6 +261,20 @@ export const IAS = [
 	{ id: 'mcp', nombre: 'Otra IA (MCP)', icon: I.phPlugsConnectedBold, col: '#8A5A3E' }
 ] as const;
 
+export type IdIa = (typeof IAS)[number]['id'];
+
+/** A qué IA corresponde un cliente MCP, por el nombre con que se registró (el resto: "Otra IA"). */
+export function iaDe(nombre: string): (typeof IAS)[number] {
+	const id: IdIa = /claude|anthropic/i.test(nombre)
+		? 'claude'
+		: /chatgpt|openai/i.test(nombre)
+			? 'chatgpt'
+			: /gemini|google/i.test(nombre)
+				? 'gemini'
+				: 'mcp';
+	return IAS.find((p) => p.id === id)!;
+}
+
 /** Qué puede hacer la IA (aiPerms del handoff). "Ver" está siempre. */
 export const PERMISOS_IA = [
 	{

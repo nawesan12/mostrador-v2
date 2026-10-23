@@ -1,6 +1,6 @@
 # Estado del trabajo
 
-Última actualización: 20/10/2026. Plan completo: `~/.claude/plans/claude-vamos-con-algo-encapsulated-alpaca.md`.
+Última actualización: 23/10/2026. Plan completo: `~/.claude/plans/claude-vamos-con-algo-encapsulated-alpaca.md`.
 
 ## Hecho (mergeado y desplegado en mostrador.iamnaw.dev)
 
@@ -13,6 +13,7 @@
 | #18 | Ingreso con Google, Mercado Pago, Mercado Libre y link por WhatsApp (apagados hasta tener credenciales) |
 | #19 | Datos de la demo: catálogo real de las 16 plantillas (`scripts/catalogos.ts`), clientes y pedidos sembrados |
 | #20 | Armazón del panel: rail, barra lateral, topbar, barra de abajo, notificaciones, ⌘K, tema y modo Simple/Completo |
+| #54 | Manejá Mostrador desde tu IA: servidor MCP en `/api/mcp` (Streamable HTTP, JSON-RPC: initialize, tools/list, tools/call, ping) con OAuth 2.1 propio como Caja (registro dinámico, PKCE S256 obligatorio, código de un solo uso de 5 min, access token de 1 h, refresh rotativo con detección de reuso, revoke, `.well-known`). Tablas en la D1 del sandbox (migración 0005, todo hasheado); la conexión queda atada al sandbox y vence con él. Consentimiento en `/oauth/autorizar` con las piezas de Ingresar (sin demo: elige tienda y vuelve). 10 herramientas sobre `Datos`: resumen_del_dia, listar_pedidos, ver_pedido, listar_productos, listar_clientes, informe_de_ventas (lectura) y cambiar_estado_pedido, ajustar_producto, crear_cupon, crear_link_de_pago (acciones; además respetan los interruptores del panel). 60 pedidos por minuto por conexión. Integraciones muestra la dirección, los pasos para Claude, ChatGPT, Gemini y otras, y las conexiones con Desconectar. Con DATA_SOURCE=api responde 501 (lo va a atender Go) |
 | #53 | Las 10 plantillas con diseño propio (Andes, Quebracho, Rosedal, Malbec, Mostaza, Yerbal, Tijera, Pampa, Miga y Miga Clásica, nueva en el catálogo): mismas props y lógica que Ceibo, datos reales; lo que no tiene datos no se dibuja. Funciones propias en el navegador: comparador (Andes), aviso +18 (Malbec), pedido desde el menú (Mostaza), buscador y filtro de ofertas (Yerbal). Pendientes con backend: turnos y seña (Tijera), drops y reserva (Pampa), club de vinos (Malbec), configurador y seña (Quebracho), suscripciones, combos, mayoristas, cupones, factura A. Schibsted Grotesk con tabular-nums ensanchaba la puntuación: font-variant-numeric normal en Yerbal y Miga. El lema de Tijera no promete turnos online hasta que existan |
 | #52 | Dominio: mostradorapp.com.ar (mostrador.com.ar está tomado; la marca no cambia) en los mails públicos; el sitio sigue en mostrador.iamnaw.dev hasta comprarlo (decisiones §20). Cerrar la cuenta hace una carga completa: una carga del panel en vuelo redirigía a /demo |
 | #51 | Motor de plantillas (Plantillas Tienda.dc.html) para las plantillas sin archivo propio; el título de la portada se parte sin dejar palabras cortas colgando (lib/tienda/titulo.ts) |
@@ -58,7 +59,7 @@ El circuito es el de PanelPedidos del handoff: Sin pagar → Para preparar → L
 
 ## Lo que sigue (orden del plan)
 
-Cuenta (Plan y facturación con cancelación en 3 pasos, Usuarios y permisos con la matriz, Dominio, Notificaciones por canal, Mis datos) → Integraciones (hub con "Configurar" de cada una) → storefront y 16 plantillas (`/t/[tienda]`, `/c/[codigo]`) → integraciones reales (con credenciales) → MCP + OAuth → Marca → endurecimiento.
+Cuenta (Plan y facturación con cancelación en 3 pasos, Usuarios y permisos con la matriz, Dominio, Notificaciones por canal, Mis datos) → Integraciones (hub con "Configurar" de cada una) → storefront y 16 plantillas (`/t/[tienda]`, `/c/[codigo]`) → integraciones reales (con credenciales) → MCP + OAuth en producción (API Go) → Marca → endurecimiento.
 
 ## Trampas que ya mordieron
 
