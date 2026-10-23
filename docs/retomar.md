@@ -1,0 +1,83 @@
+# Retomar: dónde quedó todo (23/10/2026)
+
+La sesión del 23/10 armó muchas piezas en paralelo, en ramas separadas. Algunas ya están en `main`; el resto está **subido a GitHub como rama, sin PR** (o con PR abierto) y falta mergearlo. Este documento dice qué hay en cada una, en qué orden mergear, qué choca con qué, y qué falta hacer.
+
+**Producción (mostrador.iamnaw.dev) no tiene nada de esta tanda desplegado.** El último deploy es anterior al #53. Se despliega una sola vez, al final de la tanda (ver "Cómo se trabaja").
+
+## 1. Ya en `main`
+
+| PR  | Qué                                                                                                         |
+| --- | ----------------------------------------------------------------------------------------------------------- |
+| #50 | Tienda online contra la API en Go (paquete `vidriera`)                                                      |
+| #51 | Motor de plantillas (las plantillas sin archivo propio)                                                     |
+| #52 | Dominio mostradorapp.com.ar en los mails; cerrar la cuenta recarga (arregla el e2e `cuenta-2` intermitente) |
+| #53 | Las 10 plantillas con diseño propio (+ Miga Clásica)                                                        |
+| #54 | MCP ("Manejá Mostrador desde tu IA") en la web, con OAuth 2.1                                               |
+| #55 | Worker sólo en mostrador.iamnaw.dev (sin workers.dev ni previews)                                           |
+| #56 | CodeRabbit configurado (`.coderabbit.yaml`)                                                                 |
+| #47 | Legales y pie con los datos reales de Nahuel; Contacto sin WhatsApp ni oficina inventados                   |
+| #57 | Sección de marca `/marca` (papelería, redes, imprimibles, OG)                                               |
+| #58 | MCP en producción: OAuth en Go, el token de la IA como sesión limitada (`ia.Guardia`)                       |
+
+## 2. Falta mergear (en este orden)
+
+Todas están subidas a GitHub. "Worktree" es la carpeta local donde se trabajó (en `/private/tmp/…/scratchpad/`); si se borró, se recrea con `git worktree add <carpeta> <rama>`.
+
+| #   | Rama                                                                                          | Qué trae                                                                                                                                                                                                                                                                        | Estado                                                                                                                         | Ojo al mergear                                                                                                                                                                                                                                 |
+| --- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `pr-67-mails-comprador` (la cola la preparó rebasada como `pr-61-mails-cola`; sin PR todavía) | Mails a quien compra (confirmación, pago, en camino, retiro) por outbox; **datos reales de transferencia** (alias, CBU/CVU con verificadores, titular en Configuración › Negocio; sin datos no se ofrece transferencia)                                                         | Listo, probado                                                                                                                 | **Prioridad alta**: hoy la confirmación muestra un alias inventado (`slug.mp`). Migración 00034. Toca el bloque `const pagos` de las 12 plantillas y `TiendaPublica.cobros`                                                                    |
+| 2   | `pr-59-turnos` (PR #59, abierto)                                                              | Turnos con seña: Go (00025) + web (Tijera y las otras 11, panel Ventas › Turnos)                                                                                                                                                                                                | En CI                                                                                                                          | Une `pr-55-turnos-go` y `pr-55-turnos-web`                                                                                                                                                                                                     |
+| 3   | `pr-60-empezar` (PR #60, abierto)                                                             | `/empezar`: origen de la cuenta (utm, ref, cupón) en cookie y en la tienda (00030)                                                                                                                                                                                              | En CI                                                                                                                          | —                                                                                                                                                                                                                                              |
+| 4   | `pr-60-cupones-web` (preparada por la cola desde `pr-60-cupones-tienda`)                      | Cupones en la tienda online: regla única TS/Go (`testdata/cupones.json`, 27 casos), uso contado en la transacción del pedido (00028), cupón por categoría ahora guarda la categoría, campo en las 12 plantillas                                                                 | Listo                                                                                                                          | Después del MCP (usa `lib/server/limite.ts`)                                                                                                                                                                                                   |
+| 5   | `pr-63-link-cupon`                                                                            | Link `/t/{tienda}/c/{codigo}` que deja el cupón aplicado                                                                                                                                                                                                                        | Listo                                                                                                                          | Basada en cupones: `git rebase --onto origin/main pr-60-cupones-tienda pr-63-link-cupon`                                                                                                                                                       |
+| 6   | `pr-57-google-meta`                                                                           | Feed de productos (`/t/{slug}/feed.xml`), GA4 y Meta Pixel con consentimiento, CSP sólo en `/t/`                                                                                                                                                                                | Listo                                                                                                                          | **Renombrar su migración `00025_medicion.sql` a `00027_medicion.sql`** (la 00025 es de turnos). Correr también `integraciones.e2e.ts` y `tienda.e2e.ts`. La carpeta `cola-meta` tiene un merge a medio aplicar: descartable                    |
+| 7   | `pr-61-arca`                                                                                  | Facturación con ARCA: firma CMS, WSAA, WSFE (`integraciones/arca`), dominio `facturacion` (cola al cobrar por trigger, drenador en el worker, recuperación con FECompConsultar), asistente en Integraciones › ARCA, Facturación con "No facturada", C y nota de crédito (00029) | Listo                                                                                                                          | Cambia la firma de `listas.Rutas` (agrega `fact`) y suma `Dependencias.Facturacion`. El CI necesita `openssl`                                                                                                                                  |
+| 8   | `pr-65-arrepentimiento`                                                                       | Botón de arrepentimiento de cada tienda (Ley 24.240, código ARR, 10 días) y Devoluciones reales (00032); footers de las 12 plantillas                                                                                                                                           | Listo                                                                                                                          | `vidriera.Rutas` queda `Rutas(mux, pool, mp, sitio, dev, ip)`                                                                                                                                                                                  |
+| 9   | `pr-64-resenas`                                                                               | Reseñas ("Compra verificada") y preguntas desde la tienda, panel con ocultar/responder (00031)                                                                                                                                                                                  | Listo                                                                                                                          | Choca con #8 en `vidriera.Rutas`: conservar los dos bloques                                                                                                                                                                                    |
+| 10  | `pr-66-variantes-go`                                                                          | Variantes y galería en Go (00033): opciones, combinaciones, stock por variante sin sobreventa, Mercado Libre con `variations`                                                                                                                                                   | Listo, probado                                                                                                                 | **`PedidoNuevo.Items` pasa a `pedidos.Linea`**: los tests de las otras ramas que usan el struct anónimo dejan de compilar → reemplazar por `pedidos.Linea{…}`. Su test baja hasta la 32: todas las migraciones 25–34 necesitan Down reversible |
+| 11  | `pr-66-variantes-web`                                                                         | Variantes en la web                                                                                                                                                                                                                                                             | **A medio hacer** (commit WIP): faltan tests (`variantes.spec`, `lineas.spec`, sandbox) y revisar las 12 plantillas y el panel | Formas acordadas con Go: ver `docs/especificaciones/variantes.md` y la sección "Formas finales" abajo                                                                                                                                          |
+| 12  | `pr-68-carritos`                                                                              | Carritos abandonados en Go (00035): guardar desde el checkout, panel real, recordar (mail con link que restaura), automático al 3er día                                                                                                                                         | Go listo; **falta la web**                                                                                                     | Hacer la web después de las variantes (las dos tocan el carrito)                                                                                                                                                                               |
+
+Numeración de migraciones de esta tanda: 25 turnos · 26 IA (ya en main) · 27 medición · 28 cupón en pedido · 29 facturación · 30 origen · 31 reseñas · 32 devoluciones · 33 variantes · 34 avisos al comprador · 35 carritos. Goose corre con migraciones fuera de orden (`WithAllowOutofOrder`, ya en main), así que el orden de merge no rompe nada.
+
+`docs/estado.md` y `docs/decisiones.md`: cada rama suma su fila/sección con el número que tenía al escribirla; al rebasar, renumerar según el PR real y conservar todas.
+
+### Formas finales de las variantes (Go)
+
+- Texto de la variante: `"Talle M · Color Negro"`. Tope de 100 combinaciones; nombres y valores repetidos se comparan sin mayúsculas ni tildes.
+- `ProductoEditable`: `fotos?` (≤8), `opciones?` (ausente = quedan; `[]` las saca), `variantes?` (sólo las que se tocan, identificadas por `valores`). Con opciones, el `stock` del producto se ignora.
+- Lista `inventario`: ids `"productoId:varianteId"` para ajustar/ingreso/conteo.
+- `PedidoNuevo.items[]`: `{productoId, varianteId?, cantidad}`; checkout Go: `carrito[]` = `{id, varianteId?, cantidad}`.
+- Publicar en ML con precios distintos por variante → 422 `variantes_ml`.
+
+## 3. Falta construir (sin depender de nadie)
+
+- Terminar **variantes (web)** y **carritos abandonados (web)**: capturar el email en el checkout (escuchar el campo `email` desde el layout de `/t/[tienda]`, sin tocar cada plantilla), `/t/[tienda]/carrito/recuperar/[token]`, la demo.
+- Sacar los carteles de "% off por transferencia" de las plantillas cuando la tienda no tiene datos de transferencia (después de las variantes, para no pisarlas).
+- Mail cuando la tienda responde una pregunta (se pide el email pero no se avisa).
+- Hornero y Telegram con la API real (hoy el vínculo vive en la D1 de la demo).
+- Funciones propias de plantillas que necesitan backend: drops con reserva (Pampa), club de vinos (Malbec), configurador con seña (Quebracho), suscripciones, combos, mayoristas, factura A con CUIT en el checkout (ARCA ya lo soporta).
+- API de conversiones de Meta (token de la tienda, cifrado).
+- Endurecimiento: accesibilidad AA (había arrancado la rama `pr-69-accesibilidad`, vacía), Lighthouse ≥ 90, k6, e2e de punta a punta en producción.
+- Contenido que Nahuel dejó para después: Nosotros con la historia real y los testimonios de la landing ("casos de ejemplo").
+
+## 4. Bloqueado por Nahuel (credenciales, cuentas o acciones)
+
+- **VPS para la API Go**: sin esto nada "real" funciona en producción (pagos, ARCA, ML, turnos con seña, cupones contra Go).
+- Comprar **mostradorapp.com.ar** y actualizar las URLs de Mercado Pago y Mercado Libre (ML pide QR desde el celular). Ver decisiones §20.
+- Regla de Cloudflare para Telegram (Browser Integrity Check en Off para `/api/webhooks/`).
+- Certificado de homologación de ARCA (WSASS, con clave fiscal) para verificar que ARCA acepta la firma CMS.
+- WhatsApp Cloud / Instagram (app de Meta), MODO, Payway, Ualá, Andreani, OCA, Correo Argentino, TikTok, APIs de Google, dominio de Resend, Caja.
+- Diseño de backoffice, panel de partners y generador A6: prompt en `docs/especificaciones/prompt-diseno-pendientes.md`.
+
+## 5. Cómo se trabaja (lo que Nahuel pidió en esta sesión)
+
+- No quedarse esperando CI/merges: la cola de PRs la lleva un agente en segundo plano; yo sigo construyendo.
+- CodeRabbit: antes de mergear, leer su revisión y resolver lo válido (una sola respuesta por PR, para no llenar de mails). La CLI está instalada y autenticada (`coderabbit review --agent --base main`); la clave está en `CREDENCIALES.md`.
+- Un solo deploy al final de cada tanda, no uno por PR.
+- Nada de previews ni dev remoto en Cloudflare; tests locales sólo de lo tocado.
+- Workflows multiagente sólo si Nahuel los pide; para paralelizar, agentes comunes.
+
+## 6. Especificaciones de esta tanda
+
+En `docs/especificaciones/`: `turnos.md`, `variantes.md`, `plantillas-propias.md` (las instrucciones que siguieron los agentes) y `prompt-diseno-pendientes.md`.
