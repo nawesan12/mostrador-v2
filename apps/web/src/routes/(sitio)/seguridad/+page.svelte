@@ -167,7 +167,7 @@
 			<div class="tarjeta oscura">
 				<Etiqueta texto="Reportá una vulnerabilidad" color="#F0A58A" />
 				<p>
-					Si encontrás un problema de seguridad, escribinos a <b>seguridad@mostrador.com.ar</b>.
+					Si encontrás un problema de seguridad, escribinos a <b>seguridad@mostradorapp.com.ar</b>.
 					Respondemos en 24 horas, no tomamos acciones legales contra investigaciones de buena fe y
 					reconocemos los hallazgos válidos con recompensas de hasta USD 2.000.
 				</p>

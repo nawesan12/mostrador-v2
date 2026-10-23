@@ -29,7 +29,7 @@
 
 	const CANALES = [
 		[I.logosWhatsappIcon, 'WhatsApp', '11 5555-0100', 'Respondemos en minutos, de 8 a 22 h'],
-		[I.phEnvelopeSimpleFill, 'Email', 'ayuda@mostrador.com.ar', 'Respuesta en menos de 24 h'],
+		[I.phEnvelopeSimpleFill, 'Email', 'ayuda@mostradorapp.com.ar', 'Respuesta en menos de 24 h'],
 		[
 			I.phChatsCircleFill,
 			'Chat del panel',

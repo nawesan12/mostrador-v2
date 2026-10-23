@@ -88,7 +88,7 @@ export const LEGALES: Legal[] = [
 					{
 						ul: [
 							'Una cuenta puede tener varias personas con distintos permisos.',
-							'Si detectás un acceso que no reconocés, avisanos a seguridad@mostrador.com.ar.'
+							'Si detectás un acceso que no reconocés, avisanos a seguridad@mostradorapp.com.ar.'
 						]
 					}
 				]
@@ -195,7 +195,7 @@ export const LEGALES: Legal[] = [
 		],
 		cierre: {
 			titulo: '¿Te quedó alguna duda?',
-			texto: 'Escribinos a legales@mostrador.com.ar y te respondemos en 48 horas hábiles.'
+			texto: 'Escribinos a legales@mostradorapp.com.ar y te respondemos en 48 horas hábiles.'
 		}
 	},
 	{
@@ -296,7 +296,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Tus derechos',
 				cuerpo: [
 					{
-						p: 'Podés acceder a tus datos, rectificarlos, actualizarlos o pedir que los borremos escribiendo a privacidad@mostrador.com.ar o desde Configuración › Mis datos. El acceso es gratuito en intervalos de seis meses.'
+						p: 'Podés acceder a tus datos, rectificarlos, actualizarlos o pedir que los borremos escribiendo a privacidad@mostradorapp.com.ar o desde Configuración › Mis datos. El acceso es gratuito en intervalos de seis meses.'
 					},
 					{
 						p: 'LA AGENCIA DE ACCESO A LA INFORMACIÓN PÚBLICA, en su carácter de Órgano de Control de la Ley N° 25.326, tiene la atribución de atender las denuncias y reclamos que interpongan quienes resulten afectados en sus derechos por incumplimiento de las normas vigentes en materia de protección de datos personales.'
@@ -350,7 +350,7 @@ export const LEGALES: Legal[] = [
 		],
 		cierre: {
 			titulo: '¿Te quedó alguna duda?',
-			texto: 'Escribinos a legales@mostrador.com.ar y te respondemos en 48 horas hábiles.'
+			texto: 'Escribinos a legales@mostradorapp.com.ar y te respondemos en 48 horas hábiles.'
 		}
 	},
 	{
@@ -480,7 +480,7 @@ export const LEGALES: Legal[] = [
 		],
 		cierre: {
 			titulo: '¿Te quedó alguna duda?',
-			texto: 'Escribinos a legales@mostrador.com.ar y te respondemos en 48 horas hábiles.'
+			texto: 'Escribinos a legales@mostradorapp.com.ar y te respondemos en 48 horas hábiles.'
 		}
 	},
 	{
@@ -556,7 +556,7 @@ export const LEGALES: Legal[] = [
 		],
 		cierre: {
 			titulo: '¿Te quedó alguna duda?',
-			texto: 'Escribinos a legales@mostrador.com.ar y te respondemos en 48 horas hábiles.'
+			texto: 'Escribinos a legales@mostradorapp.com.ar y te respondemos en 48 horas hábiles.'
 		}
 	},
 	{
@@ -589,7 +589,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Atención al cliente',
 				cuerpo: [
 					{
-						p: 'Podés escribirnos por WhatsApp, por email a ayuda@mostrador.com.ar o desde el chat del panel, de lunes a sábado de 8 a 22 h. Te respondemos en menos de 48 horas hábiles y te damos un número de reclamo.'
+						p: 'Podés escribirnos por WhatsApp, por email a ayuda@mostradorapp.com.ar o desde el chat del panel, de lunes a sábado de 8 a 22 h. Te respondemos en menos de 48 horas hábiles y te damos un número de reclamo.'
 					}
 				]
 			},
@@ -634,7 +634,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Datos del proveedor',
 				cuerpo: [
 					{
-						p: 'Mostrador Tecnología S.A.S. · CUIT 30-71000000-0 · Av. Corrientes 1234, piso 8, C1043 CABA · legales@mostrador.com.ar.'
+						p: 'Mostrador Tecnología S.A.S. · CUIT 30-71000000-0 · Av. Corrientes 1234, piso 8, C1043 CABA · legales@mostradorapp.com.ar.'
 					}
 				]
 			},
@@ -652,7 +652,7 @@ export const LEGALES: Legal[] = [
 		],
 		cierre: {
 			titulo: '¿Te quedó alguna duda?',
-			texto: 'Escribinos a legales@mostrador.com.ar y te respondemos en 48 horas hábiles.'
+			texto: 'Escribinos a legales@mostradorapp.com.ar y te respondemos en 48 horas hábiles.'
 		}
 	},
 	{
@@ -793,7 +793,7 @@ export const LEGALES: Legal[] = [
 		],
 		cierre: {
 			titulo: '¿Te quedó alguna duda?',
-			texto: 'Escribinos a legales@mostrador.com.ar y te respondemos en 48 horas hábiles.'
+			texto: 'Escribinos a legales@mostradorapp.com.ar y te respondemos en 48 horas hábiles.'
 		}
 	},
 	{
@@ -911,14 +911,14 @@ export const LEGALES: Legal[] = [
 				titulo: 'Denunciar una tienda',
 				cuerpo: [
 					{
-						p: 'Si ves una tienda que incumple estas reglas, escribinos a abuso@mostrador.com.ar con el link. Revisamos todas las denuncias en menos de 72 horas.'
+						p: 'Si ves una tienda que incumple estas reglas, escribinos a abuso@mostradorapp.com.ar con el link. Revisamos todas las denuncias en menos de 72 horas.'
 					}
 				]
 			}
 		],
 		cierre: {
 			titulo: '¿Te quedó alguna duda?',
-			texto: 'Escribinos a legales@mostrador.com.ar y te respondemos en 48 horas hábiles.'
+			texto: 'Escribinos a legales@mostradorapp.com.ar y te respondemos en 48 horas hábiles.'
 		}
 	},
 	{
@@ -1031,14 +1031,14 @@ export const LEGALES: Legal[] = [
 				titulo: 'Cómo pedirlo',
 				cuerpo: [
 					{
-						p: 'Desde Configuración › Plan › Pedir reembolso, o escribiendo a facturacion@mostrador.com.ar. Lo procesamos en un máximo de 10 días hábiles y lo devolvemos por el mismo medio de pago.'
+						p: 'Desde Configuración › Plan › Pedir reembolso, o escribiendo a facturacion@mostradorapp.com.ar. Lo procesamos en un máximo de 10 días hábiles y lo devolvemos por el mismo medio de pago.'
 					}
 				]
 			}
 		],
 		cierre: {
 			titulo: '¿Te quedó alguna duda?',
-			texto: 'Escribinos a legales@mostrador.com.ar y te respondemos en 48 horas hábiles.'
+			texto: 'Escribinos a legales@mostradorapp.com.ar y te respondemos en 48 horas hábiles.'
 		}
 	}
 ];
