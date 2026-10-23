@@ -37,6 +37,13 @@ type PedidoNuevo struct {
 	Pagado *bool `json:"pagado"`
 	// Precios cobrados en otro canal (Mercado Libre), por producto. Nunca viene del navegador.
 	Precios map[string]int64 `json:"-"`
+	// La tienda online: envío, descuento por transferencia, email y el código de la confirmación.
+	// Los calcula el servidor (vidriera), nunca vienen del navegador.
+	CostoEnvio    int64  `json:"-"`
+	Descuento     int64  `json:"-"`
+	Email         string `json:"-"`
+	CiudadEnvio   string `json:"-"`
+	CodigoPublico string `json:"-"`
 }
 
 var (
@@ -105,21 +112,33 @@ func CrearDesdeProductos(ctx context.Context, pool tx, tiendaID string, n Pedido
 			t := strings.TrimSpace(*n.Telefono)
 			tel = &t
 		}
-		comprador, _ := json.Marshal(Comprador{Nombre: nombre, Telefono: tel})
+		var email *string
+		if n.Email != "" {
+			email = &n.Email
+		}
+		comprador, _ := json.Marshal(Comprador{Nombre: nombre, Telefono: tel, Email: email})
+		if n.CostoEnvio < 0 || n.Descuento < 0 || n.Descuento > total {
+			return errors.New("pedido inválido")
+		}
+		var codigo *string
+		if n.CodigoPublico != "" {
+			codigo = &n.CodigoPublico
+		}
 		js, _ := json.Marshal(items)
 		if _, err := t.Exec(ctx, `SELECT 1 FROM tiendas WHERE id = $1 FOR UPDATE`, tiendaID); err != nil {
 			return err
 		}
 		return t.QueryRow(ctx, `
 			INSERT INTO pedidos (tienda_id, numero, comprador, canal, pago, estado_pago, envio, estado, facturado,
-				items, subtotal, total, nota, estados_en)
-			SELECT $1, coalesce(max(numero), 1000) + 1, $2, $3, $4, $5, $6, $7, false, $8, $9, $9, $10,
-				jsonb_build_object($7::text, now())
+				items, subtotal, costo_envio, total, nota, estados_en, ciudad_envio, codigo_publico)
+			SELECT $1, coalesce(max(numero), 1000) + 1, $2, $3, $4, $5, $6, $7, false, $8, $9, $11::bigint, $9::bigint + $11::bigint - $12::bigint, $10,
+				jsonb_build_object($7::text, now()), $13, $14
 			FROM pedidos WHERE tienda_id = $1
 			RETURNING numero`,
-			tiendaID, comprador, n.Canal, n.Pago, estadoPago, n.Envio, estado, js, total, n.Nota).Scan(&numero)
+			tiendaID, comprador, n.Canal, n.Pago, estadoPago, n.Envio, estado, js, total, n.Nota,
+			n.CostoEnvio, n.Descuento, n.CiudadEnvio, codigo).Scan(&numero)
 	})
-	return numero, total, err
+	return numero, total + n.CostoEnvio - n.Descuento, err
 }
 
 func rutasNuevo(mux *http.ServeMux, pool tx, con func(func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc) {

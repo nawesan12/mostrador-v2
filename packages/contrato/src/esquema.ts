@@ -709,6 +709,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/publico/tiendas/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** La tienda online como la ve quien compra (lib/tienda/tipos.ts TiendaPublica). */
+        get: operations["tiendaPublica"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/publico/tiendas/{slug}/pedidos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Arma el pedido de la tienda online. Precios y envío los calcula la API; con Mercado Pago devuelve el checkout. */
+        post: operations["comprarEnTienda"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/publico/tiendas/{slug}/pedidos/{codigo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** La confirmación del pedido por su código público. */
+        get: operations["confirmacionPedido"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/integraciones/mercadolibre": {
         parameters: {
             query?: never;
@@ -4019,6 +4070,109 @@ export interface operations {
                 };
                 content?: never;
             };
+        };
+    };
+    tiendaPublica: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tienda */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            404: components["responses"]["Problema"];
+        };
+    };
+    comprarEnTienda: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    carrito: {
+                        id: string;
+                        cantidad: number;
+                    }[];
+                    email: string;
+                    nombre: string;
+                    telefono: string;
+                    dni?: string;
+                    cp?: string;
+                    direccion?: string;
+                    /** @enum {string} */
+                    envio: "andreani" | "correo" | "moto" | "retiro";
+                    /** @enum {string} */
+                    pago: "transferencia" | "mercadopago";
+                };
+            };
+        };
+        responses: {
+            /** @description Pedido creado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        numero: number;
+                        codigo: string;
+                        total: number;
+                        url?: string;
+                    };
+                };
+            };
+            400: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+        };
+    };
+    confirmacionPedido: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+                codigo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Pedido */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        numero: number;
+                        total: number;
+                        pago: string;
+                        nombre: string;
+                        estadoPago: string;
+                    };
+                };
+            };
+            404: components["responses"]["Problema"];
         };
     };
     conexionMercadoLibre: {

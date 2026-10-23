@@ -33,7 +33,7 @@ export const actions: Actions = {
 	default: async ({ request, params, cookies, platform }) => {
 		const r = await resolverTienda(params.tienda, cookies.get(COOKIE));
 		if (!r) error(404, 'Esta tienda no existe.');
-		if (r.tienda.vitrina || !r.datos || !r.sandboxId)
+		if (r.tienda.vitrina)
 			return fail(409, { error: 'Es una tienda de ejemplo: no se compra de verdad.' });
 		const f = await request.formData();
 		let carrito: unknown = null;
@@ -47,6 +47,26 @@ export const actions: Actions = {
 		const p = b.output;
 		if (p.envio !== 'retiro' && (!cpValido(p.cp) || p.direccion.length < 4))
 			return fail(400, { error: 'Poné el código postal y la dirección de entrega.' });
+		// Con la API real, el pedido lo arma Go (precios, envío y Mercado Pago salen de ahí).
+		if (!r.datos || !r.sandboxId) {
+			const res = await fetch(
+				`${String(env.API_URL)}/v1/publico/tiendas/${r.tienda.slug}/pedidos`,
+				{
+					method: 'POST',
+					headers: { 'content-type': 'application/json' },
+					body: JSON.stringify(p)
+				}
+			);
+			if (!res.ok) {
+				const e = (await res.json().catch(() => null)) as { detail?: string } | null;
+				return fail(res.status === 409 ? 409 : 400, {
+					error: e?.detail ?? 'No pudimos armar el pedido.'
+				});
+			}
+			const g = (await res.json()) as { codigo: string; url?: string };
+			if (g.url && /^https:\/\/(www\.)?mercadopago\.com(\.ar)?\//.test(g.url)) redirect(303, g.url);
+			redirect(303, `/t/${r.tienda.slug}/pedido/${g.codigo}`);
+		}
 		// Los precios y el envío salen del servidor, nunca del navegador.
 		const porId = new Map(r.tienda.productos.map((x) => [x.id, x]));
 		let subtotal = 0;

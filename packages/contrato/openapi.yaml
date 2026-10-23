@@ -716,6 +716,59 @@ paths:
       summary: Borra los tokens de la tienda.
       responses:
         '204': { description: Desconectada }
+  /v1/publico/tiendas/{slug}:
+    get:
+      operationId: tiendaPublica
+      summary: La tienda online como la ve quien compra (lib/tienda/tipos.ts TiendaPublica).
+      security: []
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Tienda, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+        '404': { $ref: '#/components/responses/Problema' }
+  /v1/publico/tiendas/{slug}/pedidos:
+    post:
+      operationId: comprarEnTienda
+      summary: Arma el pedido de la tienda online. Precios y envío los calcula la API; con Mercado Pago devuelve el checkout.
+      security: []
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [carrito, email, nombre, telefono, envio, pago]
+              properties:
+                carrito: { type: array, maxItems: 50, items: { type: object, required: [id, cantidad], properties: { id: { type: string }, cantidad: { type: integer, minimum: 1, maximum: 99 } } } }
+                email: { type: string }
+                nombre: { type: string }
+                telefono: { type: string }
+                dni: { type: string }
+                cp: { type: string }
+                direccion: { type: string }
+                envio: { type: string, enum: [andreani, correo, moto, retiro] }
+                pago: { type: string, enum: [transferencia, mercadopago] }
+      responses:
+        '201':
+          description: Pedido creado
+          content:
+            application/json:
+              schema: { type: object, required: [numero, codigo, total], properties: { numero: { type: integer }, codigo: { type: string }, total: { type: integer }, url: { type: string } } }
+        '400': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+  /v1/publico/tiendas/{slug}/pedidos/{codigo}:
+    get:
+      operationId: confirmacionPedido
+      summary: La confirmación del pedido por su código público.
+      security: []
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+        - { name: codigo, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Pedido, content: { application/json: { schema: { type: object, required: [numero, total, pago, nombre, estadoPago], properties: { numero: { type: integer }, total: { type: integer }, pago: { type: string }, nombre: { type: string }, estadoPago: { type: string } } } } } }
+        '404': { $ref: '#/components/responses/Problema' }
   /v1/panel/integraciones/mercadolibre:
     get:
       operationId: conexionMercadoLibre

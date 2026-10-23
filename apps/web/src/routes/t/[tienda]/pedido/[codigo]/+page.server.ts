@@ -1,3 +1,4 @@
+import { env } from 'cloudflare:workers';
 import { error } from '@sveltejs/kit';
 import { COOKIE } from '#lib/server/sandbox/sandbox.ts';
 import { resolverTienda } from '#lib/server/tienda/publica.ts';
@@ -7,6 +8,20 @@ import type { PageServerLoad } from './$types';
 /** La confirmación del pedido: el código lleva la firma, así nadie mira el pedido de otro. */
 export const load: PageServerLoad = async ({ params, cookies, url }) => {
 	const r = await resolverTienda(params.tienda, cookies.get(COOKIE));
+	// Con la API real, el código es el público del pedido.
+	if (r && !r.datos) {
+		const res = await fetch(
+			`${String(env.API_URL)}/v1/publico/tiendas/${r.tienda.slug}/pedidos/${encodeURIComponent(params.codigo)}`
+		);
+		if (!res.ok) error(404, 'No encontramos ese pedido.');
+		const c = (await res.json()) as { numero: number; total: number; pago: string; nombre: string };
+		return {
+			pedido: {
+				...c,
+				alias: c.pago === 'transferencia' ? `${r.tienda.slug.replace(/-/g, '.')}.mp` : null
+			}
+		};
+	}
 	const numero = Number(params.codigo.split('-')[0]);
 	if (
 		!r?.datos ||

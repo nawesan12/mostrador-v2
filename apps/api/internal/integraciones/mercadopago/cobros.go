@@ -115,6 +115,55 @@ func (s *Servicio) PagarLink(ctx context.Context, tiendaID, codigo string) (stri
 	return r.InitPoint, err
 }
 
+// PagarPedido crea la preferencia de un pedido de la tienda online (total con envío y descuento,
+// sacado de la base) y devuelve el init_point. vuelta es la confirmación del pedido en la tienda.
+func (s *Servicio) PagarPedido(ctx context.Context, tiendaID string, numero int, vuelta string) (string, error) {
+	var total int64
+	var tienda string
+	err := s.Pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		return t.QueryRow(ctx, `SELECT p.total, t.nombre FROM pedidos p JOIN tiendas t ON t.id = p.tienda_id
+			WHERE p.numero = $1 AND p.estado_pago = 'Pendiente'`, numero).Scan(&total, &tienda)
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", ErrNoExiste
+	}
+	if err != nil {
+		return "", err
+	}
+	token, _, err := s.tokenDe(ctx, tiendaID)
+	if err != nil {
+		return "", err
+	}
+	ref := nuevaReferencia(tiendaID)
+	if err := s.Pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		_, err := t.Exec(ctx, `INSERT INTO mp_cobros (referencia, tienda_id, tipo, objetivo, monto) VALUES ($1, $2, 'pedido', $3, $4)`,
+			ref, tiendaID, fmt.Sprint(numero), total)
+		return err
+	}); err != nil {
+		return "", err
+	}
+	p := preferencia{
+		// Un solo ítem por el total: el detalle ya está en el pedido y así envío y descuentos cierran.
+		Items:             []item{{Title: fmt.Sprintf("Pedido #%d de %s", numero, tienda), Quantity: 1, UnitPrice: total, CurrencyID: "ARS"}},
+		ExternalReference: ref,
+		BackURLs:          map[string]string{"success": vuelta + "?pago=ok", "pending": vuelta + "?pago=pendiente", "failure": vuelta + "?pago=error"},
+		StatementDesc:     recortar(tienda, 22),
+	}
+	if s.publico() {
+		p.AutoReturn = "approved"
+	}
+	var r struct {
+		InitPoint string `json:"init_point"`
+	}
+	if err := s.cliente().JSON(ctx, http.MethodPost, "/checkout/preferences", token, ref, p, &r); err != nil {
+		return "", err
+	}
+	if r.InitPoint == "" {
+		return "", errors.New("mercadopago: la preferencia no trajo init_point")
+	}
+	return r.InitPoint, nil
+}
+
 func recortar(s string, n int) string {
 	r := []rune(s)
 	if len(r) > n {
