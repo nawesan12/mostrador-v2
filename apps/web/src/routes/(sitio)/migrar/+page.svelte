@@ -34,11 +34,11 @@
 		{
 			id: 'empretienda',
 			tab: 'Desde Empretienda',
-			ico: I.phFileCsvFill,
-			t: 'Subís la exportación de tu tienda',
-			d: 'Descargás el archivo de productos y clientes desde tu panel de Empretienda y lo arrastrás acá. Hornero ordena las columnas por vos.',
-			campo: 'Arrastrá tu archivo .csv o .xlsx',
-			rotulo: 'Archivo exportado de Empretienda',
+			ico: I.phLinkBold,
+			t: 'Pegás el link de tu tienda',
+			d: 'Traemos el catálogo directo de tu tienda de Empretienda: productos, fotos, precios y categorías. Los clientes y pedidos los sumás con el Excel que bajás de tu panel.',
+			campo: 'tutienda.empretienda.com.ar',
+			rotulo: 'Link de tu tienda en Empretienda',
 			trae: [
 				'Productos, variantes y stock',
 				'Fotos (las descargamos de tu tienda)',
@@ -49,8 +49,8 @@
 			]
 		},
 		{
-			id: 'mercadoshops',
-			tab: 'Desde Mercado Shops',
+			id: 'mercadolibre',
+			tab: 'Desde Mercado Libre',
 			ico: I.phStorefrontFill,
 			t: 'Traemos tus publicaciones de Mercado Libre',
 			d: 'Conectás tu cuenta de Mercado Libre y armamos la tienda con tus publicaciones. El stock queda sincronizado en los dos lados.',
@@ -98,7 +98,7 @@
 		],
 		[
 			'1520333789090-1afc82db536a',
-			'Teníamos Mercado Shops y ahora vendemos con tienda propia y Mercado Libre desde el mismo panel.',
+			'Vendíamos sólo en Mercado Libre y ahora tenemos tienda propia con el mismo stock, desde un solo panel.',
 			'Tomás Acosta',
 			'Sonido Sur · CABA'
 		]
@@ -142,7 +142,7 @@
 
 <Seo
 	title="Migrar a Mostrador · Mostrador"
-	description="Te mudamos gratis desde Tiendanube, Empretienda o Mercado Shops: productos, clientes, pedidos y tu posicionamiento en Google."
+	description="Te mudamos gratis desde Tiendanube, Empretienda o Mercado Libre: productos, clientes, pedidos y tu posicionamiento en Google."
 	path="/migrar"
 	image="migrar"
 />

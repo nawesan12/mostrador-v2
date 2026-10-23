@@ -31,7 +31,7 @@ test('el onboarding se recorre entero y termina en el panel con la demo armada',
 	await seguir(page);
 	await expect(page.getByRole('heading', { name: /Conectá lo que ya usás/ })).toBeVisible();
 	await page.getByRole('button', { name: 'Conectar las recomendadas' }).click();
-	await expect(page.getByText('5 de 8 conectadas.', { exact: false })).toBeVisible({
+	await expect(page.getByText('5 de 9 conectadas.', { exact: false })).toBeVisible({
 		timeout: 6000
 	});
 

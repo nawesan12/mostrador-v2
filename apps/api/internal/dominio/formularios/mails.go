@@ -12,7 +12,7 @@ import (
 var (
 	nombreFacturacion = map[string]string{"empiezo": "Recién empieza", "hasta-5": "Hasta $ 5 M", "5-a-20": "$ 5 a 20 M",
 		"20-a-100": "$ 20 a 100 M", "mas-de-100": "Más de $ 100 M"}
-	nombreOrigen = map[string]string{"tiendanube": "Tiendanube", "empretienda": "Empretienda", "mercadoshops": "Mercado Shops",
+	nombreOrigen = map[string]string{"tiendanube": "Tiendanube", "empretienda": "Empretienda", "mercadolibre": "Mercado Libre",
 		"shopify": "Shopify", "woocommerce": "WooCommerce", "ninguna": "Ninguna"}
 	nombreEspecialidad = map[string]string{"diseno": "Diseño", "desarrollo": "Desarrollo", "marketing": "Marketing",
 		"contabilidad": "Contabilidad", "fotografia": "Fotografía"}

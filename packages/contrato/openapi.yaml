@@ -2585,7 +2585,7 @@ components:
         whatsapp: { type: string, description: 'Con característica; se guardan sólo los dígitos' }
         web: { type: string, maxLength: 200 }
         facturacion: { type: string, enum: [empiezo, hasta-5, 5-a-20, 20-a-100, mas-de-100] }
-        origen: { type: string, enum: [tiendanube, empretienda, mercadoshops, shopify, woocommerce, ninguna] }
+        origen: { type: string, enum: [tiendanube, empretienda, mercadolibre, shopify, woocommerce, ninguna] }
         mensaje: { type: string, maxLength: 2000 }
     Postulacion:
       type: object

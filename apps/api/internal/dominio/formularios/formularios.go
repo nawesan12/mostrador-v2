@@ -61,7 +61,7 @@ type Postulacion struct {
 // Opciones válidas (las mismas que los chips del handoff y los CHECK de la base).
 var (
 	Facturaciones  = []string{"empiezo", "hasta-5", "5-a-20", "20-a-100", "mas-de-100"}
-	Origenes       = []string{"tiendanube", "empretienda", "mercadoshops", "shopify", "woocommerce", "ninguna"}
+	Origenes       = []string{"tiendanube", "empretienda", "mercadolibre", "shopify", "woocommerce", "ninguna"}
 	Especialidades = []string{"diseno", "desarrollo", "marketing", "contabilidad", "fotografia"}
 )
 

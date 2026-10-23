@@ -8,7 +8,7 @@
 	/** "Te mudás en una tarde." (handoff: #migrar), con la barra de importación en vivo. */
 	const l = getLanding();
 	const PASOS = [
-		['1', 'Conectás Tiendanube, Empretienda o Mercado Shops', '#2A140C'],
+		['1', 'Conectás Tiendanube, Empretienda o Mercado Libre', '#2A140C'],
 		['2', 'Revisás lo importado antes de publicar', '#2A140C'],
 		['3', 'Apuntás tu dominio. Listo.', '#D2582F']
 	] as const;

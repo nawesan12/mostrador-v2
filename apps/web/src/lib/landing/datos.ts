@@ -65,14 +65,6 @@ export const INTEG = [
 		'Stock y pedidos sincronizados'
 	],
 	[
-		'TikTok Shop',
-		'canales',
-		{
-			icon: I.logosTiktokIcon
-		},
-		'Catálogo y píxel'
-	],
-	[
 		'Google',
 		'canales',
 		{
@@ -164,49 +156,6 @@ export const INTEG = [
 		'Plan Z y cuotas'
 	],
 	[
-		'Cuenta DNI',
-		'cobros',
-		{
-			w: 'Cuenta DNI',
-			abbr: 'DNI',
-			bg: '#00A650',
-			fg: '#fff'
-		},
-		'QR interoperable'
-	],
-	[
-		'Visa',
-		'cobros',
-		{
-			icon: I.logosVisa
-		},
-		'Crédito y débito'
-	],
-	[
-		'Mastercard',
-		'cobros',
-		{
-			icon: I.logosMastercard
-		},
-		'Crédito y débito'
-	],
-	[
-		'American Express',
-		'cobros',
-		{
-			icon: I.logosAmex
-		},
-		'Crédito'
-	],
-	[
-		'PayPal',
-		'cobros',
-		{
-			icon: I.logosPaypal
-		},
-		'Ventas al exterior'
-	],
-	[
 		'Andreani',
 		'envios',
 		{
@@ -256,15 +205,6 @@ export const INTEG = [
 			col: '#4D148C'
 		},
 		'Envíos internacionales'
-	],
-	[
-		'Uber Flash',
-		'envios',
-		{
-			icon: I.siUber,
-			col: '#000'
-		},
-		'Envíos en el día'
 	],
 	[
 		'ARCA',
@@ -413,22 +353,6 @@ export const INTEG = [
 		'Importá tu tienda'
 	],
 	[
-		'YouTube',
-		'canales',
-		{
-			icon: I.logosYoutubeIcon
-		},
-		'Productos en tus videos'
-	],
-	[
-		'Pinterest',
-		'canales',
-		{
-			icon: I.logosPinterest
-		},
-		'Pines de producto'
-	],
-	[
 		'Getnet',
 		'cobros',
 		{
@@ -440,61 +364,6 @@ export const INTEG = [
 		'Posnet y link de pago'
 	],
 	[
-		'Banco Galicia',
-		'cobros',
-		{
-			w: 'Galicia',
-			abbr: 'GAL',
-			bg: '#F26722',
-			fg: '#fff'
-		},
-		'Conciliación de transferencias'
-	],
-	[
-		'Santander',
-		'cobros',
-		{
-			w: 'Santander',
-			abbr: 'SAN',
-			bg: '#EC0000',
-			fg: '#fff'
-		},
-		'Conciliación de transferencias'
-	],
-	[
-		'BBVA',
-		'cobros',
-		{
-			w: 'BBVA',
-			abbr: 'BBVA',
-			bg: '#004481',
-			fg: '#fff'
-		},
-		'Conciliación de transferencias'
-	],
-	[
-		'Banco Nación',
-		'cobros',
-		{
-			w: 'Nación',
-			abbr: 'BNA',
-			bg: '#1E4D8C',
-			fg: '#fff'
-		},
-		'Conciliación de transferencias'
-	],
-	[
-		'Lemon',
-		'cobros',
-		{
-			w: 'Lemon',
-			abbr: 'lemon',
-			bg: '#00F068',
-			fg: '#0B0B0B'
-		},
-		'Cobros en cripto'
-	],
-	[
 		'Binance Pay',
 		'cobros',
 		{
@@ -502,14 +371,6 @@ export const INTEG = [
 			col: '#F0B90B'
 		},
 		'USDT y cripto'
-	],
-	[
-		'Stripe',
-		'cobros',
-		{
-			icon: I.logosStripe
-		},
-		'Ventas al exterior'
 	],
 	[
 		'Enviopack',
@@ -521,28 +382,6 @@ export const INTEG = [
 			fg: '#fff'
 		},
 		'Cotizador multi transporte'
-	],
-	[
-		'Cruz del Sur',
-		'envios',
-		{
-			w: 'Cruz del Sur',
-			abbr: 'CDS',
-			bg: '#E30613',
-			fg: '#fff'
-		},
-		'Encomiendas al interior'
-	],
-	[
-		'Via Cargo',
-		'envios',
-		{
-			w: 'Via Cargo',
-			abbr: 'VC',
-			bg: '#E4002B',
-			fg: '#fff'
-		},
-		'Encomiendas'
 	],
 	[
 		'Moova',
@@ -670,6 +509,17 @@ export const INTEG = [
 			col: '#EA4B71'
 		},
 		'Automatizaciones'
+	],
+	[
+		'Empretienda',
+		'canales',
+		{
+			w: 'Empretienda',
+			abbr: 'ET',
+			bg: '#2E2A6B',
+			fg: '#fff'
+		},
+		'Importá productos y clientes'
 	]
 ] as const;
 

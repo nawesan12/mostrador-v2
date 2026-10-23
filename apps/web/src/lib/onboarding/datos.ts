@@ -46,6 +46,7 @@ export const LOGOS: Record<string, Logo> = {
 	ig: { icon: I.logosInstagramIcon, col: 'inherit', bg: '#FCEEF3' },
 	wa: { icon: I.logosWhatsappIcon, col: 'inherit', bg: '#E9F8EE' },
 	tn: { icon: I.phStorefrontFill, col: '#fff', bg: '#2C3E8F' },
+	et: { word: 'ET', col: '#fff', bg: '#2E2A6B' },
 	gm: { icon: I.logosGoogleMaps, col: 'inherit', bg: '#EEF4FD' },
 	and: { word: 'AND', col: '#fff', bg: '#E2001A' },
 	arca: { word: 'ARCA', col: '#fff', bg: '#1F3A6E' },
@@ -127,6 +128,13 @@ export const CONEXIONES = [
 		'Migración completa de tu tienda actual',
 		'1.204 productos · 3.880 clientes · 9.112 pedidos · 14 cupones',
 		true
+	],
+	[
+		'et',
+		'Empretienda',
+		'Productos, fotos y clientes de tu tienda',
+		'Desde el link de tu tienda y el Excel de clientes, sin claves',
+		false
 	],
 	[
 		'ml',
