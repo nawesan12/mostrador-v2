@@ -284,7 +284,7 @@ func DevolverSena(ctx context.Context, pool tx, mp Cobrador, tienda, id string, 
 		return tu, ErrSinCobros
 	}
 	if err := mp.DevolverSena(ctx, tienda, id); err != nil {
-		return tu, err
+		return tu, errors.Join(ErrDevolucion, err)
 	}
 	err = pool.EnTienda(ctx, tienda, func(t pgx.Tx) (err error) {
 		tu, err = escanearTurno(t.QueryRow(ctx, `SELECT `+colTurno+` FROM turnos WHERE id = $1`, id), ahora)

@@ -29,6 +29,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/limite"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
@@ -131,6 +132,10 @@ func Nuevo(d Dependencias) http.Handler {
 			cobrador = d.MercadoPago
 		}
 		turnos.Rutas(mux, d.App, turnos.Config{Tienda: tienda, MP: cobrador, Sitio: d.Sitio, Log: d.Log,
+			IP: func(r *http.Request) string { return cuentas.ClienteDe(r, d.ClaveBFF).IP },
+			Permitido: func(ctx context.Context, clave string, max int, ventana time.Duration) (bool, error) {
+				return limite.Permitido(ctx, d.App, clave, max, ventana)
+			},
 			Admin: func(r *http.Request) bool {
 				s, ok := cuentas.SesionDe(r)
 				return ok && (s.Rol == "duenio" || s.Rol == "admin")

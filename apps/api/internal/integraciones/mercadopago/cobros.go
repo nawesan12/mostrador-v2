@@ -318,12 +318,16 @@ func (s *Servicio) aplicar(ctx context.Context, tiendaID, ref string, pagoID int
 		case "pedido", "qr":
 			pedido = objetivo
 		case "turno":
-			// Seña aprobada: el turno queda confirmado (si alguien lo canceló mientras, sólo se marca
-			// pagada, para que la tienda la devuelva). Devuelta: se anota.
+			// Seña aprobada: el turno queda confirmado. Si alguien lo canceló mientras, o la reserva ya
+			// venció (el horario quedó libre y otra persona pudo tomarlo), sólo se marca pagada y queda
+			// cancelado, para que la tienda devuelva la seña. Devuelta: se anota.
 			switch {
 			case aprobado:
 				if _, err := t.Exec(ctx, `UPDATE turnos SET sena_pagada = true, vence_en = NULL,
-						estado = CASE WHEN estado = 'reservado' THEN 'confirmado' ELSE estado END
+						estado = CASE
+							WHEN estado = 'reservado' AND (vence_en IS NULL OR vence_en > now()) THEN 'confirmado'
+							WHEN estado = 'reservado' THEN 'cancelado'
+							ELSE estado END
 					WHERE id = $1::uuid`, objetivo); err != nil {
 					return err
 				}

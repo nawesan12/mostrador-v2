@@ -3130,6 +3130,7 @@ export interface components {
             inicio: string;
             nombre: string;
             telefono: string;
+            /** @description Puede ir vacío desde el panel */
             email: string;
             nota?: string | null;
             /**
@@ -3146,6 +3147,7 @@ export interface components {
             inicio: string;
             nombre: string;
             telefono: string;
+            /** Format: email */
             email: string;
         };
         HorarioLibre: {

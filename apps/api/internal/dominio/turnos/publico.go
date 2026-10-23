@@ -232,11 +232,13 @@ func Reservar(ctx context.Context, pool tx, mp Cobrador, sitio, slug string, r R
 	out.URL, err = mp.PagarTurno(ctx, id, turnoID, fmt.Sprintf("%s/t/%s/turno/%s", sitio, slug, codigo))
 	if err != nil {
 		// Sin preferencia no hay cómo pagar: el horario se libera ya, para poder probar de nuevo.
-		_ = pool.EnTienda(context.WithoutCancel(ctx), id, func(t pgx.Tx) error {
-			_, err := t.Exec(ctx, `UPDATE turnos SET estado = 'cancelado', vence_en = NULL WHERE id = $1`, turnoID)
+		// Con un contexto que no se cancela: aunque la persona cierre la página, el horario se libera.
+		sigue := context.WithoutCancel(ctx)
+		errLiberar := pool.EnTienda(sigue, id, func(t pgx.Tx) error {
+			_, err := t.Exec(sigue, `UPDATE turnos SET estado = 'cancelado', vence_en = NULL WHERE id = $1`, turnoID)
 			return err
 		})
-		return Reservado{}, errors.Join(ErrMercadoPago, err)
+		return Reservado{}, errors.Join(ErrMercadoPago, err, errLiberar)
 	}
 	return out, nil
 }

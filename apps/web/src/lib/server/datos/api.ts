@@ -594,9 +594,10 @@ export class DatosApi implements Datos {
 		return this.pedir<Turno[]>(`/v1/panel/turnos?${q}`);
 	}
 	async crearTurno(n: TurnoNuevo) {
-		const r = await this.intentar('/v1/panel/turnos', 'POST', n);
+		const r = await this.intentar('/v1/panel/turnos', 'POST', n, [400, 422]);
 		if (r.status === 409) return 'ocupado' as const;
-		if (r.status === 404) return 'invalido' as const;
+		// Como en el sandbox: un servicio o un horario que no van es "inválido", no un error de la API.
+		if (r.status === 404 || r.status === 400 || r.status === 422) return 'invalido' as const;
 		return (await r.json()) as Turno;
 	}
 	async estadoTurno(id: string, estado: EstadoTurno) {
@@ -623,7 +624,9 @@ export class DatosApi implements Datos {
 	private async intentar(
 		ruta: string,
 		metodo: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
-		cuerpo?: unknown
+		cuerpo?: unknown,
+		/** Estados de error que resuelve quien llama, además de 404 y 409. */
+		aceptar: number[] = []
 	) {
 		const res = await this.f(this.base + ruta, {
 			method: metodo,
@@ -634,7 +637,7 @@ export class DatosApi implements Datos {
 			},
 			body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo)
 		});
-		if (!res.ok && res.status !== 404 && res.status !== 409) {
+		if (!res.ok && res.status !== 404 && res.status !== 409 && !aceptar.includes(res.status)) {
 			const p = (await res.json().catch(() => null)) as { detail?: string; code?: string } | null;
 			error(res.status, { message: p?.detail ?? 'La API no respondió bien.', code: p?.code });
 		}

@@ -158,11 +158,16 @@
 		if (!y) return;
 		const sin = (u: T) => Object.fromEntries(Object.entries(u).filter(([k]) => k !== 'id'));
 		await Promise.all([
+			// Se intercambian; si tenían el mismo orden, el que sube queda en ese y el otro uno más
+			// (nunca un orden negativo).
 			pedir(`${ruta}/${x.id}`, 'PUT', {
 				...sin(x),
-				orden: y.orden === x.orden ? y.orden + d : y.orden
+				orden: y.orden !== x.orden ? y.orden : d < 0 ? y.orden : y.orden + 1
 			}),
-			pedir(`${ruta}/${y.id}`, 'PUT', { ...sin(y), orden: x.orden })
+			pedir(`${ruta}/${y.id}`, 'PUT', {
+				...sin(y),
+				orden: y.orden !== x.orden ? x.orden : d < 0 ? y.orden + 1 : y.orden
+			})
 		]);
 		await invalidateAll();
 	}

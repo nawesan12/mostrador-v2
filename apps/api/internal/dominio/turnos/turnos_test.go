@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -17,6 +18,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/vidriera"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db/pruebadb"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/limite"
 )
 
 // Lunes 2 de noviembre de 2026, 8 de la mañana en Argentina.
@@ -564,5 +566,45 @@ func TestRutas(t *testing.T) {
 	}
 	if w := pedir("GET", "/v1/publico/tiendas/no-existe/turnos", "", false); w.Code != http.StatusNotFound {
 		t.Fatalf("tienda inexistente: %d", w.Code)
+	}
+}
+
+// Tope de reservas públicas: 3 por teléfono y 10 por IP en una hora (el horario ocupado no cuenta
+// distinto: cada intento suma).
+func TestTopeDeReservas(t *testing.T) {
+	b := pruebadb.Nueva(t)
+	luna := armar(t, b.App, "luna")
+	mux := http.NewServeMux()
+	turnos.Rutas(mux, b.App, turnos.Config{
+		Ahora: func() time.Time { return lunes8 },
+		IP:    func(r *http.Request) string { return r.Header.Get("X-IP") },
+		Permitido: func(ctx context.Context, clave string, max int, ventana time.Duration) (bool, error) {
+			return limite.Permitido(ctx, b.App, clave, max, ventana)
+		},
+	})
+	reservar := func(hora, tel, ip string) int {
+		r := httptest.NewRequest("POST", "/v1/publico/tiendas/luna/turnos", strings.NewReader(`{"servicioId":"`+luna.corte.ID+
+			`","profesionalId":null,"inicio":"2026-11-02T`+hora+`:00-03:00","nombre":"Lucía","telefono":"`+tel+`","email":"lucia@ejemplo.com"}`))
+		r.Header.Set("X-IP", ip)
+		w := httptest.NewRecorder()
+		mux.ServeHTTP(w, r)
+		return w.Code
+	}
+	for _, h := range []string{"09:00", "09:30", "10:00"} {
+		if c := reservar(h, "1155550101", "190.0.0.1"); c != http.StatusCreated {
+			t.Fatalf("reserva %s: %d", h, c)
+		}
+	}
+	if c := reservar("10:30", "1155550101", "190.0.0.2"); c != http.StatusTooManyRequests {
+		t.Fatalf("cuarta con el mismo teléfono: %d", c)
+	}
+	for i := range 7 {
+		reservar("11:00", "115555021"+strconv.Itoa(i), "190.0.0.1")
+	}
+	if c := reservar("12:00", "1155559999", "190.0.0.1"); c != http.StatusTooManyRequests {
+		t.Fatalf("once desde la misma IP: %d", c)
+	}
+	if c := reservar("12:00", "1155559999", "190.0.0.3"); c != http.StatusCreated {
+		t.Fatalf("otra IP y otro teléfono: %d", c)
 	}
 }

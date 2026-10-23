@@ -105,6 +105,7 @@ test('turnos: cancelar con el link del turno libera el horario', async ({ page }
 	await expect(page.getByRole('heading', { name: '¡Listo, Tomás!' })).toBeVisible();
 	expect(await ofrecido(page, slug, inicio)).toBe(false);
 	await page.goBack();
+	await listo(page);
 	await page.getByRole('button', { name: 'Cancelar turno' }).click();
 	await page.getByRole('button', { name: 'Sí, cancelar el turno' }).click();
 	await expect(page.getByRole('heading', { name: 'Turno cancelado' })).toBeVisible();

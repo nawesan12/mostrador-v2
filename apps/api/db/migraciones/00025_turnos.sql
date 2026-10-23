@@ -62,9 +62,9 @@ CREATE TABLE turnos (
 	-- Para la página pública del turno: nadie adivina el de otro.
 	codigo_publico text NOT NULL UNIQUE CHECK (codigo_publico ~ '^[A-Za-z0-9_-]{16,64}$'),
 	servicio_id uuid NOT NULL,
-	servicio text NOT NULL,
+	servicio text NOT NULL CHECK (length(servicio) <= 60),
 	profesional_id uuid NOT NULL,
-	profesional text NOT NULL,
+	profesional text NOT NULL CHECK (length(profesional) <= 40),
 	inicio timestamptz NOT NULL,
 	fin timestamptz NOT NULL,
 	cliente_nombre text NOT NULL CHECK (length(cliente_nombre) BETWEEN 1 AND 80),
