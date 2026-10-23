@@ -42,7 +42,12 @@ const EXTRA = [
 	'ph:target',
 	// "¿Te sirvió este artículo?" en la ayuda.
 	'ph:thumbs-up-bold',
-	'ph:thumbs-down-bold'
+	'ph:thumbs-down-bold',
+	// Exportar las piezas de /marca.
+	'ph:image-bold',
+	'ph:file-pdf-bold',
+	'ph:file-zip-bold',
+	'ph:upload-simple-bold'
 ];
 const names = new Set<string>([...EXTRA, ...process.argv.slice(2)]);
 for (const f of files)
