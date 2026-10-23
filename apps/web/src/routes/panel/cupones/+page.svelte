@@ -173,6 +173,9 @@
 		pos: [I.phStorefrontFill, '#8A5A3E', 'Local']
 	} as const;
 
+	/** El link que deja el cupón listo para usar en la tienda (/t/[tienda]/c/[codigo]). */
+	const linkDe = (codigo: string) => `${SITE}/t/${data.slug}/c/${codigo.toLowerCase()}`;
+
 	async function copiar(c: C) {
 		try {
 			await navigator.clipboard.writeText(c.codigo);
@@ -182,11 +185,11 @@
 		ui.toast({ k: 'ok', title: `${c.codigo} copiado`, desc: 'Pegalo donde quieras' });
 	}
 	function mandar(c: C) {
-		const texto = `¡Hola! Te paso un código de ${data.tienda}: ${c.codigo} · ${c.descripcion}`;
+		const texto = `¡Hola! Te paso un código de ${data.tienda}: ${c.codigo} · ${c.descripcion}. Se aplica solo desde acá: ${linkDe(c.codigo)}`;
 		window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
 	}
 	async function historia(c: C) {
-		const texto = `${encabezado(c.tipo, c.valor)} en ${data.tienda} con el código ${c.codigo}`;
+		const texto = `${encabezado(c.tipo, c.valor)} en ${data.tienda} con el código ${c.codigo} · ${linkDe(c.codigo)}`;
 		try {
 			await navigator.clipboard.writeText(texto);
 		} catch {
@@ -351,7 +354,7 @@
 			'link',
 			I.phLinkBold,
 			'Link que lo aplica solo',
-			`${SITE.replace(/^https?:\/\//, '')}/c/${codigo.toLowerCase()} · ideal para historias`
+			`${linkDe(codigo).replace(/^https?:\/\//, '')} · ideal para historias`
 		]
 	] as const);
 	let creando = $state(false);
