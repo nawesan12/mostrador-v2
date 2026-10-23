@@ -13,6 +13,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/crecer"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cupones"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/devoluciones"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/finanzas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/formularios"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/hoy"
@@ -26,6 +27,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/vidriera"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
@@ -47,6 +49,8 @@ type Dependencias struct {
 	MercadoPago *mercadopago.Servicio
 	// Mercado Libre como canal: conexión, publicaciones, pedidos y preguntas.
 	MercadoLibre *mercadolibre.Servicio
+	// Correo para los avisos de la tienda (arrepentimiento). nil: no se manda.
+	Correo correo.Correo
 }
 
 // Nuevo devuelve el handler raíz de la API.
@@ -115,8 +119,10 @@ func Nuevo(d Dependencias) http.Handler {
 		if d.MercadoPago != nil {
 			pagador = d.MercadoPago
 		}
-		vidriera.Rutas(mux, d.App, pagador, d.Sitio)
 		ip := func(r *http.Request) string { return cuentas.ClienteDe(r, d.ClaveBFF).IP }
+		dev := &devoluciones.Servicio{Pool: d.App, Correo: d.Correo}
+		dev.Rutas(mux, tienda)
+		vidriera.Rutas(mux, d.App, pagador, d.Sitio, dev, ip)
 		if d.Arrepentimiento != nil {
 			d.Arrepentimiento.Rutas(mux, ip)
 		}

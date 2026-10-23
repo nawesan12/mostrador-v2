@@ -105,13 +105,7 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, pregu
 		}
 		w.WriteHeader(http.StatusNoContent)
 	}))
-	// Devoluciones, reseñas y preguntas llegan con el checkout, Google y Mercado Libre.
-	mux.HandleFunc("GET /v1/panel/devoluciones", con(func(w http.ResponseWriter, _ *http.Request, _ string) {
-		escribir(w, map[string]any{"devoluciones": []any{}, "tasa": 0})
-	}))
-	mux.HandleFunc("POST /v1/panel/devoluciones/{id}", con(func(w http.ResponseWriter, _ *http.Request, _ string) {
-		problema.Escribir(w, problema.NoEncontrado("Esa devolución no existe."))
-	}))
+	// Las devoluciones están en el paquete devoluciones (botón de arrepentimiento de la tienda).
 	mux.HandleFunc("GET /v1/panel/resenas", con(func(w http.ResponseWriter, r *http.Request, id string) {
 		ps := []PreguntaPanel{}
 		if preguntas != nil {

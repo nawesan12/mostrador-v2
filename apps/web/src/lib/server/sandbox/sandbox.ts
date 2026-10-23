@@ -34,6 +34,7 @@ import {
 	type EstadoIntegraciones
 } from '#lib/panel/integraciones.ts';
 import type {
+	Devolucion,
 	ConexionML,
 	ConexionMP,
 	PublicacionML,
@@ -2344,11 +2345,59 @@ export class DatosSandbox implements Datos {
 
 	async devoluciones() {
 		const d = await this.demo();
-		const c = await cambiosDe(this.db, this.sb.id, 'devolucion');
+		const [c, nuevas] = await Promise.all([
+			cambiosDe(this.db, this.sb.id, 'devolucion'),
+			cambiosDe(this.db, this.sb.id, 'devolucion-nueva')
+		]);
 		const estados = new Map(
 			[...c].filter(([, v]) => v).map(([k, v]) => [k, (v as { estado: EstadoDevolucion }).estado])
 		);
-		return devolucionesDemo(d, estados);
+		const base = devolucionesDemo(d, estados);
+		const propias = [...nuevas.values()]
+			.filter(Boolean)
+			.map((v) => {
+				const x = v as Devolucion;
+				return { ...x, estado: estados.get(x.id) ?? x.estado };
+			})
+			.sort((a, b) => Date.parse(b.creada) - Date.parse(a.creada));
+		return { ...base, devoluciones: [...propias, ...base.devoluciones] };
+	}
+
+	/**
+	 * Botón de arrepentimiento de la tienda (demo): el pedido se identifica por el número que trae el
+	 * código de la confirmación. Devuelve el código de trámite (el mismo si se repite).
+	 */
+	async arrepentirse(
+		numero: number,
+		p: { nombre: string; email: string; motivo: string },
+		ahora = Date.now()
+	): Promise<string | 'no-existe' | 'fuera-de-plazo'> {
+		const d = await this.demo();
+		const pedido = d.pedidos.find((x) => x.numero === numero);
+		if (!pedido) return 'no-existe';
+		if (ahora - pedido.creado > 10 * 86_400_000) return 'fuera-de-plazo';
+		const nuevas = await cambiosDe(this.db, this.sb.id, 'devolucion-nueva');
+		const ya = [...nuevas.values()].find((v) => (v as Devolucion | null)?.pedido === numero) as
+			(Devolucion & { codigo: string }) | undefined;
+		if (ya) return ya.codigo;
+		const codigo = `ARR-${new Date(ahora).getFullYear()}-${(nuevas.size + 1001).toString()}`;
+		const dev: Devolucion & { codigo: string } = {
+			id: `arr-${numero}`,
+			codigo,
+			producto:
+				pedido.items[0].nombre +
+				(pedido.items.length > 1 ? ` y ${pedido.items.length - 1} más` : ''),
+			foto: null,
+			cliente: p.nombre,
+			pedido: numero,
+			creada: new Date(ahora).toISOString(),
+			motivo: p.motivo || 'Arrepentimiento (no hace falta motivo)',
+			monto: pedido.total,
+			resolucion: 'reintegro',
+			estado: 'Pendiente'
+		};
+		await guardarCambio(this.db, this.sb.id, 'devolucion-nueva', dev.id, dev);
+		return codigo;
 	}
 
 	async resolverDevolucion(
