@@ -589,7 +589,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Atención al cliente',
 				cuerpo: [
 					{
-						p: 'Podés escribirnos por WhatsApp, por email a ayuda@mostradorapp.com.ar o desde el chat del panel, de lunes a sábado de 8 a 22 h. Te respondemos en menos de 48 horas hábiles y te damos un número de reclamo.'
+						p: 'Podés escribirnos por email a ayuda@mostradorapp.com.ar o desde el chat del panel, de lunes a sábado de 8 a 22 h. Te respondemos en menos de 48 horas hábiles y te damos un número de reclamo.'
 					}
 				]
 			},
