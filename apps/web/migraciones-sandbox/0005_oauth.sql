@@ -8,7 +8,9 @@ CREATE TABLE oauth_clientes (
 	nombre TEXT NOT NULL,
 	-- JSON con las direcciones de vuelta permitidas.
 	redirecciones TEXT NOT NULL,
-	creado_en INTEGER NOT NULL
+	creado_en INTEGER NOT NULL,
+	-- Último código emitido: la purga mira esto, no la fecha de registro (las IA guardan el id).
+	usado_en INTEGER
 );
 
 -- Códigos de autorización: un solo uso (se borran al canjear) y 5 minutos.

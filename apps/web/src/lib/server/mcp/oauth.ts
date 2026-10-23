@@ -117,15 +117,19 @@ export async function emitirCodigo(
 	ahora = Date.now()
 ) {
 	const codigo = randomToken(32);
-	await db.insert(oauthCodigos).values({
-		hash: await sha256(codigo),
-		clienteId: p.clienteId,
-		sandboxId: p.sandboxId,
-		redireccion: p.redireccion,
-		desafio: p.desafio,
-		permisos: p.permisos.join(' '),
-		venceEn: ahora + CODIGO_MS
-	});
+	await db.batch([
+		db.insert(oauthCodigos).values({
+			hash: await sha256(codigo),
+			clienteId: p.clienteId,
+			sandboxId: p.sandboxId,
+			redireccion: p.redireccion,
+			desafio: p.desafio,
+			permisos: p.permisos.join(' '),
+			venceEn: ahora + CODIGO_MS
+		}),
+		// El cliente se sigue usando: que la purga del cron no lo borre.
+		db.update(oauthClientes).set({ usadoEn: ahora }).where(eq(oauthClientes.id, p.clienteId))
+	]);
 	return codigo;
 }
 
@@ -328,8 +332,9 @@ export async function desconectar(db: DbSandbox, sandboxId: string, id: string) 
 }
 
 /**
- * Limpieza del cron: códigos vencidos y clientes registrados hace más de 30 días sin ninguna
- * conexión (las conexiones se van solas con su sandbox).
+ * Limpieza del cron: códigos vencidos y clientes sin uso hace más de 30 días (último código
+ * emitido o, si nunca se usaron, registro) y sin ninguna conexión (las conexiones se van solas
+ * con su sandbox).
  */
 export async function purgarOauth(db: DbSandbox, ahora = Date.now()) {
 	await db.batch([
@@ -338,7 +343,10 @@ export async function purgarOauth(db: DbSandbox, ahora = Date.now()) {
 			.delete(oauthClientes)
 			.where(
 				and(
-					lt(oauthClientes.creadoEn, ahora - 30 * 86_400_000),
+					lt(
+						sql`coalesce(${oauthClientes.usadoEn}, ${oauthClientes.creadoEn})`,
+						ahora - 30 * 86_400_000
+					),
 					sql`not exists (select 1 from oauth_conexiones c where c.cliente_id = ${oauthClientes.id})`
 				)
 			)

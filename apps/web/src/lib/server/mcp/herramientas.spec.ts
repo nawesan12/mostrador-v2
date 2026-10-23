@@ -74,6 +74,13 @@ describe('herramientas MCP', () => {
 			await llamar(c, 'crear_cupon', { codigo: 'HOLA10', tipo: 'porcentaje', valor: 10 })
 		);
 		expect(si.codigo).toBe('HOLA10');
+		// Un código largo se rechaza entero, no se recorta a 20.
+		const largo = await llamar(c, 'crear_cupon', {
+			codigo: 'VERANO2026-SUPEROFERTA',
+			tipo: 'porcentaje',
+			valor: 10
+		});
+		expect(largo.isError).toBe(true);
 	});
 
 	it('crea un link de pago con su dirección pública', async () => {

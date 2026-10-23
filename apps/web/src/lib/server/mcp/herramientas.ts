@@ -654,7 +654,8 @@ const MANEJADORES: Record<string, Manejador> = {
 	},
 
 	async crear_cupon({ datos }, a) {
-		const codigo = (texto(a.codigo, 20) ?? '').toUpperCase();
+		// Sin recortar: un código de más de 20 lo rechaza la regex, no se acorta en silencio.
+		const codigo = (typeof a.codigo === 'string' ? a.codigo.trim() : '').toUpperCase();
 		if (!/^[A-Z0-9-]{3,20}$/.test(codigo))
 			falla('El código va en mayúsculas, de 3 a 20 letras, números o guiones.');
 		const tipo =

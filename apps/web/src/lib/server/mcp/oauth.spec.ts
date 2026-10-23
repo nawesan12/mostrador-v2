@@ -239,6 +239,29 @@ describe('revocar y desconectar', () => {
 		const n = await d1!.prepare('select count(*) n from oauth_clientes').first<number>('n');
 		expect(n).toBe(0);
 	});
+
+	it('el cron no borra un cliente registrado hace mucho que se sigue usando', async () => {
+		const { db, sb, c } = await armar();
+		const DIA = 86_400_000;
+		const pedirCodigo = (ahora: number) =>
+			emitirCodigo(
+				db,
+				{
+					clienteId: c.client_id,
+					sandboxId: sb.id,
+					redireccion: VUELTA,
+					desafio: 'x'.repeat(43),
+					permisos: ['lectura']
+				},
+				ahora
+			);
+		const clientes = () => d1!.prepare('select count(*) n from oauth_clientes').first<number>('n');
+		await pedirCodigo(T0 + 20 * DIA);
+		await purgarOauth(db, T0 + 31 * DIA);
+		expect(await clientes()).toBe(1);
+		await purgarOauth(db, T0 + 51 * DIA);
+		expect(await clientes()).toBe(0);
+	});
 });
 
 describe('permisos y límites', () => {

@@ -39,7 +39,8 @@ export const oauthClientes = sqliteTable('oauth_clientes', {
 	id: text('id').primaryKey(),
 	nombre: text('nombre').notNull(),
 	redirecciones: text('redirecciones').notNull(),
-	creadoEn: integer('creado_en').notNull()
+	creadoEn: integer('creado_en').notNull(),
+	usadoEn: integer('usado_en')
 });
 
 export const oauthCodigos = sqliteTable(

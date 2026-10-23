@@ -59,7 +59,7 @@ El circuito es el de PanelPedidos del handoff: Sin pagar → Para preparar → L
 
 ## Lo que sigue (orden del plan)
 
-Cuenta (Plan y facturación con cancelación en 3 pasos, Usuarios y permisos con la matriz, Dominio, Notificaciones por canal, Mis datos) → Integraciones (hub con "Configurar" de cada una) → storefront y 16 plantillas (`/t/[tienda]`, `/c/[codigo]`) → integraciones reales (con credenciales) → MCP + OAuth → Marca → endurecimiento.
+Cuenta (Plan y facturación con cancelación en 3 pasos, Usuarios y permisos con la matriz, Dominio, Notificaciones por canal, Mis datos) → Integraciones (hub con "Configurar" de cada una) → storefront y 16 plantillas (`/t/[tienda]`, `/c/[codigo]`) → integraciones reales (con credenciales) → MCP + OAuth en producción (API Go) → Marca → endurecimiento.
 
 ## Trampas que ya mordieron
 
