@@ -217,3 +217,38 @@ URL, para que no quede en el historial ni en logs.
 - El BFF sigue siendo el que habla con las IA (nombres de OAuth, `/api/mcp` JSON-RPC); Go sólo ve
   su propio contrato (`/v1/ia/*`, `/v1/panel/ia*`).
 - Goose corre con migraciones fuera de orden: varias ramas suman migraciones a la vez.
+
+## 23. Turnos con seña (PR #59)
+
+- Modelo: `turnos_ajustes` (una fila por tienda; sin fila, apagado con seña 30 %, 60 min de
+  anticipación y 14 días de vista), `turnos_servicios`, `turnos_profesionales` y `turnos`, todas con
+  `app.aplicar_rls`. Cada turno copia el nombre del servicio y del profesional (no son FK): borrar
+  uno no deja la agenda en blanco. El turno tiene un `codigo_publico` aleatorio para su página
+  (`/t/{slug}/turno/{codigo}`), como los pedidos de la tienda online.
+- Disponibilidad (`turnos.Libres` en Go, `lib/turnos/libres.ts` en la web): grilla de 15 min desde
+  el comienzo de cada franja, el servicio tiene que entrar entero en una franja, el profesional lo
+  tiene que hacer (lista vacía = todos) y no tener otro turno que se superponga. Los días que se
+  ofrecen son hoy y los `diasVista − 1` siguientes, y nada antes de `ahora + anticipacionMin`.
+  "Cualquiera" sirve si algún profesional está libre; al reservar se asigna el primero libre por
+  `orden`. Las dos implementaciones corren la misma tabla de casos
+  (`apps/api/internal/dominio/turnos/testdata/libres.json`).
+- Sin cron para liberar horarios: un turno `reservado` sin seña pagada deja de bloquear cuando pasa
+  su `venceEn` (15 min). La regla está en la disponibilidad, no en un proceso que tenga que correr;
+  la fila queda `reservado` y la API la muestra con `vencido: true`. La preferencia de Mercado Pago
+  vence a la misma hora, así nadie paga una seña de un horario que ya se liberó.
+- Dos reservas al mismo horario: la reserva bloquea los profesionales activos de la tienda
+  (`SELECT … FOR UPDATE`, siempre por id para no trabarse) y recién ahí mira los turnos e inserta,
+  todo en la misma transacción. Una restricción de exclusión no alcanza porque "vencido" depende de
+  la hora actual. El test concurrente lo prueba (10 a la vez: gana uno; sin el bloqueo, fallaba).
+- Seña: porcentaje del precio del servicio, redondeado al peso. Precio, duración y seña salen del
+  servidor. Con seña > 0 y Mercado Pago conectado, el turno queda `reservado` y se devuelve el
+  `init_point` (Checkout Pro con la cuenta de la tienda, `mp_cobros.tipo = 'turno'`, sin cuotas).
+  El webhook aprobado lo pasa a `confirmado` con `senaPagada`. Sin Mercado Pago o con seña 0, queda
+  `confirmado` y sin seña. Si Mercado Pago no responde al armar el pago, el turno se cancela en el
+  momento para no tomar el horario.
+- Cancelar (la persona desde su página, hasta `anticipacionMin` antes; la tienda desde el panel)
+  nunca devuelve la seña sola: la tienda la devuelve con "Devolver la seña" (refund del pago en
+  Mercado Pago, sólo dueña o admin), y el turno queda con `senaDevuelta`.
+- El turno a mano del panel no tiene seña ni mira la grilla; si se superpone con otro, pide
+  confirmar (`forzar`). Turno nuevo y cancelado van al outbox (`turno.nuevo`, `turno.cancelado`)
+  para los avisos.
