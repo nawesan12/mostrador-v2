@@ -196,6 +196,10 @@ func TestFacturacionConARCA(t *testing.T) {
 	if err := s.NotaDeCredito(ctx, luna, idP1, ahora); err == nil {
 		t.Fatal("se anuló dos veces")
 	}
+	// Desde la lista, el error se lee tal cual en el panel (no el de la factura A).
+	if _, err := (facturacion.ParaListas{S: s}).Anular(ctx, luna, []string{idP1}, ahora); err == nil || !strings.Contains(err.Error(), "no se puede anular") {
+		t.Fatalf("anular dos veces desde la lista: %v", err)
+	}
 	regs, err := listas.Comprobantes(ctx, b.App, luna, ahora)
 	if err != nil {
 		t.Fatal(err)

@@ -32,4 +32,36 @@ describe('DatosApi', () => {
 			body: { message: 'Tu sesión venció.', code: 'sin_sesion' }
 		});
 	});
+
+	it('ARCA: los errores de Go vuelven como texto para mostrar', async () => {
+		const api = new DatosApi(
+			'http://api',
+			'tok',
+			respuesta(409, {
+				status: 409,
+				detail: 'Primero conectá ARCA con tu certificado.',
+				code: 'sin_arca'
+			})
+		);
+		expect(await api.arcaProbar()).toEqual({
+			ok: false,
+			ultimo: 0,
+			detalle: 'Primero conectá ARCA con tu certificado.'
+		});
+		expect(await api.arcaCertificado('x')).toEqual({
+			error: 'Primero conectá ARCA con tu certificado.'
+		});
+		const ok = new DatosApi('http://api', 'tok', respuesta(200, { pedido: '-----BEGIN' }));
+		expect(
+			await ok.arcaPedido({
+				cuit: '20448592341',
+				razonSocial: 'X',
+				condicion: 'monotributo',
+				puntoVenta: 1,
+				ambiente: 'homologacion'
+			})
+		).toEqual({ pedido: '-----BEGIN' });
+		const nada = (async () => new Response(null, { status: 204 })) as typeof fetch;
+		expect(await new DatosApi('http://api', 'tok', nada).arcaAjustes({ puntoVenta: 2 })).toBeNull();
+	});
 });

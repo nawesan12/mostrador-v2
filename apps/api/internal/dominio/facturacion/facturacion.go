@@ -437,6 +437,9 @@ func (p ParaListas) Anular(ctx context.Context, tienda string, ids []string, aho
 	n := 0
 	for _, id := range ids {
 		if err := p.S.NotaDeCredito(ctx, tienda, id, ahora); err != nil {
+			if errors.Is(err, ErrInvalido) {
+				return n, errors.New("Esa factura no se puede anular: tiene que estar autorizada y sin otra nota de crédito.")
+			}
 			return n, legible(err)
 		}
 		n++

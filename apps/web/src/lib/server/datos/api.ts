@@ -18,6 +18,12 @@ import type {
 	Turno,
 	TurnoNuevo,
 	AccionCupon,
+	ArcaAjustes,
+	ArcaAlta,
+	ArcaCertificado,
+	ArcaConfig,
+	ArcaPedido,
+	ArcaPrueba,
 	ConexionML,
 	Medicion,
 	ConexionMP,
@@ -370,20 +376,43 @@ export class DatosApi implements Datos {
 			ciclo: ciclo ?? 'mes'
 		});
 	}
-	// Las demás integraciones llegan una por PR: Mercado Pago, Mercado Libre y la medición son reales.
+	// Las demás integraciones llegan una por PR: Mercado Pago, Mercado Libre, la medición y ARCA son reales.
 	async integraciones() {
 		const e = estadoInicial(false);
-		const [mp, ml, ia, m] = await Promise.all([
+		const [mp, ml, ia, m, arca] = await Promise.all([
 			this.mercadoPago(),
 			this.mercadoLibre(),
 			this.pedir<{ permisos: Record<string, boolean> }>('/v1/panel/ia'),
-			this.medicion()
+			this.medicion(),
+			this.arca()
 		]);
 		e.conectadas.mp = mp.conectada;
 		e.conectadas.ml = ml.conectada;
 		Object.assign(e.conectadas, conectadasDeMedicion(m));
+		e.conectadas.arca = arca.conectada;
+		e.opciones.arca = { ...e.opciones.arca, auto: arca.facturarAlCobrar };
 		e.permisosIa = { ...e.permisosIa, ...ia.permisos };
 		return e;
+	}
+	arca() {
+		return this.pedir<ArcaConfig>('/v1/panel/arca');
+	}
+	async arcaPedido(a: ArcaAlta): Promise<ArcaPedido> {
+		const r = await this.conProblema<{ pedido: string }>('/v1/panel/arca/pedido', 'POST', a);
+		return 'error' in r ? r : { pedido: r.pedido };
+	}
+	arcaCertificado(pem: string) {
+		return this.conProblema<ArcaCertificado>('/v1/panel/arca/certificado', 'PUT', {
+			certificado: pem
+		});
+	}
+	async arcaAjustes(a: ArcaAjustes) {
+		const r = await this.conProblema<null>('/v1/panel/arca/ajustes', 'PUT', a);
+		return r && 'error' in r ? r : null;
+	}
+	async arcaProbar(): Promise<ArcaPrueba> {
+		const r = await this.conProblema<ArcaPrueba>('/v1/panel/arca/probar', 'POST', {});
+		return 'error' in r ? { ok: false, ultimo: 0, detalle: r.error } : r;
 	}
 	medicion() {
 		return this.pedir<Medicion>('/v1/panel/integraciones/medicion');
@@ -634,6 +663,30 @@ export class DatosApi implements Datos {
 	}
 
 	/** Como `pedir`, pero 404 y 409 vuelven como respuesta (son resultados, no errores). */
+	/** Como `pedir`, pero un 4xx/5xx vuelve como { error } con el detalle de Go, para mostrarlo. */
+	private async conProblema<T>(
+		ruta: string,
+		metodo: 'POST' | 'PUT',
+		cuerpo: unknown
+	): Promise<T | { error: string }> {
+		const res = await this.f(this.base + ruta, {
+			method: metodo,
+			headers: {
+				accept: 'application/json',
+				'content-type': 'application/json',
+				...(this.token ? { authorization: `Bearer ${this.token}` } : {})
+			},
+			body: JSON.stringify(cuerpo)
+		});
+		if (res.status === 401) error(401, 'Tu sesión venció.');
+		if (!res.ok) {
+			const p = (await res.json().catch(() => null)) as { detail?: string } | null;
+			return { error: p?.detail ?? 'ARCA no respondió bien. Probá de nuevo en un rato.' };
+		}
+		if (res.status === 204) return null as T;
+		return (await res.json()) as T;
+	}
+
 	private async intentar(
 		ruta: string,
 		metodo: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
