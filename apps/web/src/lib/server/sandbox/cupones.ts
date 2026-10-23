@@ -15,7 +15,9 @@ const iso = (t: number) => new Date(t).toISOString();
 const pesos = (n: number) => '$ ' + Math.round(n).toLocaleString('es-AR');
 
 /** Lo que el visitante cambió de un cupón de ejemplo. */
-export type CambioCupon = Partial<Pick<Cupon, 'estado' | 'minimo' | 'descripcion' | 'consejo'>>;
+export type CambioCupon = Partial<
+	Pick<Cupon, 'estado' | 'minimo' | 'descripcion' | 'consejo' | 'usos' | 'vendio' | 'desconto'>
+>;
 export type EstadoRelampago = { horas: number; liberadas: number; terminada: boolean };
 
 /** El domingo que viene a las 23:59 de Argentina. */
