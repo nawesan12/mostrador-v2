@@ -64,7 +64,8 @@ test('facturación: emitir una factura A pide CUIT', async ({ page }) => {
 });
 
 test('envíos: etiqueta de un pedido listo lo pasa a en camino', async ({ page }) => {
-	await demo(page, '/panel/pedidos?estado=para-preparar');
+	// Uno que se envía: los de retiro en el local no aparecen en Envíos.
+	await demo(page, '/panel/pedidos?estado=para-preparar&envio=andreani');
 	const numero = (await page.locator('.fila .q-s').first().textContent())!.match(/#(\d+)/)![1];
 	await page
 		.locator('.fila')
