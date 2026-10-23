@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { deslizable } from '#lib/panel/deslizable.ts';
 	import { onMount } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { invalidateAll } from '$app/navigation';
@@ -478,7 +479,13 @@
 		</div>
 	{/if}
 
-	<div class="tabs" role="group" aria-label="Ver" use:anim={{ t: 'rise', delay: 135 }}>
+	<div
+		class="tabs"
+		role="group"
+		aria-label="Ver"
+		use:anim={{ t: 'rise', delay: 135 }}
+		use:deslizable
+	>
 		{#each TABS as [id, t, icono, cuantos] (id)}
 			<button type="button" aria-pressed={tab === id} onclick={() => (tab = id)}
 				><Icon icon={icono} size={15} />{t}<span>{cuantos}</span></button
@@ -759,7 +766,7 @@
 					aria-label="Buscar cupón"
 				/></label
 			>
-			<div class="filtros" role="group" aria-label="Estado">
+			<div class="filtros" role="group" aria-label="Estado" use:deslizable>
 				{#each FILTROS as [id, t, c] (id)}
 					<button
 						type="button"

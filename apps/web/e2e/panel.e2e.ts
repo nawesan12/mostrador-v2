@@ -38,23 +38,13 @@ test('una sección que no existe da 404', async ({ page }) => {
 	expect(res?.status()).toBe(404);
 });
 
-test('el tema y el modo se recuerdan', async ({ page }) => {
+test('el tema se recuerda', async ({ page }) => {
 	await demo(page);
 	await page.getByRole('button', { name: 'Pasar a tema oscuro' }).click();
 	await expect(page.locator('.panel')).toHaveAttribute('data-theme', 'dark');
 	await page.reload();
 	await listo(page);
 	await expect(page.locator('.panel')).toHaveAttribute('data-theme', 'dark');
-
-	await page.getByRole('button', { name: 'Simple' }).dispatchEvent('click');
-	await expect(page.locator('.barra .area')).toHaveText('Día a día');
-	await page.reload();
-	await listo(page);
-	await expect(page.locator('.barra .area')).toHaveText('Día a día');
-	await expect(page.getByRole('button', { name: 'Simple' })).toHaveAttribute(
-		'aria-pressed',
-		'true'
-	);
 });
 
 test('notificaciones: filtra y marca todo como leído', async ({ page }) => {

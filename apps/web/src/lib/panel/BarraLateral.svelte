@@ -4,13 +4,15 @@
 	import MarcaIcono from '#lib/components/MarcaIcono.svelte';
 	import * as I from '#lib/icons.ts';
 	import type { components } from '@mostrador/contrato/esquema';
-	import { AREAS, SIMPLE, rutaDe, type Area } from './navegacion.ts';
+	import { AREAS, rutaDe, type Area, type Item } from './navegacion.ts';
 	import { getShell } from './shell.svelte.ts';
 
 	/**
-	 * Barra lateral (handoff): la tienda, buscar, las secciones del área (o "Día a día" en Simple),
-	 * los canales conectados, la prueba y el cambio Simple/Completo. Fija desde 1100 px; más angosto,
-	 * se abre encima.
+	 * Barra lateral (handoff): la tienda, buscar, las secciones del área, los canales conectados y la
+	 * prueba. Fija desde 1100 px; más angosta, se abre encima. En el celular (sin rail) las áreas van
+	 * en acordeón —tocar una despliega sus secciones— y todo el menú se desplaza junto; la prueba queda
+	 * en una línea al final. El cambio Simple/Completo del handoff se sacó: confundía más de lo que
+	 * ayudaba (Nahuel, 23/10).
 	 */
 	let {
 		area,
@@ -28,20 +30,23 @@
 		resumen: components['schemas']['ResumenPanel'];
 	} = $props();
 	const shell = getShell();
-	const simple = $derived(shell.modo === 'simple');
-	// En el celular no hay rail: arriba del menú van las áreas, y tocar una muestra sus secciones.
-	let vista = $state<string | null>(null);
-	const mostrada = $derived(AREAS.find((a) => a.id === vista) ?? area);
-	const items = $derived(simple ? SIMPLE : mostrada.items);
+	// Celular (sin rail): acordeón. Se dibuja una sola de las dos navegaciones, no las dos escondidas.
+	let ancho = $state(1200);
+	const celular = $derived(ancho < 760);
+	// Acordeón del celular: abierta el área actual; se puede abrir otra.
+	let abierta = $state<string | null>(null);
+	const desplegada = $derived(abierta ?? area.id);
 	// Cualquier navegación (una sección, el "+", Elegir plan…) cierra el menú.
 	afterNavigate(() => {
 		shell.barra = false;
-		vista = null;
+		abierta = null;
 	});
 	const activo = (label: string) =>
 		label === seccion ||
 		(label === 'Inicio' && seccion === 'Resumen') ||
 		(label === 'Cobros' && seccion === 'Finanzas');
+	const insignia = (i: Item) => (i.insignia ? resumen.insignias[i.insignia] : 0);
+	const pendientes = (a: Area) => a.items.reduce((s, i) => s + insignia(i), 0);
 	const NOMBRES: Record<string, string> = {
 		wa: 'WhatsApp',
 		ml: 'Mercado Libre',
@@ -55,9 +60,29 @@
 			(_, i) => i < resumen.prueba.diasTotales - resumen.prueba.diasRestantes
 		)
 	);
+	const restan = $derived(
+		`Quedan ${resumen.prueba.diasRestantes} ${resumen.prueba.diasRestantes === 1 ? 'día' : 'días'}`
+	);
 </script>
 
+<svelte:window bind:innerWidth={ancho} />
+
 <!-- eslint-disable svelte/no-navigation-without-resolve -- rutas del panel armadas con rutaDe -->
+{#snippet seccionLink(i: Item)}
+	{@const on = activo(i.label)}
+	{@const n = insignia(i)}
+	<a
+		href={rutaDe(i.label)}
+		class:on
+		aria-current={on ? 'page' : undefined}
+		onclick={() => (shell.barra = false)}
+	>
+		<Icon icon={on ? i.iconFill : i.icon} size={18} />
+		<span class="i-l">{i.label}</span>
+		{#if n}<span class="badge">{n}</span>{/if}
+	</a>
+{/snippet}
+
 {#if shell.barra}
 	<div class="fondo" onclick={() => (shell.barra = false)} aria-hidden="true"></div>
 {/if}
@@ -81,33 +106,40 @@
 		</button>
 	</div>
 	<div class="medio">
-		{#if !simple}
-			<div class="areas" role="group" aria-label="Áreas">
-				{#each AREAS as a (a.id)}
-					{@const on = mostrada.id === a.id}
-					<button type="button" class:on aria-pressed={on} onclick={() => (vista = a.id)}>
-						<Icon icon={on ? a.iconFill : a.icon} size={16} />{a.label}
-					</button>
-				{/each}
+		<!-- Compu y tablet: las secciones del área elegida en el rail. -->
+		{#if !celular}
+			<div class="solo-ancho">
+				<div class="area">{area.label}</div>
+				<nav class="items">
+					{#each area.items as i (i.label)}{@render seccionLink(i)}{/each}
+				</nav>
 			</div>
+		{:else}
+			<!-- Celular: todas las áreas, en acordeón. -->
+			<nav class="acordeon" aria-label="Áreas del panel">
+				{#each AREAS as a (a.id)}
+					{@const on = desplegada === a.id}
+					{@const n = pendientes(a)}
+					<button
+						type="button"
+						class="a-fila"
+						class:on
+						aria-expanded={on}
+						onclick={() => (abierta = on ? '' : a.id)}
+					>
+						<Icon icon={on ? a.iconFill : a.icon} size={19} />
+						<span class="a-l">{a.label}</span>
+						{#if n && !on}<span class="badge">{n}</span>{/if}
+						<Icon icon={on ? I.phCaretUpBold : I.phCaretDownBold} size={13} />
+					</button>
+					{#if on}
+						<div class="items sub">
+							{#each a.items as i (i.label)}{@render seccionLink(i)}{/each}
+						</div>
+					{/if}
+				{/each}
+			</nav>
 		{/if}
-		<div class="area">{simple ? 'Día a día' : mostrada.label}</div>
-		<nav class="items">
-			{#each items as i (i.label)}
-				{@const on = activo(i.label)}
-				{@const n = i.insignia ? resumen.insignias[i.insignia] : 0}
-				<a
-					href={rutaDe(i.label)}
-					class:on
-					aria-current={on ? 'page' : undefined}
-					onclick={() => (shell.barra = false)}
-				>
-					<Icon icon={on ? i.iconFill : i.icon} size={18} />
-					<span class="i-l">{i.label}</span>
-					{#if n}<span class="badge">{n}</span>{/if}
-				</a>
-			{/each}
-		</nav>
 		{#if resumen.canales.length}
 			<div class="c-t">Canales conectados</div>
 			<div class="canales">
@@ -124,6 +156,13 @@
 				>
 			</div>
 		{/if}
+		{#if resumen.prueba.diasRestantes > 0}
+			<a class="prueba-corta" href={rutaDe('Plan y facturación')}>
+				<span><b>Plan {resumen.prueba.plan} · prueba</b><span>{restan}</span></span><span
+					class="pc-cta">Elegir plan</span
+				>
+			</a>
+		{/if}
 	</div>
 	<div class="abajo">
 		{#if resumen.prueba.diasRestantes > 0}
@@ -131,10 +170,7 @@
 				<div class="arcos"></div>
 				<div class="p-in">
 					<div class="p-plan">Plan {resumen.prueba.plan} · prueba</div>
-					<div class="p-dias">
-						Quedan {resumen.prueba.diasRestantes}
-						{resumen.prueba.diasRestantes === 1 ? 'día' : 'días'}
-					</div>
+					<div class="p-dias">{restan}</div>
 					<div class="p-barras">
 						{#each dias as usado, i (i)}<span class:usado></span>{/each}
 					</div>
@@ -142,14 +178,6 @@
 				</div>
 			</div>
 		{/if}
-		<div class="modo" role="group" aria-label="Modo del panel">
-			<button type="button" aria-pressed={simple} onclick={() => shell.cambiarModo('simple')}
-				>Simple</button
-			>
-			<button type="button" aria-pressed={!simple} onclick={() => shell.cambiarModo('completo')}
-				>Completo</button
-			>
-		</div>
 	</div>
 </aside>
 
@@ -259,7 +287,8 @@
 		flex: 1;
 		overflow: auto;
 	}
-	.areas {
+	.acordeon,
+	.prueba-corta {
 		display: none;
 	}
 	.area {
@@ -391,27 +420,6 @@
 		padding: 8px;
 		border-radius: 999px;
 	}
-	.modo {
-		margin-top: 10px;
-		display: flex;
-		padding: 3px;
-		border-radius: 999px;
-		background: var(--chip);
-	}
-	.modo button {
-		flex: 1;
-		border: 0;
-		font-size: 12.5px;
-		font-weight: 600;
-		padding: 7px;
-		border-radius: 999px;
-		background: transparent;
-		color: var(--tx);
-	}
-	.modo button[aria-pressed='true'] {
-		background: var(--sf);
-		box-shadow: var(--sh);
-	}
 	/* Menos de 1100 px: se abre encima, a la derecha del rail. */
 	@media (max-width: 1099px) {
 		.barra {
@@ -425,36 +433,86 @@
 			box-shadow: 30px 0 60px -20px rgba(42, 20, 12, 0.5);
 		}
 	}
-	/* Celular: sin rail, desde el borde, con las áreas arriba (las piezas del rail en chips). */
+	/* Celular: sin rail, desde el borde. Las áreas en acordeón y todo el menú se desplaza junto. */
 	@media (max-width: 759px) {
 		.barra {
 			left: 0;
 			width: min(320px, 86vw);
+			overflow-y: auto;
+			overscroll-behavior: contain;
 		}
-		.areas {
+		.medio {
+			flex: none;
+			overflow: visible;
+			padding-bottom: 20px;
+		}
+		.solo-ancho,
+		.abajo {
+			display: none;
+		}
+		.acordeon {
 			display: flex;
-			flex-wrap: wrap;
-			gap: 6px;
-			padding: 4px 8px 14px;
+			flex-direction: column;
+			gap: 2px;
+			padding: 4px 8px 0;
 		}
-		.areas button {
-			display: inline-flex;
+		.a-fila {
+			display: flex;
 			align-items: center;
-			gap: 6px;
+			gap: 12px;
+			width: 100%;
+			padding: 12px;
 			border: 0;
-			cursor: pointer;
-			padding: 8px 12px;
-			border-radius: 999px;
-			background: var(--sf);
+			border-radius: 12px;
+			background: transparent;
 			color: var(--tx);
-			box-shadow: var(--sh);
 			font:
-				600 13px 'Instrument Sans',
+				600 15px 'Instrument Sans',
 				sans-serif;
+			text-align: left;
+			cursor: pointer;
 		}
-		.areas button.on {
-			background: #2a140c;
+		.a-fila.on {
+			background: var(--sf);
+			box-shadow: var(--sh);
+		}
+		.a-l {
+			flex: 1;
+		}
+		.items.sub {
+			padding: 2px 0 8px 18px;
+		}
+		.prueba-corta {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			margin: 16px 12px 0;
+			padding: 12px 14px;
+			border-radius: 14px;
+			background: linear-gradient(140deg, #c95a32, #a8461f);
 			color: #fff;
+			text-decoration: none;
+			font-size: 13px;
+		}
+		.prueba-corta > span:first-child {
+			flex: 1;
+			min-width: 0;
+			display: flex;
+			flex-direction: column;
+		}
+		.prueba-corta b {
+			font-size: 12px;
+			font-weight: 600;
+			opacity: 0.85;
+		}
+		.pc-cta {
+			flex: none;
+			padding: 7px 12px;
+			border-radius: 999px;
+			background: #fff;
+			color: #b8461f;
+			font-weight: 600;
+			font-size: 12.5px;
 		}
 	}
 	@media (min-width: 1100px) {

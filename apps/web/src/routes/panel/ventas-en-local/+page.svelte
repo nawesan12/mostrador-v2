@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { deslizable } from '#lib/panel/deslizable.ts';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { goto, invalidateAll } from '$app/navigation';
 	import Icon from '#lib/components/Icon.svelte';
@@ -153,7 +154,7 @@
 						aria-label="Buscá o escaneá un producto"
 					/></label
 				>
-				<div class="cats" role="group" aria-label="Categorías">
+				<div class="cats" role="group" aria-label="Categorías" use:deslizable>
 					{#each categorias as c (c)}
 						<button type="button" aria-pressed={categoria === c} onclick={() => (categoria = c)}
 							>{c}</button

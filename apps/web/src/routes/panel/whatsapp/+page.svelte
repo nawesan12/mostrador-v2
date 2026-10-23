@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { deslizable } from '#lib/panel/deslizable.ts';
 	import { tick } from 'svelte';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
@@ -161,7 +162,7 @@
 							aria-label="Buscar conversación"
 						/></label
 					>
-					<div class="filtros" role="group" aria-label="Filtrar">
+					<div class="filtros" role="group" aria-label="Filtrar" use:deslizable>
 						{#each FILTROS as [id, t] (id)}
 							<button type="button" aria-pressed={filtro === id} onclick={() => (filtro = id)}
 								>{t}<span
@@ -277,7 +278,7 @@
 					</div>
 				{/if}
 				<div class="escribir">
-					<div class="rapidas">
+					<div class="rapidas" use:deslizable>
 						{#each ACCIONES as [icono, t, texto] (t)}
 							<button
 								type="button"

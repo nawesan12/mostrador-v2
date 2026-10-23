@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { deslizable } from '#lib/panel/deslizable.ts';
 	import { resolve } from '$app/paths';
 	import Icon from '#lib/components/Icon.svelte';
 	import Seo from '#lib/components/Seo.svelte';
@@ -77,7 +78,13 @@
 		>
 	</div>
 
-	<div class="tabs" role="group" aria-label="Informe" use:anim={{ t: 'rise', delay: 45 }}>
+	<div
+		class="tabs"
+		role="group"
+		aria-label="Informe"
+		use:anim={{ t: 'rise', delay: 45 }}
+		use:deslizable
+	>
 		{#each SERIES as [id, t], i (id)}
 			<button type="button" aria-pressed={serie === i} onclick={() => (serie = i)}>{t}</button>
 		{/each}

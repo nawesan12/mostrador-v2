@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { deslizable } from '#lib/panel/deslizable.ts';
 	import { untrack } from 'svelte';
 	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { goto, invalidateAll } from '$app/navigation';
@@ -400,7 +401,13 @@
 		>
 	</div>
 
-	<div class="vistas" use:anim={{ t: 'rise', delay: 50 }} role="group" aria-label="Vistas">
+	<div
+		class="vistas"
+		use:anim={{ t: 'rise', delay: 50 }}
+		role="group"
+		aria-label="Vistas"
+		use:deslizable
+	>
 		{#each VISTAS as v (v.id)}
 			{@const ic = {
 				todos: [I.phTrayFill, 'var(--mu)'],
@@ -434,7 +441,13 @@
 		{/each}
 	</div>
 
-	<div class="etapas" use:anim={{ t: 'rise', delay: 100 }} role="group" aria-label="Etapas">
+	<div
+		class="etapas"
+		use:anim={{ t: 'rise', delay: 100 }}
+		role="group"
+		aria-label="Etapas"
+		use:deslizable
+	>
 		{#each ETAPAS as e (e.estado)}
 			{@const on = f.estado.includes(e.estado)}
 			<button
@@ -733,7 +746,7 @@
 </div>
 
 {#if seleccion.size}
-	<div class="lote" use:anim={{ t: 'rise' }}>
+	<div class="lote" use:anim={{ t: 'rise' }} use:deslizable>
 		<span class="lo-t"
 			>{seleccion.size}
 			{seleccion.size === 1 ? 'seleccionado' : 'seleccionados'} · {pesos(sumaSel)}</span
@@ -1410,6 +1423,12 @@
 		}
 	}
 	@media (max-width: 759px) {
+		/* En el celular la fila deja lugar al nombre: el medio de pago y la urgencia se ven en el
+		   detalle (y el ícono del canal ya está en la foto). */
+		.m-p,
+		.urg {
+			display: none;
+		}
 		/* En el handoff las etapas se cortan: acá se desplazan. */
 		.etapas {
 			overflow-x: auto;
