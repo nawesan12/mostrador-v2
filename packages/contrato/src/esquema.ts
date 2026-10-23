@@ -2432,7 +2432,7 @@ export interface components {
             /** @enum {string} */
             facturacion?: "empiezo" | "hasta-5" | "5-a-20" | "20-a-100" | "mas-de-100";
             /** @enum {string} */
-            origen?: "tiendanube" | "empretienda" | "mercadoshops" | "shopify" | "woocommerce" | "ninguna";
+            origen?: "tiendanube" | "empretienda" | "mercadolibre" | "shopify" | "woocommerce" | "ninguna";
             mensaje?: string;
         };
         Postulacion: {

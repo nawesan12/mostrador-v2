@@ -45,10 +45,10 @@ test('una ruta inexistente muestra el 404 del sitio', async ({ page }) => {
 test('migrar: la pestaña sale de ?desde= y el botón lleva al registro con el origen', async ({
 	page
 }) => {
-	await page.goto('/migrar?desde=mercadoshops');
+	await page.goto('/migrar?desde=mercadolibre');
 	await listo(page);
 	expect(await sinDesborde(page)).toBeLessThanOrEqual(0);
-	await expect(page.getByRole('button', { name: 'Desde Mercado Shops' })).toHaveAttribute(
+	await expect(page.getByRole('button', { name: 'Desde Mercado Libre' })).toHaveAttribute(
 		'aria-pressed',
 		'true'
 	);

@@ -31,7 +31,7 @@
 			[
 				['/migrar?desde=tiendanube', 'Tiendanube'],
 				['/migrar?desde=empretienda', 'Empretienda'],
-				['/migrar?desde=mercadoshops', 'Mercado Shops'],
+				['/migrar?desde=mercadolibre', 'Mercado Libre'],
 				['/ayuda', 'Centro de ayuda']
 			]
 		],

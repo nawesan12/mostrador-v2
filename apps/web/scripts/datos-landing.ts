@@ -33,6 +33,40 @@ const NOMBRES = [
 runInNewContext(codigo + `\n;globalThis.__out = { ${NOMBRES.join(', ')} };`, ctx);
 const out = ctx.__out as Record<string, unknown>;
 
+// El muro del handoff trae 70 logos. Quedan las que tienen API y funcionan en Argentina; salen las
+// que no se pueden conectar (pedido de Nahuel, 22/10): marcas de tarjeta y bancos (llegan por Mercado
+// Pago, Payway o Getnet), Stripe y PayPal (no cobran en pesos acá), TikTok Shop y YouTube Shopping (no
+// están en Argentina), Pinterest (sin catálogo para Argentina), Lemon y Cuenta DNI (sin API para
+// comercios), Uber Flash (es para personas), Cruz del Sur y Via Cargo (sin API pública).
+const SIN_INTEGRACION = [
+	'Visa',
+	'Mastercard',
+	'American Express',
+	'Banco Galicia',
+	'Santander',
+	'BBVA',
+	'Banco Nación',
+	'Stripe',
+	'PayPal',
+	'TikTok Shop',
+	'YouTube',
+	'Pinterest',
+	'Lemon',
+	'Cuenta DNI',
+	'Uber Flash',
+	'Cruz del Sur',
+	'Via Cargo'
+];
+out.INTEG = [
+	...(out.INTEG as unknown[][]).filter((i) => !SIN_INTEGRACION.includes(i[0] as string)),
+	[
+		'Empretienda',
+		'canales',
+		{ w: 'Empretienda', abbr: 'ET', bg: '#2E2A6B', fg: '#fff' },
+		'Importá productos y clientes'
+	]
+];
+
 // Logos que el handoff pide y no existen en Iconify (en el diseño se ven vacíos): reemplazos.
 const SUSTITUTOS: Record<string, Record<string, string>> = {
 	'logos:google-sheets': { icon: 'simple-icons:googlesheets', col: '#34A853' },

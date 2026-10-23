@@ -146,9 +146,9 @@ test('integraciones filtra por categoría', async ({ page }) => {
 	await listo(page);
 	const sec = page.locator('section#integraciones');
 	const tarjetas = sec.locator('.integ');
-	await expect(tarjetas).toHaveCount(70);
+	await expect(tarjetas).toHaveCount(54);
 	await sec.getByRole('button', { name: /^Envíos/ }).click();
-	await expect(tarjetas).toHaveCount(11);
+	await expect(tarjetas).toHaveCount(8);
 	await expect(sec.locator('.n', { hasText: 'Andreani' })).toBeVisible();
 });
 

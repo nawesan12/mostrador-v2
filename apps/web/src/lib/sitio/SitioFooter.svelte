@@ -29,7 +29,7 @@
 				['/ayuda', 'Centro de ayuda'],
 				['/migrar?desde=tiendanube', 'Migrar desde Tiendanube'],
 				['/migrar?desde=empretienda', 'Migrar desde Empretienda'],
-				['/migrar?desde=mercadoshops', 'Migrar desde Mercado Shops']
+				['/migrar?desde=mercadolibre', 'Migrar desde Mercado Libre']
 			]
 		],
 		[

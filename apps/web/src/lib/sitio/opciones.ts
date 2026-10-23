@@ -9,7 +9,7 @@ export const FACTURACION = [
 export const ORIGEN = [
 	['tiendanube', 'Tiendanube'],
 	['empretienda', 'Empretienda'],
-	['mercadoshops', 'Mercado Shops'],
+	['mercadolibre', 'Mercado Libre'],
 	['shopify', 'Shopify'],
 	['woocommerce', 'WooCommerce'],
 	['ninguna', 'Ninguna']
