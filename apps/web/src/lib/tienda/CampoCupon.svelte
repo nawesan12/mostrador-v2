@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
 	import type { CuponCheckout } from './cupon.svelte.ts';
@@ -37,6 +38,15 @@
 	} = $props();
 
 	const fmt = (n: number) => '$ ' + Math.round(n).toLocaleString('es-AR');
+	// Si llegó por el link de un cupón, se carga y se aplica solo.
+	let raiz: HTMLDivElement;
+	onMount(() => {
+		const c = cupon.delLink();
+		if (c && !cupon.aplicado) {
+			cupon.codigo = c;
+			aplicar(raiz);
+		}
+	});
 	// El email del mismo formulario (para "primera compra" y "una vez por cliente"), si ya está.
 	function aplicar(el: HTMLElement) {
 		const campo = el.closest('form')?.querySelector<HTMLInputElement>('[name="email"]');
@@ -45,6 +55,7 @@
 </script>
 
 <div
+	bind:this={raiz}
 	class="cupon"
 	style="--t:{tinta};--s:{suave};--b:{borde};--f:{fondo};--a:{acento};--sa:{sobreAcento};--r:{radio};--e:{error};font-family:{fuente}"
 >

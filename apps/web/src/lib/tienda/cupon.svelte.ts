@@ -39,10 +39,18 @@ export class CuponCheckout {
 		}
 	}
 
+	/** El código que dejó el link de un cupón (/t/[tienda]/c/[codigo]), si hay. */
+	delLink(): string | null {
+		const m = document.cookie.match(new RegExp(`(?:^|; )cupon-${this.slug()}=([A-Z0-9-]{3,20})`));
+		return m ? m[1] : null;
+	}
+
 	quitar() {
 		this.aplicado = null;
 		this.resultado = null;
 		this.codigo = '';
+		// Si vino de un link, que no vuelva a aparecer.
+		document.cookie = `cupon-${this.slug()}=; path=/t/${this.slug()}; max-age=0; samesite=lax`;
 	}
 }
 
