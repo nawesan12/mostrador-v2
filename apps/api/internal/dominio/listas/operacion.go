@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"hash/fnv"
 	"math"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -39,8 +40,15 @@ func Inventario(productos []Registro) []Registro {
 		for _, c := range cs {
 			enMl = enMl || c == "ml"
 		}
+		// Al abrir la fila, el stock por variante: el id "producto:variante" es el que aceptan las acciones.
+		vs, _ := p["variantes"].([]Registro)
+		porVariante := make([]Registro, 0, len(vs))
+		for _, v := range vs {
+			porVariante = append(porVariante, Registro{"id": fmt.Sprint(p["id"], ":", v["id"]), "varianteId": v["id"],
+				"texto": v["texto"], "sku": v["sku"], "stock": v["stock"], "activa": v["activa"]})
+		}
 		regs = append(regs, Registro{
-			"id": p["id"], "nombre": p["nombre"], "foto": p["foto"], "sku": p["sku"], "stock": stock, "min": minimo,
+			"id": p["id"], "nombre": p["nombre"], "foto": p["foto"], "sku": p["sku"], "stock": stock, "min": minimo, "variantes": porVariante,
 			"porDia": porDia, "cover": int(float64(stock) / porDia), "st": st, "fast": porDia > 2, "loc": "Local",
 			"proveedor": "Sin proveedor", "costo": p["costo"], "publicadoEnMl": enMl && p["publicado"] == true,
 		})
@@ -50,7 +58,9 @@ func Inventario(productos []Registro) []Registro {
 
 // DefInventario: cómo filtra y ordena Inventario.
 var DefInventario = Def{
-	Buscar:   func(r Registro) string { return fmt.Sprint(r["nombre"], " ", r["sku"], " ", r["proveedor"]) },
+	Buscar: func(r Registro) string {
+		return fmt.Sprint(r["nombre"], " ", r["sku"], " ", r["proveedor"]) + skusDe(r)
+	},
 	Segmento: "st", Facetas: []string{"loc", "proveedor"}, Rango: "cover", RangoMenor: true, Banderas: []string{"fast"},
 	Ordenes: []Orden{
 		{"cover", func(a, b Registro) bool { return numero(a["cover"]) < numero(b["cover"]) }},
@@ -200,7 +210,7 @@ func MovimientosHoy(ctx context.Context, pool tx, tiendaID string, ahora time.Ti
 	desde := time.Date(a.Year(), a.Month(), a.Day(), 0, 0, 0, 0, ar)
 	movs := []Movimiento{}
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		filas, err := t.Query(ctx, `SELECT numero, canal, i->>'nombre', (i->>'cantidad')::int, creado_en
+		filas, err := t.Query(ctx, `SELECT numero, canal, i->>'nombre', i->>'variante', (i->>'cantidad')::int, creado_en
 			FROM pedidos, jsonb_array_elements(items) i
 			WHERE tienda_id = $1 AND estado <> 'Cancelado' AND creado_en >= $2
 			ORDER BY creado_en DESC LIMIT 20`, tiendaID, desde)
@@ -210,9 +220,13 @@ func MovimientosHoy(ctx context.Context, pool tx, tiendaID string, ahora time.Ti
 		for filas.Next() {
 			var n, cant int
 			var canal, nombre string
+			var variante *string
 			var en time.Time
-			if err := filas.Scan(&n, &canal, &nombre, &cant, &en); err != nil {
+			if err := filas.Scan(&n, &canal, &nombre, &variante, &cant, &en); err != nil {
 				return err
+			}
+			if variante != nil && *variante != "" {
+				nombre += " · " + *variante
 			}
 			tipo, texto := "web", fmt.Sprintf("Venta #%d · %s", n, nombre)
 			switch canal {
@@ -228,28 +242,44 @@ func MovimientosHoy(ctx context.Context, pool tx, tiendaID string, ahora time.Ti
 	return movs, err
 }
 
-// AjustarStock suma (o resta) unidades; nunca deja stock negativo.
+// AjustarStock suma (o resta) unidades; nunca deja stock negativo. Los ids son de producto (sin
+// opciones) o "producto:variante"; un producto con opciones no se ajusta entero (se ajusta cada variante).
 func AjustarStock(ctx context.Context, pool tx, tiendaID string, ids []string, q int) (int, error) {
 	if q == 0 || q > 100000 || q < -100000 {
 		return 0, fmt.Errorf("ajuste fuera de rango")
 	}
+	prods, vars := separarIDs(ids)
 	var n int64
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		tag, err := t.Exec(ctx, `UPDATE productos SET stock = greatest(0, stock + $3) WHERE tienda_id = $1 AND id::text = ANY($2)`, tiendaID, ids, q)
+		tag, err := t.Exec(ctx, `UPDATE productos SET stock = greatest(0, stock + $3)
+			WHERE tienda_id = $1 AND id::text = ANY($2) AND opciones = '[]'::jsonb`, tiendaID, prods, q)
+		if err != nil {
+			return err
+		}
 		n = tag.RowsAffected()
+		if len(vars) == 0 {
+			return nil
+		}
+		tag, err = t.Exec(ctx, `UPDATE variantes SET stock = greatest(0, stock + $3)
+			WHERE tienda_id = $1 AND producto_id::text || ':' || id::text = ANY($2)`, tiendaID, vars, q)
+		n += tag.RowsAffected()
 		return err
 	})
 	return int(n), err
 }
 
-// FijarStock deja el stock en lo contado.
+// FijarStock deja el stock en lo contado (id de producto sin opciones o "producto:variante").
 func FijarStock(ctx context.Context, pool tx, tiendaID, id string, cantidad int) (int, error) {
 	if cantidad < 0 || cantidad > 1000000 {
 		return 0, fmt.Errorf("cantidad fuera de rango")
 	}
+	consulta := `UPDATE productos SET stock = $3 WHERE tienda_id = $1 AND id::text = $2 AND stock <> $3 AND opciones = '[]'::jsonb`
+	if strings.Contains(id, ":") {
+		consulta = `UPDATE variantes SET stock = $3 WHERE tienda_id = $1 AND producto_id::text || ':' || id::text = $2 AND stock <> $3`
+	}
 	var n int64
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		tag, err := t.Exec(ctx, `UPDATE productos SET stock = $3 WHERE tienda_id = $1 AND id::text = $2 AND stock <> $3`, tiendaID, id, cantidad)
+		tag, err := t.Exec(ctx, consulta, tiendaID, id, cantidad)
 		n = tag.RowsAffected()
 		return err
 	})

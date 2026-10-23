@@ -23,10 +23,7 @@ func (m *mpFalso) PagarPedido(_ context.Context, _ string, numero int, vuelta st
 func compra(id string, cantidad int, pago string) vidriera.Compra {
 	c := vidriera.Compra{Email: "lucia@ejemplo.com", Nombre: "Lucía Pérez", Telefono: "11 5555-0101", CP: "1414",
 		Direccion: "Gorriti 4500", Envio: "andreani", Pago: pago}
-	c.Carrito = append(c.Carrito, struct {
-		ID       string `json:"id"`
-		Cantidad int    `json:"cantidad"`
-	}{id, cantidad})
+	c.Carrito = append(c.Carrito, vidriera.LineaCarrito{ID: id, Cantidad: cantidad})
 	return c
 }
 
@@ -109,5 +106,77 @@ func TestCotizar(t *testing.T) {
 	}
 	if o := vidriera.Cotizar("x", 1, e, lunes); len(o) != 1 || o[0].ID != "retiro" {
 		t.Fatalf("CP inválido: %+v", o)
+	}
+}
+
+func TestTiendaConVariantes(t *testing.T) {
+	ctx := context.Background()
+	b := pruebadb.Nueva(t)
+	luna := pruebadb.CrearTienda(t, b.App, "luna")
+	pruebadb.CrearTienda(t, b.App, "sol")
+	cinco, uno, precio, no := 5, 1, int64(26000), false
+	p, err := listas.Guardar(ctx, b.App, luna, "", listas.Editable{Nombre: "Buzo frisa", Precio: 24000,
+		Fotos:    []string{"https://f/buzo.jpg", "https://f/buzo-gris.jpg"},
+		Opciones: []listas.Opcion{{Nombre: "Talle", Valores: []string{"M", "L", "XL"}}},
+		Variantes: []listas.VarianteEditable{
+			{Valores: map[string]string{"Talle": "M"}, Stock: &cinco},
+			{Valores: map[string]string{"Talle": "L"}, Stock: &uno, Precio: &precio},
+			{Valores: map[string]string{"Talle": "XL"}, Stock: &cinco, Activa: &no},
+		}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	id := map[string]string{}
+	for _, v := range p.Variantes {
+		id[v.Valores["Talle"]] = v.ID
+	}
+
+	// La tienda ve las fotos, las opciones y sólo las variantes activas (sin SKU); el stock es la suma.
+	tienda, err := vidriera.Publica(ctx, b.App, "luna")
+	if err != nil {
+		t.Fatal(err)
+	}
+	pp := tienda.Productos[0]
+	if len(pp.Fotos) != 2 || *pp.Foto != "https://f/buzo.jpg" || len(pp.Opciones) != 1 || len(pp.Variantes) != 2 || pp.Stock != 6 {
+		t.Fatalf("producto público: %+v", pp)
+	}
+	if pp.Variantes[0].Valores["Talle"] != "M" || pp.Variantes[0].Precio != nil || *pp.Variantes[1].Precio != 26000 {
+		t.Fatalf("variantes públicas: %+v", pp.Variantes)
+	}
+	if otra, _ := vidriera.Publica(ctx, b.App, "sol"); len(otra.Productos) != 0 {
+		t.Fatal("otra tienda ve los productos")
+	}
+
+	// Comprar por variante: el precio de la variante (o el del producto) y descuenta esa variante.
+	lunes := time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)
+	c := compra(p.ID, 1, "transferencia")
+	c.Envio = "retiro"
+	c.Carrito[0].VarianteID = id["L"]
+	c.Carrito = append(c.Carrito, vidriera.LineaCarrito{ID: p.ID, VarianteID: id["M"], Cantidad: 2})
+	r, err := vidriera.Comprar(ctx, b.App, nil, "", "luna", c, lunes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := int64(26000+48000) * 85 / 100; r.Total != want {
+		t.Fatalf("total: %d, quería %d", r.Total, want)
+	}
+	tienda, _ = vidriera.Publica(ctx, b.App, "luna")
+	if pp = tienda.Productos[0]; pp.Stock != 3 || pp.Variantes[1].Stock != 0 {
+		t.Fatalf("después de comprar: %+v", pp)
+	}
+
+	// Sin variante, con una inactiva, o la de otro producto: no se arma el pedido.
+	for nombre, v := range map[string]string{"sin variante": "", "inactiva": id["XL"], "inventada": "x"} {
+		c := compra(p.ID, 1, "transferencia")
+		c.Envio, c.Carrito[0].VarianteID = "retiro", v
+		if _, err := vidriera.Comprar(ctx, b.App, nil, "", "luna", c, lunes); !errors.Is(err, vidriera.ErrInvalido) {
+			t.Errorf("%s: %v", nombre, err)
+		}
+	}
+	// La última L ya se vendió.
+	c = compra(p.ID, 1, "transferencia")
+	c.Envio, c.Carrito[0].VarianteID = "retiro", id["L"]
+	if _, err := vidriera.Comprar(ctx, b.App, nil, "", "luna", c, lunes); !errors.Is(err, vidriera.ErrSinStock) {
+		t.Fatalf("sin stock: %v", err)
 	}
 }

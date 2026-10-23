@@ -132,10 +132,7 @@ func TestVentaEnElLocalDescuentaStock(t *testing.T) {
 	venta := func(cant int) (int, error) {
 		var n pedidos.PedidoNuevo
 		n.Pago, n.Canal = "efectivo", "pos"
-		n.Items = append(n.Items, struct {
-			ProductoID string `json:"productoId"`
-			Cantidad   int    `json:"cantidad"`
-		}{p.ID, cant})
+		n.Items = append(n.Items, pedidos.Linea{ProductoID: p.ID, Cantidad: cant})
 		num, _, err := pedidos.CrearDesdeProductos(ctx, b.App, id, n)
 		return num, err
 	}

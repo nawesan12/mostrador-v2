@@ -68,10 +68,7 @@ func TestContraMercadoPagoReal(t *testing.T) {
 	n.Pago, n.Canal, n.Envio = "mp", "pos", "retiro"
 	f := false
 	n.Pagado = &f
-	n.Items = append(n.Items, struct {
-		ProductoID string `json:"productoId"`
-		Cantidad   int    `json:"cantidad"`
-	}{p.ID, 1})
+	n.Items = append(n.Items, pedidos.Linea{ProductoID: p.ID, Cantidad: 1})
 	num, _, err := pedidos.CrearDesdeProductos(ctx, b.App, tienda, n)
 	if err != nil {
 		t.Fatal(err)

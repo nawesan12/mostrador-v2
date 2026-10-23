@@ -3,19 +3,29 @@ package mercadolibre
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 
 	"github.com/jackc/pgx/v5"
+
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/listas"
 )
 
 type producto struct {
 	nombre, descripcion string
 	foto                *string
+	fotos               []string
 	precio              int64
 	stock               int
 	publicado           bool
+	opciones            []listas.Opcion
+	// Todas las variantes (activas o no), en el orden de las combinaciones.
+	variantes []listas.Variante
+	// La variación de Mercado Libre de cada variante publicada.
+	variaciones map[string]int64
 }
 
 func (s *Servicio) leerProducto(ctx context.Context, tiendaID, productoID string) (producto, int, bool, error) {
@@ -23,11 +33,29 @@ func (s *Servicio) leerProducto(ctx context.Context, tiendaID, productoID string
 	var recargo int
 	var pausar bool
 	err := s.Pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		if err := t.QueryRow(ctx, `SELECT nombre, descripcion, foto, precio, stock, publicado FROM productos
-			WHERE tienda_id = $1 AND id::text = $2`, tiendaID, productoID).
-			Scan(&p.nombre, &p.descripcion, &p.foto, &p.precio, &p.stock, &p.publicado); err != nil {
+		if err := t.QueryRow(ctx, `SELECT nombre, descripcion, foto, fotos, precio, stock, publicado, opciones,
+				coalesce((SELECT variaciones FROM ml_publicaciones WHERE tienda_id = $1 AND producto_id = productos.id), '{}')
+			FROM productos WHERE tienda_id = $1 AND id::text = $2`, tiendaID, productoID).
+			Scan(&p.nombre, &p.descripcion, &p.foto, &p.fotos, &p.precio, &p.stock, &p.publicado, &p.opciones, &p.variaciones); err != nil {
 			return err
 		}
+		filas, err := t.Query(ctx, `SELECT id::text, valores, sku, precio, stock, foto, activa FROM variantes
+			WHERE tienda_id = $1 AND producto_id::text = $2`, tiendaID, productoID)
+		if err != nil {
+			return err
+		}
+		for filas.Next() {
+			var v listas.Variante
+			if err := filas.Scan(&v.ID, &v.Valores, &v.SKU, &v.Precio, &v.Stock, &v.Foto, &v.Activa); err != nil {
+				filas.Close()
+				return err
+			}
+			p.variantes = append(p.variantes, v)
+		}
+		if err := filas.Err(); err != nil {
+			return err
+		}
+		listas.OrdenarVariantes(p.opciones, p.variantes)
 		return t.QueryRow(ctx, `SELECT recargo, pausar_sin_stock FROM ml_conexiones WHERE tienda_id = $1`, tiendaID).
 			Scan(&recargo, &pausar)
 	})
@@ -118,16 +146,49 @@ func (s *Servicio) Publicar(ctx context.Context, tiendaID, productoID string) (P
 		"condition":          "new",
 		"attributes":         atributos,
 	}
-	if p.foto != nil && strings.HasPrefix(*p.foto, "https://") {
-		cuerpo["pictures"] = []map[string]string{{"source": *p.foto}}
+	// La galería: sólo las fotos con URL pública (Mercado Libre las descarga).
+	fotos := []map[string]string{}
+	for _, f := range p.fotos {
+		if strings.HasPrefix(f, "https://") {
+			fotos = append(fotos, map[string]string{"source": f})
+		}
+	}
+	if len(fotos) > 0 {
+		cuerpo["pictures"] = fotos
+	}
+	var publicadas []listas.Variante
+	if len(p.opciones) > 0 {
+		var variaciones []map[string]any
+		var precio int64
+		variaciones, publicadas, precio, err = s.armarVariaciones(ctx, token, sugerencias[0].CategoryID, p, recargo)
+		if err != nil {
+			return Publicacion{}, err
+		}
+		cuerpo["variations"] = variaciones
+		cuerpo["price"] = precio
+		delete(cuerpo, "available_quantity") // la suma la hace Mercado Libre
 	}
 	var item struct {
-		ID        string `json:"id"`
-		Permalink string `json:"permalink"`
-		Status    string `json:"status"`
+		ID         string `json:"id"`
+		Permalink  string `json:"permalink"`
+		Status     string `json:"status"`
+		Variations []struct {
+			ID int64 `json:"id"`
+		} `json:"variations"`
 	}
 	if err := s.pedir(ctx, http.MethodPost, "/items", token, cuerpo, &item); err != nil {
+		var em *ErrorML
+		if len(publicadas) > 0 && errors.As(err, &em) && em.Estado < 500 {
+			return Publicacion{}, &ErrVariaciones{Mensaje: "Mercado Libre no aceptó las variantes de este producto: " + em.Mensaje}
+		}
 		return Publicacion{}, err
+	}
+	// Mercado Libre devuelve las variaciones en el orden en que se mandaron.
+	variaciones := map[string]int64{}
+	for i, v := range item.Variations {
+		if i < len(publicadas) {
+			variaciones[publicadas[i].ID] = v.ID
+		}
 	}
 	if strings.TrimSpace(p.descripcion) != "" {
 		// La descripción va aparte; si falla, la publicación igual queda.
@@ -137,8 +198,8 @@ func (s *Servicio) Publicar(ctx context.Context, tiendaID, productoID string) (P
 		}
 	}
 	err = s.Pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		_, err := t.Exec(ctx, `INSERT INTO ml_publicaciones (tienda_id, producto_id, item_id, permalink, estado, sincronizado_en)
-			VALUES ($1, $2::uuid, $3, $4, $5, now())`, tiendaID, productoID, item.ID, item.Permalink, item.Status)
+		_, err := t.Exec(ctx, `INSERT INTO ml_publicaciones (tienda_id, producto_id, item_id, permalink, estado, sincronizado_en, variaciones)
+			VALUES ($1, $2::uuid, $3, $4, $5, now(), $6)`, tiendaID, productoID, item.ID, item.Permalink, item.Status, variaciones)
 		return err
 	})
 	return Publicacion{ItemID: item.ID, Permalink: item.Permalink}, err
@@ -179,8 +240,30 @@ func (s *Servicio) Sincronizar(ctx context.Context, tiendaID, productoID string)
 	nuevo := "active"
 	if !p.publicado || (p.stock == 0 && pausar) {
 		nuevo = "paused"
-	} else {
+	} else if len(p.variaciones) == 0 {
 		cuerpo["available_quantity"] = p.stock
+	}
+	if len(p.variaciones) > 0 {
+		// Stock por variación. Una variante borrada o desactivada queda en 0 (la variación sigue en
+		// Mercado Libre); una variante nueva no tiene variación hasta volver a publicar.
+		porVariante := map[string]listas.Variante{}
+		for _, v := range p.variantes {
+			porVariante[v.ID] = v
+		}
+		vars := []map[string]any{}
+		for _, id := range ordenVariaciones(p) {
+			v, ok := porVariante[id]
+			stock, precio := 0, p.precio
+			if ok && v.Activa {
+				stock = v.Stock
+			}
+			if ok && v.Precio != nil {
+				precio = *v.Precio
+			}
+			vars = append(vars, map[string]any{"id": p.variaciones[id], "available_quantity": stock, "price": precioML(precio, recargo)})
+		}
+		cuerpo["variations"] = vars
+		delete(cuerpo, "price")
 	}
 	if nuevo != estado {
 		cuerpo["status"] = nuevo
@@ -228,4 +311,150 @@ func (s *Servicio) Despublicar(ctx context.Context, tiendaID, productoID string)
 		_, err := t.Exec(ctx, `DELETE FROM ml_publicaciones WHERE tienda_id = $1 AND producto_id::text = $2`, tiendaID, productoID)
 		return err
 	})
+}
+
+// ErrVariaciones: el producto tiene variantes y no se pueden publicar como variaciones de Mercado
+// Libre. El mensaje dice por qué (va tal cual al panel); no se publica nada.
+type ErrVariaciones struct{ Mensaje string }
+
+func (e *ErrVariaciones) Error() string { return "mercadolibre: " + e.Mensaje }
+
+// alias: nombres de opción comunes y el atributo de Mercado Libre que suelen ser.
+var alias = map[string][]string{
+	"talle": {"SIZE"}, "talla": {"SIZE"}, "numero": {"SIZE", "SHOE_SIZE"}, "tamano": {"SIZE"},
+	"color": {"COLOR", "MAIN_COLOR"}, "sabor": {"FLAVOR"}, "aroma": {"FRAGRANCE", "SCENT"},
+}
+
+// armarVariaciones mapea cada opción a un atributo de la categoría que admita variaciones (por nombre
+// o por alias); la que no mapea va con su nombre tal cual (atributo personalizado) y, si Mercado
+// Libre no lo acepta, el POST falla y se avisa. Mercado Libre pide un solo precio para todas las
+// variaciones: si las variantes tienen precios distintos, no se publica.
+func (s *Servicio) armarVariaciones(ctx context.Context, token, categoria string, p producto, recargo int) ([]map[string]any, []listas.Variante, int64, error) {
+	var atributos []struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+		Tags struct {
+			AllowVariations    bool `json:"allow_variations"`
+			VariationAttribute bool `json:"variation_attribute"`
+		} `json:"tags"`
+		Values []struct {
+			ID   string `json:"id"`
+			Name string `json:"name"`
+		} `json:"values"`
+	}
+	if err := s.pedir(ctx, http.MethodGet, "/categories/"+url.PathEscape(categoria)+"/attributes", token, nil, &atributos); err != nil {
+		return nil, nil, 0, err
+	}
+	type atributo struct {
+		id      string
+		valores map[string]string // nombre normalizado → value_id
+	}
+	admite := map[string]atributo{} // por id
+	porNombre := map[string]string{}
+	for _, a := range atributos {
+		if !a.Tags.AllowVariations && !a.Tags.VariationAttribute {
+			continue
+		}
+		at := atributo{id: a.ID, valores: map[string]string{}}
+		for _, v := range a.Values {
+			at.valores[normal(v.Name)] = v.ID
+		}
+		admite[a.ID] = at
+		porNombre[normal(a.Name)] = a.ID
+	}
+	if len(admite) == 0 {
+		return nil, nil, 0, &ErrVariaciones{Mensaje: "La categoría que sugiere Mercado Libre para este producto no admite variantes. Publicalo sin opciones o como productos separados."}
+	}
+	mapa := map[string]string{} // opción → atributo ("" = personalizado)
+	usados := map[string]bool{}
+	for _, o := range p.opciones {
+		id := porNombre[normal(o.Nombre)]
+		if id == "" {
+			for _, a := range alias[normal(o.Nombre)] {
+				if _, ok := admite[a]; ok {
+					id = a
+					break
+				}
+			}
+		}
+		if id != "" && usados[id] {
+			return nil, nil, 0, &ErrVariaciones{Mensaje: fmt.Sprintf("Dos opciones (%s y otra) son el mismo atributo en Mercado Libre.", o.Nombre)}
+		}
+		usados[id] = id != ""
+		mapa[o.Nombre] = id
+	}
+	var activas []listas.Variante
+	var precio *int64
+	for _, v := range p.variantes {
+		if !v.Activa {
+			continue
+		}
+		pv := p.precio
+		if v.Precio != nil {
+			pv = *v.Precio
+		}
+		if precio != nil && *precio != pv {
+			return nil, nil, 0, &ErrVariaciones{Mensaje: "Mercado Libre pide el mismo precio para todas las variantes. Igualá los precios o publicalas por separado."}
+		}
+		precio = &pv
+		activas = append(activas, v)
+	}
+	if len(activas) == 0 || precio == nil || *precio < 1 {
+		return nil, nil, 0, ErrInvalido
+	}
+	if len(activas) > 100 {
+		return nil, nil, 0, &ErrVariaciones{Mensaje: "Mercado Libre admite hasta 100 variantes por publicación."}
+	}
+	out := make([]map[string]any, 0, len(activas))
+	for _, v := range activas {
+		combinacion := []map[string]string{}
+		for _, o := range p.opciones {
+			valor := v.Valores[o.Nombre]
+			c := map[string]string{"value_name": valor}
+			if id := mapa[o.Nombre]; id != "" {
+				c["id"] = id
+				if vid := admite[id].valores[normal(valor)]; vid != "" {
+					c["value_id"] = vid
+				}
+			} else {
+				c["name"] = o.Nombre
+			}
+			combinacion = append(combinacion, c)
+		}
+		x := map[string]any{"attribute_combinations": combinacion, "price": precioML(*precio, recargo), "available_quantity": v.Stock}
+		if v.SKU != "" {
+			x["seller_custom_field"] = v.SKU
+		}
+		if v.Foto != nil && strings.HasPrefix(*v.Foto, "https://") {
+			x["picture_ids"] = []string{*v.Foto}
+		} else if len(p.fotos) > 0 && strings.HasPrefix(p.fotos[0], "https://") {
+			x["picture_ids"] = []string{p.fotos[0]}
+		}
+		out = append(out, x)
+	}
+	return out, activas, precioML(*precio, recargo), nil
+}
+
+// ordenVariaciones: las variantes publicadas, en el orden del producto (las borradas al final).
+func ordenVariaciones(p producto) []string {
+	ids := []string{}
+	for _, v := range p.variantes {
+		if _, ok := p.variaciones[v.ID]; ok {
+			ids = append(ids, v.ID)
+		}
+	}
+	resto := []string{}
+	for id := range p.variaciones {
+		if !slices.Contains(ids, id) {
+			resto = append(resto, id)
+		}
+	}
+	slices.Sort(resto)
+	return append(ids, resto...)
+}
+
+// normal: minúsculas y sin tildes, para comparar nombres de opciones y atributos.
+func normal(s string) string {
+	r := strings.NewReplacer("á", "a", "é", "e", "í", "i", "ó", "o", "ú", "u", "ü", "u", "ñ", "n")
+	return r.Replace(strings.ToLower(strings.TrimSpace(s)))
 }

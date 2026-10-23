@@ -25,6 +25,13 @@ type Editable struct {
 	Stock       *int            `json:"stock"`
 	Foto        *string         `json:"foto"`
 	Canales     map[string]bool `json:"canales"`
+	// Fotos es la galería (la primera es la portada). Sin mandarla, manda Foto: reemplaza la portada
+	// y deja el resto (o vacía la galería si Foto es null).
+	Fotos []string `json:"fotos"`
+	// Opciones nil deja las que había; [] las saca (y con ellas las variantes).
+	Opciones []Opcion `json:"opciones"`
+	// Variantes: sólo las combinaciones que se quieren tocar; las demás se conservan o se generan.
+	Variantes []VarianteEditable `json:"variantes"`
 }
 
 // Producto es la ficha (components/schemas/Producto).
@@ -42,6 +49,9 @@ type Producto struct {
 	Publicado   bool            `json:"publicado"`
 	Vendidos30d int             `json:"vendidos30d"`
 	Slug        string          `json:"slug"`
+	Fotos       []string        `json:"fotos"`
+	Opciones    []Opcion        `json:"opciones"`
+	Variantes   []Variante      `json:"variantes"`
 }
 
 var noSlug = regexp.MustCompile(`[^a-z0-9]+`)
@@ -74,7 +84,8 @@ func valor[T any](p *T, def T) T {
 	return *p
 }
 
-// Guardar crea (id vacío) o actualiza un producto y devuelve su ficha.
+// Guardar crea (id vacío) o actualiza un producto y devuelve su ficha. Con opciones, genera o ajusta
+// las variantes y el stock del producto pasa a ser la suma de las activas.
 func Guardar(ctx context.Context, pool tx, tiendaID, id string, e Editable) (Producto, error) {
 	if err := e.Validar(); err != nil {
 		return Producto{}, err
@@ -83,21 +94,86 @@ func Guardar(ctx context.Context, pool tx, tiendaID, id string, e Editable) (Pro
 	if e.Canales == nil {
 		canales = []byte(`{"web": true}`)
 	}
+	var fotosPedidas []string
+	if e.Fotos != nil {
+		var err error
+		if fotosPedidas, err = limpiarFotos(e.Fotos); err != nil {
+			return Producto{}, err
+		}
+	}
+	var opcionesPedidas []Opcion
+	if e.Opciones != nil {
+		var err error
+		if opcionesPedidas, err = limpiarOpciones(e.Opciones); err != nil {
+			return Producto{}, err
+		}
+	}
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		opciones, fotos := []Opcion{}, []string{}
+		if id != "" {
+			err := t.QueryRow(ctx, `SELECT opciones, fotos FROM productos WHERE tienda_id = $1 AND id::text = $2 FOR UPDATE`,
+				tiendaID, id).Scan(&opciones, &fotos)
+			if errors.Is(err, pgx.ErrNoRows) {
+				return ErrNoExiste
+			}
+			if err != nil {
+				return err
+			}
+		}
+		switch {
+		case e.Fotos != nil:
+			fotos = fotosPedidas
+		case e.Foto == nil:
+			fotos = []string{}
+		default:
+			resto := []string{}
+			for i, f := range fotos {
+				if i > 0 && f != *e.Foto {
+					resto = append(resto, f)
+				}
+			}
+			fotos = append([]string{*e.Foto}, resto...)
+		}
+		var foto *string
+		if len(fotos) > 0 {
+			foto = &fotos[0]
+		}
+		if e.Opciones != nil {
+			opciones = opcionesPedidas
+		}
+		if len(e.Variantes) > 0 && len(opciones) == 0 {
+			return errors.New("para cargar variantes, el producto tiene que tener opciones")
+		}
+		// Con opciones, el stock lo pone la suma de las variantes (no el que manda el editor).
+		stock := e.Stock
+		if len(opciones) > 0 {
+			stock = nil
+		}
 		if id == "" {
-			return t.QueryRow(ctx, `INSERT INTO productos (tienda_id, nombre, descripcion, categoria, precio, costo, sku, stock, foto, canales)
-				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
+			if err := t.QueryRow(ctx, `INSERT INTO productos (tienda_id, nombre, descripcion, categoria, precio, costo, sku, stock, foto, canales, fotos, opciones)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
 				tiendaID, strings.TrimSpace(e.Nombre), valor(e.Descripcion, ""), e.Categoria, e.Precio, valor(e.Costo, 0),
-				valor(e.SKU, ""), valor(e.Stock, 0), e.Foto, canales).Scan(&id)
-		}
-		tag, err := t.Exec(ctx, `UPDATE productos SET nombre = $3, descripcion = coalesce($4, descripcion),
+				valor(e.SKU, ""), valor(stock, 0), foto, canales, fotos, opciones).Scan(&id); err != nil {
+				return err
+			}
+		} else if _, err := t.Exec(ctx, `UPDATE productos SET nombre = $3, descripcion = coalesce($4, descripcion),
 				categoria = $5, precio = $6, costo = coalesce($7, costo), sku = coalesce($8, sku),
-				stock = coalesce($9, stock), foto = $10, canales = $11, publicado = true
+				stock = coalesce($9, stock), foto = $10, canales = $11, publicado = true, fotos = $12, opciones = $13
 			WHERE tienda_id = $1 AND id::text = $2`,
-			tiendaID, id, strings.TrimSpace(e.Nombre), e.Descripcion, e.Categoria, e.Precio, e.Costo, e.SKU, e.Stock, e.Foto, canales)
-		if err == nil && tag.RowsAffected() == 0 {
-			return ErrNoExiste
+			tiendaID, id, strings.TrimSpace(e.Nombre), e.Descripcion, e.Categoria, e.Precio, e.Costo, e.SKU, stock, foto, canales,
+			fotos, opciones); err != nil {
+			return err
 		}
+		if err := sincronizarVariantes(ctx, t, tiendaID, id, opciones, fotos, e.Variantes); err != nil {
+			return err
+		}
+		if len(opciones) == 0 {
+			return nil
+		}
+		// El trigger suma con cada cambio de variante; esto cubre el caso de opciones nuevas sin cambios.
+		_, err := t.Exec(ctx, `UPDATE productos SET stock = (SELECT coalesce(sum(stock), 0) FROM variantes
+				WHERE tienda_id = $1 AND producto_id::text = $2 AND activa)
+			WHERE tienda_id = $1 AND id::text = $2`, tiendaID, id)
 		return err
 	})
 	if err != nil {
@@ -153,15 +229,29 @@ func Productos(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (
 		if err := v.Err(); err != nil {
 			return err
 		}
-		filas, err := t.Query(ctx, `SELECT id, nombre, descripcion, categoria, precio, costo, sku, stock, foto, canales, publicado
+		porProducto, err := variantesDe(ctx, t, tiendaID)
+		if err != nil {
+			return err
+		}
+		filas, err := t.Query(ctx, `SELECT id, nombre, descripcion, categoria, precio, costo, sku, stock, foto, canales, publicado, fotos, opciones
 			FROM productos WHERE tienda_id = $1 ORDER BY creado_en DESC`, tiendaID)
 		if err != nil {
 			return err
 		}
 		for filas.Next() {
 			var p Producto
-			if err := filas.Scan(&p.ID, &p.Nombre, &p.Descripcion, &p.Categoria, &p.Precio, &p.Costo, &p.SKU, &p.Stock, &p.Foto, &p.Canales, &p.Publicado); err != nil {
+			if err := filas.Scan(&p.ID, &p.Nombre, &p.Descripcion, &p.Categoria, &p.Precio, &p.Costo, &p.SKU, &p.Stock, &p.Foto, &p.Canales, &p.Publicado, &p.Fotos, &p.Opciones); err != nil {
 				return err
+			}
+			p.Variantes = porProducto[p.ID]
+			if p.Variantes == nil {
+				p.Variantes = []Variante{}
+			}
+			OrdenarVariantes(p.Opciones, p.Variantes)
+			resumen := make([]Registro, 0, len(p.Variantes))
+			for _, v := range p.Variantes {
+				resumen = append(resumen, Registro{"id": v.ID, "texto": TextoVariante(p.Opciones, v.Valores), "sku": v.SKU,
+					"precio": v.Precio, "stock": v.Stock, "activa": v.Activa})
 			}
 			p.Vendidos30d, p.Slug = ultimos30[p.Nombre], Slug(p.Nombre)
 			ventas := semanas[p.Nombre]
@@ -195,7 +285,7 @@ func Productos(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (
 				"id": p.ID, "nombre": p.Nombre, "descripcion": p.Descripcion, "foto": p.Foto, "sku": p.SKU,
 				"categoria": cat, "precio": p.Precio, "costo": p.Costo, "margen": margen, "stock": p.Stock,
 				"ventas": ventas, "vendidos30": p.Vendidos30d, "canales": canales, "publicado": p.Publicado,
-				"estado": estado, "lowm": margen < 25, "star": p.Vendidos30d > 60, "_ficha": p,
+				"estado": estado, "lowm": margen < 25, "star": p.Vendidos30d > 60, "variantes": resumen, "_ficha": p,
 			})
 		}
 		return filas.Err()
@@ -206,7 +296,7 @@ func Productos(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (
 // DefProductos: cómo filtra y ordena Productos.
 var DefProductos = Def{
 	Buscar: func(r Registro) string {
-		return r["nombre"].(string) + " " + r["sku"].(string) + " " + r["categoria"].(string)
+		return r["nombre"].(string) + " " + r["sku"].(string) + " " + r["categoria"].(string) + skusDe(r)
 	},
 	Segmento: "estado", Facetas: []string{"categoria", "canales"}, Rango: "precio", Banderas: []string{"lowm", "star"},
 	Ordenes: []Orden{
@@ -254,7 +344,25 @@ func Precio(ctx context.Context, pool tx, tiendaID string, ids []string, pct flo
 		tag, err := t.Exec(ctx, `UPDATE productos SET precio = greatest(0, round(precio * (1 + $3 / 100.0) / 10) * 10)
 			WHERE tienda_id = $1 AND id::text = ANY($2)`, tiendaID, ids, pct)
 		n = tag.RowsAffected()
+		if err != nil {
+			return err
+		}
+		// Las variantes con precio propio suben (o bajan) igual.
+		_, err = t.Exec(ctx, `UPDATE variantes SET precio = greatest(0, round(precio * (1 + $3 / 100.0) / 10) * 10)
+			WHERE tienda_id = $1 AND producto_id::text = ANY($2) AND precio IS NOT NULL`, tiendaID, ids, pct)
 		return err
 	})
 	return int(n), err
+}
+
+// skusDe suma los SKU de las variantes a la búsqueda.
+func skusDe(r Registro) string {
+	vs, _ := r["variantes"].([]Registro)
+	var b strings.Builder
+	for _, v := range vs {
+		if s, _ := v["sku"].(string); s != "" {
+			b.WriteString(" " + s)
+		}
+	}
+	return b.String()
 }

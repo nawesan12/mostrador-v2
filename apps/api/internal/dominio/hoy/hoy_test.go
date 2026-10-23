@@ -28,10 +28,7 @@ func TestTareasYActividad(t *testing.T) {
 		if pago == "transf" {
 			n.Pagado = &f
 		}
-		n.Items = append(n.Items, struct {
-			ProductoID string `json:"productoId"`
-			Cantidad   int    `json:"cantidad"`
-		}{p.ID, 1})
+		n.Items = append(n.Items, pedidos.Linea{ProductoID: p.ID, Cantidad: 1})
 		if _, _, err := pedidos.CrearDesdeProductos(ctx, b.App, id, n); err != nil {
 			t.Fatal(err)
 		}
