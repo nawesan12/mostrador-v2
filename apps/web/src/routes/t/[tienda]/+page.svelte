@@ -10,4 +10,4 @@
 	description={data.tienda.portada.titulo}
 	path="/t/{data.tienda.slug}"
 />
-<Plantilla tienda={data.tienda} pagina="inicio" />
+<Plantilla tienda={data.tienda} pagina="inicio" proximos={data.proximos} />

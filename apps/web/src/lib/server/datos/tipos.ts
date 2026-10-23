@@ -66,6 +66,14 @@ export type AccionCupon = 'pausar' | 'activar' | 'duplicar' | 'minimo' | 'deshac
 export type AccionRelampago = 'sumar-hora' | 'liberar' | 'terminar' | 'reanudar';
 export type Devolucion = components['schemas']['Devolucion'];
 export type ResenasYPreguntas = components['schemas']['ResenasYPreguntas'];
+export type AjustesTurnos = components['schemas']['AjustesTurnos'];
+export type Servicio = components['schemas']['Servicio'];
+export type ServicioEditable = components['schemas']['ServicioEditable'];
+export type Profesional = components['schemas']['Profesional'];
+export type ProfesionalEditable = components['schemas']['ProfesionalEditable'];
+export type Turno = components['schemas']['Turno'];
+export type TurnoNuevo = components['schemas']['TurnoNuevo'];
+export type EstadoTurno = components['schemas']['EstadoTurno'];
 
 export interface Datos {
 	rubros(): Promise<Rubro[]>;
@@ -214,6 +222,25 @@ export interface Datos {
 	): Promise<{ productos: number; para: string | null }>;
 	deshacerAumento(): Promise<Resultado>;
 	cancelarAumento(): Promise<Resultado>;
+	/** Turnos con seña: ajustes (activo, seña, anticipación, días de vista y horario). */
+	ajustesTurnos(): Promise<AjustesTurnos>;
+	guardarAjustesTurnos(a: AjustesTurnos): Promise<AjustesTurnos>;
+	/** Servicios que se reservan (activos e inactivos), por orden. */
+	serviciosTurnos(): Promise<Servicio[]>;
+	/** Crea (id null) o guarda un servicio; null si el id no existe. */
+	guardarServicio(id: string | null, s: ServicioEditable): Promise<Servicio | null>;
+	borrarServicio(id: string): Promise<Resultado>;
+	profesionalesTurnos(): Promise<Profesional[]>;
+	guardarProfesional(id: string | null, p: ProfesionalEditable): Promise<Profesional | null>;
+	borrarProfesional(id: string): Promise<Resultado>;
+	/** La agenda entre dos días de Argentina (inclusive), por inicio. */
+	agendaTurnos(desde: string, hasta: string, profesional?: string): Promise<Turno[]>;
+	/** Un turno a mano (sin seña); 'ocupado' si se superpone y no se pidió forzar. */
+	crearTurno(n: TurnoNuevo): Promise<Turno | 'ocupado' | 'invalido'>;
+	/** Cualquiera de los cinco estados (también para deshacer). */
+	estadoTurno(id: string, estado: EstadoTurno): Promise<Turno | 'no-existe'>;
+	/** Devuelve la seña pagada con Mercado Pago. */
+	devolverSena(id: string): Promise<Turno | 'no-existe' | 'sin-sena' | 'sin-cobros'>;
 	/** Un link de pago; devuelve el código. */
 	crearLink(l: {
 		monto: number;

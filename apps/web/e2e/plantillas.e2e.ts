@@ -37,3 +37,60 @@ for (const id of PROPIAS) {
 		expect(errores).toEqual([]);
 	});
 }
+
+/**
+ * Turnos en cada plantilla: en una demo de esa plantilla se prenden los turnos con un servicio y
+ * alguien que atiende, y la reserva y su link en el nav se dibujan sin errores ni desborde.
+ */
+for (const id of [...PROPIAS.filter((x) => x !== 'tijera'), 'ceibo', 'patio']) {
+	const p = PLANTILLAS.find((x) => x.id === id)!;
+	test(`turnos en ${id}`, async ({ page }) => {
+		const errores: string[] = [];
+		page.on('pageerror', (e) => errores.push(e.message));
+		await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+		await page.goto('/demo');
+		await page.locator('html[data-listo]').waitFor({ state: 'attached' });
+		await page.getByRole('button', { name: new RegExp(`^${p.nombre},`) }).click();
+		await expect(page).toHaveURL(/\/panel$/);
+		const ajustes = await (await page.request.get('/panel/turnos/ajustes/__data.json')).ok();
+		expect(ajustes).toBe(true);
+		const s = await page.request.post('/panel/turnos/servicios', {
+			data: {
+				nombre: 'Asesoría',
+				descripcion: '',
+				precio: 9000,
+				duracion: 30,
+				foto: null,
+				etiqueta: null,
+				activo: true
+			}
+		});
+		expect(s.status()).toBe(201);
+		const pr = await page.request.post('/panel/turnos/profesionales', {
+			data: { nombre: 'Marta', rol: 'Atiende', foto: null, servicios: [], activo: true }
+		});
+		expect(pr.status()).toBe(201);
+		const a = await page.request.put('/panel/turnos/ajustes', {
+			data: {
+				activo: true,
+				sena: 30,
+				anticipacionMin: 60,
+				diasVista: 14,
+				horario: [1, 2, 3, 4, 5, 6].map((dia) => ({ dia, desde: '09:00', hasta: '20:00' }))
+			}
+		});
+		expect(a.ok()).toBe(true);
+		const slug = slugDe(p.tienda);
+		await page.goto(`/t/${slug}`);
+		await expect(page.locator(`a[href="/t/${slug}/turnos"]`).first()).toBeVisible();
+		await page.goto(`/t/${slug}/turnos`);
+		// Malbec pregunta la edad antes de mostrar la tienda.
+		const mayor = page.getByRole('button', { name: 'Sí, soy mayor' });
+		if (await mayor.isVisible()) await mayor.click();
+		await page.getByRole('radiogroup', { name: 'Servicio' }).getByRole('radio').first().click();
+		await expect(page.locator('[role=radiogroup][aria-label^="Horarios"]').first()).toBeVisible();
+		const desborde = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+		expect(desborde, `${id}/turnos`).toBeLessThanOrEqual(0);
+		expect(errores).toEqual([]);
+	});
+}

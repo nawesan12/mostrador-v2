@@ -26,6 +26,8 @@ export class Shell {
 	cmdk = $state(false);
 	tema = $state<Tema>('light');
 	modo = $state<Modo>('completo');
+	/** La tienda toma turnos (o es de servicios): se ve la sección Turnos. */
+	turnos = $state(false);
 
 	// El modo Simple ya no se ofrece (confundía): quien lo tenía guardado vuelve al completo.
 	constructor(tema: Tema) {

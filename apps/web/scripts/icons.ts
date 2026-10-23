@@ -42,7 +42,12 @@ const EXTRA = [
 	'ph:target',
 	// "¿Te sirvió este artículo?" en la ayuda.
 	'ph:thumbs-up-bold',
-	'ph:thumbs-down-bold'
+	'ph:thumbs-down-bold',
+	// Turnos: la agenda del panel y la reserva en la tienda.
+	'ph:calendar-blank',
+	'ph:arrow-down-bold',
+	'ph:pencil-simple',
+	'ph:calendar-x'
 ];
 const names = new Set<string>([...EXTRA, ...process.argv.slice(2)]);
 for (const f of files)

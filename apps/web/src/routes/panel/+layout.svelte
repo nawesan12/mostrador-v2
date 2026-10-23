@@ -18,6 +18,11 @@
 	let { data, children } = $props();
 	// El tema se toma al entrar; después lo maneja el armazón (y lo guarda en una cookie).
 	const shell = setShell(new Shell(untrack(() => data.tema)));
+	// La sección Turnos (también en el primer render del servidor, donde los efectos no corren).
+	shell.turnos = untrack(() => data.turnos);
+	$effect.pre(() => {
+		shell.turnos = data.turnos;
+	});
 	const donde = $derived(ubicar(page.url.pathname) ?? { seccion: 'Resumen', area: AREAS[0] });
 	const sinLeer = $derived(data.resumen.notificaciones.some((n) => !n.leida));
 	const dominio = $derived(`${SITE.replace(/^https?:\/\//, '')}/t/${data.tienda.slug}`);
