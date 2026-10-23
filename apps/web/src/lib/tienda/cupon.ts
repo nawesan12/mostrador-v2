@@ -24,7 +24,12 @@ export type CuponTienda = {
 	combinable: boolean;
 };
 
-export type LineaCupon = { id: string; precio: number; cantidad: number; categoria?: string | null };
+export type LineaCupon = {
+	id: string;
+	precio: number;
+	cantidad: number;
+	categoria?: string | null;
+};
 
 /** Lo que se sabe de quien compra, por su email (lo arma el servidor). */
 export type Historial = {
@@ -55,7 +60,8 @@ export function aplicarCupon(
 	if (c.pausado) return no('Este cupón está pausado.');
 	if (c.empieza && t < Date.parse(c.empieza)) return no('Este cupón todavía no empezó.');
 	if (c.termina && t > Date.parse(c.termina)) return no('Este cupón ya venció.');
-	if (c.limite > 0 && c.usos >= c.limite) return no('Este cupón ya se usó todas las veces posibles.');
+	if (c.limite > 0 && c.usos >= c.limite)
+		return no('Este cupón ya se usó todas las veces posibles.');
 	if (!c.canales.includes(canal)) return no('Este cupón no vale en la tienda online.');
 	if (c.tipo === 'regalo') return no('Este cupón se canjea en el local.');
 	const subtotal = lineas.reduce((s, l) => s + l.precio * l.cantidad, 0);
@@ -81,7 +87,8 @@ export function aplicarCupon(
 				: true;
 	const elegible = lineas.filter(vale).reduce((s, l) => s + l.precio * l.cantidad, 0);
 	if (elegible === 0) return no('Este cupón no vale para los productos de tu carrito.');
-	if (c.tipo === 'envio') return { ok: true, descuento: 0, envioGratis: true, combinable: c.combinable };
+	if (c.tipo === 'envio')
+		return { ok: true, descuento: 0, envioGratis: true, combinable: c.combinable };
 	const descuento =
 		c.tipo === 'pct'
 			? Math.round((elegible * Math.min(100, Math.max(0, c.valor))) / 100)

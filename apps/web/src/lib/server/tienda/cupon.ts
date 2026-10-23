@@ -16,8 +16,10 @@ export async function evaluarCupon(
 	carrito: Linea[]
 ): Promise<ResultadoCupon> {
 	const c = normalizarCodigo(codigo);
-	if (!/^[A-Z0-9-]{3,20}$/.test(c)) return { ok: false, motivo: 'Ese cupón no existe. Revisá cómo está escrito.' };
-	if (r.tienda.vitrina) return { ok: false, motivo: 'Es una tienda de ejemplo: los cupones no se aplican.' };
+	if (!/^[A-Z0-9-]{3,20}$/.test(c))
+		return { ok: false, motivo: 'Ese cupón no existe. Revisá cómo está escrito.' };
+	if (r.tienda.vitrina)
+		return { ok: false, motivo: 'Es una tienda de ejemplo: los cupones no se aplican.' };
 	if (!r.datos) {
 		const res = await fetch(`${String(env.API_URL)}/v1/publico/tiendas/${r.tienda.slug}/cupon`, {
 			method: 'POST',
@@ -33,7 +35,12 @@ export async function evaluarCupon(
 			motivo?: string;
 		};
 		return g.ok
-			? { ok: true, descuento: g.descuento ?? 0, envioGratis: !!g.envioGratis, combinable: !!g.combinable }
+			? {
+					ok: true,
+					descuento: g.descuento ?? 0,
+					envioGratis: !!g.envioGratis,
+					combinable: !!g.combinable
+				}
 			: { ok: false, motivo: g.motivo ?? 'Ese cupón no vale para esta compra.' };
 	}
 	const cupon = await r.datos.cuponTienda(c);

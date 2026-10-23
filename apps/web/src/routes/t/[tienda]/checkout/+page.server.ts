@@ -93,29 +93,32 @@ export const actions: Actions = {
 				? Math.round(((subtotal - descCupon) * r.tienda.cobros.transferencia) / 100)
 				: 0);
 		const total = subtotal + envio - descuento;
-		const res = await r.datos.crearPedido({
-			items: p.carrito.map((l) => ({ productoId: l.id, cantidad: l.cantidad })),
-			pago: p.pago === 'transferencia' ? 'transf' : 'mp',
-			canal: 'web',
-			envio: p.envio,
-			cliente: p.nombre,
-			telefono: p.telefono,
-			nota: [
-				`Email: ${p.email}`,
-				p.dni && `DNI: ${p.dni}`,
-				p.envio !== 'retiro' && `Entrega: ${p.direccion} (${p.cp})`,
-				cupon?.ok && `Cupón: ${p.cupon.toUpperCase()}`,
-				`Total cobrado: $ ${total.toLocaleString('es-AR')}`
-			]
-				.filter(Boolean)
-				.join(' · '),
-			// En la demo, Mercado Pago se aprueba al toque; la transferencia queda esperando el comprobante.
-			pagado: p.pago === 'mercadopago'
-		}, {
-			email: p.email,
-			cupon: cupon?.ok ? p.cupon.toUpperCase() : null,
-			descuentoCupon: descCupon
-		});
+		const res = await r.datos.crearPedido(
+			{
+				items: p.carrito.map((l) => ({ productoId: l.id, cantidad: l.cantidad })),
+				pago: p.pago === 'transferencia' ? 'transf' : 'mp',
+				canal: 'web',
+				envio: p.envio,
+				cliente: p.nombre,
+				telefono: p.telefono,
+				nota: [
+					`Email: ${p.email}`,
+					p.dni && `DNI: ${p.dni}`,
+					p.envio !== 'retiro' && `Entrega: ${p.direccion} (${p.cp})`,
+					cupon?.ok && `Cupón: ${p.cupon.toUpperCase()}`,
+					`Total cobrado: $ ${total.toLocaleString('es-AR')}`
+				]
+					.filter(Boolean)
+					.join(' · '),
+				// En la demo, Mercado Pago se aprueba al toque; la transferencia queda esperando el comprobante.
+				pagado: p.pago === 'mercadopago'
+			},
+			{
+				email: p.email,
+				cupon: cupon?.ok ? p.cupon.toUpperCase() : null,
+				descuentoCupon: descCupon
+			}
+		);
 		if (res === 'sin-stock')
 			return fail(409, { error: 'Algún producto se quedó sin stock. Revisá el carrito.' });
 		if (res === 'invalido') return fail(400, { error: 'Revisá el carrito.' });
