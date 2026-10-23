@@ -14,7 +14,7 @@ import (
 
 // Plantillas son las 16 del handoff (apps/web/src/lib/plantillas.ts).
 var Plantillas = []string{"ceibo", "mostaza", "yerbal", "pampa", "rosedal", "quebracho", "andes", "malbec",
-	"patio", "miga", "taller", "hora", "litoral", "torno", "tijera", "lente"}
+	"patio", "miga", "miga-clasica", "taller", "hora", "litoral", "torno", "tijera", "lente"}
 
 // ErrPlantilla: la plantilla no existe.
 var ErrPlantilla = errors.New("plantilla desconocida")

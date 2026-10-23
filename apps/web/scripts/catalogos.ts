@@ -342,6 +342,14 @@ for (const c of catalogos) {
 		if (n > 1) p.id = `${p.id}-${n}`;
 	}
 }
+// Miga Clásica (la otra versión de Miga en el handoff) vende lo mismo que Miga.
+const miga = catalogos.find((c) => c.plantilla === 'miga');
+if (miga)
+	catalogos.push({
+		...structuredClone(miga),
+		plantilla: 'miga-clasica',
+		tienda: 'Panadería Lola Clásica'
+	});
 catalogos.sort((a, b) => a.plantilla.localeCompare(b.plantilla));
 
 const salida = `// Generado por scripts/catalogos.ts desde el handoff (Plantillas Tienda y las plantillas trabajadas). No editar a mano.

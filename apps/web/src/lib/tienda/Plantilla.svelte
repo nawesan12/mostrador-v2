@@ -1,17 +1,40 @@
 <script lang="ts">
-	import type { ComponentProps } from 'svelte';
+	import type { Component, ComponentProps } from 'svelte';
+	import Andes from './plantillas/Andes.svelte';
 	import Ceibo from './plantillas/Ceibo.svelte';
+	import Malbec from './plantillas/Malbec.svelte';
+	import Miga from './plantillas/Miga.svelte';
+	import MigaClasica from './plantillas/MigaClasica.svelte';
 	import Motor from './plantillas/Motor.svelte';
+	import Mostaza from './plantillas/Mostaza.svelte';
+	import Pampa from './plantillas/Pampa.svelte';
+	import Quebracho from './plantillas/Quebracho.svelte';
+	import Rosedal from './plantillas/Rosedal.svelte';
+	import Tijera from './plantillas/Tijera.svelte';
+	import Yerbal from './plantillas/Yerbal.svelte';
+
+	type Props = ComponentProps<typeof Ceibo>;
 
 	/**
-	 * Dibuja la tienda con su plantilla: Ceibo tiene su propio diseño; las demás salen del motor de
-	 * plantillas del handoff (Plantillas Tienda.dc.html), un marcado con temas por plantilla.
+	 * Dibuja la tienda con su plantilla. Las que tienen archivo propio en el handoff (Plantilla X.dc.html)
+	 * usan su diseño; las demás salen del motor de plantillas (Plantillas Tienda.dc.html).
 	 */
-	let props: ComponentProps<typeof Ceibo> = $props();
+	const PROPIAS: Record<string, Component<Props>> = {
+		andes: Andes,
+		ceibo: Ceibo,
+		malbec: Malbec,
+		miga: Miga,
+		'miga-clasica': MigaClasica,
+		mostaza: Mostaza,
+		pampa: Pampa,
+		quebracho: Quebracho,
+		rosedal: Rosedal,
+		tijera: Tijera,
+		yerbal: Yerbal
+	};
+
+	let props: Props = $props();
+	const Vista = $derived(PROPIAS[props.tienda.plantilla] ?? Motor);
 </script>
 
-{#if props.tienda.plantilla === 'ceibo'}
-	<Ceibo {...props} />
-{:else}
-	<Motor {...props} />
-{/if}
+<Vista {...props} />
