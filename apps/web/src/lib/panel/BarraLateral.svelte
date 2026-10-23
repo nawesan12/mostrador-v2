@@ -30,6 +30,9 @@
 		resumen: components['schemas']['ResumenPanel'];
 	} = $props();
 	const shell = getShell();
+	// Celular (sin rail): acordeón. Se dibuja una sola de las dos navegaciones, no las dos escondidas.
+	let ancho = $state(1200);
+	const celular = $derived(ancho < 760);
 	// Acordeón del celular: abierta el área actual; se puede abrir otra.
 	let abierta = $state<string | null>(null);
 	const desplegada = $derived(abierta ?? area.id);
@@ -61,6 +64,8 @@
 		`Quedan ${resumen.prueba.diasRestantes} ${resumen.prueba.diasRestantes === 1 ? 'día' : 'días'}`
 	);
 </script>
+
+<svelte:window bind:innerWidth={ancho} />
 
 <!-- eslint-disable svelte/no-navigation-without-resolve -- rutas del panel armadas con rutaDe -->
 {#snippet seccionLink(i: Item)}
@@ -102,36 +107,39 @@
 	</div>
 	<div class="medio">
 		<!-- Compu y tablet: las secciones del área elegida en el rail. -->
-		<div class="solo-ancho">
-			<div class="area">{area.label}</div>
-			<nav class="items">
-				{#each area.items as i (i.label)}{@render seccionLink(i)}{/each}
+		{#if !celular}
+			<div class="solo-ancho">
+				<div class="area">{area.label}</div>
+				<nav class="items">
+					{#each area.items as i (i.label)}{@render seccionLink(i)}{/each}
+				</nav>
+			</div>
+		{:else}
+			<!-- Celular: todas las áreas, en acordeón. -->
+			<nav class="acordeon" aria-label="Áreas del panel">
+				{#each AREAS as a (a.id)}
+					{@const on = desplegada === a.id}
+					{@const n = pendientes(a)}
+					<button
+						type="button"
+						class="a-fila"
+						class:on
+						aria-expanded={on}
+						onclick={() => (abierta = on ? '' : a.id)}
+					>
+						<Icon icon={on ? a.iconFill : a.icon} size={19} />
+						<span class="a-l">{a.label}</span>
+						{#if n && !on}<span class="badge">{n}</span>{/if}
+						<Icon icon={on ? I.phCaretUpBold : I.phCaretDownBold} size={13} />
+					</button>
+					{#if on}
+						<div class="items sub">
+							{#each a.items as i (i.label)}{@render seccionLink(i)}{/each}
+						</div>
+					{/if}
+				{/each}
 			</nav>
-		</div>
-		<!-- Celular: todas las áreas, en acordeón. -->
-		<nav class="acordeon" aria-label="Áreas del panel">
-			{#each AREAS as a (a.id)}
-				{@const on = desplegada === a.id}
-				{@const n = pendientes(a)}
-				<button
-					type="button"
-					class="a-fila"
-					class:on
-					aria-expanded={on}
-					onclick={() => (abierta = on ? '' : a.id)}
-				>
-					<Icon icon={on ? a.iconFill : a.icon} size={19} />
-					<span class="a-l">{a.label}</span>
-					{#if n && !on}<span class="badge">{n}</span>{/if}
-					<Icon icon={on ? I.phCaretUpBold : I.phCaretDownBold} size={13} />
-				</button>
-				{#if on}
-					<div class="items sub">
-						{#each a.items as i (i.label)}{@render seccionLink(i)}{/each}
-					</div>
-				{/if}
-			{/each}
-		</nav>
+		{/if}
 		{#if resumen.canales.length}
 			<div class="c-t">Canales conectados</div>
 			<div class="canales">
