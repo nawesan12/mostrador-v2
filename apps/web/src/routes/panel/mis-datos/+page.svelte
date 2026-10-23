@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto, invalidateAll } from '$app/navigation';
+	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Icon from '#lib/components/Icon.svelte';
 	import Modal from '#lib/components/Modal.svelte';
@@ -91,7 +91,8 @@
 		if (!r.ok)
 			return ui.toast({ k: 'err', title: 'No se cerró', desc: 'Revisá el nombre de la tienda.' });
 		cerrando = false;
-		await goto(resolve('/'));
+		// Carga completa: sin sandbox, cualquier pedido del panel que siga en camino redirige a /demo.
+		location.assign(resolve('/'));
 	}
 </script>
 
