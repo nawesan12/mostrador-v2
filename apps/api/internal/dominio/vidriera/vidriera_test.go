@@ -1,0 +1,113 @@
+package vidriera_test
+
+import (
+	"context"
+	"errors"
+	"testing"
+	"time"
+
+	"github.com/jackc/pgx/v5"
+
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/listas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/vidriera"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db/pruebadb"
+)
+
+type mpFalso struct{ pedidos []int }
+
+func (m *mpFalso) PagarPedido(_ context.Context, _ string, numero int, vuelta string) (string, error) {
+	m.pedidos = append(m.pedidos, numero)
+	return "https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=x&vuelta=" + vuelta, nil
+}
+
+func compra(id string, cantidad int, pago string) vidriera.Compra {
+	c := vidriera.Compra{Email: "lucia@ejemplo.com", Nombre: "Lucía Pérez", Telefono: "11 5555-0101", CP: "1414",
+		Direccion: "Gorriti 4500", Envio: "andreani", Pago: pago}
+	c.Carrito = append(c.Carrito, struct {
+		ID       string `json:"id"`
+		Cantidad int    `json:"cantidad"`
+	}{id, cantidad})
+	return c
+}
+
+func TestTiendaOnline(t *testing.T) {
+	ctx := context.Background()
+	b := pruebadb.Nueva(t)
+	luna := pruebadb.CrearTienda(t, b.App, "luna")
+	sol := pruebadb.CrearTienda(t, b.App, "sol")
+	stock := 3
+	cat := "Mates"
+	p, err := listas.Guardar(ctx, b.App, luna, "", listas.Editable{Nombre: "Mate de calabaza", Categoria: &cat, Precio: 10000, Stock: &stock})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tienda, err := vidriera.Publica(ctx, b.App, "luna")
+	if err != nil || len(tienda.Productos) != 1 || len(tienda.Categorias) != 1 || tienda.Categorias[0].Cantidad != 1 {
+		t.Fatalf("pública: %+v %v", tienda, err)
+	}
+	if _, err := vidriera.Publica(ctx, b.App, "no-existe"); !errors.Is(err, vidriera.ErrNoExiste) {
+		t.Fatal("una tienda que no existe")
+	}
+
+	// Transferencia: precio del servidor, envío por región, 15 % off y el código público.
+	lunes := time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)
+	r, err := vidriera.Comprar(ctx, b.App, nil, "https://mostrador.iamnaw.dev", "luna", compra(p.ID, 2, "transferencia"), lunes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := int64(20000 + 6900 - 3000); r.Total != want || r.URL != "" || len(r.Codigo) < 16 {
+		t.Fatalf("resultado: %+v (quería total %d)", r, want)
+	}
+	c, err := vidriera.VerPedido(ctx, b.App, "luna", r.Codigo)
+	if err != nil || c.Numero != r.Numero || c.Total != r.Total || c.Nombre != "Lucía" || c.Pago != "transferencia" {
+		t.Fatalf("confirmación: %+v %v", c, err)
+	}
+	if _, err := vidriera.VerPedido(ctx, b.App, "sol", r.Codigo); !errors.Is(err, vidriera.ErrNoExiste) {
+		t.Fatal("otra tienda vio el pedido")
+	}
+	var quedan int
+	_ = b.App.EnTienda(ctx, luna, func(tx pgx.Tx) error {
+		return tx.QueryRow(ctx, `SELECT stock FROM productos WHERE id::text = $1`, p.ID).Scan(&quedan)
+	})
+	if quedan != 1 {
+		t.Fatalf("stock: %d", quedan)
+	}
+
+	// Sin stock, carrito de otra tienda, y Mercado Pago sin cuenta conectada: no se arma el pedido.
+	if _, err := vidriera.Comprar(ctx, b.App, nil, "", "luna", compra(p.ID, 5, "transferencia"), lunes); !errors.Is(err, vidriera.ErrSinStock) {
+		t.Fatalf("sin stock: %v", err)
+	}
+	if _, err := vidriera.Comprar(ctx, b.App, nil, "", "sol", compra(p.ID, 1, "transferencia"), lunes); !errors.Is(err, vidriera.ErrInvalido) {
+		t.Fatalf("producto de otra tienda: %v", err)
+	}
+	mp := &mpFalso{}
+	if _, err := vidriera.Comprar(ctx, b.App, mp, "", "luna", compra(p.ID, 1, "mercadopago"), lunes); !errors.Is(err, vidriera.ErrInvalido) {
+		t.Fatalf("Mercado Pago sin conectar: %v", err)
+	}
+
+	// Una tienda cerrada no se ve.
+	_ = b.App.EnTienda(ctx, sol, func(tx pgx.Tx) error {
+		_, err := tx.Exec(ctx, `UPDATE tiendas SET cerrada_en = now() WHERE id = $1`, sol)
+		return err
+	})
+	if _, err := vidriera.Publica(ctx, b.App, "sol"); !errors.Is(err, vidriera.ErrNoExiste) {
+		t.Fatal("se ve una tienda cerrada")
+	}
+}
+
+func TestCotizar(t *testing.T) {
+	lunes := time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)
+	gratis := int64(100000)
+	e := vidriera.Envios{GratisDesde: &gratis, Retiro: true, Moto: true, Correo: true}
+	o := vidriera.Cotizar("1414", 5000, e, lunes)
+	if len(o) != 4 || o[0].Precio != 6900 || o[0].Detalle != "Llega el miércoles 28" || o[1].Precio != 5500 {
+		t.Fatalf("CABA: %+v", o)
+	}
+	if o := vidriera.Cotizar("5000", 150000, e, lunes); o[0].Precio != 0 || len(o) != 3 {
+		t.Fatalf("Córdoba con envío gratis: %+v", o)
+	}
+	if o := vidriera.Cotizar("x", 1, e, lunes); len(o) != 1 || o[0].ID != "retiro" {
+		t.Fatalf("CP inválido: %+v", o)
+	}
+}
