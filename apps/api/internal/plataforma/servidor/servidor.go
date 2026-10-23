@@ -22,6 +22,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/precios"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/tiendas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/turnos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ventas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/vidriera"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
@@ -116,6 +117,15 @@ func Nuevo(d Dependencias) http.Handler {
 			pagador = d.MercadoPago
 		}
 		vidriera.Rutas(mux, d.App, pagador, d.Sitio)
+		var cobrador turnos.Cobrador
+		if d.MercadoPago != nil {
+			cobrador = d.MercadoPago
+		}
+		turnos.Rutas(mux, d.App, turnos.Config{Tienda: tienda, MP: cobrador, Sitio: d.Sitio, Log: d.Log,
+			Admin: func(r *http.Request) bool {
+				s, ok := cuentas.SesionDe(r)
+				return ok && (s.Rol == "duenio" || s.Rol == "admin")
+			}})
 		ip := func(r *http.Request) string { return cuentas.ClienteDe(r, d.ClaveBFF).IP }
 		if d.Arrepentimiento != nil {
 			d.Arrepentimiento.Rutas(mux, ip)
