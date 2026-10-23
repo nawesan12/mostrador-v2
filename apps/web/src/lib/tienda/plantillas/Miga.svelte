@@ -257,13 +257,17 @@
 	const iconoEnvio = (id: OpcionEnvio['id']) =>
 		id === 'retiro' ? I.phStorefrontFill : id === 'moto' ? I.phMopedFill : I.phTruck;
 	const pagos = $derived([
-		{
-			id: 'transferencia' as const,
-			t: 'Transferencia',
-			d: `${tienda.cobros.transferencia}% off · alias al confirmar`,
-			i: I.phBankFill,
-			c: '#2F7A43'
-		},
+		...(tienda.cobros.datosTransferencia
+			? [
+					{
+						id: 'transferencia' as const,
+						t: 'Transferencia',
+						d: `${tienda.cobros.transferencia}% off · alias al confirmar`,
+						i: I.phBankFill,
+						c: '#2F7A43'
+					}
+				]
+			: []),
 		...(tienda.cobros.mercadoPago
 			? [
 					{
@@ -276,6 +280,10 @@
 				]
 			: [])
 	]);
+	// Sin datos de transferencia cargados, el medio de pago es el primero disponible.
+	$effect(() => {
+		if (pagos.length && !pagos.some((x) => x.id === pago)) pago = pagos[0].id;
+	});
 
 	// Nosotros: cómo llega el pedido (la tarjeta de "Horarios" del diseño, con los envíos de la tienda).
 	const llegadas = $derived([

@@ -45,6 +45,8 @@ export const actions: Actions = {
 		const b = v.safeParse(Pedido, { ...Object.fromEntries(f), carrito });
 		if (!b.success) return fail(400, { error: b.issues[0].message });
 		const p = b.output;
+		if (p.pago === 'transferencia' && !r.tienda.cobros.datosTransferencia)
+			return fail(400, { error: 'Esta tienda no tiene transferencia: elegí otro medio de pago.' });
 		if (p.envio !== 'retiro' && (!cpValido(p.cp) || p.direccion.length < 4))
 			return fail(400, { error: 'Poné el código postal y la dirección de entrega.' });
 		// Con la API real, el pedido lo arma Go (precios, envío y Mercado Pago salen de ahí).
