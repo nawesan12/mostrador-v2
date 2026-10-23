@@ -60,6 +60,8 @@ type Servicio struct {
 	WhatsApp whatsapp.Mensajero
 	// Cliente HTTP para los proveedores (tests: el del servidor falso).
 	HTTP *http.Client
+	// SesionIA resuelve los tokens de las IA conectadas (paquete ia). nil: no se aceptan.
+	SesionIA func(ctx context.Context, token string) (Datos, error)
 }
 
 // Cliente es de dónde viene el pedido (para la sesión y los límites).
@@ -271,6 +273,10 @@ type Datos struct {
 	VenceEn  time.Time `json:"venceEn"`
 	// SesionID identifica la sesión (un prefijo del hash del token) para listarla y cerrarla.
 	SesionID string `json:"-"`
+	// IA es la conexión de una IA (paquete ia) cuando el token es de un conector MCP; IAAcciones,
+	// si esa conexión puede escribir. Las sesiones de personas los dejan vacíos.
+	IA         string `json:"-"`
+	IAAcciones bool   `json:"-"`
 }
 
 // Sesion resuelve el token. Actualiza "visto" como mucho una vez por hora (como en Caja: no escribir

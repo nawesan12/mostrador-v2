@@ -1,14 +1,19 @@
 import { env } from 'cloudflare:workers';
 import { usaSandbox } from '#lib/server/datos/index.ts';
-import { json, noDisponible, parametros, preflight } from '#lib/server/mcp/http.ts';
+import { tokenApi } from '#lib/server/mcp/api.ts';
+import { json, parametros, preflight } from '#lib/server/mcp/http.ts';
 import { canjearCodigo, renovar } from '#lib/server/mcp/oauth.ts';
 import { dbSandbox } from '#lib/server/sandbox/sandbox.ts';
 import type { RequestHandler } from './$types';
 
 /** Endpoint de token: authorization_code (con PKCE) y refresh_token (rota). Clientes públicos. */
 export const POST: RequestHandler = async ({ request }) => {
-	if (!usaSandbox()) return noDisponible();
 	const p = await parametros(request);
+	if (!usaSandbox()) {
+		const out = await tokenApi(p);
+		if (out === undefined) return json({ error: 'unsupported_grant_type' }, 400);
+		return out ? json(out) : json({ error: 'invalid_grant' }, 400);
+	}
 	const db = dbSandbox(env.SANDBOX);
 	const grant = p.get('grant_type');
 	const clienteId = p.get('client_id') ?? '';

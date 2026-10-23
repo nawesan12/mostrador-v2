@@ -1,6 +1,7 @@
 import { env } from 'cloudflare:workers';
 import { IAS, iaDe } from '#lib/panel/integraciones.ts';
 import { datosDe, usaSandbox } from '#lib/server/datos/index.ts';
+import { panelApi } from '#lib/server/mcp/api.ts';
 import { conexionesDe } from '#lib/server/mcp/oauth.ts';
 import { dbSandbox } from '#lib/server/sandbox/sandbox.ts';
 import { BOT, habilitado, vinculoDe } from '#lib/server/telegram.ts';
@@ -14,7 +15,17 @@ export const load: PageServerLoad = async ({ locals }) => {
 		d.mercadoPago(),
 		d.mercadoLibre(),
 		db && locals.sandbox ? vinculoDe(db, locals.sandbox.id) : null,
-		db && locals.sandbox ? conexionesDe(db, locals.sandbox.id) : []
+		db && locals.sandbox
+			? conexionesDe(db, locals.sandbox.id)
+			: panelApi(locals.token).then((p) =>
+					(p?.conexiones ?? []).map((c) => ({
+						id: c.id,
+						nombre: c.cliente,
+						permisos: c.acciones ? 'lectura acciones' : 'lectura',
+						creadoEn: Date.parse(c.creadaEn),
+						usadoEn: Date.parse(c.usadaEn)
+					}))
+				)
 	]);
 	// Telegram (Hornero para la dueña) está conectado si hay un chat vinculado.
 	estado.conectadas.tg = !!tg;
@@ -39,8 +50,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		},
 		mcp: {
 			url: `${env.PUBLIC_SITE_URL}/api/mcp`,
-			// Con la API real, el servidor MCP lo va a atender Go.
-			disponible: usaSandbox(),
+			disponible: true,
 			conexiones: ias
 		},
 		demo: usaSandbox()

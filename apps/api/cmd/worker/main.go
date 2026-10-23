@@ -7,7 +7,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ia"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/config"
@@ -57,6 +59,22 @@ func correr() error {
 			w.Manejadores[tipo] = m
 		}
 	}
+	// Limpieza de las IA conectadas: códigos vencidos y clientes que nadie usa hace 30 días.
+	go func() {
+		iaS := &ia.Servicio{Pool: app}
+		t := time.NewTicker(6 * time.Hour)
+		defer t.Stop()
+		for {
+			if err := iaS.Purgar(ctx); err != nil && ctx.Err() == nil {
+				slog.Error("ia: purgar", "error", err)
+			}
+			select {
+			case <-ctx.Done():
+				return
+			case <-t.C:
+			}
+		}
+	}()
 	slog.Info("worker consumiendo el outbox", "entorno", cfg.Entorno)
 	return w.Correr(ctx)
 }
