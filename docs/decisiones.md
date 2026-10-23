@@ -181,3 +181,25 @@ URL, para que no quede en el historial ni en logs.
   de OAuth (`/integraciones/mercadopago/callback`, `/integraciones/mercadolibre/callback`,
   `/ingresar/*/vuelta`) y las notificaciones (`api.mostradorapp.com.ar/v1/webhooks/*`). Mercado
   Libre pide validar con QR desde el celular de Nahuel para editar la app.
+
+## 21. Manejá Mostrador desde tu IA: servidor MCP con OAuth propio (PR #54)
+
+- Mismo patrón que Caja: Mostrador es su propio servidor de autorización (OAuth 2.1 para clientes
+  MCP) y expone `/api/mcp` sin estado. Registro dinámico (clientes públicos, vueltas https o
+  localhost, 20 por hora por IP), PKCE S256 obligatorio, código de un solo uso (5 min), access token
+  de 1 h y refresh token que rota en cada uso; si llega uno ya rotado, se corta la conexión entera.
+  Códigos y tokens se guardan hasheados (sha256).
+- En la demo todo vive en la D1 del sandbox (migración 0005): la conexión es del sandbox del
+  visitante (el de su cookie al dar permiso), vence con él y se borra con él (`ON DELETE CASCADE`).
+  El cron limpia códigos vencidos, clientes de más de 30 días sin conexiones y los límites.
+- Una fila por conexión con el access token, el refresh token y la ventana del límite (60 pedidos
+  por minuto): autenticar y contar es una sola escritura (`UPDATE … RETURNING`).
+- Permisos: `lectura` (siempre) y `acciones` (si la IA lo pide y la persona lo deja marcado). Las
+  acciones además respetan los interruptores de Integraciones: ajustar productos pide "Cargar y
+  editar productos" y crear cupones, "Reembolsos y descuentos".
+- Las herramientas trabajan sobre `Datos`, sin métodos nuevos: cuando exista la API Go, la misma
+  lista sirve contra `DatosApi`. Montos en pesos enteros, con el texto formateado al lado.
+- Con `DATA_SOURCE=api` los endpoints responden 501 con un mensaje claro: la versión real (atada a la
+  cuenta y la tienda, no al sandbox) la va a atender Go.
+- `/api/mcp` queda fuera del chequeo de CSRF (no usa cookies, sólo el token Bearer), como los
+  endpoints de OAuth. La pantalla de consentimiento sí lo pasa.

@@ -15,7 +15,8 @@ export const load: PageServerLoad = async ({ locals }) => ({
 
 export const actions: Actions = {
 	default: async ({ request, cookies }) => {
-		const id = String((await request.formData()).get('plantilla') ?? '');
+		const f = await request.formData();
+		const id = String(f.get('plantilla') ?? '');
 		const p = buscarPlantilla(id);
 		const rubro = p && RUBROS.find((r) => r.nombre === p.rubro);
 		const sb = rubro && (await crear(dbSandbox(env.SANDBOX), rubro.id, Date.now(), p.id));
@@ -27,6 +28,8 @@ export const actions: Actions = {
 			sameSite: 'lax',
 			maxAge: VIDA_MS / 1000
 		});
-		redirect(303, '/panel');
+		// Al conectar una IA sin demo, se elige la tienda y se vuelve al consentimiento.
+		const volver = String(f.get('volver') ?? '');
+		redirect(303, volver.startsWith('/oauth/autorizar?') ? volver : '/panel');
 	}
 };
