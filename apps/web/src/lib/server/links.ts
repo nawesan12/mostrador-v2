@@ -30,10 +30,13 @@ export async function verLink(codigo: string): Promise<LinkPublico | null> {
 	return (await r.json()) as LinkPublico;
 }
 
-/** Pagar. En la demo se simula; en la real necesita Mercado Pago conectado. */
+/**
+ * Pagar. En la demo se simula; en la real crea la preferencia de Checkout Pro con la cuenta de la
+ * tienda y devuelve el init_point para mandar a quien paga.
+ */
 export async function pagarLink(
 	codigo: string
-): Promise<'ok' | 'no-existe' | 'ya-pagado' | 'sin-cobros'> {
+): Promise<'ok' | 'no-existe' | 'ya-pagado' | 'sin-cobros' | 'error' | { url: string }> {
 	if (usaSandbox()) {
 		const r = await buscarLink(dbSandbox(env.SANDBOX), codigo);
 		if (!r) return 'no-existe';
@@ -47,7 +50,15 @@ export async function pagarLink(
 		}
 	);
 	if (r.status === 404) return 'no-existe';
-	if (r.status === 409) return 'sin-cobros';
+	if (r.status === 409) {
+		const p = (await r.json().catch(() => null)) as { codigo?: string } | null;
+		return p?.codigo === 'pagado' ? 'ya-pagado' : 'sin-cobros';
+	}
+	if (r.status === 502) return 'error';
 	if (!r.ok) throw new Error(`API ${r.status}`);
-	return 'ok';
+	const { url } = (await r.json()) as { url: string };
+	// Sólo se redirige al checkout de Mercado Pago.
+	if (!/^https:\/\/(www\.)?mercadopago\.com(\.ar)?\//.test(url))
+		throw new Error('URL de pago inesperada');
+	return { url };
 }

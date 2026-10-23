@@ -1,4 +1,4 @@
-import { error, fail } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import { usaSandbox } from '#lib/server/datos/index.ts';
 import { pagarLink, verLink } from '#lib/server/links.ts';
 import type { Actions, PageServerLoad } from './$types';
@@ -19,6 +19,9 @@ export const actions: Actions = {
 			return fail(409, {
 				error: 'La tienda todavía no puede cobrar con tarjeta. Escribile para pagar de otra forma.'
 			});
+		if (r === 'error')
+			return fail(502, { error: 'Mercado Pago no respondió. Probá de nuevo en un rato.' });
+		if (typeof r === 'object') redirect(303, r.url);
 		return { pagado: true };
 	}
 };

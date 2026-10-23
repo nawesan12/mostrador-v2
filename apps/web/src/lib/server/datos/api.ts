@@ -3,8 +3,10 @@
  * (BFF), con el token de la sesión. Los errores problem+json se convierten en errores de SvelteKit.
  */
 import { error } from '@sveltejs/kit';
+import { estadoInicial } from '#lib/panel/integraciones.ts';
 import type {
 	AccionCupon,
+	ConexionMP,
 	Dominios,
 	MisDatos,
 	PreferenciasAvisos,
@@ -339,7 +341,46 @@ export class DatosApi implements Datos {
 		return (await r.json()) as Miembro;
 	}
 	async cambiarPlan(plan: IdPlan, ciclo?: 'mes' | 'anio') {
-		await this.pedir<void>('/v1/panel/plan', 'PUT', { plan, ciclo });
+		if (plan === 'gratis') {
+			await this.pedir<void>('/v1/panel/plan', 'PUT', { plan, ciclo });
+			// La suscripción de Mercado Pago se cancela (si no había, la API responde 204 igual).
+			await this.intentar('/v1/panel/cuenta/suscripcion', 'DELETE');
+			return;
+		}
+		const res = await this.intentar('/v1/panel/plan', 'PUT', { plan, ciclo });
+		if (res.ok) return;
+		// Con el cobro activo, los planes pagos se activan con la suscripción.
+		return this.pedir<{ url: string }>('/v1/panel/cuenta/suscripcion', 'POST', {
+			plan,
+			ciclo: ciclo ?? 'mes'
+		});
+	}
+	// Las demás integraciones llegan una por PR: por ahora sólo Mercado Pago es real.
+	async integraciones() {
+		const e = estadoInicial(false);
+		e.conectadas.mp = (await this.mercadoPago()).conectada;
+		return e;
+	}
+	async ajustarIntegracion() {
+		return 'no-se-puede' as const;
+	}
+	mercadoPago() {
+		return this.pedir<ConexionMP>('/v1/panel/integraciones/mercadopago');
+	}
+	async conectarMercadoPago() {
+		const res = await this.intentar('/v1/panel/integraciones/mercadopago/conectar', 'POST');
+		if (!res.ok) return null;
+		return ((await res.json()) as { url: string }).url;
+	}
+	async volverMercadoPago(codigo: string, estado: string) {
+		const res = await this.intentar('/v1/panel/integraciones/mercadopago/vuelta', 'POST', {
+			codigo,
+			estado
+		});
+		return res.ok ? 'ok' : 'no-se-puede';
+	}
+	async desconectarMercadoPago() {
+		await this.pedir<void>('/v1/panel/integraciones/mercadopago', 'DELETE');
 	}
 	miTienda() {
 		return this.pedir<MiTienda>('/v1/panel/mi-tienda');

@@ -1,7 +1,11 @@
 /**
- * Las integraciones del panel (design/PanelOperacion.dc.html, sInt). Cada una dice qué sincroniza y
- * qué opciones tiene en "Configurar" (el handoff no la diseña: se arma con sus piezas).
+ * Las integraciones del panel (design/PanelOperacion.dc.html, sInt: el orden y lo conectado de la
+ * tienda de ejemplo salen de `INT`; TikTok Shop queda afuera porque no opera en Argentina). Cada una
+ * dice qué sincroniza y qué opciones tiene en "Configurar" (el handoff no la diseña: se arma con sus
+ * piezas).
  */
+import * as I from '#lib/icons.ts';
+
 export type Categoria = 'canales' | 'cobros' | 'envios' | 'gestion';
 
 export type Integracion = {
@@ -245,22 +249,76 @@ export const INTEGRACIONES: Integracion[] = [
 	}
 ];
 
+/** "Manejá Mostrador desde tu IA" (aiProv del handoff). */
 export const IAS = [
-	{ id: 'claude', nombre: 'Claude' },
-	{ id: 'chatgpt', nombre: 'ChatGPT' },
-	{ id: 'gemini', nombre: 'Gemini' },
-	{ id: 'mcp', nombre: 'Otra IA (MCP)' }
+	{ id: 'claude', nombre: 'Claude', icon: I.siClaude, col: '#D97757' },
+	{ id: 'chatgpt', nombre: 'ChatGPT', icon: I.siOpenai, col: '#10A37F' },
+	{ id: 'gemini', nombre: 'Gemini', icon: I.siGooglegemini, col: '#4285F4' },
+	{ id: 'mcp', nombre: 'Otra IA (MCP)', icon: I.phPlugsConnectedBold, col: '#8A5A3E' }
 ] as const;
 
+/** Qué puede hacer la IA (aiPerms del handoff). "Ver" está siempre. */
 export const PERMISOS_IA = [
 	{
 		id: 'leer',
+		icon: I.phEyeFill,
 		t: 'Ver ventas, stock y clientes',
 		d: 'Solo lectura, siempre activo',
-		def: true,
-		fijo: true
+		def: true
 	},
-	{ id: 'escribir', t: 'Cargar y editar productos', d: 'Precios, stock y fotos', def: true },
-	{ id: 'responder', t: 'Responder mensajes', d: 'WhatsApp e Instagram, con tu tono', def: false },
-	{ id: 'plata', t: 'Reembolsos y descuentos', d: 'Siempre te pide confirmación', def: false }
+	{
+		id: 'escribir',
+		icon: I.phPencilSimpleFill,
+		t: 'Cargar y editar productos',
+		d: 'Precios, stock y fotos',
+		def: true
+	},
+	{
+		id: 'responder',
+		icon: I.phChatCircleDotsFill,
+		t: 'Responder mensajes',
+		d: 'WhatsApp e Instagram, con tu tono',
+		def: false
+	},
+	{
+		id: 'plata',
+		icon: I.phCurrencyCircleDollarFill,
+		t: 'Reembolsos y descuentos',
+		d: 'Siempre te pide confirmación',
+		def: false
+	}
 ] as const;
+
+export const CATEGORIAS = [
+	['todas', 'Todas'],
+	['canales', 'Canales'],
+	['cobros', 'Cobros'],
+	['envios', 'Envíos'],
+	['gestion', 'Gestión']
+] as const;
+
+/** Estado de las integraciones de la tienda (en la demo se simula; en la real, cada una por su PR). */
+export type EstadoIntegraciones = {
+	conectadas: Record<string, boolean>;
+	opciones: Record<string, Record<string, boolean>>;
+	ia: Record<string, boolean>;
+	permisosIa: Record<string, boolean>;
+};
+
+export type AjusteIntegracion =
+	| { tipo: 'conexion'; id: string; valor: boolean }
+	| { tipo: 'opcion'; id: string; clave: string; valor: boolean }
+	| { tipo: 'ia'; id: string; valor: boolean }
+	| { tipo: 'permisoIa'; id: string; valor: boolean };
+
+/** El estado de fábrica (demo: lo conectado en la tienda de ejemplo; real: nada conectado). */
+export function estadoInicial(demo: boolean): EstadoIntegraciones {
+	return {
+		conectadas: Object.fromEntries(INTEGRACIONES.map((i) => [i.id, demo && i.demo])),
+		opciones: Object.fromEntries(
+			INTEGRACIONES.map((i) => [i.id, Object.fromEntries(i.opciones.map((o) => [o.id, o.def]))])
+		),
+		ia: Object.fromEntries(IAS.map((p) => [p.id, false])),
+		permisosIa: Object.fromEntries(PERMISOS_IA.map((p) => [p.id, p.def]))
+	};
+}

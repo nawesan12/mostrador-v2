@@ -4,6 +4,7 @@
  * packages/contrato/casos corren contra las dos.
  */
 import type { components } from '@mostrador/contrato/esquema';
+import type { AjusteIntegracion, EstadoIntegraciones } from '#lib/panel/integraciones.ts';
 
 export type Rubro = components['schemas']['Rubro'];
 export type Tienda = components['schemas']['Tienda'];
@@ -43,6 +44,7 @@ export type MiTienda = components['schemas']['MiTienda'];
 export type Configuracion = components['schemas']['Configuracion'];
 export type PlanCuenta = components['schemas']['PlanCuenta'];
 export type Dominios = components['schemas']['Dominios'];
+export type ConexionMP = components['schemas']['ConexionMP'];
 export type PreferenciasAvisos = components['schemas']['PreferenciasAvisos'];
 export type MisDatos = components['schemas']['MisDatos'];
 export type TipoExport =
@@ -128,6 +130,15 @@ export interface Datos {
 	miTienda(): Promise<MiTienda>;
 	configuracion(): Promise<Configuracion>;
 	planCuenta(): Promise<PlanCuenta>;
+	/** El hub de Integraciones (Mercado Pago se lee de mercadoPago()). */
+	integraciones(): Promise<EstadoIntegraciones>;
+	ajustarIntegracion(a: AjusteIntegracion): Promise<Resultado>;
+	/** Mercado Pago de la tienda (marketplace por OAuth). */
+	mercadoPago(): Promise<ConexionMP>;
+	/** Adónde mandar a la persona para autorizar (o null si la aplicación no tiene credenciales). */
+	conectarMercadoPago(): Promise<string | null>;
+	volverMercadoPago(codigo: string, estado: string): Promise<Resultado>;
+	desconectarMercadoPago(): Promise<void>;
 	dominios(): Promise<Dominios>;
 	conectarDominio(nombre: string): Promise<Resultado>;
 	dominioPrincipal(nombre: string): Promise<Resultado>;
@@ -155,7 +166,8 @@ export interface Datos {
 	fijarOpcion(grupo: 'seguridad' | 'avisos', clave: string, activo: boolean): Promise<Resultado>;
 	cerrarSesion(id: string): Promise<Resultado>;
 	invitar(contacto: string, rol: Miembro['rol']): Promise<Miembro | 'repetido'>;
-	cambiarPlan(plan: IdPlan, ciclo?: 'mes' | 'anio'): Promise<void>;
+	/** Con el abono por Mercado Pago, un plan pago devuelve adónde ir a cargar la tarjeta. */
+	cambiarPlan(plan: IdPlan, ciclo?: 'mes' | 'anio'): Promise<void | { url: string }>;
 	guardarMiTienda(d: DisenoTienda): Promise<void>;
 	publicarTienda(): Promise<void>;
 	/** Pasa lo disponible al banco. */

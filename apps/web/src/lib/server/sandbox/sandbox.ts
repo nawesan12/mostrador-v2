@@ -27,7 +27,14 @@ import { inArray } from './sql.ts';
 import { fromB64url, randomToken, sha256 } from '../crypto.ts';
 import { rubro as buscarRubro, slugDe } from './rubros.ts';
 import { cambios, sandboxes } from './schema.ts';
+import {
+	estadoInicial,
+	INTEGRACIONES,
+	type AjusteIntegracion,
+	type EstadoIntegraciones
+} from '#lib/panel/integraciones.ts';
 import type {
+	ConexionMP,
 	Dominios,
 	MisDatos,
 	PreferenciasAvisos,
@@ -1718,6 +1725,81 @@ export class DatosSandbox implements Datos {
 		if (c.get('principal') === nombre)
 			await guardarCambio(this.db, this.sb.id, 'cuenta', 'principal', null);
 		return 'ok';
+	}
+
+	// ---------------------------------------------------------------- Mercado Pago
+
+	async integraciones(): Promise<EstadoIntegraciones> {
+		const [c, mp] = await Promise.all([
+			cambiosDe(this.db, this.sb.id, 'integraciones'),
+			this.mercadoPago()
+		]);
+		const e = estadoInicial(true);
+		const g = (k: keyof EstadoIntegraciones) =>
+			(c.get(k) as Record<string, never> | undefined) ?? {};
+		Object.assign(e.conectadas, g('conectadas'));
+		for (const [id, o] of Object.entries(g('opciones') as Record<string, Record<string, boolean>>))
+			Object.assign((e.opciones[id] ??= {}), o);
+		Object.assign(e.ia, g('ia'));
+		Object.assign(e.permisosIa, g('permisosIa'));
+		e.conectadas.mp = mp.conectada;
+		return e;
+	}
+	async ajustarIntegracion(a: AjusteIntegracion): Promise<Resultado> {
+		const e = await this.integraciones();
+		if (a.tipo === 'conexion') {
+			if (a.id === 'mp' || !INTEGRACIONES.some((i) => i.id === a.id && !i.pronto))
+				return 'no-se-puede';
+			e.conectadas[a.id] = a.valor;
+			await guardarCambio(this.db, this.sb.id, 'integraciones', 'conectadas', e.conectadas);
+		} else if (a.tipo === 'opcion') {
+			if (!(a.clave in (e.opciones[a.id] ?? {}))) return 'no-existe';
+			e.opciones[a.id][a.clave] = a.valor;
+			await guardarCambio(this.db, this.sb.id, 'integraciones', 'opciones', e.opciones);
+		} else if (a.tipo === 'ia') {
+			if (!(a.id in e.ia)) return 'no-existe';
+			e.ia[a.id] = a.valor;
+			await guardarCambio(this.db, this.sb.id, 'integraciones', 'ia', e.ia);
+		} else {
+			if (!(a.id in e.permisosIa) || a.id === 'leer') return 'no-se-puede';
+			e.permisosIa[a.id] = a.valor;
+			await guardarCambio(this.db, this.sb.id, 'integraciones', 'permisosIa', e.permisosIa);
+		}
+		return 'ok';
+	}
+
+	/** En la demo la tienda arranca con Mercado Pago conectado (el onboarding lo conecta). */
+	async mercadoPago(): Promise<ConexionMP> {
+		const c = await cambiosDe(this.db, this.sb.id, 'cuenta');
+		const mp = c.get('mp') as { conectada: boolean; desde: number } | undefined;
+		const conectada = mp?.conectada ?? true;
+		return {
+			disponible: true,
+			conectada,
+			...(conectada
+				? {
+						usuario: '3666528660',
+						desde: new Date(mp?.desde ?? Date.now() - 30 * 86_400_000).toISOString()
+					}
+				: {}),
+			reautorizar: false,
+			cajaQR: conectada
+		};
+	}
+	/** La demo no sale a Mercado Pago: vuelve directo con un código de mentira. */
+	async conectarMercadoPago() {
+		return '/integraciones/mercadopago/callback?code=demo&state=demo';
+	}
+	async volverMercadoPago(codigo: string, estado: string): Promise<Resultado> {
+		if (codigo !== 'demo' || estado !== 'demo') return 'no-se-puede';
+		await guardarCambio(this.db, this.sb.id, 'cuenta', 'mp', {
+			conectada: true,
+			desde: Date.now()
+		});
+		return 'ok';
+	}
+	async desconectarMercadoPago() {
+		await guardarCambio(this.db, this.sb.id, 'cuenta', 'mp', { conectada: false, desde: 0 });
 	}
 
 	async preferenciasAvisos(): Promise<PreferenciasAvisos> {

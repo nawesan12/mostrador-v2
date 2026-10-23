@@ -1,5 +1,5 @@
 // Package links: links de pago (el modal "Crear link de pago" del panel y la página /p/{codigo}).
-// Cobrar de verdad necesita Mercado Pago conectado: hasta entonces pagar responde 409.
+// Pagar crea el cobro en Mercado Pago con la cuenta de la tienda; sin conexión, responde 409.
 package links
 
 import (
@@ -114,8 +114,11 @@ func Ver(ctx context.Context, pool tx, cod string) (Publico, error) {
 	return l, err
 }
 
+// Pagar crea el cobro del link y devuelve la URL de pago (Mercado Pago). problemaDe traduce sus errores.
+type Pagar func(ctx context.Context, tiendaID, codigo string) (string, error)
+
 // Rutas: crear (panel) y ver/pagar (público).
-func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string) {
+func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, pagar Pagar, problemaDe func(http.ResponseWriter, error)) {
 	mux.HandleFunc("POST /v1/panel/links", func(w http.ResponseWriter, r *http.Request) {
 		id := tienda(r)
 		if id == "" {
@@ -149,10 +152,23 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string) {
 		}
 	})
 	mux.HandleFunc("POST /v1/publico/links/{codigo}/pagar", func(w http.ResponseWriter, r *http.Request) {
-		if _, err := tiendaDe(r.Context(), pool, r.PathValue("codigo")); err != nil {
+		cod := r.PathValue("codigo")
+		id, err := tiendaDe(r.Context(), pool, cod)
+		if err != nil {
 			problema.Escribir(w, problema.NoEncontrado("Ese link no existe."))
 			return
 		}
-		problema.Escribir(w, problema.Conflicto("sin_cobros", "La tienda todavía no conectó Mercado Pago."))
+		if pagar == nil {
+			problema.Escribir(w, problema.Conflicto("sin_cobros", "La tienda todavía no conectó Mercado Pago."))
+			return
+		}
+		u, err := pagar(r.Context(), id, cod)
+		if err != nil {
+			problemaDe(w, err)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "no-store")
+		_ = json.NewEncoder(w).Encode(map[string]string{"url": u})
 	})
 }

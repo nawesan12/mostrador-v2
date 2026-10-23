@@ -6,7 +6,7 @@ import { COOKIE, dbSandbox, leer } from '#lib/server/sandbox/sandbox.ts';
 import { COOKIE_SESION } from '#lib/server/auth/sesion.ts';
 
 /** Rutas que usan el sandbox de la demo: sólo ahí se lee D1 (la landing no gasta lecturas). */
-const CON_SANDBOX = /^\/(demo|panel)(\/|$)/;
+const CON_SANDBOX = /^\/(demo|panel|integraciones)(\/|$)/;
 
 /**
  * Encabezados de seguridad en todas las respuestas (también las tempranas, como el rechazo por CSRF).
