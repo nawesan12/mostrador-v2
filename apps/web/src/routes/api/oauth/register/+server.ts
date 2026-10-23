@@ -23,7 +23,8 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		return c === 429
 			? json(
 					{ error: 'slow_down', error_description: 'Demasiados registros. Probá en un rato.' },
-					429
+					429,
+					{ 'Retry-After': '3600' }
 				)
 			: json(
 					{

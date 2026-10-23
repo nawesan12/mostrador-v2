@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
@@ -75,6 +76,41 @@ func TestIAConectada(t *testing.T) {
 		}
 		return tk
 	}
+
+	// Dos pedidos a la vez con el mismo código o el mismo refresco: pasa exactamente uno.
+	aLaVez := func(cuerpo string) (ok int, primero ia.Tokens) {
+		var mu sync.Mutex
+		var wg sync.WaitGroup
+		largada := make(chan struct{})
+		for range 2 {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				<-largada
+				rec := pedir(h, "POST", "/v1/ia/token", cuerpo, "")
+				mu.Lock()
+				defer mu.Unlock()
+				if rec.Code == 200 {
+					ok++
+					_ = json.Unmarshal(rec.Body.Bytes(), &primero)
+				}
+			}()
+		}
+		close(largada)
+		wg.Wait()
+		return ok, primero
+	}
+	t.Run("un solo uso aunque lleguen dos pedidos juntos", func(t *testing.T) {
+		c := json1[map[string]string](t, pedir(h, "POST", "/v1/ia/autorizar",
+			`{"cliente":"`+cli.ID+`","redireccion":"`+vuelta+`","desafio":"`+desafio()+`","acciones":false}`, dueña), 200)
+		n, tk := aLaVez(`{"tipo":"authorization_code","codigo":"` + c["codigo"] + `","verificador":"` + verificador + `","cliente":"` + cli.ID + `","redireccion":"` + vuelta + `"}`)
+		if n != 1 {
+			t.Fatalf("canjes del mismo código que pasaron: %d", n)
+		}
+		if n, _ := aLaVez(`{"tipo":"refresh_token","refresco":"` + tk.Refresco + `","cliente":"` + cli.ID + `"}`); n != 1 {
+			t.Fatalf("refrescos con el mismo token que pasaron: %d", n)
+		}
+	})
 
 	t.Run("PKCE: con otro verificador no hay token", func(t *testing.T) {
 		c := json1[map[string]string](t, pedir(h, "POST", "/v1/ia/autorizar",

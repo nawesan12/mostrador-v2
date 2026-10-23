@@ -14,8 +14,11 @@ export const DELETE: RequestHandler = async ({ locals, request }) => {
 	const b = v.safeParse(Pedido, await request.json().catch(() => null));
 	if (!b.success) error(400, 'Pedido inválido.');
 	if (!usaSandbox()) {
-		if (!(await desconectarApi(locals.token, b.output.id)))
-			error(404, 'Esa conexión ya no existe.');
+		const estado = await desconectarApi(locals.token, b.output.id);
+		if (estado === 404) error(404, 'Esa conexión ya no existe.');
+		if (estado === 403) error(403, 'Sólo quien es dueña o admin puede desconectar una IA.');
+		// Una acción de seguridad: si no se pudo, decirlo, no "ya no existe".
+		if (estado) error(503, 'No pudimos desconectar la IA. Probá de nuevo en un rato.');
 		return new Response(null, { status: 204 });
 	}
 	if (!locals.sandbox) error(401, 'Tu demo venció. Elegí una tienda de nuevo.');

@@ -23,9 +23,8 @@ async function go<T>(
 	/** IP de quien llama: con la clave del BFF, Go aplica sus límites a esa IP y no a la del Worker. */
 	ip?: string
 ): Promise<Resp<T>> {
-	let res: Response;
 	try {
-		res = await fetch(String(env.API_URL) + ruta, {
+		const res = await fetch(String(env.API_URL) + ruta, {
 			method: metodo,
 			headers: {
 				accept: 'application/json',
@@ -33,14 +32,17 @@ async function go<T>(
 				...(token ? { authorization: `Bearer ${token}` } : {}),
 				...(ip ? { 'x-mostrador-bff': String(env.CLAVE_BFF ?? ''), 'x-cliente-ip': ip } : {})
 			},
-			body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo)
+			body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo),
+			// Go que acepta la conexión y no contesta también es un fallo, no una espera sin fin.
+			signal: AbortSignal.timeout(10_000)
 		});
+		if (!res.ok) return { ok: false, estado: res.status };
+		if (res.status === 204) return { ok: true, v: undefined as T };
+		return { ok: true, v: (await res.json()) as T };
 	} catch {
+		// Red, plazo vencido o una respuesta cortada: para la IA, "probá más tarde".
 		return { ok: false, estado: 503 };
 	}
-	if (!res.ok) return { ok: false, estado: res.status };
-	if (res.status === 204) return { ok: true, v: undefined as T };
-	return { ok: true, v: (await res.json()) as T };
 }
 
 type ClienteGo = { id: string; nombre: string; redirecciones: string[] };
@@ -75,7 +77,8 @@ export async function registrarApi(
 export async function clienteApi(id: string) {
 	if (!id || id.length > 64) return null;
 	const r = await go<ClienteGo>(`/v1/ia/clientes/${encodeURIComponent(id)}`, 'GET');
-	return r.ok ? r.v : null;
+	if (r.ok) return r.v;
+	return esFallo(r.estado) ? ({ fallo: r.estado } satisfies Fallo) : null;
 }
 
 /** El "Permitir" de la pantalla de consentimiento, con la sesión de la persona. */
@@ -110,8 +113,11 @@ export async function tokenApi(p: URLSearchParams) {
 	return esFallo(r.estado) ? ({ fallo: r.estado } satisfies Fallo) : null;
 }
 
+/** false si Go no pudo revocar (caído o límite): el token puede seguir vivo. */
 export async function revocarApi(token: string) {
-	if (token) await go('/v1/ia/revocar', 'POST', { token });
+	if (!token) return true;
+	const r = await go('/v1/ia/revocar', 'POST', { token });
+	return r.ok || !esFallo(r.estado);
 }
 
 /** La conexión del token del MCP: qué concedió la persona y los interruptores del panel. */
@@ -143,7 +149,8 @@ export async function panelApi(sesion: string | null) {
 		undefined,
 		sesion
 	);
-	return r.ok ? r.v : null;
+	if (r.ok) return r.v;
+	return esFallo(r.estado) ? ({ fallo: r.estado } satisfies Fallo) : null;
 }
 
 export async function desconectarApi(sesion: string | null, id: string) {
@@ -153,7 +160,8 @@ export async function desconectarApi(sesion: string | null, id: string) {
 		undefined,
 		sesion
 	);
-	return r.ok;
+	/** 0 si se desconectó; si no, el estado de Go. */
+	return r.ok ? 0 : r.estado;
 }
 
 export async function permisoApi(sesion: string | null, permiso: string, valor: boolean) {

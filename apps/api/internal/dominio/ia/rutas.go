@@ -49,7 +49,14 @@ func escribirError(w http.ResponseWriter, err error) {
 // Rutas: las de OAuth las llama el BFF (que habla con las IA); las del panel, con la sesión de la tienda.
 func (s *Servicio) Rutas(mux *http.ServeMux, ip func(*http.Request) string) {
 	mux.HandleFunc("POST /v1/ia/clientes", func(w http.ResponseWriter, r *http.Request) {
-		if ok, err := limite.Permitido(r.Context(), s.Pool, "ia:registro:"+ip(r), 20, time.Hour); err != nil || !ok {
+		ok, err := limite.Permitido(r.Context(), s.Pool, "ia:registro:"+ip(r), 20, time.Hour)
+		if err != nil {
+			// Una caída de la base no es un límite: se loguea y es un 500.
+			escribirError(w, err)
+			return
+		}
+		if !ok {
+			w.Header().Set("Retry-After", "3600")
 			problema.Escribir(w, &problema.Problema{Estado: http.StatusTooManyRequests, Codigo: "demasiados",
 				Titulo: "Demasiados registros", Detalle: "Probá de nuevo en una hora."})
 			return
@@ -251,7 +258,12 @@ func (s *Servicio) Guardia(next http.Handler) http.Handler {
 				return
 			}
 		}
-		if ok, err := limite.Permitido(r.Context(), s.Pool, "ia:conexion:"+d.IA, 60, time.Minute); err != nil || !ok {
+		ok, err := limite.Permitido(r.Context(), s.Pool, "ia:conexion:"+d.IA, 60, time.Minute)
+		if err != nil {
+			escribirError(w, err)
+			return
+		}
+		if !ok {
 			w.Header().Set("Retry-After", "60")
 			problema.Escribir(w, &problema.Problema{Estado: http.StatusTooManyRequests, Codigo: "demasiados",
 				Titulo: "Demasiados pedidos", Detalle: "La IA hizo más de 60 pedidos en un minuto. Esperá un poco."})

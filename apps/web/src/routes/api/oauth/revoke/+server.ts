@@ -10,7 +10,12 @@ import type { RequestHandler } from './$types';
 export const POST: RequestHandler = async ({ request }) => {
 	const p = await parametros(request);
 	if (usaSandbox()) await revocar(dbSandbox(env.SANDBOX), p.get('token') ?? '');
-	else await revocarApi(p.get('token') ?? '');
+	else if (!(await revocarApi(p.get('token') ?? '')))
+		// RFC 7009 §2.2.1: con 503 la IA sabe que el token puede seguir vivo y reintenta.
+		return new Response(null, {
+			status: 503,
+			headers: { ...CORS, 'Cache-Control': 'no-store', 'Retry-After': '30' }
+		});
 	return new Response(null, { status: 200, headers: { ...CORS, 'Cache-Control': 'no-store' } });
 };
 export const OPTIONS = preflight;

@@ -1,4 +1,5 @@
 import { env } from 'cloudflare:workers';
+import { error } from '@sveltejs/kit';
 import { IAS, iaDe } from '#lib/panel/integraciones.ts';
 import { datosDe, usaSandbox } from '#lib/server/datos/index.ts';
 import { panelApi } from '#lib/server/mcp/api.ts';
@@ -17,15 +18,18 @@ export const load: PageServerLoad = async ({ locals }) => {
 		db && locals.sandbox ? vinculoDe(db, locals.sandbox.id) : null,
 		db && locals.sandbox
 			? conexionesDe(db, locals.sandbox.id)
-			: panelApi(locals.token).then((p) =>
-					(p?.conexiones ?? []).map((c) => ({
+			: panelApi(locals.token).then((p) => {
+					// Que una falla de Go no muestre "sin conexiones" cuando hay IA conectadas.
+					if (p && 'fallo' in p)
+						error(503, 'No pudimos traer las conexiones de IA. Probá recargar en un rato.');
+					return (p?.conexiones ?? []).map((c) => ({
 						id: c.id,
 						nombre: c.cliente,
 						permisos: c.acciones ? 'lectura acciones' : 'lectura',
 						creadoEn: Date.parse(c.creadaEn),
 						usadoEn: Date.parse(c.usadaEn)
-					}))
-				)
+					}));
+				})
 	]);
 	// Telegram (Hornero para la dueña) está conectado si hay un chat vinculado.
 	estado.conectadas.tg = !!tg;

@@ -51,7 +51,8 @@ const sinToken = (url: URL) =>
 async function conexion(request: Request, url: URL) {
 	const auth = request.headers.get('authorization');
 	if (!usaSandbox()) {
-		const token = auth?.startsWith('Bearer ') ? auth.slice(7).trim() : '';
+		// El esquema no distingue mayúsculas (RFC 7235), igual que en la demo.
+		const token = auth && /^Bearer\s+/i.test(auth) ? auth.replace(/^Bearer\s+/i, '').trim() : '';
 		const cx = token && token.length <= 200 ? await conexionApi(token) : null;
 		if (!cx) return sinToken(url);
 		if ('fallo' in cx)
