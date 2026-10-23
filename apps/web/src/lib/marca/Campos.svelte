@@ -22,6 +22,12 @@
 	} = $props();
 
 	const id = $props.id();
+	let archivo = $state<HTMLInputElement>();
+
+	// Al salir de la página, la foto elegida deja de ocupar memoria.
+	$effect(() => () => {
+		if (valores.foto) URL.revokeObjectURL(valores.foto);
+	});
 
 	function elegir(e: Event) {
 		const f = (e.currentTarget as HTMLInputElement).files?.[0];
@@ -32,6 +38,8 @@
 	function quitar() {
 		URL.revokeObjectURL(valores.foto);
 		valores.foto = '';
+		// Si vuelve a elegir el mismo archivo, que el navegador lo tome como un cambio.
+		if (archivo) archivo.value = '';
 	}
 </script>
 
@@ -52,7 +60,7 @@
 				<div class="foto">
 					<label class="btn btn-secondary">
 						<Icon icon={phUploadSimpleBold} size={16} />{valores.foto ? 'Cambiar' : 'Elegir foto'}
-						<input type="file" accept="image/*" onchange={elegir} />
+						<input type="file" accept="image/*" onchange={elegir} bind:this={archivo} />
 					</label>
 					{#if valores.foto}
 						<button type="button" class="icon-btn" onclick={quitar} aria-label="Quitar la foto"

@@ -52,8 +52,9 @@
 	const hoyIso = fechaIso(ahora);
 	// Año y mes de Argentina, no los del entorno.
 	const [anio, mes] = hoyIso.split('-').map(Number);
-	const primero = new Date(anio, mes - 1, 1, 12);
-	const ultimo = new Date(anio, mes, 0, 12);
+	// Mediodía UTC: en Argentina es el mismo día, sea cual sea la zona del navegador.
+	const primero = new Date(Date.UTC(anio, mes - 1, 1, 12));
+	const ultimo = new Date(Date.UTC(anio, mes, 0, 12));
 	const periodo = `${fechaCorta(primero)} al ${fechaCorta(ultimo)}`;
 	/** "$ 49.900,00", como un comprobante. */
 	const pesos = (n: number) =>
@@ -292,7 +293,13 @@
 						<div style="height:1px;background:#EADFD4;margin:9mm 0 12mm"></div>
 						<div style="font-size:11.5px;line-height:1.7;color:#2A140C;max-width:150mm">
 							<div style="color:#7A6252">{EMPRESA.ciudadCarta}, {hoy}</div>
-							<div contenteditable="true" spellcheck="false">
+							<div
+								contenteditable="true"
+								spellcheck="false"
+								role="textbox"
+								aria-multiline="true"
+								aria-label="Texto de la carta"
+							>
 								<div style="margin-top:9mm;font-weight:600">Sres. Nombre de la empresa</div>
 								<div style="color:#7A6252">At. Área o persona</div>
 								<p style="margin:8mm 0 0">De nuestra mayor consideración:</p>
@@ -352,11 +359,20 @@
 							<div
 								contenteditable="true"
 								spellcheck="false"
+								role="textbox"
+								aria-multiline="true"
+								aria-label="Título de la propuesta"
 								style="margin-top:8mm;font-size:22px;line-height:1.15;letter-spacing:-.03em;font-weight:600;max-width:120mm"
 							>
 								Tu tienda en Mostrador, con todo lo que ya&nbsp;usás.
 							</div>
-							<div contenteditable="true" spellcheck="false">
+							<div
+								contenteditable="true"
+								spellcheck="false"
+								role="textbox"
+								aria-multiline="true"
+								aria-label="Texto de la propuesta"
+							>
 								<p style="margin:8mm 0 0;text-wrap:pretty">
 									Hola. Como charlamos, la mudanza desde tu plataforma actual corre por nuestra
 									cuenta: productos, clientes y dominio. Probás {PRUEBA_DIAS} días gratis y el plan {PLAN
@@ -399,6 +415,9 @@
 						<div
 							contenteditable="true"
 							spellcheck="false"
+							role="textbox"
+							aria-multiline="true"
+							aria-label="Destinatario del sobre"
 							style="position:absolute;left:110mm;top:52mm;font-size:12px;line-height:1.6"
 						>
 							<div style="font-weight:600">Nombre del destinatario</div>
@@ -789,7 +808,7 @@
 					mm={[460, 310]}
 					escala={0.62}
 					><div
-						style="width:460mm;height:310mm;display:grid;grid-template-columns:1fr 1fr;box-shadow:0 30px 60px -30px rgba(42,20,12,.55);"
+						style="width:460mm;height:310mm;display:grid;grid-template-columns:1fr 1fr;background:linear-gradient(90deg,#2A140C 50%,#D2582F 50%);box-shadow:0 30px 60px -30px rgba(42,20,12,.55);"
 					>
 						<div
 							style="background:#2A140C;color:#FBF7F2;position:relative;overflow:hidden;padding:22mm;display:flex;flex-direction:column"

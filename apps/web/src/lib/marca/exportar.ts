@@ -90,19 +90,7 @@ body>:not(#marca-imprimir){display:none!important}
 	document.head.appendChild(estilo);
 	document.body.appendChild(hoja);
 
-	await Promise.all(
-		[...hoja.querySelectorAll('img')].map((i) =>
-			i.complete
-				? null
-				: new Promise((r) => {
-						// Una imagen que no carga no traba la impresión.
-						i.addEventListener('load', r, { once: true });
-						i.addEventListener('error', r, { once: true });
-					})
-		)
-	);
 	const antes = document.title;
-	document.title = titulo;
 	let listo = false;
 	const limpiar = () => {
 		if (listo) return;
@@ -111,7 +99,25 @@ body>:not(#marca-imprimir){display:none!important}
 		estilo.remove();
 		document.title = antes;
 	};
-	window.addEventListener('afterprint', limpiar, { once: true });
-	window.print();
-	setTimeout(limpiar, 1000);
+	try {
+		// Una imagen que no carga (o no avisa) no traba la impresión: a los 5 s se imprime igual.
+		await Promise.race([
+			Promise.all(
+				[...hoja.querySelectorAll('img')].map((i) =>
+					i.complete
+						? null
+						: new Promise((r) => {
+								i.addEventListener('load', r, { once: true });
+								i.addEventListener('error', r, { once: true });
+							})
+				)
+			),
+			new Promise((r) => setTimeout(r, 5000))
+		]);
+		document.title = titulo;
+		window.addEventListener('afterprint', limpiar, { once: true });
+		window.print();
+	} finally {
+		setTimeout(limpiar, 1000);
+	}
 }

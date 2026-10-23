@@ -4,11 +4,12 @@
 	import * as I from '#lib/icons.ts';
 	import DescargarTodo from '#lib/marca/DescargarTodo.svelte';
 	import Lamina from '#lib/marca/Lamina.svelte';
-	import { DESDE, PRUEBA_DIAS, VS_PRO, fmt } from '#lib/marca/datos.ts';
+	import { DESDE, PRUEBA_DIAS, VS_PRO, anioHotSale, fmt } from '#lib/marca/datos.ts';
 	import { crearFamilia } from '#lib/marca/familia.svelte.ts';
 
 	/** Redes (design/Redes Mostrador.dc.html): cada pieza a su medida en px, mostrada al 30–50 %. */
 	const fam = crearFamilia('redes');
+	const ANIO_HOT_SALE = anioHotSale();
 </script>
 
 <Seo
@@ -753,7 +754,7 @@
 							style="position:absolute;inset:0;background:url(/textura/arch-pattern-accent.svg) center/130px;opacity:.6"
 						></div>
 						<div style="position:relative;font-size:60px;font-weight:700;letter-spacing:.06em">
-							HOT SALE 2026
+							HOT SALE {ANIO_HOT_SALE}
 						</div>
 						<div
 							style="position:relative;margin-top:30px;font-size:150px;line-height:.9;letter-spacing:-.05em;font-weight:600"
@@ -993,6 +994,9 @@
 						<div
 							contenteditable="true"
 							spellcheck="false"
+							role="textbox"
+							aria-multiline="true"
+							aria-label="Nombre de la tienda"
 							style="position:absolute;left:590px;top:110px"
 						>
 							<div style="font-size:50px;font-weight:600;color:#6B5244">Nombre de la tienda</div>

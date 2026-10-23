@@ -88,6 +88,14 @@ export const fechaLarga = (d = new Date()) =>
 	d.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: zona });
 /** "2026-10-23", en hora de Argentina. */
 export const fechaIso = (d = new Date()) => d.toLocaleDateString('en-CA', { timeZone: zona });
+/**
+ * El año del próximo Hot Sale (se hace en mayo): pasado mayo, la pieza ya anuncia el del año que
+ * viene.
+ */
+export function anioHotSale(d = new Date()) {
+	const [anio, mes] = fechaIso(d).split('-').map(Number);
+	return mes > 5 ? anio + 1 : anio;
+}
 /** "23/10/2026" */
 export const fechaCorta = (d = new Date()) =>
 	d.toLocaleDateString('es-AR', {
