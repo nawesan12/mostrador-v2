@@ -7,9 +7,12 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/facturacion"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/cifrado"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/config"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/outbox"
@@ -57,6 +60,26 @@ func correr() error {
 			w.Manejadores[tipo] = m
 		}
 	}
+	// Facturación: el drenador pide los CAE de las ventas cobradas (cada 30 s, con espera creciente
+	// por comprobante). Corre en el servidor propio.
+	go func() {
+		f := &facturacion.Servicio{Pool: app}
+		if c, err := cifrado.Nuevo(cfg.ClaveCifrado); err == nil && cfg.ClaveCifrado != "" {
+			f.Cifra = c
+		}
+		t := time.NewTicker(30 * time.Second)
+		defer t.Stop()
+		for {
+			if err := f.Drenar(ctx, time.Now()); err != nil && ctx.Err() == nil {
+				slog.Error("facturacion: drenar", "error", err)
+			}
+			select {
+			case <-ctx.Done():
+				return
+			case <-t.C:
+			}
+		}
+	}()
 	slog.Info("worker consumiendo el outbox", "entorno", cfg.Entorno)
 	return w.Correr(ctx)
 }
