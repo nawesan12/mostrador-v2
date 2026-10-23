@@ -57,7 +57,7 @@ test('facturación: emitir una factura A pide CUIT', async ({ page }) => {
 	await m.getByLabel('Total').fill('121000');
 	await m.getByRole('button', { name: 'Emitir' }).click();
 	await expect(m.getByText(/necesita el CUIT/)).toBeVisible();
-	await m.getByLabel('CUIT').fill('30-71234567-8');
+	await m.getByLabel('CUIT').fill('30-71234567-1');
 	await m.getByRole('button', { name: 'Emitir' }).click();
 	await expect(page.getByText('Factura A emitida')).toBeVisible();
 	await expect(page.locator('.fila').first()).toContainText('Estudio Paz SRL');

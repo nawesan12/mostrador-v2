@@ -34,6 +34,12 @@ import {
 	type EstadoIntegraciones
 } from '#lib/panel/integraciones.ts';
 import type {
+	ArcaAjustes,
+	ArcaAlta,
+	ArcaCertificado,
+	ArcaConfig,
+	ArcaPedido,
+	ArcaPrueba,
 	ConexionML,
 	ConexionMP,
 	PublicacionML,
@@ -105,6 +111,7 @@ import {
 	type Movimiento
 } from './listas.ts';
 import { inicioDelDia } from './tablero.ts';
+import { cuitValido, limpiarCuit } from '#lib/panel/cuit.ts';
 import {
 	bandejaDemo,
 	carritosDemo,
@@ -128,6 +135,34 @@ import { SITE } from '#lib/site.ts';
 import type { TiendaPublica } from '#lib/tienda/tipos.ts';
 
 export type DbSandbox = DrizzleD1Database<Record<string, never>>;
+
+/** ARCA en la demo: el punto de venta y los cambios de "facturar al cobrar" ([cuándo, prendido]). */
+type ArcaDemo = { puntoVenta: number; historial: [number, boolean][] };
+/** El CUIT de la dueña de ejemplo (Valeria Sosa, Configuración › Negocio). */
+const CUIT_DEMO = '27314589020';
+const DEMO_ARCA =
+	'Es una tienda de ejemplo: la demo no guarda certificados ni habla con ARCA. Con tu cuenta, este paso deja la facturación andando.';
+export const SIN_FACTURAR_AL_COBRAR = 'Facturar al cobrar está apagado: se factura a mano.';
+
+/** Si facturar al cobrar estaba prendido en ese momento (arranca prendido). */
+export function alCobrarEn(historial: [number, boolean][], en: number) {
+	let v = true;
+	for (const [t, on] of historial) if (t <= en) v = on;
+	return v;
+}
+
+/** Los mismos chequeos que Go (facturacion.GenerarPedido); devuelve el error para mostrar. */
+export function validarAlta(a: ArcaAlta): string | null {
+	if (!cuitValido(limpiarCuit(a.cuit))) return 'Revisá el CUIT: el dígito verificador no da.';
+	const r = a.razonSocial.trim();
+	if (!r || r.length > 64) return 'Poné la razón social como figura en ARCA (hasta 64 letras).';
+	if (a.condicion !== 'monotributo' && a.condicion !== 'responsable_inscripto')
+		return 'Elegí tu condición frente al IVA.';
+	if (!Number.isInteger(a.puntoVenta) || a.puntoVenta < 1 || a.puntoVenta > 99998)
+		return 'El punto de venta va de 1 a 99998.';
+	if (a.ambiente !== 'homologacion' && a.ambiente !== 'produccion') return 'Elegí el ambiente.';
+	return null;
+}
 
 export const COOKIE = 'mostrador_demo';
 export const VIDA_MS = 24 * 60 * 60 * 1000;
@@ -530,7 +565,10 @@ export class DatosSandbox implements Datos {
 			.filter(([, v]) => v)
 			.map(([k, v]) => [k, v as FacturaManual] as [string, FacturaManual])
 			.sort((a, b) => a[1].en - b[1].en);
-		return registrosFacturacion(d, Date.now(), cambios, manuales);
+		const arca = await this.arcaDemo();
+		return registrosFacturacion(d, Date.now(), cambios, manuales, (en) =>
+			alCobrarEn(arca.historial, en) ? null : SIN_FACTURAR_AL_COBRAR
+		);
 	}
 
 	private async regEnvios() {
@@ -723,15 +761,24 @@ export class DatosSandbox implements Datos {
 				for (const f of a) await guardar(f.id, { autorizada: true });
 				return a.length;
 			}
+			// Anular con nota de crédito: sólo facturas autorizadas (no notas) y una vez.
+			if (accion === 'anular') {
+				const a = elegidos.filter((x) => x.estado === 'ok' && !x.id.startsWith('NC-'));
+				for (const f of a) await guardar(f.id, { anulada: ahora });
+				return a.length;
+			}
 			if (accion === 'emitir') {
 				const v = valor as Partial<FacturaManual> | null;
 				const cliente = typeof v?.cliente === 'string' ? v.cliente.trim().slice(0, 80) : '';
 				const total = Number(v?.total);
-				const tipo = v?.tipo === 'A' ? 'A' : 'B';
-				const cuit = typeof v?.cuit === 'string' ? v.cuit.replace(/\D/g, '') : '';
+				const arca = await this.arca();
+				// La letra sale de la condición de la tienda (como en Go): A sólo si es responsable
+				// inscripta y el cliente también; si no, B; monotributo, siempre C.
+				const tipo = arca.condicion !== 'responsable_inscripto' ? 'C' : v?.tipo === 'A' ? 'A' : 'B';
+				const cuit = typeof v?.cuit === 'string' ? limpiarCuit(v.cuit) : '';
 				if (cliente.length < 2 || !Number.isInteger(total) || total <= 0 || total > 1_000_000_000)
 					return 0;
-				if (tipo === 'A' && cuit.length !== 11) return 0;
+				if (tipo === 'A' && !cuitValido(cuit)) return 0;
 				await guardarCambio(this.db, this.sb.id, 'factura-manual', `M-${ahora.toString(36)}`, {
 					cliente,
 					tipo,
@@ -1768,6 +1815,9 @@ export class DatosSandbox implements Datos {
 		Object.assign(e.permisosIa, g('permisosIa'));
 		e.conectadas.mp = mp.conectada;
 		e.conectadas.ml = (await this.mercadoLibre()).conectada;
+		const arca = await this.arca();
+		e.conectadas.arca = arca.conectada;
+		e.opciones.arca = { ...e.opciones.arca, auto: arca.facturarAlCobrar };
 		// Telegram cuenta si hay un chat vinculado (lib/server/telegram.ts).
 		e.conectadas.tg = !!(await cambiosDe(this.db, this.sb.id, 'cuenta')).get('telegram');
 		return e;
@@ -1779,6 +1829,7 @@ export class DatosSandbox implements Datos {
 				a.id === 'mp' ||
 				a.id === 'ml' ||
 				a.id === 'tg' ||
+				a.id === 'arca' ||
 				!INTEGRACIONES.some((i) => i.id === a.id && !i.pronto)
 			)
 				return 'no-se-puede';
@@ -1798,6 +1849,66 @@ export class DatosSandbox implements Datos {
 			await guardarCambio(this.db, this.sb.id, 'integraciones', 'permisosIa', e.permisosIa);
 		}
 		return 'ok';
+	}
+
+	// ---------------------------------------------------------------- ARCA
+
+	/** Lo que el visitante cambió de ARCA: punto de venta y cuándo prendió o apagó facturar al cobrar. */
+	private async arcaDemo(): Promise<ArcaDemo> {
+		const c = (await cambiosDe(this.db, this.sb.id, 'cuenta')).get('arca') as ArcaDemo | undefined;
+		return { puntoVenta: c?.puntoVenta ?? 4, historial: c?.historial ?? [] };
+	}
+	/**
+	 * La demo arranca conectada en homologación con un certificado de ejemplo, para que Facturación
+	 * muestre comprobantes como siempre. Lo que no se puede simular sin mentir (guardar un
+	 * certificado, hablar con ARCA) responde que es una tienda de ejemplo.
+	 */
+	async arca(): Promise<ArcaConfig> {
+		const a = await this.arcaDemo();
+		return {
+			conectada: true,
+			cuit: CUIT_DEMO,
+			razonSocial: 'Valeria Sosa',
+			condicion: 'responsable_inscripto',
+			puntoVenta: a.puntoVenta,
+			ambiente: 'homologacion',
+			certificado: true,
+			certificadoVence: new Date(this.sb.creadoEn + 2 * 365 * 86_400_000).toISOString(),
+			facturarAlCobrar: alCobrarEn(a.historial, Date.now())
+		};
+	}
+	/** Valida como Go; la clave no se genera acá (CPU de Workers Free): el navegador arma el CSR. */
+	async arcaPedido(a: ArcaAlta): Promise<ArcaPedido> {
+		const e = validarAlta(a);
+		return e ? { error: e } : { demo: true };
+	}
+	async arcaCertificado(pem: string): Promise<ArcaCertificado | { error: string }> {
+		if (!/-----BEGIN CERTIFICATE-----[\s\S]+-----END CERTIFICATE-----/.test(pem))
+			return {
+				error:
+					'Eso no es un certificado: pegá el archivo .crt que te dio ARCA, desde -----BEGIN CERTIFICATE-----.'
+			};
+		return { error: DEMO_ARCA };
+	}
+	async arcaAjustes(a: ArcaAjustes): Promise<{ error: string } | null> {
+		if (
+			a.puntoVenta !== undefined &&
+			(!Number.isInteger(a.puntoVenta) || a.puntoVenta < 1 || a.puntoVenta > 99998)
+		)
+			return { error: 'El punto de venta va de 1 a 99998.' };
+		const antes = await this.arcaDemo();
+		const historial =
+			a.facturarAlCobrar === undefined
+				? antes.historial
+				: [...antes.historial, [Date.now(), a.facturarAlCobrar] as [number, boolean]].slice(-20);
+		await guardarCambio(this.db, this.sb.id, 'cuenta', 'arca', {
+			puntoVenta: a.puntoVenta ?? antes.puntoVenta,
+			historial
+		} satisfies ArcaDemo);
+		return null;
+	}
+	async arcaProbar(): Promise<ArcaPrueba> {
+		return { ok: false, ultimo: 0, detalle: DEMO_ARCA };
 	}
 
 	/** En la demo Mercado Libre arranca conectado (como en el handoff) y todo se simula. */

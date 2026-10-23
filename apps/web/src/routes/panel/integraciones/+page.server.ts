@@ -9,10 +9,11 @@ import type { PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ locals }) => {
 	const d = datosDe(locals);
 	const db = locals.sandbox ? dbSandbox(env.SANDBOX) : null;
-	const [estado, mp, ml, tg, conexiones] = await Promise.all([
+	const [estado, mp, ml, arca, tg, conexiones] = await Promise.all([
 		d.integraciones(),
 		d.mercadoPago(),
 		d.mercadoLibre(),
+		d.arca(),
 		db && locals.sandbox ? vinculoDe(db, locals.sandbox.id) : null,
 		db && locals.sandbox ? conexionesDe(db, locals.sandbox.id) : []
 	]);
@@ -32,6 +33,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		estado,
 		mp,
 		ml,
+		arca,
 		telegram: {
 			disponible: habilitado() && !!locals.sandbox,
 			nombre: tg?.nombre ?? null,

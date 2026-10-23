@@ -87,7 +87,7 @@ export function configuracionDemo(
 	const negocio: Negocio = {
 		nombre: tienda,
 		razonSocial: 'Valeria Sosa',
-		cuit: '27-31458902-4',
+		cuit: '27-31458902-0',
 		condicion: 'Responsable inscripta',
 		direccion: `Av. San Martín 1240, ${d.catalogo.ciudad}`,
 		whatsapp: '+54 341 555-0142',

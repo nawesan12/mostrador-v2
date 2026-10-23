@@ -203,3 +203,45 @@ URL, para que no quede en el historial ni en logs.
   cuenta y la tienda, no al sandbox) la va a atender Go.
 - `/api/mcp` queda fuera del chequeo de CSRF (no usa cookies, sólo el token Bearer), como los
   endpoints de OAuth. La pantalla de consentimiento sí lo pasa.
+
+## 22. Facturación con ARCA (PR #61)
+
+- **La clave nunca sale de Mostrador.** Go genera la clave RSA de 2048 bits, la guarda cifrada con
+  la clave de la tienda (`plataforma/cifrado`, como los tokens de Mercado Pago) y le da a la tienda
+  sólo el pedido de certificado (CSR con `C=AR`, `O=<razón social>`, `CN=mostrador`,
+  `serialNumber=CUIT <cuit>`). El certificado que pega la tienda se revisa contra esa clave y ese
+  CUIT. Generar un pedido nuevo reemplaza la clave: el certificado anterior deja de servir (el
+  asistente lo avisa). Sólo dueña o admin.
+- **Sin dependencias.** La firma CMS (PKCS#7 SignedData) se arma a mano con `encoding/asn1`
+  (atributos firmados como SET OF ordenados por DER); los tests la verifican con
+  `openssl cms -verify` y contra un ARCA falso que valida como el real (10016, 10048, IVA de la C,
+  condición del receptor).
+- **Cola en la misma transacción del cobro.** El trigger `app.encolar_factura` escribe el
+  comprobante cuando el pedido pasa a cobrado, en la misma transacción: si el pago se guardó, la
+  factura está encolada. Un drenador (worker, cada 30 s) emite de a uno y en orden por tienda, con
+  un advisory lock para que la numeración correlativa no se pise.
+- **"No facturado" es un estado, no un hueco.** Sin ARCA conectada, o con Facturar al cobrar
+  apagado, la venta cobrada queda como comprobante `no_facturado` con su motivo (la base lo exige):
+  toda venta cobrada tiene su fila. El panel lo muestra como "No facturada: <motivo>".
+- **Recuperación con FECompConsultar.** Antes de pedir el CAE se guarda el número intentado. Si la
+  respuesta se cortó y ARCA ya numeró ese comprobante, el reintento lo consulta y recupera el CAE en
+  vez de emitir otro por la misma venta (sacar la recuperación hace fallar el test). Un rechazo
+  guarda el código y el mensaje de ARCA; los errores de red reintentan con espera creciente hasta
+  5 min y 8 intentos.
+- **Redondeo al IVA.** Los importes se congelan al encolar, en centavos, con `neto + iva = total`:
+  el neto se calcula dividiendo el precio final por 1,21 y el IVA es lo que falta, así la suma
+  cierra con dos decimales. La C va sin IVA.
+- **Letra según la condición.** Monotributo emite C (y nota de crédito C); responsable inscripto,
+  A si el cliente es inscripto con CUIT válido y B si no. La nota de crédito anula entera la factura
+  emitida, asociada a ella, una sola vez.
+- **La demo no miente.** Arranca conectada en homologación (CUIT de la dueña de ejemplo) para que
+  Facturación muestre comprobantes. El pedido de certificado es real, pero lo arma el navegador del
+  visitante con WebCrypto (`lib/panel/csr.ts`, el mismo sujeto que Go): una clave RSA tarda de 20 a
+  100 ms de CPU y Workers Free da 10 ms. La clave no se guarda; guardar un certificado y probar la
+  conexión responden que es una tienda de ejemplo. Facturar al cobrar se guarda con su historial y
+  las ventas cobradas mientras estuvo apagado aparecen como no facturadas; anular deja la factura
+  anulada y suma su nota de crédito.
+- **Sin verificar todavía:** que ARCA acepte este CMS. Los tests pasan contra `openssl` y el ARCA
+  falso, pero el WSAA real sólo se prueba con un certificado de homologación de verdad (WSASS con la
+  clave fiscal de Nahuel). Se cierra cargando ese certificado en una tienda de prueba y tocando
+  "Probar conexión".

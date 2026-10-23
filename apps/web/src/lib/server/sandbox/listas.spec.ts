@@ -7,6 +7,7 @@ import {
 	DEF_INVENTARIO,
 	DEF_PRODUCTOS,
 	listarGenerico,
+	MOTIVO_CUIT,
 	registrosClientes,
 	registrosEnvios,
 	registrosFacturacion,
@@ -115,6 +116,26 @@ describe('motor de listas de la demo', () => {
 		expect(listarGenerico(f, DEF_FACTURACION, { seg: ['ok'] }).total).toBe(
 			f.filter((x) => x.estado === 'ok').length
 		);
+	});
+
+	it('facturación: rechazos con motivo, ventas no facturadas y notas de crédito', () => {
+		const f = registrosFacturacion(d, AHORA, new Map(), []);
+		expect(f.filter((x) => x.estado === 'rej').every((x) => x.motivo === MOTIVO_CUIT)).toBe(true);
+		expect(f.filter((x) => x.estado === 'ok').every((x) => x.motivo === '')).toBe(true);
+		// Facturar al cobrar apagado desde la mitad: lo cobrado después queda sin facturar.
+		const corte = AHORA - 10 * 86_400_000;
+		const sin = registrosFacturacion(d, AHORA, new Map(), [], (en) =>
+			en > corte ? 'apagado' : null
+		);
+		const nofac = sin.filter((x) => x.estado === 'nofac');
+		expect(nofac.length).toBeGreaterThan(0);
+		expect(nofac.every((x) => x.motivo === 'apagado' && x.numero === '—')).toBe(true);
+		expect(listarGenerico(sin, DEF_FACTURACION, {}).segmentos.nofac).toBe(nofac.length);
+		// Anulada: la factura pasa a void y aparece su nota de crédito arriba de todo.
+		const ok = f.find((x) => x.estado === 'ok')!;
+		const anulada = registrosFacturacion(d, AHORA, new Map([[ok.id, { anulada: AHORA }]]), []);
+		expect(anulada.find((x) => x.id === ok.id)!.estado).toBe('void');
+		expect(anulada[0]).toMatchObject({ id: `NC-${ok.id}`, estado: 'ok', total: ok.total });
 	});
 
 	it('envíos: sólo los que se despachan, con su etapa', () => {

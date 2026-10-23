@@ -47,6 +47,16 @@ export type Dominios = components['schemas']['Dominios'];
 export type ConexionMP = components['schemas']['ConexionMP'];
 export type ConexionML = components['schemas']['ConexionML'];
 export type PublicacionML = components['schemas']['PublicacionML'];
+export type ArcaConfig = components['schemas']['ArcaConfig'];
+export type ArcaAlta = components['schemas']['ArcaAlta'];
+export type ArcaCertificado = components['schemas']['ArcaCertificado'];
+export type ArcaAjustes = { puntoVenta?: number; facturarAlCobrar?: boolean };
+export type ArcaPrueba = { ok: boolean; ultimo: number; detalle: string };
+/**
+ * El pedido de certificado (CSR en PEM). En la demo no hay clave que guardar: `demo` le dice al
+ * panel que lo arme el navegador (lib/panel/csr.ts) con los datos ya validados.
+ */
+export type ArcaPedido = { pedido: string } | { demo: true } | { error: string };
 export type PreferenciasAvisos = components['schemas']['PreferenciasAvisos'];
 export type MisDatos = components['schemas']['MisDatos'];
 export type TipoExport =
@@ -144,6 +154,16 @@ export interface Datos {
 	/** Publicar o despublicar un producto; el texto de error es el que da Mercado Libre. */
 	publicarEnMercadoLibre(productoId: string): Promise<PublicacionML | { error: string }>;
 	despublicarDeMercadoLibre(productoId: string): Promise<void>;
+	/** La conexión con ARCA (facturación electrónica); nunca trae la clave. */
+	arca(): Promise<ArcaConfig>;
+	/** Genera la clave (queda en Mostrador) y devuelve el pedido de certificado para subir a ARCA. */
+	arcaPedido(a: ArcaAlta): Promise<ArcaPedido>;
+	/** El certificado que devolvió ARCA (PEM); el error es el texto para mostrar. */
+	arcaCertificado(pem: string): Promise<ArcaCertificado | { error: string }>;
+	/** Punto de venta y facturar al cobrar; null si se guardó. */
+	arcaAjustes(a: ArcaAjustes): Promise<{ error: string } | null>;
+	/** Pide el ticket y el último comprobante autorizado. */
+	arcaProbar(): Promise<ArcaPrueba>;
 	/** Mercado Pago de la tienda (marketplace por OAuth). */
 	mercadoPago(): Promise<ConexionMP>;
 	/** Adónde mandar a la persona para autorizar (o null si la aplicación no tiene credenciales). */

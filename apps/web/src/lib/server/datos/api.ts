@@ -6,6 +6,12 @@ import { error } from '@sveltejs/kit';
 import { estadoInicial } from '#lib/panel/integraciones.ts';
 import type {
 	AccionCupon,
+	ArcaAjustes,
+	ArcaAlta,
+	ArcaCertificado,
+	ArcaConfig,
+	ArcaPedido,
+	ArcaPrueba,
 	ConexionML,
 	ConexionMP,
 	PublicacionML,
@@ -357,13 +363,39 @@ export class DatosApi implements Datos {
 			ciclo: ciclo ?? 'mes'
 		});
 	}
-	// Las demás integraciones llegan una por PR: por ahora sólo Mercado Pago es real.
+	// Las demás integraciones llegan una por PR: Mercado Pago, Mercado Libre y ARCA son reales.
 	async integraciones() {
 		const e = estadoInicial(false);
-		const [mp, ml] = await Promise.all([this.mercadoPago(), this.mercadoLibre()]);
+		const [mp, ml, arca] = await Promise.all([
+			this.mercadoPago(),
+			this.mercadoLibre(),
+			this.arca()
+		]);
 		e.conectadas.mp = mp.conectada;
 		e.conectadas.ml = ml.conectada;
+		e.conectadas.arca = arca.conectada;
+		e.opciones.arca = { ...e.opciones.arca, auto: arca.facturarAlCobrar };
 		return e;
+	}
+	arca() {
+		return this.pedir<ArcaConfig>('/v1/panel/arca');
+	}
+	async arcaPedido(a: ArcaAlta): Promise<ArcaPedido> {
+		const r = await this.conProblema<{ pedido: string }>('/v1/panel/arca/pedido', 'POST', a);
+		return 'error' in r ? r : { pedido: r.pedido };
+	}
+	arcaCertificado(pem: string) {
+		return this.conProblema<ArcaCertificado>('/v1/panel/arca/certificado', 'PUT', {
+			certificado: pem
+		});
+	}
+	async arcaAjustes(a: ArcaAjustes) {
+		const r = await this.conProblema<null>('/v1/panel/arca/ajustes', 'PUT', a);
+		return r && 'error' in r ? r : null;
+	}
+	async arcaProbar(): Promise<ArcaPrueba> {
+		const r = await this.conProblema<ArcaPrueba>('/v1/panel/arca/probar', 'POST', {});
+		return 'error' in r ? { ok: false, ultimo: 0, detalle: r.error } : r;
 	}
 	async ajustarIntegracion() {
 		return 'no-se-puede' as const;
@@ -532,6 +564,30 @@ export class DatosApi implements Datos {
 	}
 
 	/** Como `pedir`, pero 404 y 409 vuelven como respuesta (son resultados, no errores). */
+	/** Como `pedir`, pero un 4xx/5xx vuelve como { error } con el detalle de Go, para mostrarlo. */
+	private async conProblema<T>(
+		ruta: string,
+		metodo: 'POST' | 'PUT',
+		cuerpo: unknown
+	): Promise<T | { error: string }> {
+		const res = await this.f(this.base + ruta, {
+			method: metodo,
+			headers: {
+				accept: 'application/json',
+				'content-type': 'application/json',
+				...(this.token ? { authorization: `Bearer ${this.token}` } : {})
+			},
+			body: JSON.stringify(cuerpo)
+		});
+		if (res.status === 401) error(401, 'Tu sesión venció.');
+		if (!res.ok) {
+			const p = (await res.json().catch(() => null)) as { detail?: string } | null;
+			return { error: p?.detail ?? 'ARCA no respondió bien. Probá de nuevo en un rato.' };
+		}
+		if (res.status === 204) return null as T;
+		return (await res.json()) as T;
+	}
+
 	private async intentar(
 		ruta: string,
 		metodo: 'GET' | 'POST' | 'PUT' | 'DELETE',

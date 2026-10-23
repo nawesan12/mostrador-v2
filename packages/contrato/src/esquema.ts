@@ -846,6 +846,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/arca": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** La conexión con ARCA (facturación electrónica). Nunca devuelve la clave. */
+        get: operations["conexionArca"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/arca/pedido": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Genera la clave (queda cifrada en Mostrador y no sale nunca) y devuelve el pedido de certificado (CSR en PEM) para subir a ARCA. Reemplaza la clave anterior: el certificado que había deja de servir. Sólo dueña o admin. */
+        post: operations["pedidoCertificadoArca"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/arca/certificado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** El certificado que devolvió ARCA (PEM). Tiene que ser de la clave de esta tienda y de su CUIT. Sólo dueña o admin. */
+        put: operations["certificadoArca"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/arca/ajustes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Punto de venta y facturar al cobrar, sin tocar el certificado. Sólo dueña o admin. */
+        put: operations["ajustesArca"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/arca/probar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pide (o reusa) el ticket del WSAA y el último comprobante autorizado del punto de venta. */
+        post: operations["probarArca"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/integraciones/mercadopago/conectar": {
         parameters: {
             query?: never;
@@ -2427,6 +2512,42 @@ export interface components {
             itemId: string;
             permalink: string;
         };
+        ArcaConfig: {
+            /** @description Tiene certificado cargado */
+            conectada: boolean;
+            /** @description 11 dígitos; vacío si nunca se configuró */
+            cuit: string;
+            razonSocial: string;
+            /** @description monotributo | responsable_inscripto (vacío si nunca se configuró) */
+            condicion: string;
+            puntoVenta: number;
+            /** @enum {string} */
+            ambiente: "homologacion" | "produccion";
+            certificado: boolean;
+            /** Format: date-time */
+            certificadoVence: string | null;
+            facturarAlCobrar: boolean;
+        };
+        ArcaAlta: {
+            /** @description Con o sin guiones; se valida el dígito verificador */
+            cuit: string;
+            razonSocial: string;
+            /** @enum {string} */
+            condicion: "monotributo" | "responsable_inscripto";
+            puntoVenta: number;
+            /** @enum {string} */
+            ambiente: "homologacion" | "produccion";
+        };
+        ArcaCertificado: {
+            cuit: string;
+            alias: string;
+            /** Format: date-time */
+            desde: string;
+            /** Format: date-time */
+            vence: string;
+            emisor: string;
+            homologacion: boolean;
+        };
         ConexionMP: {
             /** @description La aplicación de Mostrador tiene credenciales */
             disponible: boolean;
@@ -3579,7 +3700,7 @@ export interface operations {
                 "application/json": {
                     ids: string[];
                     accion: string;
-                    /** @description Lo que la acción necesite (ajuste de stock, publicado…) */
+                    /** @description Lo que la acción necesite (ajuste de stock, publicado…). Facturación: emitir lleva {cliente, tipo, cuit, concepto, total}; reintentar y anular (nota de crédito) usan ids. */
                     valor?: unknown;
                 };
             };
@@ -3596,6 +3717,8 @@ export interface operations {
                     };
                 };
             };
+            /** @description Facturación: el error de ARCA o de los datos, para mostrar tal cual */
+            400: components["responses"]["Problema"];
             401: components["responses"]["Problema"];
             409: components["responses"]["Problema"];
         };
@@ -4346,6 +4469,139 @@ export interface operations {
                 };
                 content?: never;
             };
+        };
+    };
+    conexionArca: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Estado */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArcaConfig"];
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    pedidoCertificadoArca: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArcaAlta"];
+            };
+        };
+        responses: {
+            /** @description El pedido de certificado */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description PEM: -----BEGIN CERTIFICATE REQUEST----- */
+                        pedido: string;
+                    };
+                };
+            };
+            400: components["responses"]["Problema"];
+            403: components["responses"]["Problema"];
+        };
+    };
+    certificadoArca: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    certificado: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Guardado */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArcaCertificado"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            403: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+        };
+    };
+    ajustesArca: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    puntoVenta?: number;
+                    facturarAlCobrar?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Guardado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
+            403: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+        };
+    };
+    probarArca: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Conectada */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        ok: boolean;
+                        ultimo: number;
+                        detalle: string;
+                    };
+                };
+            };
+            409: components["responses"]["Problema"];
+            502: components["responses"]["Problema"];
         };
     };
     conectarMercadoPago: {

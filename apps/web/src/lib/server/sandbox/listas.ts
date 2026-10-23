@@ -489,10 +489,11 @@ export const DEF_INVENTARIO: DefLista<RegInventario> = {
 
 // ---------------------------------------------------------------- Facturación
 
-export type CambioFactura = { enviado?: boolean; autorizada?: boolean };
+/** Lo que el visitante hizo con un comprobante: enviarlo, reintentarlo o anularlo (nota de crédito). */
+export type CambioFactura = { enviado?: boolean; autorizada?: boolean; anulada?: number };
 export type FacturaManual = {
 	cliente: string;
-	tipo: 'A' | 'B';
+	tipo: 'A' | 'B' | 'C';
 	cuit: string | null;
 	concepto: string;
 	total: number;
@@ -501,11 +502,14 @@ export type FacturaManual = {
 
 export type RegComprobante = {
 	id: string;
+	/** "0004-00012812"; las notas de crédito, "NC 0004-…"; sin número, "—". */
 	numero: string;
-	tipo: 'A' | 'B';
+	tipo: 'A' | 'B' | 'C';
 	cliente: string;
 	dias: number;
-	estado: 'ok' | 'pend' | 'rej' | 'void';
+	estado: 'ok' | 'pend' | 'rej' | 'void' | 'nofac';
+	/** Por qué ARCA la rechazó o por qué no se facturó (vacío si no hace falta). */
+	motivo: string;
 	total: number;
 	canal: string;
 	enviado: boolean;
@@ -514,42 +518,55 @@ export type RegComprobante = {
 	pedido: number | null;
 };
 
+/** El rechazo de ejemplo de la demo (facturas A con el CUIT del cliente mal cargado). */
+export const MOTIVO_CUIT = 'El CUIT del receptor no es válido.';
+
+/**
+ * Los comprobantes de la demo. `sinFacturar` dice, para el momento de un cobro, si esa venta quedó
+ * "no facturada" y por qué (Facturar al cobrar apagado), como el trigger de Go.
+ */
 export function registrosFacturacion(
 	d: Demo,
 	ahora: number,
 	cambios: Map<string, CambioFactura>,
-	manuales: [string, FacturaManual][]
+	manuales: [string, FacturaManual][],
+	sinFacturar: (en: number) => string | null = () => null
 ): RegComprobante[] {
 	const clientes = new Map(d.clientes.map((c) => [c.id, c]));
 	const facturados = d.pedidos.filter((p) => p.facturado && p.creado <= ahora);
+	const periodo = (dias: number) => (dias < 30 ? 'm' : dias < 90 ? 'q' : 'y');
 	const regs: RegComprobante[] = facturados.map((p, i) => {
 		const c = clientes.get(p.clienteId)!;
 		const tipo = c.mayorista ? 'A' : 'B';
 		const id = `${tipo}-${p.numero}`;
 		const cambio = cambios.get(id) ?? {};
 		const dias = (ahora - p.creado) / DIA;
-		const base: RegComprobante['estado'] =
-			p.estado === 'Cancelado'
+		const motivoNo = sinFacturar(p.creado);
+		const base: RegComprobante['estado'] = motivoNo
+			? 'nofac'
+			: p.estado === 'Cancelado'
 				? 'void'
 				: dias < 0.015
 					? 'pend'
 					: tipo === 'A' && p.numero % 7 === 0
 						? 'rej'
 						: 'ok';
-		const estado = cambio.autorizada && base !== 'void' ? 'ok' : base;
+		const autorizada = cambio.autorizada && (base === 'pend' || base === 'rej') ? 'ok' : base;
+		const estado = cambio.anulada && autorizada === 'ok' ? 'void' : autorizada;
 		const enviado = cambio.enviado ?? semilla(id) < 0.85;
 		return {
 			id,
-			numero: `0004-${String(12812 - i).padStart(8, '0')}`,
+			numero: estado === 'nofac' ? '—' : `0004-${String(12812 - i).padStart(8, '0')}`,
 			tipo,
 			cliente:
 				tipo === 'A' ? `${c.nombre} SRL` : semilla(id + 'cf') < 0.4 ? 'Consumidor final' : c.nombre,
 			dias,
 			estado,
+			motivo: estado === 'nofac' ? motivoNo! : estado === 'rej' ? MOTIVO_CUIT : '',
 			total: p.total,
 			canal: p.canal,
 			enviado,
-			per: dias < 30 ? 'm' : dias < 90 ? 'q' : 'y',
+			per: periodo(dias),
 			nomail: !enviado,
 			pedido: p.numero
 		};
@@ -563,7 +580,8 @@ export function registrosFacturacion(
 			tipo: m.tipo,
 			cliente: m.cliente,
 			dias,
-			estado: 'ok',
+			estado: cambios.get(id)?.anulada ? 'void' : 'ok',
+			motivo: '',
 			total: m.total,
 			canal: 'pos',
 			enviado,
@@ -572,7 +590,27 @@ export function registrosFacturacion(
 			pedido: null
 		};
 	});
-	return [...manualesReg.reverse(), ...regs];
+	// Cada anulación es una nota de crédito autorizada, con su propio número (como en Go).
+	const notas = [...manualesReg, ...regs]
+		.filter((r) => r.estado === 'void' && cambios.get(r.id)?.anulada)
+		.map((r) => [r, cambios.get(r.id)!.anulada!] as const)
+		.sort((a, b) => a[1] - b[1])
+		.map(([r, en], k): RegComprobante => {
+			const dias = (ahora - en) / DIA;
+			const enviado = cambios.get(`NC-${r.id}`)?.enviado ?? false;
+			return {
+				...r,
+				id: `NC-${r.id}`,
+				numero: `NC 0004-${String(301 + k).padStart(8, '0')}`,
+				dias,
+				estado: 'ok',
+				motivo: '',
+				enviado,
+				per: periodo(dias),
+				nomail: !enviado
+			};
+		});
+	return [...notas.reverse(), ...manualesReg.reverse(), ...regs];
 }
 
 export const DEF_FACTURACION: DefLista<RegComprobante> = {

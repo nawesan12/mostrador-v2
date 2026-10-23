@@ -67,7 +67,7 @@ export const TRAE_MP = [
 ] as const;
 
 export const DATOS_NEGOCIO = [
-	['CUIT · desde Mercado Pago', '27-31458902-4'],
+	['CUIT · desde Mercado Pago', '27-31458902-0'],
 	['Instagram', '@cafelaesquina'],
 	['Tienda actual', 'laesquina.mitiendanube.com']
 ] as const;
