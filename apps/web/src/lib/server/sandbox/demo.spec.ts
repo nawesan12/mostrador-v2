@@ -8,7 +8,7 @@ import { inicioDelDia, tableroDemo } from './tablero.ts';
 const BASE = Date.parse('2026-10-20T15:00:00Z');
 
 describe('datos de la demo', () => {
-	it('las 16 plantillas tienen catálogo con categorías y fotos', () => {
+	it('todas las plantillas tienen catálogo con categorías y fotos', () => {
 		expect(new Set(CATALOGOS.map((c) => c.plantilla))).toEqual(
 			new Set(PLANTILLAS.map((p) => p.id))
 		);

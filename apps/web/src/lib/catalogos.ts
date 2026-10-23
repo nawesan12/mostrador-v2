@@ -686,6 +686,95 @@ export const CATALOGOS: Catalogo[] = [
 		]
 	},
 	{
+		plantilla: 'miga-clasica',
+		tienda: 'Panadería Lola Clásica',
+		rubro: 'Panadería',
+		ciudad: 'Rosario',
+		categorias: ['Panes', 'Facturas', 'Dulces'],
+		productos: [
+			{
+				id: 'hogaza-de-masa-madre',
+				nombre: 'Hogaza de masa madre',
+				categoria: 'Panes',
+				precio: 6900,
+				anterior: null,
+				foto: '1586444248902-2f64eddc13df',
+				etiqueta: 'Del día',
+				detalle: null
+			},
+			{
+				id: 'medialuna-de-manteca',
+				nombre: 'Medialuna de manteca',
+				categoria: 'Facturas',
+				precio: 1200,
+				anterior: null,
+				foto: '1555507036-ab1f4038808a',
+				etiqueta: null,
+				detalle: null
+			},
+			{
+				id: 'budin-de-limon',
+				nombre: 'Budín de limón',
+				categoria: 'Dulces',
+				precio: 6400,
+				anterior: null,
+				foto: '1608198093002-ad4e005484ec',
+				etiqueta: null,
+				detalle: null
+			},
+			{
+				id: 'rol-de-canela',
+				nombre: 'Rol de canela',
+				categoria: 'Facturas',
+				precio: 2800,
+				anterior: null,
+				foto: '1568254183919-78a4f43a2877',
+				etiqueta: 'Nuevo',
+				detalle: null
+			},
+			{
+				id: 'pan-de-campo',
+				nombre: 'Pan de campo',
+				categoria: 'Panes',
+				precio: 5400,
+				anterior: null,
+				foto: '1549931319-a545dcf3bc73',
+				etiqueta: null,
+				detalle: null
+			},
+			{
+				id: 'cookies-x6',
+				nombre: 'Cookies x6',
+				categoria: 'Dulces',
+				precio: 7200,
+				anterior: 8400,
+				foto: '1483695028939-5bb13f8648b0',
+				etiqueta: '−15%',
+				detalle: null
+			},
+			{
+				id: 'croissant',
+				nombre: 'Croissant',
+				categoria: 'Facturas',
+				precio: 2400,
+				anterior: null,
+				foto: '1517433670267-08bbd4be890f',
+				etiqueta: null,
+				detalle: null
+			},
+			{
+				id: 'focaccia',
+				nombre: 'Focaccia',
+				categoria: 'Panes',
+				precio: 6200,
+				anterior: null,
+				foto: '1509440159596-0249088772ff',
+				etiqueta: null,
+				detalle: null
+			}
+		]
+	},
+	{
 		plantilla: 'mostaza',
 		tienda: 'Café Bruma',
 		rubro: 'Café de especialidad',

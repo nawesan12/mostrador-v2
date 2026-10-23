@@ -29,6 +29,9 @@ const __dirname = import.meta.dirname;
 runInNewContext(readFileSync(join(__dirname, '../../../design/templates-data.js'), 'utf8'), {
 	window
 });
+// Lemas del handoff que prometen algo que la tienda todavía no hace (los turnos online de Tijera):
+// se reemplazan hasta que exista la función.
+const LEMAS: Record<string, string> = { tijera: 'Cortes, barba y productos' };
 const filas = window.MOSTRADOR_TEMPLATES.map((t) => ({
 	id: t.id,
 	nombre: t.name,
@@ -41,10 +44,25 @@ const filas = window.MOSTRADOR_TEMPLATES.map((t) => ({
 	ac: t.acc,
 	ff: t.ff,
 	radio: t.r,
-	lema: t.tag,
+	lema: LEMAS[t.id] ?? t.tag,
 	oscura: t.dark,
 	productos: t.prods.map((p) => ({ pos: p.pos, precio: p.price }))
 }));
+// Miga tiene dos versiones en el handoff (Plantilla Miga y Plantilla Miga Clasica): la clásica no está
+// en templates-data.js, así que se suma con su paleta y su tipografía.
+const miga = filas.find((f) => f.id === 'miga');
+if (miga)
+	filas.splice(filas.indexOf(miga) + 1, 0, {
+		...miga,
+		id: 'miga-clasica',
+		nombre: 'Miga Clásica',
+		tienda: 'Panadería Lola Clásica',
+		bg: '#FBF1E6',
+		tx: '#3A2414',
+		ac: '#B5651D',
+		ff: "'Young Serif', Georgia, serif",
+		radio: '24px'
+	});
 const ts = `// Generado por scripts/plantillas.ts desde design/templates-data.js — no editar a mano.
 /** Una plantilla de tienda del handoff. */
 export type Plantilla = {
