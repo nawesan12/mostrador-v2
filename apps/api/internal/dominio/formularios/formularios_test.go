@@ -19,7 +19,7 @@ var ctx = context.Background()
 func nuevo(t *testing.T) (*formularios.Servicio, *correo.Memoria, *pruebadb.Bases) {
 	b := pruebadb.Nueva(t)
 	m := &correo.Memoria{}
-	return &formularios.Servicio{Pool: b.App, Correo: m, Sitio: "https://mostrador.iamnaw.dev", Equipo: "equipo@mostrador.com.ar"}, m, b
+	return &formularios.Servicio{Pool: b.App, Correo: m, Sitio: "https://mostrador.iamnaw.dev", Equipo: "equipo@mostradorapp.com.ar"}, m, b
 }
 
 func TestConsultaDeVentas(t *testing.T) {
@@ -41,7 +41,7 @@ func TestConsultaDeVentas(t *testing.T) {
 	if msj, ok := m.Ultimo("lucia@tutienda.com.ar"); !ok || !strings.Contains(msj.Texto, "2 horas hábiles") {
 		t.Fatalf("confirmación %+v", msj)
 	}
-	if msj, ok := m.Ultimo("equipo@mostrador.com.ar"); !ok || !strings.Contains(msj.Texto, "$ 5 a 20 M") || !strings.Contains(msj.Texto, "Tiendanube") {
+	if msj, ok := m.Ultimo("equipo@mostradorapp.com.ar"); !ok || !strings.Contains(msj.Texto, "$ 5 a 20 M") || !strings.Contains(msj.Texto, "Tiendanube") {
 		t.Fatalf("aviso al equipo %+v", msj)
 	}
 	if _, err := b.App.Exec(ctx, `SELECT email FROM soporte.consultas`); err == nil {

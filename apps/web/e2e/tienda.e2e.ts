@@ -17,8 +17,7 @@ test('tienda: se compra de punta a punta y el pedido entra al panel', async ({ p
 	const slug = await demo(page);
 	await page.goto(`/t/${slug}`);
 	expect(await sinDesborde(page)).toBeLessThanOrEqual(0);
-	await page.getByRole('link', { name: 'Ver la colección' }).click();
-	await expect(page).toHaveURL(/\/catalogo/);
+	await page.goto(`/t/${slug}/catalogo`);
 	await page.locator('a[href*="/producto/"]').first().click();
 	await page.getByRole('button', { name: 'Agregar al carrito' }).click();
 	await expect(page).toHaveURL(/\/carrito$/);

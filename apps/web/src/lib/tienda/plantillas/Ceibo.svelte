@@ -5,6 +5,7 @@
 	import * as I from '#lib/icons.ts';
 	import { carritoDe } from '../carrito.svelte.ts';
 	import { cotizar, cpValido } from '../envio.ts';
+	import { partirTitulo } from '../titulo.ts';
 	import type { OpcionEnvio, ProductoPublico, TiendaPublica } from '../tipos.ts';
 
 	/**
@@ -70,11 +71,7 @@
 		`https://wa.me/${whatsapp.startsWith('54') ? whatsapp : '54' + whatsapp}?text=${encodeURIComponent(texto)}`;
 
 	// Título de la portada: el último tramo va en itálica, como en el diseño ("Abrigo / que dura.").
-	const titulo = $derived.by(() => {
-		const t = tienda.portada.titulo.trim();
-		const corte = t.lastIndexOf(' ', Math.ceil(t.length / 2));
-		return corte > 0 ? [t.slice(0, corte), t.slice(corte + 1)] : [t, ''];
-	});
+	const titulo = $derived(partirTitulo(tienda.portada.titulo));
 
 	const perks = $derived([
 		...(tienda.envios.gratisDesde

@@ -170,3 +170,14 @@ URL, para que no quede en el historial ni en logs.
 - `GET /v1/panel/resumen` (insignias, notificaciones, canales y prueba) está en el contrato. En la
   demo sale de esos datos; en Go, la prueba es real y lo demás va en cero hasta que existan los
   dominios (pedidos, carritos, WhatsApp, tareas).
+
+## 20. Dominio: mostradorapp.com.ar (PR #52)
+
+- mostrador.com.ar está registrado por un tercero (vence a mediados de diciembre). La marca sigue
+  siendo Mostrador y el dominio será **mostradorapp.com.ar**: los mails públicos (ayuda@,
+  legales@, seguridad@…) ya lo usan. Hasta que esté comprado y con DNS, el sitio sigue en
+  mostrador.iamnaw.dev (`PUBLIC_SITE_URL` / `MOSTRADOR_SITIO`).
+- Al pasarlo: cambiar esas dos variables, la ruta de `wrangler.jsonc`, y en los portales las vueltas
+  de OAuth (`/integraciones/mercadopago/callback`, `/integraciones/mercadolibre/callback`,
+  `/ingresar/*/vuelta`) y las notificaciones (`api.mostradorapp.com.ar/v1/webhooks/*`). Mercado
+  Libre pide validar con QR desde el celular de Nahuel para editar la app.

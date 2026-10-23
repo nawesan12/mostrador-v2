@@ -56,7 +56,7 @@ func responder(w http.ResponseWriter, err error, ok int) {
 	case errors.Is(err, ErrDemasiados):
 		w.Header().Set("Retry-After", "3600")
 		problema.Escribir(w, &problema.Problema{Estado: http.StatusTooManyRequests, Codigo: "demasiados_envios",
-			Titulo: "Esperá un rato", Detalle: "Recibimos varios envíos seguidos. Probá de nuevo en una hora o escribinos a ayuda@mostrador.com.ar."})
+			Titulo: "Esperá un rato", Detalle: "Recibimos varios envíos seguidos. Probá de nuevo en una hora o escribinos a ayuda@mostradorapp.com.ar."})
 	case errors.Is(err, ErrTokenInvalido):
 		problema.Escribir(w, problema.NoProcesable("link_invalido", "Ese link de baja ya se usó o no existe."))
 	default:
