@@ -430,6 +430,47 @@ export const PLANTILLAS: Plantilla[] = [
 		]
 	},
 	{
+		id: 'miga-clasica',
+		nombre: 'Miga Clásica',
+		rubro: 'Gastronomía',
+		layout: 'cat',
+		tienda: 'Panadería Lola Clásica',
+		img: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=700&q=72',
+		bg: '#FBF1E6',
+		tx: '#3A2414',
+		ac: '#B5651D',
+		ff: "'Young Serif', Georgia, serif",
+		radio: '24px',
+		lema: 'Masa madre todos los días',
+		oscura: false,
+		productos: [
+			{
+				pos: '20% 30%',
+				precio: '$ 31.900'
+			},
+			{
+				pos: '80% 40%',
+				precio: '$ 44.900'
+			},
+			{
+				pos: '50% 80%',
+				precio: '$ 17.900'
+			},
+			{
+				pos: '30% 70%',
+				precio: '$ 30.900'
+			},
+			{
+				pos: '70% 20%',
+				precio: '$ 43.900'
+			},
+			{
+				pos: '50% 50%',
+				precio: '$ 16.900'
+			}
+		]
+	},
+	{
 		id: 'taller',
 		nombre: 'Taller',
 		rubro: 'Artesanías',
@@ -605,7 +646,7 @@ export const PLANTILLAS: Plantilla[] = [
 		ac: '#5B3FD6',
 		ff: "'Instrument Sans', system-ui, sans-serif",
 		radio: '18px',
-		lema: 'Reservá tu turno online',
+		lema: 'Cortes, barba y productos',
 		oscura: false,
 		productos: [
 			{
