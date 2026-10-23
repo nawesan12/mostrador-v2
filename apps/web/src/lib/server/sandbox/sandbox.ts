@@ -125,6 +125,7 @@ import { COSTO_MENSAJE, contextoDemo, tableroDemo, type CambiosTablero } from '.
 import RUBROS from '@mostrador/contrato/rubros.json';
 import { plantilla as buscarPlantilla } from '#lib/plantillas.ts';
 import { SITE } from '#lib/site.ts';
+import type { TiendaPublica } from '#lib/tienda/tipos.ts';
 
 export type DbSandbox = DrizzleD1Database<Record<string, never>>;
 
@@ -2090,6 +2091,86 @@ export class DatosSandbox implements Datos {
 				fotos: [...new Set(top.flatMap((x) => (x.foto ? [x.foto] : [])))].slice(0, 6),
 				portada: { foto: p?.img ?? top[0]?.foto ?? null, titulo: p?.lema ?? t.nombre }
 			}
+		};
+	}
+
+	/**
+	 * La tienda online como la ve quien compra (lo publicado en Mi tienda). vitrina: es la tienda de
+	 * ejemplo de una plantilla para mirar, sin carrito real.
+	 */
+	async tiendaPublica(vitrina = false): Promise<TiendaPublica> {
+		const [d, t, c, conf, productos, mp] = await Promise.all([
+			this.demo(),
+			this.tienda(),
+			cambiosDe(this.db, this.sb.id, 'mi-tienda'),
+			this.configuracion(),
+			this.regProductos(),
+			this.mercadoPago()
+		]);
+		const diseno = (c.get('publicado') as DisenoTienda | undefined) ?? DISENO_INICIAL;
+		const p = buscarPlantilla(t.plantilla);
+		const visibles = productos.filter((x) => x.publicado && x.canales.includes('web'));
+		const vendidos = new Map(visibles.map((x) => [x.id, x.vendidos30]));
+		const masVendidos = [...visibles]
+			.sort((a, b) => (vendidos.get(b.id) ?? 0) - (vendidos.get(a.id) ?? 0))
+			.map((x) => x.id);
+		const delCatalogo = new Map(d.catalogo.productos.map((x) => [x.id, x]));
+		const categorias = [...new Set(visibles.map((x) => x.categoria).filter(Boolean))].map(
+			(nombre) => {
+				const de = visibles.filter((x) => x.categoria === nombre);
+				return { nombre, cantidad: de.length, foto: de.find((x) => x.foto)?.foto ?? null };
+			}
+		);
+		const nombres = new Map(d.clientes.map((x) => [x.id, x.nombre]));
+		const ciudades = new Map(d.clientes.map((x) => [x.id, x.ciudad]));
+		const resenas = d.resenas
+			.filter((r) => r.estrellas >= 4 && r.texto.length > 25)
+			.slice(0, 6)
+			.map((r) => ({
+				texto: r.texto,
+				autor: [nombres.get(r.clienteId)?.split(' ')[0], ciudades.get(r.clienteId)]
+					.filter(Boolean)
+					.join(', '),
+				producto: r.producto,
+				estrellas: r.estrellas
+			}));
+		const promedio = d.resenas.length
+			? Math.round((d.resenas.reduce((s, r) => s + r.estrellas, 0) / d.resenas.length) * 10) / 10
+			: null;
+		return {
+			slug: t.slug,
+			nombre: t.nombre,
+			plantilla: t.plantilla,
+			paleta: diseno.paleta,
+			secciones: diseno.secciones.filter((s) => s.visible).map((s) => s.id),
+			portada: {
+				titulo: p?.lema ?? t.nombre,
+				lema: d.catalogo.ciudad ? `Desde ${d.catalogo.ciudad}` : '',
+				foto: p?.img ?? visibles.find((x) => x.foto)?.foto ?? null
+			},
+			ciudad: d.catalogo.ciudad,
+			direccion: conf.negocio.direccion,
+			whatsapp: conf.negocio.whatsapp,
+			categorias,
+			productos: visibles.map((x) => ({
+				id: x.id,
+				nombre: x.nombre,
+				descripcion: x.descripcion || delCatalogo.get(x.id)?.detalle || '',
+				categoria: x.categoria || null,
+				precio: x.precio,
+				anterior: delCatalogo.get(x.id)?.anterior ?? null,
+				foto: x.foto,
+				etiqueta:
+					delCatalogo.get(x.id)?.etiqueta ?? (x.stock > 0 && x.stock <= 3 ? 'Últimos' : null),
+				stock: x.stock
+			})),
+			masVendidos,
+			resenas,
+			promedio,
+			fotos: [...new Set(visibles.flatMap((x) => (x.foto ? [x.foto] : [])))].slice(0, 6),
+			cobros: { transferencia: 15, cuotas: 6, mercadoPago: mp.conectada },
+			envios: { gratisDesde: 240_000, retiro: true, moto: true, correo: true },
+			vitrina
 		};
 	}
 

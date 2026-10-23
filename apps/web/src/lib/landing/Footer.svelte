@@ -67,10 +67,7 @@
 	</div>
 	<div class="barra">
 		<div class="barra-in">
-			<span
-				>© 2026 Mostrador Tecnología S.A.S. · <span class="nw">CUIT 30-71000000-0</span>
-				<b class="nw">(datos de ejemplo)</b></span
-			>
+			<span>© 2026 Mostrador · Nahuel Santillán · <span class="nw">CUIT 20-44859234-1</span></span>
 			<span class="legal">
 				<a class="arrep" href="/legales/arrepentimiento"
 					><Icon icon={I.phArrowCounterClockwiseBold} size={13} />Botón de arrepentimiento</a
@@ -146,9 +143,6 @@
 		flex-wrap: wrap;
 		font-size: 12.5px;
 		color: #7a6252;
-	}
-	.barra-in b {
-		color: #9a6a10;
 	}
 	.legal {
 		display: flex;
