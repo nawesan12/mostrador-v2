@@ -67,8 +67,8 @@
 		</div>
 		<div class="barra">
 			<span
-				>© 2026 Mostrador Tecnología S.A.S. · <span class="nw">CUIT 30-71000000-0</span> · Av.
-				Corrientes 1234, piso 8, C1043 CABA <b class="nw">(datos de ejemplo)</b></span
+				>© 2026 Mostrador · Nahuel Santillán · <span class="nw">CUIT 20-44859234-1</span> ·
+				<span class="nw">Mar del Plata</span></span
 			>
 			<span class="legal">
 				<a class="arrep" href="/legales/arrepentimiento"

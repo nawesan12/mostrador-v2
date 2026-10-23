@@ -72,7 +72,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Quiénes somos',
 				cuerpo: [
 					{
-						p: 'Mostrador Tecnología S.A.S. (“Mostrador”) ofrece una plataforma para crear y administrar tiendas online, vender por WhatsApp y redes, cobrar en el local y facturar. Al crear una cuenta aceptás estos términos en nombre propio o de la empresa que representás.'
+						p: 'Nahuel Santillán, CUIT 20-44859234-1 (“Mostrador”), ofrece una plataforma para crear y administrar tiendas online, vender por WhatsApp y redes, cobrar en el local y facturar. Al crear una cuenta aceptás estos términos en nombre propio o de la empresa que representás.'
 					}
 				]
 			},
@@ -234,7 +234,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Responsable',
 				cuerpo: [
 					{
-						p: 'Mostrador Tecnología S.A.S., CUIT 30-71000000-0, con domicilio en Av. Corrientes 1234, piso 8, C1043 CABA, es responsable de la base de datos de usuarios de Mostrador, inscripta ante la Agencia de Acceso a la Información Pública.'
+						p: 'Nahuel Santillán, CUIT 20-44859234-1, con domicilio en Mar del Plata, provincia de Buenos Aires, es responsable de la base de datos de usuarios de Mostrador.'
 					}
 				]
 			},
@@ -634,7 +634,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Datos del proveedor',
 				cuerpo: [
 					{
-						p: 'Mostrador Tecnología S.A.S. · CUIT 30-71000000-0 · Av. Corrientes 1234, piso 8, C1043 CABA · legales@mostradorapp.com.ar.'
+						p: 'Nahuel Santillán · CUIT 20-44859234-1 · Mar del Plata, provincia de Buenos Aires · legales@mostradorapp.com.ar.'
 					}
 				]
 			},
