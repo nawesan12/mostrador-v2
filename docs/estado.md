@@ -57,7 +57,7 @@ Cuenta (Plan y facturación con cancelación en 3 pasos, Usuarios y permisos con
 - **Tests de Go sin Postgres se saltan (SKIP) en local:** antes de correrlos, `bun run db:up`; confirmar con `go test -v ./... | grep -c '^--- SKIP'` que dé 0. En CI no se saltan (fallan).
 
 - **`wrangler dev` con el binding de IA** pide credenciales al arrancar (en CI no hay). El script `preview` corre con `--local --var HORNERO:simulado`; no sacarlo.
-- **Deploy manual:** el job `deploy` del CI no hace nada (no hay `CLOUDFLARE_API_TOKEN` en GitHub). Después de mergear: `cd apps/web && bun run build && bunx wrangler deploy`. Preview: `bunx wrangler versions upload --preview-alias pr-N`.
+- **Deploy manual:** el job `deploy` del CI no hace nada (no hay `CLOUDFLARE_API_TOKEN` en GitHub). Después de mergear: `cd apps/web && bun run build && bunx wrangler deploy`. Sin previews en Cloudflare (pedido de Nahuel, 22/10): se prueba en local.
 - **`bun scripts/icons.ts ph:nombre`** reescribe `src/lib/icons.ts` sin formato: correr `bunx prettier --write src/lib/icons.ts` y revisar que el diff sólo sume íconos.
 - **Tests con miles de `expect`** en loops se pasan de los 5 s: juntar los errores y hacer un solo `expect`.
 - **Hora de Argentina:** UTC−3 fijo; `inicioDelDia` y `horaAr` en `sandbox/tablero.ts`, formatos en `lib/panel/formato.ts`.
