@@ -23,6 +23,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/links"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/turnos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/cifrado"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db/pruebadb"
@@ -65,6 +66,15 @@ func (f *mpFalso) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			"expires_in": 15552000, "scope": "offline_access payments", "user_id": f.usuario})
 	case r.URL.Path == "/checkout/preferences":
 		enviar(map[string]any{"id": "pref-1", "init_point": "https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=pref-1"})
+	case strings.HasPrefix(r.URL.Path, "/v1/payments/") && strings.HasSuffix(r.URL.Path, "/refunds"):
+		id := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/v1/payments/"), "/refunds")
+		p, ok := f.pagos[id]
+		if !ok {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		p["status"] = "refunded"
+		enviar(map[string]any{"id": 1, "payment_id": p["id"], "status": "approved"})
 	case strings.HasPrefix(r.URL.Path, "/v1/payments/"):
 		p, ok := f.pagos[strings.TrimPrefix(r.URL.Path, "/v1/payments/")]
 		if !ok {
@@ -284,5 +294,99 @@ func TestPrecios(t *testing.T) {
 	}
 	if _, ok := mercadopago.PrecioDe("gratis", "mes"); ok {
 		t.Fatal("el plan gratis no se cobra")
+	}
+}
+
+// La seña de un turno: preferencia por el monto de la seña con el token de la tienda, el webhook
+// confirma el turno y devolverla pasa por /refunds.
+func TestSenaDeTurno(t *testing.T) {
+	ctx := context.Background()
+	b := pruebadb.Nueva(t)
+	luna := pruebadb.CrearTienda(t, b.App, "luna")
+	var ana string
+	if err := b.App.EnTx(ctx, func(tx pgx.Tx) error {
+		return tx.QueryRow(ctx, `INSERT INTO auth.usuarios (email, nombre) VALUES ('ana@luna.com', 'Ana') RETURNING id::text`).Scan(&ana)
+	}); err != nil {
+		t.Fatal(err)
+	}
+	f := &mpFalso{cuerpos: map[string]map[string]any{}, pagos: map[string]map[string]any{}, susc: map[string]map[string]any{}, usuario: 778, refreshOK: true}
+	srv := httptest.NewServer(f)
+	defer srv.Close()
+	k := make([]byte, 32)
+	_, _ = rand.Read(k)
+	cif, _ := cifrado.Nuevo(base64.StdEncoding.EncodeToString(k))
+	ahora := time.Now()
+	s := &mercadopago.Servicio{Pool: b.App, Cifra: cif, Cliente: &mercadopago.Cliente{Base: srv.URL},
+		Ahora:  func() time.Time { return ahora },
+		Config: mercadopago.Config{AppID: "123", Secreto: "sec", SecretoWebhook: "whsec", Sitio: "https://mostrador.iamnaw.dev"}}
+	mux := http.NewServeMux()
+	s.Rutas(mux)
+	u, err := s.Conectar(ctx, luna, ana)
+	if err != nil {
+		t.Fatal(err)
+	}
+	q, _ := url.Parse(u)
+	if err := s.Volver(ctx, luna, ana, "codigo", q.Query().Get("state")); err != nil {
+		t.Fatal(err)
+	}
+
+	// Una barbería que cobra el 30 % de seña.
+	lunes8 := time.Date(2026, 11, 2, 8, 0, 0, 0, turnos.Zona)
+	if _, err := turnos.GuardarAjustes(ctx, b.App, luna, turnos.Ajustes{Activo: true, Sena: 30, AnticipacionMin: 60, DiasVista: 14,
+		Horario: []turnos.Franja{{Dia: 1, Desde: "09:00", Hasta: "13:00"}}}); err != nil {
+		t.Fatal(err)
+	}
+	corte, _ := turnos.GuardarServicio(ctx, b.App, luna, "", turnos.Servicio{Nombre: "Corte clásico", Precio: 12000, Duracion: 30, Activo: true}, nil)
+	if _, err := turnos.GuardarProfesional(ctx, b.App, luna, "", turnos.Profesional{Nombre: "Beto", Activo: true}, nil); err != nil {
+		t.Fatal(err)
+	}
+	res, err := turnos.Reservar(ctx, b.App, s, s.Config.Sitio, "luna", turnos.Reserva{ServicioID: corte.ID, Inicio: "2026-11-02T10:00:00-03:00",
+		Nombre: "Lucía Pérez", Telefono: "1155550101", Email: "lucia@ejemplo.com"}, lunes8)
+	if err != nil || !strings.Contains(res.URL, "pref_id=pref-1") {
+		t.Fatalf("reservar: %+v %v", res, err)
+	}
+	if len(f.vio("POST /checkout/preferences APP_USR-vendedor-authorization_code")) != 1 {
+		t.Fatalf("preferencias: %v", f.vio("POST /checkout/preferences"))
+	}
+	pref := f.cuerpos["POST /checkout/preferences"]
+	items := pref["items"].([]any)
+	back := pref["back_urls"].(map[string]any)
+	if items[0].(map[string]any)["unit_price"].(float64) != 3600 || pref["expires"] != true ||
+		back["success"] != "https://mostrador.iamnaw.dev/t/luna/turno/"+res.Codigo+"?pago=ok" ||
+		pref["payment_methods"].(map[string]any)["installments"].(float64) != 1 {
+		t.Fatalf("preferencia de la seña: %v", pref)
+	}
+	if v, _ := turnos.Ver(ctx, b.App, "luna", res.Codigo, lunes8); v.Estado != "reservado" || v.SenaPagada {
+		t.Fatalf("antes de pagar: %+v", v)
+	}
+
+	// El pago aprobado llega por el webhook y el worker confirma el turno.
+	f.pagos["556"] = map[string]any{"id": 556, "status": "approved", "external_reference": pref["external_reference"], "transaction_amount": 3600}
+	r := httptest.NewRequest(http.MethodPost, "/v1/webhooks/mercadopago?data.id=556&type=payment",
+		strings.NewReader(`{"type":"payment","action":"payment.created","user_id":778,"data":{"id":"556"}}`))
+	r.Header.Set("x-request-id", "req-2")
+	r.Header.Set("x-signature", firmar("whsec", "556", "req-2", ahora.UnixMilli()))
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
+	if w.Code != http.StatusOK {
+		t.Fatalf("webhook: %d", w.Code)
+	}
+	wk := &outbox.Worker{Pool: b.Worker, Manejadores: s.Manejadores()}
+	if _, err := wk.Pasada(ctx); err != nil {
+		t.Fatal(err)
+	}
+	v, _ := turnos.Ver(ctx, b.App, "luna", res.Codigo, lunes8.Add(time.Hour))
+	if v.Estado != "confirmado" || !v.SenaPagada || v.VenceEn != nil || v.Vencido {
+		t.Fatalf("después del pago: %+v", v)
+	}
+
+	// Devolver la seña: refund del pago con el token de la tienda; queda anotada como devuelta.
+	l, _ := turnos.Agenda(ctx, b.App, luna, "2026-11-02", "2026-11-02", "", lunes8)
+	tu, err := turnos.DevolverSena(ctx, b.App, s, luna, l[0].ID, lunes8)
+	if err != nil || !tu.SenaDevuelta || len(f.vio("POST /v1/payments/556/refunds APP_USR-vendedor-authorization_code")) != 1 {
+		t.Fatalf("devolver la seña: %+v %v", tu, err)
+	}
+	if _, err := turnos.DevolverSena(ctx, b.App, s, luna, l[0].ID, lunes8); !errors.Is(err, turnos.ErrSinSena) {
+		t.Fatalf("devolvió dos veces: %v", err)
 	}
 }
