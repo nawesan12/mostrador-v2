@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { deslizable } from '#lib/panel/deslizable.ts';
 	import { invalidateAll, replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -265,7 +266,13 @@
 		</div>
 	{/if}
 
-	<div class="cats" role="group" aria-label="Categoría" use:anim={{ t: 'rise', delay: 100 }}>
+	<div
+		class="cats"
+		role="group"
+		aria-label="Categoría"
+		use:anim={{ t: 'rise', delay: 100 }}
+		use:deslizable
+	>
 		{#each CATEGORIAS as [id, t] (id)}
 			<button
 				type="button"

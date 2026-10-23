@@ -1,4 +1,5 @@
 <script lang="ts" generics="R extends { id: string }">
+	import { deslizable } from '#lib/panel/deslizable.ts';
 	import { untrack, type Snippet } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { goto, invalidateAll } from '$app/navigation';
@@ -236,7 +237,13 @@
 		</div>
 	{/if}
 
-	<div class="vistas" use:anim={{ t: 'rise', delay: 80 }} role="group" aria-label="Vistas">
+	<div
+		class="vistas"
+		use:anim={{ t: 'rise', delay: 80 }}
+		role="group"
+		aria-label="Vistas"
+		use:deslizable
+	>
 		{#each config.vistas as v (v.id)}
 			<button
 				type="button"
@@ -250,7 +257,13 @@
 		{/each}
 	</div>
 
-	<div class="segs" use:anim={{ t: 'rise', delay: 120 }} role="group" aria-label="Segmentos">
+	<div
+		class="segs"
+		use:anim={{ t: 'rise', delay: 120 }}
+		role="group"
+		aria-label="Segmentos"
+		use:deslizable
+	>
 		{#each config.segmentos as s (s.k)}
 			{@const on = f.seg.includes(s.k)}
 			<button
@@ -553,7 +566,7 @@
 {@render despues?.()}
 
 {#if seleccion.size}
-	<div class="lote" use:anim={{ t: 'rise' }}>
+	<div class="lote" use:anim={{ t: 'rise' }} use:deslizable>
 		<span class="lo-t"
 			>{seleccion.size} {seleccion.size === 1 ? 'seleccionado' : 'seleccionados'}</span
 		>

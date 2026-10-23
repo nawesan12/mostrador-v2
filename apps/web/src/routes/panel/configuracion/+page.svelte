@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { deslizable } from '#lib/panel/deslizable.ts';
 	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Icon from '#lib/components/Icon.svelte';
@@ -166,7 +167,7 @@
 	</div>
 
 	<div class="grilla" use:anim={{ t: 'rise', delay: 60 }}>
-		<nav class="tabs" aria-label="Secciones">
+		<nav class="tabs" aria-label="Secciones" use:deslizable>
 			{#each TABS as [id, icono, t] (id)}
 				<button
 					type="button"

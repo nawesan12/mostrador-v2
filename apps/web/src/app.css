@@ -419,3 +419,14 @@ html.lenis body {
 body {
 	text-wrap: pretty;
 }
+
+/* Filas deslizables (lib/panel/deslizable.ts): el degradé dice que hay más de ese lado. */
+[data-deslizable][data-mas='der'] {
+	mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
+}
+[data-deslizable][data-mas='izq'] {
+	mask-image: linear-gradient(90deg, transparent, #000 40px);
+}
+[data-deslizable][data-mas='ambos'] {
+	mask-image: linear-gradient(90deg, transparent, #000 40px, #000 calc(100% - 40px), transparent);
+}

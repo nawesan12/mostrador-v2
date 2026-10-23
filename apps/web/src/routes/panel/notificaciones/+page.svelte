@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { deslizable } from '#lib/panel/deslizable.ts';
 	import Icon from '#lib/components/Icon.svelte';
 	import Interruptor from '#lib/components/Interruptor.svelte';
 	import Seo from '#lib/components/Seo.svelte';
@@ -67,7 +68,7 @@
 	</div>
 
 	<div class="tarjeta" use:anim={{ t: 'rise', delay: 50 }}>
-		<div class="desliza">
+		<div class="desliza" use:deslizable>
 			<div class="tabla">
 				<div class="fila cab-t">
 					<span>Aviso</span>

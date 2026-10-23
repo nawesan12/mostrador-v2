@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { deslizable } from '#lib/panel/deslizable.ts';
 	import { invalidateAll } from '$app/navigation';
 	import Icon from '#lib/components/Icon.svelte';
 	import Modal from '#lib/components/Modal.svelte';
@@ -144,7 +145,7 @@
 				<span class="areas"
 					>{#each AREAS[m.rol] as a (a)}<span>{a}</span>{/each}</span
 				>
-				<span class="roles" role="group" aria-label="Rol de {m.nombre}">
+				<span class="roles" role="group" aria-label="Rol de {m.nombre}" use:deslizable>
 					{#each ROLES as r (r)}
 						<button
 							type="button"
@@ -170,7 +171,7 @@
 		<div class="mz-cab">
 			<span>Qué puede hacer cada rol</span><span class="mz-s">Tocá un permiso para cambiarlo</span>
 		</div>
-		<div class="desliza">
+		<div class="desliza" use:deslizable>
 			<div class="tabla">
 				<div class="fila cab-t">
 					<span>Permiso</span>{#each ROLES as r (r)}<span>{NOMBRE_ROL[r]}</span>{/each}
