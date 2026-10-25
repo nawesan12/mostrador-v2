@@ -6,8 +6,10 @@
 import type { Carrito } from './carrito.svelte.ts';
 import type { ProductoPublico, VariantePublica } from './tipos.ts';
 import {
+	colorDe,
 	elegirVariante,
 	faltaElegir,
+	fotoDelValor,
 	precioDe,
 	precioDesde,
 	textoVariante,
@@ -22,6 +24,8 @@ export type ValorOpcion = {
 	disponible: boolean;
 	/** La foto de las variantes con ese valor (para swatches con foto). */
 	foto: string | null;
+	/** El color, si la opción es Color y el valor uno conocido (para swatches de color). */
+	color: string | null;
 };
 
 export class Seleccion {
@@ -62,7 +66,8 @@ export class Seleccion {
 					valor,
 					elegido: this.elegidos[o.nombre] === valor,
 					disponible: disp[valor],
-					foto: this.variantes.find((v) => v.valores[o.nombre] === valor && v.foto)?.foto ?? null
+					foto: fotoDelValor(this.variantes, o.nombre, valor),
+					color: colorDe(o.nombre, valor)
 				}))
 			};
 		});

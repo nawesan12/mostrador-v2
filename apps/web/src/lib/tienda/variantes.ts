@@ -202,3 +202,54 @@ export function errorVariantes(
 	}
 	return null;
 }
+
+/**
+ * La foto de un valor (para swatches): sólo si todas las variantes con ese valor tienen la misma.
+ * Así el color lleva su foto y el talle no (cada talle viene en varios colores).
+ */
+export function fotoDelValor(
+	variantes: (ConValores & { foto: string | null })[],
+	opcion: string,
+	valor: string
+) {
+	const fotos = new Set(variantes.filter((v) => v.valores[opcion] === valor).map((v) => v.foto));
+	const [f] = fotos;
+	return fotos.size === 1 ? (f ?? null) : null;
+}
+
+const COLORES: Record<string, string> = {
+	negro: '#2B2622',
+	blanco: '#F7F5F0',
+	crudo: '#EDE4D3',
+	natural: '#D9C3A0',
+	arena: '#D8C3A5',
+	beige: '#D9C7AE',
+	nude: '#E3BFA6',
+	camel: '#B98B5E',
+	suela: '#9A6236',
+	marron: '#6B4A33',
+	chocolate: '#4E3426',
+	gris: '#8E8E8C',
+	'gris melange': '#A7A6A3',
+	'gris topo': '#7C7268',
+	verde: '#6E7B6A',
+	'verde oliva': '#6B6B3A',
+	azul: '#2F4A6B',
+	'azul marino': '#1F2A44',
+	celeste: '#9CC3DE',
+	rojo: '#A8322D',
+	bordo: '#6B1F2A',
+	rosa: '#E4A9B4',
+	amarillo: '#E7C552',
+	naranja: '#D9772F',
+	violeta: '#6E4F8A',
+	lila: '#B7A2CF',
+	dorado: '#C9A44C',
+	plateado: '#C0C0C0'
+};
+
+/** El color de un valor de la opción Color ("Negro", "Gris melange"), o null si no es conocido. */
+export function colorDe(opcion: string, valor: string) {
+	if (!/^colou?r(es)?$/.test(normal(opcion))) return null;
+	return COLORES[normal(valor)] ?? null;
+}

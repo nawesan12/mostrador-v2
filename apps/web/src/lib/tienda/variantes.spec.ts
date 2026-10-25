@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
 	agotado,
+	colorDe,
 	combinaciones,
 	elegirVariante,
 	errorOpciones,
 	errorVariantes,
 	faltaElegir,
+	fotoDelValor,
 	generarVariantes,
 	precioDesde,
 	stockTotal,
@@ -148,5 +150,21 @@ describe('variantes', () => {
 			/galería/
 		);
 		expect(errorVariantes([], variantes, [])).toMatch(/Sin opciones/);
+	});
+
+	it('swatches: el color por su nombre y la foto sólo si el valor tiene una sola', () => {
+		expect(colorDe('Color', 'Negro')).toBe('#2B2622');
+		expect(colorDe('color', 'Marrón')).toBe(colorDe('Color', 'marron'));
+		expect(colorDe('Talle', 'Negro')).toBeNull();
+		expect(colorDe('Color', 'Tornasolado')).toBeNull();
+		const conFoto = [
+			{ ...v('S', 'Negro', 1), foto: 'n' },
+			{ ...v('M', 'Negro', 1), foto: 'n' },
+			{ ...v('S', 'Arena', 1), foto: 'a' }
+		];
+		expect(fotoDelValor(conFoto, 'Color', 'Negro')).toBe('n');
+		// Cada talle viene en varios colores: no tiene una foto propia.
+		expect(fotoDelValor(conFoto, 'Talle', 'S')).toBeNull();
+		expect(fotoDelValor(conFoto, 'Talle', 'XL')).toBeNull();
 	});
 });
