@@ -69,10 +69,14 @@ func TestMailsAQuienCompra(t *testing.T) {
 	}
 	// Al menos una vez del outbox, una sola vez el mail: reencolar el mismo aviso no manda otro.
 	antes := len(mails.Enviados)
-	_ = b.App.EnTienda(ctx, luna, func(tx pgx.Tx) error {
+	if err := b.App.EnTienda(ctx, luna, func(tx pgx.Tx) error {
 		return outbox.Publicar(ctx, tx, luna, "comprador.aviso", map[string]any{"numero": r.Numero, "aviso": "confirmacion"})
-	})
-	_, _ = w.Pasada(ctx)
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := w.Pasada(ctx); err != nil {
+		t.Fatal(err)
+	}
 	if len(mails.Enviados) != antes {
 		t.Fatal("se mandó la confirmación dos veces")
 	}

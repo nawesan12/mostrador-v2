@@ -56,7 +56,13 @@ func correr() error {
 	}
 	ml := mercadolibre.DesdeConfig(app, cfg.OAuth["mercadolibre"][0], cfg.OAuth["mercadolibre"][1], cfg.Sitio,
 		cfg.ClaveCifrado, slog.Default())
-	// Mails a quien compra (confirmación, pago, en camino, retiro): el mismo correo que la API.
+	// Mails a quien compra (confirmación, pago, en camino, retiro): el mismo correo que la API, y
+	// como en la API, sin Resend fuera de desarrollo no arranca (no se manda a Mailpit en producción).
+	if !cfg.Desarrollo() {
+		if err := cfg.Exigir("ResendClave"); err != nil {
+			return err
+		}
+	}
 	var mails correo.Correo = &correo.SMTP{Direccion: cfg.SMTP, De: cfg.CorreoDe}
 	if cfg.ResendClave != "" {
 		mails = &correo.Resend{Clave: cfg.ResendClave, De: cfg.CorreoDe}

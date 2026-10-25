@@ -4174,8 +4174,9 @@ export interface operations {
                         pago: string;
                         nombre: string;
                         estadoPago: string;
-                        estado: string;
-                        envio: string;
+                        estado: components["schemas"]["EstadoPedido"];
+                        /** @enum {string} */
+                        envio: "retiro" | "andreani" | "oca" | "correo" | "moto" | "mercadoenvios";
                         seguimiento: string | null;
                         alias: string | null;
                         cbu: string | null;

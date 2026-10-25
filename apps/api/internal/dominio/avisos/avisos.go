@@ -97,11 +97,14 @@ func (s *Servicio) manejar(ctx context.Context, ev outbox.Evento) error {
 		p.alias, p.cbu, p.titular, p.whatsapp, p.direccion = n.Alias, n.CBU, n.Titular, n.Whatsapp, n.Direccion
 		return nil
 	})
-	if errors.Is(err, pgx.ErrNoRows) || ya || p.email == "" {
+	if errors.Is(err, pgx.ErrNoRows) {
 		return nil
 	}
 	if err != nil {
 		return err
+	}
+	if ya || p.email == "" {
+		return nil
 	}
 	m, ok := s.mail(p, d.Aviso)
 	if !ok {
