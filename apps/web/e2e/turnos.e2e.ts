@@ -30,13 +30,20 @@ async function elegir(page: Page, slug: string) {
 		.getByRole('radiogroup', { name: 'Día' })
 		.locator('[role=radio]:not([disabled])');
 	for (let i = 1; i < (await dias.count()); i++) {
+		// Hasta que llegan los horarios del día nuevo se ven los del anterior: esperar la respuesta.
+		const llegan = page.waitForResponse((r) => r.url().includes('/turnos/libres?'));
 		await dias.nth(i).click();
+		await llegan;
 		await expect(horarios(page).first()).toBeVisible();
 		const libre = page.locator(
 			'[role=radiogroup][aria-label^="Horarios"] [role=radio]:not([disabled])'
 		);
 		if (await libre.count()) {
-			await libre.first().click();
+			// Si el clic cayó mientras cargaba, no queda elegido: se reintenta.
+			await expect(async () => {
+				await libre.first().click();
+				await expect(libre.first()).toHaveAttribute('aria-checked', 'true', { timeout: 1000 });
+			}).toPass();
 			break;
 		}
 	}

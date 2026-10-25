@@ -157,7 +157,8 @@ export class Reserva {
 		void this.cargar();
 	}
 	elegirHorario(h: Horario) {
-		if (h.libre) this.inicio = h.inicio;
+		// Mientras llegan los del día nuevo, la lista que se ve es la del anterior: no se elige.
+		if (h.libre && !this.cargando) this.inicio = h.inicio;
 	}
 
 	async cargar() {
