@@ -6,7 +6,7 @@ Escribís UN componente Svelte 5 (runes, TypeScript) por plantilla: `S/<Nombre s
 
 ## Contexto
 
-Mostrador es una plataforma de tiendas online argentinas (SvelteKit 5). Hay dos plantillas terminadas que son tu MODELO EXACTO de cómo se enchufan los datos reales a un marcado del handoff (leelas desde `origin/main`):
+Mostrador es una plataforma de tiendas online argentinas (SvelteKit 3 con Svelte 5). Hay dos plantillas terminadas que son tu MODELO EXACTO de cómo se enchufan los datos reales a un marcado del handoff (leelas desde `origin/main`):
 
 - `apps/web/src/lib/tienda/plantillas/Ceibo.svelte` (modelo principal: leelo ENTERO antes de empezar) y `apps/web/src/lib/tienda/plantillas/Motor.svelte`.
 - Tipos: `apps/web/src/lib/tienda/tipos.ts`; `carrito.svelte.ts`, `envio.ts`, `titulo.ts` (partirTitulo), en `apps/web/src/lib/tienda/`.
