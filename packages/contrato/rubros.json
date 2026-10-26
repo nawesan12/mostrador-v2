@@ -1,15 +1,80 @@
 [
-	{ "id": "moda", "nombre": "Moda", "plantilla": "ceibo", "tienda": "Tienda Lumbre" },
-	{ "id": "gastronomia", "nombre": "Gastronomía", "plantilla": "mostaza", "tienda": "Café Bruma" },
-	{ "id": "almacen", "nombre": "Almacén", "plantilla": "yerbal", "tienda": "Almacén Verde" },
-	{ "id": "belleza", "nombre": "Belleza", "plantilla": "rosedal", "tienda": "Rosa Mosqueta" },
-	{ "id": "hogar", "nombre": "Hogar", "plantilla": "quebracho", "tienda": "Casa Nido" },
-	{ "id": "tecnologia", "nombre": "Tecnología", "plantilla": "andes", "tienda": "Sonido Sur" },
-	{ "id": "bebidas", "nombre": "Bebidas", "plantilla": "malbec", "tienda": "Vinoteca Tres" },
-	{ "id": "mascotas", "nombre": "Mascotas", "plantilla": "patio", "tienda": "Huellitas" },
-	{ "id": "artesanias", "nombre": "Artesanías", "plantilla": "taller", "tienda": "Madera Viva" },
-	{ "id": "accesorios", "nombre": "Accesorios", "plantilla": "hora", "tienda": "Relojería Norte" },
-	{ "id": "regionales", "nombre": "Regionales", "plantilla": "litoral", "tienda": "Mate & Co" },
-	{ "id": "arte", "nombre": "Arte y diseño", "plantilla": "torno", "tienda": "Estudio Arcilla" },
-	{ "id": "servicios", "nombre": "Servicios", "plantilla": "tijera", "tienda": "Navaja" }
+  {
+    "id": "moda",
+    "nombre": "Moda",
+    "plantilla": "ceibo",
+    "tienda": "Tienda Lumbre"
+  },
+  {
+    "id": "gastronomia",
+    "nombre": "Gastronomía",
+    "plantilla": "mostaza",
+    "tienda": "Café Bruma"
+  },
+  {
+    "id": "almacen",
+    "nombre": "Almacén",
+    "plantilla": "yerbal",
+    "tienda": "Almacén Verde"
+  },
+  {
+    "id": "belleza",
+    "nombre": "Belleza",
+    "plantilla": "rosedal",
+    "tienda": "Rosa Mosqueta"
+  },
+  {
+    "id": "hogar",
+    "nombre": "Hogar",
+    "plantilla": "quebracho",
+    "tienda": "Casa Nido"
+  },
+  {
+    "id": "tecnologia",
+    "nombre": "Tecnología",
+    "plantilla": "andes",
+    "tienda": "Sonido Sur"
+  },
+  {
+    "id": "bebidas",
+    "nombre": "Bebidas",
+    "plantilla": "malbec",
+    "tienda": "Vinoteca Tres"
+  },
+  {
+    "id": "mascotas",
+    "nombre": "Mascotas",
+    "plantilla": "patio",
+    "tienda": "Huellitas"
+  },
+  {
+    "id": "artesanias",
+    "nombre": "Artesanías",
+    "plantilla": "taller",
+    "tienda": "Madera Viva"
+  },
+  {
+    "id": "accesorios",
+    "nombre": "Accesorios",
+    "plantilla": "hora",
+    "tienda": "Relojería Norte"
+  },
+  {
+    "id": "regionales",
+    "nombre": "Regionales",
+    "plantilla": "litoral",
+    "tienda": "Mate & Co"
+  },
+  {
+    "id": "arte",
+    "nombre": "Arte y diseño",
+    "plantilla": "torno",
+    "tienda": "Estudio Arcilla"
+  },
+  {
+    "id": "servicios",
+    "nombre": "Servicios",
+    "plantilla": "tijera",
+    "tienda": "Navaja"
+  }
 ]

@@ -1,13 +1,13 @@
 {
-	"name": "@mostrador/contrato",
-	"private": true,
-	"type": "module",
-	"exports": {
-		"./esquema": "./src/esquema.ts",
-		"./rubros.json": "./rubros.json",
-		"./casos/*": "./casos/*"
-	},
-	"scripts": {
-		"gen": "openapi-typescript openapi.yaml -o src/esquema.ts"
-	}
+  "name": "@mostrador/contrato",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./esquema": "./src/esquema.ts",
+    "./rubros.json": "./rubros.json",
+    "./casos/*": "./casos/*"
+  },
+  "scripts": {
+    "gen": "openapi-typescript openapi.yaml -o src/esquema.ts"
+  }
 }

@@ -81,6 +81,12 @@ export class Carrito {
 		this.#guardar();
 	}
 
+	/** Vuelve a armar un carrito guardado (el link del recordatorio): reemplaza lo que había. */
+	restaurar(lineas: Linea[]) {
+		this.lineas = migrarLineas(lineas);
+		this.#guardar();
+	}
+
 	/** Las líneas con su producto (precio, foto y stock de la variante). */
 	detalle(productos: ProductoPublico[]) {
 		return detalleLineas(this.lineas, productos);

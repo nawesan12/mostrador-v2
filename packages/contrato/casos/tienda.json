@@ -1,12 +1,12 @@
 {
-	"descripcion": "Una tienda recién sembrada con el rubro gastronomía. Los campos que dependen de la corrida (id, creadaEn) se comparan por forma, no por valor.",
-	"siembra": { "rubro": "gastronomia", "slug": "cafe-bruma" },
-	"esperado": {
-		"slug": "cafe-bruma",
-		"nombre": "Café Bruma",
-		"rubro": "gastronomia",
-		"plantilla": "mostaza",
-		"plan": "gratis"
-	},
-	"forma": { "id": "uuid", "creadaEn": "fecha-hora" }
+  "descripcion": "Una tienda recién sembrada con el rubro gastronomía. Los campos que dependen de la corrida (id, creadaEn) se comparan por forma, no por valor.",
+  "siembra": { "rubro": "gastronomia", "slug": "cafe-bruma" },
+  "esperado": {
+    "slug": "cafe-bruma",
+    "nombre": "Café Bruma",
+    "rubro": "gastronomia",
+    "plantilla": "mostaza",
+    "plan": "gratis"
+  },
+  "forma": { "id": "uuid", "creadaEn": "fecha-hora" }
 }

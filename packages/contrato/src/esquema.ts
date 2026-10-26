@@ -830,6 +830,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/publico/tiendas/{slug}/carritos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Guarda el carrito de quien dejó su email en el checkout (uno abierto por email; se cierra solo si compra). Tope de 60 por hora por IP. */
+        post: operations["guardarCarritoTienda"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/publico/tiendas/{slug}/carritos/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Las líneas del carrito del link del recordatorio, para volver a armarlo. 404 si ya compró o no existe. */
+        get: operations["carritoPorToken"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/publico/tiendas/{slug}/pedidos/{codigo}": {
         parameters: {
             query?: never;
@@ -4981,6 +5015,76 @@ export interface operations {
             400: components["responses"]["Problema"];
             404: components["responses"]["Problema"];
             429: components["responses"]["Problema"];
+        };
+    };
+    guardarCarritoTienda: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    email: string;
+                    nombre?: string;
+                    carrito: {
+                        id: string;
+                        varianteId?: string | null;
+                        cantidad: number;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            /** @description Guardado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
+            /** @description Demasiados carritos desde esa IP */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    carritoPorToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Carrito */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        carrito: {
+                            id: string;
+                            varianteId?: string | null;
+                            cantidad: number;
+                        }[];
+                    };
+                };
+            };
+            404: components["responses"]["Problema"];
         };
     };
     confirmacionPedido: {
