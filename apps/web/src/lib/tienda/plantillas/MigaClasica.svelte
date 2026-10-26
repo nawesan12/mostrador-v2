@@ -35,6 +35,7 @@
 			pago: string;
 			nombre: string;
 			alias: string | null;
+			esCbu?: boolean;
 		} | null;
 		error?: string | null;
 	} = $props();
@@ -258,13 +259,17 @@
 	const iconoEnvio = (id: OpcionEnvio['id']) =>
 		id === 'retiro' ? I.phStorefrontFill : id === 'moto' ? I.phMopedFill : I.phTruck;
 	const pagos = $derived([
-		{
-			id: 'transferencia' as const,
-			t: 'Transferencia',
-			d: `${tienda.cobros.transferencia}% off · alias al confirmar`,
-			i: I.phBankFill,
-			c: '#2F7A43'
-		},
+		...(tienda.cobros.datosTransferencia
+			? [
+					{
+						id: 'transferencia' as const,
+						t: 'Transferencia',
+						d: `${tienda.cobros.transferencia}% off · alias al confirmar`,
+						i: I.phBankFill,
+						c: '#2F7A43'
+					}
+				]
+			: []),
 		...(tienda.cobros.mercadoPago
 			? [
 					{
@@ -277,6 +282,10 @@
 				]
 			: [])
 	]);
+	// Sin datos de transferencia cargados, el medio de pago es el primero disponible.
+	$effect(() => {
+		if (pagos.length && !pagos.some((x) => x.id === pago)) pago = pagos[0].id;
+	});
 
 	// Nosotros: cómo llega el pedido (la tarjeta de "Horarios" del diseño, con los envíos de la tienda).
 	const llegadas = $derived([
@@ -1221,13 +1230,15 @@
 								{error}
 							</div>{/if}
 						<button
-							disabled={!envio || enviando || tienda.vitrina}
+							disabled={!envio || !pagos.length || enviando || tienda.vitrina}
 							style="padding:17px;border:0;border-radius:999px;background:#B5651D;color:#FBF1E6;font:700 15.5px 'Instrument Sans';cursor:pointer;display:flex;justify-content:center;align-items:center;gap:8px"
 							><Icon icon={I.phLockSimpleFill} size={16} />{tienda.vitrina
 								? 'Es una tienda de ejemplo'
-								: envio
-									? `Pagar ${fmt(total)}`
-									: 'Elegí cómo te llega'}</button
+								: !pagos.length
+									? 'Esta tienda todavía no tiene medios de pago'
+									: envio
+										? `Pagar ${fmt(total)}`
+										: 'Elegí cómo te llega'}</button
 						>
 					</div>
 					<div
@@ -1307,8 +1318,9 @@
 						style="margin-top:24px;padding:22px;border-radius:28px;background:#3A2414;color:#FBF1E6;text-align:left;font-size:14.5px;line-height:1.6"
 					>
 						<b>Transferí {fmt(pedido.total)}</b>
-						{#if pedido.alias}al alias <b style="color:#F2B36E">{pedido.alias}</b>{:else}con los
-							datos que te mandamos por mail{/if} y mandanos el comprobante{#if whatsapp}&nbsp;<a
+						{#if pedido.alias}al {pedido.esCbu ? 'CBU/CVU' : 'alias'}
+							<b style="color:#F2B36E">{pedido.alias}</b>{:else}con los datos que te mandamos por
+							mail{/if} y mandanos el comprobante{#if whatsapp}&nbsp;<a
 								href={wa(`¡Hola! Te mando el comprobante del pedido #${pedido.numero}.`)}
 								target="_blank"
 								rel="noopener"

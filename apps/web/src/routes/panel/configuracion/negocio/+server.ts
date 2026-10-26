@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import * as v from 'valibot';
+import { cbuValido } from '#lib/panel/cbu.ts';
 import { datosDe } from '#lib/server/datos/index.ts';
 import type { RequestHandler } from './$types';
 
@@ -12,7 +13,30 @@ const Negocio = v.object({
 	direccion: txt(160),
 	whatsapp: txt(30),
 	email: v.pipe(txt(120), v.regex(/^$|^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Revisá el email.')),
-	horario: txt(80)
+	horario: txt(80),
+	// Para cobrar por transferencia en la tienda online (sin alias ni CBU no se ofrece).
+	alias: v.optional(
+		v.pipe(
+			txt(20),
+			v.regex(
+				/^$|^[a-zA-Z0-9.-]{6,20}$/,
+				'El alias tiene de 6 a 20 letras, números, puntos o guiones.'
+			)
+		),
+		''
+	),
+	cbu: v.optional(
+		v.pipe(
+			txt(26),
+			v.transform((s) => s.replace(/\s/g, '')),
+			v.check(
+				(s) => s === '' || cbuValido(s),
+				'Revisá el CBU/CVU: tiene 22 números y algún dígito no coincide.'
+			)
+		),
+		''
+	),
+	titular: v.optional(txt(80), '')
 });
 
 /** Datos del negocio. */

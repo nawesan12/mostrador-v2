@@ -64,6 +64,10 @@ func (r *Resend) Enviar(ctx context.Context, m Mensaje) error {
 type SMTP struct{ Direccion, De string }
 
 func (s *SMTP) Enviar(_ context.Context, m Mensaje) error {
+	// Para y Asunto van en los encabezados: un salto de línea metería encabezados ajenos.
+	if strings.ContainsAny(m.Para+m.Asunto, "\r\n") {
+		return fmt.Errorf("correo: salto de línea en Para o Asunto")
+	}
 	frontera := "mostrador-frontera"
 	var b strings.Builder
 	fmt.Fprintf(&b, "From: %s\r\nTo: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\n", s.De, m.Para, m.Asunto)

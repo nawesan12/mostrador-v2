@@ -141,10 +141,14 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 			}
 			out.Paleta = d.Paleta
 		}
-		var n struct{ Direccion, Whatsapp string }
+		var n struct{ Direccion, Whatsapp, Alias, CBU, Titular string }
 		_ = json.Unmarshal(negocio, &n)
 		out.Direccion, out.Whatsapp = n.Direccion, n.Whatsapp
-		out.Cobros = map[string]any{"transferencia": transferencia, "cuotas": cuotas, "mercadoPago": mp}
+		out.Cobros = map[string]any{"transferencia": transferencia, "cuotas": cuotas, "mercadoPago": mp, "datosTransferencia": nil}
+		// Sin alias ni CBU cargados no se ofrece transferencia (nunca un alias inventado).
+		if n.Alias != "" || n.CBU != "" {
+			out.Cobros["datosTransferencia"] = map[string]string{"alias": n.Alias, "cbu": n.CBU, "titular": n.Titular}
+		}
 
 		filas, err := t.Query(ctx, `SELECT id::text, nombre, descripcion, categoria, precio, foto, stock FROM productos
 			WHERE tienda_id = $1 AND publicado AND coalesce((canales->>'web')::boolean, true) ORDER BY creado_en DESC LIMIT 500`, id)
@@ -272,6 +276,9 @@ func Comprar(ctx context.Context, pool tx, mp Pagador, sitio, slug string, c Com
 	if c.Pago == "mercadopago" && (mp == nil || t.Cobros["mercadoPago"] != true) {
 		return Resultado{}, ErrInvalido
 	}
+	if c.Pago == "transferencia" && t.Cobros["datosTransferencia"] == nil {
+		return Resultado{}, ErrInvalido
+	}
 	porID := map[string]ProductoPublico{}
 	for _, p := range t.Productos {
 		porID[p.ID] = p
@@ -329,13 +336,19 @@ func Comprar(ctx context.Context, pool tx, mp Pagador, sitio, slug string, c Com
 	return r, err
 }
 
-// Confirmacion es lo que muestra la página del pedido.
+// Confirmacion es lo que muestra la página del pedido (y su seguimiento).
 type Confirmacion struct {
-	Numero     int    `json:"numero"`
-	Total      int64  `json:"total"`
-	Pago       string `json:"pago"`
-	Nombre     string `json:"nombre"`
-	EstadoPago string `json:"estadoPago"`
+	Numero      int     `json:"numero"`
+	Total       int64   `json:"total"`
+	Pago        string  `json:"pago"`
+	Nombre      string  `json:"nombre"`
+	EstadoPago  string  `json:"estadoPago"`
+	Estado      string  `json:"estado"`
+	Envio       string  `json:"envio"`
+	Seguimiento *string `json:"seguimiento"`
+	Alias       *string `json:"alias"`
+	CBU         *string `json:"cbu"`
+	Titular     *string `json:"titular"`
 }
 
 // VerPedido por su código público.
@@ -346,9 +359,11 @@ func VerPedido(ctx context.Context, pool tx, slug, codigo string) (Confirmacion,
 	}
 	var c Confirmacion
 	err = pool.EnTienda(ctx, id, func(t pgx.Tx) error {
-		return t.QueryRow(ctx, `SELECT numero, total, CASE WHEN pago = 'mp' THEN 'mercadopago' ELSE 'transferencia' END,
-				split_part(comprador->>'nombre', ' ', 1), estado_pago
-			FROM pedidos WHERE codigo_publico = $1`, codigo).Scan(&c.Numero, &c.Total, &c.Pago, &c.Nombre, &c.EstadoPago)
+		return t.QueryRow(ctx, `SELECT p.numero, p.total, CASE WHEN p.pago = 'mp' THEN 'mercadopago' ELSE 'transferencia' END,
+				split_part(p.comprador->>'nombre', ' ', 1), p.estado_pago, p.estado, p.envio, p.seguimiento,
+				nullif(t.negocio->>'alias', ''), nullif(t.negocio->>'cbu', ''), nullif(t.negocio->>'titular', '')
+			FROM pedidos p JOIN tiendas t ON t.id = p.tienda_id WHERE p.codigo_publico = $1`, codigo).
+			Scan(&c.Numero, &c.Total, &c.Pago, &c.Nombre, &c.EstadoPago, &c.Estado, &c.Envio, &c.Seguimiento, &c.Alias, &c.CBU, &c.Titular)
 	})
 	if errors.Is(err, pgx.ErrNoRows) {
 		return c, ErrNoExiste

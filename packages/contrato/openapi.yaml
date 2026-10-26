@@ -767,7 +767,7 @@ paths:
         - { name: slug, in: path, required: true, schema: { type: string } }
         - { name: codigo, in: path, required: true, schema: { type: string } }
       responses:
-        '200': { description: Pedido, content: { application/json: { schema: { type: object, required: [numero, total, pago, nombre, estadoPago], properties: { numero: { type: integer }, total: { type: integer }, pago: { type: string }, nombre: { type: string }, estadoPago: { type: string } } } } } }
+        '200': { description: Pedido y su seguimiento, content: { application/json: { schema: { type: object, required: [numero, total, pago, nombre, estadoPago, estado, envio, seguimiento, alias, cbu, titular], properties: { numero: { type: integer }, total: { type: integer }, pago: { type: string }, nombre: { type: string }, estadoPago: { type: string }, estado: { $ref: '#/components/schemas/EstadoPedido' }, envio: { type: string, enum: [retiro, andreani, oca, correo, moto, mercadoenvios] }, seguimiento: { type: [string, 'null'] }, alias: { type: [string, 'null'] }, cbu: { type: [string, 'null'] }, titular: { type: [string, 'null'] } } } } } }
         '404': { $ref: '#/components/responses/Problema' }
   /v1/panel/integraciones/mercadolibre:
     get:
@@ -2356,6 +2356,9 @@ components:
         whatsapp: { type: string, maxLength: 30 }
         email: { type: string, maxLength: 120 }
         horario: { type: string, maxLength: 80 }
+        alias: { type: string, maxLength: 20, pattern: '^([a-zA-Z0-9.-]{6,20})?$', description: 'Alias para cobrar por transferencia (6 a 20 caracteres; vacío si no hay)' }
+        cbu: { type: string, maxLength: 22, pattern: '^([0-9]{22})?$', description: 'CBU o CVU de 22 dígitos, con sus verificadores (vacío si no hay)' }
+        titular: { type: string, maxLength: 80 }
     Miembro:
       type: object
       required: [id, nombre, contacto, rol, foto, ultimo, pendiente, vos, dobleFactor]

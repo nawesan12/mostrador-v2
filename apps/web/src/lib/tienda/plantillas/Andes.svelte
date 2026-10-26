@@ -35,6 +35,7 @@
 			pago: string;
 			nombre: string;
 			alias: string | null;
+			esCbu?: boolean;
 		} | null;
 		error?: string | null;
 	} = $props();
@@ -339,14 +340,18 @@
 		rc: on ? '#2F6BFF' : '#C5CCD6'
 	});
 	const pagos = $derived([
-		{
-			id: 'transferencia' as const,
-			t: 'Transferencia',
-			d: `${tienda.cobros.transferencia}% off · te mandamos el alias al confirmar`,
-			i: I.phBankFill,
-			c: '#14894B',
-			p: fmt(subtotal * (1 - tienda.cobros.transferencia / 100))
-		},
+		...(tienda.cobros.datosTransferencia
+			? [
+					{
+						id: 'transferencia' as const,
+						t: 'Transferencia',
+						d: `${tienda.cobros.transferencia}% off · te mandamos el alias al confirmar`,
+						i: I.phBankFill,
+						c: '#14894B',
+						p: fmt(subtotal * (1 - tienda.cobros.transferencia / 100))
+					}
+				]
+			: []),
 		...(tienda.cobros.mercadoPago
 			? [
 					{
@@ -360,6 +365,10 @@
 				]
 			: [])
 	]);
+	// Sin datos de transferencia cargados, el medio de pago es el primero disponible.
+	$effect(() => {
+		if (pagos.length && !pagos.some((x) => x.id === pago)) pago = pagos[0].id;
+	});
 
 	const foot = $derived([
 		{
@@ -1564,13 +1573,15 @@
 									{error}
 								</div>{/if}
 							<button
-								disabled={!envio || enviando || tienda.vitrina}
+								disabled={!envio || !pagos.length || enviando || tienda.vitrina}
 								style="padding:17px;border:0;border-radius:14px;background:#2F6BFF;color:#fff;font:700 15.5px 'Instrument Sans';cursor:pointer;display:flex;justify-content:center;align-items:center;gap:8px"
 								><Icon icon={I.phLockSimpleFill} size={16} />{tienda.vitrina
 									? 'Es una tienda de ejemplo'
-									: envio
-										? `Pagar ${fmt(total)}`
-										: 'Elegí cómo te llega'}</button
+									: !pagos.length
+										? 'Esta tienda todavía no tiene medios de pago'
+										: envio
+											? `Pagar ${fmt(total)}`
+											: 'Elegí cómo te llega'}</button
 							>
 							<div
 								style="display:flex;justify-content:center;gap:12px;align-items:center;flex-wrap:wrap;color:#69717E;font-size:12.5px"
@@ -1663,8 +1674,9 @@
 								<Icon icon={I.phBankFill} size={22} style="color:#2F6BFF;flex:none" />
 								<span
 									><b>Transferí {fmt(pedido.total)}</b>
-									{#if pedido.alias}al alias <b>{pedido.alias}</b>{:else}con los datos que te
-										mandamos por mail{/if} y mandanos el comprobante{#if whatsapp}&nbsp;<a
+									{#if pedido.alias}al {pedido.esCbu ? 'CBU/CVU' : 'alias'}
+										<b>{pedido.alias}</b>{:else}con los datos que te mandamos por mail{/if} y mandanos
+									el comprobante{#if whatsapp}&nbsp;<a
 											href={wa(`¡Hola! Te mando el comprobante del pedido #${pedido.numero}.`)}
 											target="_blank"
 											rel="noopener"

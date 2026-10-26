@@ -8,6 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/configuracion"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/listas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/vidriera"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db/pruebadb"
@@ -35,6 +36,10 @@ func TestTiendaOnline(t *testing.T) {
 	b := pruebadb.Nueva(t)
 	luna := pruebadb.CrearTienda(t, b.App, "luna")
 	sol := pruebadb.CrearTienda(t, b.App, "sol")
+	// Sin alias ni CBU no se ofrece transferencia: la tienda los carga.
+	if err := configuracion.GuardarNegocio(ctx, b.App, luna, configuracion.Negocio{Nombre: "Luna", Alias: "luna.tienda"}); err != nil {
+		t.Fatal(err)
+	}
 	stock := 3
 	cat := "Mates"
 	p, err := listas.Guardar(ctx, b.App, luna, "", listas.Editable{Nombre: "Mate de calabaza", Categoria: &cat, Precio: 10000, Stock: &stock})

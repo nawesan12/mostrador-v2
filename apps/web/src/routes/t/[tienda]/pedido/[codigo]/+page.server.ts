@@ -14,12 +14,22 @@ export const load: PageServerLoad = async ({ params, cookies, url }) => {
 			`${String(env.API_URL)}/v1/publico/tiendas/${r.tienda.slug}/pedidos/${encodeURIComponent(params.codigo)}`
 		);
 		if (!res.ok) error(404, 'No encontramos ese pedido.');
-		const c = (await res.json()) as { numero: number; total: number; pago: string; nombre: string };
+		const c = (await res.json()) as {
+			numero: number;
+			total: number;
+			pago: string;
+			nombre: string;
+			estado: string;
+			envio: string;
+			seguimiento: string | null;
+			alias: string | null;
+			cbu: string | null;
+			titular: string | null;
+		};
+		// Los datos para transferir son los que cargó la tienda (nunca inventados). Sin alias, el CBU/CVU.
+		const tr = c.pago === 'transferencia';
 		return {
-			pedido: {
-				...c,
-				alias: c.pago === 'transferencia' ? `${r.tienda.slug.replace(/-/g, '.')}.mp` : null
-			}
+			pedido: { ...c, alias: tr ? (c.alias ?? c.cbu) : null, esCbu: tr && !c.alias && !!c.cbu }
 		};
 	}
 	const numero = Number(params.codigo.split('-')[0]);
@@ -34,13 +44,16 @@ export const load: PageServerLoad = async ({ params, cookies, url }) => {
 	if (!p) error(404, 'No encontramos ese pedido.');
 	const pago = url.searchParams.get('pago') === 'mercadopago' ? 'mercadopago' : 'transferencia';
 	const total = Number(url.searchParams.get('total')) || p.total;
+	const dt = pago === 'transferencia' ? r.tienda.cobros.datosTransferencia : null;
 	return {
 		pedido: {
 			numero,
 			total,
 			pago,
 			nombre: p.cliente.split(' ')[0],
-			alias: pago === 'transferencia' ? `${r.tienda.slug.replace(/-/g, '.')}.mp` : null
+			alias: dt?.alias || dt?.cbu || null,
+			esCbu: !!dt && !dt.alias && !!dt.cbu,
+			titular: r.tienda.cobros.datosTransferencia?.titular ?? null
 		}
 	};
 };
