@@ -1498,14 +1498,14 @@
 									aria-label="Días anteriores"
 									disabled={!reserva.hayAntes}
 									onclick={() => reserva.mover(-1)}
-									style="display:grid;padding:4px;border:0;background:transparent;color:inherit;cursor:pointer"
+									style="display:grid;place-items:center;min-width:44px;min-height:44px;padding:4px;border:0;background:transparent;color:inherit;cursor:pointer"
 									><Icon icon={I.phCaretLeftBold} size={14} /></button
 								>{/if}{reserva.mes}{#if reserva.hayAntes || reserva.hayDespues}<button
 									type="button"
 									aria-label="Días siguientes"
 									disabled={!reserva.hayDespues}
 									onclick={() => reserva.mover(1)}
-									style="display:grid;padding:4px;border:0;background:transparent;color:inherit;cursor:pointer"
+									style="display:grid;place-items:center;min-width:44px;min-height:44px;padding:4px;border:0;background:transparent;color:inherit;cursor:pointer"
 									><Icon icon={I.phCaretRightBold} size={14} /></button
 								>{/if}
 						</div>
@@ -1675,7 +1675,7 @@
 					</div>
 					{#if error}<div
 							role="alert"
-							style="margin-top:12px;padding:12px 14px;border-radius:16px;background:rgba(181,101,29,.12);color:#8A4A12;font-size:14px"
+							style="margin-top:12px;padding:12px 14px;border-radius:16px;background:rgba(181,101,29,.3);color:#FCE3C8;font-size:14px"
 						>
 							{error}
 						</div>{/if}

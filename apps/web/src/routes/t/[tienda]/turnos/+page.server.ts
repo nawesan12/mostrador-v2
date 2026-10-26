@@ -17,7 +17,12 @@ const Reserva = v.object({
 		v.string(),
 		v.regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:00-03:00$/, 'Elegí un día y un horario.')
 	),
-	nombre: v.pipe(v.string(), v.trim(), v.minLength(2, 'Poné tu nombre.'), v.maxLength(80)),
+	nombre: v.pipe(
+		v.string(),
+		v.trim(),
+		v.minLength(2, 'Poné tu nombre.'),
+		v.maxLength(80, 'El nombre puede tener hasta 80 letras.')
+	),
 	telefono: v.pipe(v.string(), v.trim(), v.regex(/^[\d\s+()-]{8,20}$/, 'Revisá el WhatsApp.')),
 	email: v.pipe(v.string(), v.trim(), v.email('Revisá el email.'), v.maxLength(120))
 });

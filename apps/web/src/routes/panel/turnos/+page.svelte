@@ -183,21 +183,31 @@
 	async function crear(e: SubmitEvent, forzar = false) {
 		e.preventDefault();
 		guardando = true;
-		const r = await fetch('/panel/turnos/nuevo', {
-			method: 'POST',
-			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({
-				servicioId: n.servicioId,
-				profesionalId: n.profesionalId,
-				inicio: `${n.dia}T${n.hora}:00-03:00`,
-				nombre: n.nombre,
-				telefono: n.telefono,
-				email: n.email,
-				nota: n.nota || null,
-				forzar
-			})
-		});
-		guardando = false;
+		let r: Response;
+		try {
+			r = await fetch('/panel/turnos/nuevo', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({
+					servicioId: n.servicioId,
+					profesionalId: n.profesionalId,
+					inicio: `${n.dia}T${n.hora}:00-03:00`,
+					nombre: n.nombre,
+					telefono: n.telefono,
+					email: n.email,
+					nota: n.nota || null,
+					forzar
+				})
+			});
+		} catch {
+			return ui.toast({
+				k: 'err',
+				title: 'No se pudo',
+				desc: 'Revisá la conexión y probá de nuevo.'
+			});
+		} finally {
+			guardando = false;
+		}
 		if (r.status === 409) return void (superpuesto = true);
 		if (!r.ok) {
 			const m = ((await r.json().catch(() => null)) as { message?: string } | null)?.message;

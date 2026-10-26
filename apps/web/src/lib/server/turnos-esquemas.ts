@@ -76,7 +76,15 @@ export const TurnoNuevo = v.object({
 	profesionalId: v.pipe(v.string(), v.minLength(1, 'Elegí quién atiende.'), v.maxLength(64)),
 	inicio: v.pipe(
 		v.string(),
-		v.regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:00-03:00$/, 'Elegí día y hora.')
+		v.regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:00-03:00$/, 'Elegí día y hora.'),
+		// Que la fecha exista (no un 31 de febrero) y la hora esté en rango.
+		v.check((s) => {
+			const [a, m, d, h, mi] = [0, 5, 8, 11, 14].map((i) =>
+				Number(s.slice(i, i === 0 ? 4 : i + 2))
+			);
+			const f = new Date(Date.UTC(a, m - 1, d));
+			return f.getUTCMonth() === m - 1 && f.getUTCDate() === d && h < 24 && mi < 60;
+		}, 'Elegí día y hora.')
 	),
 	nombre: v.pipe(
 		v.string(),

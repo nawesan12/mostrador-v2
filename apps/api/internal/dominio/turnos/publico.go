@@ -235,8 +235,11 @@ func Reservar(ctx context.Context, pool tx, mp Cobrador, sitio, slug string, r R
 		// Con un contexto que no se cancela: aunque la persona cierre la página, el horario se libera.
 		sigue := context.WithoutCancel(ctx)
 		errLiberar := pool.EnTienda(sigue, id, func(t pgx.Tx) error {
-			_, err := t.Exec(sigue, `UPDATE turnos SET estado = 'cancelado', vence_en = NULL WHERE id = $1`, turnoID)
-			return err
+			if _, err := t.Exec(sigue, `UPDATE turnos SET estado = 'cancelado', vence_en = NULL WHERE id = $1`, turnoID); err != nil {
+				return err
+			}
+			// El aviso de "turno nuevo" ya salió: el de cancelado lo compensa.
+			return outbox.Publicar(sigue, t, id, "turno.cancelado", map[string]any{"codigo": codigo, "senaPagada": false})
 		})
 		return Reservado{}, errors.Join(ErrMercadoPago, err, errLiberar)
 	}

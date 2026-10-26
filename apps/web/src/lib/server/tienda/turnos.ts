@@ -155,7 +155,9 @@ export async function turnoDe(slug: string, codigo: string, sandbox: boolean) {
 	if (!CODIGO.test(codigo)) return null;
 	if (!sandbox) {
 		const r = await api(`/v1/publico/tiendas/${enc(slug)}/turnos/${enc(codigo)}`);
-		return r.ok ? ((await r.json()) as TurnoPublico) : null;
+		if (r.status === 404) return null;
+		if (!r.ok) throw new Error(`turnos: la API respondió ${r.status}`);
+		return (await r.json()) as TurnoPublico;
 	}
 	return (await sandboxDelTurno(slug, codigo))?.turnoPublico(codigo) ?? null;
 }
@@ -172,7 +174,9 @@ export async function cancelar(
 			method: 'DELETE'
 		});
 		if (r.status === 409) return 'tarde';
-		return r.ok ? ((await r.json()) as TurnoPublico) : 'no-existe';
+		if (r.status === 404) return 'no-existe';
+		if (!r.ok) throw new Error(`turnos: la API respondió ${r.status}`);
+		return (await r.json()) as TurnoPublico;
 	}
 	const d = await sandboxDelTurno(slug, codigo);
 	return d ? d.cancelarTurnoPublico(codigo) : 'no-existe';

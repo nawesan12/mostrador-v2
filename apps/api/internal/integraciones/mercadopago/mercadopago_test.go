@@ -331,7 +331,14 @@ func TestSenaDeTurno(t *testing.T) {
 	}
 
 	// Una barbería que cobra el 30 % de seña.
-	lunes8 := time.Date(2026, 11, 2, 8, 0, 0, 0, turnos.Zona)
+	// El webhook compara el vencimiento con el reloj de Postgres: el "ahora" del test es el real y
+	// el turno, el lunes que viene (a 2 días o más, dentro de los 14 que se ofrecen).
+	ya := time.Now().In(turnos.Zona)
+	dia := ya.AddDate(0, 0, 2)
+	for dia.Weekday() != time.Monday {
+		dia = dia.AddDate(0, 0, 1)
+	}
+	lunes := dia.Format("2006-01-02")
 	if _, err := turnos.GuardarAjustes(ctx, b.App, luna, turnos.Ajustes{Activo: true, Sena: 30, AnticipacionMin: 60, DiasVista: 14,
 		Horario: []turnos.Franja{{Dia: 1, Desde: "09:00", Hasta: "13:00"}}}); err != nil {
 		t.Fatal(err)
@@ -340,8 +347,8 @@ func TestSenaDeTurno(t *testing.T) {
 	if _, err := turnos.GuardarProfesional(ctx, b.App, luna, "", turnos.Profesional{Nombre: "Beto", Activo: true}, nil); err != nil {
 		t.Fatal(err)
 	}
-	res, err := turnos.Reservar(ctx, b.App, s, s.Config.Sitio, "luna", turnos.Reserva{ServicioID: corte.ID, Inicio: "2026-11-02T10:00:00-03:00",
-		Nombre: "Lucía Pérez", Telefono: "1155550101", Email: "lucia@ejemplo.com"}, lunes8)
+	res, err := turnos.Reservar(ctx, b.App, s, s.Config.Sitio, "luna", turnos.Reserva{ServicioID: corte.ID, Inicio: lunes + "T10:00:00-03:00",
+		Nombre: "Lucía Pérez", Telefono: "1155550101", Email: "lucia@ejemplo.com"}, ya)
 	if err != nil || !strings.Contains(res.URL, "pref_id=pref-1") {
 		t.Fatalf("reservar: %+v %v", res, err)
 	}
@@ -356,7 +363,7 @@ func TestSenaDeTurno(t *testing.T) {
 		pref["payment_methods"].(map[string]any)["installments"].(float64) != 1 {
 		t.Fatalf("preferencia de la seña: %v", pref)
 	}
-	if v, _ := turnos.Ver(ctx, b.App, "luna", res.Codigo, lunes8); v.Estado != "reservado" || v.SenaPagada {
+	if v, _ := turnos.Ver(ctx, b.App, "luna", res.Codigo, ya); v.Estado != "reservado" || v.SenaPagada {
 		t.Fatalf("antes de pagar: %+v", v)
 	}
 
@@ -375,25 +382,25 @@ func TestSenaDeTurno(t *testing.T) {
 	if _, err := wk.Pasada(ctx); err != nil {
 		t.Fatal(err)
 	}
-	v, _ := turnos.Ver(ctx, b.App, "luna", res.Codigo, lunes8.Add(time.Hour))
+	v, _ := turnos.Ver(ctx, b.App, "luna", res.Codigo, ya.Add(time.Hour))
 	if v.Estado != "confirmado" || !v.SenaPagada || v.VenceEn != nil || v.Vencido {
 		t.Fatalf("después del pago: %+v", v)
 	}
 
 	// Devolver la seña: refund del pago con el token de la tienda; queda anotada como devuelta.
-	l, _ := turnos.Agenda(ctx, b.App, luna, "2026-11-02", "2026-11-02", "", lunes8)
-	tu, err := turnos.DevolverSena(ctx, b.App, s, luna, l[0].ID, lunes8)
+	l, _ := turnos.Agenda(ctx, b.App, luna, lunes, lunes, "", ya)
+	tu, err := turnos.DevolverSena(ctx, b.App, s, luna, l[0].ID, ya)
 	if err != nil || !tu.SenaDevuelta || len(f.vio("POST /v1/payments/556/refunds APP_USR-vendedor-authorization_code")) != 1 {
 		t.Fatalf("devolver la seña: %+v %v", tu, err)
 	}
-	if _, err := turnos.DevolverSena(ctx, b.App, s, luna, l[0].ID, lunes8); !errors.Is(err, turnos.ErrSinSena) {
+	if _, err := turnos.DevolverSena(ctx, b.App, s, luna, l[0].ID, ya); !errors.Is(err, turnos.ErrSinSena) {
 		t.Fatalf("devolvió dos veces: %v", err)
 	}
 
 	// La seña llega tarde: la reserva ya venció y otra persona tomó el horario. El turno vencido no
 	// se confirma (sería un doble turno): queda cancelado con la seña pagada, para devolverla.
-	tarde, err := turnos.Reservar(ctx, b.App, s, s.Config.Sitio, "luna", turnos.Reserva{ServicioID: corte.ID, Inicio: "2026-11-02T11:00:00-03:00",
-		Nombre: "Tomás", Telefono: "1155550102", Email: "tomas@ejemplo.com"}, lunes8)
+	tarde, err := turnos.Reservar(ctx, b.App, s, s.Config.Sitio, "luna", turnos.Reserva{ServicioID: corte.ID, Inicio: lunes + "T11:00:00-03:00",
+		Nombre: "Tomás", Telefono: "1155550102", Email: "tomas@ejemplo.com"}, ya)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -406,8 +413,8 @@ func TestSenaDeTurno(t *testing.T) {
 	if _, err := admin.Exec(ctx, `UPDATE turnos SET vence_en = now() - interval '1 minute' WHERE codigo_publico = $1`, tarde.Codigo); err != nil {
 		t.Fatal(err)
 	}
-	otra, err := turnos.Reservar(ctx, b.App, s, s.Config.Sitio, "luna", turnos.Reserva{ServicioID: corte.ID, Inicio: "2026-11-02T11:00:00-03:00",
-		Nombre: "Paula", Telefono: "1155550103", Email: "paula@ejemplo.com"}, lunes8)
+	otra, err := turnos.Reservar(ctx, b.App, s, s.Config.Sitio, "luna", turnos.Reserva{ServicioID: corte.ID, Inicio: lunes + "T11:00:00-03:00",
+		Nombre: "Paula", Telefono: "1155550103", Email: "paula@ejemplo.com"}, ya)
 	if err != nil {
 		t.Fatalf("el horario vencido no se liberó: %v", err)
 	}
@@ -424,10 +431,10 @@ func TestSenaDeTurno(t *testing.T) {
 	if _, err := wk.Pasada(ctx); err != nil {
 		t.Fatal(err)
 	}
-	if v, _ := turnos.Ver(ctx, b.App, "luna", tarde.Codigo, lunes8); v.Estado != "cancelado" || !v.SenaPagada {
+	if v, _ := turnos.Ver(ctx, b.App, "luna", tarde.Codigo, ya); v.Estado != "cancelado" || !v.SenaPagada {
 		t.Fatalf("seña tardía: %+v", v)
 	}
-	if v, _ := turnos.Ver(ctx, b.App, "luna", otra.Codigo, lunes8); v.Estado != "reservado" {
+	if v, _ := turnos.Ver(ctx, b.App, "luna", otra.Codigo, ya); v.Estado != "reservado" {
 		t.Fatalf("el turno de la otra persona: %+v", v)
 	}
 }

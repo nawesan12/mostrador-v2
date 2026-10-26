@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
@@ -240,7 +241,7 @@ func Rutas(mux *http.ServeMux, pool tx, cfg Config) {
 			for _, l := range []struct {
 				clave string
 				max   int
-			}{{"turno:ip:" + cfg.IP(r), 10}, {"turno:tel:" + r.PathValue("slug") + ":" + b.Telefono, 3}} {
+			}{{"turno:ip:" + cfg.IP(r), 10}, {"turno:tel:" + r.PathValue("slug") + ":" + soloDigitos(b.Telefono), 3}} {
 				ok, err := cfg.Permitido(r.Context(), l.clave, l.max, time.Hour)
 				if err != nil {
 					errorDe(w, err)
@@ -267,4 +268,14 @@ func Rutas(mux *http.ServeMux, pool tx, cfg Config) {
 		t, err := Cancelar(r.Context(), pool, r.PathValue("slug"), r.PathValue("codigo"), ahora())
 		responder(w, http.StatusOK, t, err)
 	})
+}
+
+// soloDigitos: el tope por teléfono cuenta igual "11 5555-0101" que "1155550101".
+func soloDigitos(s string) string {
+	return strings.Map(func(r rune) rune {
+		if r >= '0' && r <= '9' {
+			return r
+		}
+		return -1
+	}, s)
 }

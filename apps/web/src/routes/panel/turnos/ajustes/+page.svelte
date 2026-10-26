@@ -49,11 +49,16 @@
 	}
 
 	// ---- General y horario (un solo guardado) ----
-	// Lo que se edita; vuelve a lo guardado cada vez que se recargan los datos.
-	// eslint-disable-next-line svelte/prefer-writable-derived -- `a` se edita en profundidad (bind en franjas)
+	// Lo que se edita. Vuelve a lo guardado cuando se recargan los datos, salvo que haya cambios sin
+	// guardar (otra sección que recarga no los pisa).
 	let a = $state(structuredClone(untrack(() => $state.snapshot(data.ajustes))));
+	let base = JSON.stringify(untrack(() => data.ajustes));
 	$effect(() => {
-		a = structuredClone($state.snapshot(data.ajustes));
+		const nuevo = JSON.stringify(data.ajustes);
+		if (nuevo === base) return;
+		const sinCambios = untrack(() => JSON.stringify(a)) === base;
+		base = nuevo;
+		if (sinCambios) a = structuredClone($state.snapshot(data.ajustes));
 	});
 	const cambiado = $derived(JSON.stringify(a) !== JSON.stringify(data.ajustes));
 	async function guardar(antes = data.ajustes) {
