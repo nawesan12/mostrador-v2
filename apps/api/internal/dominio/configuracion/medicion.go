@@ -12,7 +12,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// Los formatos de lib/tienda/medicion.ts (la migración 00025 los vuelve a chequear).
+// Los formatos de lib/tienda/medicion.ts (la migración 00027 los vuelve a chequear).
 var (
 	ga4Valido   = regexp.MustCompile(`^G-[A-Z0-9]{6,12}$`)
 	pixelValido = regexp.MustCompile(`^[0-9]{15,16}$`)
