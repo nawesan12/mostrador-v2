@@ -35,6 +35,7 @@
 			pago: string;
 			nombre: string;
 			alias: string | null;
+			esCbu?: boolean;
 		} | null;
 		error?: string | null;
 	} = $props();
@@ -1191,13 +1192,15 @@
 								{error}
 							</div>{/if}
 						<button
-							disabled={!envio || enviando || tienda.vitrina}
+							disabled={!envio || !pagos.length || enviando || tienda.vitrina}
 							style="padding:18px;border:0;background:#4F5B3A;color:#fff;font:600 15.5px 'Familjen Grotesk';cursor:pointer;display:flex;justify-content:center;align-items:center;gap:8px"
 							><Icon icon={I.phLockSimple} size={16} />{tienda.vitrina
 								? 'Es una tienda de ejemplo'
-								: envio
-									? `Pagar ${fmt(total)}`
-									: 'Elegí cómo te llega'}</button
+								: !pagos.length
+									? 'Esta tienda todavía no tiene medios de pago'
+									: envio
+										? `Pagar ${fmt(total)}`
+										: 'Elegí cómo te llega'}</button
 						>
 					</div>
 					<div style="position:sticky;top:90px;padding:24px;background:#2B2520;color:#EFE9E1">
@@ -1273,8 +1276,9 @@
 						<Icon icon={I.phBank} size={24} style="color:#4F5B3A;flex:none" />
 						<span
 							><b>Transferí {fmt(pedido.total)}</b>
-							{#if pedido.alias}al alias <b>{pedido.alias}</b>{:else}con los datos que te mandamos
-								por mail{/if} y mandanos el comprobante{#if whatsapp}&nbsp;<a
+							{#if pedido.alias}al {pedido.esCbu ? 'CBU/CVU' : 'alias'}
+								<b>{pedido.alias}</b>{:else}con los datos que te mandamos por mail{/if} y mandanos el
+							comprobante{#if whatsapp}&nbsp;<a
 									href={wa(`¡Hola! Te mando el comprobante del pedido #${pedido.numero}.`)}
 									target="_blank"
 									rel="noopener"

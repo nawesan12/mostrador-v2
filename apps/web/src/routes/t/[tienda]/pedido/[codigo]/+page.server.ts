@@ -26,8 +26,11 @@ export const load: PageServerLoad = async ({ params, cookies, url }) => {
 			cbu: string | null;
 			titular: string | null;
 		};
-		// Los datos para transferir son los que cargó la tienda (nunca inventados).
-		return { pedido: { ...c, alias: c.pago === 'transferencia' ? (c.alias ?? c.cbu) : null } };
+		// Los datos para transferir son los que cargó la tienda (nunca inventados). Sin alias, el CBU/CVU.
+		const tr = c.pago === 'transferencia';
+		return {
+			pedido: { ...c, alias: tr ? (c.alias ?? c.cbu) : null, esCbu: tr && !c.alias && !!c.cbu }
+		};
 	}
 	const numero = Number(params.codigo.split('-')[0]);
 	if (
@@ -41,18 +44,15 @@ export const load: PageServerLoad = async ({ params, cookies, url }) => {
 	if (!p) error(404, 'No encontramos ese pedido.');
 	const pago = url.searchParams.get('pago') === 'mercadopago' ? 'mercadopago' : 'transferencia';
 	const total = Number(url.searchParams.get('total')) || p.total;
+	const dt = pago === 'transferencia' ? r.tienda.cobros.datosTransferencia : null;
 	return {
 		pedido: {
 			numero,
 			total,
 			pago,
 			nombre: p.cliente.split(' ')[0],
-			alias:
-				pago === 'transferencia'
-					? r.tienda.cobros.datosTransferencia?.alias ||
-						r.tienda.cobros.datosTransferencia?.cbu ||
-						null
-					: null,
+			alias: dt?.alias || dt?.cbu || null,
+			esCbu: !!dt && !dt.alias && !!dt.cbu,
 			titular: r.tienda.cobros.datosTransferencia?.titular ?? null
 		}
 	};

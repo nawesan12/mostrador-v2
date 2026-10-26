@@ -2305,9 +2305,9 @@ export interface components {
             whatsapp: string;
             email: string;
             horario: string;
-            /** @description Alias para cobrar por transferencia (6 a 20 caracteres) */
+            /** @description Alias para cobrar por transferencia (6 a 20 caracteres; vacío si no hay) */
             alias?: string;
-            /** @description CBU o CVU de 22 dígitos, con sus verificadores */
+            /** @description CBU o CVU de 22 dígitos, con sus verificadores (vacío si no hay) */
             cbu?: string;
             titular?: string;
         };
