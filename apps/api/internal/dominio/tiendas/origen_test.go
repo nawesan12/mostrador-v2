@@ -17,6 +17,10 @@ func TestOrigenSeFijaUnaSolaVez(t *testing.T) {
 	if _, err := tiendas.FijarOrigen(ctx, b.App, luna, tiendas.Origen{Ref: "<script>"}); err != tiendas.ErrOrigen {
 		t.Fatalf("valor raro: %v", err)
 	}
+	// Un origen vacío ({} o null) no se fija: taparía el ref que llegue después.
+	if _, err := tiendas.FijarOrigen(ctx, b.App, luna, tiendas.Origen{Llego: "2026-10-23T08:00:00Z"}); err != tiendas.ErrOrigen {
+		t.Fatalf("origen vacío: %v", err)
+	}
 	if ok, err := tiendas.FijarOrigen(ctx, b.App, luna, tiendas.Origen{Fuente: "flyer", Ref: "BRUMA-REF"}); err != nil || !ok {
 		t.Fatalf("primera vez: %v %v", ok, err)
 	}

@@ -42,8 +42,19 @@ export function guardarOrigen(cookies: Cookies, o: Origen) {
 
 export function leerOrigen(cookies: Cookies): Origen | null {
 	try {
-		const o = JSON.parse(cookies.get(COOKIE_ORIGEN) ?? 'null') as Origen | null;
-		return o && typeof o === 'object' ? o : null;
+		const o = JSON.parse(cookies.get(COOKIE_ORIGEN) ?? 'null') as unknown;
+		if (!o || typeof o !== 'object' || Array.isArray(o)) return null;
+		// Sólo los campos conocidos y válidos; sin ninguno de atribución, no hay origen.
+		const r = o as Record<string, unknown>;
+		const campo = (k: string) => (typeof r[k] === 'string' ? valido(r[k] as string) : undefined);
+		const limpio = Object.fromEntries(
+			(['fuente', 'medio', 'campana', 'ref', 'cupon'] as const)
+				.map((k) => [k, campo(k)])
+				.filter(([, v]) => v)
+		) as Origen;
+		if (!Object.keys(limpio).length) return null;
+		const llego = typeof r.llego === 'string' && r.llego.length <= 40 ? r.llego : undefined;
+		return llego ? { ...limpio, llego } : limpio;
 	} catch {
 		return null;
 	}

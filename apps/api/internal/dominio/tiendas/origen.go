@@ -27,13 +27,16 @@ var valorOrigen = regexp.MustCompile(`^[A-Za-z0-9_.-]{1,40}$`)
 // ErrOrigen: algún valor no es válido.
 var ErrOrigen = errors.New("tiendas: origen inválido")
 
+// valido: al menos un dato de atribución (un origen vacío no se fija: taparía un ref posterior).
 func (o Origen) valido() bool {
+	alguno := false
 	for _, v := range []string{o.Fuente, o.Medio, o.Campana, o.Ref, o.Cupon} {
 		if v != "" && !valorOrigen.MatchString(v) {
 			return false
 		}
+		alguno = alguno || v != ""
 	}
-	return len(o.Llego) <= 40
+	return alguno && len(o.Llego) <= 40
 }
 
 // FijarOrigen guarda el origen de la tienda una sola vez (después no se pisa: una comisión no se
