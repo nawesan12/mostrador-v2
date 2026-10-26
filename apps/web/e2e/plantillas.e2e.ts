@@ -89,7 +89,17 @@ for (const id of [...PROPIAS.filter((x) => x !== 'tijera'), 'ceibo', 'patio']) {
 		// no se mira si ya está, porque si aparece después tapa el clic).
 		if (id === 'malbec') await page.getByRole('button', { name: 'Sí, soy mayor' }).click();
 		await page.getByRole('radiogroup', { name: 'Servicio' }).getByRole('radio').first().click();
-		await expect(page.locator('[role=radiogroup][aria-label^="Horarios"]').first()).toBeVisible();
+		// De noche ya no quedan horarios hoy: se pasa al día siguiente abierto.
+		const horarios = page.locator('[role=radiogroup][aria-label^="Horarios"]').first();
+		const sinHorarios = page.getByText('No quedan horarios este día');
+		await expect(horarios.or(sinHorarios)).toBeVisible();
+		if (await sinHorarios.isVisible())
+			await page
+				.getByRole('radiogroup', { name: 'Día' })
+				.locator('[role=radio]:not([disabled])')
+				.nth(1)
+				.click();
+		await expect(horarios).toBeVisible();
 		const desborde = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
 		expect(desborde, `${id}/turnos`).toBeLessThanOrEqual(0);
 		expect(errores).toEqual([]);
