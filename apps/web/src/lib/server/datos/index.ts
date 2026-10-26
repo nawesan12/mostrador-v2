@@ -26,7 +26,7 @@ export function datosDe(locals: App.Locals): Datos {
 type Evento = Pick<RequestEvent, 'request' | 'getClientAddress'>;
 
 /** IP y navegador del visitante, para que Go aplique los límites a la persona y no al BFF. */
-function clienteDe(event: Evento) {
+export function clienteDe(event: Evento) {
 	let ip = '';
 	try {
 		ip = event.request.headers.get('cf-connecting-ip') ?? event.getClientAddress();

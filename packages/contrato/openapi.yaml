@@ -13,13 +13,13 @@ paths:
       operationId: listarRubros
       summary: Rubros con su plantilla y tienda de ejemplo
       responses:
-        '200':
+        "200":
           description: Rubros
           content:
             application/json:
               schema:
                 type: array
-                items: { $ref: '#/components/schemas/Rubro' }
+                items: { $ref: "#/components/schemas/Rubro" }
   /v1/auth/registro:
     post:
       operationId: registrar
@@ -28,12 +28,20 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/Alta' }
+            schema: { $ref: "#/components/schemas/Alta" }
       responses:
-        '201': { description: Sesión, content: { application/json: { schema: { $ref: '#/components/schemas/Sesion' } } } }
-        '400': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
-        '429': { $ref: '#/components/responses/Problema' }
+        "201":
+          {
+            description: Sesión,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/Sesion" } },
+              },
+          }
+        "400": { $ref: "#/components/responses/Problema" }
+        "409": { $ref: "#/components/responses/Problema" }
+        "429": { $ref: "#/components/responses/Problema" }
   /v1/auth/ingresar:
     post:
       operationId: ingresar
@@ -49,20 +57,36 @@ paths:
                 clave: { type: string }
                 recordarme: { type: boolean }
       responses:
-        '200': { description: Sesión, content: { application/json: { schema: { $ref: '#/components/schemas/Sesion' } } } }
-        '401': { $ref: '#/components/responses/Problema' }
-        '429': { $ref: '#/components/responses/Problema' }
+        "200":
+          {
+            description: Sesión,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/Sesion" } },
+              },
+          }
+        "401": { $ref: "#/components/responses/Problema" }
+        "429": { $ref: "#/components/responses/Problema" }
   /v1/auth/salir:
     post:
       operationId: salir
       responses:
-        '204': { description: Sesión cerrada }
+        "204": { description: Sesión cerrada }
   /v1/auth/sesion:
     get:
       operationId: sesion
       responses:
-        '200': { description: Sesión en curso, content: { application/json: { schema: { $ref: '#/components/schemas/DatosSesion' } } } }
-        '401': { $ref: '#/components/responses/Problema' }
+        "200":
+          {
+            description: Sesión en curso,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/DatosSesion" } },
+              },
+          }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/auth/recuperar:
     post:
       operationId: recuperar
@@ -71,10 +95,15 @@ paths:
         required: true
         content:
           application/json:
-            schema: { type: object, required: [email], properties: { email: { type: string } } }
+            schema:
+              {
+                type: object,
+                required: [email],
+                properties: { email: { type: string } },
+              }
       responses:
-        '202': { description: Recibido }
-        '429': { $ref: '#/components/responses/Problema' }
+        "202": { description: Recibido }
+        "429": { $ref: "#/components/responses/Problema" }
   /v1/auth/restablecer:
     post:
       operationId: restablecer
@@ -82,11 +111,18 @@ paths:
         required: true
         content:
           application/json:
-            schema: { type: object, required: [token, clave], properties: { token: { type: string }, clave: { type: string } } }
+            schema:
+              {
+                type: object,
+                required: [token, clave],
+                properties:
+                  { token: { type: string }, clave: { type: string } },
+              }
       responses:
-        '204': { description: Contraseña cambiada; se cierran todas las sesiones }
-        '400': { $ref: '#/components/responses/Problema' }
-        '422': { $ref: '#/components/responses/Problema' }
+        "204":
+          { description: Contraseña cambiada; se cierran todas las sesiones }
+        "400": { $ref: "#/components/responses/Problema" }
+        "422": { $ref: "#/components/responses/Problema" }
   /v1/arrepentimientos:
     post:
       operationId: pedirArrepentimiento
@@ -95,15 +131,21 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/PedidoArrepentimiento' }
+            schema: { $ref: "#/components/schemas/PedidoArrepentimiento" }
       responses:
-        '201':
+        "201":
           description: Registrado; la confirmación sale por mail
           content:
             application/json:
-              schema: { type: object, required: [codigo], properties: { codigo: { type: string, pattern: '^ARR-\d{4}-\d{6,}$' } } }
-        '400': { $ref: '#/components/responses/Problema' }
-        '429': { $ref: '#/components/responses/Problema' }
+              schema:
+                {
+                  type: object,
+                  required: [codigo],
+                  properties:
+                    { codigo: { type: string, pattern: '^ARR-\d{4}-\d{6,}$' } },
+                }
+        "400": { $ref: "#/components/responses/Problema" }
+        "429": { $ref: "#/components/responses/Problema" }
   /v1/contacto:
     post:
       operationId: consultar
@@ -112,11 +154,11 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/Consulta' }
+            schema: { $ref: "#/components/schemas/Consulta" }
       responses:
-        '202': { description: Registrada; confirmación por mail }
-        '400': { $ref: '#/components/responses/Problema' }
-        '429': { $ref: '#/components/responses/Problema' }
+        "202": { description: Registrada; confirmación por mail }
+        "400": { $ref: "#/components/responses/Problema" }
+        "429": { $ref: "#/components/responses/Problema" }
   /v1/partners/postulaciones:
     post:
       operationId: postularPartner
@@ -125,11 +167,11 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/Postulacion' }
+            schema: { $ref: "#/components/schemas/Postulacion" }
       responses:
-        '202': { description: Registrada }
-        '400': { $ref: '#/components/responses/Problema' }
-        '429': { $ref: '#/components/responses/Problema' }
+        "202": { description: Registrada }
+        "400": { $ref: "#/components/responses/Problema" }
+        "429": { $ref: "#/components/responses/Problema" }
   /v1/novedades/suscripciones:
     post:
       operationId: suscribirNovedades
@@ -138,11 +180,16 @@ paths:
         required: true
         content:
           application/json:
-            schema: { type: object, required: [email], properties: { email: { type: string } } }
+            schema:
+              {
+                type: object,
+                required: [email],
+                properties: { email: { type: string } },
+              }
       responses:
-        '202': { description: Suscripto (o ya lo estaba) }
-        '400': { $ref: '#/components/responses/Problema' }
-        '429': { $ref: '#/components/responses/Problema' }
+        "202": { description: Suscripto (o ya lo estaba) }
+        "400": { $ref: "#/components/responses/Problema" }
+        "429": { $ref: "#/components/responses/Problema" }
   /v1/novedades/baja:
     post:
       operationId: bajaNovedades
@@ -151,10 +198,15 @@ paths:
         required: true
         content:
           application/json:
-            schema: { type: object, required: [token], properties: { token: { type: string } } }
+            schema:
+              {
+                type: object,
+                required: [token],
+                properties: { token: { type: string } },
+              }
       responses:
-        '204': { description: Dado de baja }
-        '422': { $ref: '#/components/responses/Problema' }
+        "204": { description: Dado de baja }
+        "422": { $ref: "#/components/responses/Problema" }
   /v1/panel/onboarding:
     put:
       operationId: guardarOnboarding
@@ -163,22 +215,22 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/Onboarding' }
+            schema: { $ref: "#/components/schemas/Onboarding" }
       responses:
-        '204': { description: Guardado }
-        '400': { $ref: '#/components/responses/Problema' }
-        '401': { $ref: '#/components/responses/Problema' }
+        "204": { description: Guardado }
+        "400": { $ref: "#/components/responses/Problema" }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/panel/resumen:
     get:
       operationId: resumenPanel
       summary: Lo que muestra el armazón del panel en cada pantalla (insignias del menú y notificaciones).
       responses:
-        '200':
+        "200":
           description: Resumen
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ResumenPanel' }
-        '401': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/ResumenPanel" }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/panel/tablero:
     get:
       operationId: tablero
@@ -188,12 +240,12 @@ paths:
           in: query
           schema: { type: string, enum: [hoy, 7d, 30d], default: 7d }
       responses:
-        '200':
+        "200":
           description: Tablero
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Tablero' }
-        '401': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/Tablero" }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/panel/meta:
     put:
       operationId: guardarMeta
@@ -208,24 +260,29 @@ paths:
               properties:
                 objetivo: { type: integer, minimum: 0, maximum: 100000000000 }
       responses:
-        '204': { description: Guardada }
-        '400': { $ref: '#/components/responses/Problema' }
-        '401': { $ref: '#/components/responses/Problema' }
+        "204": { description: Guardada }
+        "400": { $ref: "#/components/responses/Problema" }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/panel/avisos/{aviso}/ocultar:
     post:
       operationId: ocultarAviso
       summary: Descarta un aviso del Resumen (por ahora, el del certificado de ARCA).
       parameters:
-        - { name: aviso, in: path, required: true, schema: { type: string, enum: [certificado] } }
+        - {
+            name: aviso,
+            in: path,
+            required: true,
+            schema: { type: string, enum: [certificado] },
+          }
       responses:
-        '204': { description: Oculto }
-        '401': { $ref: '#/components/responses/Problema' }
+        "204": { description: Oculto }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/panel/carritos/recordar:
     post:
       operationId: recordarCarritos
       summary: Manda por WhatsApp el recordatorio a los carritos abandonados recuperables.
       responses:
-        '200':
+        "200":
           description: Cuántos mensajes quedaron en cola
           content:
             application/json:
@@ -234,24 +291,29 @@ paths:
                 required: [enviados]
                 properties:
                   enviados: { type: integer }
-        '401': { $ref: '#/components/responses/Problema' }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/panel/hornero/contexto:
     get:
       operationId: contextoHornero
       summary: Lo que Hornero sabe de la tienda para responder (ventas por día, productos, clientes, pendientes).
       responses:
-        '200':
+        "200":
           description: Contexto
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ContextoHornero' }
-        '401': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/ContextoHornero" }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/panel/hornero/ideas/{idea}:
     post:
       operationId: marcarIdea
       summary: Aprueba (o deshace) una idea de Hornero.
       parameters:
-        - { name: idea, in: path, required: true, schema: { type: string, enum: [carritos, stock, promo] } }
+        - {
+            name: idea,
+            in: path,
+            required: true,
+            schema: { type: string, enum: [carritos, stock, promo] },
+          }
       requestBody:
         required: true
         content:
@@ -262,34 +324,65 @@ paths:
               properties:
                 hecha: { type: boolean }
       responses:
-        '204': { description: Hecho }
-        '401': { $ref: '#/components/responses/Problema' }
-        '404': { $ref: '#/components/responses/Problema' }
+        "204": { description: Hecho }
+        "401": { $ref: "#/components/responses/Problema" }
+        "404": { $ref: "#/components/responses/Problema" }
   /v1/panel/pedidos:
     get:
       operationId: listarPedidos
       summary: Pedidos con filtros (en la URL del panel), conteos por etapa y facetas, y una ventana de filas.
       parameters:
-        - { name: q, in: query, schema: { type: string, maxLength: 100 }, description: 'Cliente, número, producto o ciudad' }
-        - { name: estado, in: query, schema: { type: string }, description: 'Separados por coma' }
+        - {
+            name: q,
+            in: query,
+            schema: { type: string, maxLength: 100 },
+            description: "Cliente, número, producto o ciudad",
+          }
+        - {
+            name: estado,
+            in: query,
+            schema: { type: string },
+            description: "Separados por coma",
+          }
         - { name: canal, in: query, schema: { type: string } }
         - { name: pago, in: query, schema: { type: string } }
         - { name: envio, in: query, schema: { type: string } }
-        - { name: fecha, in: query, schema: { type: string, enum: [hoy, 7d, 30d, todo], default: todo } }
+        - {
+            name: fecha,
+            in: query,
+            schema: { type: string, enum: [hoy, 7d, 30d, todo], default: todo },
+          }
         - { name: minimo, in: query, schema: { type: integer, minimum: 0 } }
         - { name: vip, in: query, schema: { type: boolean } }
         - { name: hornero, in: query, schema: { type: boolean } }
         - { name: mayorista, in: query, schema: { type: boolean } }
-        - { name: orden, in: query, schema: { type: string, enum: [nuevos, urgentes, monto, viejos], default: nuevos } }
-        - { name: desde, in: query, schema: { type: integer, minimum: 0, default: 0 } }
-        - { name: cuantos, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 60 } }
+        - {
+            name: orden,
+            in: query,
+            schema:
+              {
+                type: string,
+                enum: [nuevos, urgentes, monto, viejos],
+                default: nuevos,
+              },
+          }
+        - {
+            name: desde,
+            in: query,
+            schema: { type: integer, minimum: 0, default: 0 },
+          }
+        - {
+            name: cuantos,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 200, default: 60 },
+          }
       responses:
-        '200':
+        "200":
           description: Lista
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ListaPedidos' }
-        '401': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/ListaPedidos" }
+        "401": { $ref: "#/components/responses/Problema" }
     post:
       operationId: crearPedido
       summary: Un pedido nuevo (venta en el local o cargado a mano). Descuenta el stock.
@@ -297,9 +390,9 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/PedidoNuevo' }
+            schema: { $ref: "#/components/schemas/PedidoNuevo" }
       responses:
-        '201':
+        "201":
           description: Creado
           content:
             application/json:
@@ -309,9 +402,9 @@ paths:
                 properties:
                   numero: { type: integer }
                   total: { type: integer }
-        '400': { $ref: '#/components/responses/Problema' }
-        '401': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
+        "400": { $ref: "#/components/responses/Problema" }
+        "401": { $ref: "#/components/responses/Problema" }
+        "409": { $ref: "#/components/responses/Problema" }
   /v1/panel/pedidos/lote:
     post:
       operationId: pedidosEnLote
@@ -324,10 +417,15 @@ paths:
               type: object
               required: [numeros, accion]
               properties:
-                numeros: { type: array, maxItems: 500, items: { type: integer } }
-                accion: { type: string, enum: [preparar, etiquetas, facturar, avisar] }
+                numeros:
+                  { type: array, maxItems: 500, items: { type: integer } }
+                accion:
+                  {
+                    type: string,
+                    enum: [preparar, etiquetas, facturar, avisar],
+                  }
       responses:
-        '200':
+        "200":
           description: Cuántos se pudieron hacer (los que no estaban en la etapa justa se saltean)
           content:
             application/json:
@@ -338,14 +436,14 @@ paths:
                   hechos: { type: integer }
                   cambios:
                     type: array
-                    description: 'Para deshacer: número y estado anterior'
+                    description: "Para deshacer: número y estado anterior"
                     items:
                       type: object
                       required: [numero, antes]
                       properties:
                         numero: { type: integer }
-                        antes: { $ref: '#/components/schemas/EstadoPedido' }
-        '401': { $ref: '#/components/responses/Problema' }
+                        antes: { $ref: "#/components/schemas/EstadoPedido" }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/panel/pedidos/{numero}:
     get:
       operationId: obtenerPedido
@@ -353,13 +451,13 @@ paths:
       parameters:
         - { name: numero, in: path, required: true, schema: { type: integer } }
       responses:
-        '200':
+        "200":
           description: Pedido
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/PedidoDetalle' }
-        '401': { $ref: '#/components/responses/Problema' }
-        '404': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/PedidoDetalle" }
+        "401": { $ref: "#/components/responses/Problema" }
+        "404": { $ref: "#/components/responses/Problema" }
   /v1/panel/pedidos/{numero}/estado:
     post:
       operationId: cambiarEstadoPedido
@@ -374,12 +472,12 @@ paths:
               type: object
               required: [estado]
               properties:
-                estado: { $ref: '#/components/schemas/EstadoPedido' }
+                estado: { $ref: "#/components/schemas/EstadoPedido" }
       responses:
-        '204': { description: Hecho }
-        '401': { $ref: '#/components/responses/Problema' }
-        '404': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
+        "204": { description: Hecho }
+        "401": { $ref: "#/components/responses/Problema" }
+        "404": { $ref: "#/components/responses/Problema" }
+        "409": { $ref: "#/components/responses/Problema" }
   /v1/panel/pedidos/{numero}/recordatorio:
     post:
       operationId: recordarPago
@@ -387,38 +485,66 @@ paths:
       parameters:
         - { name: numero, in: path, required: true, schema: { type: integer } }
       responses:
-        '204': { description: Enviado }
-        '401': { $ref: '#/components/responses/Problema' }
-        '404': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
+        "204": { description: Enviado }
+        "401": { $ref: "#/components/responses/Problema" }
+        "404": { $ref: "#/components/responses/Problema" }
+        "409": { $ref: "#/components/responses/Problema" }
   /v1/panel/listas/{lista}:
     get:
       operationId: listar
-      summary: 'Motor de listas (Clientes, Productos, Inventario, Facturación, Envíos): filtros, conteos y una ventana de filas.'
+      summary: "Motor de listas (Clientes, Productos, Inventario, Facturación, Envíos): filtros, conteos y una ventana de filas."
       parameters:
-        - { name: lista, in: path, required: true, schema: { $ref: '#/components/schemas/NombreLista' } }
+        - {
+            name: lista,
+            in: path,
+            required: true,
+            schema: { $ref: "#/components/schemas/NombreLista" },
+          }
         - { name: q, in: query, schema: { type: string, maxLength: 100 } }
-        - { name: seg, in: query, schema: { type: string }, description: 'Segmentos, separados por coma' }
-        - { name: facetas, in: query, schema: { type: string }, description: 'clave:valor separados por coma (ch:wa,city:Rosario)' }
+        - {
+            name: seg,
+            in: query,
+            schema: { type: string },
+            description: "Segmentos, separados por coma",
+          }
+        - {
+            name: facetas,
+            in: query,
+            schema: { type: string },
+            description: "clave:valor separados por coma (ch:wa,city:Rosario)",
+          }
         - { name: rango, in: query, schema: { type: integer, minimum: 0 } }
         - { name: banderas, in: query, schema: { type: string } }
         - { name: orden, in: query, schema: { type: string } }
-        - { name: desde, in: query, schema: { type: integer, minimum: 0, default: 0 } }
-        - { name: cuantos, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 60 } }
+        - {
+            name: desde,
+            in: query,
+            schema: { type: integer, minimum: 0, default: 0 },
+          }
+        - {
+            name: cuantos,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 200, default: 60 },
+          }
       responses:
-        '200':
+        "200":
           description: Lista
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ListaGenerica' }
-        '401': { $ref: '#/components/responses/Problema' }
-        '404': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/ListaGenerica" }
+        "401": { $ref: "#/components/responses/Problema" }
+        "404": { $ref: "#/components/responses/Problema" }
   /v1/panel/listas/{lista}/acciones:
     post:
       operationId: accionLista
       summary: Una acción sobre una o varias filas (o la sugerencia de Hornero de esa lista).
       parameters:
-        - { name: lista, in: path, required: true, schema: { $ref: '#/components/schemas/NombreLista' } }
+        - {
+            name: lista,
+            in: path,
+            required: true,
+            schema: { $ref: "#/components/schemas/NombreLista" },
+          }
       requestBody:
         required: true
         content:
@@ -429,9 +555,12 @@ paths:
               properties:
                 ids: { type: array, maxItems: 500, items: { type: string } }
                 accion: { type: string }
-                valor: { description: 'Lo que la acción necesite (ajuste de stock, publicado…)' }
+                valor:
+                  {
+                    description: "Lo que la acción necesite (ajuste de stock, publicado…)",
+                  }
       responses:
-        '200':
+        "200":
           description: Cuántas filas cambiaron
           content:
             application/json:
@@ -440,8 +569,8 @@ paths:
                 required: [hechos]
                 properties:
                   hechos: { type: integer }
-        '401': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
+        "401": { $ref: "#/components/responses/Problema" }
+        "409": { $ref: "#/components/responses/Problema" }
   /v1/panel/productos:
     post:
       operationId: crearProducto
@@ -449,28 +578,28 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/ProductoEditable' }
+            schema: { $ref: "#/components/schemas/ProductoEditable" }
       responses:
-        '201':
+        "201":
           description: Creado
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Producto' }
-        '400': { $ref: '#/components/responses/Problema' }
-        '401': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/Producto" }
+        "400": { $ref: "#/components/responses/Problema" }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/panel/productos/{id}:
     get:
       operationId: obtenerProducto
       parameters:
         - { name: id, in: path, required: true, schema: { type: string } }
       responses:
-        '200':
+        "200":
           description: Producto
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Producto' }
-        '401': { $ref: '#/components/responses/Problema' }
-        '404': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/Producto" }
+        "401": { $ref: "#/components/responses/Problema" }
+        "404": { $ref: "#/components/responses/Problema" }
     put:
       operationId: guardarProducto
       parameters:
@@ -479,35 +608,35 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/ProductoEditable' }
+            schema: { $ref: "#/components/schemas/ProductoEditable" }
       responses:
-        '200':
+        "200":
           description: Guardado
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Producto' }
-        '400': { $ref: '#/components/responses/Problema' }
-        '401': { $ref: '#/components/responses/Problema' }
-        '404': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/Producto" }
+        "400": { $ref: "#/components/responses/Problema" }
+        "401": { $ref: "#/components/responses/Problema" }
+        "404": { $ref: "#/components/responses/Problema" }
   /v1/panel/inventario/movimientos:
     get:
       operationId: movimientosHoy
       summary: Movimientos de stock de hoy (ventas, ajustes, conteos e ingresos), del más nuevo al más viejo.
       responses:
-        '200':
+        "200":
           description: Movimientos
           content:
             application/json:
               schema:
                 type: array
-                items: { $ref: '#/components/schemas/MovimientoStock' }
-        '401': { $ref: '#/components/responses/Problema' }
+                items: { $ref: "#/components/schemas/MovimientoStock" }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/panel/bandeja:
     get:
       operationId: bandeja
       summary: Conversaciones de WhatsApp, Instagram, Telegram y Mercado Libre.
       responses:
-        '200':
+        "200":
           description: Conversaciones
           content:
             application/json:
@@ -515,22 +644,30 @@ paths:
                 type: object
                 required: [conversaciones, atendidasHoy]
                 properties:
-                  conversaciones: { type: array, items: { $ref: '#/components/schemas/ConversacionBreve' } }
-                  atendidasHoy: { type: integer, description: 'Conversaciones que atendió Hornero hoy' }
-        '401': { $ref: '#/components/responses/Problema' }
+                  conversaciones:
+                    {
+                      type: array,
+                      items: { $ref: "#/components/schemas/ConversacionBreve" },
+                    }
+                  atendidasHoy:
+                    {
+                      type: integer,
+                      description: "Conversaciones que atendió Hornero hoy",
+                    }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/panel/bandeja/{id}:
     get:
       operationId: conversacion
       parameters:
         - { name: id, in: path, required: true, schema: { type: string } }
       responses:
-        '200':
+        "200":
           description: Conversación
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Conversacion' }
-        '401': { $ref: '#/components/responses/Problema' }
-        '404': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/Conversacion" }
+        "401": { $ref: "#/components/responses/Problema" }
+        "404": { $ref: "#/components/responses/Problema" }
     post:
       operationId: responder
       summary: Manda un mensaje, o toma / devuelve la conversación a Hornero.
@@ -545,22 +682,26 @@ paths:
               properties:
                 texto: { type: string, minLength: 1, maxLength: 2000 }
                 tomada: { type: boolean }
-                leida: { type: boolean, description: 'Al abrirla: los mensajes quedan leídos' }
+                leida:
+                  {
+                    type: boolean,
+                    description: "Al abrirla: los mensajes quedan leídos",
+                  }
       responses:
-        '204': { description: Hecho }
-        '401': { $ref: '#/components/responses/Problema' }
-        '404': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
+        "204": { description: Hecho }
+        "401": { $ref: "#/components/responses/Problema" }
+        "404": { $ref: "#/components/responses/Problema" }
+        "409": { $ref: "#/components/responses/Problema" }
   /v1/panel/carritos:
     get:
       operationId: carritos
       responses:
-        '200':
+        "200":
           description: Carritos abandonados
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Carritos' }
-        '401': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/Carritos" }
+        "401": { $ref: "#/components/responses/Problema" }
     put:
       operationId: guardarAutomaticos
       summary: Los recordatorios automáticos (a la hora, a las 24 h con 5% off, email al tercer día).
@@ -568,25 +709,25 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/AutomaticosCarritos' }
+            schema: { $ref: "#/components/schemas/AutomaticosCarritos" }
       responses:
-        '204': { description: Guardado }
-        '401': { $ref: '#/components/responses/Problema' }
+        "204": { description: Guardado }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/panel/carritos/{id}/recordar:
     post:
       operationId: recordarCarrito
       parameters:
         - { name: id, in: path, required: true, schema: { type: string } }
       responses:
-        '204': { description: Enviado }
-        '401': { $ref: '#/components/responses/Problema' }
-        '404': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
+        "204": { description: Enviado }
+        "401": { $ref: "#/components/responses/Problema" }
+        "404": { $ref: "#/components/responses/Problema" }
+        "409": { $ref: "#/components/responses/Problema" }
   /v1/panel/devoluciones:
     get:
       operationId: devoluciones
       responses:
-        '200':
+        "200":
           description: Devoluciones
           content:
             application/json:
@@ -594,9 +735,17 @@ paths:
                 type: object
                 required: [devoluciones, tasa]
                 properties:
-                  devoluciones: { type: array, items: { $ref: '#/components/schemas/Devolucion' } }
-                  tasa: { type: number, description: 'Porcentaje de pedidos con devolución' }
-        '401': { $ref: '#/components/responses/Problema' }
+                  devoluciones:
+                    {
+                      type: array,
+                      items: { $ref: "#/components/schemas/Devolucion" },
+                    }
+                  tasa:
+                    {
+                      type: number,
+                      description: "Porcentaje de pedidos con devolución",
+                    }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/panel/devoluciones/{id}:
     post:
       operationId: resolverDevolucion
@@ -612,19 +761,19 @@ paths:
               properties:
                 accion: { type: string, enum: [aprobar, cambio, deshacer] }
       responses:
-        '204': { description: Hecho }
-        '401': { $ref: '#/components/responses/Problema' }
-        '404': { $ref: '#/components/responses/Problema' }
+        "204": { description: Hecho }
+        "401": { $ref: "#/components/responses/Problema" }
+        "404": { $ref: "#/components/responses/Problema" }
   /v1/panel/resenas:
     get:
       operationId: resenas
       responses:
-        '200':
+        "200":
           description: Reseñas y preguntas
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ResenasYPreguntas' }
-        '401': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/ResenasYPreguntas" }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/panel/preguntas/{id}:
     post:
       operationId: responderPregunta
@@ -640,9 +789,9 @@ paths:
               properties:
                 respuesta: { type: string, minLength: 2, maxLength: 2000 }
       responses:
-        '204': { description: Publicada }
-        '401': { $ref: '#/components/responses/Problema' }
-        '404': { $ref: '#/components/responses/Problema' }
+        "204": { description: Publicada }
+        "401": { $ref: "#/components/responses/Problema" }
+        "404": { $ref: "#/components/responses/Problema" }
   /v1/panel/links:
     post:
       operationId: crearLink
@@ -658,9 +807,13 @@ paths:
                 monto: { type: integer, minimum: 1, maximum: 100000000 }
                 concepto: { type: string, minLength: 2, maxLength: 140 }
                 cuotas: { type: boolean, default: true }
-                pedido: { type: [integer, 'null'], description: 'Si es el cobro de un pedido, se marca pagado al pagar' }
+                pedido:
+                  {
+                    type: [integer, "null"],
+                    description: "Si es el cobro de un pedido, se marca pagado al pagar",
+                  }
       responses:
-        '201':
+        "201":
           description: Creado
           content:
             application/json:
@@ -669,8 +822,8 @@ paths:
                 required: [codigo]
                 properties:
                   codigo: { type: string }
-        '400': { $ref: '#/components/responses/Problema' }
-        '401': { $ref: '#/components/responses/Problema' }
+        "400": { $ref: "#/components/responses/Problema" }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/publico/links/{codigo}:
     get:
       operationId: verLink
@@ -679,12 +832,12 @@ paths:
       parameters:
         - { name: codigo, in: path, required: true, schema: { type: string } }
       responses:
-        '200':
+        "200":
           description: Link
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/LinkPublico' }
-        '404': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/LinkPublico" }
+        "404": { $ref: "#/components/responses/Problema" }
   /v1/publico/links/{codigo}/pagar:
     post:
       operationId: pagarLink
@@ -693,29 +846,29 @@ paths:
       parameters:
         - { name: codigo, in: path, required: true, schema: { type: string } }
       responses:
-        '200':
+        "200":
           description: El checkout de Mercado Pago (init_point) para mandar a quien paga
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/UrlExterna' }
-        '404': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
-        '502': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/UrlExterna" }
+        "404": { $ref: "#/components/responses/Problema" }
+        "409": { $ref: "#/components/responses/Problema" }
+        "502": { $ref: "#/components/responses/Problema" }
   /v1/panel/integraciones/mercadopago:
     get:
       operationId: conexionMercadoPago
       summary: Si la tienda conectó su cuenta de Mercado Pago (marketplace por OAuth).
       responses:
-        '200':
+        "200":
           description: Estado
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ConexionMP' }
+              schema: { $ref: "#/components/schemas/ConexionMP" }
     delete:
       operationId: desconectarMercadoPago
       summary: Borra los tokens de la tienda.
       responses:
-        '204': { description: Desconectada }
+        "204": { description: Desconectada }
   /v1/publico/tiendas/{slug}:
     get:
       operationId: tiendaPublica
@@ -724,8 +877,16 @@ paths:
       parameters:
         - { name: slug, in: path, required: true, schema: { type: string } }
       responses:
-        '200': { description: Tienda, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
-        '404': { $ref: '#/components/responses/Problema' }
+        "200":
+          {
+            description: Tienda,
+            content:
+              {
+                application/json:
+                  { schema: { type: object, additionalProperties: true } },
+              },
+          }
+        "404": { $ref: "#/components/responses/Problema" }
   /v1/publico/tiendas/{slug}/pedidos:
     post:
       operationId: comprarEnTienda
@@ -741,7 +902,23 @@ paths:
               type: object
               required: [carrito, email, nombre, telefono, envio, pago]
               properties:
-                carrito: { type: array, maxItems: 50, items: { type: object, required: [id, cantidad], properties: { id: { type: string }, varianteId: { type: [string, 'null'] }, cantidad: { type: integer, minimum: 1, maximum: 99 } } } }
+                carrito:
+                  {
+                    type: array,
+                    maxItems: 50,
+                    items:
+                      {
+                        type: object,
+                        required: [id, cantidad],
+                        properties:
+                          {
+                            id: { type: string },
+                            varianteId: { type: [string, "null"] },
+                            cantidad:
+                              { type: integer, minimum: 1, maximum: 99 },
+                          },
+                      },
+                  }
                 email: { type: string }
                 nombre: { type: string }
                 telefono: { type: string }
@@ -751,13 +928,100 @@ paths:
                 envio: { type: string, enum: [andreani, correo, moto, retiro] }
                 pago: { type: string, enum: [transferencia, mercadopago] }
       responses:
-        '201':
+        "201":
           description: Pedido creado
           content:
             application/json:
-              schema: { type: object, required: [numero, codigo, total], properties: { numero: { type: integer }, codigo: { type: string }, total: { type: integer }, url: { type: string } } }
-        '400': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
+              schema:
+                {
+                  type: object,
+                  required: [numero, codigo, total],
+                  properties:
+                    {
+                      numero: { type: integer },
+                      codigo: { type: string },
+                      total: { type: integer },
+                      url: { type: string },
+                    },
+                }
+        "400": { $ref: "#/components/responses/Problema" }
+        "409": { $ref: "#/components/responses/Problema" }
+  /v1/publico/tiendas/{slug}/carritos:
+    post:
+      operationId: guardarCarritoTienda
+      summary: Guarda el carrito de quien dejó su email en el checkout (uno abierto por email; se cierra solo si compra). Tope de 60 por hora por IP.
+      security: []
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, carrito]
+              properties:
+                email: { type: string, maxLength: 120 }
+                nombre: { type: string, maxLength: 80 }
+                carrito:
+                  {
+                    type: array,
+                    minItems: 1,
+                    maxItems: 50,
+                    items:
+                      {
+                        type: object,
+                        required: [id, cantidad],
+                        properties:
+                          {
+                            id: { type: string },
+                            varianteId: { type: [string, "null"] },
+                            cantidad:
+                              { type: integer, minimum: 1, maximum: 99 },
+                          },
+                      },
+                  }
+      responses:
+        "204": { description: Guardado }
+        "400": { $ref: "#/components/responses/Problema" }
+        "429": { description: Demasiados carritos desde esa IP }
+  /v1/publico/tiendas/{slug}/carritos/{token}:
+    get:
+      operationId: carritoPorToken
+      summary: Las líneas del carrito del link del recordatorio, para volver a armarlo. 404 si ya compró o no existe.
+      security: []
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+        - { name: token, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Carrito
+          content:
+            application/json:
+              schema:
+                {
+                  type: object,
+                  required: [carrito],
+                  properties:
+                    {
+                      carrito:
+                        {
+                          type: array,
+                          items:
+                            {
+                              type: object,
+                              required: [id, cantidad],
+                              properties:
+                                {
+                                  id: { type: string },
+                                  varianteId: { type: [string, "null"] },
+                                  cantidad: { type: integer },
+                                },
+                            },
+                        },
+                    },
+                }
+        "404": { $ref: "#/components/responses/Problema" }
   /v1/publico/tiendas/{slug}/pedidos/{codigo}:
     get:
       operationId: confirmacionPedido
@@ -767,18 +1031,40 @@ paths:
         - { name: slug, in: path, required: true, schema: { type: string } }
         - { name: codigo, in: path, required: true, schema: { type: string } }
       responses:
-        '200': { description: Pedido, content: { application/json: { schema: { type: object, required: [numero, total, pago, nombre, estadoPago], properties: { numero: { type: integer }, total: { type: integer }, pago: { type: string }, nombre: { type: string }, estadoPago: { type: string } } } } } }
-        '404': { $ref: '#/components/responses/Problema' }
+        "200":
+          {
+            description: Pedido,
+            content:
+              {
+                application/json:
+                  {
+                    schema:
+                      {
+                        type: object,
+                        required: [numero, total, pago, nombre, estadoPago],
+                        properties:
+                          {
+                            numero: { type: integer },
+                            total: { type: integer },
+                            pago: { type: string },
+                            nombre: { type: string },
+                            estadoPago: { type: string },
+                          },
+                      },
+                  },
+              },
+          }
+        "404": { $ref: "#/components/responses/Problema" }
   /v1/panel/integraciones/mercadolibre:
     get:
       operationId: conexionMercadoLibre
       summary: Si la tienda conectó su cuenta de Mercado Libre, y cuánto publicó.
       responses:
-        '200':
+        "200":
           description: Estado
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ConexionML' }
+              schema: { $ref: "#/components/schemas/ConexionML" }
     put:
       operationId: ajustarMercadoLibre
       summary: Recargo sobre el precio (comisión) y pausar sin stock.
@@ -793,23 +1079,23 @@ paths:
                 recargo: { type: integer, minimum: 0, maximum: 60 }
                 pausarSinStock: { type: boolean }
       responses:
-        '204': { description: Guardado }
-        '409': { $ref: '#/components/responses/Problema' }
+        "204": { description: Guardado }
+        "409": { $ref: "#/components/responses/Problema" }
     delete:
       operationId: desconectarMercadoLibre
       responses:
-        '204': { description: Desconectada }
+        "204": { description: Desconectada }
   /v1/panel/integraciones/mercadolibre/conectar:
     post:
       operationId: conectarMercadoLibre
       summary: La URL de autorización (PKCE, state de un solo uso).
       responses:
-        '200':
+        "200":
           description: Adónde mandar a la persona
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/UrlExterna' }
-        '409': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/UrlExterna" }
+        "409": { $ref: "#/components/responses/Problema" }
   /v1/panel/integraciones/mercadolibre/vuelta:
     post:
       operationId: volverMercadoLibre
@@ -824,8 +1110,8 @@ paths:
                 codigo: { type: string, maxLength: 512 }
                 estado: { type: string, maxLength: 512 }
       responses:
-        '204': { description: Conectada }
-        '400': { $ref: '#/components/responses/Problema' }
+        "204": { description: Conectada }
+        "400": { $ref: "#/components/responses/Problema" }
   /v1/panel/productos/{id}/mercadolibre:
     post:
       operationId: publicarEnMercadoLibre
@@ -833,38 +1119,38 @@ paths:
       parameters:
         - { name: id, in: path, required: true, schema: { type: string } }
       responses:
-        '201':
+        "201":
           description: Publicado
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/PublicacionML' }
-        '409': { $ref: '#/components/responses/Problema' }
-        '422': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/PublicacionML" }
+        "409": { $ref: "#/components/responses/Problema" }
+        "422": { $ref: "#/components/responses/Problema" }
     delete:
       operationId: despublicarDeMercadoLibre
       summary: Pausa la publicación y deja de sincronizarla.
       parameters:
         - { name: id, in: path, required: true, schema: { type: string } }
       responses:
-        '204': { description: Pausada }
+        "204": { description: Pausada }
   /v1/webhooks/mercadolibre:
     post:
       operationId: webhookMercadoLibre
       summary: Avisos de Mercado Libre (orders_v2, questions, items). Se encolan y se traen con el token de la tienda.
       security: []
       responses:
-        '200': { description: Recibido }
+        "200": { description: Recibido }
   /v1/panel/integraciones/mercadopago/conectar:
     post:
       operationId: conectarMercadoPago
       summary: La URL de autorización (state de un solo uso y PKCE). Sólo dueña o admin.
       responses:
-        '200':
+        "200":
           description: Adónde mandar a la persona
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/UrlExterna' }
-        '409': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/UrlExterna" }
+        "409": { $ref: "#/components/responses/Problema" }
   /v1/panel/integraciones/mercadopago/vuelta:
     post:
       operationId: volverMercadoPago
@@ -880,8 +1166,8 @@ paths:
                 codigo: { type: string, maxLength: 512 }
                 estado: { type: string, maxLength: 512 }
       responses:
-        '204': { description: Conectada }
-        '400': { $ref: '#/components/responses/Problema' }
+        "204": { description: Conectada }
+        "400": { $ref: "#/components/responses/Problema" }
   /v1/panel/integraciones/mercadopago/caja:
     post:
       operationId: crearCajaMercadoPago
@@ -890,11 +1176,11 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/UbicacionMP' }
+            schema: { $ref: "#/components/schemas/UbicacionMP" }
       responses:
-        '204': { description: Creada }
-        '400': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
+        "204": { description: Creada }
+        "400": { $ref: "#/components/responses/Problema" }
+        "409": { $ref: "#/components/responses/Problema" }
   /v1/panel/pedidos/{numero}/qr:
     post:
       operationId: cobrarConQR
@@ -902,45 +1188,69 @@ paths:
       parameters:
         - { name: numero, in: path, required: true, schema: { type: integer } }
       responses:
-        '201':
+        "201":
           description: El QR para mostrar
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/CobroQR' }
-        '409': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/CobroQR" }
+        "409": { $ref: "#/components/responses/Problema" }
   /v1/panel/cobros/qr/{referencia}:
     get:
       operationId: estadoCobroQR
       summary: Consulta la orden en Mercado Pago y la aplica (created, processed, canceled…).
       parameters:
-        - { name: referencia, in: path, required: true, schema: { type: string } }
+        - {
+            name: referencia,
+            in: path,
+            required: true,
+            schema: { type: string },
+          }
       responses:
-        '200':
+        "200":
           description: Estado
           content:
             application/json:
-              schema: { type: object, required: [estado], properties: { estado: { type: string } } }
+              schema:
+                {
+                  type: object,
+                  required: [estado],
+                  properties: { estado: { type: string } },
+                }
     delete:
       operationId: cancelarCobroQR
       parameters:
-        - { name: referencia, in: path, required: true, schema: { type: string } }
+        - {
+            name: referencia,
+            in: path,
+            required: true,
+            schema: { type: string },
+          }
       responses:
-        '204': { description: Cancelada }
+        "204": { description: Cancelada }
   /v1/panel/pedidos/{numero}/reembolso:
     post:
       operationId: reembolsarPedido
       summary: Devuelve el pago del pedido por Mercado Pago (total, o parcial con monto). Pide Idempotency-Key.
       parameters:
         - { name: numero, in: path, required: true, schema: { type: integer } }
-        - { name: Idempotency-Key, in: header, required: true, schema: { type: string, minLength: 8, maxLength: 255 } }
+        - {
+            name: Idempotency-Key,
+            in: header,
+            required: true,
+            schema: { type: string, minLength: 8, maxLength: 255 },
+          }
       requestBody:
         content:
           application/json:
-            schema: { type: object, properties: { monto: { type: integer, minimum: 1 } } }
+            schema:
+              {
+                type: object,
+                properties: { monto: { type: integer, minimum: 1 } },
+              }
       responses:
-        '204': { description: Devuelto }
-        '404': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
+        "204": { description: Devuelto }
+        "404": { $ref: "#/components/responses/Problema" }
+        "409": { $ref: "#/components/responses/Problema" }
   /v1/panel/cuenta/suscripcion:
     post:
       operationId: suscribirPlan
@@ -957,30 +1267,30 @@ paths:
                 ciclo: { type: string, enum: [mes, anio] }
                 diasPrueba: { type: integer, minimum: 0, maximum: 14 }
       responses:
-        '200':
+        "200":
           description: El checkout de la suscripción
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/UrlExterna' }
+              schema: { $ref: "#/components/schemas/UrlExterna" }
   /v1/webhooks/mercadopago:
     post:
       operationId: webhookMercadoPago
       summary: Avisos de Mercado Pago, con x-signature (HMAC-SHA256). Sin firma válida, 401.
       security: []
       responses:
-        '200': { description: Recibido }
-        '401': { description: Firma inválida }
+        "200": { description: Recibido }
+        "401": { description: Firma inválida }
   /v1/panel/listas-precio:
     get:
       operationId: listasPrecio
       summary: Las listas de precio y la muestra para el aumento por inflación.
       responses:
-        '200':
+        "200":
           description: Listas
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ListasPrecio' }
-        '401': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/ListasPrecio" }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/panel/listas-precio/aumento:
     post:
       operationId: aumentarPrecios
@@ -994,10 +1304,10 @@ paths:
               required: [pct, redondeo]
               properties:
                 pct: { type: integer, minimum: 1, maximum: 50 }
-                redondeo: { type: string, enum: ['no', '90', '500'] }
+                redondeo: { type: string, enum: ["no", "90", "500"] }
                 programar: { type: boolean, default: false }
       responses:
-        '200':
+        "200":
           description: Aplicado o programado
           content:
             application/json:
@@ -1006,34 +1316,34 @@ paths:
                 required: [productos]
                 properties:
                   productos: { type: integer }
-                  para: { type: [string, 'null'], format: date-time }
-        '400': { $ref: '#/components/responses/Problema' }
-        '401': { $ref: '#/components/responses/Problema' }
+                  para: { type: [string, "null"], format: date-time }
+        "400": { $ref: "#/components/responses/Problema" }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/panel/listas-precio/aumento/deshacer:
     post:
       operationId: deshacerAumento
       summary: Vuelve los precios a como estaban antes del último aumento.
       responses:
-        '204': { description: Deshecho }
-        '404': { $ref: '#/components/responses/Problema' }
+        "204": { description: Deshecho }
+        "404": { $ref: "#/components/responses/Problema" }
   /v1/panel/listas-precio/programado:
     delete:
       operationId: cancelarAumento
       summary: Cancela el aumento programado.
       responses:
-        '204': { description: Cancelado }
-        '404': { $ref: '#/components/responses/Problema' }
+        "204": { description: Cancelado }
+        "404": { $ref: "#/components/responses/Problema" }
   /v1/panel/cupones:
     get:
       operationId: cupones
       summary: Cupones, automáticas y oferta relámpago.
       responses:
-        '200':
+        "200":
           description: Cupones
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Cupones' }
-        '401': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/Cupones" }
+        "401": { $ref: "#/components/responses/Problema" }
     post:
       operationId: crearCupon
       summary: Un cupón nuevo (activo o programado).
@@ -1041,15 +1351,15 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/CuponNuevo' }
+            schema: { $ref: "#/components/schemas/CuponNuevo" }
       responses:
-        '201':
+        "201":
           description: Creado
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Cupon' }
-        '400': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/Cupon" }
+        "400": { $ref: "#/components/responses/Problema" }
+        "409": { $ref: "#/components/responses/Problema" }
   /v1/panel/cupones/{id}:
     post:
       operationId: accionCupon
@@ -1064,22 +1374,26 @@ paths:
               type: object
               required: [accion]
               properties:
-                accion: { type: string, enum: [pausar, activar, duplicar, minimo, deshacer-minimo] }
+                accion:
+                  {
+                    type: string,
+                    enum: [pausar, activar, duplicar, minimo, deshacer-minimo],
+                  }
                 minimo: { type: integer, minimum: 0 }
       responses:
-        '200':
+        "200":
           description: El cupón como quedó (o la copia)
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Cupon' }
-        '404': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/Cupon" }
+        "404": { $ref: "#/components/responses/Problema" }
+        "409": { $ref: "#/components/responses/Problema" }
   /v1/panel/cupones/consejo:
     delete:
       operationId: descartarConsejo
       summary: Oculta el consejo de Hornero (Ahora no).
       responses:
-        '204': { description: Oculto }
+        "204": { description: Oculto }
   /v1/panel/automaticas/{id}:
     put:
       operationId: fijarAutomatica
@@ -1096,8 +1410,8 @@ paths:
               properties:
                 activa: { type: boolean }
       responses:
-        '204': { description: Guardado }
-        '404': { $ref: '#/components/responses/Problema' }
+        "204": { description: Guardado }
+        "404": { $ref: "#/components/responses/Problema" }
   /v1/panel/relampago:
     post:
       operationId: accionRelampago
@@ -1110,21 +1424,25 @@ paths:
               type: object
               required: [accion]
               properties:
-                accion: { type: string, enum: [sumar-hora, liberar, terminar, reanudar] }
+                accion:
+                  {
+                    type: string,
+                    enum: [sumar-hora, liberar, terminar, reanudar],
+                  }
       responses:
-        '204': { description: Hecho }
-        '404': { $ref: '#/components/responses/Problema' }
+        "204": { description: Hecho }
+        "404": { $ref: "#/components/responses/Problema" }
   /v1/panel/marketing:
     get:
       operationId: marketing
       summary: Audiencias, campañas y lo necesario para armar una nueva.
       responses:
-        '200':
+        "200":
           description: Marketing
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Marketing' }
-        '401': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/Marketing" }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/panel/campanas:
     post:
       operationId: crearCampana
@@ -1137,31 +1455,32 @@ paths:
               type: object
               required: [audiencia, mensaje, foto, boton, cupon]
               properties:
-                audiencia: { type: string, enum: [todos, vip, riesgo, categoria] }
+                audiencia:
+                  { type: string, enum: [todos, vip, riesgo, categoria] }
                 mensaje: { type: string, minLength: 10, maxLength: 1000 }
                 foto: { type: boolean }
                 boton: { type: boolean }
                 cupon: { type: boolean }
                 programar: { type: boolean, default: false }
       responses:
-        '201':
+        "201":
           description: Creada
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Campana' }
-        '400': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/Campana" }
+        "400": { $ref: "#/components/responses/Problema" }
+        "409": { $ref: "#/components/responses/Problema" }
   /v1/panel/canales:
     get:
       operationId: canales
       summary: Lo vendido por canal este mes, ya descontadas las comisiones.
       responses:
-        '200':
+        "200":
           description: Canales
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Canales' }
-        '401': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/Canales" }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/panel/canales/{id}:
     put:
       operationId: fijarCanal
@@ -1178,26 +1497,26 @@ paths:
               properties:
                 activo: { type: boolean }
       responses:
-        '204': { description: Guardado }
-        '404': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
+        "204": { description: Guardado }
+        "404": { $ref: "#/components/responses/Problema" }
+        "409": { $ref: "#/components/responses/Problema" }
   /v1/panel/informes:
     get:
       operationId: informes
       summary: Los últimos 12 meses.
       responses:
-        '200':
+        "200":
           description: Informes
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Informes' }
-        '401': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/Informes" }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/panel/actividad:
     get:
       operationId: actividad
       summary: Todo lo que pasó en la cuenta, quién lo hizo y desde dónde.
       responses:
-        '200':
+        "200":
           description: Actividad
           content:
             application/json:
@@ -1205,8 +1524,12 @@ paths:
                 type: object
                 required: [items]
                 properties:
-                  items: { type: array, items: { $ref: '#/components/schemas/Evento' } }
-        '401': { $ref: '#/components/responses/Problema' }
+                  items:
+                    {
+                      type: array,
+                      items: { $ref: "#/components/schemas/Evento" },
+                    }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/panel/actividad/{id}/deshacer:
     post:
       operationId: deshacerEvento
@@ -1214,20 +1537,20 @@ paths:
       parameters:
         - { name: id, in: path, required: true, schema: { type: string } }
       responses:
-        '204': { description: Deshecho }
-        '404': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
+        "204": { description: Deshecho }
+        "404": { $ref: "#/components/responses/Problema" }
+        "409": { $ref: "#/components/responses/Problema" }
   /v1/panel/para-hacer:
     get:
       operationId: paraHacer
       summary: Las tareas de hoy, ordenadas por lo que más plata mueven.
       responses:
-        '200':
+        "200":
           description: Tareas
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ParaHacer' }
-        '401': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/ParaHacer" }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/panel/para-hacer/{id}:
     put:
       operationId: marcarTarea
@@ -1244,25 +1567,25 @@ paths:
               properties:
                 hecha: { type: boolean }
       responses:
-        '204': { description: Guardado }
-        '404': { $ref: '#/components/responses/Problema' }
+        "204": { description: Guardado }
+        "404": { $ref: "#/components/responses/Problema" }
   /v1/panel/finanzas:
     get:
       operationId: finanzas
       summary: Lo disponible, lo que se va a liquidar, los gastos, el flujo y los movimientos.
       responses:
-        '200':
+        "200":
           description: Finanzas
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Finanzas' }
-        '401': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/Finanzas" }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/panel/finanzas/retiro:
     post:
       operationId: retirar
       summary: Transfiere lo disponible a la cuenta bancaria.
       responses:
-        '200':
+        "200":
           description: En camino
           content:
             application/json:
@@ -1272,18 +1595,18 @@ paths:
                 properties:
                   monto: { type: integer }
                   cuenta: { type: string }
-        '409': { $ref: '#/components/responses/Problema' }
+        "409": { $ref: "#/components/responses/Problema" }
   /v1/panel/mi-tienda:
     get:
       operationId: miTienda
       summary: El editor de la tienda (borrador y si hay cambios sin publicar).
       responses:
-        '200':
+        "200":
           description: Mi tienda
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/MiTienda' }
-        '401': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/MiTienda" }
+        "401": { $ref: "#/components/responses/Problema" }
     put:
       operationId: guardarMiTienda
       summary: Guarda el borrador (secciones y colores).
@@ -1291,27 +1614,27 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/DisenoTienda' }
+            schema: { $ref: "#/components/schemas/DisenoTienda" }
       responses:
-        '204': { description: Guardado }
-        '400': { $ref: '#/components/responses/Problema' }
+        "204": { description: Guardado }
+        "400": { $ref: "#/components/responses/Problema" }
   /v1/panel/mi-tienda/publicar:
     post:
       operationId: publicarTienda
       summary: Publica el borrador.
       responses:
-        '204': { description: Publicado }
+        "204": { description: Publicado }
   /v1/panel/configuracion:
     get:
       operationId: configuracion
       summary: Negocio, equipo, seguridad, sesiones, avisos y plan.
       responses:
-        '200':
+        "200":
           description: Configuración
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Configuracion' }
-        '401': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/Configuracion" }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/panel/configuracion/negocio:
     put:
       operationId: guardarNegocio
@@ -1319,16 +1642,21 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/Negocio' }
+            schema: { $ref: "#/components/schemas/Negocio" }
       responses:
-        '204': { description: Guardado }
-        '400': { $ref: '#/components/responses/Problema' }
+        "204": { description: Guardado }
+        "400": { $ref: "#/components/responses/Problema" }
   /v1/panel/configuracion/{grupo}/{clave}:
     put:
       operationId: fijarOpcion
       summary: Prende o apaga una opción de seguridad o un aviso.
       parameters:
-        - { name: grupo, in: path, required: true, schema: { type: string, enum: [seguridad, avisos] } }
+        - {
+            name: grupo,
+            in: path,
+            required: true,
+            schema: { type: string, enum: [seguridad, avisos] },
+          }
         - { name: clave, in: path, required: true, schema: { type: string } }
       requestBody:
         required: true
@@ -1340,8 +1668,8 @@ paths:
               properties:
                 activo: { type: boolean }
       responses:
-        '204': { description: Guardado }
-        '404': { $ref: '#/components/responses/Problema' }
+        "204": { description: Guardado }
+        "404": { $ref: "#/components/responses/Problema" }
   /v1/panel/sesiones/{id}:
     delete:
       operationId: cerrarSesion
@@ -1349,9 +1677,9 @@ paths:
       parameters:
         - { name: id, in: path, required: true, schema: { type: string } }
       responses:
-        '204': { description: Cerrada }
-        '404': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
+        "204": { description: Cerrada }
+        "404": { $ref: "#/components/responses/Problema" }
+        "409": { $ref: "#/components/responses/Problema" }
   /v1/panel/equipo:
     post:
       operationId: invitar
@@ -1364,16 +1692,22 @@ paths:
               type: object
               required: [contacto, rol]
               properties:
-                contacto: { type: string, minLength: 6, maxLength: 120, description: 'Email o WhatsApp' }
+                contacto:
+                  {
+                    type: string,
+                    minLength: 6,
+                    maxLength: 120,
+                    description: "Email o WhatsApp",
+                  }
                 rol: { type: string, enum: [admin, ventas, deposito] }
       responses:
-        '201':
+        "201":
           description: Invitado
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Miembro' }
-        '400': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/Miembro" }
+        "400": { $ref: "#/components/responses/Problema" }
+        "409": { $ref: "#/components/responses/Problema" }
   /v1/panel/plan:
     put:
       operationId: cambiarPlan
@@ -1388,32 +1722,32 @@ paths:
                 plan: { type: string, enum: [gratis, emprende, pro, negocio] }
                 ciclo: { type: string, enum: [mes, anio] }
       responses:
-        '204': { description: Cambiado }
-        '409': { $ref: '#/components/responses/Problema' }
+        "204": { description: Cambiado }
+        "409": { $ref: "#/components/responses/Problema" }
   /v1/panel/cuenta/plan:
     get:
       operationId: planCuenta
       summary: Plan, uso del mes, medio de pago y facturas de Mostrador.
       responses:
-        '200':
+        "200":
           description: Plan
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/PlanCuenta' }
-        '401': { $ref: '#/components/responses/Problema' }
+              schema: { $ref: "#/components/schemas/PlanCuenta" }
+        "401": { $ref: "#/components/responses/Problema" }
   /v1/panel/cuenta/pack:
     post:
       operationId: comprarPack
       summary: Suma 2.000 respuestas de Hornero este mes ($ 4.900).
       responses:
-        '204': { description: Sumado }
-        '409': { $ref: '#/components/responses/Problema' }
+        "204": { description: Sumado }
+        "409": { $ref: "#/components/responses/Problema" }
     delete:
       operationId: devolverPack
       summary: Deshace el último pack de este mes.
       responses:
-        '204': { description: Devuelto }
-        '404': { $ref: '#/components/responses/Problema' }
+        "204": { description: Devuelto }
+        "404": { $ref: "#/components/responses/Problema" }
   /v1/panel/cuenta/cancelacion:
     post:
       operationId: cancelarPlan
@@ -1429,7 +1763,7 @@ paths:
                 motivo: { type: integer, minimum: 0, maximum: 4 }
                 accion: { type: string, enum: [cancelar, oferta] }
       responses:
-        '200':
+        "200":
           description: Hecho
           content:
             application/json:
@@ -1442,23 +1776,28 @@ paths:
       operationId: reactivarPlan
       summary: Deshace la cancelación.
       responses:
-        '204': { description: Reactivado }
+        "204": { description: Reactivado }
   /v1/panel/permisos:
     get:
       operationId: permisos
       summary: Qué puede hacer cada rol.
       responses:
-        '200':
+        "200":
           description: Matriz
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Permisos' }
+              schema: { $ref: "#/components/schemas/Permisos" }
   /v1/panel/permisos/{permiso}/{rol}:
     put:
       operationId: fijarPermiso
       parameters:
         - { name: permiso, in: path, required: true, schema: { type: string } }
-        - { name: rol, in: path, required: true, schema: { type: string, enum: [admin, ventas, deposito] } }
+        - {
+            name: rol,
+            in: path,
+            required: true,
+            schema: { type: string, enum: [admin, ventas, deposito] },
+          }
       requestBody:
         required: true
         content:
@@ -1469,9 +1808,9 @@ paths:
               properties:
                 activo: { type: boolean }
       responses:
-        '204': { description: Guardado }
-        '404': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
+        "204": { description: Guardado }
+        "404": { $ref: "#/components/responses/Problema" }
+        "409": { $ref: "#/components/responses/Problema" }
   /v1/panel/equipo/{id}:
     put:
       operationId: cambiarRol
@@ -1487,27 +1826,27 @@ paths:
               properties:
                 rol: { type: string, enum: [admin, ventas, deposito] }
       responses:
-        '204': { description: Cambiado }
-        '404': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
+        "204": { description: Cambiado }
+        "404": { $ref: "#/components/responses/Problema" }
+        "409": { $ref: "#/components/responses/Problema" }
     delete:
       operationId: quitarDelEquipo
       parameters:
         - { name: id, in: path, required: true, schema: { type: string } }
       responses:
-        '204': { description: Quitado }
-        '404': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
+        "204": { description: Quitado }
+        "404": { $ref: "#/components/responses/Problema" }
+        "409": { $ref: "#/components/responses/Problema" }
   /v1/panel/dominios:
     get:
       operationId: dominios
       summary: Dónde se ve la tienda y los dominios propios.
       responses:
-        '200':
+        "200":
           description: Dominios
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Dominios' }
+              schema: { $ref: "#/components/schemas/Dominios" }
     post:
       operationId: conectarDominio
       requestBody:
@@ -1520,9 +1859,9 @@ paths:
               properties:
                 dominio: { type: string, maxLength: 253 }
       responses:
-        '201': { description: Agregado }
-        '400': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
+        "201": { description: Agregado }
+        "400": { $ref: "#/components/responses/Problema" }
+        "409": { $ref: "#/components/responses/Problema" }
   /v1/panel/dominios/{dominio}:
     put:
       operationId: dominioPrincipal
@@ -1530,52 +1869,69 @@ paths:
       parameters:
         - { name: dominio, in: path, required: true, schema: { type: string } }
       responses:
-        '204': { description: Hecho }
-        '404': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
+        "204": { description: Hecho }
+        "404": { $ref: "#/components/responses/Problema" }
+        "409": { $ref: "#/components/responses/Problema" }
     delete:
       operationId: quitarDominio
       parameters:
         - { name: dominio, in: path, required: true, schema: { type: string } }
       responses:
-        '204': { description: Quitado }
-        '404': { $ref: '#/components/responses/Problema' }
+        "204": { description: Quitado }
+        "404": { $ref: "#/components/responses/Problema" }
   /v1/panel/notificaciones/preferencias:
     get:
       operationId: preferenciasAvisos
       responses:
-        '200':
+        "200":
           description: Preferencias
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/PreferenciasAvisos' }
+              schema: { $ref: "#/components/schemas/PreferenciasAvisos" }
     put:
       operationId: guardarPreferenciasAvisos
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/PreferenciasAvisos' }
+            schema: { $ref: "#/components/schemas/PreferenciasAvisos" }
       responses:
-        '204': { description: Guardado }
+        "204": { description: Guardado }
   /v1/panel/datos:
     get:
       operationId: misDatos
       summary: Cuánto hay de cada cosa para exportar y lo exportado.
       responses:
-        '200':
+        "200":
           description: Datos
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/MisDatos' }
+              schema: { $ref: "#/components/schemas/MisDatos" }
   /v1/panel/datos/{tipo}:
     get:
       operationId: exportar
       summary: Exporta productos, clientes, pedidos, facturas, reseñas o conversaciones.
       parameters:
-        - { name: tipo, in: path, required: true, schema: { type: string, enum: [productos, clientes, pedidos, facturas, resenas, conversaciones] } }
+        - {
+            name: tipo,
+            in: path,
+            required: true,
+            schema:
+              {
+                type: string,
+                enum:
+                  [
+                    productos,
+                    clientes,
+                    pedidos,
+                    facturas,
+                    resenas,
+                    conversaciones,
+                  ],
+              },
+          }
       responses:
-        '200':
+        "200":
           description: Las filas (el BFF arma el CSV, el Excel o el ZIP)
           content:
             application/json:
@@ -1585,13 +1941,14 @@ paths:
                 properties:
                   filas:
                     type: array
-                    items: { type: array, items: { type: [string, number, 'null'] } }
+                    items:
+                      { type: array, items: { type: [string, number, "null"] } }
   /v1/panel/datos/inactivos:
     delete:
       operationId: borrarInactivos
       summary: Programa el borrado de los clientes sin compras en 3 años (7 días para frenarlo).
       responses:
-        '200':
+        "200":
           description: Programado
           content:
             application/json:
@@ -1603,7 +1960,7 @@ paths:
     post:
       operationId: frenarBorrado
       responses:
-        '204': { description: Frenado }
+        "204": { description: Frenado }
   /v1/panel/cuenta:
     delete:
       operationId: cerrarCuenta
@@ -1618,30 +1975,30 @@ paths:
               properties:
                 confirmacion: { type: string }
       responses:
-        '204': { description: Cerrada }
-        '400': { $ref: '#/components/responses/Problema' }
+        "204": { description: Cerrada }
+        "400": { $ref: "#/components/responses/Problema" }
   /v1/panel/tienda:
     get:
       operationId: obtenerTienda
       summary: La tienda de la sesión
       responses:
-        '200':
+        "200":
           description: Tienda
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Tienda' }
-        '401':
+              schema: { $ref: "#/components/schemas/Tienda" }
+        "401":
           description: Sin sesión
           content:
             application/problem+json:
-              schema: { $ref: '#/components/schemas/Problema' }
+              schema: { $ref: "#/components/schemas/Problema" }
 components:
   responses:
     Problema:
       description: Error (application/problem+json)
       content:
         application/problem+json:
-          schema: { $ref: '#/components/schemas/Problema' }
+          schema: { $ref: "#/components/schemas/Problema" }
   schemas:
     ResumenPanel:
       type: object
@@ -1649,19 +2006,23 @@ components:
       properties:
         insignias:
           type: object
-          description: 'Números del menú (0: sin insignia)'
+          description: "Números del menú (0: sin insignia)"
           required: [pedidos, carritos, whatsapp, paraHacer]
           properties:
-            pedidos: { type: integer, description: 'Para preparar' }
-            carritos: { type: integer, description: 'Carritos abandonados recuperables' }
-            whatsapp: { type: integer, description: 'Conversaciones sin leer' }
-            paraHacer: { type: integer, description: 'Tareas de hoy' }
+            pedidos: { type: integer, description: "Para preparar" }
+            carritos:
+              {
+                type: integer,
+                description: "Carritos abandonados recuperables",
+              }
+            whatsapp: { type: integer, description: "Conversaciones sin leer" }
+            paraHacer: { type: integer, description: "Tareas de hoy" }
         notificaciones:
           type: array
-          items: { $ref: '#/components/schemas/Notificacion' }
+          items: { $ref: "#/components/schemas/Notificacion" }
         canales:
           type: array
-          description: 'Canales conectados (ids: wa, ml, mp, ig, tg)'
+          description: "Canales conectados (ids: wa, ml, mp, ig, tg)"
           items: { type: string }
         prueba:
           type: object
@@ -1672,7 +2033,7 @@ components:
             diasTotales: { type: integer }
     Comparado:
       type: object
-      description: 'El valor del período y el del período anterior del mismo largo'
+      description: "El valor del período y el del período anterior del mismo largo"
       required: [actual, anterior]
       properties:
         actual: { type: number }
@@ -1683,7 +2044,7 @@ components:
       properties:
         ventasPorDia:
           type: array
-          description: 'Últimos 14 días, del más viejo a hoy (hora de Argentina)'
+          description: "Últimos 14 días, del más viejo a hoy (hora de Argentina)"
           items:
             type: object
             required: [fecha, ventas, pedidos]
@@ -1698,7 +2059,7 @@ components:
             required: [nombre, categoria, precio, stock, vendidos30d, enMl]
             properties:
               nombre: { type: string }
-              categoria: { type: [string, 'null'] }
+              categoria: { type: [string, "null"] }
               precio: { type: integer }
               stock: { type: integer }
               vendidos30d: { type: integer }
@@ -1710,7 +2071,11 @@ components:
             total: { type: integer }
             nuevos30d: { type: integer }
             conWhatsApp: { type: integer }
-            sinVolver: { type: integer, description: 'Compraron más de una vez y hace 30 días que no vuelven' }
+            sinVolver:
+              {
+                type: integer,
+                description: "Compraron más de una vez y hace 30 días que no vuelven",
+              }
         canales30d:
           type: array
           items:
@@ -1733,15 +2098,16 @@ components:
           items: { type: object, additionalProperties: true }
         segmentos:
           type: object
-          description: 'Conteo por segmento, sin el filtro de segmento'
+          description: "Conteo por segmento, sin el filtro de segmento"
           additionalProperties: { type: integer }
         facetas:
           type: object
-          description: 'Por faceta, conteo de cada valor sin el filtro de esa faceta'
-          additionalProperties: { type: object, additionalProperties: { type: integer } }
+          description: "Por faceta, conteo de cada valor sin el filtro de esa faceta"
+          additionalProperties:
+            { type: object, additionalProperties: { type: integer } }
         resumen:
           type: object
-          description: 'Números para el encabezado y la sugerencia de Hornero (dependen de la lista)'
+          description: "Números para el encabezado y la sugerencia de Hornero (dependen de la lista)"
           additionalProperties: { type: number }
     ProductoEditable:
       type: object
@@ -1749,30 +2115,34 @@ components:
       properties:
         nombre: { type: string, minLength: 2, maxLength: 120 }
         descripcion: { type: string, maxLength: 4000 }
-        categoria: { type: [string, 'null'], maxLength: 60 }
+        categoria: { type: [string, "null"], maxLength: 60 }
         precio: { type: integer, minimum: 0 }
         costo: { type: integer, minimum: 0 }
         sku: { type: string, maxLength: 40 }
         stock: { type: integer, minimum: 0 }
-        foto: { type: [string, 'null'], description: 'La portada (fotos[0]). Sin `fotos`: reemplaza la portada y deja el resto; null vacía la galería' }
+        foto:
+          {
+            type: [string, "null"],
+            description: "La portada (fotos[0]). Sin `fotos`: reemplaza la portada y deja el resto; null vacía la galería",
+          }
         fotos:
           type: array
           maxItems: 8
-          description: 'Galería: la primera es la portada (ids de foto o URLs https). Sin vacías; las repetidas se descartan'
+          description: "Galería: la primera es la portada (ids de foto o URLs https). Sin vacías; las repetidas se descartan"
           items: { type: string }
         opciones:
           type: array
           maxItems: 3
-          description: 'Talle, Color, Presentación… Con opciones se vende por variante y el `stock` del producto se ignora (es la suma de las activas). Sin mandar: quedan las que había; [] las saca. Hasta 100 combinaciones; nombres y valores repetidos se comparan sin mayúsculas ni tildes'
-          items: { $ref: '#/components/schemas/OpcionProducto' }
+          description: "Talle, Color, Presentación… Con opciones se vende por variante y el `stock` del producto se ignora (es la suma de las activas). Sin mandar: quedan las que había; [] las saca. Hasta 100 combinaciones; nombres y valores repetidos se comparan sin mayúsculas ni tildes"
+          items: { $ref: "#/components/schemas/OpcionProducto" }
         variantes:
           type: array
           maxItems: 100
-          description: 'Sólo las que se tocan, identificadas por sus valores. Al guardar se generan las combinaciones: las nuevas arrancan con stock 0 y activas; las que dejan de existir se borran'
-          items: { $ref: '#/components/schemas/VarianteEditable' }
+          description: "Sólo las que se tocan, identificadas por sus valores. Al guardar se generan las combinaciones: las nuevas arrancan con stock 0 y activas; las que dejan de existir se borran"
+          items: { $ref: "#/components/schemas/VarianteEditable" }
         canales:
           type: object
-          description: 'Dónde se publica: web, ml, ig, google'
+          description: "Dónde se publica: web, ml, ig, google"
           additionalProperties: { type: boolean }
     OpcionProducto:
       type: object
@@ -1783,7 +2153,7 @@ components:
           type: array
           minItems: 1
           maxItems: 20
-          description: 'Sin repetidos'
+          description: "Sin repetidos"
           items: { type: string, minLength: 1, maxLength: 20 }
     VarianteEditable:
       type: object
@@ -1791,13 +2161,32 @@ components:
       properties:
         valores:
           type: object
-          description: 'Una clave por opción, con un valor de esa opción: identifica la combinación'
+          description: "Una clave por opción, con un valor de esa opción: identifica la combinación"
           additionalProperties: { type: string }
         sku: { type: string, maxLength: 40 }
-        precio: { type: [integer, 'null'], minimum: 0, description: 'null: usa el precio del producto' }
-        stock: { type: integer, minimum: 0, maximum: 1000000, description: 'Sin mandar: el que tenía (0 si es nueva)' }
-        foto: { type: [string, 'null'], description: 'Una de las fotos del producto' }
-        activa: { type: boolean, description: 'Sin mandar: la que tenía (true si es nueva)' }
+        precio:
+          {
+            type: [integer, "null"],
+            minimum: 0,
+            description: "null: usa el precio del producto",
+          }
+        stock:
+          {
+            type: integer,
+            minimum: 0,
+            maximum: 1000000,
+            description: "Sin mandar: el que tenía (0 si es nueva)",
+          }
+        foto:
+          {
+            type: [string, "null"],
+            description: "Una de las fotos del producto",
+          }
+        activa:
+          {
+            type: boolean,
+            description: "Sin mandar: la que tenía (true si es nueva)",
+          }
     Variante:
       type: object
       required: [id, valores, sku, precio, stock, foto, activa]
@@ -1805,33 +2194,57 @@ components:
         id: { type: string }
         valores:
           type: object
-          description: 'Una clave por opción del producto, con un valor de esa opción'
+          description: "Una clave por opción del producto, con un valor de esa opción"
           additionalProperties: { type: string }
         sku: { type: string, maxLength: 40 }
-        precio: { type: [integer, 'null'], minimum: 0, description: 'null: usa el precio del producto' }
+        precio:
+          {
+            type: [integer, "null"],
+            minimum: 0,
+            description: "null: usa el precio del producto",
+          }
         stock: { type: integer, minimum: 0 }
-        foto: { type: [string, 'null'], description: 'Una de las fotos del producto' }
+        foto:
+          {
+            type: [string, "null"],
+            description: "Una de las fotos del producto",
+          }
         activa: { type: boolean }
     Producto:
       allOf:
-        - { $ref: '#/components/schemas/ProductoEditable' }
+        - { $ref: "#/components/schemas/ProductoEditable" }
         - type: object
-          required: [id, publicado, vendidos30d, slug, fotos, opciones, variantes]
+          required:
+            [id, publicado, vendidos30d, slug, fotos, opciones, variantes]
           properties:
             id: { type: string }
             publicado: { type: boolean }
             vendidos30d: { type: integer }
             slug: { type: string }
             fotos: { type: array, items: { type: string } }
-            opciones: { type: array, items: { $ref: '#/components/schemas/OpcionProducto' } }
-            variantes: { type: array, description: 'En el orden de las combinaciones', items: { $ref: '#/components/schemas/Variante' } }
+            opciones:
+              {
+                type: array,
+                items: { $ref: "#/components/schemas/OpcionProducto" },
+              }
+            variantes:
+              {
+                type: array,
+                description: "En el orden de las combinaciones",
+                items: { $ref: "#/components/schemas/Variante" },
+              }
     MovimientoStock:
       type: object
       required: [tipo, texto, cantidad, en]
       properties:
-        tipo: { type: string, enum: [web, local, ml, ajuste, conteo, ingreso, devolucion] }
+        tipo:
+          {
+            type: string,
+            enum: [web, local, ml, ajuste, conteo, ingreso, devolucion],
+          }
         texto: { type: string }
-        cantidad: { type: integer, description: 'Negativo: sale; positivo: entra' }
+        cantidad:
+          { type: integer, description: "Negativo: sale; positivo: entra" }
         en: { type: string, format: date-time }
     ConversacionBreve:
       type: object
@@ -1839,19 +2252,23 @@ components:
       properties:
         id: { type: string }
         nombre: { type: string }
-        foto: { type: [string, 'null'] }
+        foto: { type: [string, "null"] }
         canal: { type: string, enum: [wa, ig, tg, ml] }
-        ultimo: { type: string, description: 'El último mensaje' }
+        ultimo: { type: string, description: "El último mensaje" }
         creado: { type: string, format: date-time }
         atiende: { type: string, enum: [hornero, vos, resuelto] }
         sinLeer: { type: integer }
     Conversacion:
       allOf:
-        - { $ref: '#/components/schemas/ConversacionBreve' }
+        - { $ref: "#/components/schemas/ConversacionBreve" }
         - type: object
           required: [mensajes, sugerencia, tomada, cliente, clienteId]
           properties:
-            clienteId: { type: [string, 'null'], description: 'Su ficha, para crearle un pedido' }
+            clienteId:
+              {
+                type: [string, "null"],
+                description: "Su ficha, para crearle un pedido",
+              }
             mensajes:
               type: array
               items:
@@ -1862,19 +2279,28 @@ components:
                   texto: { type: string }
                   en: { type: string, format: date-time }
                   producto:
-                    type: [object, 'null']
-                    description: 'Tarjeta de producto que mandó Hornero'
+                    type: [object, "null"]
+                    description: "Tarjeta de producto que mandó Hornero"
                     required: [nombre, foto, precio, stock]
                     properties:
                       nombre: { type: string }
-                      foto: { type: [string, 'null'] }
+                      foto: { type: [string, "null"] }
                       precio: { type: integer }
                       stock: { type: integer }
-            sugerencia: { type: [string, 'null'], description: 'Respuesta que propone Hornero' }
-            tomada: { type: boolean, description: 'La atiende la persona (Hornero en pausa)' }
+            sugerencia:
+              {
+                type: [string, "null"],
+                description: "Respuesta que propone Hornero",
+              }
+            tomada:
+              {
+                type: boolean,
+                description: "La atiende la persona (Hornero en pausa)",
+              }
             cliente:
               type: object
-              required: [ciudad, desde, gastado, pedidos, etiquetas, ultimoPedido, sabe]
+              required:
+                [ciudad, desde, gastado, pedidos, etiquetas, ultimoPedido, sabe]
               properties:
                 ciudad: { type: string }
                 desde: { type: string, format: date-time }
@@ -1882,46 +2308,67 @@ components:
                 pedidos: { type: integer }
                 etiquetas: { type: array, items: { type: string } }
                 ultimoPedido:
-                  type: [object, 'null']
+                  type: [object, "null"]
                   required: [numero, resumen, total, estado]
                   properties:
                     numero: { type: integer }
                     resumen: { type: string }
                     total: { type: integer }
-                    estado: { $ref: '#/components/schemas/EstadoPedido' }
-                sabe: { type: [string, 'null'], description: 'Lo que Hornero aprendió de esta persona' }
+                    estado: { $ref: "#/components/schemas/EstadoPedido" }
+                sabe:
+                  {
+                    type: [string, "null"],
+                    description: "Lo que Hornero aprendió de esta persona",
+                  }
     AutomaticosCarritos:
       type: object
       required: [hora, dia, email]
       properties:
-        hora: { type: boolean, description: 'WhatsApp a la hora' }
-        dia: { type: boolean, description: 'Segundo aviso a las 24 h con 5% off' }
-        email: { type: boolean, description: 'Email al tercer día' }
+        hora: { type: boolean, description: "WhatsApp a la hora" }
+        dia:
+          { type: boolean, description: "Segundo aviso a las 24 h con 5% off" }
+        email: { type: boolean, description: "Email al tercer día" }
     Carritos:
       type: object
-      required: [carritos, abiertos, monto, recuperado, tasa, costoMensaje, automaticos]
+      required:
+        [carritos, abiertos, monto, recuperado, tasa, costoMensaje, automaticos]
       properties:
         carritos:
           type: array
           items:
             type: object
-            required: [id, nombre, foto, desde, creado, fotos, cantidad, total, recordado]
+            required:
+              [
+                id,
+                nombre,
+                foto,
+                desde,
+                creado,
+                fotos,
+                cantidad,
+                total,
+                recordado,
+              ]
             properties:
               id: { type: string }
               nombre: { type: string }
-              foto: { type: [string, 'null'] }
-              desde: { type: string, description: 'Por dónde llegó: la tienda, Instagram…' }
+              foto: { type: [string, "null"] }
+              desde:
+                {
+                  type: string,
+                  description: "Por dónde llegó: la tienda, Instagram…",
+                }
               creado: { type: string, format: date-time }
-              fotos: { type: array, items: { type: [string, 'null'] } }
+              fotos: { type: array, items: { type: [string, "null"] } }
               cantidad: { type: integer }
               total: { type: integer }
               recordado: { type: boolean }
         abiertos: { type: integer }
         monto: { type: integer }
-        recuperado: { type: integer, description: 'Recuperado este mes' }
-        tasa: { type: number, description: 'Porcentaje recuperado (0–100)' }
+        recuperado: { type: integer, description: "Recuperado este mes" }
+        tasa: { type: number, description: "Porcentaje recuperado (0–100)" }
         costoMensaje: { type: integer }
-        automaticos: { $ref: '#/components/schemas/AutomaticosCarritos' }
+        automaticos: { $ref: "#/components/schemas/AutomaticosCarritos" }
     PedidoNuevo:
       type: object
       required: [items, pago, canal]
@@ -1935,47 +2382,97 @@ components:
             required: [productoId, cantidad]
             properties:
               productoId: { type: string }
-              varianteId: { type: [string, 'null'], description: 'Obligatoria si el producto tiene opciones; activa y de ese producto' }
+              varianteId:
+                {
+                  type: [string, "null"],
+                  description: "Obligatoria si el producto tiene opciones; activa y de ese producto",
+                }
               cantidad: { type: integer, minimum: 1, maximum: 10000 }
-        pago: { type: string, enum: [mp, tarjeta, payway, modo, uala, transf, efectivo] }
+        pago:
+          {
+            type: string,
+            enum: [mp, tarjeta, payway, modo, uala, transf, efectivo],
+          }
         canal: { type: string, enum: [pos, wa, web, ig, ml, tg] }
-        envio: { type: string, enum: [retiro, andreani, oca, correo, moto, mercadoenvios], default: retiro }
-        cliente: { type: [string, 'null'], maxLength: 80, description: 'Nombre (en el local suele no haber)' }
-        clienteId: { type: [string, 'null'], maxLength: 80, description: 'Un cliente que ya existe (el nombre sale de su ficha)' }
-        telefono: { type: [string, 'null'], maxLength: 30 }
-        nota: { type: [string, 'null'], maxLength: 300 }
-        pagado: { type: boolean, default: true, description: 'false: queda Sin pagar (se cobra con un link)' }
+        envio:
+          {
+            type: string,
+            enum: [retiro, andreani, oca, correo, moto, mercadoenvios],
+            default: retiro,
+          }
+        cliente:
+          {
+            type: [string, "null"],
+            maxLength: 80,
+            description: "Nombre (en el local suele no haber)",
+          }
+        clienteId:
+          {
+            type: [string, "null"],
+            maxLength: 80,
+            description: "Un cliente que ya existe (el nombre sale de su ficha)",
+          }
+        telefono: { type: [string, "null"], maxLength: 30 }
+        nota: { type: [string, "null"], maxLength: 300 }
+        pagado:
+          {
+            type: boolean,
+            default: true,
+            description: "false: queda Sin pagar (se cobra con un link)",
+          }
     Devolucion:
       type: object
-      required: [id, producto, foto, cliente, pedido, creada, motivo, monto, resolucion, estado]
+      required:
+        [
+          id,
+          producto,
+          foto,
+          cliente,
+          pedido,
+          creada,
+          motivo,
+          monto,
+          resolucion,
+          estado,
+        ]
       properties:
         id: { type: string }
         producto: { type: string }
-        foto: { type: [string, 'null'] }
+        foto: { type: [string, "null"] }
         cliente: { type: string }
         pedido: { type: integer }
         creada: { type: string, format: date-time }
         motivo: { type: string }
         monto: { type: integer }
-        resolucion: { type: string, description: 'Lo que pidió: reintegro, reemplazo, cambio' }
+        resolucion:
+          {
+            type: string,
+            description: "Lo que pidió: reintegro, reemplazo, cambio",
+          }
         estado: { type: string, enum: [Pendiente, Aprobada, Cambio ofrecido] }
     ResenasYPreguntas:
       type: object
-      required: [preguntas, resenas, promedio, total, porEstrellas, recomendaria]
+      required:
+        [preguntas, resenas, promedio, total, porEstrellas, recomendaria]
       properties:
         preguntas:
           type: array
           items:
             type: object
-            required: [id, producto, foto, pregunta, creada, sugerida, respuesta]
+            required:
+              [id, producto, foto, pregunta, creada, sugerida, respuesta]
             properties:
               id: { type: string }
               producto: { type: string }
-              foto: { type: [string, 'null'] }
+              foto: { type: [string, "null"] }
               pregunta: { type: string }
               creada: { type: string, format: date-time }
-              sugerida: { type: string, description: 'La respuesta que propone Hornero' }
-              respuesta: { type: [string, 'null'], description: 'La publicada' }
+              sugerida:
+                {
+                  type: string,
+                  description: "La respuesta que propone Hornero",
+                }
+              respuesta: { type: [string, "null"], description: "La publicada" }
         resenas:
           type: array
           items:
@@ -1985,12 +2482,19 @@ components:
               autor: { type: string }
               estrellas: { type: integer }
               texto: { type: string }
-              origen: { type: string, description: 'Tienda, Mercado Libre, Google' }
+              origen:
+                { type: string, description: "Tienda, Mercado Libre, Google" }
               creada: { type: string, format: date-time }
-        promedio: { type: [number, 'null'] }
+        promedio: { type: [number, "null"] }
         total: { type: integer }
-        porEstrellas: { type: array, items: { type: integer }, description: 'De 5 a 1 estrella' }
-        recomendaria: { type: integer, description: 'Porcentaje (4 y 5 estrellas)' }
+        porEstrellas:
+          {
+            type: array,
+            items: { type: integer },
+            description: "De 5 a 1 estrella",
+          }
+        recomendaria:
+          { type: integer, description: "Porcentaje (4 y 5 estrellas)" }
     LinkPublico:
       type: object
       required: [codigo, tienda, concepto, monto, cuotas, pagado, pedido]
@@ -2001,7 +2505,7 @@ components:
         monto: { type: integer }
         cuotas: { type: boolean }
         pagado: { type: boolean }
-        pedido: { type: [integer, 'null'] }
+        pedido: { type: [integer, "null"] }
     ListasPrecio:
       type: object
       required: [listas, productos, muestra, programado]
@@ -2012,12 +2516,18 @@ components:
             type: object
             required: [id, nombre, quien, ajuste, detalle]
             properties:
-              id: { type: string, enum: [minorista, mayorista, ml, revendedoras] }
+              id:
+                { type: string, enum: [minorista, mayorista, ml, revendedoras] }
               nombre: { type: string }
               quien: { type: string }
-              ajuste: { type: integer, description: 'Porcentaje sobre el precio base (0 = base)' }
+              ajuste:
+                {
+                  type: integer,
+                  description: "Porcentaje sobre el precio base (0 = base)",
+                }
               detalle: { type: string }
-        productos: { type: integer, description: 'Cuántos productos toca un aumento' }
+        productos:
+          { type: integer, description: "Cuántos productos toca un aumento" }
         muestra:
           type: array
           items:
@@ -2028,37 +2538,74 @@ components:
               nombre: { type: string }
               precio: { type: integer }
         programado:
-          type: [object, 'null']
+          type: [object, "null"]
           required: [pct, redondeo, para]
           properties:
             pct: { type: integer }
-            redondeo: { type: string, enum: ['no', '90', '500'] }
+            redondeo: { type: string, enum: ["no", "90", "500"] }
             para: { type: string, format: date-time }
     Cupon:
       type: object
-      required: [id, codigo, tipo, valor, descripcion, estado, usos, limite, vendio, desconto, canales, empieza, termina, minimo, consejo, creado]
+      required:
+        [
+          id,
+          codigo,
+          tipo,
+          valor,
+          descripcion,
+          estado,
+          usos,
+          limite,
+          vendio,
+          desconto,
+          canales,
+          empieza,
+          termina,
+          minimo,
+          consejo,
+          creado,
+        ]
       properties:
         id: { type: string }
         codigo: { type: string }
         tipo: { type: string, enum: [pct, fijo, envio, regalo] }
-        valor: { type: integer, description: 'Porcentaje o pesos (0 en envío y regalo)' }
+        valor:
+          {
+            type: integer,
+            description: "Porcentaje o pesos (0 en envío y regalo)",
+          }
         descripcion: { type: string }
         estado: { type: string, enum: [activo, programado, pausado, terminado] }
         usos: { type: integer }
-        limite: { type: integer, description: '0 = sin límite' }
+        limite: { type: integer, description: "0 = sin límite" }
         vendio: { type: integer }
         desconto: { type: integer }
-        canales: { type: array, items: { type: string, enum: [web, wa, ig, pos] } }
-        empieza: { type: [string, 'null'], format: date-time }
-        termina: { type: [string, 'null'], format: date-time }
+        canales:
+          { type: array, items: { type: string, enum: [web, wa, ig, pos] } }
+        empieza: { type: [string, "null"], format: date-time }
+        termina: { type: [string, "null"], format: date-time }
         minimo: { type: integer }
-        consejo: { type: [string, 'null'], description: 'Lo que sugiere Hornero' }
+        consejo:
+          { type: [string, "null"], description: "Lo que sugiere Hornero" }
         creado: { type: string, format: date-time }
     CuponNuevo:
       type: object
-      required: [codigo, tipo, valor, alcance, quien, minimo, limite, porCliente, vigencia, canales, opciones]
+      required:
+        [
+          codigo,
+          tipo,
+          valor,
+          alcance,
+          quien,
+          minimo,
+          limite,
+          porCliente,
+          vigencia,
+          canales,
+          opciones,
+        ]
       properties:
-        codigo: { type: string, pattern: '^[A-Z0-9-]{3,20}$' }
+        codigo: { type: string, pattern: "^[A-Z0-9-]{3,20}$" }
         tipo: { type: string, enum: [pct, fijo, envio, regalo] }
         valor: { type: integer, minimum: 0, maximum: 100000 }
         alcance: { type: string, enum: [todo, categoria, productos] }
@@ -2066,9 +2613,14 @@ components:
         quien: { type: string, enum: [todos, nuevos, vip, riesgo] }
         minimo: { type: integer, minimum: 0 }
         limite: { type: integer, minimum: 0 }
-        porCliente: { type: string, enum: ['1', '3', libre] }
-        vigencia: { type: string, enum: ['7', finde, '30', hotsale, sin] }
-        canales: { type: array, minItems: 1, items: { type: string, enum: [web, wa, ig, pos] } }
+        porCliente: { type: string, enum: ["1", "3", libre] }
+        vigencia: { type: string, enum: ["7", finde, "30", hotsale, sin] }
+        canales:
+          {
+            type: array,
+            minItems: 1,
+            items: { type: string, enum: [web, wa, ig, pos] },
+          }
         opciones:
           type: object
           required: [hornero, combinable, unicos, link]
@@ -2082,18 +2634,47 @@ components:
       type: object
       required: [id, titulo, detalle, ejemplo, estado, aporte, activa]
       properties:
-        id: { type: string, enum: [transf, envio, cantidad, '3x2', cuotas, mayorista, carrito, cumple] }
+        id:
+          {
+            type: string,
+            enum:
+              [
+                transf,
+                envio,
+                cantidad,
+                "3x2",
+                cuotas,
+                mayorista,
+                carrito,
+                cumple,
+              ],
+          }
         titulo: { type: string }
         detalle: { type: string }
         ejemplo: { type: string }
         estado: { type: string }
-        aporte: { type: [integer, 'null'], description: 'Lo que vendió con esta promo este mes' }
+        aporte:
+          {
+            type: [integer, "null"],
+            description: "Lo que vendió con esta promo este mes",
+          }
         activa: { type: boolean }
     Cupones:
       type: object
-      required: [cupones, kpis, consejo, segmentos, automaticas, relampago, tienda, productos, categoria]
+      required:
+        [
+          cupones,
+          kpis,
+          consejo,
+          segmentos,
+          automaticas,
+          relampago,
+          tienda,
+          productos,
+          categoria,
+        ]
       properties:
-        cupones: { type: array, items: { $ref: '#/components/schemas/Cupon' } }
+        cupones: { type: array, items: { $ref: "#/components/schemas/Cupon" } }
         kpis:
           type: object
           required: [activos, usosMes, vendido, descontado, vsMesAnterior]
@@ -2102,9 +2683,10 @@ components:
             usosMes: { type: integer }
             vendido: { type: integer }
             descontado: { type: integer }
-            vsMesAnterior: { type: [integer, 'null'], description: 'Porcentaje' }
+            vsMesAnterior:
+              { type: [integer, "null"], description: "Porcentaje" }
         consejo:
-          type: [object, 'null']
+          type: [object, "null"]
           required: [cuponId, codigo, titulo, texto, minimo]
           properties:
             cuponId: { type: string }
@@ -2118,17 +2700,29 @@ components:
           properties:
             vip: { type: integer }
             riesgo: { type: integer }
-        automaticas: { type: array, items: { $ref: '#/components/schemas/Automatica' } }
+        automaticas:
+          { type: array, items: { $ref: "#/components/schemas/Automatica" } }
         relampago:
           type: object
           required: [vivo, proximas]
           properties:
             vivo:
-              type: [object, 'null']
-              required: [producto, foto, pct, precio, oferta, termina, vendidos, unidades, terminada]
+              type: [object, "null"]
+              required:
+                [
+                  producto,
+                  foto,
+                  pct,
+                  precio,
+                  oferta,
+                  termina,
+                  vendidos,
+                  unidades,
+                  terminada,
+                ]
               properties:
                 producto: { type: string }
-                foto: { type: [string, 'null'] }
+                foto: { type: [string, "null"] }
                 pct: { type: integer }
                 precio: { type: integer }
                 oferta: { type: integer }
@@ -2145,7 +2739,7 @@ components:
                   titulo: { type: string }
                   detalle: { type: string }
                   cuando: { type: string }
-                  foto: { type: [string, 'null'] }
+                  foto: { type: [string, "null"] }
         tienda: { type: string }
         productos:
           type: array
@@ -2156,8 +2750,12 @@ components:
             properties:
               id: { type: string }
               nombre: { type: string }
-              foto: { type: [string, 'null'] }
-        categoria: { type: [string, 'null'], description: 'La categoría que más vende (alcance "una categoría")' }
+              foto: { type: [string, "null"] }
+        categoria:
+          {
+            type: [string, "null"],
+            description: 'La categoría que más vende (alcance "una categoría")',
+          }
     Campana:
       type: object
       required: [id, canal, titulo, detalle, estado, metricas]
@@ -2166,7 +2764,8 @@ components:
         canal: { type: string, enum: [wa, email] }
         titulo: { type: string }
         detalle: { type: string }
-        estado: { type: string, enum: [Enviando, Programada, Activa, Terminada] }
+        estado:
+          { type: string, enum: [Enviando, Programada, Activa, Terminada] }
         metricas:
           type: array
           items:
@@ -2177,14 +2776,25 @@ components:
               v: { type: string }
     Marketing:
       type: object
-      required: [tienda, audiencias, costoMensaje, retorno, mensajes, producto, cupon, campanas, cupones]
+      required:
+        [
+          tienda,
+          audiencias,
+          costoMensaje,
+          retorno,
+          mensajes,
+          producto,
+          cupon,
+          campanas,
+          cupones,
+        ]
       properties:
         tienda:
           type: object
           required: [nombre, foto]
           properties:
             nombre: { type: string }
-            foto: { type: [string, 'null'] }
+            foto: { type: [string, "null"] }
         audiencias:
           type: array
           items:
@@ -2194,17 +2804,35 @@ components:
               id: { type: string, enum: [todos, vip, riesgo, categoria] }
               nombre: { type: string }
               cantidad: { type: integer }
-        costoMensaje: { type: integer, description: 'Pesos por mensaje de marketing de WhatsApp' }
-        retorno: { type: [number, 'null'], description: 'Ventas por cada peso, según campañas anteriores' }
-        mensajes: { type: array, items: { type: string }, description: 'Lo que propone Hornero; {nombre} se reemplaza' }
+        costoMensaje:
+          {
+            type: integer,
+            description: "Pesos por mensaje de marketing de WhatsApp",
+          }
+        retorno:
+          {
+            type: [number, "null"],
+            description: "Ventas por cada peso, según campañas anteriores",
+          }
+        mensajes:
+          {
+            type: array,
+            items: { type: string },
+            description: "Lo que propone Hornero; {nombre} se reemplaza",
+          }
         producto:
-          type: [object, 'null']
+          type: [object, "null"]
           required: [nombre, foto]
           properties:
             nombre: { type: string }
-            foto: { type: [string, 'null'] }
-        cupon: { type: [string, 'null'], description: 'El cupón que se puede adjuntar' }
-        campanas: { type: array, items: { $ref: '#/components/schemas/Campana' } }
+            foto: { type: [string, "null"] }
+        cupon:
+          {
+            type: [string, "null"],
+            description: "El cupón que se puede adjuntar",
+          }
+        campanas:
+          { type: array, items: { $ref: "#/components/schemas/Campana" } }
         cupones:
           type: array
           items:
@@ -2223,13 +2851,14 @@ components:
           type: array
           items:
             type: object
-            required: [id, nombre, vendido, pedidos, comision, nota, activo, conectado]
+            required:
+              [id, nombre, vendido, pedidos, comision, nota, activo, conectado]
             properties:
               id: { type: string, enum: [web, wa, ml, pos, ig, tg, gg, tk] }
               nombre: { type: string }
               vendido: { type: integer }
               pedidos: { type: integer }
-              comision: { type: number, description: '0,14 = 14 %' }
+              comision: { type: number, description: "0,14 = 14 %" }
               nota: { type: string }
               activo: { type: boolean }
               conectado: { type: boolean }
@@ -2245,33 +2874,48 @@ components:
             ventas: { type: array, items: { type: integer } }
             productos: { type: array, items: { type: integer } }
             clientes: { type: array, items: { type: integer } }
-            margen: { type: array, items: { type: [integer, 'null'] } }
+            margen: { type: array, items: { type: [integer, "null"] } }
         kpis:
           type: object
-          required: [ventas, ventasVs, ticket, ticketVs, margen, margenVs, ahorro, mesAnterior]
+          required:
+            [
+              ventas,
+              ventasVs,
+              ticket,
+              ticketVs,
+              margen,
+              margenVs,
+              ahorro,
+              mesAnterior,
+            ]
           properties:
             ventas: { type: integer }
-            ventasVs: { type: [number, 'null'] }
+            ventasVs: { type: [number, "null"] }
             ticket: { type: integer }
-            ticketVs: { type: [number, 'null'] }
-            margen: { type: [integer, 'null'] }
-            margenVs: { type: [integer, 'null'] }
-            ahorro: { type: integer, description: 'Comisiones que no pagó contra una plataforma con comisión' }
+            ticketVs: { type: [number, "null"] }
+            margen: { type: [integer, "null"] }
+            margenVs: { type: [integer, "null"] }
+            ahorro:
+              {
+                type: integer,
+                description: "Comisiones que no pagó contra una plataforma con comisión",
+              }
             mesAnterior: { type: string }
-        historia: { type: integer, description: 'Meses de historia' }
+        historia: { type: integer, description: "Meses de historia" }
         insights: { type: array, items: { type: string } }
     Evento:
       type: object
-      required: [id, tipo, quien, foto, texto, cuando, donde, deshacer, deshecho]
+      required:
+        [id, tipo, quien, foto, texto, cuando, donde, deshacer, deshecho]
       properties:
         id: { type: string }
         tipo: { type: string, enum: [equipo, hornero, sistema] }
         quien: { type: string }
-        foto: { type: [string, 'null'] }
+        foto: { type: [string, "null"] }
         texto: { type: string }
         cuando: { type: string, format: date-time }
         donde: { type: string }
-        deshacer: { type: boolean, description: 'Se puede volver atrás' }
+        deshacer: { type: boolean, description: "Se puede volver atrás" }
         deshecho: { type: boolean }
     ParaHacer:
       type: object
@@ -2291,24 +2935,50 @@ components:
                   required: [id, tipo, titulo, detalle, valor, accion, hecha]
                   properties:
                     id: { type: string }
-                    tipo: { type: string, enum: [preparar, chats, carritos, transferencias, certificado, reponer] }
+                    tipo:
+                      {
+                        type: string,
+                        enum:
+                          [
+                            preparar,
+                            chats,
+                            carritos,
+                            transferencias,
+                            certificado,
+                            reponer,
+                          ],
+                      }
                     titulo: { type: string }
                     detalle: { type: string }
-                    valor: { type: [integer, 'null'], description: 'Lo que mueve, en pesos' }
+                    valor:
+                      {
+                        type: [integer, "null"],
+                        description: "Lo que mueve, en pesos",
+                      }
                     aproximado: { type: boolean }
                     accion: { type: string }
                     hecha: { type: boolean }
     Finanzas:
       type: object
-      required: [disponible, cuenta, banco, caja, kpis, flujo, movimientos, conciliado]
+      required:
+        [disponible, cuenta, banco, caja, kpis, flujo, movimientos, conciliado]
       properties:
-        disponible: { type: integer, description: 'En Mercado Pago, listo para transferir' }
-        cuenta: { type: [string, 'null'], description: 'Cómo se muestra la cuenta de cobro (CBU terminada en…)' }
-        banco: { type: [string, 'null'] }
+        disponible:
+          {
+            type: integer,
+            description: "En Mercado Pago, listo para transferir",
+          }
+        cuenta:
+          {
+            type: [string, "null"],
+            description: "Cómo se muestra la cuenta de cobro (CBU terminada en…)",
+          }
+        banco: { type: [string, "null"] }
         caja:
-          type: [object, 'null']
+          type: [object, "null"]
           description: null si Caja no está conectada
-          required: [ventas, liquidaciones, gastos, meta, metaPct, falta, sincronizado]
+          required:
+            [ventas, liquidaciones, gastos, meta, metaPct, falta, sincronizado]
           properties:
             ventas: { type: integer }
             liquidaciones: { type: integer }
@@ -2319,14 +2989,23 @@ components:
             sincronizado: { type: string, format: date-time }
         kpis:
           type: object
-          required: [aLiquidar, aLiquidarDetalle, gastos, gastosDetalle, ganancia, margen, mes]
+          required:
+            [
+              aLiquidar,
+              aLiquidarDetalle,
+              gastos,
+              gastosDetalle,
+              ganancia,
+              margen,
+              mes,
+            ]
           properties:
             aLiquidar: { type: integer }
             aLiquidarDetalle: { type: string }
             gastos: { type: integer }
             gastosDetalle: { type: string }
             ganancia: { type: integer }
-            margen: { type: [integer, 'null'] }
+            margen: { type: [integer, "null"] }
             mes: { type: string }
         flujo:
           type: array
@@ -2345,10 +3024,28 @@ components:
             required: [id, tipo, titulo, detalle, monto]
             properties:
               id: { type: string }
-              tipo: { type: string, enum: [mp, payway, modo, uala, andreani, oca, correo, moto, transf, gasto, retiro] }
+              tipo:
+                {
+                  type: string,
+                  enum:
+                    [
+                      mp,
+                      payway,
+                      modo,
+                      uala,
+                      andreani,
+                      oca,
+                      correo,
+                      moto,
+                      transf,
+                      gasto,
+                      retiro,
+                    ],
+                }
               titulo: { type: string }
               detalle: { type: string }
-              monto: { type: integer, description: 'Positivo entra, negativo sale' }
+              monto:
+                { type: integer, description: "Positivo entra, negativo sale" }
         conciliado: { type: boolean }
     DisenoTienda:
       type: object
@@ -2370,8 +3067,12 @@ components:
       required: [plantilla, direccion, diseno, sinPublicar, vista]
       properties:
         plantilla: { type: string }
-        direccion: { type: string, description: 'Dónde se ve la tienda (dominio o dirección de Mostrador)' }
-        diseno: { $ref: '#/components/schemas/DisenoTienda' }
+        direccion:
+          {
+            type: string,
+            description: "Dónde se ve la tienda (dominio o dirección de Mostrador)",
+          }
+        diseno: { $ref: "#/components/schemas/DisenoTienda" }
         sinPublicar: { type: boolean }
         vista:
           type: object
@@ -2386,10 +3087,10 @@ components:
                 required: [nombre, foto, precio]
                 properties:
                   nombre: { type: string }
-                  foto: { type: [string, 'null'] }
+                  foto: { type: [string, "null"] }
                   precio: { type: integer }
             resena:
-              type: [object, 'null']
+              type: [object, "null"]
               required: [promedio, texto]
               properties:
                 promedio: { type: number }
@@ -2399,11 +3100,21 @@ components:
               type: object
               required: [foto, titulo]
               properties:
-                foto: { type: [string, 'null'] }
+                foto: { type: [string, "null"] }
                 titulo: { type: string }
     Negocio:
       type: object
-      required: [nombre, razonSocial, cuit, condicion, direccion, whatsapp, email, horario]
+      required:
+        [
+          nombre,
+          razonSocial,
+          cuit,
+          condicion,
+          direccion,
+          whatsapp,
+          email,
+          horario,
+        ]
       properties:
         nombre: { type: string, maxLength: 80 }
         razonSocial: { type: string, maxLength: 120 }
@@ -2415,23 +3126,24 @@ components:
         horario: { type: string, maxLength: 80 }
     Miembro:
       type: object
-      required: [id, nombre, contacto, rol, foto, ultimo, pendiente, vos, dobleFactor]
+      required:
+        [id, nombre, contacto, rol, foto, ultimo, pendiente, vos, dobleFactor]
       properties:
         id: { type: string }
         nombre: { type: string }
         contacto: { type: string }
         rol: { type: string, enum: [duenio, admin, ventas, deposito] }
-        foto: { type: [string, 'null'] }
-        ultimo: { type: [string, 'null'], format: date-time }
-        pendiente: { type: boolean, description: 'Invitación sin aceptar' }
+        foto: { type: [string, "null"] }
+        ultimo: { type: [string, "null"], format: date-time }
+        pendiente: { type: boolean, description: "Invitación sin aceptar" }
         vos: { type: boolean }
         dobleFactor: { type: boolean }
     Configuracion:
       type: object
       required: [negocio, equipo, seguridad, sesiones, avisos, plan]
       properties:
-        negocio: { $ref: '#/components/schemas/Negocio' }
-        equipo: { type: array, items: { $ref: '#/components/schemas/Miembro' } }
+        negocio: { $ref: "#/components/schemas/Negocio" }
+        equipo: { type: array, items: { $ref: "#/components/schemas/Miembro" } }
         seguridad:
           type: object
           required: [dobleFactor, otroPais, alertas, inactivas]
@@ -2472,7 +3184,19 @@ components:
             diasPrueba: { type: integer }
     PlanCuenta:
       type: object
-      required: [actual, ciclo, enPrueba, diasPrueba, proximoCobro, uso, medio, facturacion, facturas, cancelado]
+      required:
+        [
+          actual,
+          ciclo,
+          enPrueba,
+          diasPrueba,
+          proximoCobro,
+          uso,
+          medio,
+          facturacion,
+          facturas,
+          cancelado,
+        ]
       properties:
         actual: { type: string, enum: [gratis, emprende, pro, negocio] }
         ciclo: { type: string, enum: [mes, anio] }
@@ -2485,11 +3209,12 @@ components:
           properties:
             productos: { type: integer }
             personas: { type: integer }
-            hornero: { type: integer, description: 'Respuestas con IA este mes' }
+            hornero:
+              { type: integer, description: "Respuestas con IA este mes" }
             packs: { type: integer }
             sinIa: { type: integer }
         medio:
-          type: [object, 'null']
+          type: [object, "null"]
           required: [marca, ultimos, vence]
           properties:
             marca: { type: string }
@@ -2512,7 +3237,7 @@ components:
               detalle: { type: string }
               total: { type: integer }
         cancelado:
-          type: [object, 'null']
+          type: [object, "null"]
           required: [hasta]
           properties:
             hasta: { type: string, format: date-time }
@@ -2544,7 +3269,16 @@ components:
         url: { type: string, format: uri }
     ConexionML:
       type: object
-      required: [disponible, conectada, reautorizar, recargo, pausarSinStock, publicaciones, preguntas]
+      required:
+        [
+          disponible,
+          conectada,
+          reautorizar,
+          recargo,
+          pausarSinStock,
+          publicaciones,
+          preguntas,
+        ]
       properties:
         disponible: { type: boolean }
         conectada: { type: boolean }
@@ -2554,7 +3288,7 @@ components:
         recargo: { type: integer }
         pausarSinStock: { type: boolean }
         publicaciones: { type: integer }
-        preguntas: { type: integer, description: 'Sin responder' }
+        preguntas: { type: integer, description: "Sin responder" }
     PublicacionML:
       type: object
       required: [itemId, permalink]
@@ -2565,11 +3299,20 @@ components:
       type: object
       required: [disponible, conectada, reautorizar, cajaQR]
       properties:
-        disponible: { type: boolean, description: 'La aplicación de Mostrador tiene credenciales' }
+        disponible:
+          {
+            type: boolean,
+            description: "La aplicación de Mostrador tiene credenciales",
+          }
         conectada: { type: boolean }
-        usuario: { type: string, description: 'user_id de la cuenta de Mercado Pago' }
+        usuario:
+          { type: string, description: "user_id de la cuenta de Mercado Pago" }
         desde: { type: string, format: date-time }
-        reautorizar: { type: boolean, description: 'El refresh falló: hay que volver a conectar' }
+        reautorizar:
+          {
+            type: boolean,
+            description: "El refresh falló: hay que volver a conectar",
+          }
         cajaQR: { type: boolean }
     UbicacionMP:
       type: object
@@ -2586,13 +3329,14 @@ components:
       required: [referencia, qr, estado]
       properties:
         referencia: { type: string }
-        qr: { type: string, description: 'qr_data para dibujar' }
+        qr: { type: string, description: "qr_data para dibujar" }
         estado: { type: string }
     Dominios:
       type: object
       required: [gratis, dominios, registros]
       properties:
-        gratis: { type: string, description: 'La dirección que viene con la tienda' }
+        gratis:
+          { type: string, description: "La dirección que viene con la tienda" }
         dominios:
           type: array
           items:
@@ -2636,7 +3380,8 @@ components:
       properties:
         conteos:
           type: object
-          required: [productos, clientes, pedidos, facturas, resenas, conversaciones]
+          required:
+            [productos, clientes, pedidos, facturas, resenas, conversaciones]
           properties:
             productos: { type: integer }
             clientes: { type: integer }
@@ -2655,23 +3400,50 @@ components:
               en: { type: string, format: date-time }
         inactivos: { type: integer }
         borrado:
-          type: [object, 'null']
+          type: [object, "null"]
           required: [clientes, el]
           properties:
             clientes: { type: integer }
             el: { type: string, format: date-time }
     Tablero:
       type: object
-      required: [periodo, desde, hasta, hola, ventas, serie, kpis, canales, meta, avisos, ultimosPedidos, paraHacer, enVivo, caja, liquidaciones, hornero, bandeja, integraciones, masVendidos, resenas, envios]
+      required:
+        [
+          periodo,
+          desde,
+          hasta,
+          hola,
+          ventas,
+          serie,
+          kpis,
+          canales,
+          meta,
+          avisos,
+          ultimosPedidos,
+          paraHacer,
+          enVivo,
+          caja,
+          liquidaciones,
+          hornero,
+          bandeja,
+          integraciones,
+          masVendidos,
+          resenas,
+          envios,
+        ]
       properties:
         periodo: { type: string, enum: [hoy, 7d, 30d] }
         desde: { type: string, format: date-time }
         hasta: { type: string, format: date-time }
-        hola: { type: [string, 'null'], description: 'Nombre de pila de quien entra' }
-        ventas: { $ref: '#/components/schemas/Comparado' }
+        hola:
+          {
+            type: [string, "null"],
+            description: "Nombre de pila de quien entra",
+          }
+        ventas: { $ref: "#/components/schemas/Comparado" }
         serie:
           type: object
-          description: 'Ventas acumuladas en 14 tramos del período, y las del período anterior'
+          description: "Ventas acumuladas en 14 tramos del período, y las del período anterior"
           required: [actual, anterior]
           properties:
             actual: { type: array, items: { type: number } }
@@ -2680,37 +3452,58 @@ components:
           type: object
           required: [pedidos, ticket, conversion, clientesNuevos]
           properties:
-            pedidos: { $ref: '#/components/schemas/Comparado' }
-            ticket: { $ref: '#/components/schemas/Comparado' }
-            conversion: { $ref: '#/components/schemas/Comparado', description: 'Porcentaje (3.4 = 3,4 %)' }
-            clientesNuevos: { $ref: '#/components/schemas/Comparado' }
+            pedidos: { $ref: "#/components/schemas/Comparado" }
+            ticket: { $ref: "#/components/schemas/Comparado" }
+            conversion:
+              {
+                $ref: "#/components/schemas/Comparado",
+                description: "Porcentaje (3.4 = 3,4 %)",
+              }
+            clientesNuevos: { $ref: "#/components/schemas/Comparado" }
         canales:
           type: array
-          description: 'Parte de las ventas del período por canal (web, wa, ml, ig, pos, tg), de mayor a menor'
+          description: "Parte de las ventas del período por canal (web, wa, ml, ig, pos, tg), de mayor a menor"
           items:
             type: object
             required: [canal, parte]
             properties:
               canal: { type: string }
-              parte: { type: number, description: 'De 0 a 1' }
+              parte: { type: number, description: "De 0 a 1" }
         meta:
           type: object
           required: [objetivo, actual, proyeccion]
           properties:
-            objetivo: { type: integer, description: '0: sin meta' }
-            actual: { type: integer, description: 'Vendido en el mes' }
-            proyeccion: { type: integer, description: 'Al ritmo actual, cómo cierra el mes' }
+            objetivo: { type: integer, description: "0: sin meta" }
+            actual: { type: integer, description: "Vendido en el mes" }
+            proyeccion:
+              {
+                type: integer,
+                description: "Al ritmo actual, cómo cierra el mes",
+              }
         avisos:
           type: object
           required: [certificadoDias]
           properties:
-            certificadoDias: { type: [integer, 'null'], description: 'Días para que venza el certificado de ARCA, si hay que avisar' }
+            certificadoDias:
+              {
+                type: [integer, "null"],
+                description: "Días para que venza el certificado de ARCA, si hay que avisar",
+              }
         ultimosPedidos:
           type: array
-          items: { $ref: '#/components/schemas/PedidoBreve' }
+          items: { $ref: "#/components/schemas/PedidoBreve" }
         paraHacer:
           type: object
-          required: [preparar, chats, chatMasViejoMin, transferencias, transferenciasMonto, sinStock, sinStockEnMl]
+          required:
+            [
+              preparar,
+              chats,
+              chatMasViejoMin,
+              transferencias,
+              transferenciasMonto,
+              sinStock,
+              sinStockEnMl,
+            ]
           properties:
             preparar: { type: integer }
             chats: { type: integer }
@@ -2738,7 +3531,12 @@ components:
           type: object
           required: [abierta, total, medios]
           properties:
-            abierta: { type: [string, 'null'], format: date-time, description: 'Cuándo se abrió hoy (null: cerrada)' }
+            abierta:
+              {
+                type: [string, "null"],
+                format: date-time,
+                description: "Cuándo se abrió hoy (null: cerrada)",
+              }
             total: { type: integer }
             medios:
               type: array
@@ -2746,11 +3544,15 @@ components:
                 type: object
                 required: [medio, monto]
                 properties:
-                  medio: { type: string, description: 'efectivo, tarjeta, mp, modo, transf' }
+                  medio:
+                    {
+                      type: string,
+                      description: "efectivo, tarjeta, mp, modo, transf",
+                    }
                   monto: { type: integer }
         liquidaciones:
           type: array
-          description: 'Lo que se acredita en los próximos 7 días, por medio de pago'
+          description: "Lo que se acredita en los próximos 7 días, por medio de pago"
           items:
             type: object
             required: [medio, fecha, monto]
@@ -2760,18 +3562,37 @@ components:
               monto: { type: integer }
         hornero:
           type: object
-          required: [chatsHoy, ideas, carritos, carritosMonto, costoMensaje, recordados, audiencia, ideasHechas]
+          required:
+            [
+              chatsHoy,
+              ideas,
+              carritos,
+              carritosMonto,
+              costoMensaje,
+              recordados,
+              audiencia,
+              ideasHechas,
+            ]
           properties:
             chatsHoy: { type: integer }
             ideas: { type: integer }
             carritos: { type: integer }
             carritosMonto: { type: integer }
-            costoMensaje: { type: integer, description: 'Lo que cuesta cada mensaje de WhatsApp' }
-            recordados: { type: boolean, description: 'Ya se les mandó el recordatorio' }
-            audiencia: { type: integer, description: 'Clientes que aceptan mensajes por WhatsApp' }
+            costoMensaje:
+              {
+                type: integer,
+                description: "Lo que cuesta cada mensaje de WhatsApp",
+              }
+            recordados:
+              { type: boolean, description: "Ya se les mandó el recordatorio" }
+            audiencia:
+              {
+                type: integer,
+                description: "Clientes que aceptan mensajes por WhatsApp",
+              }
             ideasHechas:
               type: array
-              description: 'Ideas de Hornero ya aprobadas (carritos, stock, promo)'
+              description: "Ideas de Hornero ya aprobadas (carritos, stock, promo)"
               items: { type: string }
         bandeja:
           type: array
@@ -2780,36 +3601,44 @@ components:
             required: [nombre, foto, mensaje, creado, atiende, sinLeer]
             properties:
               nombre: { type: string }
-              foto: { type: [string, 'null'], description: 'Id de la foto en Unsplash' }
+              foto:
+                {
+                  type: [string, "null"],
+                  description: "Id de la foto en Unsplash",
+                }
               mensaje: { type: string }
               creado: { type: string, format: date-time }
               atiende: { type: string, enum: [hornero, vos] }
               sinLeer: { type: integer }
         integraciones:
           type: array
-          description: 'Integraciones conectadas con su dato del momento'
+          description: "Integraciones conectadas con su dato del momento"
           items:
             type: object
             required: [id, valor]
             properties:
-              id: { type: string, description: 'mp (cobrado en 7 días), ml (publicaciones), wa (chats esperando), arca (días del certificado), andreani (envíos en camino)' }
+              id:
+                {
+                  type: string,
+                  description: "mp (cobrado en 7 días), ml (publicaciones), wa (chats esperando), arca (días del certificado), andreani (envíos en camino)",
+                }
               valor: { type: integer }
         masVendidos:
           type: array
-          description: 'Los 4 más vendidos de los últimos 7 días'
+          description: "Los 4 más vendidos de los últimos 7 días"
           items:
             type: object
             required: [productoId, nombre, foto, unidades]
             properties:
               productoId: { type: string }
               nombre: { type: string }
-              foto: { type: [string, 'null'] }
+              foto: { type: [string, "null"] }
               unidades: { type: integer }
         resenas:
           type: object
           required: [promedio, nuevas]
           properties:
-            promedio: { type: [number, 'null'] }
+            promedio: { type: [number, "null"] }
             nuevas:
               type: array
               items:
@@ -2832,55 +3661,91 @@ components:
                 type: object
                 required: [hora, transporte, paquetes, ciudad, proximo]
                 properties:
-                  hora: { type: string, description: 'HH:MM' }
-                  transporte: { type: string, enum: [andreani, oca, correo, moto] }
+                  hora: { type: string, description: "HH:MM" }
+                  transporte:
+                    { type: string, enum: [andreani, oca, correo, moto] }
                   paquetes: { type: integer }
-                  ciudad: { type: [string, 'null'], description: 'Si todos van a la misma ciudad' }
+                  ciudad:
+                    {
+                      type: [string, "null"],
+                      description: "Si todos van a la misma ciudad",
+                    }
                   proximo: { type: boolean }
     EstadoPedido:
       type: string
-      enum: [Sin pagar, Para preparar, Listo para despachar, En camino, Entregado, Cancelado]
+      enum:
+        [
+          Sin pagar,
+          Para preparar,
+          Listo para despachar,
+          En camino,
+          Entregado,
+          Cancelado,
+        ]
     PedidoFila:
       type: object
-      required: [numero, cliente, foto, ciudad, canal, pago, envio, estado, total, creado, productos, cantidadProductos, vip, hornero, mayorista]
+      required:
+        [
+          numero,
+          cliente,
+          foto,
+          ciudad,
+          canal,
+          pago,
+          envio,
+          estado,
+          total,
+          creado,
+          productos,
+          cantidadProductos,
+          vip,
+          hornero,
+          mayorista,
+        ]
       properties:
         numero: { type: integer }
         cliente: { type: string }
-        foto: { type: [string, 'null'] }
+        foto: { type: [string, "null"] }
         ciudad: { type: string }
         canal: { type: string }
-        pago: { type: string, description: 'mp, tarjeta, payway, modo, uala, transf, efectivo' }
-        envio: { type: string, description: 'andreani, oca, correo, moto, retiro' }
-        estado: { $ref: '#/components/schemas/EstadoPedido' }
+        pago:
+          {
+            type: string,
+            description: "mp, tarjeta, payway, modo, uala, transf, efectivo",
+          }
+        envio:
+          { type: string, description: "andreani, oca, correo, moto, retiro" }
+        estado: { $ref: "#/components/schemas/EstadoPedido" }
         total: { type: integer }
         creado: { type: string, format: date-time }
         productos:
           type: array
-          description: 'Los primeros 3'
+          description: "Los primeros 3"
           items:
             type: object
             required: [nombre, foto]
             properties:
               nombre: { type: string }
-              foto: { type: [string, 'null'] }
+              foto: { type: [string, "null"] }
         cantidadProductos: { type: integer }
         vip: { type: boolean }
-        hornero: { type: boolean, description: 'Lo vendió Hornero' }
+        hornero: { type: boolean, description: "Lo vendió Hornero" }
         mayorista: { type: boolean }
     ListaPedidos:
       type: object
       required: [total, suma, filas, etapas, facetas]
       properties:
-        total: { type: integer, description: 'Pedidos que cumplen los filtros' }
+        total: { type: integer, description: "Pedidos que cumplen los filtros" }
         suma: { type: integer }
-        filas: { type: array, items: { $ref: '#/components/schemas/PedidoFila' } }
+        filas:
+          { type: array, items: { $ref: "#/components/schemas/PedidoFila" } }
         etapas:
           type: object
-          description: 'Por estado, con todos los filtros salvo el de estado'
+          description: "Por estado, con todos los filtros salvo el de estado"
           additionalProperties: { type: integer }
         facetas:
           type: object
-          description: 'Conteos de canal, pago y envío; cada uno sin su propio filtro'
+          description: "Conteos de canal, pago y envío; cada uno sin su propio filtro"
           required: [canal, pago, envio]
           properties:
             canal: { type: object, additionalProperties: { type: integer } }
@@ -2888,9 +3753,21 @@ components:
             envio: { type: object, additionalProperties: { type: integer } }
     PedidoDetalle:
       allOf:
-        - { $ref: '#/components/schemas/PedidoFila' }
+        - { $ref: "#/components/schemas/PedidoFila" }
         - type: object
-          required: [items, subtotal, costoEnvio, comprador, estadoPago, factura, seguimiento, llega, nota, historial]
+          required:
+            [
+              items,
+              subtotal,
+              costoEnvio,
+              comprador,
+              estadoPago,
+              factura,
+              seguimiento,
+              llega,
+              nota,
+              historial,
+            ]
           properties:
             items:
               type: array
@@ -2899,11 +3776,15 @@ components:
                 required: [nombre, foto, cantidad, precio, varianteId, variante]
                 properties:
                   nombre: { type: string }
-                  foto: { type: [string, 'null'] }
+                  foto: { type: [string, "null"] }
                   cantidad: { type: integer }
                   precio: { type: integer }
-                  varianteId: { type: [string, 'null'] }
-                  variante: { type: [string, 'null'], description: 'Texto de la variante al comprar: "Talle M · Color Negro"' }
+                  varianteId: { type: [string, "null"] }
+                  variante:
+                    {
+                      type: [string, "null"],
+                      description: 'Texto de la variante al comprar: "Talle M · Color Negro"',
+                    }
             subtotal: { type: integer }
             costoEnvio: { type: integer }
             comprador:
@@ -2911,17 +3792,25 @@ components:
               required: [nombre, foto, telefono, email, desde, pedidos, gastado]
               properties:
                 nombre: { type: string }
-                foto: { type: [string, 'null'] }
-                telefono: { type: [string, 'null'] }
-                email: { type: [string, 'null'] }
+                foto: { type: [string, "null"] }
+                telefono: { type: [string, "null"] }
+                email: { type: [string, "null"] }
                 desde: { type: string, format: date-time }
                 pedidos: { type: integer }
                 gastado: { type: integer }
-            estadoPago: { type: string, description: 'Aprobado, Acreditada, Pendiente, Cobrado' }
-            factura: { type: [string, 'null'], description: 'B 0004-00000812' }
-            seguimiento: { type: [string, 'null'] }
-            llega: { type: [string, 'null'], format: date }
-            nota: { type: [string, 'null'], description: 'Lo que anotó Hornero de la charla' }
+            estadoPago:
+              {
+                type: string,
+                description: "Aprobado, Acreditada, Pendiente, Cobrado",
+              }
+            factura: { type: [string, "null"], description: "B 0004-00000812" }
+            seguimiento: { type: [string, "null"] }
+            llega: { type: [string, "null"], format: date }
+            nota:
+              {
+                type: [string, "null"],
+                description: "Lo que anotó Hornero de la charla",
+              }
             historial:
               type: array
               items:
@@ -2929,7 +3818,7 @@ components:
                 required: [texto, cuando, hecho]
                 properties:
                   texto: { type: string }
-                  cuando: { type: [string, 'null'], format: date-time }
+                  cuando: { type: [string, "null"], format: date-time }
                   hecho: { type: boolean }
     PedidoBreve:
       type: object
@@ -2937,9 +3826,9 @@ components:
       properties:
         numero: { type: integer }
         cliente: { type: string }
-        foto: { type: [string, 'null'] }
+        foto: { type: [string, "null"] }
         canal: { type: string }
-        estado: { $ref: '#/components/schemas/EstadoPedido' }
+        estado: { $ref: "#/components/schemas/EstadoPedido" }
         total: { type: integer }
         creado: { type: string, format: date-time }
     Notificacion:
@@ -2947,7 +3836,11 @@ components:
       required: [id, tipo, titulo, detalle, creada, leida, grupo]
       properties:
         id: { type: string }
-        tipo: { type: string, description: 'Marca o tipo del ícono: wa, mp, ml, warn, arca, star, ok, err' }
+        tipo:
+          {
+            type: string,
+            description: "Marca o tipo del ícono: wa, mp, ml, warn, arca, star, ok, err",
+          }
         titulo: { type: string }
         detalle: { type: string }
         creada: { type: string, format: date-time }
@@ -2957,8 +3850,13 @@ components:
       type: object
       required: [elecciones]
       properties:
-        plantilla: { type: string, description: 'Una de las 16 del handoff' }
-        elecciones: { type: object, additionalProperties: true, description: 'Objetivos, canales, secciones, cobros y envíos, tono, equipo (hasta 16 KB)' }
+        plantilla: { type: string, description: "Una de las 16 del handoff" }
+        elecciones:
+          {
+            type: object,
+            additionalProperties: true,
+            description: "Objetivos, canales, secciones, cobros y envíos, tono, equipo (hasta 16 KB)",
+          }
         terminado: { type: boolean }
     Consulta:
       type: object
@@ -2966,10 +3864,30 @@ components:
       properties:
         nombre: { type: string, maxLength: 80 }
         email: { type: string }
-        whatsapp: { type: string, description: 'Con característica; se guardan sólo los dígitos' }
+        whatsapp:
+          {
+            type: string,
+            description: "Con característica; se guardan sólo los dígitos",
+          }
         web: { type: string, maxLength: 200 }
-        facturacion: { type: string, enum: [empiezo, hasta-5, 5-a-20, 20-a-100, mas-de-100] }
-        origen: { type: string, enum: [tiendanube, empretienda, mercadolibre, shopify, woocommerce, ninguna] }
+        facturacion:
+          {
+            type: string,
+            enum: [empiezo, hasta-5, 5-a-20, 20-a-100, mas-de-100],
+          }
+        origen:
+          {
+            type: string,
+            enum:
+              [
+                tiendanube,
+                empretienda,
+                mercadolibre,
+                shopify,
+                woocommerce,
+                ninguna,
+              ],
+          }
         mensaje: { type: string, maxLength: 2000 }
     Postulacion:
       type: object
@@ -2981,15 +3899,25 @@ components:
         web: { type: string, maxLength: 200 }
         especialidades:
           type: array
-          items: { type: string, enum: [diseno, desarrollo, marketing, contabilidad, fotografia] }
+          items:
+            {
+              type: string,
+              enum: [diseno, desarrollo, marketing, contabilidad, fotografia],
+            }
     PedidoArrepentimiento:
       type: object
       required: [email, nombre, documento, plan]
       properties:
-        email: { type: string, description: 'El de la cuenta' }
+        email: { type: string, description: "El de la cuenta" }
         nombre: { type: string, maxLength: 80 }
-        documento: { type: string, description: 'DNI o CUIT, con o sin guiones' }
-        plan: { type: string, maxLength: 120, description: 'Plan contratado y fecha' }
+        documento:
+          { type: string, description: "DNI o CUIT, con o sin guiones" }
+        plan:
+          {
+            type: string,
+            maxLength: 120,
+            description: "Plan contratado y fecha",
+          }
         motivo: { type: string, maxLength: 1000 }
     Alta:
       type: object
@@ -3003,7 +3931,11 @@ components:
       type: object
       required: [token, venceEn, tiendaId]
       properties:
-        token: { type: string, description: 'Se entrega una sola vez; el BFF lo guarda en una cookie httpOnly' }
+        token:
+          {
+            type: string,
+            description: "Se entrega una sola vez; el BFF lo guarda en una cookie httpOnly",
+          }
         venceEn: { type: string, format: date-time }
         tiendaId: { type: string }
     DatosSesion:
@@ -3018,7 +3950,7 @@ components:
             nombre: { type: string }
             email: { type: string }
         tiendaId: { type: string }
-        rol: { type: string, enum: [duenio, admin, ventas, deposito, ''] }
+        rol: { type: string, enum: [duenio, admin, ventas, deposito, ""] }
         venceEn: { type: string, format: date-time }
     Rubro:
       type: object
@@ -3026,7 +3958,11 @@ components:
       properties:
         id: { type: string, examples: [gastronomia] }
         nombre: { type: string, examples: [Gastronomía] }
-        plantilla: { type: string, description: Plantilla de tienda que se usa por defecto }
+        plantilla:
+          {
+            type: string,
+            description: Plantilla de tienda que se usa por defecto,
+          }
         tienda: { type: string, description: Nombre de la tienda de ejemplo }
     Plan:
       type: string
@@ -3036,11 +3972,11 @@ components:
       required: [id, slug, nombre, rubro, plantilla, plan, creadaEn]
       properties:
         id: { type: string, format: uuid }
-        slug: { type: string, pattern: '^[a-z0-9]([a-z0-9-]{0,46}[a-z0-9])?$' }
+        slug: { type: string, pattern: "^[a-z0-9]([a-z0-9-]{0,46}[a-z0-9])?$" }
         nombre: { type: string }
         rubro: { type: string }
         plantilla: { type: string }
-        plan: { $ref: '#/components/schemas/Plan' }
+        plan: { $ref: "#/components/schemas/Plan" }
         creadaEn: { type: string, format: date-time }
     Problema:
       type: object

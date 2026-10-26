@@ -123,6 +123,8 @@ export const actions: Actions = {
 		if (res === 'sin-stock')
 			return fail(409, { error: 'Algún producto se quedó sin stock. Revisá el carrito.' });
 		if (res === 'invalido') return fail(400, { error: 'Revisá el carrito.' });
+		// Si había dejado el carrito, queda recuperado (como en Go, que lo cierra al comprar).
+		await r.datos.cerrarCarritoTienda(p.email, total).catch(() => {});
 		const aviso = avisarVenta(
 			dbSandbox(env.SANDBOX),
 			r.sandboxId,

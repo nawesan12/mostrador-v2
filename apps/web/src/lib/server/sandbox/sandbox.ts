@@ -110,8 +110,11 @@ import { inicioDelDia } from './tablero.ts';
 import {
 	bandejaDemo,
 	carritosDemo,
+	conCarritosTienda,
 	conversacionDemo,
+	idCarritoTienda,
 	type CambioConversacion,
+	type CarritoTienda,
 	type EstadoCarritos
 } from './ventas.ts';
 import {
@@ -128,7 +131,7 @@ import RUBROS from '@mostrador/contrato/rubros.json';
 import { plantilla as buscarPlantilla } from '#lib/plantillas.ts';
 import { SITE } from '#lib/site.ts';
 import type { TiendaPublica } from '#lib/tienda/tipos.ts';
-import { generarVariantes, textoVariante, type Variante } from '#lib/tienda/variantes.ts';
+import { generarVariantes, precioDe, textoVariante, type Variante } from '#lib/tienda/variantes.ts';
 
 export type DbSandbox = DrizzleD1Database<Record<string, never>>;
 
@@ -992,7 +995,77 @@ export class DatosSandbox implements Datos {
 	}
 
 	async carritos() {
-		return carritosDemo(await this.demo(), Date.now(), await this.estadoCarritos(), 120);
+		const e = await this.estadoCarritos();
+		const base = carritosDemo(await this.demo(), Date.now(), e, 120);
+		const propios = await this.carritosTienda();
+		if (!propios.length) return base;
+		const fotos = new Map((await this.regProductos()).map((p) => [p.id, p.foto]));
+		return conCarritosTienda(base, propios, (id) => fotos.get(id) ?? null, e, Date.now());
+	}
+
+	// ---------------------------------------------------------------- Carritos de la tienda online
+
+	private async carritosTienda() {
+		const c = await cambiosDe(this.db, this.sb.id, 'carrito-tienda');
+		return [...c.values()].filter(Boolean) as CarritoTienda[];
+	}
+
+	/**
+	 * Guarda el carrito que alguien dejó en el checkout de la tienda (uno abierto por email). Como
+	 * Go: sólo productos publicados y variantes que se venden; el total, con los precios de la tienda.
+	 */
+	async guardarCarritoTienda(
+		email: string,
+		nombre: string,
+		lineas: { id: string; varianteId: string | null; cantidad: number }[]
+	) {
+		const tienda = await this.tiendaPublica(false);
+		const porId = new Map(tienda.productos.map((p) => [p.id, p]));
+		let total = 0;
+		const items: CarritoTienda['items'] = [];
+		for (const l of lineas) {
+			const p = porId.get(l.id);
+			const v = p?.opciones.length ? p.variantes.find((x) => x.id === l.varianteId) : null;
+			if (!p || (p.opciones.length && !v)) continue;
+			total += (v ? precioDe(v, p.precio) : p.precio) * l.cantidad;
+			items.push({ id: p.id, varianteId: v?.id ?? null, cantidad: l.cantidad });
+		}
+		if (!items.length) return false;
+		const clave = email.trim().toLowerCase();
+		const previo = (await cambiosDe(this.db, this.sb.id, 'carrito-tienda')).get(clave) as
+			CarritoTienda | null | undefined;
+		const abierto = previo && !previo.recuperado ? previo : null;
+		const ahora = Date.now();
+		await guardarCambio(this.db, this.sb.id, 'carrito-tienda', clave, {
+			email: clave,
+			nombre: nombre.trim(),
+			items,
+			total,
+			token: abierto?.token ?? randomToken(24),
+			creado: abierto?.creado ?? ahora,
+			actualizado: ahora,
+			recuperado: null
+		} satisfies CarritoTienda);
+		return true;
+	}
+
+	/** Las líneas del carrito del link de recordatorio (null si no existe o ya compró). */
+	async carritoTienda(token: string) {
+		const c = (await this.carritosTienda()).find((x) => x.token === token && !x.recuperado);
+		return c?.items ?? null;
+	}
+
+	/** Ese email compró: su carrito queda recuperado y deja de aparecer. */
+	async cerrarCarritoTienda(email: string, total: number) {
+		const clave = email.trim().toLowerCase();
+		const c = (await cambiosDe(this.db, this.sb.id, 'carrito-tienda')).get(clave) as
+			CarritoTienda | null | undefined;
+		if (!c || c.recuperado) return;
+		await guardarCambio(this.db, this.sb.id, 'carrito-tienda', clave, {
+			...c,
+			recuperado: Date.now(),
+			recuperadoTotal: total
+		} satisfies CarritoTienda);
 	}
 
 	async guardarAutomaticos(a: AutomaticosCarritos) {
@@ -1005,7 +1078,10 @@ export class DatosSandbox implements Datos {
 
 	async recordarCarrito(id: string): Promise<Resultado> {
 		const d = await this.demo();
-		if (!d.carritos.some((k) => k.id === id)) return 'no-existe';
+		const deLaTienda = (await this.carritosTienda()).some(
+			(c) => !c.recuperado && idCarritoTienda(c) === id
+		);
+		if (!deLaTienda && !d.carritos.some((k) => k.id === id)) return 'no-existe';
 		const e = await this.estadoCarritos();
 		if (e.todos || e.recordados.has(id)) return 'no-se-puede';
 		await guardarCambio(this.db, this.sb.id, 'carrito', id, { en: Date.now() });

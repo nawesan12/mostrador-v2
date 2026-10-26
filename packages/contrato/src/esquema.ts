@@ -4,5823 +4,5978 @@
  */
 
 export interface paths {
-    "/v1/rubros": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Rubros con su plantilla y tienda de ejemplo */
-        get: operations["listarRubros"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/auth/registro": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Crea la cuenta, su tienda y la sesión (sigue en el onboarding) */
-        post: operations["registrar"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/auth/ingresar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["ingresar"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/auth/salir": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["salir"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/auth/sesion": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["sesion"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/auth/recuperar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Manda el link para crear una contraseña nueva. Responde igual exista o no la cuenta. */
-        post: operations["recuperar"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/auth/restablecer": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["restablecer"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/arrepentimientos": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Botón de arrepentimiento (Res. 424/2020). Público, sin sesión; devuelve el código de trámite. */
-        post: operations["pedirArrepentimiento"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/contacto": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Consulta de ventas (/contacto). Público, sin sesión. */
-        post: operations["consultar"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/partners/postulaciones": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Postulación al programa de partners. Repetir el email no es error. */
-        post: operations["postularPartner"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/novedades/suscripciones": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Suma un email al resumen mensual de novedades. */
-        post: operations["suscribirNovedades"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/novedades/baja": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Baja con el token del link del mail. */
-        post: operations["bajaNovedades"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/onboarding": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Guarda lo elegido en el onboarding (y si terminó). La plantilla pasa a ser la de la tienda. */
-        put: operations["guardarOnboarding"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/resumen": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Lo que muestra el armazón del panel en cada pantalla (insignias del menú y notificaciones). */
-        get: operations["resumenPanel"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/tablero": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** El Resumen del panel (dashboard) para un período. */
-        get: operations["tablero"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/meta": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** La meta de ventas del mes (en pesos; 0 la saca). */
-        put: operations["guardarMeta"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/avisos/{aviso}/ocultar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Descarta un aviso del Resumen (por ahora, el del certificado de ARCA). */
-        post: operations["ocultarAviso"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/carritos/recordar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Manda por WhatsApp el recordatorio a los carritos abandonados recuperables. */
-        post: operations["recordarCarritos"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/hornero/contexto": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Lo que Hornero sabe de la tienda para responder (ventas por día, productos, clientes, pendientes). */
-        get: operations["contextoHornero"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/hornero/ideas/{idea}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Aprueba (o deshace) una idea de Hornero. */
-        post: operations["marcarIdea"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/pedidos": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Pedidos con filtros (en la URL del panel), conteos por etapa y facetas, y una ventana de filas. */
-        get: operations["listarPedidos"];
-        put?: never;
-        /** Un pedido nuevo (venta en el local o cargado a mano). Descuenta el stock. */
-        post: operations["crearPedido"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/pedidos/lote": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Acción sobre varios pedidos (preparar, etiquetas, facturar, avisar). */
-        post: operations["pedidosEnLote"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/pedidos/{numero}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** El detalle de un pedido. */
-        get: operations["obtenerPedido"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/pedidos/{numero}/estado": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Avanza el pedido una etapa, lo vuelve una atrás (deshacer) o lo cancela. */
-        post: operations["cambiarEstadoPedido"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/pedidos/{numero}/recordatorio": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Le manda al cliente un recordatorio de pago por WhatsApp. */
-        post: operations["recordarPago"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/listas/{lista}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Motor de listas (Clientes, Productos, Inventario, Facturación, Envíos): filtros, conteos y una ventana de filas. */
-        get: operations["listar"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/listas/{lista}/acciones": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Una acción sobre una o varias filas (o la sugerencia de Hornero de esa lista). */
-        post: operations["accionLista"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/productos": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["crearProducto"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/productos/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["obtenerProducto"];
-        put: operations["guardarProducto"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/inventario/movimientos": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Movimientos de stock de hoy (ventas, ajustes, conteos e ingresos), del más nuevo al más viejo. */
-        get: operations["movimientosHoy"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/bandeja": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Conversaciones de WhatsApp, Instagram, Telegram y Mercado Libre. */
-        get: operations["bandeja"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/bandeja/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["conversacion"];
-        put?: never;
-        /** Manda un mensaje, o toma / devuelve la conversación a Hornero. */
-        post: operations["responder"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/carritos": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["carritos"];
-        /** Los recordatorios automáticos (a la hora, a las 24 h con 5% off, email al tercer día). */
-        put: operations["guardarAutomaticos"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/carritos/{id}/recordar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["recordarCarrito"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/devoluciones": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["devoluciones"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/devoluciones/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["resolverDevolucion"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/resenas": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["resenas"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/preguntas/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["responderPregunta"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/links": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Un link de pago para mandar por WhatsApp. */
-        post: operations["crearLink"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/publico/links/{codigo}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** La página de pago (pública). */
-        get: operations["verLink"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/publico/links/{codigo}/pagar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Pagar (con Mercado Pago; en la demo se simula). */
-        post: operations["pagarLink"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/integraciones/mercadopago": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Si la tienda conectó su cuenta de Mercado Pago (marketplace por OAuth). */
-        get: operations["conexionMercadoPago"];
-        put?: never;
-        post?: never;
-        /** Borra los tokens de la tienda. */
-        delete: operations["desconectarMercadoPago"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/publico/tiendas/{slug}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** La tienda online como la ve quien compra (lib/tienda/tipos.ts TiendaPublica). */
-        get: operations["tiendaPublica"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/publico/tiendas/{slug}/pedidos": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Arma el pedido de la tienda online. Precios y envío los calcula la API; con Mercado Pago devuelve el checkout. */
-        post: operations["comprarEnTienda"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/publico/tiendas/{slug}/pedidos/{codigo}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** La confirmación del pedido por su código público. */
-        get: operations["confirmacionPedido"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/integraciones/mercadolibre": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Si la tienda conectó su cuenta de Mercado Libre, y cuánto publicó. */
-        get: operations["conexionMercadoLibre"];
-        /** Recargo sobre el precio (comisión) y pausar sin stock. */
-        put: operations["ajustarMercadoLibre"];
-        post?: never;
-        delete: operations["desconectarMercadoLibre"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/integraciones/mercadolibre/conectar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** La URL de autorización (PKCE, state de un solo uso). */
-        post: operations["conectarMercadoLibre"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/integraciones/mercadolibre/vuelta": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["volverMercadoLibre"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/productos/{id}/mercadolibre": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Publica el producto (categoría sugerida, precio con recargo, stock, foto y descripción). */
-        post: operations["publicarEnMercadoLibre"];
-        /** Pausa la publicación y deja de sincronizarla. */
-        delete: operations["despublicarDeMercadoLibre"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/webhooks/mercadolibre": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Avisos de Mercado Libre (orders_v2, questions, items). Se encolan y se traen con el token de la tienda. */
-        post: operations["webhookMercadoLibre"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/integraciones/mercadopago/conectar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** La URL de autorización (state de un solo uso y PKCE). Sólo dueña o admin. */
-        post: operations["conectarMercadoPago"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/integraciones/mercadopago/vuelta": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Canjea el código de la vuelta del OAuth y guarda los tokens cifrados. */
-        post: operations["volverMercadoPago"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/integraciones/mercadopago/caja": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Da de alta la sucursal y la caja para cobrar con QR (con la dirección real del local). */
-        post: operations["crearCajaMercadoPago"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/pedidos/{numero}/qr": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Orden dinámica de QR por el total del pedido (Orders API). */
-        post: operations["cobrarConQR"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/cobros/qr/{referencia}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Consulta la orden en Mercado Pago y la aplica (created, processed, canceled…). */
-        get: operations["estadoCobroQR"];
-        put?: never;
-        post?: never;
-        delete: operations["cancelarCobroQR"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/pedidos/{numero}/reembolso": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Devuelve el pago del pedido por Mercado Pago (total, o parcial con monto). Pide Idempotency-Key. */
-        post: operations["reembolsarPedido"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/cuenta/suscripcion": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** El abono de Mostrador. Crea la suscripción pendiente y devuelve dónde cargar la tarjeta; el plan cambia cuando Mercado Pago avisa. */
-        post: operations["suscribirPlan"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/webhooks/mercadopago": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Avisos de Mercado Pago, con x-signature (HMAC-SHA256). Sin firma válida, 401. */
-        post: operations["webhookMercadoPago"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/listas-precio": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Las listas de precio y la muestra para el aumento por inflación. */
-        get: operations["listasPrecio"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/listas-precio/aumento": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Sube todos los precios (o lo programa para el lunes). */
-        post: operations["aumentarPrecios"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/listas-precio/aumento/deshacer": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Vuelve los precios a como estaban antes del último aumento. */
-        post: operations["deshacerAumento"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/listas-precio/programado": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Cancela el aumento programado. */
-        delete: operations["cancelarAumento"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/cupones": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Cupones, automáticas y oferta relámpago. */
-        get: operations["cupones"];
-        put?: never;
-        /** Un cupón nuevo (activo o programado). */
-        post: operations["crearCupon"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/cupones/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Pausar, activar, duplicar o ponerle un mínimo de compra. */
-        post: operations["accionCupon"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/cupones/consejo": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Oculta el consejo de Hornero (Ahora no). */
-        delete: operations["descartarConsejo"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/automaticas/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Prende o apaga una promoción automática. */
-        put: operations["fijarAutomatica"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/relampago": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Sumar una hora, liberar 20 unidades, terminar o deshacer el final. */
-        post: operations["accionRelampago"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/marketing": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Audiencias, campañas y lo necesario para armar una nueva. */
-        get: operations["marketing"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/campanas": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Manda (o programa) una campaña por WhatsApp. */
-        post: operations["crearCampana"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/canales": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Lo vendido por canal este mes, ya descontadas las comisiones. */
-        get: operations["canales"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/canales/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Pausa o activa un canal conectado. */
-        put: operations["fijarCanal"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/informes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Los últimos 12 meses. */
-        get: operations["informes"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/actividad": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Todo lo que pasó en la cuenta, quién lo hizo y desde dónde. */
-        get: operations["actividad"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/actividad/{id}/deshacer": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Vuelve atrás un cambio. */
-        post: operations["deshacerEvento"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/para-hacer": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Las tareas de hoy, ordenadas por lo que más plata mueven. */
-        get: operations["paraHacer"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/para-hacer/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Marca o desmarca una tarea de hoy. */
-        put: operations["marcarTarea"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/finanzas": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Lo disponible, lo que se va a liquidar, los gastos, el flujo y los movimientos. */
-        get: operations["finanzas"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/finanzas/retiro": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Transfiere lo disponible a la cuenta bancaria. */
-        post: operations["retirar"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/mi-tienda": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** El editor de la tienda (borrador y si hay cambios sin publicar). */
-        get: operations["miTienda"];
-        /** Guarda el borrador (secciones y colores). */
-        put: operations["guardarMiTienda"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/mi-tienda/publicar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Publica el borrador. */
-        post: operations["publicarTienda"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/configuracion": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Negocio, equipo, seguridad, sesiones, avisos y plan. */
-        get: operations["configuracion"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/configuracion/negocio": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["guardarNegocio"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/configuracion/{grupo}/{clave}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Prende o apaga una opción de seguridad o un aviso. */
-        put: operations["fijarOpcion"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/sesiones/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Cierra otra sesión de la cuenta. */
-        delete: operations["cerrarSesion"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/equipo": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Invita a alguien al equipo. */
-        post: operations["invitar"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/plan": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["cambiarPlan"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/cuenta/plan": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Plan, uso del mes, medio de pago y facturas de Mostrador. */
-        get: operations["planCuenta"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/cuenta/pack": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Suma 2.000 respuestas de Hornero este mes ($ 4.900). */
-        post: operations["comprarPack"];
-        /** Deshace el último pack de este mes. */
-        delete: operations["devolverPack"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/cuenta/cancelacion": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Cancela el plan al final del período (o acepta la oferta). */
-        post: operations["cancelarPlan"];
-        /** Deshace la cancelación. */
-        delete: operations["reactivarPlan"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/permisos": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Qué puede hacer cada rol. */
-        get: operations["permisos"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/permisos/{permiso}/{rol}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["fijarPermiso"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/equipo/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["cambiarRol"];
-        post?: never;
-        delete: operations["quitarDelEquipo"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/dominios": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Dónde se ve la tienda y los dominios propios. */
-        get: operations["dominios"];
-        put?: never;
-        post: operations["conectarDominio"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/dominios/{dominio}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Lo hace principal. */
-        put: operations["dominioPrincipal"];
-        post?: never;
-        delete: operations["quitarDominio"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/notificaciones/preferencias": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["preferenciasAvisos"];
-        put: operations["guardarPreferenciasAvisos"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/datos": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Cuánto hay de cada cosa para exportar y lo exportado. */
-        get: operations["misDatos"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/datos/{tipo}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Exporta productos, clientes, pedidos, facturas, reseñas o conversaciones. */
-        get: operations["exportar"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/datos/inactivos": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["frenarBorrado"];
-        /** Programa el borrado de los clientes sin compras en 3 años (7 días para frenarlo). */
-        delete: operations["borrarInactivos"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/cuenta": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Cierra la tienda. 90 días para arrepentirse. */
-        delete: operations["cerrarCuenta"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/tienda": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** La tienda de la sesión */
-        get: operations["obtenerTienda"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
+  "/v1/rubros": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Rubros con su plantilla y tienda de ejemplo */
+    get: operations["listarRubros"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/auth/registro": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Crea la cuenta, su tienda y la sesión (sigue en el onboarding) */
+    post: operations["registrar"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/auth/ingresar": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["ingresar"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/auth/salir": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["salir"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/auth/sesion": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["sesion"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/auth/recuperar": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Manda el link para crear una contraseña nueva. Responde igual exista o no la cuenta. */
+    post: operations["recuperar"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/auth/restablecer": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["restablecer"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/arrepentimientos": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Botón de arrepentimiento (Res. 424/2020). Público, sin sesión; devuelve el código de trámite. */
+    post: operations["pedirArrepentimiento"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/contacto": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Consulta de ventas (/contacto). Público, sin sesión. */
+    post: operations["consultar"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/partners/postulaciones": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Postulación al programa de partners. Repetir el email no es error. */
+    post: operations["postularPartner"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/novedades/suscripciones": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Suma un email al resumen mensual de novedades. */
+    post: operations["suscribirNovedades"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/novedades/baja": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Baja con el token del link del mail. */
+    post: operations["bajaNovedades"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/onboarding": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Guarda lo elegido en el onboarding (y si terminó). La plantilla pasa a ser la de la tienda. */
+    put: operations["guardarOnboarding"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/resumen": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Lo que muestra el armazón del panel en cada pantalla (insignias del menú y notificaciones). */
+    get: operations["resumenPanel"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/tablero": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** El Resumen del panel (dashboard) para un período. */
+    get: operations["tablero"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/meta": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** La meta de ventas del mes (en pesos; 0 la saca). */
+    put: operations["guardarMeta"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/avisos/{aviso}/ocultar": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Descarta un aviso del Resumen (por ahora, el del certificado de ARCA). */
+    post: operations["ocultarAviso"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/carritos/recordar": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Manda por WhatsApp el recordatorio a los carritos abandonados recuperables. */
+    post: operations["recordarCarritos"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/hornero/contexto": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Lo que Hornero sabe de la tienda para responder (ventas por día, productos, clientes, pendientes). */
+    get: operations["contextoHornero"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/hornero/ideas/{idea}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Aprueba (o deshace) una idea de Hornero. */
+    post: operations["marcarIdea"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/pedidos": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Pedidos con filtros (en la URL del panel), conteos por etapa y facetas, y una ventana de filas. */
+    get: operations["listarPedidos"];
+    put?: never;
+    /** Un pedido nuevo (venta en el local o cargado a mano). Descuenta el stock. */
+    post: operations["crearPedido"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/pedidos/lote": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Acción sobre varios pedidos (preparar, etiquetas, facturar, avisar). */
+    post: operations["pedidosEnLote"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/pedidos/{numero}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** El detalle de un pedido. */
+    get: operations["obtenerPedido"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/pedidos/{numero}/estado": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Avanza el pedido una etapa, lo vuelve una atrás (deshacer) o lo cancela. */
+    post: operations["cambiarEstadoPedido"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/pedidos/{numero}/recordatorio": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Le manda al cliente un recordatorio de pago por WhatsApp. */
+    post: operations["recordarPago"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/listas/{lista}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Motor de listas (Clientes, Productos, Inventario, Facturación, Envíos): filtros, conteos y una ventana de filas. */
+    get: operations["listar"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/listas/{lista}/acciones": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Una acción sobre una o varias filas (o la sugerencia de Hornero de esa lista). */
+    post: operations["accionLista"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/productos": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["crearProducto"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/productos/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["obtenerProducto"];
+    put: operations["guardarProducto"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/inventario/movimientos": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Movimientos de stock de hoy (ventas, ajustes, conteos e ingresos), del más nuevo al más viejo. */
+    get: operations["movimientosHoy"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/bandeja": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Conversaciones de WhatsApp, Instagram, Telegram y Mercado Libre. */
+    get: operations["bandeja"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/bandeja/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["conversacion"];
+    put?: never;
+    /** Manda un mensaje, o toma / devuelve la conversación a Hornero. */
+    post: operations["responder"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/carritos": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["carritos"];
+    /** Los recordatorios automáticos (a la hora, a las 24 h con 5% off, email al tercer día). */
+    put: operations["guardarAutomaticos"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/carritos/{id}/recordar": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["recordarCarrito"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/devoluciones": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["devoluciones"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/devoluciones/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["resolverDevolucion"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/resenas": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["resenas"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/preguntas/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["responderPregunta"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/links": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Un link de pago para mandar por WhatsApp. */
+    post: operations["crearLink"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/publico/links/{codigo}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** La página de pago (pública). */
+    get: operations["verLink"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/publico/links/{codigo}/pagar": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Pagar (con Mercado Pago; en la demo se simula). */
+    post: operations["pagarLink"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/integraciones/mercadopago": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Si la tienda conectó su cuenta de Mercado Pago (marketplace por OAuth). */
+    get: operations["conexionMercadoPago"];
+    put?: never;
+    post?: never;
+    /** Borra los tokens de la tienda. */
+    delete: operations["desconectarMercadoPago"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/publico/tiendas/{slug}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** La tienda online como la ve quien compra (lib/tienda/tipos.ts TiendaPublica). */
+    get: operations["tiendaPublica"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/publico/tiendas/{slug}/pedidos": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Arma el pedido de la tienda online. Precios y envío los calcula la API; con Mercado Pago devuelve el checkout. */
+    post: operations["comprarEnTienda"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/publico/tiendas/{slug}/carritos": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Guarda el carrito de quien dejó su email en el checkout (uno abierto por email; se cierra solo si compra). Tope de 60 por hora por IP. */
+    post: operations["guardarCarritoTienda"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/publico/tiendas/{slug}/carritos/{token}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Las líneas del carrito del link del recordatorio, para volver a armarlo. 404 si ya compró o no existe. */
+    get: operations["carritoPorToken"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/publico/tiendas/{slug}/pedidos/{codigo}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** La confirmación del pedido por su código público. */
+    get: operations["confirmacionPedido"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/integraciones/mercadolibre": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Si la tienda conectó su cuenta de Mercado Libre, y cuánto publicó. */
+    get: operations["conexionMercadoLibre"];
+    /** Recargo sobre el precio (comisión) y pausar sin stock. */
+    put: operations["ajustarMercadoLibre"];
+    post?: never;
+    delete: operations["desconectarMercadoLibre"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/integraciones/mercadolibre/conectar": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** La URL de autorización (PKCE, state de un solo uso). */
+    post: operations["conectarMercadoLibre"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/integraciones/mercadolibre/vuelta": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["volverMercadoLibre"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/productos/{id}/mercadolibre": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Publica el producto (categoría sugerida, precio con recargo, stock, foto y descripción). */
+    post: operations["publicarEnMercadoLibre"];
+    /** Pausa la publicación y deja de sincronizarla. */
+    delete: operations["despublicarDeMercadoLibre"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/webhooks/mercadolibre": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Avisos de Mercado Libre (orders_v2, questions, items). Se encolan y se traen con el token de la tienda. */
+    post: operations["webhookMercadoLibre"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/integraciones/mercadopago/conectar": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** La URL de autorización (state de un solo uso y PKCE). Sólo dueña o admin. */
+    post: operations["conectarMercadoPago"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/integraciones/mercadopago/vuelta": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Canjea el código de la vuelta del OAuth y guarda los tokens cifrados. */
+    post: operations["volverMercadoPago"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/integraciones/mercadopago/caja": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Da de alta la sucursal y la caja para cobrar con QR (con la dirección real del local). */
+    post: operations["crearCajaMercadoPago"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/pedidos/{numero}/qr": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Orden dinámica de QR por el total del pedido (Orders API). */
+    post: operations["cobrarConQR"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/cobros/qr/{referencia}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Consulta la orden en Mercado Pago y la aplica (created, processed, canceled…). */
+    get: operations["estadoCobroQR"];
+    put?: never;
+    post?: never;
+    delete: operations["cancelarCobroQR"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/pedidos/{numero}/reembolso": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Devuelve el pago del pedido por Mercado Pago (total, o parcial con monto). Pide Idempotency-Key. */
+    post: operations["reembolsarPedido"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/cuenta/suscripcion": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** El abono de Mostrador. Crea la suscripción pendiente y devuelve dónde cargar la tarjeta; el plan cambia cuando Mercado Pago avisa. */
+    post: operations["suscribirPlan"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/webhooks/mercadopago": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Avisos de Mercado Pago, con x-signature (HMAC-SHA256). Sin firma válida, 401. */
+    post: operations["webhookMercadoPago"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/listas-precio": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Las listas de precio y la muestra para el aumento por inflación. */
+    get: operations["listasPrecio"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/listas-precio/aumento": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Sube todos los precios (o lo programa para el lunes). */
+    post: operations["aumentarPrecios"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/listas-precio/aumento/deshacer": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Vuelve los precios a como estaban antes del último aumento. */
+    post: operations["deshacerAumento"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/listas-precio/programado": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Cancela el aumento programado. */
+    delete: operations["cancelarAumento"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/cupones": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Cupones, automáticas y oferta relámpago. */
+    get: operations["cupones"];
+    put?: never;
+    /** Un cupón nuevo (activo o programado). */
+    post: operations["crearCupon"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/cupones/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Pausar, activar, duplicar o ponerle un mínimo de compra. */
+    post: operations["accionCupon"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/cupones/consejo": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Oculta el consejo de Hornero (Ahora no). */
+    delete: operations["descartarConsejo"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/automaticas/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Prende o apaga una promoción automática. */
+    put: operations["fijarAutomatica"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/relampago": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Sumar una hora, liberar 20 unidades, terminar o deshacer el final. */
+    post: operations["accionRelampago"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/marketing": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Audiencias, campañas y lo necesario para armar una nueva. */
+    get: operations["marketing"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/campanas": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Manda (o programa) una campaña por WhatsApp. */
+    post: operations["crearCampana"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/canales": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Lo vendido por canal este mes, ya descontadas las comisiones. */
+    get: operations["canales"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/canales/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Pausa o activa un canal conectado. */
+    put: operations["fijarCanal"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/informes": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Los últimos 12 meses. */
+    get: operations["informes"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/actividad": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Todo lo que pasó en la cuenta, quién lo hizo y desde dónde. */
+    get: operations["actividad"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/actividad/{id}/deshacer": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Vuelve atrás un cambio. */
+    post: operations["deshacerEvento"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/para-hacer": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Las tareas de hoy, ordenadas por lo que más plata mueven. */
+    get: operations["paraHacer"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/para-hacer/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Marca o desmarca una tarea de hoy. */
+    put: operations["marcarTarea"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/finanzas": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Lo disponible, lo que se va a liquidar, los gastos, el flujo y los movimientos. */
+    get: operations["finanzas"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/finanzas/retiro": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Transfiere lo disponible a la cuenta bancaria. */
+    post: operations["retirar"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/mi-tienda": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** El editor de la tienda (borrador y si hay cambios sin publicar). */
+    get: operations["miTienda"];
+    /** Guarda el borrador (secciones y colores). */
+    put: operations["guardarMiTienda"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/mi-tienda/publicar": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Publica el borrador. */
+    post: operations["publicarTienda"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/configuracion": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Negocio, equipo, seguridad, sesiones, avisos y plan. */
+    get: operations["configuracion"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/configuracion/negocio": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations["guardarNegocio"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/configuracion/{grupo}/{clave}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Prende o apaga una opción de seguridad o un aviso. */
+    put: operations["fijarOpcion"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/sesiones/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Cierra otra sesión de la cuenta. */
+    delete: operations["cerrarSesion"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/equipo": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Invita a alguien al equipo. */
+    post: operations["invitar"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/plan": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations["cambiarPlan"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/cuenta/plan": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Plan, uso del mes, medio de pago y facturas de Mostrador. */
+    get: operations["planCuenta"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/cuenta/pack": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Suma 2.000 respuestas de Hornero este mes ($ 4.900). */
+    post: operations["comprarPack"];
+    /** Deshace el último pack de este mes. */
+    delete: operations["devolverPack"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/cuenta/cancelacion": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Cancela el plan al final del período (o acepta la oferta). */
+    post: operations["cancelarPlan"];
+    /** Deshace la cancelación. */
+    delete: operations["reactivarPlan"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/permisos": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Qué puede hacer cada rol. */
+    get: operations["permisos"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/permisos/{permiso}/{rol}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations["fijarPermiso"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/equipo/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations["cambiarRol"];
+    post?: never;
+    delete: operations["quitarDelEquipo"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/dominios": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Dónde se ve la tienda y los dominios propios. */
+    get: operations["dominios"];
+    put?: never;
+    post: operations["conectarDominio"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/dominios/{dominio}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Lo hace principal. */
+    put: operations["dominioPrincipal"];
+    post?: never;
+    delete: operations["quitarDominio"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/notificaciones/preferencias": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["preferenciasAvisos"];
+    put: operations["guardarPreferenciasAvisos"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/datos": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Cuánto hay de cada cosa para exportar y lo exportado. */
+    get: operations["misDatos"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/datos/{tipo}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Exporta productos, clientes, pedidos, facturas, reseñas o conversaciones. */
+    get: operations["exportar"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/datos/inactivos": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["frenarBorrado"];
+    /** Programa el borrado de los clientes sin compras en 3 años (7 días para frenarlo). */
+    delete: operations["borrarInactivos"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/cuenta": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Cierra la tienda. 90 días para arrepentirse. */
+    delete: operations["cerrarCuenta"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/panel/tienda": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** La tienda de la sesión */
+    get: operations["obtenerTienda"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        ResumenPanel: {
-            /** @description Números del menú (0: sin insignia) */
-            insignias: {
-                /** @description Para preparar */
-                pedidos: number;
-                /** @description Carritos abandonados recuperables */
-                carritos: number;
-                /** @description Conversaciones sin leer */
-                whatsapp: number;
-                /** @description Tareas de hoy */
-                paraHacer: number;
-            };
-            notificaciones: components["schemas"]["Notificacion"][];
-            /** @description Canales conectados (ids: wa, ml, mp, ig, tg) */
-            canales: string[];
-            prueba: {
-                plan: string;
-                diasRestantes: number;
-                diasTotales: number;
-            };
-        };
-        /** @description El valor del período y el del período anterior del mismo largo */
-        Comparado: {
-            actual: number;
-            anterior: number;
-        };
-        ContextoHornero: {
-            /** @description Últimos 14 días, del más viejo a hoy (hora de Argentina) */
-            ventasPorDia: {
-                /** Format: date */
-                fecha: string;
-                ventas: number;
-                pedidos: number;
-            }[];
-            productos: {
-                nombre: string;
-                categoria: string | null;
-                precio: number;
-                stock: number;
-                vendidos30d: number;
-                enMl: boolean;
-            }[];
-            clientes: {
-                total: number;
-                nuevos30d: number;
-                conWhatsApp: number;
-                /** @description Compraron más de una vez y hace 30 días que no vuelven */
-                sinVolver: number;
-            };
-            canales30d: {
-                canal: string;
-                ventas: number;
-            }[];
-        };
-        /** @enum {string} */
-        NombreLista: "clientes" | "productos" | "inventario" | "facturacion" | "envios";
-        ListaGenerica: {
-            total: number;
-            /** @description Registros de la lista (la forma depende de la lista: ver FilaCliente, FilaProducto, …). Productos: cada fila trae `variantes: {id, texto, sku, precio, stock, activa}[]`. Inventario: `variantes: {id: "producto:variante", varianteId, texto, sku, stock, activa}[]` y el stock de la fila es el total; ajustar, ingreso y conteo aceptan esos ids */
-            filas: {
-                [key: string]: unknown;
-            }[];
-            /** @description Conteo por segmento, sin el filtro de segmento */
-            segmentos: {
-                [key: string]: number;
-            };
-            /** @description Por faceta, conteo de cada valor sin el filtro de esa faceta */
-            facetas: {
-                [key: string]: {
-                    [key: string]: number;
-                };
-            };
-            /** @description Números para el encabezado y la sugerencia de Hornero (dependen de la lista) */
-            resumen: {
-                [key: string]: number;
-            };
-        };
-        ProductoEditable: {
-            nombre: string;
-            descripcion?: string;
-            categoria?: string | null;
-            precio: number;
-            costo?: number;
-            sku?: string;
-            stock?: number;
-            /** @description La portada (fotos[0]). Sin `fotos`: reemplaza la portada y deja el resto; null vacía la galería */
-            foto?: string | null;
-            /** @description Galería: la primera es la portada (ids de foto o URLs https). Sin vacías; las repetidas se descartan */
-            fotos?: string[];
-            /** @description Talle, Color, Presentación… Con opciones se vende por variante y el `stock` del producto se ignora (es la suma de las activas). Sin mandar: quedan las que había; [] las saca. Hasta 100 combinaciones; nombres y valores repetidos se comparan sin mayúsculas ni tildes */
-            opciones?: components["schemas"]["OpcionProducto"][];
-            /** @description Sólo las que se tocan, identificadas por sus valores. Al guardar se generan las combinaciones: las nuevas arrancan con stock 0 y activas; las que dejan de existir se borran */
-            variantes?: components["schemas"]["VarianteEditable"][];
-            /** @description Dónde se publica: web, ml, ig, google */
-            canales?: {
-                [key: string]: boolean;
-            };
-        };
-        OpcionProducto: {
-            nombre: string;
-            /** @description Sin repetidos */
-            valores: string[];
-        };
-        VarianteEditable: {
-            /** @description Una clave por opción, con un valor de esa opción: identifica la combinación */
-            valores: {
-                [key: string]: string;
-            };
-            sku?: string;
-            /** @description null: usa el precio del producto */
-            precio?: number | null;
-            /** @description Sin mandar: el que tenía (0 si es nueva) */
-            stock?: number;
-            /** @description Una de las fotos del producto */
-            foto?: string | null;
-            /** @description Sin mandar: la que tenía (true si es nueva) */
-            activa?: boolean;
-        };
-        Variante: {
-            id: string;
-            /** @description Una clave por opción del producto, con un valor de esa opción */
-            valores: {
-                [key: string]: string;
-            };
-            sku: string;
-            /** @description null: usa el precio del producto */
-            precio: number | null;
-            stock: number;
-            /** @description Una de las fotos del producto */
-            foto: string | null;
-            activa: boolean;
-        };
-        Producto: components["schemas"]["ProductoEditable"] & {
-            id: string;
-            publicado: boolean;
-            vendidos30d: number;
-            slug: string;
-            fotos: string[];
-            opciones: components["schemas"]["OpcionProducto"][];
-            /** @description En el orden de las combinaciones */
-            variantes: components["schemas"]["Variante"][];
-        };
-        MovimientoStock: {
-            /** @enum {string} */
-            tipo: "web" | "local" | "ml" | "ajuste" | "conteo" | "ingreso" | "devolucion";
-            texto: string;
-            /** @description Negativo: sale; positivo: entra */
-            cantidad: number;
-            /** Format: date-time */
-            en: string;
-        };
-        ConversacionBreve: {
-            id: string;
-            nombre: string;
-            foto: string | null;
-            /** @enum {string} */
-            canal: "wa" | "ig" | "tg" | "ml";
-            /** @description El último mensaje */
-            ultimo: string;
-            /** Format: date-time */
-            creado: string;
-            /** @enum {string} */
-            atiende: "hornero" | "vos" | "resuelto";
-            sinLeer: number;
-        };
-        Conversacion: components["schemas"]["ConversacionBreve"] & {
-            /** @description Su ficha, para crearle un pedido */
-            clienteId: string | null;
-            mensajes: {
-                /** @enum {string} */
-                de: "cliente" | "hornero" | "vos";
-                texto: string;
-                /** Format: date-time */
-                en: string;
-                /** @description Tarjeta de producto que mandó Hornero */
-                producto?: {
-                    nombre: string;
-                    foto: string | null;
-                    precio: number;
-                    stock: number;
-                } | null;
-            }[];
-            /** @description Respuesta que propone Hornero */
-            sugerencia: string | null;
-            /** @description La atiende la persona (Hornero en pausa) */
-            tomada: boolean;
-            cliente: {
-                ciudad: string;
-                /** Format: date-time */
-                desde: string;
-                gastado: number;
-                pedidos: number;
-                etiquetas: string[];
-                ultimoPedido: {
-                    numero: number;
-                    resumen: string;
-                    total: number;
-                    estado: components["schemas"]["EstadoPedido"];
-                } | null;
-                /** @description Lo que Hornero aprendió de esta persona */
-                sabe: string | null;
-            };
-        };
-        AutomaticosCarritos: {
-            /** @description WhatsApp a la hora */
-            hora: boolean;
-            /** @description Segundo aviso a las 24 h con 5% off */
-            dia: boolean;
-            /** @description Email al tercer día */
-            email: boolean;
-        };
-        Carritos: {
-            carritos: {
-                id: string;
-                nombre: string;
-                foto: string | null;
-                /** @description Por dónde llegó: la tienda, Instagram… */
-                desde: string;
-                /** Format: date-time */
-                creado: string;
-                fotos: (string | null)[];
-                cantidad: number;
-                total: number;
-                recordado: boolean;
-            }[];
-            abiertos: number;
-            monto: number;
-            /** @description Recuperado este mes */
-            recuperado: number;
-            /** @description Porcentaje recuperado (0–100) */
-            tasa: number;
-            costoMensaje: number;
-            automaticos: components["schemas"]["AutomaticosCarritos"];
-        };
-        PedidoNuevo: {
-            items: {
-                productoId: string;
-                /** @description Obligatoria si el producto tiene opciones; activa y de ese producto */
-                varianteId?: string | null;
-                cantidad: number;
-            }[];
-            /** @enum {string} */
-            pago: "mp" | "tarjeta" | "payway" | "modo" | "uala" | "transf" | "efectivo";
-            /** @enum {string} */
-            canal: "pos" | "wa" | "web" | "ig" | "ml" | "tg";
-            /**
-             * @default retiro
-             * @enum {string}
-             */
-            envio: "retiro" | "andreani" | "oca" | "correo" | "moto" | "mercadoenvios";
-            /** @description Nombre (en el local suele no haber) */
-            cliente?: string | null;
-            /** @description Un cliente que ya existe (el nombre sale de su ficha) */
-            clienteId?: string | null;
-            telefono?: string | null;
-            nota?: string | null;
-            /**
-             * @description false: queda Sin pagar (se cobra con un link)
-             * @default true
-             */
-            pagado: boolean;
-        };
-        Devolucion: {
-            id: string;
-            producto: string;
-            foto: string | null;
-            cliente: string;
-            pedido: number;
-            /** Format: date-time */
-            creada: string;
-            motivo: string;
-            monto: number;
-            /** @description Lo que pidió: reintegro, reemplazo, cambio */
-            resolucion: string;
-            /** @enum {string} */
-            estado: "Pendiente" | "Aprobada" | "Cambio ofrecido";
-        };
-        ResenasYPreguntas: {
-            preguntas: {
-                id: string;
-                producto: string;
-                foto: string | null;
-                pregunta: string;
-                /** Format: date-time */
-                creada: string;
-                /** @description La respuesta que propone Hornero */
-                sugerida: string;
-                /** @description La publicada */
-                respuesta: string | null;
-            }[];
-            resenas: {
-                autor: string;
-                estrellas: number;
-                texto: string;
-                /** @description Tienda, Mercado Libre, Google */
-                origen: string;
-                /** Format: date-time */
-                creada: string;
-            }[];
-            promedio: number | null;
-            total: number;
-            /** @description De 5 a 1 estrella */
-            porEstrellas: number[];
-            /** @description Porcentaje (4 y 5 estrellas) */
-            recomendaria: number;
-        };
-        LinkPublico: {
-            codigo: string;
-            tienda: string;
-            concepto: string;
-            monto: number;
-            cuotas: boolean;
-            pagado: boolean;
-            pedido: number | null;
-        };
-        ListasPrecio: {
-            listas: {
-                /** @enum {string} */
-                id: "minorista" | "mayorista" | "ml" | "revendedoras";
-                nombre: string;
-                quien: string;
-                /** @description Porcentaje sobre el precio base (0 = base) */
-                ajuste: number;
-                detalle: string;
-            }[];
-            /** @description Cuántos productos toca un aumento */
-            productos: number;
-            muestra: {
-                id: string;
-                nombre: string;
-                precio: number;
-            }[];
-            programado: {
-                pct: number;
-                /** @enum {string} */
-                redondeo: "no" | "90" | "500";
-                /** Format: date-time */
-                para: string;
-            } | null;
-        };
-        Cupon: {
-            id: string;
-            codigo: string;
-            /** @enum {string} */
-            tipo: "pct" | "fijo" | "envio" | "regalo";
-            /** @description Porcentaje o pesos (0 en envío y regalo) */
-            valor: number;
-            descripcion: string;
-            /** @enum {string} */
-            estado: "activo" | "programado" | "pausado" | "terminado";
-            usos: number;
-            /** @description 0 = sin límite */
-            limite: number;
-            vendio: number;
-            desconto: number;
-            canales: ("web" | "wa" | "ig" | "pos")[];
-            /** Format: date-time */
-            empieza: string | null;
-            /** Format: date-time */
-            termina: string | null;
-            minimo: number;
-            /** @description Lo que sugiere Hornero */
-            consejo: string | null;
-            /** Format: date-time */
-            creado: string;
-        };
-        CuponNuevo: {
-            codigo: string;
-            /** @enum {string} */
-            tipo: "pct" | "fijo" | "envio" | "regalo";
-            valor: number;
-            /** @enum {string} */
-            alcance: "todo" | "categoria" | "productos";
-            productos?: string[];
-            /** @enum {string} */
-            quien: "todos" | "nuevos" | "vip" | "riesgo";
-            minimo: number;
-            limite: number;
-            /** @enum {string} */
-            porCliente: "1" | "3" | "libre";
-            /** @enum {string} */
-            vigencia: "7" | "finde" | "30" | "hotsale" | "sin";
-            canales: ("web" | "wa" | "ig" | "pos")[];
-            opciones: {
-                hornero: boolean;
-                combinable: boolean;
-                unicos: boolean;
-                link: boolean;
-            };
-            /** @default false */
-            programar: boolean;
-        };
-        Automatica: {
-            /** @enum {string} */
-            id: "transf" | "envio" | "cantidad" | "3x2" | "cuotas" | "mayorista" | "carrito" | "cumple";
-            titulo: string;
-            detalle: string;
-            ejemplo: string;
-            estado: string;
-            /** @description Lo que vendió con esta promo este mes */
-            aporte: number | null;
-            activa: boolean;
-        };
-        Cupones: {
-            cupones: components["schemas"]["Cupon"][];
-            kpis: {
-                activos: number;
-                usosMes: number;
-                vendido: number;
-                descontado: number;
-                /** @description Porcentaje */
-                vsMesAnterior: number | null;
-            };
-            consejo: {
-                cuponId: string;
-                codigo: string;
-                titulo: string;
-                texto: string;
-                minimo: number;
-            } | null;
-            segmentos: {
-                vip: number;
-                riesgo: number;
-            };
-            automaticas: components["schemas"]["Automatica"][];
-            relampago: {
-                vivo: {
-                    producto: string;
-                    foto: string | null;
-                    pct: number;
-                    precio: number;
-                    oferta: number;
-                    /** Format: date-time */
-                    termina: string;
-                    vendidos: number;
-                    unidades: number;
-                    terminada: boolean;
-                } | null;
-                proximas: {
-                    titulo: string;
-                    detalle: string;
-                    cuando: string;
-                    foto: string | null;
-                }[];
-            };
-            tienda: string;
-            /** @description Para elegir a qué productos aplica */
-            productos: {
-                id: string;
-                nombre: string;
-                foto: string | null;
-            }[];
-            /** @description La categoría que más vende (alcance "una categoría") */
-            categoria: string | null;
-        };
-        Campana: {
-            id: string;
-            /** @enum {string} */
-            canal: "wa" | "email";
-            titulo: string;
-            detalle: string;
-            /** @enum {string} */
-            estado: "Enviando" | "Programada" | "Activa" | "Terminada";
-            metricas: {
-                k: string;
-                v: string;
-            }[];
-        };
-        Marketing: {
-            tienda: {
-                nombre: string;
-                foto: string | null;
-            };
-            audiencias: {
-                /** @enum {string} */
-                id: "todos" | "vip" | "riesgo" | "categoria";
-                nombre: string;
-                cantidad: number;
-            }[];
-            /** @description Pesos por mensaje de marketing de WhatsApp */
-            costoMensaje: number;
-            /** @description Ventas por cada peso, según campañas anteriores */
-            retorno: number | null;
-            /** @description Lo que propone Hornero; {nombre} se reemplaza */
-            mensajes: string[];
-            producto: {
-                nombre: string;
-                foto: string | null;
-            } | null;
-            /** @description El cupón que se puede adjuntar */
-            cupon: string | null;
-            campanas: components["schemas"]["Campana"][];
-            cupones: {
-                codigo: string;
-                descripcion: string;
-                usos: string;
-            }[];
-        };
-        Canales: {
-            mes: string;
-            canales: {
-                /** @enum {string} */
-                id: "web" | "wa" | "ml" | "pos" | "ig" | "tg" | "gg" | "tk";
-                nombre: string;
-                vendido: number;
-                pedidos: number;
-                /** @description 0,14 = 14 % */
-                comision: number;
-                nota: string;
-                activo: boolean;
-                conectado: boolean;
-            }[];
-        };
-        Informes: {
-            meses: string[];
-            series: {
-                ventas: number[];
-                productos: number[];
-                clientes: number[];
-                margen: (number | null)[];
-            };
-            kpis: {
-                ventas: number;
-                ventasVs: number | null;
-                ticket: number;
-                ticketVs: number | null;
-                margen: number | null;
-                margenVs: number | null;
-                /** @description Comisiones que no pagó contra una plataforma con comisión */
-                ahorro: number;
-                mesAnterior: string;
-            };
-            /** @description Meses de historia */
-            historia: number;
-            insights: string[];
-        };
-        Evento: {
-            id: string;
-            /** @enum {string} */
-            tipo: "equipo" | "hornero" | "sistema";
-            quien: string;
-            foto: string | null;
-            texto: string;
-            /** Format: date-time */
-            cuando: string;
-            donde: string;
-            /** @description Se puede volver atrás */
-            deshacer: boolean;
-            deshecho: boolean;
-        };
-        ParaHacer: {
-            grupos: {
-                /** @enum {string} */
-                titulo: "Urgente" | "Hoy" | "Esta semana";
-                tareas: {
-                    id: string;
-                    /** @enum {string} */
-                    tipo: "preparar" | "chats" | "carritos" | "transferencias" | "certificado" | "reponer";
-                    titulo: string;
-                    detalle: string;
-                    /** @description Lo que mueve, en pesos */
-                    valor: number | null;
-                    aproximado?: boolean;
-                    accion: string;
-                    hecha: boolean;
-                }[];
-            }[];
-        };
-        Finanzas: {
-            /** @description En Mercado Pago, listo para transferir */
-            disponible: number;
-            /** @description Cómo se muestra la cuenta de cobro (CBU terminada en…) */
-            cuenta: string | null;
-            banco: string | null;
-            /** @description null si Caja no está conectada */
-            caja: {
-                ventas: number;
-                liquidaciones: number;
-                gastos: number;
-                meta: string;
-                metaPct: number;
-                falta: number;
-                /** Format: date-time */
-                sincronizado: string;
-            } | null;
-            kpis: {
-                aLiquidar: number;
-                aLiquidarDetalle: string;
-                gastos: number;
-                gastosDetalle: string;
-                ganancia: number;
-                margen: number | null;
-                mes: string;
-            };
-            /** @description Próximos 14 días */
-            flujo: {
-                dia: number;
-                entra: number;
-                sale: number;
-            }[];
-            movimientos: {
-                id: string;
-                /** @enum {string} */
-                tipo: "mp" | "payway" | "modo" | "uala" | "andreani" | "oca" | "correo" | "moto" | "transf" | "gasto" | "retiro";
-                titulo: string;
-                detalle: string;
-                /** @description Positivo entra, negativo sale */
-                monto: number;
-            }[];
-            conciliado: boolean;
-        };
-        DisenoTienda: {
-            secciones: {
-                /** @enum {string} */
-                id: "hero" | "cats" | "prods" | "revs" | "ig" | "wa";
-                visible: boolean;
-            }[];
-            paleta: number;
-        };
-        MiTienda: {
-            plantilla: string;
-            /** @description Dónde se ve la tienda (dominio o dirección de Mostrador) */
-            direccion: string;
-            diseno: components["schemas"]["DisenoTienda"];
-            sinPublicar: boolean;
-            vista: {
-                tienda: string;
-                categorias: string[];
-                productos: {
-                    nombre: string;
-                    foto: string | null;
-                    precio: number;
-                }[];
-                resena: {
-                    promedio: number;
-                    texto: string;
-                } | null;
-                fotos: string[];
-                portada: {
-                    foto: string | null;
-                    titulo: string;
-                };
-            };
-        };
-        Negocio: {
-            nombre: string;
-            razonSocial: string;
-            cuit: string;
-            condicion: string;
-            direccion: string;
-            whatsapp: string;
-            email: string;
-            horario: string;
-        };
-        Miembro: {
-            id: string;
-            nombre: string;
-            contacto: string;
-            /** @enum {string} */
-            rol: "duenio" | "admin" | "ventas" | "deposito";
-            foto: string | null;
-            /** Format: date-time */
-            ultimo: string | null;
-            /** @description Invitación sin aceptar */
-            pendiente: boolean;
-            vos: boolean;
-            dobleFactor: boolean;
-        };
-        Configuracion: {
-            negocio: components["schemas"]["Negocio"];
-            equipo: components["schemas"]["Miembro"][];
-            seguridad: {
-                dobleFactor: boolean;
-                otroPais: boolean;
-                alertas: boolean;
-                inactivas: boolean;
-            };
-            sesiones: {
-                id: string;
-                /** @enum {string} */
-                tipo: "compu" | "celu" | "caja";
-                nombre: string;
-                donde: string;
-                /** Format: date-time */
-                cuando: string;
-                actual: boolean;
-            }[];
-            avisos: {
-                venta: boolean;
-                chats: boolean;
-                stock: boolean;
-                diario: boolean;
-                ideas: boolean;
-                novedades: boolean;
-            };
-            plan: {
-                /** @enum {string} */
-                actual: "gratis" | "emprende" | "pro" | "negocio";
-                /** @enum {string} */
-                ciclo: "mes" | "anio";
-                enPrueba: boolean;
-                diasPrueba: number;
-            };
-        };
-        PlanCuenta: {
-            /** @enum {string} */
-            actual: "gratis" | "emprende" | "pro" | "negocio";
-            /** @enum {string} */
-            ciclo: "mes" | "anio";
-            enPrueba: boolean;
-            diasPrueba: number;
-            /** Format: date-time */
-            proximoCobro: string;
-            uso: {
-                productos: number;
-                personas: number;
-                /** @description Respuestas con IA este mes */
-                hornero: number;
-                packs: number;
-                sinIa: number;
-            };
-            medio: {
-                marca: string;
-                ultimos: string;
-                vence: string;
-            } | null;
-            facturacion: {
-                razonSocial: string;
-                cuit: string;
-                tipo: string;
-            };
-            facturas: {
-                numero: string;
-                detalle: string;
-                total: number;
-            }[];
-            cancelado: {
-                /** Format: date-time */
-                hasta: string;
-            } | null;
-        };
-        Permisos: {
-            permisos: {
-                id: string;
-                titulo: string;
-                detalle: string;
-                roles: {
-                    duenio: boolean;
-                    admin: boolean;
-                    ventas: boolean;
-                    deposito: boolean;
-                };
-            }[];
-        };
-        UrlExterna: {
-            /** Format: uri */
-            url: string;
-        };
-        ConexionML: {
-            disponible: boolean;
-            conectada: boolean;
-            apodo?: string;
-            /** Format: date-time */
-            desde?: string;
-            reautorizar: boolean;
-            recargo: number;
-            pausarSinStock: boolean;
-            publicaciones: number;
-            /** @description Sin responder */
-            preguntas: number;
-        };
-        PublicacionML: {
-            itemId: string;
-            permalink: string;
-        };
-        ConexionMP: {
-            /** @description La aplicación de Mostrador tiene credenciales */
-            disponible: boolean;
-            conectada: boolean;
-            /** @description user_id de la cuenta de Mercado Pago */
-            usuario?: string;
-            /** Format: date-time */
-            desde?: string;
-            /** @description El refresh falló: hay que volver a conectar */
-            reautorizar: boolean;
-            cajaQR: boolean;
-        };
-        UbicacionMP: {
-            calle: string;
-            numero: string;
-            ciudad: string;
-            provincia: string;
-            latitud: number;
-            longitud: number;
-        };
-        CobroQR: {
-            referencia: string;
-            /** @description qr_data para dibujar */
-            qr: string;
-            estado: string;
-        };
-        Dominios: {
-            /** @description La dirección que viene con la tienda */
-            gratis: string;
-            dominios: {
-                nombre: string;
-                detalle: string;
-                /** @enum {string} */
-                estado: "activo" | "verificando";
-                principal: boolean;
-                chequeos?: {
-                    titulo: string;
-                    /** @enum {string} */
-                    estado: "ok" | "esperando" | "pendiente";
-                }[];
-            }[];
-            registros: {
-                tipo: string;
-                nombre: string;
-                valor: string;
-            }[];
-        };
-        PreferenciasAvisos: {
-            /** @description "aviso:canal" → activo (los que no están, van por defecto) */
-            matriz: {
-                [key: string]: boolean;
-            };
-            silencio: boolean;
-            /** @enum {string} */
-            resumen: "whatsapp" | "email" | "off";
-        };
-        MisDatos: {
-            conteos: {
-                productos: number;
-                clientes: number;
-                pedidos: number;
-                facturas: number;
-                resenas: number;
-                conversaciones: number;
-            };
-            recientes: {
-                tipo: string;
-                formato: string;
-                /** Format: date-time */
-                en: string;
-            }[];
-            inactivos: number;
-            borrado: {
-                clientes: number;
-                /** Format: date-time */
-                el: string;
-            } | null;
-        };
-        Tablero: {
-            /** @enum {string} */
-            periodo: "hoy" | "7d" | "30d";
-            /** Format: date-time */
-            desde: string;
-            /** Format: date-time */
-            hasta: string;
-            /** @description Nombre de pila de quien entra */
-            hola: string | null;
-            ventas: components["schemas"]["Comparado"];
-            /** @description Ventas acumuladas en 14 tramos del período, y las del período anterior */
-            serie: {
-                actual: number[];
-                anterior: number[];
-            };
-            kpis: {
-                pedidos: components["schemas"]["Comparado"];
-                ticket: components["schemas"]["Comparado"];
-                /** @description Porcentaje (3.4 = 3,4 %) */
-                conversion: components["schemas"]["Comparado"];
-                clientesNuevos: components["schemas"]["Comparado"];
-            };
-            /** @description Parte de las ventas del período por canal (web, wa, ml, ig, pos, tg), de mayor a menor */
-            canales: {
-                canal: string;
-                /** @description De 0 a 1 */
-                parte: number;
-            }[];
-            meta: {
-                /** @description 0: sin meta */
-                objetivo: number;
-                /** @description Vendido en el mes */
-                actual: number;
-                /** @description Al ritmo actual, cómo cierra el mes */
-                proyeccion: number;
-            };
-            avisos: {
-                /** @description Días para que venza el certificado de ARCA, si hay que avisar */
-                certificadoDias: number | null;
-            };
-            ultimosPedidos: components["schemas"]["PedidoBreve"][];
-            paraHacer: {
-                preparar: number;
-                chats: number;
-                chatMasViejoMin: number;
-                transferencias: number;
-                transferenciasMonto: number;
-                sinStock: number;
-                sinStockEnMl: number;
-            };
-            enVivo: {
-                personas: number;
-                paginas: {
-                    nombre: string;
-                    personas: number;
-                }[];
-                carritos: number;
-                carritosMonto: number;
-            };
-            caja: {
-                /**
-                 * Format: date-time
-                 * @description Cuándo se abrió hoy (null: cerrada)
-                 */
-                abierta: string | null;
-                total: number;
-                medios: {
-                    /** @description efectivo, tarjeta, mp, modo, transf */
-                    medio: string;
-                    monto: number;
-                }[];
-            };
-            /** @description Lo que se acredita en los próximos 7 días, por medio de pago */
-            liquidaciones: {
-                medio: string;
-                /** Format: date */
-                fecha: string;
-                monto: number;
-            }[];
-            hornero: {
-                chatsHoy: number;
-                ideas: number;
-                carritos: number;
-                carritosMonto: number;
-                /** @description Lo que cuesta cada mensaje de WhatsApp */
-                costoMensaje: number;
-                /** @description Ya se les mandó el recordatorio */
-                recordados: boolean;
-                /** @description Clientes que aceptan mensajes por WhatsApp */
-                audiencia: number;
-                /** @description Ideas de Hornero ya aprobadas (carritos, stock, promo) */
-                ideasHechas: string[];
-            };
-            bandeja: {
-                nombre: string;
-                /** @description Id de la foto en Unsplash */
-                foto: string | null;
-                mensaje: string;
-                /** Format: date-time */
-                creado: string;
-                /** @enum {string} */
-                atiende: "hornero" | "vos";
-                sinLeer: number;
-            }[];
-            /** @description Integraciones conectadas con su dato del momento */
-            integraciones: {
-                /** @description mp (cobrado en 7 días), ml (publicaciones), wa (chats esperando), arca (días del certificado), andreani (envíos en camino) */
-                id: string;
-                valor: number;
-            }[];
-            /** @description Los 4 más vendidos de los últimos 7 días */
-            masVendidos: {
-                productoId: string;
-                nombre: string;
-                foto: string | null;
-                unidades: number;
-            }[];
-            resenas: {
-                promedio: number | null;
-                nuevas: {
-                    texto: string;
-                    autor: string;
-                    producto: string;
-                    canal: string;
-                    estrellas: number;
-                }[];
-            };
-            envios: {
-                paquetes: number;
-                retiros: {
-                    /** @description HH:MM */
-                    hora: string;
-                    /** @enum {string} */
-                    transporte: "andreani" | "oca" | "correo" | "moto";
-                    paquetes: number;
-                    /** @description Si todos van a la misma ciudad */
-                    ciudad: string | null;
-                    proximo: boolean;
-                }[];
-            };
-        };
-        /** @enum {string} */
-        EstadoPedido: "Sin pagar" | "Para preparar" | "Listo para despachar" | "En camino" | "Entregado" | "Cancelado";
-        PedidoFila: {
-            numero: number;
-            cliente: string;
-            foto: string | null;
-            ciudad: string;
-            canal: string;
-            /** @description mp, tarjeta, payway, modo, uala, transf, efectivo */
-            pago: string;
-            /** @description andreani, oca, correo, moto, retiro */
-            envio: string;
-            estado: components["schemas"]["EstadoPedido"];
-            total: number;
-            /** Format: date-time */
-            creado: string;
-            /** @description Los primeros 3 */
-            productos: {
-                nombre: string;
-                foto: string | null;
-            }[];
-            cantidadProductos: number;
-            vip: boolean;
-            /** @description Lo vendió Hornero */
-            hornero: boolean;
-            mayorista: boolean;
-        };
-        ListaPedidos: {
-            /** @description Pedidos que cumplen los filtros */
-            total: number;
-            suma: number;
-            filas: components["schemas"]["PedidoFila"][];
-            /** @description Por estado, con todos los filtros salvo el de estado */
-            etapas: {
-                [key: string]: number;
-            };
-            /** @description Conteos de canal, pago y envío; cada uno sin su propio filtro */
-            facetas: {
-                canal: {
-                    [key: string]: number;
-                };
-                pago: {
-                    [key: string]: number;
-                };
-                envio: {
-                    [key: string]: number;
-                };
-            };
-        };
-        PedidoDetalle: components["schemas"]["PedidoFila"] & {
-            items: {
-                nombre: string;
-                foto: string | null;
-                cantidad: number;
-                precio: number;
-                varianteId: string | null;
-                /** @description Texto de la variante al comprar: "Talle M · Color Negro" */
-                variante: string | null;
-            }[];
-            subtotal: number;
-            costoEnvio: number;
-            comprador: {
-                nombre: string;
-                foto: string | null;
-                telefono: string | null;
-                email: string | null;
-                /** Format: date-time */
-                desde: string;
-                pedidos: number;
-                gastado: number;
-            };
-            /** @description Aprobado, Acreditada, Pendiente, Cobrado */
-            estadoPago: string;
-            /** @description B 0004-00000812 */
-            factura: string | null;
-            seguimiento: string | null;
-            /** Format: date */
-            llega: string | null;
-            /** @description Lo que anotó Hornero de la charla */
-            nota: string | null;
-            historial: {
-                texto: string;
-                /** Format: date-time */
-                cuando: string | null;
-                hecho: boolean;
-            }[];
-        };
-        PedidoBreve: {
-            numero: number;
-            cliente: string;
-            foto: string | null;
-            canal: string;
-            estado: components["schemas"]["EstadoPedido"];
-            total: number;
-            /** Format: date-time */
-            creado: string;
-        };
-        Notificacion: {
-            id: string;
-            /** @description Marca o tipo del ícono: wa, mp, ml, warn, arca, star, ok, err */
-            tipo: string;
-            titulo: string;
-            detalle: string;
-            /** Format: date-time */
-            creada: string;
-            leida: boolean;
-            /** @enum {string} */
-            grupo: "ventas" | "sistema";
-        };
-        Onboarding: {
-            /** @description Una de las 16 del handoff */
-            plantilla?: string;
-            /** @description Objetivos, canales, secciones, cobros y envíos, tono, equipo (hasta 16 KB) */
-            elecciones: {
-                [key: string]: unknown;
-            };
-            terminado?: boolean;
-        };
-        Consulta: {
-            nombre: string;
-            email: string;
-            /** @description Con característica; se guardan sólo los dígitos */
-            whatsapp?: string;
-            web?: string;
-            /** @enum {string} */
-            facturacion?: "empiezo" | "hasta-5" | "5-a-20" | "20-a-100" | "mas-de-100";
-            /** @enum {string} */
-            origen?: "tiendanube" | "empretienda" | "mercadolibre" | "shopify" | "woocommerce" | "ninguna";
-            mensaje?: string;
-        };
-        Postulacion: {
-            nombre: string;
-            email: string;
-            agencia: string;
-            web?: string;
-            especialidades?: ("diseno" | "desarrollo" | "marketing" | "contabilidad" | "fotografia")[];
-        };
-        PedidoArrepentimiento: {
-            /** @description El de la cuenta */
-            email: string;
-            nombre: string;
-            /** @description DNI o CUIT, con o sin guiones */
-            documento: string;
-            /** @description Plan contratado y fecha */
-            plan: string;
-            motivo?: string;
-        };
-        Alta: {
-            nombre: string;
-            tienda: string;
-            email: string;
-            clave: string;
-        };
-        Sesion: {
-            /** @description Se entrega una sola vez; el BFF lo guarda en una cookie httpOnly */
-            token: string;
-            /** Format: date-time */
-            venceEn: string;
-            tiendaId: string;
-        };
-        DatosSesion: {
-            usuario: {
-                /** Format: uuid */
-                id: string;
-                nombre: string;
-                email: string;
-            };
-            tiendaId: string;
-            /** @enum {string} */
-            rol: "duenio" | "admin" | "ventas" | "deposito" | "";
-            /** Format: date-time */
-            venceEn: string;
-        };
-        Rubro: {
-            /** @example gastronomia */
-            id: string;
-            /** @example Gastronomía */
-            nombre: string;
-            /** @description Plantilla de tienda que se usa por defecto */
-            plantilla: string;
-            /** @description Nombre de la tienda de ejemplo */
-            tienda: string;
-        };
-        /** @enum {string} */
-        Plan: "gratis" | "emprende" | "pro" | "negocio";
-        Tienda: {
-            /** Format: uuid */
-            id: string;
-            slug: string;
-            nombre: string;
-            rubro: string;
-            plantilla: string;
-            plan: components["schemas"]["Plan"];
-            /** Format: date-time */
-            creadaEn: string;
-        };
-        Problema: {
-            type: string;
-            title: string;
-            status: number;
-            detail?: string;
-            code?: string;
-            issues?: {
-                path: string;
-                message: string;
-            }[];
-        };
+  schemas: {
+    ResumenPanel: {
+      /** @description Números del menú (0: sin insignia) */
+      insignias: {
+        /** @description Para preparar */
+        pedidos: number;
+        /** @description Carritos abandonados recuperables */
+        carritos: number;
+        /** @description Conversaciones sin leer */
+        whatsapp: number;
+        /** @description Tareas de hoy */
+        paraHacer: number;
+      };
+      notificaciones: components["schemas"]["Notificacion"][];
+      /** @description Canales conectados (ids: wa, ml, mp, ig, tg) */
+      canales: string[];
+      prueba: {
+        plan: string;
+        diasRestantes: number;
+        diasTotales: number;
+      };
     };
-    responses: {
-        /** @description Error (application/problem+json) */
-        Problema: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["Problema"];
-            };
-        };
+    /** @description El valor del período y el del período anterior del mismo largo */
+    Comparado: {
+      actual: number;
+      anterior: number;
     };
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    ContextoHornero: {
+      /** @description Últimos 14 días, del más viejo a hoy (hora de Argentina) */
+      ventasPorDia: {
+        /** Format: date */
+        fecha: string;
+        ventas: number;
+        pedidos: number;
+      }[];
+      productos: {
+        nombre: string;
+        categoria: string | null;
+        precio: number;
+        stock: number;
+        vendidos30d: number;
+        enMl: boolean;
+      }[];
+      clientes: {
+        total: number;
+        nuevos30d: number;
+        conWhatsApp: number;
+        /** @description Compraron más de una vez y hace 30 días que no vuelven */
+        sinVolver: number;
+      };
+      canales30d: {
+        canal: string;
+        ventas: number;
+      }[];
+    };
+    /** @enum {string} */
+    NombreLista:
+      "clientes" | "productos" | "inventario" | "facturacion" | "envios";
+    ListaGenerica: {
+      total: number;
+      /** @description Registros de la lista (la forma depende de la lista: ver FilaCliente, FilaProducto, …). Productos: cada fila trae `variantes: {id, texto, sku, precio, stock, activa}[]`. Inventario: `variantes: {id: "producto:variante", varianteId, texto, sku, stock, activa}[]` y el stock de la fila es el total; ajustar, ingreso y conteo aceptan esos ids */
+      filas: {
+        [key: string]: unknown;
+      }[];
+      /** @description Conteo por segmento, sin el filtro de segmento */
+      segmentos: {
+        [key: string]: number;
+      };
+      /** @description Por faceta, conteo de cada valor sin el filtro de esa faceta */
+      facetas: {
+        [key: string]: {
+          [key: string]: number;
+        };
+      };
+      /** @description Números para el encabezado y la sugerencia de Hornero (dependen de la lista) */
+      resumen: {
+        [key: string]: number;
+      };
+    };
+    ProductoEditable: {
+      nombre: string;
+      descripcion?: string;
+      categoria?: string | null;
+      precio: number;
+      costo?: number;
+      sku?: string;
+      stock?: number;
+      /** @description La portada (fotos[0]). Sin `fotos`: reemplaza la portada y deja el resto; null vacía la galería */
+      foto?: string | null;
+      /** @description Galería: la primera es la portada (ids de foto o URLs https). Sin vacías; las repetidas se descartan */
+      fotos?: string[];
+      /** @description Talle, Color, Presentación… Con opciones se vende por variante y el `stock` del producto se ignora (es la suma de las activas). Sin mandar: quedan las que había; [] las saca. Hasta 100 combinaciones; nombres y valores repetidos se comparan sin mayúsculas ni tildes */
+      opciones?: components["schemas"]["OpcionProducto"][];
+      /** @description Sólo las que se tocan, identificadas por sus valores. Al guardar se generan las combinaciones: las nuevas arrancan con stock 0 y activas; las que dejan de existir se borran */
+      variantes?: components["schemas"]["VarianteEditable"][];
+      /** @description Dónde se publica: web, ml, ig, google */
+      canales?: {
+        [key: string]: boolean;
+      };
+    };
+    OpcionProducto: {
+      nombre: string;
+      /** @description Sin repetidos */
+      valores: string[];
+    };
+    VarianteEditable: {
+      /** @description Una clave por opción, con un valor de esa opción: identifica la combinación */
+      valores: {
+        [key: string]: string;
+      };
+      sku?: string;
+      /** @description null: usa el precio del producto */
+      precio?: number | null;
+      /** @description Sin mandar: el que tenía (0 si es nueva) */
+      stock?: number;
+      /** @description Una de las fotos del producto */
+      foto?: string | null;
+      /** @description Sin mandar: la que tenía (true si es nueva) */
+      activa?: boolean;
+    };
+    Variante: {
+      id: string;
+      /** @description Una clave por opción del producto, con un valor de esa opción */
+      valores: {
+        [key: string]: string;
+      };
+      sku: string;
+      /** @description null: usa el precio del producto */
+      precio: number | null;
+      stock: number;
+      /** @description Una de las fotos del producto */
+      foto: string | null;
+      activa: boolean;
+    };
+    Producto: components["schemas"]["ProductoEditable"] & {
+      id: string;
+      publicado: boolean;
+      vendidos30d: number;
+      slug: string;
+      fotos: string[];
+      opciones: components["schemas"]["OpcionProducto"][];
+      /** @description En el orden de las combinaciones */
+      variantes: components["schemas"]["Variante"][];
+    };
+    MovimientoStock: {
+      /** @enum {string} */
+      tipo:
+        "web" | "local" | "ml" | "ajuste" | "conteo" | "ingreso" | "devolucion";
+      texto: string;
+      /** @description Negativo: sale; positivo: entra */
+      cantidad: number;
+      /** Format: date-time */
+      en: string;
+    };
+    ConversacionBreve: {
+      id: string;
+      nombre: string;
+      foto: string | null;
+      /** @enum {string} */
+      canal: "wa" | "ig" | "tg" | "ml";
+      /** @description El último mensaje */
+      ultimo: string;
+      /** Format: date-time */
+      creado: string;
+      /** @enum {string} */
+      atiende: "hornero" | "vos" | "resuelto";
+      sinLeer: number;
+    };
+    Conversacion: components["schemas"]["ConversacionBreve"] & {
+      /** @description Su ficha, para crearle un pedido */
+      clienteId: string | null;
+      mensajes: {
+        /** @enum {string} */
+        de: "cliente" | "hornero" | "vos";
+        texto: string;
+        /** Format: date-time */
+        en: string;
+        /** @description Tarjeta de producto que mandó Hornero */
+        producto?: {
+          nombre: string;
+          foto: string | null;
+          precio: number;
+          stock: number;
+        } | null;
+      }[];
+      /** @description Respuesta que propone Hornero */
+      sugerencia: string | null;
+      /** @description La atiende la persona (Hornero en pausa) */
+      tomada: boolean;
+      cliente: {
+        ciudad: string;
+        /** Format: date-time */
+        desde: string;
+        gastado: number;
+        pedidos: number;
+        etiquetas: string[];
+        ultimoPedido: {
+          numero: number;
+          resumen: string;
+          total: number;
+          estado: components["schemas"]["EstadoPedido"];
+        } | null;
+        /** @description Lo que Hornero aprendió de esta persona */
+        sabe: string | null;
+      };
+    };
+    AutomaticosCarritos: {
+      /** @description WhatsApp a la hora */
+      hora: boolean;
+      /** @description Segundo aviso a las 24 h con 5% off */
+      dia: boolean;
+      /** @description Email al tercer día */
+      email: boolean;
+    };
+    Carritos: {
+      carritos: {
+        id: string;
+        nombre: string;
+        foto: string | null;
+        /** @description Por dónde llegó: la tienda, Instagram… */
+        desde: string;
+        /** Format: date-time */
+        creado: string;
+        fotos: (string | null)[];
+        cantidad: number;
+        total: number;
+        recordado: boolean;
+      }[];
+      abiertos: number;
+      monto: number;
+      /** @description Recuperado este mes */
+      recuperado: number;
+      /** @description Porcentaje recuperado (0–100) */
+      tasa: number;
+      costoMensaje: number;
+      automaticos: components["schemas"]["AutomaticosCarritos"];
+    };
+    PedidoNuevo: {
+      items: {
+        productoId: string;
+        /** @description Obligatoria si el producto tiene opciones; activa y de ese producto */
+        varianteId?: string | null;
+        cantidad: number;
+      }[];
+      /** @enum {string} */
+      pago:
+        "mp" | "tarjeta" | "payway" | "modo" | "uala" | "transf" | "efectivo";
+      /** @enum {string} */
+      canal: "pos" | "wa" | "web" | "ig" | "ml" | "tg";
+      /**
+       * @default retiro
+       * @enum {string}
+       */
+      envio:
+        "retiro" | "andreani" | "oca" | "correo" | "moto" | "mercadoenvios";
+      /** @description Nombre (en el local suele no haber) */
+      cliente?: string | null;
+      /** @description Un cliente que ya existe (el nombre sale de su ficha) */
+      clienteId?: string | null;
+      telefono?: string | null;
+      nota?: string | null;
+      /**
+       * @description false: queda Sin pagar (se cobra con un link)
+       * @default true
+       */
+      pagado: boolean;
+    };
+    Devolucion: {
+      id: string;
+      producto: string;
+      foto: string | null;
+      cliente: string;
+      pedido: number;
+      /** Format: date-time */
+      creada: string;
+      motivo: string;
+      monto: number;
+      /** @description Lo que pidió: reintegro, reemplazo, cambio */
+      resolucion: string;
+      /** @enum {string} */
+      estado: "Pendiente" | "Aprobada" | "Cambio ofrecido";
+    };
+    ResenasYPreguntas: {
+      preguntas: {
+        id: string;
+        producto: string;
+        foto: string | null;
+        pregunta: string;
+        /** Format: date-time */
+        creada: string;
+        /** @description La respuesta que propone Hornero */
+        sugerida: string;
+        /** @description La publicada */
+        respuesta: string | null;
+      }[];
+      resenas: {
+        autor: string;
+        estrellas: number;
+        texto: string;
+        /** @description Tienda, Mercado Libre, Google */
+        origen: string;
+        /** Format: date-time */
+        creada: string;
+      }[];
+      promedio: number | null;
+      total: number;
+      /** @description De 5 a 1 estrella */
+      porEstrellas: number[];
+      /** @description Porcentaje (4 y 5 estrellas) */
+      recomendaria: number;
+    };
+    LinkPublico: {
+      codigo: string;
+      tienda: string;
+      concepto: string;
+      monto: number;
+      cuotas: boolean;
+      pagado: boolean;
+      pedido: number | null;
+    };
+    ListasPrecio: {
+      listas: {
+        /** @enum {string} */
+        id: "minorista" | "mayorista" | "ml" | "revendedoras";
+        nombre: string;
+        quien: string;
+        /** @description Porcentaje sobre el precio base (0 = base) */
+        ajuste: number;
+        detalle: string;
+      }[];
+      /** @description Cuántos productos toca un aumento */
+      productos: number;
+      muestra: {
+        id: string;
+        nombre: string;
+        precio: number;
+      }[];
+      programado: {
+        pct: number;
+        /** @enum {string} */
+        redondeo: "no" | "90" | "500";
+        /** Format: date-time */
+        para: string;
+      } | null;
+    };
+    Cupon: {
+      id: string;
+      codigo: string;
+      /** @enum {string} */
+      tipo: "pct" | "fijo" | "envio" | "regalo";
+      /** @description Porcentaje o pesos (0 en envío y regalo) */
+      valor: number;
+      descripcion: string;
+      /** @enum {string} */
+      estado: "activo" | "programado" | "pausado" | "terminado";
+      usos: number;
+      /** @description 0 = sin límite */
+      limite: number;
+      vendio: number;
+      desconto: number;
+      canales: ("web" | "wa" | "ig" | "pos")[];
+      /** Format: date-time */
+      empieza: string | null;
+      /** Format: date-time */
+      termina: string | null;
+      minimo: number;
+      /** @description Lo que sugiere Hornero */
+      consejo: string | null;
+      /** Format: date-time */
+      creado: string;
+    };
+    CuponNuevo: {
+      codigo: string;
+      /** @enum {string} */
+      tipo: "pct" | "fijo" | "envio" | "regalo";
+      valor: number;
+      /** @enum {string} */
+      alcance: "todo" | "categoria" | "productos";
+      productos?: string[];
+      /** @enum {string} */
+      quien: "todos" | "nuevos" | "vip" | "riesgo";
+      minimo: number;
+      limite: number;
+      /** @enum {string} */
+      porCliente: "1" | "3" | "libre";
+      /** @enum {string} */
+      vigencia: "7" | "finde" | "30" | "hotsale" | "sin";
+      canales: ("web" | "wa" | "ig" | "pos")[];
+      opciones: {
+        hornero: boolean;
+        combinable: boolean;
+        unicos: boolean;
+        link: boolean;
+      };
+      /** @default false */
+      programar: boolean;
+    };
+    Automatica: {
+      /** @enum {string} */
+      id:
+        | "transf"
+        | "envio"
+        | "cantidad"
+        | "3x2"
+        | "cuotas"
+        | "mayorista"
+        | "carrito"
+        | "cumple";
+      titulo: string;
+      detalle: string;
+      ejemplo: string;
+      estado: string;
+      /** @description Lo que vendió con esta promo este mes */
+      aporte: number | null;
+      activa: boolean;
+    };
+    Cupones: {
+      cupones: components["schemas"]["Cupon"][];
+      kpis: {
+        activos: number;
+        usosMes: number;
+        vendido: number;
+        descontado: number;
+        /** @description Porcentaje */
+        vsMesAnterior: number | null;
+      };
+      consejo: {
+        cuponId: string;
+        codigo: string;
+        titulo: string;
+        texto: string;
+        minimo: number;
+      } | null;
+      segmentos: {
+        vip: number;
+        riesgo: number;
+      };
+      automaticas: components["schemas"]["Automatica"][];
+      relampago: {
+        vivo: {
+          producto: string;
+          foto: string | null;
+          pct: number;
+          precio: number;
+          oferta: number;
+          /** Format: date-time */
+          termina: string;
+          vendidos: number;
+          unidades: number;
+          terminada: boolean;
+        } | null;
+        proximas: {
+          titulo: string;
+          detalle: string;
+          cuando: string;
+          foto: string | null;
+        }[];
+      };
+      tienda: string;
+      /** @description Para elegir a qué productos aplica */
+      productos: {
+        id: string;
+        nombre: string;
+        foto: string | null;
+      }[];
+      /** @description La categoría que más vende (alcance "una categoría") */
+      categoria: string | null;
+    };
+    Campana: {
+      id: string;
+      /** @enum {string} */
+      canal: "wa" | "email";
+      titulo: string;
+      detalle: string;
+      /** @enum {string} */
+      estado: "Enviando" | "Programada" | "Activa" | "Terminada";
+      metricas: {
+        k: string;
+        v: string;
+      }[];
+    };
+    Marketing: {
+      tienda: {
+        nombre: string;
+        foto: string | null;
+      };
+      audiencias: {
+        /** @enum {string} */
+        id: "todos" | "vip" | "riesgo" | "categoria";
+        nombre: string;
+        cantidad: number;
+      }[];
+      /** @description Pesos por mensaje de marketing de WhatsApp */
+      costoMensaje: number;
+      /** @description Ventas por cada peso, según campañas anteriores */
+      retorno: number | null;
+      /** @description Lo que propone Hornero; {nombre} se reemplaza */
+      mensajes: string[];
+      producto: {
+        nombre: string;
+        foto: string | null;
+      } | null;
+      /** @description El cupón que se puede adjuntar */
+      cupon: string | null;
+      campanas: components["schemas"]["Campana"][];
+      cupones: {
+        codigo: string;
+        descripcion: string;
+        usos: string;
+      }[];
+    };
+    Canales: {
+      mes: string;
+      canales: {
+        /** @enum {string} */
+        id: "web" | "wa" | "ml" | "pos" | "ig" | "tg" | "gg" | "tk";
+        nombre: string;
+        vendido: number;
+        pedidos: number;
+        /** @description 0,14 = 14 % */
+        comision: number;
+        nota: string;
+        activo: boolean;
+        conectado: boolean;
+      }[];
+    };
+    Informes: {
+      meses: string[];
+      series: {
+        ventas: number[];
+        productos: number[];
+        clientes: number[];
+        margen: (number | null)[];
+      };
+      kpis: {
+        ventas: number;
+        ventasVs: number | null;
+        ticket: number;
+        ticketVs: number | null;
+        margen: number | null;
+        margenVs: number | null;
+        /** @description Comisiones que no pagó contra una plataforma con comisión */
+        ahorro: number;
+        mesAnterior: string;
+      };
+      /** @description Meses de historia */
+      historia: number;
+      insights: string[];
+    };
+    Evento: {
+      id: string;
+      /** @enum {string} */
+      tipo: "equipo" | "hornero" | "sistema";
+      quien: string;
+      foto: string | null;
+      texto: string;
+      /** Format: date-time */
+      cuando: string;
+      donde: string;
+      /** @description Se puede volver atrás */
+      deshacer: boolean;
+      deshecho: boolean;
+    };
+    ParaHacer: {
+      grupos: {
+        /** @enum {string} */
+        titulo: "Urgente" | "Hoy" | "Esta semana";
+        tareas: {
+          id: string;
+          /** @enum {string} */
+          tipo:
+            | "preparar"
+            | "chats"
+            | "carritos"
+            | "transferencias"
+            | "certificado"
+            | "reponer";
+          titulo: string;
+          detalle: string;
+          /** @description Lo que mueve, en pesos */
+          valor: number | null;
+          aproximado?: boolean;
+          accion: string;
+          hecha: boolean;
+        }[];
+      }[];
+    };
+    Finanzas: {
+      /** @description En Mercado Pago, listo para transferir */
+      disponible: number;
+      /** @description Cómo se muestra la cuenta de cobro (CBU terminada en…) */
+      cuenta: string | null;
+      banco: string | null;
+      /** @description null si Caja no está conectada */
+      caja: {
+        ventas: number;
+        liquidaciones: number;
+        gastos: number;
+        meta: string;
+        metaPct: number;
+        falta: number;
+        /** Format: date-time */
+        sincronizado: string;
+      } | null;
+      kpis: {
+        aLiquidar: number;
+        aLiquidarDetalle: string;
+        gastos: number;
+        gastosDetalle: string;
+        ganancia: number;
+        margen: number | null;
+        mes: string;
+      };
+      /** @description Próximos 14 días */
+      flujo: {
+        dia: number;
+        entra: number;
+        sale: number;
+      }[];
+      movimientos: {
+        id: string;
+        /** @enum {string} */
+        tipo:
+          | "mp"
+          | "payway"
+          | "modo"
+          | "uala"
+          | "andreani"
+          | "oca"
+          | "correo"
+          | "moto"
+          | "transf"
+          | "gasto"
+          | "retiro";
+        titulo: string;
+        detalle: string;
+        /** @description Positivo entra, negativo sale */
+        monto: number;
+      }[];
+      conciliado: boolean;
+    };
+    DisenoTienda: {
+      secciones: {
+        /** @enum {string} */
+        id: "hero" | "cats" | "prods" | "revs" | "ig" | "wa";
+        visible: boolean;
+      }[];
+      paleta: number;
+    };
+    MiTienda: {
+      plantilla: string;
+      /** @description Dónde se ve la tienda (dominio o dirección de Mostrador) */
+      direccion: string;
+      diseno: components["schemas"]["DisenoTienda"];
+      sinPublicar: boolean;
+      vista: {
+        tienda: string;
+        categorias: string[];
+        productos: {
+          nombre: string;
+          foto: string | null;
+          precio: number;
+        }[];
+        resena: {
+          promedio: number;
+          texto: string;
+        } | null;
+        fotos: string[];
+        portada: {
+          foto: string | null;
+          titulo: string;
+        };
+      };
+    };
+    Negocio: {
+      nombre: string;
+      razonSocial: string;
+      cuit: string;
+      condicion: string;
+      direccion: string;
+      whatsapp: string;
+      email: string;
+      horario: string;
+    };
+    Miembro: {
+      id: string;
+      nombre: string;
+      contacto: string;
+      /** @enum {string} */
+      rol: "duenio" | "admin" | "ventas" | "deposito";
+      foto: string | null;
+      /** Format: date-time */
+      ultimo: string | null;
+      /** @description Invitación sin aceptar */
+      pendiente: boolean;
+      vos: boolean;
+      dobleFactor: boolean;
+    };
+    Configuracion: {
+      negocio: components["schemas"]["Negocio"];
+      equipo: components["schemas"]["Miembro"][];
+      seguridad: {
+        dobleFactor: boolean;
+        otroPais: boolean;
+        alertas: boolean;
+        inactivas: boolean;
+      };
+      sesiones: {
+        id: string;
+        /** @enum {string} */
+        tipo: "compu" | "celu" | "caja";
+        nombre: string;
+        donde: string;
+        /** Format: date-time */
+        cuando: string;
+        actual: boolean;
+      }[];
+      avisos: {
+        venta: boolean;
+        chats: boolean;
+        stock: boolean;
+        diario: boolean;
+        ideas: boolean;
+        novedades: boolean;
+      };
+      plan: {
+        /** @enum {string} */
+        actual: "gratis" | "emprende" | "pro" | "negocio";
+        /** @enum {string} */
+        ciclo: "mes" | "anio";
+        enPrueba: boolean;
+        diasPrueba: number;
+      };
+    };
+    PlanCuenta: {
+      /** @enum {string} */
+      actual: "gratis" | "emprende" | "pro" | "negocio";
+      /** @enum {string} */
+      ciclo: "mes" | "anio";
+      enPrueba: boolean;
+      diasPrueba: number;
+      /** Format: date-time */
+      proximoCobro: string;
+      uso: {
+        productos: number;
+        personas: number;
+        /** @description Respuestas con IA este mes */
+        hornero: number;
+        packs: number;
+        sinIa: number;
+      };
+      medio: {
+        marca: string;
+        ultimos: string;
+        vence: string;
+      } | null;
+      facturacion: {
+        razonSocial: string;
+        cuit: string;
+        tipo: string;
+      };
+      facturas: {
+        numero: string;
+        detalle: string;
+        total: number;
+      }[];
+      cancelado: {
+        /** Format: date-time */
+        hasta: string;
+      } | null;
+    };
+    Permisos: {
+      permisos: {
+        id: string;
+        titulo: string;
+        detalle: string;
+        roles: {
+          duenio: boolean;
+          admin: boolean;
+          ventas: boolean;
+          deposito: boolean;
+        };
+      }[];
+    };
+    UrlExterna: {
+      /** Format: uri */
+      url: string;
+    };
+    ConexionML: {
+      disponible: boolean;
+      conectada: boolean;
+      apodo?: string;
+      /** Format: date-time */
+      desde?: string;
+      reautorizar: boolean;
+      recargo: number;
+      pausarSinStock: boolean;
+      publicaciones: number;
+      /** @description Sin responder */
+      preguntas: number;
+    };
+    PublicacionML: {
+      itemId: string;
+      permalink: string;
+    };
+    ConexionMP: {
+      /** @description La aplicación de Mostrador tiene credenciales */
+      disponible: boolean;
+      conectada: boolean;
+      /** @description user_id de la cuenta de Mercado Pago */
+      usuario?: string;
+      /** Format: date-time */
+      desde?: string;
+      /** @description El refresh falló: hay que volver a conectar */
+      reautorizar: boolean;
+      cajaQR: boolean;
+    };
+    UbicacionMP: {
+      calle: string;
+      numero: string;
+      ciudad: string;
+      provincia: string;
+      latitud: number;
+      longitud: number;
+    };
+    CobroQR: {
+      referencia: string;
+      /** @description qr_data para dibujar */
+      qr: string;
+      estado: string;
+    };
+    Dominios: {
+      /** @description La dirección que viene con la tienda */
+      gratis: string;
+      dominios: {
+        nombre: string;
+        detalle: string;
+        /** @enum {string} */
+        estado: "activo" | "verificando";
+        principal: boolean;
+        chequeos?: {
+          titulo: string;
+          /** @enum {string} */
+          estado: "ok" | "esperando" | "pendiente";
+        }[];
+      }[];
+      registros: {
+        tipo: string;
+        nombre: string;
+        valor: string;
+      }[];
+    };
+    PreferenciasAvisos: {
+      /** @description "aviso:canal" → activo (los que no están, van por defecto) */
+      matriz: {
+        [key: string]: boolean;
+      };
+      silencio: boolean;
+      /** @enum {string} */
+      resumen: "whatsapp" | "email" | "off";
+    };
+    MisDatos: {
+      conteos: {
+        productos: number;
+        clientes: number;
+        pedidos: number;
+        facturas: number;
+        resenas: number;
+        conversaciones: number;
+      };
+      recientes: {
+        tipo: string;
+        formato: string;
+        /** Format: date-time */
+        en: string;
+      }[];
+      inactivos: number;
+      borrado: {
+        clientes: number;
+        /** Format: date-time */
+        el: string;
+      } | null;
+    };
+    Tablero: {
+      /** @enum {string} */
+      periodo: "hoy" | "7d" | "30d";
+      /** Format: date-time */
+      desde: string;
+      /** Format: date-time */
+      hasta: string;
+      /** @description Nombre de pila de quien entra */
+      hola: string | null;
+      ventas: components["schemas"]["Comparado"];
+      /** @description Ventas acumuladas en 14 tramos del período, y las del período anterior */
+      serie: {
+        actual: number[];
+        anterior: number[];
+      };
+      kpis: {
+        pedidos: components["schemas"]["Comparado"];
+        ticket: components["schemas"]["Comparado"];
+        /** @description Porcentaje (3.4 = 3,4 %) */
+        conversion: components["schemas"]["Comparado"];
+        clientesNuevos: components["schemas"]["Comparado"];
+      };
+      /** @description Parte de las ventas del período por canal (web, wa, ml, ig, pos, tg), de mayor a menor */
+      canales: {
+        canal: string;
+        /** @description De 0 a 1 */
+        parte: number;
+      }[];
+      meta: {
+        /** @description 0: sin meta */
+        objetivo: number;
+        /** @description Vendido en el mes */
+        actual: number;
+        /** @description Al ritmo actual, cómo cierra el mes */
+        proyeccion: number;
+      };
+      avisos: {
+        /** @description Días para que venza el certificado de ARCA, si hay que avisar */
+        certificadoDias: number | null;
+      };
+      ultimosPedidos: components["schemas"]["PedidoBreve"][];
+      paraHacer: {
+        preparar: number;
+        chats: number;
+        chatMasViejoMin: number;
+        transferencias: number;
+        transferenciasMonto: number;
+        sinStock: number;
+        sinStockEnMl: number;
+      };
+      enVivo: {
+        personas: number;
+        paginas: {
+          nombre: string;
+          personas: number;
+        }[];
+        carritos: number;
+        carritosMonto: number;
+      };
+      caja: {
+        /**
+         * Format: date-time
+         * @description Cuándo se abrió hoy (null: cerrada)
+         */
+        abierta: string | null;
+        total: number;
+        medios: {
+          /** @description efectivo, tarjeta, mp, modo, transf */
+          medio: string;
+          monto: number;
+        }[];
+      };
+      /** @description Lo que se acredita en los próximos 7 días, por medio de pago */
+      liquidaciones: {
+        medio: string;
+        /** Format: date */
+        fecha: string;
+        monto: number;
+      }[];
+      hornero: {
+        chatsHoy: number;
+        ideas: number;
+        carritos: number;
+        carritosMonto: number;
+        /** @description Lo que cuesta cada mensaje de WhatsApp */
+        costoMensaje: number;
+        /** @description Ya se les mandó el recordatorio */
+        recordados: boolean;
+        /** @description Clientes que aceptan mensajes por WhatsApp */
+        audiencia: number;
+        /** @description Ideas de Hornero ya aprobadas (carritos, stock, promo) */
+        ideasHechas: string[];
+      };
+      bandeja: {
+        nombre: string;
+        /** @description Id de la foto en Unsplash */
+        foto: string | null;
+        mensaje: string;
+        /** Format: date-time */
+        creado: string;
+        /** @enum {string} */
+        atiende: "hornero" | "vos";
+        sinLeer: number;
+      }[];
+      /** @description Integraciones conectadas con su dato del momento */
+      integraciones: {
+        /** @description mp (cobrado en 7 días), ml (publicaciones), wa (chats esperando), arca (días del certificado), andreani (envíos en camino) */
+        id: string;
+        valor: number;
+      }[];
+      /** @description Los 4 más vendidos de los últimos 7 días */
+      masVendidos: {
+        productoId: string;
+        nombre: string;
+        foto: string | null;
+        unidades: number;
+      }[];
+      resenas: {
+        promedio: number | null;
+        nuevas: {
+          texto: string;
+          autor: string;
+          producto: string;
+          canal: string;
+          estrellas: number;
+        }[];
+      };
+      envios: {
+        paquetes: number;
+        retiros: {
+          /** @description HH:MM */
+          hora: string;
+          /** @enum {string} */
+          transporte: "andreani" | "oca" | "correo" | "moto";
+          paquetes: number;
+          /** @description Si todos van a la misma ciudad */
+          ciudad: string | null;
+          proximo: boolean;
+        }[];
+      };
+    };
+    /** @enum {string} */
+    EstadoPedido:
+      | "Sin pagar"
+      | "Para preparar"
+      | "Listo para despachar"
+      | "En camino"
+      | "Entregado"
+      | "Cancelado";
+    PedidoFila: {
+      numero: number;
+      cliente: string;
+      foto: string | null;
+      ciudad: string;
+      canal: string;
+      /** @description mp, tarjeta, payway, modo, uala, transf, efectivo */
+      pago: string;
+      /** @description andreani, oca, correo, moto, retiro */
+      envio: string;
+      estado: components["schemas"]["EstadoPedido"];
+      total: number;
+      /** Format: date-time */
+      creado: string;
+      /** @description Los primeros 3 */
+      productos: {
+        nombre: string;
+        foto: string | null;
+      }[];
+      cantidadProductos: number;
+      vip: boolean;
+      /** @description Lo vendió Hornero */
+      hornero: boolean;
+      mayorista: boolean;
+    };
+    ListaPedidos: {
+      /** @description Pedidos que cumplen los filtros */
+      total: number;
+      suma: number;
+      filas: components["schemas"]["PedidoFila"][];
+      /** @description Por estado, con todos los filtros salvo el de estado */
+      etapas: {
+        [key: string]: number;
+      };
+      /** @description Conteos de canal, pago y envío; cada uno sin su propio filtro */
+      facetas: {
+        canal: {
+          [key: string]: number;
+        };
+        pago: {
+          [key: string]: number;
+        };
+        envio: {
+          [key: string]: number;
+        };
+      };
+    };
+    PedidoDetalle: components["schemas"]["PedidoFila"] & {
+      items: {
+        nombre: string;
+        foto: string | null;
+        cantidad: number;
+        precio: number;
+        varianteId: string | null;
+        /** @description Texto de la variante al comprar: "Talle M · Color Negro" */
+        variante: string | null;
+      }[];
+      subtotal: number;
+      costoEnvio: number;
+      comprador: {
+        nombre: string;
+        foto: string | null;
+        telefono: string | null;
+        email: string | null;
+        /** Format: date-time */
+        desde: string;
+        pedidos: number;
+        gastado: number;
+      };
+      /** @description Aprobado, Acreditada, Pendiente, Cobrado */
+      estadoPago: string;
+      /** @description B 0004-00000812 */
+      factura: string | null;
+      seguimiento: string | null;
+      /** Format: date */
+      llega: string | null;
+      /** @description Lo que anotó Hornero de la charla */
+      nota: string | null;
+      historial: {
+        texto: string;
+        /** Format: date-time */
+        cuando: string | null;
+        hecho: boolean;
+      }[];
+    };
+    PedidoBreve: {
+      numero: number;
+      cliente: string;
+      foto: string | null;
+      canal: string;
+      estado: components["schemas"]["EstadoPedido"];
+      total: number;
+      /** Format: date-time */
+      creado: string;
+    };
+    Notificacion: {
+      id: string;
+      /** @description Marca o tipo del ícono: wa, mp, ml, warn, arca, star, ok, err */
+      tipo: string;
+      titulo: string;
+      detalle: string;
+      /** Format: date-time */
+      creada: string;
+      leida: boolean;
+      /** @enum {string} */
+      grupo: "ventas" | "sistema";
+    };
+    Onboarding: {
+      /** @description Una de las 16 del handoff */
+      plantilla?: string;
+      /** @description Objetivos, canales, secciones, cobros y envíos, tono, equipo (hasta 16 KB) */
+      elecciones: {
+        [key: string]: unknown;
+      };
+      terminado?: boolean;
+    };
+    Consulta: {
+      nombre: string;
+      email: string;
+      /** @description Con característica; se guardan sólo los dígitos */
+      whatsapp?: string;
+      web?: string;
+      /** @enum {string} */
+      facturacion?:
+        "empiezo" | "hasta-5" | "5-a-20" | "20-a-100" | "mas-de-100";
+      /** @enum {string} */
+      origen?:
+        | "tiendanube"
+        | "empretienda"
+        | "mercadolibre"
+        | "shopify"
+        | "woocommerce"
+        | "ninguna";
+      mensaje?: string;
+    };
+    Postulacion: {
+      nombre: string;
+      email: string;
+      agencia: string;
+      web?: string;
+      especialidades?: (
+        "diseno" | "desarrollo" | "marketing" | "contabilidad" | "fotografia"
+      )[];
+    };
+    PedidoArrepentimiento: {
+      /** @description El de la cuenta */
+      email: string;
+      nombre: string;
+      /** @description DNI o CUIT, con o sin guiones */
+      documento: string;
+      /** @description Plan contratado y fecha */
+      plan: string;
+      motivo?: string;
+    };
+    Alta: {
+      nombre: string;
+      tienda: string;
+      email: string;
+      clave: string;
+    };
+    Sesion: {
+      /** @description Se entrega una sola vez; el BFF lo guarda en una cookie httpOnly */
+      token: string;
+      /** Format: date-time */
+      venceEn: string;
+      tiendaId: string;
+    };
+    DatosSesion: {
+      usuario: {
+        /** Format: uuid */
+        id: string;
+        nombre: string;
+        email: string;
+      };
+      tiendaId: string;
+      /** @enum {string} */
+      rol: "duenio" | "admin" | "ventas" | "deposito" | "";
+      /** Format: date-time */
+      venceEn: string;
+    };
+    Rubro: {
+      /** @example gastronomia */
+      id: string;
+      /** @example Gastronomía */
+      nombre: string;
+      /** @description Plantilla de tienda que se usa por defecto */
+      plantilla: string;
+      /** @description Nombre de la tienda de ejemplo */
+      tienda: string;
+    };
+    /** @enum {string} */
+    Plan: "gratis" | "emprende" | "pro" | "negocio";
+    Tienda: {
+      /** Format: uuid */
+      id: string;
+      slug: string;
+      nombre: string;
+      rubro: string;
+      plantilla: string;
+      plan: components["schemas"]["Plan"];
+      /** Format: date-time */
+      creadaEn: string;
+    };
+    Problema: {
+      type: string;
+      title: string;
+      status: number;
+      detail?: string;
+      code?: string;
+      issues?: {
+        path: string;
+        message: string;
+      }[];
+    };
+  };
+  responses: {
+    /** @description Error (application/problem+json) */
+    Problema: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        "application/problem+json": components["schemas"]["Problema"];
+      };
+    };
+  };
+  parameters: never;
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    listarRubros: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Rubros */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Rubro"][];
-                };
-            };
-        };
-    };
-    registrar: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Alta"];
-            };
-        };
-        responses: {
-            /** @description Sesión */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Sesion"];
-                };
-            };
-            400: components["responses"]["Problema"];
-            409: components["responses"]["Problema"];
-            429: components["responses"]["Problema"];
-        };
-    };
-    ingresar: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    email: string;
-                    clave: string;
-                    recordarme?: boolean;
-                };
-            };
-        };
-        responses: {
-            /** @description Sesión */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Sesion"];
-                };
-            };
-            401: components["responses"]["Problema"];
-            429: components["responses"]["Problema"];
-        };
-    };
-    salir: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Sesión cerrada */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    sesion: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Sesión en curso */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DatosSesion"];
-                };
-            };
-            401: components["responses"]["Problema"];
-        };
-    };
-    recuperar: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    email: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Recibido */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            429: components["responses"]["Problema"];
-        };
-    };
-    restablecer: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    token: string;
-                    clave: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Contraseña cambiada; se cierran todas las sesiones */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            400: components["responses"]["Problema"];
-            422: components["responses"]["Problema"];
-        };
-    };
-    pedirArrepentimiento: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PedidoArrepentimiento"];
-            };
-        };
-        responses: {
-            /** @description Registrado; la confirmación sale por mail */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        codigo: string;
-                    };
-                };
-            };
-            400: components["responses"]["Problema"];
-            429: components["responses"]["Problema"];
-        };
-    };
-    consultar: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Consulta"];
-            };
-        };
-        responses: {
-            /** @description Registrada; confirmación por mail */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            400: components["responses"]["Problema"];
-            429: components["responses"]["Problema"];
-        };
-    };
-    postularPartner: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Postulacion"];
-            };
-        };
-        responses: {
-            /** @description Registrada */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            400: components["responses"]["Problema"];
-            429: components["responses"]["Problema"];
-        };
-    };
-    suscribirNovedades: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    email: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Suscripto (o ya lo estaba) */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            400: components["responses"]["Problema"];
-            429: components["responses"]["Problema"];
-        };
-    };
-    bajaNovedades: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    token: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Dado de baja */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            422: components["responses"]["Problema"];
-        };
-    };
-    guardarOnboarding: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Onboarding"];
-            };
-        };
-        responses: {
-            /** @description Guardado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            400: components["responses"]["Problema"];
-            401: components["responses"]["Problema"];
-        };
-    };
-    resumenPanel: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Resumen */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ResumenPanel"];
-                };
-            };
-            401: components["responses"]["Problema"];
-        };
-    };
-    tablero: {
-        parameters: {
-            query?: {
-                periodo?: "hoy" | "7d" | "30d";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Tablero */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Tablero"];
-                };
-            };
-            401: components["responses"]["Problema"];
-        };
-    };
-    guardarMeta: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    objetivo: number;
-                };
-            };
-        };
-        responses: {
-            /** @description Guardada */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            400: components["responses"]["Problema"];
-            401: components["responses"]["Problema"];
-        };
-    };
-    ocultarAviso: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                aviso: "certificado";
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Oculto */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            401: components["responses"]["Problema"];
-        };
-    };
-    recordarCarritos: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Cuántos mensajes quedaron en cola */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        enviados: number;
-                    };
-                };
-            };
-            401: components["responses"]["Problema"];
-        };
-    };
-    contextoHornero: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Contexto */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ContextoHornero"];
-                };
-            };
-            401: components["responses"]["Problema"];
-        };
-    };
-    marcarIdea: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                idea: "carritos" | "stock" | "promo";
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    hecha: boolean;
-                };
-            };
-        };
-        responses: {
-            /** @description Hecho */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            401: components["responses"]["Problema"];
-            404: components["responses"]["Problema"];
-        };
-    };
-    listarPedidos: {
-        parameters: {
-            query?: {
-                /** @description Cliente, número, producto o ciudad */
-                q?: string;
-                /** @description Separados por coma */
-                estado?: string;
-                canal?: string;
-                pago?: string;
-                envio?: string;
-                fecha?: "hoy" | "7d" | "30d" | "todo";
-                minimo?: number;
-                vip?: boolean;
-                hornero?: boolean;
-                mayorista?: boolean;
-                orden?: "nuevos" | "urgentes" | "monto" | "viejos";
-                desde?: number;
-                cuantos?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Lista */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ListaPedidos"];
-                };
-            };
-            401: components["responses"]["Problema"];
-        };
-    };
-    crearPedido: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PedidoNuevo"];
-            };
-        };
-        responses: {
-            /** @description Creado */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        numero: number;
-                        total: number;
-                    };
-                };
-            };
-            400: components["responses"]["Problema"];
-            401: components["responses"]["Problema"];
-            409: components["responses"]["Problema"];
-        };
-    };
-    pedidosEnLote: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    numeros: number[];
-                    /** @enum {string} */
-                    accion: "preparar" | "etiquetas" | "facturar" | "avisar";
-                };
-            };
-        };
-        responses: {
-            /** @description Cuántos se pudieron hacer (los que no estaban en la etapa justa se saltean) */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        hechos: number;
-                        /** @description Para deshacer: número y estado anterior */
-                        cambios: {
-                            numero: number;
-                            antes: components["schemas"]["EstadoPedido"];
-                        }[];
-                    };
-                };
-            };
-            401: components["responses"]["Problema"];
-        };
-    };
-    obtenerPedido: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                numero: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Pedido */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PedidoDetalle"];
-                };
-            };
-            401: components["responses"]["Problema"];
-            404: components["responses"]["Problema"];
-        };
-    };
-    cambiarEstadoPedido: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                numero: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    estado: components["schemas"]["EstadoPedido"];
-                };
-            };
-        };
-        responses: {
-            /** @description Hecho */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            401: components["responses"]["Problema"];
-            404: components["responses"]["Problema"];
-            409: components["responses"]["Problema"];
-        };
-    };
-    recordarPago: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                numero: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Enviado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            401: components["responses"]["Problema"];
-            404: components["responses"]["Problema"];
-            409: components["responses"]["Problema"];
-        };
-    };
-    listar: {
-        parameters: {
-            query?: {
-                q?: string;
-                /** @description Segmentos, separados por coma */
-                seg?: string;
-                /** @description clave:valor separados por coma (ch:wa,city:Rosario) */
-                facetas?: string;
-                rango?: number;
-                banderas?: string;
-                orden?: string;
-                desde?: number;
-                cuantos?: number;
-            };
-            header?: never;
-            path: {
-                lista: components["schemas"]["NombreLista"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Lista */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ListaGenerica"];
-                };
-            };
-            401: components["responses"]["Problema"];
-            404: components["responses"]["Problema"];
-        };
-    };
-    accionLista: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                lista: components["schemas"]["NombreLista"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    ids: string[];
-                    accion: string;
-                    /** @description Lo que la acción necesite (ajuste de stock, publicado…) */
-                    valor?: unknown;
-                };
-            };
-        };
-        responses: {
-            /** @description Cuántas filas cambiaron */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        hechos: number;
-                    };
-                };
-            };
-            401: components["responses"]["Problema"];
-            409: components["responses"]["Problema"];
-        };
-    };
-    crearProducto: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProductoEditable"];
-            };
-        };
-        responses: {
-            /** @description Creado */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Producto"];
-                };
-            };
-            400: components["responses"]["Problema"];
-            401: components["responses"]["Problema"];
-        };
-    };
-    obtenerProducto: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Producto */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Producto"];
-                };
-            };
-            401: components["responses"]["Problema"];
-            404: components["responses"]["Problema"];
-        };
-    };
-    guardarProducto: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProductoEditable"];
-            };
-        };
-        responses: {
-            /** @description Guardado */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Producto"];
-                };
-            };
-            400: components["responses"]["Problema"];
-            401: components["responses"]["Problema"];
-            404: components["responses"]["Problema"];
-        };
-    };
-    movimientosHoy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Movimientos */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MovimientoStock"][];
-                };
-            };
-            401: components["responses"]["Problema"];
-        };
-    };
-    bandeja: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Conversaciones */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        conversaciones: components["schemas"]["ConversacionBreve"][];
-                        /** @description Conversaciones que atendió Hornero hoy */
-                        atendidasHoy: number;
-                    };
-                };
-            };
-            401: components["responses"]["Problema"];
-        };
-    };
-    conversacion: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Conversación */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Conversacion"];
-                };
-            };
-            401: components["responses"]["Problema"];
-            404: components["responses"]["Problema"];
-        };
-    };
-    responder: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    texto?: string;
-                    tomada?: boolean;
-                    /** @description Al abrirla: los mensajes quedan leídos */
-                    leida?: boolean;
-                };
-            };
-        };
-        responses: {
-            /** @description Hecho */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            401: components["responses"]["Problema"];
-            404: components["responses"]["Problema"];
-            409: components["responses"]["Problema"];
-        };
-    };
-    carritos: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Carritos abandonados */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Carritos"];
-                };
-            };
-            401: components["responses"]["Problema"];
-        };
-    };
-    guardarAutomaticos: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AutomaticosCarritos"];
-            };
-        };
-        responses: {
-            /** @description Guardado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            401: components["responses"]["Problema"];
-        };
-    };
-    recordarCarrito: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Enviado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            401: components["responses"]["Problema"];
-            404: components["responses"]["Problema"];
-            409: components["responses"]["Problema"];
-        };
-    };
-    devoluciones: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Devoluciones */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        devoluciones: components["schemas"]["Devolucion"][];
-                        /** @description Porcentaje de pedidos con devolución */
-                        tasa: number;
-                    };
-                };
-            };
-            401: components["responses"]["Problema"];
-        };
-    };
-    resolverDevolucion: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @enum {string} */
-                    accion: "aprobar" | "cambio" | "deshacer";
-                };
-            };
-        };
-        responses: {
-            /** @description Hecho */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            401: components["responses"]["Problema"];
-            404: components["responses"]["Problema"];
-        };
-    };
-    resenas: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Reseñas y preguntas */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ResenasYPreguntas"];
-                };
-            };
-            401: components["responses"]["Problema"];
-        };
-    };
-    responderPregunta: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    respuesta: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Publicada */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            401: components["responses"]["Problema"];
-            404: components["responses"]["Problema"];
-        };
-    };
-    crearLink: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    monto: number;
-                    concepto: string;
-                    /** @default true */
-                    cuotas?: boolean;
-                    /** @description Si es el cobro de un pedido, se marca pagado al pagar */
-                    pedido?: number | null;
-                };
-            };
-        };
-        responses: {
-            /** @description Creado */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        codigo: string;
-                    };
-                };
-            };
-            400: components["responses"]["Problema"];
-            401: components["responses"]["Problema"];
-        };
-    };
-    verLink: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                codigo: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Link */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LinkPublico"];
-                };
-            };
-            404: components["responses"]["Problema"];
-        };
-    };
-    pagarLink: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                codigo: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description El checkout de Mercado Pago (init_point) para mandar a quien paga */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UrlExterna"];
-                };
-            };
-            404: components["responses"]["Problema"];
-            409: components["responses"]["Problema"];
-            502: components["responses"]["Problema"];
-        };
-    };
-    conexionMercadoPago: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Estado */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConexionMP"];
-                };
-            };
-        };
-    };
-    desconectarMercadoPago: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Desconectada */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    tiendaPublica: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                slug: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Tienda */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-            404: components["responses"]["Problema"];
-        };
-    };
-    comprarEnTienda: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                slug: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    carrito: {
-                        id: string;
-                        varianteId?: string | null;
-                        cantidad: number;
-                    }[];
-                    email: string;
-                    nombre: string;
-                    telefono: string;
-                    dni?: string;
-                    cp?: string;
-                    direccion?: string;
-                    /** @enum {string} */
-                    envio: "andreani" | "correo" | "moto" | "retiro";
-                    /** @enum {string} */
-                    pago: "transferencia" | "mercadopago";
-                };
-            };
-        };
-        responses: {
-            /** @description Pedido creado */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        numero: number;
-                        codigo: string;
-                        total: number;
-                        url?: string;
-                    };
-                };
-            };
-            400: components["responses"]["Problema"];
-            409: components["responses"]["Problema"];
-        };
-    };
-    confirmacionPedido: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                slug: string;
-                codigo: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Pedido */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        numero: number;
-                        total: number;
-                        pago: string;
-                        nombre: string;
-                        estadoPago: string;
-                    };
-                };
-            };
-            404: components["responses"]["Problema"];
-        };
-    };
-    conexionMercadoLibre: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Estado */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConexionML"];
-                };
-            };
-        };
-    };
-    ajustarMercadoLibre: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    recargo: number;
-                    pausarSinStock: boolean;
-                };
-            };
-        };
-        responses: {
-            /** @description Guardado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            409: components["responses"]["Problema"];
-        };
-    };
-    desconectarMercadoLibre: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Desconectada */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    conectarMercadoLibre: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Adónde mandar a la persona */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UrlExterna"];
-                };
-            };
-            409: components["responses"]["Problema"];
-        };
-    };
-    volverMercadoLibre: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    codigo: string;
-                    estado: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Conectada */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            400: components["responses"]["Problema"];
-        };
-    };
-    publicarEnMercadoLibre: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Publicado */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PublicacionML"];
-                };
-            };
-            409: components["responses"]["Problema"];
-            422: components["responses"]["Problema"];
-        };
-    };
-    despublicarDeMercadoLibre: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Pausada */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    webhookMercadoLibre: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Recibido */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    conectarMercadoPago: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Adónde mandar a la persona */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UrlExterna"];
-                };
-            };
-            409: components["responses"]["Problema"];
-        };
-    };
-    volverMercadoPago: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    codigo: string;
-                    estado: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Conectada */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            400: components["responses"]["Problema"];
-        };
-    };
-    crearCajaMercadoPago: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UbicacionMP"];
-            };
-        };
-        responses: {
-            /** @description Creada */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            400: components["responses"]["Problema"];
-            409: components["responses"]["Problema"];
-        };
-    };
-    cobrarConQR: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                numero: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description El QR para mostrar */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CobroQR"];
-                };
-            };
-            409: components["responses"]["Problema"];
-        };
-    };
-    estadoCobroQR: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                referencia: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Estado */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        estado: string;
-                    };
-                };
-            };
-        };
-    };
-    cancelarCobroQR: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                referencia: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Cancelada */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    reembolsarPedido: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-            };
-            path: {
-                numero: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    monto?: number;
-                };
-            };
-        };
-        responses: {
-            /** @description Devuelto */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["Problema"];
-            409: components["responses"]["Problema"];
-        };
-    };
-    suscribirPlan: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @enum {string} */
-                    plan: "emprende" | "pro" | "negocio";
-                    /** @enum {string} */
-                    ciclo: "mes" | "anio";
-                    diasPrueba?: number;
-                };
-            };
-        };
-        responses: {
-            /** @description El checkout de la suscripción */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UrlExterna"];
-                };
-            };
-        };
-    };
-    webhookMercadoPago: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Recibido */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Firma inválida */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    listasPrecio: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Listas */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ListasPrecio"];
-                };
-            };
-            401: components["responses"]["Problema"];
-        };
-    };
-    aumentarPrecios: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    pct: number;
-                    /** @enum {string} */
-                    redondeo: "no" | "90" | "500";
-                    /** @default false */
-                    programar?: boolean;
-                };
-            };
-        };
-        responses: {
-            /** @description Aplicado o programado */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        productos: number;
-                        /** Format: date-time */
-                        para?: string | null;
-                    };
-                };
-            };
-            400: components["responses"]["Problema"];
-            401: components["responses"]["Problema"];
-        };
-    };
-    deshacerAumento: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Deshecho */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["Problema"];
-        };
-    };
-    cancelarAumento: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Cancelado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["Problema"];
-        };
-    };
-    cupones: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Cupones */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Cupones"];
-                };
-            };
-            401: components["responses"]["Problema"];
-        };
-    };
-    crearCupon: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CuponNuevo"];
-            };
-        };
-        responses: {
-            /** @description Creado */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Cupon"];
-                };
-            };
-            400: components["responses"]["Problema"];
-            409: components["responses"]["Problema"];
-        };
-    };
-    accionCupon: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @enum {string} */
-                    accion: "pausar" | "activar" | "duplicar" | "minimo" | "deshacer-minimo";
-                    minimo?: number;
-                };
-            };
-        };
-        responses: {
-            /** @description El cupón como quedó (o la copia) */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Cupon"];
-                };
-            };
-            404: components["responses"]["Problema"];
-            409: components["responses"]["Problema"];
-        };
-    };
-    descartarConsejo: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Oculto */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    fijarAutomatica: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    activa: boolean;
-                };
-            };
-        };
-        responses: {
-            /** @description Guardado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["Problema"];
-        };
-    };
-    accionRelampago: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @enum {string} */
-                    accion: "sumar-hora" | "liberar" | "terminar" | "reanudar";
-                };
-            };
-        };
-        responses: {
-            /** @description Hecho */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["Problema"];
-        };
-    };
-    marketing: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Marketing */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Marketing"];
-                };
-            };
-            401: components["responses"]["Problema"];
-        };
-    };
-    crearCampana: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @enum {string} */
-                    audiencia: "todos" | "vip" | "riesgo" | "categoria";
-                    mensaje: string;
-                    foto: boolean;
-                    boton: boolean;
-                    cupon: boolean;
-                    /** @default false */
-                    programar?: boolean;
-                };
-            };
-        };
-        responses: {
-            /** @description Creada */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Campana"];
-                };
-            };
-            400: components["responses"]["Problema"];
-            409: components["responses"]["Problema"];
-        };
-    };
-    canales: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Canales */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Canales"];
-                };
-            };
-            401: components["responses"]["Problema"];
-        };
-    };
-    fijarCanal: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    activo: boolean;
-                };
-            };
-        };
-        responses: {
-            /** @description Guardado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["Problema"];
-            409: components["responses"]["Problema"];
-        };
-    };
-    informes: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Informes */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Informes"];
-                };
-            };
-            401: components["responses"]["Problema"];
-        };
-    };
-    actividad: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Actividad */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        items: components["schemas"]["Evento"][];
-                    };
-                };
-            };
-            401: components["responses"]["Problema"];
-        };
-    };
-    deshacerEvento: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Deshecho */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["Problema"];
-            409: components["responses"]["Problema"];
-        };
-    };
-    paraHacer: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Tareas */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ParaHacer"];
-                };
-            };
-            401: components["responses"]["Problema"];
-        };
-    };
-    marcarTarea: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    hecha: boolean;
-                };
-            };
-        };
-        responses: {
-            /** @description Guardado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["Problema"];
-        };
-    };
-    finanzas: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Finanzas */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Finanzas"];
-                };
-            };
-            401: components["responses"]["Problema"];
-        };
-    };
-    retirar: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description En camino */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        monto: number;
-                        cuenta: string;
-                    };
-                };
-            };
-            409: components["responses"]["Problema"];
-        };
-    };
-    miTienda: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Mi tienda */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MiTienda"];
-                };
-            };
-            401: components["responses"]["Problema"];
-        };
-    };
-    guardarMiTienda: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DisenoTienda"];
-            };
-        };
-        responses: {
-            /** @description Guardado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            400: components["responses"]["Problema"];
-        };
-    };
-    publicarTienda: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Publicado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    configuracion: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Configuración */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Configuracion"];
-                };
-            };
-            401: components["responses"]["Problema"];
-        };
-    };
-    guardarNegocio: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Negocio"];
-            };
-        };
-        responses: {
-            /** @description Guardado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            400: components["responses"]["Problema"];
-        };
-    };
-    fijarOpcion: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                grupo: "seguridad" | "avisos";
-                clave: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    activo: boolean;
-                };
-            };
-        };
-        responses: {
-            /** @description Guardado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["Problema"];
-        };
-    };
-    cerrarSesion: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Cerrada */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["Problema"];
-            409: components["responses"]["Problema"];
-        };
-    };
-    invitar: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description Email o WhatsApp */
-                    contacto: string;
-                    /** @enum {string} */
-                    rol: "admin" | "ventas" | "deposito";
-                };
-            };
-        };
-        responses: {
-            /** @description Invitado */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Miembro"];
-                };
-            };
-            400: components["responses"]["Problema"];
-            409: components["responses"]["Problema"];
-        };
-    };
-    cambiarPlan: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @enum {string} */
-                    plan: "gratis" | "emprende" | "pro" | "negocio";
-                    /** @enum {string} */
-                    ciclo?: "mes" | "anio";
-                };
-            };
-        };
-        responses: {
-            /** @description Cambiado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            409: components["responses"]["Problema"];
-        };
-    };
-    planCuenta: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Plan */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlanCuenta"];
-                };
-            };
-            401: components["responses"]["Problema"];
-        };
-    };
-    comprarPack: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Sumado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            409: components["responses"]["Problema"];
-        };
-    };
-    devolverPack: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Devuelto */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["Problema"];
-        };
-    };
-    cancelarPlan: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    motivo: number;
-                    /** @enum {string} */
-                    accion: "cancelar" | "oferta";
-                };
-            };
-        };
-        responses: {
-            /** @description Hecho */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** Format: date-time */
-                        hasta: string;
-                    };
-                };
-            };
-        };
-    };
-    reactivarPlan: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Reactivado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    permisos: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Matriz */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Permisos"];
-                };
-            };
-        };
-    };
-    fijarPermiso: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                permiso: string;
-                rol: "admin" | "ventas" | "deposito";
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    activo: boolean;
-                };
-            };
-        };
-        responses: {
-            /** @description Guardado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["Problema"];
-            409: components["responses"]["Problema"];
-        };
-    };
-    cambiarRol: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @enum {string} */
-                    rol: "admin" | "ventas" | "deposito";
-                };
-            };
-        };
-        responses: {
-            /** @description Cambiado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["Problema"];
-            409: components["responses"]["Problema"];
-        };
-    };
-    quitarDelEquipo: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Quitado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["Problema"];
-            409: components["responses"]["Problema"];
-        };
-    };
-    dominios: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Dominios */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Dominios"];
-                };
-            };
-        };
-    };
-    conectarDominio: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    dominio: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Agregado */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            400: components["responses"]["Problema"];
-            409: components["responses"]["Problema"];
-        };
-    };
-    dominioPrincipal: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                dominio: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Hecho */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["Problema"];
-            409: components["responses"]["Problema"];
-        };
-    };
-    quitarDominio: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                dominio: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Quitado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["Problema"];
-        };
-    };
-    preferenciasAvisos: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Preferencias */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PreferenciasAvisos"];
-                };
-            };
-        };
-    };
-    guardarPreferenciasAvisos: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PreferenciasAvisos"];
-            };
-        };
-        responses: {
-            /** @description Guardado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    misDatos: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Datos */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MisDatos"];
-                };
-            };
-        };
-    };
-    exportar: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tipo: "productos" | "clientes" | "pedidos" | "facturas" | "resenas" | "conversaciones";
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Las filas (el BFF arma el CSV, el Excel o el ZIP) */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        filas: (string | number | null)[][];
-                    };
-                };
-            };
-        };
-    };
-    frenarBorrado: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Frenado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    borrarInactivos: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Programado */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        clientes: number;
-                    };
-                };
-            };
-        };
-    };
-    cerrarCuenta: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    confirmacion: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Cerrada */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            400: components["responses"]["Problema"];
-        };
-    };
-    obtenerTienda: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Tienda */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Tienda"];
-                };
-            };
-            /** @description Sin sesión */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problema"];
-                };
-            };
-        };
-    };
+  listarRubros: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Rubros */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Rubro"][];
+        };
+      };
+    };
+  };
+  registrar: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Alta"];
+      };
+    };
+    responses: {
+      /** @description Sesión */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Sesion"];
+        };
+      };
+      400: components["responses"]["Problema"];
+      409: components["responses"]["Problema"];
+      429: components["responses"]["Problema"];
+    };
+  };
+  ingresar: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          email: string;
+          clave: string;
+          recordarme?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Sesión */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Sesion"];
+        };
+      };
+      401: components["responses"]["Problema"];
+      429: components["responses"]["Problema"];
+    };
+  };
+  salir: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Sesión cerrada */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  sesion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Sesión en curso */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DatosSesion"];
+        };
+      };
+      401: components["responses"]["Problema"];
+    };
+  };
+  recuperar: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          email: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Recibido */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      429: components["responses"]["Problema"];
+    };
+  };
+  restablecer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          token: string;
+          clave: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Contraseña cambiada; se cierran todas las sesiones */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      400: components["responses"]["Problema"];
+      422: components["responses"]["Problema"];
+    };
+  };
+  pedirArrepentimiento: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PedidoArrepentimiento"];
+      };
+    };
+    responses: {
+      /** @description Registrado; la confirmación sale por mail */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            codigo: string;
+          };
+        };
+      };
+      400: components["responses"]["Problema"];
+      429: components["responses"]["Problema"];
+    };
+  };
+  consultar: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Consulta"];
+      };
+    };
+    responses: {
+      /** @description Registrada; confirmación por mail */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      400: components["responses"]["Problema"];
+      429: components["responses"]["Problema"];
+    };
+  };
+  postularPartner: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Postulacion"];
+      };
+    };
+    responses: {
+      /** @description Registrada */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      400: components["responses"]["Problema"];
+      429: components["responses"]["Problema"];
+    };
+  };
+  suscribirNovedades: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          email: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Suscripto (o ya lo estaba) */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      400: components["responses"]["Problema"];
+      429: components["responses"]["Problema"];
+    };
+  };
+  bajaNovedades: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          token: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Dado de baja */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      422: components["responses"]["Problema"];
+    };
+  };
+  guardarOnboarding: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Onboarding"];
+      };
+    };
+    responses: {
+      /** @description Guardado */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      400: components["responses"]["Problema"];
+      401: components["responses"]["Problema"];
+    };
+  };
+  resumenPanel: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Resumen */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ResumenPanel"];
+        };
+      };
+      401: components["responses"]["Problema"];
+    };
+  };
+  tablero: {
+    parameters: {
+      query?: {
+        periodo?: "hoy" | "7d" | "30d";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Tablero */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Tablero"];
+        };
+      };
+      401: components["responses"]["Problema"];
+    };
+  };
+  guardarMeta: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          objetivo: number;
+        };
+      };
+    };
+    responses: {
+      /** @description Guardada */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      400: components["responses"]["Problema"];
+      401: components["responses"]["Problema"];
+    };
+  };
+  ocultarAviso: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        aviso: "certificado";
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Oculto */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components["responses"]["Problema"];
+    };
+  };
+  recordarCarritos: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Cuántos mensajes quedaron en cola */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            enviados: number;
+          };
+        };
+      };
+      401: components["responses"]["Problema"];
+    };
+  };
+  contextoHornero: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Contexto */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ContextoHornero"];
+        };
+      };
+      401: components["responses"]["Problema"];
+    };
+  };
+  marcarIdea: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        idea: "carritos" | "stock" | "promo";
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          hecha: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Hecho */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components["responses"]["Problema"];
+      404: components["responses"]["Problema"];
+    };
+  };
+  listarPedidos: {
+    parameters: {
+      query?: {
+        /** @description Cliente, número, producto o ciudad */
+        q?: string;
+        /** @description Separados por coma */
+        estado?: string;
+        canal?: string;
+        pago?: string;
+        envio?: string;
+        fecha?: "hoy" | "7d" | "30d" | "todo";
+        minimo?: number;
+        vip?: boolean;
+        hornero?: boolean;
+        mayorista?: boolean;
+        orden?: "nuevos" | "urgentes" | "monto" | "viejos";
+        desde?: number;
+        cuantos?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Lista */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListaPedidos"];
+        };
+      };
+      401: components["responses"]["Problema"];
+    };
+  };
+  crearPedido: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PedidoNuevo"];
+      };
+    };
+    responses: {
+      /** @description Creado */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            numero: number;
+            total: number;
+          };
+        };
+      };
+      400: components["responses"]["Problema"];
+      401: components["responses"]["Problema"];
+      409: components["responses"]["Problema"];
+    };
+  };
+  pedidosEnLote: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          numeros: number[];
+          /** @enum {string} */
+          accion: "preparar" | "etiquetas" | "facturar" | "avisar";
+        };
+      };
+    };
+    responses: {
+      /** @description Cuántos se pudieron hacer (los que no estaban en la etapa justa se saltean) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            hechos: number;
+            /** @description Para deshacer: número y estado anterior */
+            cambios: {
+              numero: number;
+              antes: components["schemas"]["EstadoPedido"];
+            }[];
+          };
+        };
+      };
+      401: components["responses"]["Problema"];
+    };
+  };
+  obtenerPedido: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        numero: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Pedido */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PedidoDetalle"];
+        };
+      };
+      401: components["responses"]["Problema"];
+      404: components["responses"]["Problema"];
+    };
+  };
+  cambiarEstadoPedido: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        numero: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          estado: components["schemas"]["EstadoPedido"];
+        };
+      };
+    };
+    responses: {
+      /** @description Hecho */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components["responses"]["Problema"];
+      404: components["responses"]["Problema"];
+      409: components["responses"]["Problema"];
+    };
+  };
+  recordarPago: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        numero: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Enviado */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components["responses"]["Problema"];
+      404: components["responses"]["Problema"];
+      409: components["responses"]["Problema"];
+    };
+  };
+  listar: {
+    parameters: {
+      query?: {
+        q?: string;
+        /** @description Segmentos, separados por coma */
+        seg?: string;
+        /** @description clave:valor separados por coma (ch:wa,city:Rosario) */
+        facetas?: string;
+        rango?: number;
+        banderas?: string;
+        orden?: string;
+        desde?: number;
+        cuantos?: number;
+      };
+      header?: never;
+      path: {
+        lista: components["schemas"]["NombreLista"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Lista */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListaGenerica"];
+        };
+      };
+      401: components["responses"]["Problema"];
+      404: components["responses"]["Problema"];
+    };
+  };
+  accionLista: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        lista: components["schemas"]["NombreLista"];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          ids: string[];
+          accion: string;
+          /** @description Lo que la acción necesite (ajuste de stock, publicado…) */
+          valor?: unknown;
+        };
+      };
+    };
+    responses: {
+      /** @description Cuántas filas cambiaron */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            hechos: number;
+          };
+        };
+      };
+      401: components["responses"]["Problema"];
+      409: components["responses"]["Problema"];
+    };
+  };
+  crearProducto: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ProductoEditable"];
+      };
+    };
+    responses: {
+      /** @description Creado */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Producto"];
+        };
+      };
+      400: components["responses"]["Problema"];
+      401: components["responses"]["Problema"];
+    };
+  };
+  obtenerProducto: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Producto */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Producto"];
+        };
+      };
+      401: components["responses"]["Problema"];
+      404: components["responses"]["Problema"];
+    };
+  };
+  guardarProducto: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ProductoEditable"];
+      };
+    };
+    responses: {
+      /** @description Guardado */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Producto"];
+        };
+      };
+      400: components["responses"]["Problema"];
+      401: components["responses"]["Problema"];
+      404: components["responses"]["Problema"];
+    };
+  };
+  movimientosHoy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Movimientos */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MovimientoStock"][];
+        };
+      };
+      401: components["responses"]["Problema"];
+    };
+  };
+  bandeja: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Conversaciones */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            conversaciones: components["schemas"]["ConversacionBreve"][];
+            /** @description Conversaciones que atendió Hornero hoy */
+            atendidasHoy: number;
+          };
+        };
+      };
+      401: components["responses"]["Problema"];
+    };
+  };
+  conversacion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Conversación */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Conversacion"];
+        };
+      };
+      401: components["responses"]["Problema"];
+      404: components["responses"]["Problema"];
+    };
+  };
+  responder: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          texto?: string;
+          tomada?: boolean;
+          /** @description Al abrirla: los mensajes quedan leídos */
+          leida?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Hecho */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components["responses"]["Problema"];
+      404: components["responses"]["Problema"];
+      409: components["responses"]["Problema"];
+    };
+  };
+  carritos: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Carritos abandonados */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Carritos"];
+        };
+      };
+      401: components["responses"]["Problema"];
+    };
+  };
+  guardarAutomaticos: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AutomaticosCarritos"];
+      };
+    };
+    responses: {
+      /** @description Guardado */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components["responses"]["Problema"];
+    };
+  };
+  recordarCarrito: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Enviado */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components["responses"]["Problema"];
+      404: components["responses"]["Problema"];
+      409: components["responses"]["Problema"];
+    };
+  };
+  devoluciones: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Devoluciones */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            devoluciones: components["schemas"]["Devolucion"][];
+            /** @description Porcentaje de pedidos con devolución */
+            tasa: number;
+          };
+        };
+      };
+      401: components["responses"]["Problema"];
+    };
+  };
+  resolverDevolucion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          accion: "aprobar" | "cambio" | "deshacer";
+        };
+      };
+    };
+    responses: {
+      /** @description Hecho */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components["responses"]["Problema"];
+      404: components["responses"]["Problema"];
+    };
+  };
+  resenas: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Reseñas y preguntas */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ResenasYPreguntas"];
+        };
+      };
+      401: components["responses"]["Problema"];
+    };
+  };
+  responderPregunta: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          respuesta: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Publicada */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components["responses"]["Problema"];
+      404: components["responses"]["Problema"];
+    };
+  };
+  crearLink: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          monto: number;
+          concepto: string;
+          /** @default true */
+          cuotas?: boolean;
+          /** @description Si es el cobro de un pedido, se marca pagado al pagar */
+          pedido?: number | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Creado */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            codigo: string;
+          };
+        };
+      };
+      400: components["responses"]["Problema"];
+      401: components["responses"]["Problema"];
+    };
+  };
+  verLink: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        codigo: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Link */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LinkPublico"];
+        };
+      };
+      404: components["responses"]["Problema"];
+    };
+  };
+  pagarLink: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        codigo: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description El checkout de Mercado Pago (init_point) para mandar a quien paga */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UrlExterna"];
+        };
+      };
+      404: components["responses"]["Problema"];
+      409: components["responses"]["Problema"];
+      502: components["responses"]["Problema"];
+    };
+  };
+  conexionMercadoPago: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Estado */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ConexionMP"];
+        };
+      };
+    };
+  };
+  desconectarMercadoPago: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Desconectada */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  tiendaPublica: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Tienda */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      404: components["responses"]["Problema"];
+    };
+  };
+  comprarEnTienda: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          carrito: {
+            id: string;
+            varianteId?: string | null;
+            cantidad: number;
+          }[];
+          email: string;
+          nombre: string;
+          telefono: string;
+          dni?: string;
+          cp?: string;
+          direccion?: string;
+          /** @enum {string} */
+          envio: "andreani" | "correo" | "moto" | "retiro";
+          /** @enum {string} */
+          pago: "transferencia" | "mercadopago";
+        };
+      };
+    };
+    responses: {
+      /** @description Pedido creado */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            numero: number;
+            codigo: string;
+            total: number;
+            url?: string;
+          };
+        };
+      };
+      400: components["responses"]["Problema"];
+      409: components["responses"]["Problema"];
+    };
+  };
+  guardarCarritoTienda: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          email: string;
+          nombre?: string;
+          carrito: {
+            id: string;
+            varianteId?: string | null;
+            cantidad: number;
+          }[];
+        };
+      };
+    };
+    responses: {
+      /** @description Guardado */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      400: components["responses"]["Problema"];
+      /** @description Demasiados carritos desde esa IP */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  carritoPorToken: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        slug: string;
+        token: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Carrito */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            carrito: {
+              id: string;
+              varianteId?: string | null;
+              cantidad: number;
+            }[];
+          };
+        };
+      };
+      404: components["responses"]["Problema"];
+    };
+  };
+  confirmacionPedido: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        slug: string;
+        codigo: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Pedido */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            numero: number;
+            total: number;
+            pago: string;
+            nombre: string;
+            estadoPago: string;
+          };
+        };
+      };
+      404: components["responses"]["Problema"];
+    };
+  };
+  conexionMercadoLibre: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Estado */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ConexionML"];
+        };
+      };
+    };
+  };
+  ajustarMercadoLibre: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          recargo: number;
+          pausarSinStock: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Guardado */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      409: components["responses"]["Problema"];
+    };
+  };
+  desconectarMercadoLibre: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Desconectada */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  conectarMercadoLibre: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Adónde mandar a la persona */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UrlExterna"];
+        };
+      };
+      409: components["responses"]["Problema"];
+    };
+  };
+  volverMercadoLibre: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          codigo: string;
+          estado: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Conectada */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      400: components["responses"]["Problema"];
+    };
+  };
+  publicarEnMercadoLibre: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Publicado */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PublicacionML"];
+        };
+      };
+      409: components["responses"]["Problema"];
+      422: components["responses"]["Problema"];
+    };
+  };
+  despublicarDeMercadoLibre: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Pausada */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  webhookMercadoLibre: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Recibido */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  conectarMercadoPago: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Adónde mandar a la persona */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UrlExterna"];
+        };
+      };
+      409: components["responses"]["Problema"];
+    };
+  };
+  volverMercadoPago: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          codigo: string;
+          estado: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Conectada */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      400: components["responses"]["Problema"];
+    };
+  };
+  crearCajaMercadoPago: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UbicacionMP"];
+      };
+    };
+    responses: {
+      /** @description Creada */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      400: components["responses"]["Problema"];
+      409: components["responses"]["Problema"];
+    };
+  };
+  cobrarConQR: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        numero: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description El QR para mostrar */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CobroQR"];
+        };
+      };
+      409: components["responses"]["Problema"];
+    };
+  };
+  estadoCobroQR: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        referencia: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Estado */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            estado: string;
+          };
+        };
+      };
+    };
+  };
+  cancelarCobroQR: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        referencia: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Cancelada */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  reembolsarPedido: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        numero: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        "application/json": {
+          monto?: number;
+        };
+      };
+    };
+    responses: {
+      /** @description Devuelto */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["Problema"];
+      409: components["responses"]["Problema"];
+    };
+  };
+  suscribirPlan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          plan: "emprende" | "pro" | "negocio";
+          /** @enum {string} */
+          ciclo: "mes" | "anio";
+          diasPrueba?: number;
+        };
+      };
+    };
+    responses: {
+      /** @description El checkout de la suscripción */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UrlExterna"];
+        };
+      };
+    };
+  };
+  webhookMercadoPago: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Recibido */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Firma inválida */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  listasPrecio: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Listas */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListasPrecio"];
+        };
+      };
+      401: components["responses"]["Problema"];
+    };
+  };
+  aumentarPrecios: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          pct: number;
+          /** @enum {string} */
+          redondeo: "no" | "90" | "500";
+          /** @default false */
+          programar?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Aplicado o programado */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            productos: number;
+            /** Format: date-time */
+            para?: string | null;
+          };
+        };
+      };
+      400: components["responses"]["Problema"];
+      401: components["responses"]["Problema"];
+    };
+  };
+  deshacerAumento: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Deshecho */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["Problema"];
+    };
+  };
+  cancelarAumento: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Cancelado */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["Problema"];
+    };
+  };
+  cupones: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Cupones */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Cupones"];
+        };
+      };
+      401: components["responses"]["Problema"];
+    };
+  };
+  crearCupon: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CuponNuevo"];
+      };
+    };
+    responses: {
+      /** @description Creado */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Cupon"];
+        };
+      };
+      400: components["responses"]["Problema"];
+      409: components["responses"]["Problema"];
+    };
+  };
+  accionCupon: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          accion:
+            "pausar" | "activar" | "duplicar" | "minimo" | "deshacer-minimo";
+          minimo?: number;
+        };
+      };
+    };
+    responses: {
+      /** @description El cupón como quedó (o la copia) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Cupon"];
+        };
+      };
+      404: components["responses"]["Problema"];
+      409: components["responses"]["Problema"];
+    };
+  };
+  descartarConsejo: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Oculto */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  fijarAutomatica: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          activa: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Guardado */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["Problema"];
+    };
+  };
+  accionRelampago: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          accion: "sumar-hora" | "liberar" | "terminar" | "reanudar";
+        };
+      };
+    };
+    responses: {
+      /** @description Hecho */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["Problema"];
+    };
+  };
+  marketing: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Marketing */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Marketing"];
+        };
+      };
+      401: components["responses"]["Problema"];
+    };
+  };
+  crearCampana: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          audiencia: "todos" | "vip" | "riesgo" | "categoria";
+          mensaje: string;
+          foto: boolean;
+          boton: boolean;
+          cupon: boolean;
+          /** @default false */
+          programar?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Creada */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Campana"];
+        };
+      };
+      400: components["responses"]["Problema"];
+      409: components["responses"]["Problema"];
+    };
+  };
+  canales: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Canales */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Canales"];
+        };
+      };
+      401: components["responses"]["Problema"];
+    };
+  };
+  fijarCanal: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          activo: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Guardado */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["Problema"];
+      409: components["responses"]["Problema"];
+    };
+  };
+  informes: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Informes */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Informes"];
+        };
+      };
+      401: components["responses"]["Problema"];
+    };
+  };
+  actividad: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Actividad */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            items: components["schemas"]["Evento"][];
+          };
+        };
+      };
+      401: components["responses"]["Problema"];
+    };
+  };
+  deshacerEvento: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Deshecho */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["Problema"];
+      409: components["responses"]["Problema"];
+    };
+  };
+  paraHacer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Tareas */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ParaHacer"];
+        };
+      };
+      401: components["responses"]["Problema"];
+    };
+  };
+  marcarTarea: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          hecha: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Guardado */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["Problema"];
+    };
+  };
+  finanzas: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Finanzas */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Finanzas"];
+        };
+      };
+      401: components["responses"]["Problema"];
+    };
+  };
+  retirar: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description En camino */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            monto: number;
+            cuenta: string;
+          };
+        };
+      };
+      409: components["responses"]["Problema"];
+    };
+  };
+  miTienda: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Mi tienda */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MiTienda"];
+        };
+      };
+      401: components["responses"]["Problema"];
+    };
+  };
+  guardarMiTienda: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DisenoTienda"];
+      };
+    };
+    responses: {
+      /** @description Guardado */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      400: components["responses"]["Problema"];
+    };
+  };
+  publicarTienda: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Publicado */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  configuracion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Configuración */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Configuracion"];
+        };
+      };
+      401: components["responses"]["Problema"];
+    };
+  };
+  guardarNegocio: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Negocio"];
+      };
+    };
+    responses: {
+      /** @description Guardado */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      400: components["responses"]["Problema"];
+    };
+  };
+  fijarOpcion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        grupo: "seguridad" | "avisos";
+        clave: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          activo: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Guardado */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["Problema"];
+    };
+  };
+  cerrarSesion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Cerrada */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["Problema"];
+      409: components["responses"]["Problema"];
+    };
+  };
+  invitar: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @description Email o WhatsApp */
+          contacto: string;
+          /** @enum {string} */
+          rol: "admin" | "ventas" | "deposito";
+        };
+      };
+    };
+    responses: {
+      /** @description Invitado */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Miembro"];
+        };
+      };
+      400: components["responses"]["Problema"];
+      409: components["responses"]["Problema"];
+    };
+  };
+  cambiarPlan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          plan: "gratis" | "emprende" | "pro" | "negocio";
+          /** @enum {string} */
+          ciclo?: "mes" | "anio";
+        };
+      };
+    };
+    responses: {
+      /** @description Cambiado */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      409: components["responses"]["Problema"];
+    };
+  };
+  planCuenta: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Plan */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PlanCuenta"];
+        };
+      };
+      401: components["responses"]["Problema"];
+    };
+  };
+  comprarPack: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Sumado */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      409: components["responses"]["Problema"];
+    };
+  };
+  devolverPack: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Devuelto */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["Problema"];
+    };
+  };
+  cancelarPlan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          motivo: number;
+          /** @enum {string} */
+          accion: "cancelar" | "oferta";
+        };
+      };
+    };
+    responses: {
+      /** @description Hecho */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** Format: date-time */
+            hasta: string;
+          };
+        };
+      };
+    };
+  };
+  reactivarPlan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Reactivado */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  permisos: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Matriz */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Permisos"];
+        };
+      };
+    };
+  };
+  fijarPermiso: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        permiso: string;
+        rol: "admin" | "ventas" | "deposito";
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          activo: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Guardado */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["Problema"];
+      409: components["responses"]["Problema"];
+    };
+  };
+  cambiarRol: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          rol: "admin" | "ventas" | "deposito";
+        };
+      };
+    };
+    responses: {
+      /** @description Cambiado */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["Problema"];
+      409: components["responses"]["Problema"];
+    };
+  };
+  quitarDelEquipo: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Quitado */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["Problema"];
+      409: components["responses"]["Problema"];
+    };
+  };
+  dominios: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Dominios */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Dominios"];
+        };
+      };
+    };
+  };
+  conectarDominio: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          dominio: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Agregado */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      400: components["responses"]["Problema"];
+      409: components["responses"]["Problema"];
+    };
+  };
+  dominioPrincipal: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dominio: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Hecho */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["Problema"];
+      409: components["responses"]["Problema"];
+    };
+  };
+  quitarDominio: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dominio: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Quitado */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["Problema"];
+    };
+  };
+  preferenciasAvisos: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Preferencias */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PreferenciasAvisos"];
+        };
+      };
+    };
+  };
+  guardarPreferenciasAvisos: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PreferenciasAvisos"];
+      };
+    };
+    responses: {
+      /** @description Guardado */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  misDatos: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Datos */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MisDatos"];
+        };
+      };
+    };
+  };
+  exportar: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        tipo:
+          | "productos"
+          | "clientes"
+          | "pedidos"
+          | "facturas"
+          | "resenas"
+          | "conversaciones";
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Las filas (el BFF arma el CSV, el Excel o el ZIP) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            filas: (string | number | null)[][];
+          };
+        };
+      };
+    };
+  };
+  frenarBorrado: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Frenado */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  borrarInactivos: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Programado */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            clientes: number;
+          };
+        };
+      };
+    };
+  };
+  cerrarCuenta: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          confirmacion: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Cerrada */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      400: components["responses"]["Problema"];
+    };
+  };
+  obtenerTienda: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Tienda */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Tienda"];
+        };
+      };
+      /** @description Sin sesión */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problema"];
+        };
+      };
+    };
+  };
 }

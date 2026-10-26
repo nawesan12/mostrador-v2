@@ -323,3 +323,63 @@ export function carritosDemo(
 		automaticos: e.automaticos
 	};
 }
+
+/**
+ * Un carrito que alguien dejó en el checkout de la tienda del visitante (uno abierto por email,
+ * como en la API Go). Se cierra cuando ese email compra.
+ */
+export type CarritoTienda = {
+	email: string;
+	nombre: string;
+	items: { id: string; varianteId: string | null; cantidad: number }[];
+	total: number;
+	token: string;
+	creado: number;
+	actualizado: number;
+	/** Cuándo compró ese email (y cuánto), o null si sigue abierto. */
+	recuperado: number | null;
+	recuperadoTotal?: number;
+};
+
+/** El id con el que el panel nombra un carrito de la tienda (no expone el email ni el token). */
+export const idCarritoTienda = (c: Pick<CarritoTienda, 'token'>) => `t-${c.token.slice(0, 12)}`;
+
+/** Suma a los carritos de ejemplo los que se dejaron de verdad en la tienda: arriba, los más nuevos. */
+export function conCarritosTienda(
+	base: Carritos,
+	propios: CarritoTienda[],
+	fotoDe: (id: string) => string | null,
+	e: EstadoCarritos,
+	ahora: number
+): Carritos {
+	const abiertos = propios
+		.filter((c) => !c.recuperado)
+		.sort((a, b) => b.actualizado - a.actualizado)
+		.map((c) => ({
+			id: idCarritoTienda(c),
+			nombre: c.nombre || c.email,
+			foto: null,
+			desde: 'la tienda',
+			creado: iso(c.actualizado),
+			fotos: c.items.map((i) => fotoDe(i.id)),
+			cantidad: c.items.reduce((s, i) => s + i.cantidad, 0),
+			total: c.total,
+			recordado: e.todos || e.recordados.has(idCarritoTienda(c))
+		}));
+	const mes = ahora - 30 * DIA;
+	const recuperado =
+		base.recuperado +
+		propios
+			.filter((c) => c.recuperado && c.recuperado > mes)
+			.reduce((s, c) => s + (c.recuperadoTotal ?? c.total), 0);
+	const carritos = [...abiertos, ...base.carritos];
+	const monto = carritos.reduce((s, k) => s + k.total, 0);
+	return {
+		...base,
+		carritos,
+		abiertos: carritos.length,
+		monto,
+		recuperado,
+		tasa: Math.round((recuperado / Math.max(1, recuperado + monto)) * 100)
+	};
+}
