@@ -25,11 +25,11 @@ async function moda() {
 }
 
 describe('variantes de la demo', () => {
-	it('los rubros con talles, números y presentaciones las traen; los demás, no', () => {
+	it('cada plantilla que vende productos muestra alguno con variantes; la de turnos, no', () => {
 		const con = (p: string) => variantesDemo(CATALOGOS.find((c) => c.plantilla === p)!);
-		for (const p of ['ceibo', 'pampa', 'rosedal', 'mostaza', 'miga', 'yerbal', 'litoral'])
-			expect(con(p).size, p).toBeGreaterThan(0);
-		expect(con('andes').size).toBe(0);
+		for (const c of CATALOGOS.filter((x) => x.plantilla !== 'tijera'))
+			expect(con(c.plantilla).size, c.plantilla).toBeGreaterThan(0);
+		expect(con('tijera').size).toBe(0);
 		const zapa = con('pampa').get('zapa-runner-90')!;
 		expect(zapa.opciones).toEqual([
 			{ nombre: 'Número', valores: ['38', '39', '40', '41', '42', '43', '44'] }

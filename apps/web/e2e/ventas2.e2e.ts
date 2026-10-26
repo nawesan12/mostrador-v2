@@ -31,7 +31,10 @@ test('punto de venta: cobrar crea el pedido y descuenta stock', async ({ page })
 		`${stock - 2} u`
 	);
 	await page.getByRole('button', { name: 'Ver pedido' }).click();
-	await expect(page.getByRole('dialog', { name: /Pedido #\d+/ })).toContainText(nombre);
+	// Con opciones, la grilla dice "Producto · Talle M" y el pedido lleva la variante aparte.
+	await expect(page.getByRole('dialog', { name: /Pedido #\d+/ })).toContainText(
+		nombre.split(' · ')[0]
+	);
 });
 
 test('devoluciones: aprobar y deshacer', async ({ page }) => {

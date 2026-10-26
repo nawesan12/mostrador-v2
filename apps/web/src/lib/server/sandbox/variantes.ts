@@ -176,6 +176,71 @@ const REGLAS: Regla[] = [
 		si: en('termo-acero-1-l'),
 		opciones: () => [{ nombre: 'Color', valores: ['Negro', 'Verde', 'Blanco'] }],
 		foto: 'Color'
+	},
+	// ---- Tecnología (Andes)
+	{
+		si: en('auricular-over-ear-anc', 'in-ear-inalambricos'),
+		opciones: () => [{ nombre: 'Color', valores: ['Negro', 'Blanco', 'Azul marino'] }],
+		foto: 'Color'
+	},
+	// ---- Vinos (Malbec): la caja de 6 con 10% menos por botella.
+	{
+		si: en('malbec-valle-de-uco-2021', 'malbec-reserva-lujan'),
+		opciones: () => [{ nombre: 'Presentación', valores: ['Botella', 'Caja x 6'] }],
+		precio: (v, p) => (v['Presentación'] === 'Caja x 6' ? redondo(p.precio * 5.4) : null)
+	},
+	// ---- Muebles (Quebracho)
+	{
+		si: en('silla-quebracho', 'butaca-pampa'),
+		opciones: () => [{ nombre: 'Color', valores: ['Natural', 'Chocolate', 'Negro'] }],
+		foto: 'Color'
+	},
+	{
+		si: en('mesa-ratona-paraiso'),
+		opciones: () => [{ nombre: 'Medida', valores: ['80 cm', '100 cm', '120 cm'] }],
+		precio: (v, p) =>
+			v['Medida'] === '100 cm'
+				? redondo(p.precio * 1.2)
+				: v['Medida'] === '120 cm'
+					? redondo(p.precio * 1.4)
+					: null
+	},
+	// ---- Las plantillas del motor: mascotas, artesanías, relojes, cerámica y anteojos.
+	{
+		si: en('cama-redonda'),
+		opciones: () => [{ nombre: 'Talle', valores: ['S', 'M', 'L'] }],
+		precio: (v, p) => (v['Talle'] === 'L' ? redondo(p.precio * 1.3) : null)
+	},
+	{
+		si: en('correa-extensible', 'taza-arena', 'mate-de-ceramica'),
+		opciones: (p) => [
+			{
+				nombre: 'Color',
+				valores:
+					p.id === 'correa-extensible' ? ['Negro', 'Rojo', 'Azul'] : ['Arena', 'Blanco', 'Verde']
+			}
+		],
+		foto: 'Color'
+	},
+	{
+		si: en('tabla-de-asado-lenga', 'tabla-de-picada'),
+		opciones: () => [{ nombre: 'Medida', valores: ['30 × 20 cm', '40 × 25 cm'] }],
+		precio: (v, p) => (v['Medida'] === '40 × 25 cm' ? redondo(p.precio * 1.35) : null)
+	},
+	{
+		si: en('automatico-clasico-40', 'cuarzo-minimal'),
+		opciones: () => [{ nombre: 'Malla', valores: ['Cuero negro', 'Cuero suela', 'Acero'] }],
+		precio: (v, p) => (v['Malla'] === 'Acero' ? redondo(p.precio * 1.15) : null)
+	},
+	{
+		si: en('sol-aviador-dorado', 'sol-wayfarer'),
+		opciones: (p) => [
+			{
+				nombre: 'Color',
+				valores: p.id === 'sol-wayfarer' ? ['Negro', 'Carey'] : ['Dorado', 'Plateado']
+			}
+		],
+		foto: 'Color'
 	}
 ];
 

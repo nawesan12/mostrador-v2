@@ -5,6 +5,15 @@
 	import * as I from '#lib/icons.ts';
 	import { unsplash } from '#lib/landing/formato.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
+	import {
+		colorDe,
+		errorOpciones,
+		generarVariantes,
+		MAX_OPCIONES,
+		MAX_VALORES,
+		normal,
+		type Variante
+	} from '#lib/tienda/variantes.ts';
 	import type { components } from '@mostrador/contrato/esquema';
 	import { pesos } from '../formato.ts';
 
@@ -37,6 +46,10 @@
 	let stock = $state(0);
 	let categoria = $state('');
 	let canales = $state<Record<string, boolean>>({ web: true, ml: false, ig: false, google: false });
+	// Talle, color, presentación…: con opciones, el stock va por combinación.
+	let opciones = $state<{ nombre: string; valores: string[] }[]>([]);
+	let variantes = $state<Variante[]>([]);
+	let nuevoValor = $state<string[]>([]);
 	let error = $state<string | null>(null);
 	let guardando = $state(false);
 	let mejorando = $state(false);
@@ -51,6 +64,13 @@
 		stock = p?.stock ?? 0;
 		categoria = p?.categoria ?? '';
 		canales = { web: true, ml: false, ig: false, google: false, ...(p?.canales ?? {}) };
+		opciones = (p?.opciones ?? []).map((o) => ({ nombre: o.nombre, valores: [...o.valores] }));
+		// Producto = ProductoEditable & {variantes: Variante[]}: el map de la intersección toma la editable.
+		variantes = ((p?.variantes ?? []) as Variante[]).map((v) => ({
+			...v,
+			valores: { ...v.valores }
+		}));
+		nuevoValor = (p?.opciones ?? []).map(() => '');
 		error = null;
 	});
 
@@ -75,6 +95,61 @@
 		['google', I.logosGoogleIcon, 'Google Shopping', 'inherit']
 	] as const;
 	const numero = (s: string) => Math.max(0, Number(s.replace(/\D/g, '')) || 0);
+
+	// Las opciones completas (con nombre y algún valor) arman las combinaciones.
+	const listas = $derived(opciones.filter((o) => o.nombre.trim() && o.valores.length));
+	const total = $derived(variantes.reduce((s, v) => s + (v.activa ? v.stock : 0), 0));
+	/** Rearma las combinaciones conservando lo que ya tenían (stock, precio, SKU, foto). */
+	function recombinar() {
+		variantes = generarVariantes(
+			listas.map((o) => ({ nombre: o.nombre.trim(), valores: o.valores })),
+			variantes
+		);
+	}
+	function sumarOpcion() {
+		if (opciones.length >= MAX_OPCIONES) return;
+		const usadas = new Set(opciones.map((o) => normal(o.nombre)));
+		const nombre = ['Talle', 'Color', 'Presentación'].find((n) => !usadas.has(normal(n))) ?? '';
+		opciones = [...opciones, { nombre, valores: [] }];
+		nuevoValor = [...nuevoValor, ''];
+	}
+	function quitarOpcion(i: number) {
+		opciones = opciones.filter((_, j) => j !== i);
+		nuevoValor = nuevoValor.filter((_, j) => j !== i);
+		recombinar();
+	}
+	/** Al renombrar una opción, las variantes siguen con sus valores bajo el nombre nuevo. */
+	function renombrar(i: number, nombre: string) {
+		const antes = opciones[i].nombre.trim();
+		opciones[i].nombre = nombre;
+		const ahora = nombre.trim();
+		if (!antes || !ahora || antes === ahora) return recombinar();
+		variantes = variantes.map((v) => {
+			const { [antes]: x, ...resto } = v.valores;
+			return x === undefined ? v : { ...v, valores: { ...resto, [ahora]: x } };
+		});
+		recombinar();
+	}
+	/** Suma los valores escritos (uno o varios separados por coma). */
+	function sumarValores(i: number) {
+		const o = opciones[i];
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- local, sólo evita repetidos
+		const vistos = new Set(o.valores.map(normal));
+		for (const x of nuevoValor[i].split(',').map((v) => v.trim())) {
+			if (!x || x.length > 20 || vistos.has(normal(x)) || o.valores.length >= MAX_VALORES) continue;
+			vistos.add(normal(x));
+			o.valores.push(x);
+		}
+		nuevoValor[i] = '';
+		recombinar();
+	}
+	function quitarValor(i: number, valor: string) {
+		opciones[i].valores = opciones[i].valores.filter((v) => v !== valor);
+		recombinar();
+	}
+	const nombreVariante = (v: Variante) => listas.map((o) => v.valores[o.nombre.trim()]).join(' · ');
+	const colorVariante = (v: Variante) =>
+		listas.map((o) => colorDe(o.nombre, v.valores[o.nombre.trim()])).find(Boolean) ?? null;
 
 	async function mejorar() {
 		if (nombre.trim().length < 2) {
@@ -109,6 +184,16 @@
 			error = 'Poné un nombre de al menos 2 letras.';
 			return;
 		}
+		const ops = listas.map((o) => ({ nombre: o.nombre.trim(), valores: o.valores }));
+		if (opciones.length !== listas.length) {
+			error = 'Cada opción necesita un nombre y al menos un valor.';
+			return;
+		}
+		const mal = errorOpciones(ops);
+		if (mal) {
+			error = mal;
+			return;
+		}
 		guardando = true;
 		const r = await fetch(`/panel/productos/${producto?.id ?? 'nuevo'}`, {
 			method: 'PUT',
@@ -121,6 +206,13 @@
 				costo,
 				stock,
 				foto: producto?.foto ?? null,
+				opciones: ops,
+				variantes: variantes.map((v) => ({
+					valores: v.valores,
+					precio: v.precio,
+					stock: v.stock,
+					activa: v.activa
+				})),
 				canales
 			})
 		});
@@ -248,18 +340,100 @@
 
 		<div class="tarjeta">
 			<div class="t">Variantes y stock</div>
-			<div class="variantes">
-				<div class="variante">
-					<span class="v-color"></span><span class="v-n">Única</span>
-					<input
-						class="v-s"
-						inputmode="numeric"
-						aria-label="Stock"
-						value={stock}
-						onchange={(e) => (stock = numero(e.currentTarget.value))}
-					/><span class="v-u">u</span>
+			{#each opciones as o, i (i)}
+				<div class="opcion">
+					<span class="o-fila"
+						><input
+							class="o-n"
+							aria-label="Opción {i + 1}"
+							placeholder="Talle, color…"
+							maxlength="20"
+							value={o.nombre}
+							onchange={(e) => renombrar(i, e.currentTarget.value)}
+						/><button
+							type="button"
+							class="o-quitar"
+							aria-label="Quitar la opción {o.nombre}"
+							onclick={() => quitarOpcion(i)}><Icon icon={I.phXBold} size={12} /></button
+						></span
+					>
+					<div class="valores">
+						{#each o.valores as x (x)}<span class="valor"
+								>{#if colorDe(o.nombre, x)}<span
+										class="v-color chico"
+										style="background:{colorDe(o.nombre, x)}"
+									></span>{/if}{x}<button
+									type="button"
+									aria-label="Quitar {x}"
+									onclick={() => quitarValor(i, x)}><Icon icon={I.phXBold} size={10} /></button
+								></span
+							>{/each}<input
+							class="v-nuevo"
+							aria-label="Sumar valores a {o.nombre || 'la opción'}"
+							placeholder={o.valores.length ? 'Otro valor' : 'S, M, L…'}
+							bind:value={nuevoValor[i]}
+							onkeydown={(e) => {
+								if (e.key === 'Enter' || e.key === ',') {
+									e.preventDefault();
+									sumarValores(i);
+								}
+							}}
+							onblur={() => nuevoValor[i]?.trim() && sumarValores(i)}
+						/>
+					</div>
 				</div>
+			{/each}
+			<div class="variantes">
+				{#if listas.length}
+					{#each variantes as v (nombreVariante(v))}
+						<div class="variante" class:apagada={!v.activa}>
+							<span class="v-color" style:background={colorVariante(v)}></span><span class="v-n"
+								>{nombreVariante(v)}</span
+							>
+							<input
+								class="v-p"
+								inputmode="numeric"
+								aria-label="Precio de {nombreVariante(v)}"
+								placeholder={pesos(precio)}
+								value={v.precio === null ? '' : pesos(v.precio)}
+								onchange={(e) =>
+									(v.precio = e.currentTarget.value.trim() ? numero(e.currentTarget.value) : null)}
+							/>
+							<input
+								class="v-s"
+								inputmode="numeric"
+								aria-label="Stock de {nombreVariante(v)}"
+								value={v.stock}
+								onchange={(e) => (v.stock = numero(e.currentTarget.value))}
+							/><span class="v-u">u</span>
+							<Interruptor label="Vender {nombreVariante(v)}" bind:checked={v.activa} />
+						</div>
+					{/each}
+					<div class="v-total">
+						{variantes.length}
+						{variantes.length === 1 ? 'combinación' : 'combinaciones'} · {total} u en total
+					</div>
+				{:else}
+					<div class="variante">
+						<span class="v-color"></span><span class="v-n">Única</span>
+						<input
+							class="v-s"
+							inputmode="numeric"
+							aria-label="Stock"
+							value={stock}
+							onchange={(e) => (stock = numero(e.currentTarget.value))}
+						/><span class="v-u">u</span>
+					</div>
+				{/if}
 			</div>
+			{#if opciones.length < MAX_OPCIONES}<button
+					type="button"
+					class="o-sumar"
+					onclick={sumarOpcion}
+					><Icon icon={I.phPlusBold} size={14} />{opciones.length
+						? 'Sumar otra opción'
+						: 'Sumar talles, colores u otra opción'}</button
+				>{/if}
 		</div>
 
 		<div class="tarjeta canales">
@@ -509,9 +683,123 @@
 		background: var(--sf3);
 		box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
 	}
+	.v-color.chico {
+		width: 12px;
+		height: 12px;
+	}
 	.v-n {
 		flex: 1;
+		min-width: 0;
 		font-size: 14px;
+	}
+	.variante.apagada .v-n {
+		color: var(--mu);
+		text-decoration: line-through;
+	}
+	.v-p {
+		width: 92px;
+		text-align: right;
+		border: 0;
+		border-bottom: 1.5px dashed var(--ln2);
+		background: transparent;
+		color: var(--tx);
+		font-size: 13px;
+		font-weight: 600;
+		outline: none;
+	}
+	.v-p::placeholder {
+		color: var(--mu);
+		font-weight: 500;
+	}
+	.v-total {
+		padding-top: 9px;
+		font-size: 12.5px;
+		color: var(--mu);
+	}
+	.opcion {
+		margin-top: 10px;
+		padding: 10px 12px;
+		border-radius: 12px;
+		border: 1px solid var(--ln2);
+		background: var(--bg);
+	}
+	.o-fila {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+	.o-n {
+		flex: 1;
+		min-width: 0;
+		border: 0;
+		background: transparent;
+		color: var(--tx);
+		font-size: 14px;
+		font-weight: 600;
+		outline: none;
+	}
+	.o-quitar {
+		width: 26px;
+		height: 26px;
+		border: 0;
+		border-radius: 50%;
+		background: var(--chip);
+		color: var(--mu);
+		display: grid;
+		place-items: center;
+	}
+	.valores {
+		margin-top: 8px;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 6px;
+	}
+	.valor {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 5px 6px 5px 10px;
+		border-radius: 999px;
+		background: var(--chip);
+		font-size: 13px;
+		font-weight: 600;
+	}
+	.valor button {
+		width: 18px;
+		height: 18px;
+		border: 0;
+		border-radius: 50%;
+		background: transparent;
+		color: var(--mu);
+		display: grid;
+		place-items: center;
+	}
+	.v-nuevo {
+		flex: 1;
+		min-width: 90px;
+		padding: 5px 2px;
+		border: 0;
+		border-bottom: 1.5px dashed var(--ln2);
+		background: transparent;
+		color: var(--tx);
+		font-size: 13px;
+		outline: none;
+	}
+	.o-sumar {
+		margin-top: 10px;
+		width: 100%;
+		padding: 10px;
+		border-radius: 12px;
+		border: 1.5px dashed var(--ln2);
+		background: transparent;
+		color: var(--mu);
+		font-size: 13px;
+		font-weight: 600;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
 	}
 	.v-s {
 		width: 64px;

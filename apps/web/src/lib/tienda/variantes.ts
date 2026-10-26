@@ -245,7 +245,8 @@ const COLORES: Record<string, string> = {
 	violeta: '#6E4F8A',
 	lila: '#B7A2CF',
 	dorado: '#C9A44C',
-	plateado: '#C0C0C0'
+	plateado: '#C0C0C0',
+	carey: '#6A4128'
 };
 
 /** El color de un valor de la opción Color ("Negro", "Gris melange"), o null si no es conocido. */

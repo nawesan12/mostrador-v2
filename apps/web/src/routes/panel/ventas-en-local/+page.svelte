@@ -10,13 +10,15 @@
 	import { anim } from '#lib/panel/anim.ts';
 	import { horaMin, pesos } from '#lib/panel/formato.ts';
 	import { rutaDe } from '#lib/panel/navegacion.ts';
+	import { vendibles } from '#lib/panel/vendibles.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 
 	/** Ventas en el local (design/PanelVentas.dc.html, POS): grilla, ticket, medios de pago y Cobrar. */
 	let { data } = $props();
 	const ui = getUi();
 
-	const productos = $derived(data.productos.filter((p) => p.publicado || p.stock > 0));
+	// Con opciones, cada variante es una tarjeta ("Remera · M · Negro").
+	const productos = $derived(vendibles(data.productos.filter((p) => p.publicado || p.stock > 0)));
 	const categorias = $derived(['Todo', ...new Set(productos.map((p) => p.categoria))]);
 	let categoria = $state('Todo');
 	let buscar = $state('');
@@ -32,21 +34,23 @@
 	// ---- Ticket ----
 	const ticket = new SvelteMap<string, number>();
 	const renglones = $derived(
-		[...ticket].map(([id, q]) => ({ p: productos.find((x) => x.id === id)!, q })).filter((x) => x.p)
+		[...ticket]
+			.map(([clave, q]) => ({ p: productos.find((x) => x.clave === clave)!, q }))
+			.filter((x) => x.p)
 	);
 	const total = $derived(renglones.reduce((s, x) => s + x.p.precio * x.q, 0));
-	function sumar(id: string, d: number) {
-		const p = productos.find((x) => x.id === id);
+	function sumar(clave: string, d: number) {
+		const p = productos.find((x) => x.clave === clave);
 		if (!p) return;
-		const q = (ticket.get(id) ?? 0) + d;
+		const q = (ticket.get(clave) ?? 0) + d;
 		if (q > p.stock)
 			return ui.toast({
 				k: 'warn',
 				title: `Quedan ${p.stock} de ${p.nombre}`,
 				desc: 'No alcanza el stock'
 			});
-		if (q <= 0) ticket.delete(id);
-		else ticket.set(id, q);
+		if (q <= 0) ticket.delete(clave);
+		else ticket.set(clave, q);
 	}
 	/** Con lector: el código entra como texto y Enter. Si coincide un SKU, se suma. */
 	function escanear(e: KeyboardEvent) {
@@ -56,7 +60,7 @@
 			productos.find((x) => x.sku.toLowerCase() === q) ??
 			(visibles.length === 1 ? visibles[0] : null);
 		if (p) {
-			sumar(p.id, 1);
+			sumar(p.clave, 1);
 			buscar = '';
 		}
 	}
@@ -85,7 +89,11 @@
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({
-				items: renglones.map((x) => ({ productoId: x.p.id, cantidad: x.q })),
+				items: renglones.map((x) => ({
+					productoId: x.p.id,
+					varianteId: x.p.varianteId,
+					cantidad: x.q
+				})),
 				pago,
 				canal: 'pos',
 				envio: 'retiro',
@@ -163,13 +171,13 @@
 				</div>
 			</div>
 			<div class="grilla">
-				{#each visibles as p (p.id)}
-					{@const en = ticket.get(p.id) ?? 0}
+				{#each visibles as p (p.clave)}
+					{@const en = ticket.get(p.clave) ?? 0}
 					<button
 						type="button"
 						class="prod"
 						disabled={!p.stock}
-						onclick={() => sumar(p.id, 1)}
+						onclick={() => sumar(p.clave, 1)}
 						aria-label="Sumar {p.nombre}"
 					>
 						<div class="foto">
@@ -198,7 +206,7 @@
 				>
 			</div>
 			<div class="t-items" data-lenis-prevent>
-				{#each renglones as x (x.p.id)}
+				{#each renglones as x (x.p.clave)}
 					<div class="item">
 						<span class="i-txt"
 							><span class="i-n">{x.p.nombre}</span><span class="i-s">{pesos(x.p.precio)} c/u</span
@@ -208,14 +216,14 @@
 							<button
 								type="button"
 								aria-label="Restar {x.p.nombre}"
-								onclick={() => sumar(x.p.id, -1)}><Icon icon={I.phMinusBold} size={12} /></button
+								onclick={() => sumar(x.p.clave, -1)}><Icon icon={I.phMinusBold} size={12} /></button
 							>
 							<b>{x.q}</b>
 							<button
 								type="button"
 								class="mas"
 								aria-label="Sumar {x.p.nombre}"
-								onclick={() => sumar(x.p.id, 1)}><Icon icon={I.phPlusBold} size={12} /></button
+								onclick={() => sumar(x.p.clave, 1)}><Icon icon={I.phPlusBold} size={12} /></button
 							>
 						</span>
 						<b class="i-t">{pesos(x.p.precio * x.q)}</b>
