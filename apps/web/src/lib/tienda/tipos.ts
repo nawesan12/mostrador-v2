@@ -1,3 +1,10 @@
+import type { components } from '@mostrador/contrato/esquema';
+
+/** Los turnos de la tienda (servicios y profesionales activos, seña, horario); null si no toma. */
+export type TurnosTienda = components['schemas']['TurnosPublicos'];
+export type TurnoPublico = components['schemas']['TurnoPublico'];
+export type HorarioLibre = components['schemas']['HorarioLibre'];
+
 /**
  * La tienda online tal como la ve quien compra: lo publicado, sin costos, márgenes ni datos de
  * clientes. La arma el servidor (demo o API) y la dibuja la plantilla elegida en Mi tienda.
@@ -43,8 +50,18 @@ export type TiendaPublica = {
 		datosTransferencia: { alias: string; cbu: string; titular: string; ejemplo?: boolean } | null;
 	};
 	envios: { gratisDesde: number | null; retiro: boolean; moto: boolean; correo: boolean };
+	/** Turnos con seña; null si la tienda no los tomó. `sena` es el % que se cobra de verdad. */
+	turnos: TurnosTienda | null;
 	/** Sólo mirar: la vitrina de una plantilla (nadie la administra, no se compra). */
 	vitrina: boolean;
+};
+
+/** Lo que muestra la portada de los turnos: los libres de hoy y el próximo libre de cada uno. */
+export type ProximosTurnos = {
+	/** Inicios (ISO −03:00) libres hoy, con cualquiera, para el primer servicio. */
+	hoy: string[];
+	/** Por profesional: su próximo horario libre (ISO) o null. */
+	porProfesional: Record<string, string | null>;
 };
 
 /** Una opción de envío cotizada para un código postal. */

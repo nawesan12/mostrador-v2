@@ -5,6 +5,14 @@
 import { error } from '@sveltejs/kit';
 import { estadoInicial, type AjusteIntegracion } from '#lib/panel/integraciones.ts';
 import type {
+	AjustesTurnos,
+	EstadoTurno,
+	Profesional,
+	ProfesionalEditable,
+	Servicio,
+	ServicioEditable,
+	Turno,
+	TurnoNuevo,
 	AccionCupon,
 	ConexionML,
 	ConexionMP,
@@ -73,7 +81,7 @@ export class DatosApi implements Datos {
 
 	private async pedir<T>(
 		ruta: string,
-		metodo: 'GET' | 'PUT' | 'POST' | 'DELETE' = 'GET',
+		metodo: 'GET' | 'PUT' | 'POST' | 'PATCH' | 'DELETE' = 'GET',
 		cuerpo?: unknown
 	): Promise<T> {
 		const res = await this.f(this.base + ruta, {
@@ -542,11 +550,83 @@ export class DatosApi implements Datos {
 		return resultado(await this.intentar('/v1/panel/listas-precio/programado', 'DELETE'));
 	}
 
+	// ---- Turnos con seña
+
+	ajustesTurnos() {
+		return this.pedir<AjustesTurnos>('/v1/panel/turnos/ajustes');
+	}
+	guardarAjustesTurnos(a: AjustesTurnos) {
+		return this.pedir<AjustesTurnos>('/v1/panel/turnos/ajustes', 'PUT', a);
+	}
+	serviciosTurnos() {
+		return this.pedir<Servicio[]>('/v1/panel/turnos/servicios');
+	}
+	async guardarServicio(id: string | null, s: ServicioEditable) {
+		if (!id) return this.pedir<Servicio>('/v1/panel/turnos/servicios', 'POST', s);
+		const r = await this.intentar(`/v1/panel/turnos/servicios/${encodeURIComponent(id)}`, 'PUT', s);
+		return r.ok ? ((await r.json()) as Servicio) : null;
+	}
+	async borrarServicio(id: string) {
+		return resultado(
+			await this.intentar(`/v1/panel/turnos/servicios/${encodeURIComponent(id)}`, 'DELETE')
+		);
+	}
+	profesionalesTurnos() {
+		return this.pedir<Profesional[]>('/v1/panel/turnos/profesionales');
+	}
+	async guardarProfesional(id: string | null, p: ProfesionalEditable) {
+		if (!id) return this.pedir<Profesional>('/v1/panel/turnos/profesionales', 'POST', p);
+		const r = await this.intentar(
+			`/v1/panel/turnos/profesionales/${encodeURIComponent(id)}`,
+			'PUT',
+			p
+		);
+		return r.ok ? ((await r.json()) as Profesional) : null;
+	}
+	async borrarProfesional(id: string) {
+		return resultado(
+			await this.intentar(`/v1/panel/turnos/profesionales/${encodeURIComponent(id)}`, 'DELETE')
+		);
+	}
+	agendaTurnos(desde: string, hasta: string, profesional?: string) {
+		const q = new URLSearchParams({ desde, hasta });
+		if (profesional) q.set('profesional', profesional);
+		return this.pedir<Turno[]>(`/v1/panel/turnos?${q}`);
+	}
+	async crearTurno(n: TurnoNuevo) {
+		const r = await this.intentar('/v1/panel/turnos', 'POST', n, [400, 422]);
+		if (r.status === 409) return 'ocupado' as const;
+		// Como en el sandbox: un servicio o un horario que no van es "inválido", no un error de la API.
+		if (r.status === 404 || r.status === 400 || r.status === 422) return 'invalido' as const;
+		return (await r.json()) as Turno;
+	}
+	async estadoTurno(id: string, estado: EstadoTurno) {
+		const r = await this.intentar(`/v1/panel/turnos/${encodeURIComponent(id)}`, 'PATCH', {
+			estado
+		});
+		return r.ok ? ((await r.json()) as Turno) : ('no-existe' as const);
+	}
+	async devolverSena(id: string) {
+		const r = await this.intentar(
+			`/v1/panel/turnos/${encodeURIComponent(id)}/devolver-sena`,
+			'POST',
+			{}
+		);
+		if (r.status === 404) return 'no-existe' as const;
+		if (r.status === 409) {
+			const p = (await r.json().catch(() => null)) as { code?: string } | null;
+			return p?.code === 'sin_cobros' ? ('sin-cobros' as const) : ('sin-sena' as const);
+		}
+		return (await r.json()) as Turno;
+	}
+
 	/** Como `pedir`, pero 404 y 409 vuelven como respuesta (son resultados, no errores). */
 	private async intentar(
 		ruta: string,
-		metodo: 'GET' | 'POST' | 'PUT' | 'DELETE',
-		cuerpo?: unknown
+		metodo: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+		cuerpo?: unknown,
+		/** Estados de error que resuelve quien llama, además de 404 y 409. */
+		aceptar: number[] = []
 	) {
 		const res = await this.f(this.base + ruta, {
 			method: metodo,
@@ -557,7 +637,7 @@ export class DatosApi implements Datos {
 			},
 			body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo)
 		});
-		if (!res.ok && res.status !== 404 && res.status !== 409) {
+		if (!res.ok && res.status !== 404 && res.status !== 409 && !aceptar.includes(res.status)) {
 			const p = (await res.json().catch(() => null)) as { detail?: string; code?: string } | null;
 			error(res.status, { message: p?.detail ?? 'La API no respondió bien.', code: p?.code });
 		}

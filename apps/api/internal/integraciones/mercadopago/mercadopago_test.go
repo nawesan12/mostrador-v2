@@ -23,6 +23,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/links"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/turnos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/cifrado"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db/pruebadb"
@@ -65,6 +66,15 @@ func (f *mpFalso) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			"expires_in": 15552000, "scope": "offline_access payments", "user_id": f.usuario})
 	case r.URL.Path == "/checkout/preferences":
 		enviar(map[string]any{"id": "pref-1", "init_point": "https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=pref-1"})
+	case strings.HasPrefix(r.URL.Path, "/v1/payments/") && strings.HasSuffix(r.URL.Path, "/refunds"):
+		id := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/v1/payments/"), "/refunds")
+		p, ok := f.pagos[id]
+		if !ok {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		p["status"] = "refunded"
+		enviar(map[string]any{"id": 1, "payment_id": p["id"], "status": "approved"})
 	case strings.HasPrefix(r.URL.Path, "/v1/payments/"):
 		p, ok := f.pagos[strings.TrimPrefix(r.URL.Path, "/v1/payments/")]
 		if !ok {
@@ -284,5 +294,147 @@ func TestPrecios(t *testing.T) {
 	}
 	if _, ok := mercadopago.PrecioDe("gratis", "mes"); ok {
 		t.Fatal("el plan gratis no se cobra")
+	}
+}
+
+// La seña de un turno: preferencia por el monto de la seña con el token de la tienda, el webhook
+// confirma el turno y devolverla pasa por /refunds.
+func TestSenaDeTurno(t *testing.T) {
+	ctx := context.Background()
+	b := pruebadb.Nueva(t)
+	luna := pruebadb.CrearTienda(t, b.App, "luna")
+	var ana string
+	if err := b.App.EnTx(ctx, func(tx pgx.Tx) error {
+		return tx.QueryRow(ctx, `INSERT INTO auth.usuarios (email, nombre) VALUES ('ana@luna.com', 'Ana') RETURNING id::text`).Scan(&ana)
+	}); err != nil {
+		t.Fatal(err)
+	}
+	f := &mpFalso{cuerpos: map[string]map[string]any{}, pagos: map[string]map[string]any{}, susc: map[string]map[string]any{}, usuario: 778, refreshOK: true}
+	srv := httptest.NewServer(f)
+	defer srv.Close()
+	k := make([]byte, 32)
+	_, _ = rand.Read(k)
+	cif, _ := cifrado.Nuevo(base64.StdEncoding.EncodeToString(k))
+	ahora := time.Now()
+	s := &mercadopago.Servicio{Pool: b.App, Cifra: cif, Cliente: &mercadopago.Cliente{Base: srv.URL},
+		Ahora:  func() time.Time { return ahora },
+		Config: mercadopago.Config{AppID: "123", Secreto: "sec", SecretoWebhook: "whsec", Sitio: "https://mostrador.iamnaw.dev"}}
+	mux := http.NewServeMux()
+	s.Rutas(mux)
+	u, err := s.Conectar(ctx, luna, ana)
+	if err != nil {
+		t.Fatal(err)
+	}
+	q, _ := url.Parse(u)
+	if err := s.Volver(ctx, luna, ana, "codigo", q.Query().Get("state")); err != nil {
+		t.Fatal(err)
+	}
+
+	// Una barbería que cobra el 30 % de seña.
+	// El webhook compara el vencimiento con el reloj de Postgres: el "ahora" del test es el real y
+	// el turno, el lunes que viene (a 2 días o más, dentro de los 14 que se ofrecen).
+	ya := time.Now().In(turnos.Zona)
+	dia := ya.AddDate(0, 0, 2)
+	for dia.Weekday() != time.Monday {
+		dia = dia.AddDate(0, 0, 1)
+	}
+	lunes := dia.Format("2006-01-02")
+	if _, err := turnos.GuardarAjustes(ctx, b.App, luna, turnos.Ajustes{Activo: true, Sena: 30, AnticipacionMin: 60, DiasVista: 14,
+		Horario: []turnos.Franja{{Dia: 1, Desde: "09:00", Hasta: "13:00"}}}); err != nil {
+		t.Fatal(err)
+	}
+	corte, _ := turnos.GuardarServicio(ctx, b.App, luna, "", turnos.Servicio{Nombre: "Corte clásico", Precio: 12000, Duracion: 30, Activo: true}, nil)
+	if _, err := turnos.GuardarProfesional(ctx, b.App, luna, "", turnos.Profesional{Nombre: "Beto", Activo: true}, nil); err != nil {
+		t.Fatal(err)
+	}
+	res, err := turnos.Reservar(ctx, b.App, s, s.Config.Sitio, "luna", turnos.Reserva{ServicioID: corte.ID, Inicio: lunes + "T10:00:00-03:00",
+		Nombre: "Lucía Pérez", Telefono: "1155550101", Email: "lucia@ejemplo.com"}, ya)
+	if err != nil || !strings.Contains(res.URL, "pref_id=pref-1") {
+		t.Fatalf("reservar: %+v %v", res, err)
+	}
+	if len(f.vio("POST /checkout/preferences APP_USR-vendedor-authorization_code")) != 1 {
+		t.Fatalf("preferencias: %v", f.vio("POST /checkout/preferences"))
+	}
+	pref := f.cuerpos["POST /checkout/preferences"]
+	items := pref["items"].([]any)
+	back := pref["back_urls"].(map[string]any)
+	if items[0].(map[string]any)["unit_price"].(float64) != 3600 || pref["expires"] != true ||
+		back["success"] != "https://mostrador.iamnaw.dev/t/luna/turno/"+res.Codigo+"?pago=ok" ||
+		pref["payment_methods"].(map[string]any)["installments"].(float64) != 1 {
+		t.Fatalf("preferencia de la seña: %v", pref)
+	}
+	if v, _ := turnos.Ver(ctx, b.App, "luna", res.Codigo, ya); v.Estado != "reservado" || v.SenaPagada {
+		t.Fatalf("antes de pagar: %+v", v)
+	}
+
+	// El pago aprobado llega por el webhook y el worker confirma el turno.
+	f.pagos["556"] = map[string]any{"id": 556, "status": "approved", "external_reference": pref["external_reference"], "transaction_amount": 3600}
+	r := httptest.NewRequest(http.MethodPost, "/v1/webhooks/mercadopago?data.id=556&type=payment",
+		strings.NewReader(`{"type":"payment","action":"payment.created","user_id":778,"data":{"id":"556"}}`))
+	r.Header.Set("x-request-id", "req-2")
+	r.Header.Set("x-signature", firmar("whsec", "556", "req-2", ahora.UnixMilli()))
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
+	if w.Code != http.StatusOK {
+		t.Fatalf("webhook: %d", w.Code)
+	}
+	wk := &outbox.Worker{Pool: b.Worker, Manejadores: s.Manejadores()}
+	if _, err := wk.Pasada(ctx); err != nil {
+		t.Fatal(err)
+	}
+	v, _ := turnos.Ver(ctx, b.App, "luna", res.Codigo, ya.Add(time.Hour))
+	if v.Estado != "confirmado" || !v.SenaPagada || v.VenceEn != nil || v.Vencido {
+		t.Fatalf("después del pago: %+v", v)
+	}
+
+	// Devolver la seña: refund del pago con el token de la tienda; queda anotada como devuelta.
+	l, _ := turnos.Agenda(ctx, b.App, luna, lunes, lunes, "", ya)
+	tu, err := turnos.DevolverSena(ctx, b.App, s, luna, l[0].ID, ya)
+	if err != nil || !tu.SenaDevuelta || len(f.vio("POST /v1/payments/556/refunds APP_USR-vendedor-authorization_code")) != 1 {
+		t.Fatalf("devolver la seña: %+v %v", tu, err)
+	}
+	if _, err := turnos.DevolverSena(ctx, b.App, s, luna, l[0].ID, ya); !errors.Is(err, turnos.ErrSinSena) {
+		t.Fatalf("devolvió dos veces: %v", err)
+	}
+
+	// La seña llega tarde: la reserva ya venció y otra persona tomó el horario. El turno vencido no
+	// se confirma (sería un doble turno): queda cancelado con la seña pagada, para devolverla.
+	tarde, err := turnos.Reservar(ctx, b.App, s, s.Config.Sitio, "luna", turnos.Reserva{ServicioID: corte.ID, Inicio: lunes + "T11:00:00-03:00",
+		Nombre: "Tomás", Telefono: "1155550102", Email: "tomas@ejemplo.com"}, ya)
+	if err != nil {
+		t.Fatal(err)
+	}
+	refTarde := f.cuerpos["POST /checkout/preferences"]["external_reference"]
+	admin, err := pgx.Connect(ctx, b.AdminURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer admin.Close(ctx)
+	if _, err := admin.Exec(ctx, `UPDATE turnos SET vence_en = now() - interval '1 minute' WHERE codigo_publico = $1`, tarde.Codigo); err != nil {
+		t.Fatal(err)
+	}
+	otra, err := turnos.Reservar(ctx, b.App, s, s.Config.Sitio, "luna", turnos.Reserva{ServicioID: corte.ID, Inicio: lunes + "T11:00:00-03:00",
+		Nombre: "Paula", Telefono: "1155550103", Email: "paula@ejemplo.com"}, ya)
+	if err != nil {
+		t.Fatalf("el horario vencido no se liberó: %v", err)
+	}
+	f.pagos["557"] = map[string]any{"id": 557, "status": "approved", "external_reference": refTarde, "transaction_amount": 3600}
+	r = httptest.NewRequest(http.MethodPost, "/v1/webhooks/mercadopago?data.id=557&type=payment",
+		strings.NewReader(`{"type":"payment","action":"payment.created","user_id":778,"data":{"id":"557"}}`))
+	r.Header.Set("x-request-id", "req-3")
+	r.Header.Set("x-signature", firmar("whsec", "557", "req-3", ahora.UnixMilli()))
+	w = httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
+	if w.Code != http.StatusOK {
+		t.Fatalf("webhook tardío: %d", w.Code)
+	}
+	if _, err := wk.Pasada(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if v, _ := turnos.Ver(ctx, b.App, "luna", tarde.Codigo, ya); v.Estado != "cancelado" || !v.SenaPagada {
+		t.Fatalf("seña tardía: %+v", v)
+	}
+	if v, _ := turnos.Ver(ctx, b.App, "luna", otra.Codigo, ya); v.Estado != "reservado" {
+		t.Fatalf("el turno de la otra persona: %+v", v)
 	}
 }

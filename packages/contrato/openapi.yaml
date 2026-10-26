@@ -1635,6 +1635,284 @@ paths:
           content:
             application/problem+json:
               schema: { $ref: '#/components/schemas/Problema' }
+  /v1/panel/turnos/ajustes:
+    get:
+      operationId: ajustesTurnos
+      summary: Turnos con seña — si están activos, la seña, la anticipación, los días de vista y el horario.
+      responses:
+        '200':
+          description: Ajustes (los de por defecto si nunca se guardaron)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AjustesTurnos' }
+    put:
+      operationId: guardarAjustesTurnos
+      summary: Guarda los ajustes de turnos.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AjustesTurnos' }
+      responses:
+        '200':
+          description: Como quedaron
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AjustesTurnos' }
+        '400': { $ref: '#/components/responses/Problema' }
+  /v1/panel/turnos/servicios:
+    get:
+      operationId: serviciosTurnos
+      summary: Los servicios que se reservan (activos e inactivos), por orden.
+      responses:
+        '200':
+          description: Servicios
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Servicio' } }
+    post:
+      operationId: crearServicio
+      summary: Un servicio nuevo (va al final del orden si no trae uno).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServicioEditable' }
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Servicio' }
+        '400': { $ref: '#/components/responses/Problema' }
+  /v1/panel/turnos/servicios/{id}:
+    put:
+      operationId: guardarServicio
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServicioEditable' }
+      responses:
+        '200':
+          description: Como quedó
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Servicio' }
+        '400': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+    delete:
+      operationId: borrarServicio
+      summary: Lo saca (los turnos ya tomados quedan con el nombre copiado).
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '204': { description: Borrado }
+        '404': { $ref: '#/components/responses/Problema' }
+  /v1/panel/turnos/profesionales:
+    get:
+      operationId: profesionalesTurnos
+      summary: Quienes atienden (activos e inactivos), por orden.
+      responses:
+        '200':
+          description: Profesionales
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Profesional' } }
+    post:
+      operationId: crearProfesional
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProfesionalEditable' }
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Profesional' }
+        '400': { $ref: '#/components/responses/Problema' }
+  /v1/panel/turnos/profesionales/{id}:
+    put:
+      operationId: guardarProfesional
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProfesionalEditable' }
+      responses:
+        '200':
+          description: Como quedó
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Profesional' }
+        '400': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+    delete:
+      operationId: borrarProfesional
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '204': { description: Borrado }
+        '404': { $ref: '#/components/responses/Problema' }
+  /v1/panel/turnos:
+    get:
+      operationId: agendaTurnos
+      summary: La agenda entre dos días (inclusive), opcionalmente de un profesional; por inicio.
+      parameters:
+        - { name: desde, in: query, required: true, schema: { type: string, format: date } }
+        - { name: hasta, in: query, required: true, schema: { type: string, format: date } }
+        - { name: profesional, in: query, required: false, schema: { type: string } }
+      responses:
+        '200':
+          description: Turnos
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Turno' } }
+        '400': { $ref: '#/components/responses/Problema' }
+    post:
+      operationId: crearTurno
+      summary: Un turno cargado a mano (origen panel, sin seña). Si se superpone, 409 salvo que venga forzar.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TurnoNuevo' }
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Turno' }
+        '400': { $ref: '#/components/responses/Problema' }
+        '409': { description: 'ocupado: se superpone con otro turno (mandar forzar para tomarlo igual)', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problema' } } } }
+  /v1/panel/turnos/{id}:
+    patch:
+      operationId: estadoTurno
+      summary: Cualquiera de los cinco estados (también sirve para deshacer).
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [estado]
+              properties:
+                estado: { $ref: '#/components/schemas/EstadoTurno' }
+      responses:
+        '200':
+          description: Como quedó
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Turno' }
+        '400': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+  /v1/panel/turnos/{id}/devolver-sena:
+    post:
+      operationId: devolverSena
+      summary: Devuelve la seña pagada con Mercado Pago (Reembolsar). Cancelar no la devuelve sola.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: El turno con la seña devuelta
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Turno' }
+        '403': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+        '409': { description: 'sin_sena (no hay seña pagada) o sin_cobros (sin Mercado Pago)', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problema' } } } }
+        '502': { $ref: '#/components/responses/Problema' }
+  /v1/publico/tiendas/{slug}/turnos:
+    get:
+      operationId: turnosPublicos
+      summary: Servicios y profesionales activos y los ajustes públicos. 404 si la tienda no tiene turnos activos.
+      security: []
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Turnos de la tienda
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TurnosPublicos' }
+        '404': { $ref: '#/components/responses/Problema' }
+    post:
+      operationId: reservarTurno
+      summary: Reserva desde la tienda. Precio, duración y seña salen del servicio; la disponibilidad se re-chequea en una transacción. Con seña y Mercado Pago devuelve el checkout (url).
+      security: []
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReservaTurno' }
+      responses:
+        '201':
+          description: Reservado
+          content:
+            application/json:
+              schema: { type: object, required: [codigo], properties: { codigo: { type: string }, url: { type: string } } }
+        '400': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+        '409': { description: 'ocupado: el horario ya no está libre', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problema' } } } }
+        '502': { $ref: '#/components/responses/Problema' }
+  /v1/publico/tiendas/{slug}/turnos/libres:
+    get:
+      operationId: turnosLibres
+      summary: Los horarios libres de un día (regla 1). Sin profesional (o "cualquiera") sirve si alguno está libre.
+      security: []
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+        - { name: servicio, in: query, required: true, schema: { type: string } }
+        - { name: profesional, in: query, required: false, schema: { type: string } }
+        - { name: dia, in: query, required: true, schema: { type: string, format: date } }
+      responses:
+        '200':
+          description: Horarios libres, por hora
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/HorarioLibre' } }
+        '400': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+  /v1/publico/tiendas/{slug}/turnos/{codigo}:
+    get:
+      operationId: turnoPublico
+      summary: El turno por su código público (la confirmación).
+      security: []
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+        - { name: codigo, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Turno
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TurnoPublico' }
+        '404': { $ref: '#/components/responses/Problema' }
+    delete:
+      operationId: cancelarTurnoPublico
+      summary: Cancela el turno (hasta anticipacionMin antes; cancelar uno cancelado no es error). Con seña pagada, la devolución la hace la tienda.
+      security: []
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+        - { name: codigo, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Cancelado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TurnoPublico' }
+        '404': { $ref: '#/components/responses/Problema' }
+        '409': { description: 'tarde: falta menos que la anticipación mínima', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problema' } } } }
 components:
   responses:
     Problema:
@@ -2986,6 +3264,153 @@ components:
         plantilla: { type: string }
         plan: { $ref: '#/components/schemas/Plan' }
         creadaEn: { type: string, format: date-time }
+    Franja:
+      type: object
+      description: 'Un tramo de atención de un día de la semana, en hora de Argentina (UTC−3)'
+      required: [dia, desde, hasta]
+      properties:
+        dia: { type: integer, minimum: 0, maximum: 6, description: '0 = domingo' }
+        desde: { type: string, pattern: '^([01]\d|2[0-3]):(00|15|30|45)$', description: 'Múltiplo de 15 min, menor que hasta' }
+        hasta: { type: string, pattern: '^(([01]\d|2[0-3]):(00|15|30|45)|24:00)$', description: 'Múltiplo de 15 min; se acepta 24:00' }
+    AjustesTurnos:
+      type: object
+      required: [activo, sena, anticipacionMin, diasVista, horario]
+      properties:
+        activo: { type: boolean }
+        sena: { type: integer, minimum: 0, maximum: 100, description: 'Porcentaje del precio (0 = sin seña); por defecto 30' }
+        anticipacionMin: { type: integer, minimum: 0, maximum: 10080, description: 'Minutos mínimos para reservar; por defecto 60' }
+        diasVista: { type: integer, minimum: 1, maximum: 90, description: 'Días hacia adelante que se pueden reservar (hoy cuenta como el primero); por defecto 14' }
+        horario: { type: array, maxItems: 42, items: { $ref: '#/components/schemas/Franja' } }
+    ServicioEditable:
+      type: object
+      required: [nombre, descripcion, precio, duracion, foto, etiqueta, activo]
+      properties:
+        nombre: { type: string, minLength: 2, maxLength: 60 }
+        descripcion: { type: string, maxLength: 200 }
+        precio: { type: integer, minimum: 1, description: 'Pesos enteros' }
+        duracion: { type: integer, minimum: 15, maximum: 480, multipleOf: 15, description: 'Minutos' }
+        foto: { type: [string, 'null'], maxLength: 2048 }
+        etiqueta: { type: [string, 'null'], maxLength: 20 }
+        activo: { type: boolean }
+        orden: { type: integer, minimum: 0 }
+    Servicio:
+      allOf:
+        - { $ref: '#/components/schemas/ServicioEditable' }
+        - type: object
+          required: [id, orden]
+          properties:
+            id: { type: string }
+            orden: { type: integer }
+    ProfesionalEditable:
+      type: object
+      required: [nombre, rol, foto, servicios, activo]
+      properties:
+        nombre: { type: string, minLength: 2, maxLength: 40 }
+        rol: { type: string, maxLength: 60 }
+        foto: { type: [string, 'null'], maxLength: 2048 }
+        servicios: { type: array, maxItems: 100, items: { type: string, pattern: '^[A-Za-z0-9_-]{1,64}$' }, description: 'Ids de los servicios que hace; vacío = todos' }
+        activo: { type: boolean }
+        orden: { type: integer, minimum: 0 }
+    Profesional:
+      allOf:
+        - { $ref: '#/components/schemas/ProfesionalEditable' }
+        - type: object
+          required: [id, orden]
+          properties:
+            id: { type: string }
+            orden: { type: integer }
+    EstadoTurno:
+      type: string
+      enum: [reservado, confirmado, cancelado, atendido, ausente]
+    Turno:
+      type: object
+      required: [id, codigo, servicioId, servicio, profesionalId, profesional, inicio, fin, cliente, precio, sena, estado, senaPagada, senaDevuelta, origen, nota, creadoEn, venceEn, vencido]
+      properties:
+        id: { type: string }
+        codigo: { type: string, description: 'Público, aleatorio (≥ 16 caracteres url-safe)' }
+        servicioId: { type: string }
+        servicio: { type: string, description: 'Nombre copiado al reservar' }
+        profesionalId: { type: string }
+        profesional: { type: string, description: 'Nombre copiado al reservar' }
+        inicio: { type: string, format: date-time, description: 'ISO con offset −03:00' }
+        fin: { type: string, format: date-time }
+        cliente:
+          type: object
+          required: [nombre, telefono, email]
+          properties:
+            nombre: { type: string }
+            telefono: { type: string }
+            email: { type: string }
+        precio: { type: integer, description: 'Pesos' }
+        sena: { type: integer, description: 'Monto de la seña en pesos (0 = sin seña)' }
+        estado: { $ref: '#/components/schemas/EstadoTurno' }
+        senaPagada: { type: boolean }
+        senaDevuelta: { type: boolean, description: 'Se devolvió con Mercado Pago (Devolver la seña)' }
+        origen: { type: string, enum: [tienda, panel] }
+        nota: { type: [string, 'null'] }
+        creadoEn: { type: string, format: date-time }
+        venceEn: { type: [string, 'null'], format: date-time, description: 'Sólo mientras espera la seña' }
+        vencido: { type: boolean, description: 'Reservado, sin seña y pasado venceEn: ya no ocupa el horario' }
+    TurnoNuevo:
+      type: object
+      required: [servicioId, profesionalId, inicio, nombre, telefono, email]
+      properties:
+        servicioId: { type: string, pattern: '^[A-Za-z0-9_-]{1,64}$' }
+        profesionalId: { type: string, pattern: '^[A-Za-z0-9_-]{1,64}$' }
+        inicio: { type: string, format: date-time }
+        nombre: { type: string, minLength: 2, maxLength: 80 }
+        telefono: { type: string, maxLength: 20 }
+        email: { type: string, maxLength: 120, description: 'Puede ir vacío desde el panel' }
+        nota: { type: [string, 'null'], maxLength: 300 }
+        forzar: { type: boolean, default: false, description: 'Reservar aunque se superponga' }
+    ReservaTurno:
+      type: object
+      required: [servicioId, profesionalId, inicio, nombre, telefono, email]
+      properties:
+        servicioId: { type: string, pattern: '^[A-Za-z0-9_-]{1,64}$' }
+        profesionalId: { type: [string, 'null'], pattern: '^[A-Za-z0-9_-]{1,64}$', description: 'null = cualquiera (el primero libre por orden)' }
+        inicio: { type: string, format: date-time }
+        nombre: { type: string, minLength: 2, maxLength: 80 }
+        telefono: { type: string, maxLength: 20 }
+        email: { type: string, format: email, maxLength: 120 }
+    HorarioLibre:
+      type: object
+      required: [inicio, profesionalId]
+      properties:
+        inicio: { type: string, format: date-time, description: 'ISO con offset −03:00' }
+        profesionalId: { type: [string, 'null'], description: 'El profesional pedido (null = cualquiera); al reservar se asigna el primero libre por orden' }
+    TurnosPublicos:
+      type: object
+      description: 'TiendaPublica.turnos (null si la tienda no toma turnos): sólo servicios y profesionales activos'
+      required: [servicios, profesionales, sena, anticipacionMin, diasVista, horario]
+      properties:
+        servicios: { type: array, items: { $ref: '#/components/schemas/Servicio' } }
+        profesionales: { type: array, items: { $ref: '#/components/schemas/Profesional' } }
+        sena: { type: integer, description: 'Porcentaje que se cobra al reservar (0 si no hay seña o la tienda no tiene Mercado Pago)' }
+        anticipacionMin: { type: integer }
+        diasVista: { type: integer }
+        horario: { type: array, items: { $ref: '#/components/schemas/Franja' } }
+    TurnoPublico:
+      type: object
+      description: 'Lo que ve quien reservó (/t/{slug}/turno/{codigo}): sin los datos de contacto'
+      required: [codigo, servicio, profesional, inicio, fin, nombre, precio, sena, senaPagada, estado, venceEn, vencido, cancelable, tienda, direccion, whatsapp]
+      properties:
+        codigo: { type: string }
+        servicio: { type: string }
+        profesional: { type: string }
+        inicio: { type: string, format: date-time }
+        fin: { type: string, format: date-time }
+        nombre: { type: string, description: 'Sólo el primer nombre de quien reservó' }
+        precio: { type: integer }
+        sena: { type: integer }
+        senaPagada: { type: boolean }
+        estado: { $ref: '#/components/schemas/EstadoTurno' }
+        venceEn: { type: [string, 'null'], format: date-time }
+        vencido: { type: boolean }
+        cancelable: { type: boolean, description: 'Reservado sin vencer o confirmado, y falta más que la anticipación mínima' }
+        tienda: { type: string }
+        direccion: { type: string }
+        whatsapp: { type: string }
     Problema:
       type: object
       required: [type, title, status]

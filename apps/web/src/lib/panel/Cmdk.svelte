@@ -4,7 +4,7 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
 	import type { IconData } from '#lib/icons.ts';
-	import { AREAS, rutaDe } from './navegacion.ts';
+	import { AREAS, rutaDe, visible } from './navegacion.ts';
 	import { getShell } from './shell.svelte.ts';
 
 	/**
@@ -52,17 +52,19 @@
 		[
 			...ACCIONES,
 			...AREAS.flatMap((a) =>
-				a.items.map((i): Item => {
-					const href = rutaDe(i.label);
-					return {
-						t: i.label,
-						s: a.label,
-						icon: i.icon,
-						id: href,
-						grupo: 'Ir a',
-						go: () => ir(href)
-					};
-				})
+				a.items
+					.filter((i) => visible(i.label, shell.turnos))
+					.map((i): Item => {
+						const href = rutaDe(i.label);
+						return {
+							t: i.label,
+							s: a.label,
+							icon: i.icon,
+							id: href,
+							grupo: 'Ir a',
+							go: () => ir(href)
+						};
+					})
 			)
 		].filter((i) => !q.trim() || `${i.t} ${i.s}`.toLowerCase().includes(q.trim().toLowerCase()))
 	);
