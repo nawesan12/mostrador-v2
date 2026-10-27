@@ -4,10 +4,12 @@ import { datosDe } from '#lib/server/datos/index.ts';
 import { errorOpciones, errorVariantes, MAX_FOTOS, MAX_VARIANTES } from '#lib/tienda/variantes.ts';
 import type { RequestHandler } from './$types';
 
-// Una foto de Unsplash (id) o una URL https (los productos importados de Empretienda).
+// Una foto de Unsplash (id), una URL https (las subidas a /f/ y las importadas de Empretienda) o,
+// en las pruebas locales, una subida a http://localhost.
 const Foto = v.union([
 	v.pipe(v.string(), v.regex(/^\d{10,}-[0-9a-f]+$/)),
-	v.pipe(v.string(), v.maxLength(500), v.url(), v.startsWith('https://'))
+	v.pipe(v.string(), v.maxLength(500), v.url(), v.startsWith('https://')),
+	v.pipe(v.string(), v.maxLength(200), v.regex(/^http:\/\/(localhost|127\.0\.0\.1):\d+\/f\//))
 ]);
 const Texto20 = v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(20));
 

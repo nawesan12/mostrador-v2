@@ -99,3 +99,16 @@ export const limites = sqliteTable(
 	},
 	(t) => [index('limites_reinicia').on(t.reiniciaEn)]
 );
+
+/** Fotos subidas a R2: la tienda dueña (y el sandbox en la demo) y el tamaño, para topes y purga. */
+export const archivos = sqliteTable(
+	'archivos',
+	{
+		clave: text('clave').primaryKey(),
+		duenio: text('duenio').notNull(),
+		sandboxId: text('sandbox_id'),
+		bytes: integer('bytes').notNull(),
+		creadoEn: integer('creado_en').notNull()
+	},
+	(t) => [index('archivos_duenio').on(t.duenio), index('archivos_sandbox').on(t.sandboxId)]
+);

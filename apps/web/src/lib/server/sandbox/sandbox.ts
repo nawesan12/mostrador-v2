@@ -177,7 +177,13 @@ export async function leer(db: DbSandbox, id: string | undefined, ahora = Date.n
  * Borra los sandboxes vencidos y sus cambios. Va de a tandas chicas para no pasar el tope de CPU ni
  * de parámetros de D1; lo llama el cron.
  */
-export async function purgar(db: DbSandbox, ahora = Date.now(), tanda = 50) {
+export async function purgar(
+	db: DbSandbox,
+	ahora = Date.now(),
+	tanda = 50,
+	// Lo que vive fuera de la D1 (las fotos en R2), antes de borrar los sandboxes.
+	antes?: (ids: string[]) => Promise<unknown>
+) {
 	const viejos = await db
 		.select({ id: sandboxes.id })
 		.from(sandboxes)
@@ -185,6 +191,7 @@ export async function purgar(db: DbSandbox, ahora = Date.now(), tanda = 50) {
 		.limit(tanda);
 	if (!viejos.length) return 0;
 	const ids = viejos.map((v) => v.id);
+	await antes?.(ids);
 	await db.batch([
 		db.delete(cambios).where(inArray(cambios.sandboxId, ids)),
 		db.delete(sandboxes).where(inArray(sandboxes.id, ids))
