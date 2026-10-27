@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { deslizable } from '#lib/panel/deslizable.ts';
 	import { untrack } from 'svelte';
 	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
@@ -206,11 +207,15 @@
 	const LOTE = [
 		{ accion: 'preparar', t: 'Preparar', i: I.phPackageFill },
 		{ accion: 'etiquetas', t: 'Etiquetas', i: I.phPrinterFill },
+		{ accion: 'tarjetas', t: 'Tarjetas', i: I.phEnvelopeSimpleFill },
 		{ accion: 'facturar', t: 'Facturar', i: I.phReceiptFill },
 		{ accion: 'avisar', t: 'Avisar', i: I.phWhatsappLogoFill }
 	] as const;
 	async function lote(l: (typeof LOTE)[number]) {
 		const numeros = [...seleccion.keys()];
+		// Las tarjetas A6 de los paquetes se imprimen en otra pestaña (4 por A4).
+		if (l.accion === 'tarjetas')
+			return window.open(`${resolve('/panel/pedidos/imprimir')}?n=${numeros.join(',')}`, '_blank');
 		const r = await fetch('/panel/pedidos/lote', {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },

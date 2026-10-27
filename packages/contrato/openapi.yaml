@@ -551,6 +551,19 @@ paths:
         '401': { $ref: '#/components/responses/Problema' }
         '404': { $ref: '#/components/responses/Problema' }
         '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/tarjeta:
+    get:
+      operationId: tarjeta
+      summary: La tarjeta A6 para los paquetes (con los valores de fábrica si no se guardó).
+      responses:
+        '200': { description: Tarjeta, content: { application/json: { schema: { $ref: '#/components/schemas/Tarjeta' } } } }
+    put:
+      operationId: guardarTarjeta
+      summary: Guarda la tarjeta A6.
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Tarjeta' } } } }
+      responses:
+        '204': { description: Guardada }
+        '400': { $ref: '#/components/responses/Problema' }
   /v1/panel/carritos:
     get:
       operationId: carritos
@@ -2586,6 +2599,19 @@ components:
               id: { type: string, enum: [hero, cats, prods, revs, ig, wa] }
               visible: { type: boolean }
         paleta: { type: integer, minimum: 0, maximum: 3 }
+    Tarjeta:
+      type: object
+      description: 'La tarjeta A6 para los paquetes (pieza 7a de Imprimibles). Los textos aceptan {nombre}, {fecha}, {productos} y {pedido}'
+      required: [modelo, titulo, mensaje, dorsoTitulo, dorsoTexto, qr, cupon, instagram]
+      properties:
+        modelo: { type: string, enum: [arco, sello, carta] }
+        titulo: { type: string, minLength: 1, maxLength: 40 }
+        mensaje: { type: string, maxLength: 140 }
+        dorsoTitulo: { type: string, maxLength: 40 }
+        dorsoTexto: { type: string, maxLength: 140 }
+        qr: { type: string, enum: [resena, cupon, instagram, whatsapp] }
+        cupon: { type: string, pattern: '^[A-Z0-9-]{0,20}$' }
+        instagram: { type: string, pattern: '^[a-zA-Z0-9._]{0,30}$' }
     MiTienda:
       type: object
       required: [plantilla, direccion, diseno, sinPublicar, vista]

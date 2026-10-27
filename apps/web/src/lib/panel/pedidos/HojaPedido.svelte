@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import ChipEstado from '#lib/components/ChipEstado.svelte';
 	import Hoja from '#lib/components/Hoja.svelte';
 	import Icon from '#lib/components/Icon.svelte';
@@ -73,12 +74,12 @@
 						{cuando(pedido.creado)} · por {NOMBRE_CANAL[pedido.canal] ?? pedido.canal}
 					</div>
 				</div>
-				<button
-					type="button"
+				<a
 					class="redondo"
-					title="Imprimir"
-					aria-label="Imprimir"
-					onclick={() => imprimir(pedido!)}><Icon icon={I.phPrinter} size={17} /></button
+					title="Imprimir la tarjeta del paquete"
+					aria-label="Imprimir la tarjeta del paquete"
+					href="{resolve('/panel/pedidos/imprimir')}?n={pedido.numero}"
+					target="_blank"><Icon icon={I.phPrinter} size={17} /></a
 				>
 				<button
 					type="button"

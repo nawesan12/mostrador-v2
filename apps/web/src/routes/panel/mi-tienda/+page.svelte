@@ -81,6 +81,9 @@
 			<h1>Mi tienda</h1>
 			<div class="c-s">Plantilla {data.plantilla} · {data.direccion}</div>
 		</div>
+		<a class="cambiar" href={resolve('/panel/tarjeta-para-paquetes')}
+			><Icon icon={I.phEnvelopeSimpleFill} size={14} />Tarjeta para paquetes</a
+		>
 		<a class="cambiar" href="{resolve('/')}#plantillas"
 			><Icon icon={I.phSwapBold} size={14} />Cambiar plantilla</a
 		>
