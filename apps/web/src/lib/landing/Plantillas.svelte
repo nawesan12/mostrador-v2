@@ -94,13 +94,8 @@
 		</div>
 
 		<div class="vitrina">
-			<button
-				type="button"
-				class="tarjeta"
-				onclick={() => (l.tplI = PLANTILLAS.indexOf(t0))}
-				aria-label="Ver la plantilla {t0.nombre}"
-			>
-				<div class="marco" style:zoom>
+			<button type="button" class="tarjeta" onclick={() => (l.tplI = PLANTILLAS.indexOf(t0))}>
+				<div class="marco" aria-hidden="true" style:zoom>
 					<div class="barra">
 						<span style:background="#E0A595"></span><span style:background="#E7CB8F"></span><span
 							style:background="#A9CBA8"
@@ -110,7 +105,7 @@
 				</div>
 				<div class="pie">
 					<span class="nom"
-						><span class="n">{t0.nombre}</span><span class="r">{t0.rubro}</span></span
+						><span class="n">{t0.nombre}</span> <span class="r">{t0.rubro}</span></span
 					>
 					<span class="muestras">
 						<span style:background={paleta?.bg ?? t0.bg}></span><span

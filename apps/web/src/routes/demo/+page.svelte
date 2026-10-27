@@ -98,10 +98,10 @@
 					value={t.id}
 					class="tpl"
 					disabled={eligiendo !== null}
-					aria-label="{t.nombre}, {t.rubro}: {t.tienda}"
 				>
 					<div
 						class="marco"
+						aria-hidden="true"
 						style:box-shadow="0 0 0 2px {sel ? '#D2582F' : 'transparent'},0 20px 40px -24px
 						rgba(58,29,18,.55)"
 					>

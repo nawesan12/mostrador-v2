@@ -427,12 +427,7 @@
 									onclick={() => (sel ? seleccion.delete(r.id) : seleccion.add(r.id))}
 									>{#if sel}<Icon icon={I.phCheckBold} size={12} />{/if}</button
 								>
-								<button
-									type="button"
-									class="abrir"
-									onclick={() => abrir?.(r)}
-									aria-label="Abrir {v.t}"
-								>
+								<button type="button" class="abrir" onclick={() => abrir?.(r)}>
 									<span class="media">
 										{#if v.img}<img src={v.img} alt="" style:border-radius={v.radio} />{:else}<span
 												class="ini"

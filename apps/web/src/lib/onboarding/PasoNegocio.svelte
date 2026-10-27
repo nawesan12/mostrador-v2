@@ -111,7 +111,7 @@
 	}
 	.d-k {
 		font-size: 12px;
-		color: #8a7060;
+		color: var(--marron-2);
 	}
 	.d-v {
 		font-size: 15.5px;
@@ -176,7 +176,7 @@
 	}
 	.f-k {
 		font-size: 11.5px;
-		color: #8a7060;
+		color: var(--marron-2);
 	}
 	.f-v {
 		font-size: 14px;
@@ -223,7 +223,7 @@
 	}
 	.c-t {
 		font-size: 11.5px;
-		color: #8a7060;
+		color: var(--marron-2);
 		margin-right: 4px;
 	}
 	.c {

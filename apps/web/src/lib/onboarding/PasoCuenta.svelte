@@ -185,7 +185,7 @@
 		align-items: center;
 		gap: 12px;
 		font-size: 13px;
-		color: #8a7060;
+		color: var(--marron-2);
 	}
 	.o span {
 		flex: 1;
@@ -228,7 +228,7 @@
 	.legal {
 		margin-top: 14px;
 		font-size: 12.5px;
-		color: #8a7060;
+		color: var(--marron-2);
 		line-height: 1.5;
 	}
 	.trae {

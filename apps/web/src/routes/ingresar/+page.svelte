@@ -742,7 +742,7 @@
 		align-items: center;
 		gap: 12px;
 		font-size: 13px;
-		color: #9a8576;
+		color: var(--marron-2);
 	}
 	.o span {
 		flex: 1;

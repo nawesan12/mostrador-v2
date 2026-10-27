@@ -645,12 +645,7 @@
 									onclick={() => tildar(p)}
 									>{#if sel}<Icon icon={I.phCheckBold} size={12} />{/if}</button
 								>
-								<button
-									type="button"
-									class="abrir"
-									onclick={() => abrir(p.numero)}
-									aria-label="Ver el pedido #{p.numero} de {p.cliente}"
-								>
+								<button type="button" class="abrir" onclick={() => abrir(p.numero)}>
 									<span class="av">
 										{#if p.foto}<img src={cara(p.foto)} alt="" />{:else}<span class="av-ini"
 												>{iniciales(p.cliente)}</span

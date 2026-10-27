@@ -347,7 +347,7 @@
 		justify-content: space-between;
 		margin-top: 6px;
 		font-size: 11.5px;
-		color: #9a8576;
+		color: var(--marron-2);
 	}
 	.abajo {
 		padding: clamp(40px, 6vw, 64px) 0 clamp(56px, 8vw, 100px);

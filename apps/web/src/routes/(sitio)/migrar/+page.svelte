@@ -209,7 +209,7 @@
 		<div class="pasos">
 			{#each PASOS as [t, d], i (t)}
 				<div class="paso">
-					<div class="p-n" class:ultimo={i === PASOS.length - 1}>0{i + 1}</div>
+					<div class="p-n" class:ultimo={i === PASOS.length - 1} aria-hidden="true">0{i + 1}</div>
 					<div class="p-t">{t}</div>
 					<div class="p-d">{d}</div>
 				</div>
@@ -383,7 +383,7 @@
 		outline: none;
 	}
 	.falso {
-		color: #9a8576;
+		color: var(--marron-2);
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
