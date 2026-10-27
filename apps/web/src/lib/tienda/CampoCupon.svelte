@@ -36,15 +36,31 @@
 		error?: string;
 	} = $props();
 
-	const fmt = (n: number) => '$ ' + Math.round(n).toLocaleString('es-AR');
+	const fmt = (n: number) => '$\u00a0' + Math.round(n).toLocaleString('es-AR');
 	// El email del mismo formulario (para "primera compra" y "una vez por cliente"), si ya está.
 	function aplicar(el: HTMLElement) {
 		const campo = el.closest('form')?.querySelector<HTMLInputElement>('[name="email"]');
 		cupon.aplicar(lineas, campo?.value.trim() || email);
 	}
+	// Si cambia el email con un cupón aplicado, se vuelve a evaluar (primera compra, una vez por
+	// cliente): no queda el resultado del email anterior.
+	let raiz = $state<HTMLElement>();
+	$effect(() => {
+		const campo = raiz?.closest('form')?.querySelector<HTMLInputElement>('[name="email"]');
+		if (!campo || !raiz) return;
+		const el = raiz;
+		const alCambiar = () => {
+			if (!cupon.aplicado) return;
+			cupon.codigo = cupon.aplicado;
+			aplicar(el);
+		};
+		campo.addEventListener('change', alCambiar);
+		return () => campo.removeEventListener('change', alCambiar);
+	});
 </script>
 
 <div
+	bind:this={raiz}
 	class="cupon"
 	style="--t:{tinta};--s:{suave};--b:{borde};--f:{fondo};--a:{acento};--sa:{sobreAcento};--r:{radio};--e:{error};font-family:{fuente}"
 >

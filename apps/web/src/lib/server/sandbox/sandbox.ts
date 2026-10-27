@@ -939,7 +939,7 @@ export class DatosSandbox implements Datos {
 	async crearPedido(
 		n: PedidoNuevo,
 		/** Tienda online: email de quien compra y el cupón que usó (para "una vez por cliente"). */
-		web?: { email: string; cupon: string | null; descuentoCupon: number }
+		web?: { email: string; cupon: string | null; descuentoCupon: number; total?: number }
 	): Promise<{ numero: number; total: number } | 'sin-stock' | 'invalido'> {
 		const d = await this.base();
 		const productos = new Map((await this.regProductos()).map((p) => [p.id, p]));
@@ -992,7 +992,8 @@ export class DatosSandbox implements Datos {
 						: 'Para preparar',
 			facturado: n.pagado !== false,
 			items,
-			total: items.reduce((s, i) => s + i.precio * i.cantidad, 0),
+			// En la tienda online, el total cobrado (envío, cupón y transferencia incluidos).
+			total: web?.total ?? items.reduce((s, i) => s + i.precio * i.cantidad, 0),
 			creado: ahora,
 			...(web?.cupon ? { cupon: web.cupon } : {})
 		};

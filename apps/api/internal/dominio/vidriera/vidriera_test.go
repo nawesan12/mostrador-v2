@@ -192,3 +192,55 @@ func TestCompraConCupon(t *testing.T) {
 		t.Fatalf("contadores: %d %d", usos, desconto)
 	}
 }
+
+// Dos compras a la vez del mismo email con un cupón de una vez por cliente: sólo una lo usa. Y el
+// cupón de otra tienda con el mismo código no se toca.
+func TestCuponPorClienteConcurrenteYAislado(t *testing.T) {
+	ctx := context.Background()
+	b := pruebadb.Nueva(t)
+	ahora := time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)
+	ids := map[string]string{}
+	for _, slug := range []string{"luna", "sol"} {
+		id := pruebadb.CrearTienda(t, b.App, slug)
+		if err := configuracion.GuardarNegocio(ctx, b.App, id, configuracion.Negocio{Nombre: slug, Alias: slug + ".tienda"}); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := cupones.Crear(ctx, b.App, id, cupones.Nuevo{Codigo: "DIEZ", Tipo: "pct", Valor: 10, Alcance: "todo",
+			Quien: "todos", PorCliente: "1", Vigencia: "sin", Canales: []string{"web"}}, ahora); err != nil {
+			t.Fatal(err)
+		}
+		ids[slug] = id
+	}
+	stock := 50
+	p, err := listas.Guardar(ctx, b.App, ids["luna"], "", listas.Editable{Nombre: "Mate", Precio: 10000, Stock: &stock})
+	if err != nil {
+		t.Fatal(err)
+	}
+	errs := make(chan error, 2)
+	for range 2 {
+		go func() {
+			c := compra(p.ID, 1, "transferencia")
+			c.Cupon = "DIEZ"
+			_, err := vidriera.Comprar(ctx, b.App, nil, "", "luna", c, ahora)
+			errs <- err
+		}()
+	}
+	ok := 0
+	for range 2 {
+		if err := <-errs; err == nil {
+			ok++
+		} else if ec := (vidriera.ErrCupon{}); !errors.As(err, &ec) {
+			t.Fatal(err)
+		}
+	}
+	if ok != 1 {
+		t.Fatalf("compras con el cupón: %d, quería 1", ok)
+	}
+	var usos int
+	_ = b.App.EnTienda(ctx, ids["sol"], func(tx pgx.Tx) error {
+		return tx.QueryRow(ctx, `SELECT usos FROM cupones WHERE codigo = 'DIEZ'`).Scan(&usos)
+	})
+	if usos != 0 {
+		t.Fatalf("el cupón de sol sumó %d usos", usos)
+	}
+}

@@ -147,6 +147,20 @@ func CrearDesdeProductos(ctx context.Context, pool tx, tiendaID string, n Pedido
 			if tag.RowsAffected() == 0 {
 				return ErrCupon
 			}
+			// El tope por cliente se vuelve a mirar acá: con la tienda bloqueada, dos compras a la vez
+			// del mismo email no pasan las dos.
+			if n.Email != "" {
+				var pasado bool
+				if err := t.QueryRow(ctx, `SELECT count(p.*) >= CASE c.por_cliente WHEN '1' THEN 1 WHEN '3' THEN 3 ELSE 2147483647 END
+					FROM cupones c LEFT JOIN pedidos p ON p.tienda_id = c.tienda_id AND p.cupon = c.codigo
+						AND p.estado <> 'Cancelado' AND lower(p.comprador->>'email') = lower($3)
+					WHERE c.tienda_id = $1 AND c.codigo = $2 GROUP BY c.por_cliente`, tiendaID, n.Cupon, n.Email).Scan(&pasado); err != nil {
+					return err
+				}
+				if pasado {
+					return ErrCupon
+				}
+			}
 		}
 		return t.QueryRow(ctx, `
 			INSERT INTO pedidos (tienda_id, numero, comprador, canal, pago, estado_pago, envio, estado, facturado,
