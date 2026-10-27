@@ -12,6 +12,7 @@
 	import { anim } from '#lib/panel/anim.ts';
 	import {
 		CATEGORIAS,
+		DE_MEDICION,
 		IAS,
 		INTEGRACIONES,
 		PERMISOS_IA,
@@ -19,6 +20,7 @@
 		type Integracion
 	} from '#lib/panel/integraciones.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
+	import { validarGa4, validarPixel } from '#lib/tienda/medicion.ts';
 
 	/**
 	 * Integraciones (design/PanelOperacion.dc.html, sInt). "Configurar" no está diseñado: se arma con
@@ -135,13 +137,103 @@
 		await invalidateAll();
 	}
 
+	// Google Analytics, Google Shopping y Meta Ads: con las cuentas de la tienda (IDs y feed).
+	type Medicion = typeof data.medicion;
+	const esMedicion = (id: string) => (DE_MEDICION as readonly string[]).includes(id);
+	let ga4 = $state('');
+	let pixel = $state('');
+	let errorId = $state<string | null>(null);
+
+	function abrir(i: Integracion) {
+		abierta = i;
+		ga4 = data.medicion.ga4 ?? '';
+		pixel = data.medicion.pixel ?? '';
+		errorId = null;
+		modal = true;
+	}
+
+	async function guardarMedicion(m: Medicion) {
+		const r = await fetch('/panel/integraciones/medicion', {
+			method: 'PUT',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify(m)
+		});
+		if (!r.ok) {
+			const e = ((await r.json().catch(() => null)) as { message?: string } | null)?.message;
+			errorId = e ?? 'No se pudo guardar. Probá de nuevo.';
+			return false;
+		}
+		await invalidateAll();
+		return true;
+	}
+
+	async function guardarId(id: 'ga' | 'meta') {
+		const v = id === 'ga' ? validarGa4(ga4) : validarPixel(pixel);
+		if (!v.ok) return (errorId = v.error);
+		errorId = null;
+		const antes = data.medicion;
+		const ahora = id === 'ga' ? { ...antes, ga4: v.valor } : { ...antes, pixel: v.valor };
+		if ((id === 'ga' ? antes.ga4 : antes.pixel) === v.valor) return (modal = false);
+		if (!(await guardarMedicion(ahora))) return;
+		modal = false;
+		const deshacer = async () => {
+			if (!(await guardarMedicion(antes)))
+				ui.toast({ k: 'err', title: 'No se pudo deshacer', desc: errorId ?? 'Probá de nuevo.' });
+		};
+		if (!v.valor)
+			return ui.undoable(
+				id === 'ga' ? 'Google Analytics desconectado' : 'Píxel de Meta borrado',
+				'Tu tienda deja de medir con ese ID',
+				deshacer
+			);
+		ui.toast({
+			k: 'ok',
+			title: id === 'ga' ? 'Google Analytics conectado' : 'Píxel de Meta guardado',
+			desc: 'Mide a quienes acepten las cookies de tu tienda'
+		});
+	}
+
+	async function yaLoCargue(id: 'gm' | 'meta') {
+		const m = data.medicion;
+		if (!(await guardarMedicion({ ...m, feeds: { ...m.feeds, [id]: true } }))) return;
+		if (id === 'gm') modal = false;
+		ui.undoable(
+			id === 'gm' ? 'Google Shopping conectado' : 'Catálogo de Meta conectado',
+			id === 'gm' ? 'Google revisa los productos en unos días' : 'Meta lee el feed una vez por día',
+			async () => {
+				if (!(await guardarMedicion(m)))
+					ui.toast({ k: 'err', title: 'No se pudo deshacer', desc: errorId ?? 'Probá de nuevo.' });
+			}
+		);
+	}
+
+	async function copiarFeed() {
+		try {
+			await navigator.clipboard.writeText(data.feed);
+			ui.toast({ k: 'ok', title: 'Link copiado', desc: 'Pegalo como URL del feed' });
+		} catch {
+			ui.toast({ k: 'warn', title: 'No se pudo copiar', desc: 'Seleccioná el link y copialo' });
+		}
+	}
+
+	async function desconectarMedicion(i: Integracion) {
+		const antes = data.medicion;
+		const ahora: Medicion =
+			i.id === 'ga'
+				? { ...antes, ga4: null }
+				: i.id === 'gm'
+					? { ...antes, feeds: { ...antes.feeds, gm: false } }
+					: { ...antes, pixel: null, feeds: { ...antes.feeds, meta: false } };
+		if (!(await guardarMedicion(ahora))) return;
+		modal = false;
+		ui.undoable(`${i.nombre} desconectado`, 'Tu tienda deja de mandarle datos', async () => {
+			await guardarMedicion(antes);
+		});
+	}
+
 	async function boton(i: Integracion) {
 		const on = data.estado.conectadas[i.id];
-		if (on) {
-			abierta = i;
-			modal = true;
-			return;
-		}
+		if (on || esMedicion(i.id)) return abrir(i);
 		if (i.id === 'mp' || i.id === 'ml') return conectarMP(i.id);
 		if (i.id === 'tg') return vincularTelegram();
 		if (i.pronto)
@@ -155,6 +247,7 @@
 	}
 
 	async function desconectar(i: Integracion) {
+		if (esMedicion(i.id)) return desconectarMedicion(i);
 		if (i.id === 'mp' || i.id === 'ml') return desconectarMP(i.id);
 		if (i.id === 'tg') return desvincularTelegram();
 		if (!(await ajustar({ tipo: 'conexion', id: i.id, valor: false }))) return;
@@ -395,6 +488,7 @@
 	{#if abierta}
 		{@const m = marca(abierta.marca)}
 		{@const mp = abierta.id === 'mp'}
+		{@const conectada = data.estado.conectadas[abierta.id]}
 		<div class="m-cab">
 			<span class="logo grande" style:background={m.bg}>
 				{#if m.icon}<Icon icon={m.icon} size={26} style="color:{m.col ?? 'inherit'}" />{:else}<span
@@ -404,8 +498,10 @@
 			</span>
 			<div>
 				<div class="m-t">{abierta.nombre}</div>
-				<div class="m-st">
-					● Conectada{#if mp && data.mp.desde}&nbsp;desde el {fecha(data.mp.desde)}{/if}
+				<div class="m-st" class:apagada={!conectada}>
+					{#if conectada}● Conectada{#if mp && data.mp.desde}&nbsp;desde el {fecha(
+								data.mp.desde
+							)}{/if}{:else}Sin conectar{/if}
 				</div>
 			</div>
 		</div>
@@ -472,6 +568,115 @@
 					/>
 				</div>
 			</div>
+		{:else if abierta.id === 'ga'}
+			<form
+				id="f-medicion"
+				class="m-form"
+				novalidate
+				onsubmit={(e) => {
+					e.preventDefault();
+					void guardarId('ga');
+				}}
+			>
+				<label class="field">
+					ID de medición de GA4
+					<input
+						class="input"
+						name="ga4"
+						placeholder="G-XXXXXXXXXX"
+						autocomplete="off"
+						spellcheck="false"
+						autocapitalize="characters"
+						bind:value={ga4}
+						aria-invalid={!!errorId}
+					/>
+				</label>
+				<div class="m-ayuda">
+					Está en Google Analytics: Administrar › Flujos de datos › Web, como “ID de&nbsp;medición”.
+				</div>
+				{#if errorId}<div class="m-error" role="alert">{errorId}</div>{/if}
+			</form>
+			<div class="m-cuenta">
+				Se carga sólo si quien compra acepta las cookies de medición en el aviso de tu&nbsp;tienda.
+			</div>
+		{:else if abierta.id === 'gm' || abierta.id === 'meta'}
+			{@const gm = abierta.id === 'gm'}
+			{#if !gm}
+				<div class="m-sec">Píxel</div>
+				<form
+					id="f-medicion"
+					class="m-form"
+					novalidate
+					onsubmit={(e) => {
+						e.preventDefault();
+						void guardarId('meta');
+					}}
+				>
+					<label class="field">
+						ID del píxel de Meta
+						<input
+							class="input"
+							name="pixel"
+							placeholder="15 o 16 números"
+							inputmode="numeric"
+							autocomplete="off"
+							bind:value={pixel}
+							aria-invalid={!!errorId}
+						/>
+					</label>
+					<div class="m-ayuda">
+						Está en el Administrador de eventos: Orígenes de datos › tu&nbsp;píxel.
+					</div>
+					{#if errorId}<div class="m-error" role="alert">{errorId}</div>{/if}
+				</form>
+			{/if}
+			<div class="m-sec">{gm ? 'Feed de productos' : 'Catálogo'}</div>
+			<div class="m-feed">
+				<code>{data.feed}</code>
+				<button type="button" class="b-copiar" onclick={copiarFeed}
+					><Icon icon={I.phCopyBold} size={15} />Copiar</button
+				>
+			</div>
+			<ol class="m-pasos">
+				{#if gm}
+					<li>
+						Entrá a <a href="https://merchants.google.com" target="_blank" rel="noopener"
+							>Merchant Center</a
+						> con la cuenta de Google de tu&nbsp;tienda.
+					</li>
+					<li>Andá a <b>Productos › Fuentes de datos › Agregar</b>.</li>
+					<li>
+						Elegí <b>Archivo programado</b> (o URL), pegá el link y dejá la descarga todos los&nbsp;días.
+					</li>
+					<li>Guardá. En unos días tus productos aparecen gratis en&nbsp;Google.</li>
+				{:else}
+					<li>
+						Entrá a <a href="https://business.facebook.com/commerce" target="_blank" rel="noopener"
+							>Commerce Manager</a
+						> y elegí tu catálogo (o creá uno de&nbsp;comercio).
+					</li>
+					<li>Andá a <b>Catálogo › Orígenes de datos › Agregar artículos</b>.</li>
+					<li>
+						Elegí <b>Feed programado</b>, pegá el link y que se actualice todos los&nbsp;días.
+					</li>
+				{/if}
+			</ol>
+			<div class="m-feed-st">
+				Precio, oferta y stock salen solos de tu tienda: el feed se actualiza cada&nbsp;hora.
+			</div>
+			{#if !gm}
+				{#if data.medicion.feeds.meta}
+					<div class="m-hecho"><Icon icon={I.phCheckCircleFill} size={16} />Catálogo cargado</div>
+				{:else}
+					<button type="button" class="b-sec b-chico" onclick={() => yaLoCargue('meta')}
+						>Ya cargué el catálogo</button
+					>
+				{/if}
+				<div class="m-cuenta">
+					El píxel se carga sólo si quien compra acepta las cookies de tu tienda. Próximamente: API
+					de&nbsp;conversiones.
+				</div>
+			{/if}
 		{:else if abierta.opciones.length}
 			<div class="m-sec">Opciones</div>
 			<div class="m-ops">
@@ -489,10 +694,16 @@
 			</div>
 		{/if}
 		<div class="m-acc">
-			<button type="button" class="b-sec rojo" onclick={() => abierta && desconectar(abierta)}
-				>Desconectar</button
-			>
-			{#if (mp && data.mp.reautorizar) || (abierta.id === 'ml' && data.ml.reautorizar)}
+			{#if conectada}
+				<button type="button" class="b-sec rojo" onclick={() => abierta && desconectar(abierta)}
+					>Desconectar</button
+				>
+			{/if}
+			{#if abierta.id === 'ga' || abierta.id === 'meta'}
+				<button type="submit" class="b-pri" form="f-medicion">Guardar</button>
+			{:else if abierta.id === 'gm' && !conectada}
+				<button type="button" class="b-pri" onclick={() => yaLoCargue('gm')}>Ya lo cargué</button>
+			{:else if (mp && data.mp.reautorizar) || (abierta.id === 'ml' && data.ml.reautorizar)}
 				<button type="button" class="b-pri" onclick={() => conectarMP(mp ? 'mp' : 'ml')}
 					>Volver a conectar</button
 				>
@@ -871,6 +1082,98 @@
 		font-size: 13px;
 		font-weight: 600;
 		color: #2f8f63;
+	}
+	.m-st.apagada {
+		color: var(--fa);
+	}
+	.m-form {
+		margin-top: 12px;
+		display: grid;
+		gap: 6px;
+	}
+	.m-form .input {
+		font-family: inherit;
+		letter-spacing: 0.02em;
+	}
+	.m-ayuda {
+		font-size: 12.5px;
+		line-height: 1.45;
+		color: var(--fa);
+	}
+	.m-error {
+		font-size: 13px;
+		font-weight: 600;
+		color: #b83a2e;
+	}
+	.m-feed {
+		margin-top: 8px;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 8px 8px 8px 14px;
+		border-radius: 14px;
+		background: var(--sf2);
+	}
+	.m-feed code {
+		flex: 1;
+		min-width: 0;
+		font-size: 12.5px;
+		line-height: 1.4;
+		overflow-wrap: anywhere;
+		color: var(--tx);
+	}
+	.b-copiar {
+		flex: none;
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		min-height: 44px;
+		padding: 8px 14px;
+		border: 0;
+		border-radius: 999px;
+		background: var(--tx);
+		color: var(--sf);
+		font:
+			600 12.5px 'Instrument Sans',
+			sans-serif;
+		cursor: pointer;
+	}
+	.m-pasos {
+		margin: 12px 0 0;
+		padding-left: 20px;
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		font-size: 13.5px;
+		line-height: 1.45;
+	}
+	.m-pasos a {
+		color: #c24e25;
+		font-weight: 600;
+	}
+	.m-feed-st {
+		margin-top: 10px;
+		font-size: 12.5px;
+		color: var(--fa);
+	}
+	.m-hecho {
+		margin-top: 12px;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 13.5px;
+		font-weight: 600;
+		color: #2f8f63;
+	}
+	.b-chico {
+		margin-top: 12px;
+		padding: 10px 16px;
+		min-height: 44px;
+		border-radius: 999px;
+		font:
+			600 13px 'Instrument Sans',
+			sans-serif;
+		cursor: pointer;
 	}
 	.m-aviso {
 		margin-top: 14px;

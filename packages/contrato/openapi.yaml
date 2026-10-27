@@ -716,6 +716,27 @@ paths:
       summary: Borra los tokens de la tienda.
       responses:
         '204': { description: Desconectada }
+  /v1/panel/integraciones/medicion:
+    get:
+      operationId: medicion
+      summary: GA4, el píxel de Meta y los feeds de productos que la tienda ya cargó (con sus propias cuentas).
+      responses:
+        '200':
+          description: Medición
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Medicion' }
+    put:
+      operationId: guardarMedicion
+      summary: Reemplaza los IDs (vacío o null los borra) y qué feeds se cargaron.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Medicion' }
+      responses:
+        '204': { description: Guardado }
+        '400': { $ref: '#/components/responses/Problema' }
   /v1/publico/tiendas/{slug}:
     get:
       operationId: tiendaPublica
@@ -2766,6 +2787,18 @@ components:
       required: [url]
       properties:
         url: { type: string, format: uri }
+    Medicion:
+      type: object
+      required: [ga4, pixel, feeds]
+      properties:
+        ga4: { type: [string, 'null'], pattern: '^(G-[A-Z0-9]{6,12})?$', description: 'ID de medición de GA4' }
+        pixel: { type: [string, 'null'], pattern: '^([0-9]{15,16})?$', description: 'ID del píxel de Meta' }
+        feeds:
+          type: object
+          required: [gm, meta]
+          properties:
+            gm: { type: boolean, description: 'Cargó el feed en Google Merchant Center' }
+            meta: { type: boolean, description: 'Cargó el feed en Meta Commerce Manager' }
     ConexionML:
       type: object
       required: [disponible, conectada, reautorizar, recargo, pausarSinStock, publicaciones, preguntas]

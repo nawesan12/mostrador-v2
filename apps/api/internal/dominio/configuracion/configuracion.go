@@ -344,6 +344,7 @@ func Rutas(mux *http.ServeMux, pool tx, sitio string, cobraAbono bool) {
 	}
 	rutasCuenta(mux, pool, con, errorDe, leer)
 	rutasDatos(mux, pool, sitio, con, errorDe, leer)
+	rutasMedicion(mux, pool, con, errorDe, leer)
 	mux.HandleFunc("GET /v1/panel/configuracion", con(func(w http.ResponseWriter, r *http.Request, id string, q Quien) {
 		v, err := Leer(r.Context(), pool, id, q, time.Now())
 		if err != nil {
