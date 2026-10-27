@@ -51,7 +51,7 @@
 		const campo = el.closest('form')?.querySelector<HTMLInputElement>('[name="email"]');
 		cupon.aplicar(lineas, campo?.value.trim() || email);
 	}
-	// Si cambia el email con un cupón aplicado, se vuelve a evaluar (primera compra, una vez por
+	// Si cambia el email con un cupón cargado, se vuelve a evaluar (primera compra, una vez por
 	// cliente): no queda el resultado del email anterior.
 	let raiz = $state<HTMLElement>();
 	$effect(() => {
@@ -59,8 +59,9 @@
 		if (!campo || !raiz) return;
 		const el = raiz;
 		const alCambiar = () => {
-			if (!cupon.aplicado) return;
-			cupon.codigo = cupon.aplicado;
+			// También el que no aplicó con el email anterior (o sin email, el del link): se reintenta.
+			if (cupon.aplicado) cupon.codigo = cupon.aplicado;
+			else if (!cupon.codigo || !cupon.motivo) return;
 			aplicar(el);
 		};
 		campo.addEventListener('change', alCambiar);
