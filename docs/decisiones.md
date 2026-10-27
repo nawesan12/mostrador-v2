@@ -265,7 +265,7 @@ URL, para que no quede en el historial ni en logs.
   toda la tienda.
 - La vista previa del cupón (`/t/[tienda]/cupon`) tiene un tope de 30 pruebas por IP cada 10 min,
   con el limitador del #54, para que no se adivinen códigos probando.
-## 25. Medición de la tienda: consentimiento primero y sin API de conversiones todavía (PR #66)
+## 25. Medición de la tienda: consentimiento primero y sin API de conversiones todavía (PR #67)
 
 - Google Shopping, Google Analytics y Meta Ads usan las cuentas de la tienda, no credenciales de
   Mostrador: la tienda pega sus IDs (GA4 y píxel) y carga el feed `/t/{slug}/feed.xml` en Merchant
