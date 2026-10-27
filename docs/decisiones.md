@@ -253,7 +253,7 @@ URL, para que no quede en el historial ni en logs.
   confirmar (`forzar`). Turno nuevo y cancelado van al outbox (`turno.nuevo`, `turno.cancelado`)
   para los avisos.
 
-## 24. Hornero en Telegram con la API real (PR #NN)
+## 24. Hornero en Telegram con la API real (PR #68)
 
 - Vive en Go en `internal/integraciones/telegram` (migración 00036: 00027–00035 las toman otras
   ramas). `telegram_vinculos` (una fila por tienda, `chat` UNIQUE: un chat no puede estar en dos

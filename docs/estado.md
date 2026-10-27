@@ -6,6 +6,7 @@
 
 | PR | Qué |
 |---|---|
+| #68 | Hornero en Telegram con la API real: Go `integraciones/telegram` (migración 00036: `telegram_vinculos` con un chat por tienda y una tienda por chat, `telegram_codigos` con sha256, 10 min y un solo uso, RLS). Panel `/v1/panel/telegram` (estado, código, desvincular; dueña o admin) y rutas del bot `/v1/telegram/{vincular,desvincular,contexto}` sólo con la clave del BFF. Hornero responde desde el Worker con el contexto que da Go (tienda, tablero hoy y 7d, ContextoHornero) y los topes de cupo.ts (los mensajes del día los cuenta Go). Aviso de cada venta: trigger → outbox `telegram.venta` → worker por la Bot API con `MOSTRADOR_TELEGRAM_BOT_TOKEN`, una sola vez (`pedidos.avisos`). Web: `telegram.ts` decide por `usaSandbox()`, un solo webhook. Falta: el token en el VPS y avisar los turnos nuevos con la API |
 | #1–#9 | Bootstrap, design system (`/componentes`), fundación Go (roles, RLS, outbox), sandbox D1 + contrato, auth, landing parte 1 |
 | #10–#11 | Landing parte 2 y arreglos de mobile |
 | #12–#16 | Legales (arrepentimiento con código ARR), Seguridad, Nosotros, 404, formularios (contacto, partners, novedades), `/migrar`, `/estado` con monitor real (cron de `mostrador-jobs`) |
