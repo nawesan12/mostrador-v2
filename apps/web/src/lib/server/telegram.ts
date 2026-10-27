@@ -1,13 +1,16 @@
 /**
  * Hornero en Telegram (@mostradorhornero_bot): la dueña vincula su tienda con un código de un solo
  * uso (Integraciones › Telegram › Vincular), le pregunta en lenguaje natural y recibe un aviso por
- * cada venta. En la demo vive sobre el sandbox; con la API real, el webhook lo atiende Go.
+ * cada venta. En la demo vive sobre el sandbox; con la API real (DATA_SOURCE=api), el vínculo y el
+ * contexto de la tienda salen de Go (`TelegramApi`) y el aviso de cada venta lo manda el worker de Go.
+ * El webhook es uno solo y las respuestas con IA salen siempre del Worker, con los mismos topes.
  *
  * Seguridad: Telegram manda el secreto del webhook en X-Telegram-Bot-Api-Secret-Token (se compara en
  * tiempo constante) y el chat sólo ve la tienda a la que se vinculó.
  */
 import { env } from 'cloudflare:workers';
 import { sistema, type DatosHornero } from './hornero/contexto.ts';
+import { usaSandbox } from './datos/index.ts';
 import { cupoDemo, diaAr, POR_VISITANTE } from './hornero/cupo.ts';
 import { responderConIa, type Mensaje } from './hornero/modelo.ts';
 import { responderSimulado } from './hornero/simulado.ts';
@@ -21,6 +24,7 @@ import {
 	sumarUsoHornero,
 	type DbSandbox
 } from './sandbox/sandbox.ts';
+import { TelegramApi } from './telegram-api.ts';
 
 export const BOT = 'mostradorhornero_bot';
 /** Cuánto dura el código de vinculación. */
@@ -54,11 +58,34 @@ const ALFABETO = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
 const codigo = () =>
 	[...crypto.getRandomValues(new Uint8Array(8))].map((b) => ALFABETO[b % ALFABETO.length]).join('');
 
+const linkDe = (cod: string) => `https://t.me/${BOT}?start=${cod}`;
+
 /** Un código de un solo uso para vincular el chat con esta tienda; devuelve el link al bot. */
 export async function linkVinculo(db: DbSandbox, sandboxId: string) {
 	const cod = codigo();
 	await guardarCambio(db, sandboxId, 'tg-codigo', cod, { vence: Date.now() + VIGENCIA });
-	return `https://t.me/${BOT}?start=${cod}`;
+	return linkDe(cod);
+}
+
+/** Go, desde el webhook o el panel. La IP no aplica: quien llama es Telegram o la sesión. */
+const api = () =>
+	new TelegramApi(String(env.API_URL), String(env.CLAVE_BFF ?? ''), { ip: '', agente: 'telegram' });
+
+/** Con la API: el código lo genera Go (dueña o admin) y se guarda sólo su hash. */
+export async function linkVinculoApi(sesion: string) {
+	return linkDe((await api().codigo(sesion)).codigo);
+}
+
+/** Con la API: el chat vinculado a la tienda de la sesión (null si no hay). */
+export async function vinculoApi(sesion: string) {
+	const e = await api().estado(sesion);
+	return e.vinculado ? { nombre: e.nombre ?? 'Telegram' } : null;
+}
+
+/** Con la API: desvincula desde el panel y le avisa al chat que estaba. */
+export async function desvincularApi(sesion: string) {
+	const chat = await api().desvincular(sesion);
+	if (chat) await enviar(chat, DESVINCULADO);
 }
 
 export async function vinculoDe(db: DbSandbox, sandboxId: string) {
@@ -66,15 +93,15 @@ export async function vinculoDe(db: DbSandbox, sandboxId: string) {
 	return (c.get('telegram') as Vinculo | null | undefined) ?? null;
 }
 
+const DESVINCULADO =
+	'Listo, desvinculé este chat de la tienda. Para volver, tocá Vincular en Integraciones.';
+
 export async function desvincular(db: DbSandbox, sandboxId: string) {
 	const v = await vinculoDe(db, sandboxId);
 	if (!v) return;
 	await borrarCambio(db, sandboxId, 'tg-chat', String(v.chat));
 	await guardarCambio(db, sandboxId, 'cuenta', 'telegram', null);
-	await enviar(
-		v.chat,
-		'Listo, desvinculé este chat de la tienda. Para volver, tocá Vincular en Integraciones.'
-	);
+	await enviar(v.chat, DESVINCULADO);
 }
 
 /** Aviso de venta al chat vinculado (si hay). */
@@ -95,36 +122,55 @@ type Update = {
 const AYUDA =
 	'Soy Hornero, de Mostrador. Preguntame lo que quieras de tu tienda: "¿qué se vendió hoy?", "¿qué tengo para preparar?", "¿qué me falta?". Y te aviso cada venta.';
 
+const SIN_VINCULO =
+	'Todavía no sé de qué tienda sos. Vinculá este chat desde el panel: Integraciones › Telegram › Vincular.';
+const VENCIDO = 'Ese link venció o ya se usó. Generá uno nuevo desde Integraciones › Telegram.';
+const BASTA = 'Por hoy ya charlamos un montón. Mañana sigo respondiendo.';
+
 /** Procesa un mensaje del bot. Devuelve la respuesta que se mandó (para los tests). */
 export async function procesar(u: Update): Promise<string | null> {
 	const m = u.message;
 	if (!m?.text || m.chat.type !== 'private') return null;
-	const db = dbSandbox(env.SANDBOX);
 	const chat = m.chat.id;
 	const texto = m.text.trim().slice(0, 1000);
+	const nombre = m.from?.first_name?.slice(0, 60) || 'Telegram';
 
 	const responder = async (t: string) => {
 		await enviar(chat, t);
 		return t;
 	};
 
+	let cod: string | null = null;
 	if (texto.startsWith('/start')) {
-		const cod = texto.split(/\s+/)[1]?.toUpperCase() ?? '';
+		cod = texto.split(/\s+/)[1]?.toUpperCase() ?? '';
 		if (!/^[2-9A-Z]{8}$/.test(cod))
 			return responder(
 				`¡Hola! ${AYUDA}\n\nPara empezar, vinculá tu tienda desde el panel: Integraciones › Telegram › Vincular.`
 			);
+	}
+	const c = { chat, texto, nombre, cod, responder };
+	return usaSandbox() ? procesarSandbox(c) : procesarApi(c);
+}
+
+type Entrante = {
+	chat: number;
+	texto: string;
+	nombre: string;
+	/** El código del /start (ya validado), o null si no es un /start. */
+	cod: string | null;
+	responder: (t: string) => Promise<string>;
+};
+
+async function procesarSandbox({ chat, texto, nombre, cod, responder }: Entrante) {
+	const db = dbSandbox(env.SANDBOX);
+	if (cod) {
 		const r = await buscarCambio<{ vence: number }>(db, 'tg-codigo', cod);
-		if (!r || r.datos.vence < Date.now())
-			return responder(
-				'Ese link venció o ya se usó. Generá uno nuevo desde Integraciones › Telegram.'
-			);
+		if (!r || r.datos.vence < Date.now()) return responder(VENCIDO);
 		await borrarCambio(db, r.sb.id, 'tg-codigo', cod);
 		// Un chat por tienda: el anterior queda desvinculado.
 		const antes = await vinculoDe(db, r.sb.id);
 		if (antes && antes.chat !== chat)
 			await borrarCambio(db, r.sb.id, 'tg-chat', String(antes.chat));
-		const nombre = m.from?.first_name?.slice(0, 60) || 'Telegram';
 		await guardarCambio(db, r.sb.id, 'tg-chat', String(chat), { en: Date.now() });
 		await guardarCambio(db, r.sb.id, 'cuenta', 'telegram', {
 			chat,
@@ -136,10 +182,7 @@ export async function procesar(u: Update): Promise<string | null> {
 	}
 
 	const v = await buscarCambio<unknown>(db, 'tg-chat', String(chat));
-	if (!v)
-		return responder(
-			'Todavía no sé de qué tienda sos. Vinculá este chat desde el panel: Integraciones › Telegram › Vincular.'
-		);
+	if (!v) return responder(SIN_VINCULO);
 	if (texto === '/desvincular') {
 		await desvincular(db, v.sb.id);
 		return 'desvinculado';
@@ -153,11 +196,55 @@ export async function procesar(u: Update): Promise<string | null> {
 		datos.tablero('7d'),
 		datos.contextoHornero()
 	]);
-	const d: DatosHornero = { tienda, hola: hoy.hola, hoy, semana, contexto };
 	// Los mismos topes que el Hornero del panel (cupo.ts): por tienda y para toda la demo.
 	const usos = await sumarUsoHornero(db, v.sb.id, diaAr());
-	if (usos > POR_VISITANTE)
-		return responder('Por hoy ya charlamos un montón. Mañana sigo respondiendo.');
+	return responderHornero(
+		texto,
+		{ tienda, hola: hoy.hola, hoy, semana, contexto },
+		usos,
+		responder
+	);
+}
+
+async function procesarApi({ chat, texto, nombre, cod, responder }: Entrante) {
+	const go = api();
+	if (cod) {
+		const r = await go.vincular(cod, chat, nombre);
+		if (r.ok) return responder(`¡Listo, ${nombre}! Quedé vinculado a ${r.tienda}. ${AYUDA}`);
+		if (r.motivo === 'ocupado')
+			return responder(
+				'Este chat ya está vinculado a otra tienda. Mandá /desvincular y después tocá el link de nuevo.'
+			);
+		if (r.motivo === 'demasiados')
+			return responder('Probaste muchas veces seguidas. Esperá un rato y generá un link nuevo.');
+		return responder(VENCIDO);
+	}
+	if (texto === '/desvincular') {
+		if (!(await go.desvincularChat(chat))) return responder(SIN_VINCULO);
+		await enviar(chat, DESVINCULADO);
+		return 'desvinculado';
+	}
+	if (texto === '/ayuda' || texto === '/help') return responder(AYUDA);
+	// Go cuenta el mensaje en el día de la tienda y devuelve lo que sabe Hornero (como el panel).
+	const c = await go.contexto(chat);
+	if (!c) return responder(SIN_VINCULO);
+	const { tienda, hoy, semana, contexto, usos } = c;
+	return responderHornero(
+		texto,
+		{ tienda, hola: hoy.hola, hoy, semana, contexto },
+		usos,
+		responder
+	);
+}
+
+/** La respuesta de Hornero: Workers AI con los topes de cupo.ts, o la simulada. */
+async function responderHornero(
+	texto: string,
+	d: DatosHornero,
+	usos: number,
+	responder: (t: string) => Promise<string>
+) {
+	if (usos > POR_VISITANTE) return responder(BASTA);
 	let conModelo = env.HORNERO === 'workers-ai' && !!env.AI;
 	if (conModelo && !(await cupoDemo())) conModelo = false;
 	if (!conModelo || !env.AI) return responder(responderSimulado(texto, d));

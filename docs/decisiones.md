@@ -252,3 +252,36 @@ URL, para que no quede en el historial ni en logs.
 - El turno a mano del panel no tiene seña ni mira la grilla; si se superpone con otro, pide
   confirmar (`forzar`). Turno nuevo y cancelado van al outbox (`turno.nuevo`, `turno.cancelado`)
   para los avisos.
+
+## 24. Hornero en Telegram con la API real (PR #NN)
+
+- Vive en Go en `internal/integraciones/telegram` (migración 00036: 00027–00035 las toman otras
+  ramas). `telegram_vinculos` (una fila por tienda, `chat` UNIQUE: un chat no puede estar en dos
+  tiendas aunque RLS no deje ver la otra) y `telegram_codigos` (sha256 del código, 10 min, un solo
+  uso), las dos con `app.aplicar_rls`. El bot sólo sabe el chat o el código: `app.tienda_de_telegram`
+  y `app.tienda_de_codigo_telegram` devuelven el id de la tienda (como `app.tienda_de_ml`) y todo lo
+  demás se hace con la tienda fijada.
+- Generar un código borra el anterior de la tienda; un código vencido se borra al intentar usarlo.
+  Canjear: 10 intentos por hora por chat. Vincular otro chat a la misma tienda reemplaza al anterior;
+  un chat que ya está en otra tienda no se mueve solo (409 `chat_ocupado`: primero `/desvincular`).
+  Mover el chat de una tienda a otra implicaría tocar una tienda ajena desde un pedido que no es suyo.
+- Para responder, el BFF le pide a Go **el contexto** de la tienda del chat (`POST /v1/telegram/contexto`:
+  tienda, tablero de hoy y de 7 días, `ContextoHornero` y los mensajes del día), no una sesión
+  limitada. Es lo más simple y lo más seguro: no hay un token nuevo que guardar, vencer, limitar ni
+  dejar pasar por la Guardia, y el chat no puede pedir nada más que eso. El contexto sale de las
+  mismas funciones que las rutas del panel (`tiendas.Obtener`, `ObtenerTablero`, `ContextoHornero`),
+  así que el panel y Telegram no se separan. Si un día Hornero en Telegram tiene que hacer acciones,
+  ahí sí conviene la sesión limitada de `ia` (`SesionIA` + Guardia).
+- Las rutas `/v1/telegram/*` exigen la clave del BFF (`cuentas.EsBFF`, tiempo constante; sin clave
+  configurada, nunca pasan): el que habla con Telegram es el Worker, que ya verificó el secreto del
+  webhook. Las del panel (`/v1/panel/telegram`) van con la sesión; generar y desvincular, sólo dueña
+  o admin. Desvincular devuelve el chat que estaba para que el BFF le avise (el navegador no lo ve).
+- Topes: Go cuenta los mensajes por tienda y día de Argentina (`uso_dia`, `uso_n`, un solo `UPDATE …
+  RETURNING`) y el Worker aplica los mismos de `cupo.ts`: 15 por tienda por día y el tope diario de
+  Workers AI de toda la cuenta (el contador de D1, que es de la cuenta y no de la demo).
+- Aviso de venta: el trigger `app.avisar_venta_telegram` encola `telegram.venta` al insertar un
+  pedido de una tienda con chat (por cualquier camino: tienda online, panel, local, Mercado Libre);
+  sin chat no encola nada. El worker manda "🛒 Nueva venta {canal}: pedido #N por $ X." por la Bot API
+  con `MOSTRADOR_TELEGRAM_BOT_TOKEN` (sin token, no hace nada) y lo marca en `pedidos.avisos.telegram`
+  (una sola vez aunque el outbox entregue dos). Un 4xx de Telegram (bot bloqueado, chat borrado) no
+  se reintenta; un 429 o 5xx, sí. Los turnos nuevos todavía no avisan por Telegram con la API.

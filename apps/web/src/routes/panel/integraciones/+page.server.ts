@@ -5,7 +5,7 @@ import { datosDe, usaSandbox } from '#lib/server/datos/index.ts';
 import { panelApi } from '#lib/server/mcp/api.ts';
 import { conexionesDe } from '#lib/server/mcp/oauth.ts';
 import { dbSandbox } from '#lib/server/sandbox/sandbox.ts';
-import { BOT, habilitado, vinculoDe } from '#lib/server/telegram.ts';
+import { BOT, habilitado, vinculoApi, vinculoDe } from '#lib/server/telegram.ts';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -15,7 +15,15 @@ export const load: PageServerLoad = async ({ locals }) => {
 		d.integraciones(),
 		d.mercadoPago(),
 		d.mercadoLibre(),
-		db && locals.sandbox ? vinculoDe(db, locals.sandbox.id) : null,
+		db && locals.sandbox
+			? vinculoDe(db, locals.sandbox.id)
+			: !usaSandbox() && locals.token && habilitado()
+				? vinculoApi(locals.token).catch((e) => {
+						// Que una falla de Go no tire Integraciones entera: Telegram se ve sin vincular.
+						console.error('telegram', e instanceof Error ? e.message : e);
+						return null;
+					})
+				: null,
 		db && locals.sandbox
 			? conexionesDe(db, locals.sandbox.id)
 			: panelApi(locals.token).then((p) => {
@@ -48,7 +56,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		mp,
 		ml,
 		telegram: {
-			disponible: habilitado() && !!locals.sandbox,
+			disponible: habilitado() && (usaSandbox() ? !!locals.sandbox : !!locals.token),
 			nombre: tg?.nombre ?? null,
 			bot: BOT
 		},

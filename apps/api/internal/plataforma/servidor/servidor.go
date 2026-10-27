@@ -28,6 +28,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/vidriera"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/telegram"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/limite"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
@@ -52,6 +53,8 @@ type Dependencias struct {
 	MercadoLibre *mercadolibre.Servicio
 	// IA conectadas por MCP (OAuth 2.1). Sin esto, los tokens de IA no entran.
 	IA *ia.Servicio
+	// Hornero en Telegram: vínculo del chat (panel) y lo que pide el bot por el BFF.
+	Telegram *telegram.Servicio
 }
 
 // Nuevo devuelve el handler raíz de la API.
@@ -140,6 +143,9 @@ func Nuevo(d Dependencias) http.Handler {
 				s, ok := cuentas.SesionDe(r)
 				return ok && (s.Rol == "duenio" || s.Rol == "admin")
 			}})
+		if d.Telegram != nil {
+			d.Telegram.Rutas(mux, d.ClaveBFF)
+		}
 		ip := func(r *http.Request) string { return cuentas.ClienteDe(r, d.ClaveBFF).IP }
 		if d.Arrepentimiento != nil {
 			d.Arrepentimiento.Rutas(mux, ip)

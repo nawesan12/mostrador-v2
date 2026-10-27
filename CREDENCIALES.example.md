@@ -97,6 +97,7 @@ Dónde: @BotFather → /newbot.
 - ⬜ `TELEGRAM_BOT_TOKEN=`
 - ⬜ `TELEGRAM_BOT_USERNAME=`
 - `TELEGRAM_WEBHOOK_SECRET`: lo genero yo.
+- En el VPS, el mismo token como `MOSTRADOR_TELEGRAM_BOT_TOKEN` (el worker de Go avisa cada venta).
 
 ## 10. Medios de pago adicionales (PR 20)
 

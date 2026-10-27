@@ -1913,6 +1913,95 @@ paths:
               schema: { $ref: '#/components/schemas/TurnoPublico' }
         '404': { $ref: '#/components/responses/Problema' }
         '409': { description: 'tarde: falta menos que la anticipación mínima', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problema' } } } }
+  /v1/panel/telegram:
+    get:
+      operationId: estadoTelegram
+      summary: Hornero en Telegram — si hay un chat vinculado a la tienda y con qué nombre.
+      responses:
+        '200':
+          description: Estado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EstadoTelegram' }
+    delete:
+      operationId: desvincularTelegram
+      summary: Desvincula el chat (dueña o admin). Devuelve el chat que estaba para que el BFF le avise; el navegador no lo ve.
+      responses:
+        '200':
+          description: Desvinculado
+          content:
+            application/json:
+              schema: { type: object, required: [chat], properties: { chat: { type: integer, format: int64 } } }
+        '204': { description: No había chat vinculado }
+        '403': { $ref: '#/components/responses/Problema' }
+  /v1/panel/telegram/codigo:
+    post:
+      operationId: codigoTelegram
+      summary: Código de un solo uso (10 min) para vincular un chat con el bot (dueña o admin). El anterior deja de servir.
+      responses:
+        '201':
+          description: Código
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CodigoTelegram' }
+        '403': { $ref: '#/components/responses/Problema' }
+  /v1/telegram/vincular:
+    post:
+      operationId: vincularTelegram
+      summary: 'El /start del bot: canjea el código y vincula el chat. Sólo el BFF (X-Mostrador-BFF).'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [codigo, chat, nombre]
+              properties:
+                codigo: { type: string }
+                chat: { type: integer, format: int64 }
+                nombre: { type: string, description: 'Nombre de quien escribe en Telegram' }
+      responses:
+        '200':
+          description: Vinculado
+          content:
+            application/json:
+              schema: { type: object, required: [tienda], properties: { tienda: { type: string } } }
+        '403': { $ref: '#/components/responses/Problema' }
+        '409': { description: 'codigo_invalido (vencido, usado o inexistente) o chat_ocupado (el chat está en otra tienda)', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problema' } } } }
+        '429': { $ref: '#/components/responses/Problema' }
+  /v1/telegram/desvincular:
+    post:
+      operationId: desvincularChatTelegram
+      summary: 'El /desvincular del bot. Sólo el BFF.'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [chat], properties: { chat: { type: integer, format: int64 } } }
+      responses:
+        '204': { description: Desvinculado }
+        '403': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+  /v1/telegram/contexto:
+    post:
+      operationId: contextoTelegram
+      summary: 'Lo que necesita Hornero para responder en el chat (lo mismo que el panel) y cuántos mensajes lleva hoy la tienda (suma este). Sólo el BFF.'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [chat], properties: { chat: { type: integer, format: int64 } } }
+      responses:
+        '200':
+          description: Contexto
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContextoTelegram' }
+        '403': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
 components:
   responses:
     Problema:
@@ -1921,6 +2010,28 @@ components:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problema' }
   schemas:
+    EstadoTelegram:
+      type: object
+      required: [vinculado]
+      properties:
+        vinculado: { type: boolean }
+        nombre: { type: string, description: 'Nombre de quien vinculó el chat' }
+        desde: { type: string, format: date-time }
+    CodigoTelegram:
+      type: object
+      required: [codigo, venceEn]
+      properties:
+        codigo: { type: string, description: '8 letras y números (sin 0, 1, I ni O)' }
+        venceEn: { type: string, format: date-time }
+    ContextoTelegram:
+      type: object
+      required: [tienda, hoy, semana, contexto, usos]
+      properties:
+        tienda: { $ref: '#/components/schemas/Tienda' }
+        hoy: { $ref: '#/components/schemas/Tablero' }
+        semana: { $ref: '#/components/schemas/Tablero' }
+        contexto: { $ref: '#/components/schemas/ContextoHornero' }
+        usos: { type: integer, description: 'Mensajes a Hornero hoy (hora de Argentina), contando este' }
     ResumenPanel:
       type: object
       required: [insignias, notificaciones, canales, prueba]
