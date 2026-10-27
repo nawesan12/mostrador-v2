@@ -80,7 +80,7 @@
 	const img = (f: string | null, w: number, h?: number) =>
 		!f
 			? null
-			: f.startsWith('https://')
+			: /^https?:\/\//.test(f)
 				? f
 				: `https://images.unsplash.com/photo-${f}?auto=format&fit=crop&w=${w}${h ? '&h=' + h : ''}&q=72`;
 	const porId = $derived(new Map(tienda.productos.map((p) => [p.id, p])));

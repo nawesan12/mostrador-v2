@@ -29,6 +29,8 @@
 			"migrations_dir": "migraciones-estado"
 		}
 	],
+	// Fotos de productos (lib/server/archivos.ts, con topes). En desarrollo, el R2 local.
+	"r2_buckets": [{ "binding": "FILES", "bucket_name": "mostrador-files" }],
 	// Hornero: Workers AI (siempre remoto). En desarrollo y en las pruebas no se llama: el preview
 	// corre con --local y HORNERO=simulado.
 	"ai": { "binding": "AI", "remote": true },

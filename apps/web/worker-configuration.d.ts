@@ -4,6 +4,7 @@
 interface __BaseEnv_Env {
 	SANDBOX: D1Database;
 	ESTADO: D1Database;
+	FILES: R2Bucket;
 	ASSETS: Fetcher;
 	PUBLIC_SITE_URL: "https://mostrador.iamnaw.dev";
 	DATA_SOURCE: "sandbox";

@@ -9,12 +9,14 @@
 		colorDe,
 		errorOpciones,
 		generarVariantes,
+		MAX_FOTOS,
 		MAX_OPCIONES,
 		MAX_VALORES,
 		normal,
 		type Variante
 	} from '#lib/tienda/variantes.ts';
 	import type { components } from '@mostrador/contrato/esquema';
+	import { subir } from '../fotos.ts';
 	import { pesos } from '../formato.ts';
 
 	type Producto = components['schemas']['Producto'];
@@ -50,6 +52,10 @@
 	let opciones = $state<{ nombre: string; valores: string[] }[]>([]);
 	let variantes = $state<Variante[]>([]);
 	let nuevoValor = $state<string[]>([]);
+	// La galería: la primera es la portada.
+	let fotos = $state<string[]>([]);
+	let subiendo = $state(0);
+	let elegirFoto = $state<HTMLInputElement>();
 	let error = $state<string | null>(null);
 	let guardando = $state(false);
 	let mejorando = $state(false);
@@ -71,6 +77,7 @@
 			valores: { ...v.valores }
 		}));
 		nuevoValor = (p?.opciones ?? []).map(() => '');
+		fotos = p?.fotos?.length ? [...p.fotos] : p?.foto ? [p.foto] : [];
 		error = null;
 	});
 
@@ -205,13 +212,16 @@
 				precio,
 				costo,
 				stock,
-				foto: producto?.foto ?? null,
+				foto: fotos[0] ?? null,
+				fotos,
 				opciones: ops,
 				variantes: variantes.map((v) => ({
 					valores: v.valores,
 					precio: v.precio,
 					stock: v.stock,
-					activa: v.activa
+					activa: v.activa,
+					// Si se sacó de la galería la foto de una variante, la variante queda sin foto.
+					...(v.foto && !fotos.includes(v.foto) ? { foto: null } : {})
 				})),
 				canales
 			})
@@ -239,11 +249,28 @@
 			});
 	}
 
-	const fotoPronto = () =>
+	/** Sube las fotos elegidas (de a una, hasta completar la galería). */
+	async function sumarFotos(archivos: FileList | null) {
+		const lista = [...(archivos ?? [])].slice(0, MAX_FOTOS - fotos.length);
+		if (elegirFoto) elegirFoto.value = '';
+		for (const a of lista) {
+			subiendo++;
+			try {
+				fotos = [...fotos, await subir(a)];
+			} catch (e) {
+				ui.toast({ k: 'warn', title: 'No se subió la foto', desc: (e as Error).message });
+			} finally {
+				subiendo--;
+			}
+		}
+	}
+	const sacarFoto = (f: string) => (fotos = fotos.filter((x) => x !== f));
+	const portada = (f: string) => (fotos = [f, ...fotos.filter((x) => x !== f)]);
+	const fondoPronto = () =>
 		ui.toast({
 			k: 'info',
-			title: 'Subir fotos llega con el almacenamiento',
-			desc: 'Mientras, el producto queda con la foto que tiene.'
+			title: 'Mejorar el fondo llega pronto',
+			desc: 'Mientras, subí la foto sobre un fondo liso.'
 		});
 </script>
 
@@ -258,20 +285,51 @@
 	{/snippet}
 
 	<div class="cuerpo">
+		<input
+			bind:this={elegirFoto}
+			type="file"
+			accept="image/jpeg,image/png,image/webp"
+			multiple
+			hidden
+			aria-label="Elegir fotos"
+			onchange={(e) => sumarFotos(e.currentTarget.files)}
+		/>
 		<div class="fotos">
-			{#if producto?.foto}
-				<img class="f-1" src={unsplash(producto.foto, 500, '&h=500')} alt="" />
-				<img src={unsplash(producto.foto, 200, '&h=200')} alt="" style="object-position:20% 30%" />
-				<img src={unsplash(producto.foto, 200, '&h=200')} alt="" style="object-position:80% 70%" />
+			{#each fotos as f, i (f)}
+				<div class="foto" class:f-1={i === 0}>
+					<img src={unsplash(f, i === 0 ? 500 : 200, i === 0 ? '&h=500' : '&h=200')} alt="" />
+					<button
+						type="button"
+						class="f-x"
+						aria-label="Sacar la foto {i + 1}"
+						onclick={() => sacarFoto(f)}><Icon icon={I.phXBold} size={11} /></button
+					>{#if i > 0}<button
+							type="button"
+							class="f-portada"
+							aria-label="Usar la foto {i + 1} de portada"
+							onclick={() => portada(f)}><Icon icon={I.phStarFill} size={11} /></button
+						>{/if}
+				</div>
 			{:else}
-				<button type="button" class="f-1 f-vacia" onclick={fotoPronto}
-					><Icon icon={I.phCameraPlusFill} size={28} /><span>Sumá la primera foto</span></button
+				<button
+					type="button"
+					class="f-1 f-vacia"
+					onclick={() => elegirFoto?.click()}
+					disabled={subiendo > 0}
+					><Icon icon={I.phCameraPlusFill} size={28} /><span
+						>{subiendo ? 'Subiendo…' : 'Sumá la primera foto'}</span
+					></button
 				>
-			{/if}
-			<button type="button" class="f-mas" aria-label="Sumar una foto" onclick={fotoPronto}
-				><Icon icon={I.phPlusBold} size={18} /></button
-			>
-			<button type="button" class="f-magia" onclick={fotoPronto}
+			{/each}
+			{#if fotos.length && fotos.length < MAX_FOTOS}<button
+					type="button"
+					class="f-mas"
+					aria-label={subiendo ? 'Subiendo la foto' : 'Sumar una foto'}
+					onclick={() => elegirFoto?.click()}
+					disabled={subiendo > 0}
+					><Icon icon={subiendo ? I.phSpinnerGap : I.phPlusBold} size={18} /></button
+				>{/if}
+			<button type="button" class="f-magia" onclick={fondoPronto}
 				><Icon icon={I.phMagicWandFill} size={16} />Mejorar fondo</button
 			>
 		</div>
@@ -499,15 +557,41 @@
 		grid-template-columns: 2fr 1fr 1fr;
 		gap: 8px;
 	}
+	.foto {
+		position: relative;
+	}
 	.fotos img {
+		display: block;
 		width: 100%;
+		height: 100%;
 		aspect-ratio: 1;
 		border-radius: 12px;
 		object-fit: cover;
 	}
 	.fotos .f-1 {
 		grid-row: span 2;
+	}
+	.fotos .f-1 img {
 		border-radius: 16px;
+	}
+	.f-x,
+	.f-portada {
+		position: absolute;
+		top: 6px;
+		width: 24px;
+		height: 24px;
+		border: 0;
+		border-radius: 50%;
+		background: rgba(42, 20, 12, 0.6);
+		color: #fff;
+		display: grid;
+		place-items: center;
+	}
+	.f-x {
+		right: 6px;
+	}
+	.f-portada {
+		left: 6px;
 	}
 	.f-vacia {
 		aspect-ratio: auto;
