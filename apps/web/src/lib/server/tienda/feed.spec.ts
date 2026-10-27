@@ -9,7 +9,7 @@ const producto = (p: Partial<ProductoPublico>): ProductoPublico => ({
 	categoria: 'Mates',
 	precio: 12345,
 	anterior: null,
-	foto: null,
+	foto: 'https://cdn.x.com/p.jpg',
 	etiqueta: null,
 	stock: 3,
 	...p
@@ -44,6 +44,7 @@ describe('feed de productos', () => {
 			'g:title': 'Mate',
 			'g:description': 'Calabaza curada',
 			'g:link': 'https://mostrador.iamnaw.dev/t/mate-y-co/producto/p1',
+			'g:image_link': 'https://cdn.x.com/p.jpg',
 			'g:availability': 'in_stock',
 			'g:price': '12345.00 ARS',
 			'g:brand': 'Mate &amp; Co',
@@ -112,6 +113,9 @@ describe('feed de productos', () => {
 		expect(campos(x, 'barato')['g:image_link']).toBe('https://cdn.x.com/a.jpg?b=1&amp;c=2');
 		expect(campos(x, 'barato')['g:description']).toBe('Mate');
 		expect(fotoFeed('javascript:alert(1)')).toBeNull();
+		// Sin foto válida no se publica: Google y Meta rechazan el artículo.
+		const sin = feedXml(tienda([producto({ id: 'sinfoto', foto: null })]), 'https://m.x');
+		expect(sin).not.toContain('sinfoto');
 	});
 
 	it('una tienda sin productos es un feed vacío pero válido', () => {

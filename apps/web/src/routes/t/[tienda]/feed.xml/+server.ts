@@ -16,7 +16,9 @@ export const GET: RequestHandler = async ({ params, cookies, url }) => {
 	return new Response(feedXml(r.tienda, url.origin), {
 		headers: {
 			'content-type': 'application/xml; charset=utf-8',
-			'cache-control': propia ? 'private, no-store' : 'public, max-age=3600'
+			'cache-control': propia ? 'private, no-store' : 'public, max-age=3600',
+			// Con o sin la cookie de la demo, el feed es otro.
+			vary: 'Cookie'
 		}
 	});
 };

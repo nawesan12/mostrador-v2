@@ -44,7 +44,7 @@ function item(p: ProductoPublico, t: TiendaPublica, base: string): string {
 		['g:title', corto(p.nombre, 150)],
 		['g:description', corto(p.descripcion.trim() || p.nombre, 5000)],
 		['g:link', `${base}/producto/${encodeURIComponent(p.id)}`],
-		...(foto ? ([['g:image_link', foto]] as [string, string][]) : []),
+		['g:image_link', foto!],
 		['g:availability', p.stock > 0 ? 'in_stock' : 'out_of_stock'],
 		['g:price', precioFeed(enOferta ? p.anterior! : p.precio)],
 		...(enOferta ? ([['g:sale_price', precioFeed(p.precio)]] as [string, string][]) : []),
@@ -75,7 +75,8 @@ export function feedXml(t: TiendaPublica, origen: string): string {
 		`    <title>${xml(t.nombre)}</title>`,
 		`    <link>${xml(base)}</link>`,
 		`    <description>${xml(`Productos de ${t.nombre}`)}</description>`,
-		...t.productos.map((p) => item(p, t, base)),
+		// Google y Meta rechazan un artículo sin imagen: los productos sin foto válida no se publican.
+		...t.productos.filter((p) => fotoFeed(p.foto)).map((p) => item(p, t, base)),
 		'  </channel>',
 		'</rss>',
 		''

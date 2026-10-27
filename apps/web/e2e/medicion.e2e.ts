@@ -48,8 +48,9 @@ const eventos = (page: Page) =>
 				.filter((a) => a[0] === 'event')
 				.map((a) => ({ n: a[1] as string, p: a[2] as Record<string, unknown> })),
 			meta: (w.fbq?.queue ?? [])
-				.filter((a) => a[0] === 'track')
-				.map((a) => ({ n: a[1] as string, p: a[2], o: a[3] as { eventID?: string } | undefined }))
+				// trackSingle: [, píxel, nombre, datos, opciones] (sólo al píxel de esta tienda).
+				.filter((a) => a[0] === 'trackSingle')
+				.map((a) => ({ n: a[2] as string, p: a[3], o: a[4] as { eventID?: string } | undefined }))
 		};
 	});
 

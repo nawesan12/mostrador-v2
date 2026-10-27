@@ -191,11 +191,14 @@ function enviar(
 ) {
 	if (!activa || !acepto(activa.slug)) return;
 	const w = window as Ventana;
-	if (ga && activa.medicion.ga4 && w.gtag) w.gtag('event', ga[0], ga[1]);
+	// A la medición de esta tienda, no a todas las que se cargaron en la sesión.
+	if (ga && activa.medicion.ga4 && w.gtag)
+		w.gtag('event', ga[0], { ...ga[1], send_to: activa.medicion.ga4 });
 	if (meta && activa.medicion.pixel && w.fbq) {
 		const [nombre, datos, opciones] = meta;
-		if (opciones) w.fbq('track', nombre, datos, opciones);
-		else w.fbq('track', nombre, datos);
+		const pixel = activa.medicion.pixel;
+		if (opciones) w.fbq('trackSingle', pixel, nombre, datos, opciones);
+		else w.fbq('trackSingle', pixel, nombre, datos);
 	}
 }
 

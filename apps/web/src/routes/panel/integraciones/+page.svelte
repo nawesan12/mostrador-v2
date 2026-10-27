@@ -176,7 +176,16 @@
 		if ((id === 'ga' ? antes.ga4 : antes.pixel) === v.valor) return (modal = false);
 		if (!(await guardarMedicion(ahora))) return;
 		modal = false;
-		if (!v.valor) return;
+		const deshacer = async () => {
+			if (!(await guardarMedicion(antes)))
+				ui.toast({ k: 'err', title: 'No se pudo deshacer', desc: errorId ?? 'Probá de nuevo.' });
+		};
+		if (!v.valor)
+			return ui.undoable(
+				id === 'ga' ? 'Google Analytics desconectado' : 'Píxel de Meta borrado',
+				'Tu tienda deja de medir con ese ID',
+				deshacer
+			);
 		ui.toast({
 			k: 'ok',
 			title: id === 'ga' ? 'Google Analytics conectado' : 'Píxel de Meta guardado',
@@ -188,14 +197,14 @@
 		const m = data.medicion;
 		if (!(await guardarMedicion({ ...m, feeds: { ...m.feeds, [id]: true } }))) return;
 		if (id === 'gm') modal = false;
-		ui.toast({
-			k: 'ok',
-			title: id === 'gm' ? 'Google Shopping conectado' : 'Catálogo de Meta conectado',
-			desc:
-				id === 'gm'
-					? 'Google revisa los productos en unos días'
-					: 'Meta lee el feed una vez por día'
-		});
+		ui.undoable(
+			id === 'gm' ? 'Google Shopping conectado' : 'Catálogo de Meta conectado',
+			id === 'gm' ? 'Google revisa los productos en unos días' : 'Meta lee el feed una vez por día',
+			async () => {
+				if (!(await guardarMedicion(m)))
+					ui.toast({ k: 'err', title: 'No se pudo deshacer', desc: errorId ?? 'Probá de nuevo.' });
+			}
+		);
 	}
 
 	async function copiarFeed() {
@@ -1118,7 +1127,7 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;
-		min-height: 40px;
+		min-height: 44px;
 		padding: 8px 14px;
 		border: 0;
 		border-radius: 999px;

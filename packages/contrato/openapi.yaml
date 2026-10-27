@@ -2791,8 +2791,8 @@ components:
       type: object
       required: [ga4, pixel, feeds]
       properties:
-        ga4: { type: [string, 'null'], pattern: '^G-[A-Z0-9]{6,12}$', description: 'ID de medición de GA4' }
-        pixel: { type: [string, 'null'], pattern: '^[0-9]{15,16}$', description: 'ID del píxel de Meta' }
+        ga4: { type: [string, 'null'], pattern: '^(G-[A-Z0-9]{6,12})?$', description: 'ID de medición de GA4' }
+        pixel: { type: [string, 'null'], pattern: '^([0-9]{15,16})?$', description: 'ID del píxel de Meta' }
         feeds:
           type: object
           required: [gm, meta]
