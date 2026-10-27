@@ -1,0 +1,1282 @@
+{
+ "descripcion": "Casos de aplicarCupon (apps/web/src/lib/tienda/cupon.ts) y vidriera.AplicarCupon (Go): tienen que dar lo mismo.",
+ "ahora": "2026-10-23T15:00:00-03:00",
+ "casos": [
+  {
+   "nombre": "10 % sobre todo",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "pct",
+    "valor": 10,
+    "pausado": false,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "web"
+    ],
+    "empieza": null,
+    "termina": null,
+    "minimo": 0,
+    "quien": "todos",
+    "porCliente": "libre",
+    "alcance": {
+     "tipo": "todo",
+     "productos": []
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1
+    }
+   ],
+   "historial": {
+    "pedidos": 0,
+    "usosDelCupon": 0,
+    "vip": false,
+    "ultimaCompra": null
+   },
+   "esperado": {
+    "ok": true,
+    "descuento": 2500,
+    "envioGratis": false,
+    "combinable": true
+   }
+  },
+  {
+   "nombre": "fijo con tope en el subtotal elegible",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "fijo",
+    "valor": 50000,
+    "pausado": false,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "web"
+    ],
+    "empieza": null,
+    "termina": null,
+    "minimo": 0,
+    "quien": "todos",
+    "porCliente": "libre",
+    "alcance": {
+     "tipo": "todo",
+     "productos": []
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1
+    }
+   ],
+   "historial": {
+    "pedidos": 0,
+    "usosDelCupon": 0,
+    "vip": false,
+    "ultimaCompra": null
+   },
+   "esperado": {
+    "ok": true,
+    "descuento": 25000,
+    "envioGratis": false,
+    "combinable": true
+   }
+  },
+  {
+   "nombre": "fijo normal",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "fijo",
+    "valor": 3000,
+    "pausado": false,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "web"
+    ],
+    "empieza": null,
+    "termina": null,
+    "minimo": 0,
+    "quien": "todos",
+    "porCliente": "libre",
+    "alcance": {
+     "tipo": "todo",
+     "productos": []
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1
+    }
+   ],
+   "historial": {
+    "pedidos": 0,
+    "usosDelCupon": 0,
+    "vip": false,
+    "ultimaCompra": null
+   },
+   "esperado": {
+    "ok": true,
+    "descuento": 3000,
+    "envioGratis": false,
+    "combinable": true
+   }
+  },
+  {
+   "nombre": "envío gratis",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "envio",
+    "valor": 0,
+    "pausado": false,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "web"
+    ],
+    "empieza": null,
+    "termina": null,
+    "minimo": 0,
+    "quien": "todos",
+    "porCliente": "libre",
+    "alcance": {
+     "tipo": "todo",
+     "productos": []
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1
+    }
+   ],
+   "historial": {
+    "pedidos": 0,
+    "usosDelCupon": 0,
+    "vip": false,
+    "ultimaCompra": null
+   },
+   "esperado": {
+    "ok": true,
+    "descuento": 0,
+    "envioGratis": true,
+    "combinable": true
+   }
+  },
+  {
+   "nombre": "redondeo del porcentaje",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "pct",
+    "valor": 15,
+    "pausado": false,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "web"
+    ],
+    "empieza": null,
+    "termina": null,
+    "minimo": 0,
+    "quien": "todos",
+    "porCliente": "libre",
+    "alcance": {
+     "tipo": "todo",
+     "productos": []
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 3333,
+     "cantidad": 1
+    }
+   ],
+   "historial": {
+    "pedidos": 0,
+    "usosDelCupon": 0,
+    "vip": false,
+    "ultimaCompra": null
+   },
+   "esperado": {
+    "ok": true,
+    "descuento": 500,
+    "envioGratis": false,
+    "combinable": true
+   }
+  },
+  {
+   "nombre": "sólo productos elegidos",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "pct",
+    "valor": 10,
+    "pausado": false,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "web"
+    ],
+    "empieza": null,
+    "termina": null,
+    "minimo": 0,
+    "quien": "todos",
+    "porCliente": "libre",
+    "alcance": {
+     "tipo": "productos",
+     "productos": [
+      "b"
+     ]
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1
+    }
+   ],
+   "historial": {
+    "pedidos": 0,
+    "usosDelCupon": 0,
+    "vip": false,
+    "ultimaCompra": null
+   },
+   "esperado": {
+    "ok": true,
+    "descuento": 500,
+    "envioGratis": false,
+    "combinable": true
+   }
+  },
+  {
+   "nombre": "productos elegidos fuera del carrito",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "pct",
+    "valor": 10,
+    "pausado": false,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "web"
+    ],
+    "empieza": null,
+    "termina": null,
+    "minimo": 0,
+    "quien": "todos",
+    "porCliente": "libre",
+    "alcance": {
+     "tipo": "productos",
+     "productos": [
+      "z"
+     ]
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1
+    }
+   ],
+   "historial": {
+    "pedidos": 0,
+    "usosDelCupon": 0,
+    "vip": false,
+    "ultimaCompra": null
+   },
+   "esperado": {
+    "ok": false,
+    "motivo": "Este cupón no vale para los productos de tu carrito."
+   }
+  },
+  {
+   "nombre": "pausado",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "pct",
+    "valor": 10,
+    "pausado": true,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "web"
+    ],
+    "empieza": null,
+    "termina": null,
+    "minimo": 0,
+    "quien": "todos",
+    "porCliente": "libre",
+    "alcance": {
+     "tipo": "todo",
+     "productos": []
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1
+    }
+   ],
+   "historial": {
+    "pedidos": 0,
+    "usosDelCupon": 0,
+    "vip": false,
+    "ultimaCompra": null
+   },
+   "esperado": {
+    "ok": false,
+    "motivo": "Este cupón está pausado."
+   }
+  },
+  {
+   "nombre": "todavía no empezó",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "pct",
+    "valor": 10,
+    "pausado": false,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "web"
+    ],
+    "empieza": "2026-10-24T00:00:00-03:00",
+    "termina": null,
+    "minimo": 0,
+    "quien": "todos",
+    "porCliente": "libre",
+    "alcance": {
+     "tipo": "todo",
+     "productos": []
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1
+    }
+   ],
+   "historial": {
+    "pedidos": 0,
+    "usosDelCupon": 0,
+    "vip": false,
+    "ultimaCompra": null
+   },
+   "esperado": {
+    "ok": false,
+    "motivo": "Este cupón todavía no empezó."
+   }
+  },
+  {
+   "nombre": "vencido",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "pct",
+    "valor": 10,
+    "pausado": false,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "web"
+    ],
+    "empieza": null,
+    "termina": "2026-10-22T23:59:59-03:00",
+    "minimo": 0,
+    "quien": "todos",
+    "porCliente": "libre",
+    "alcance": {
+     "tipo": "todo",
+     "productos": []
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1
+    }
+   ],
+   "historial": {
+    "pedidos": 0,
+    "usosDelCupon": 0,
+    "vip": false,
+    "ultimaCompra": null
+   },
+   "esperado": {
+    "ok": false,
+    "motivo": "Este cupón ya venció."
+   }
+  },
+  {
+   "nombre": "límite total alcanzado",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "pct",
+    "valor": 10,
+    "pausado": false,
+    "usos": 5,
+    "limite": 5,
+    "canales": [
+     "web"
+    ],
+    "empieza": null,
+    "termina": null,
+    "minimo": 0,
+    "quien": "todos",
+    "porCliente": "libre",
+    "alcance": {
+     "tipo": "todo",
+     "productos": []
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1
+    }
+   ],
+   "historial": {
+    "pedidos": 0,
+    "usosDelCupon": 0,
+    "vip": false,
+    "ultimaCompra": null
+   },
+   "esperado": {
+    "ok": false,
+    "motivo": "Este cupón ya se usó todas las veces posibles."
+   }
+  },
+  {
+   "nombre": "no vale en la web",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "pct",
+    "valor": 10,
+    "pausado": false,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "wa",
+     "pos"
+    ],
+    "empieza": null,
+    "termina": null,
+    "minimo": 0,
+    "quien": "todos",
+    "porCliente": "libre",
+    "alcance": {
+     "tipo": "todo",
+     "productos": []
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1
+    }
+   ],
+   "historial": {
+    "pedidos": 0,
+    "usosDelCupon": 0,
+    "vip": false,
+    "ultimaCompra": null
+   },
+   "esperado": {
+    "ok": false,
+    "motivo": "Este cupón no vale en la tienda online."
+   }
+  },
+  {
+   "nombre": "regalo",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "regalo",
+    "valor": 10,
+    "pausado": false,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "web"
+    ],
+    "empieza": null,
+    "termina": null,
+    "minimo": 0,
+    "quien": "todos",
+    "porCliente": "libre",
+    "alcance": {
+     "tipo": "todo",
+     "productos": []
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1
+    }
+   ],
+   "historial": {
+    "pedidos": 0,
+    "usosDelCupon": 0,
+    "vip": false,
+    "ultimaCompra": null
+   },
+   "esperado": {
+    "ok": false,
+    "motivo": "Este cupón se canjea en el local."
+   }
+  },
+  {
+   "nombre": "mínimo no alcanzado",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "pct",
+    "valor": 10,
+    "pausado": false,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "web"
+    ],
+    "empieza": null,
+    "termina": null,
+    "minimo": 30000,
+    "quien": "todos",
+    "porCliente": "libre",
+    "alcance": {
+     "tipo": "todo",
+     "productos": []
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1
+    }
+   ],
+   "historial": {
+    "pedidos": 0,
+    "usosDelCupon": 0,
+    "vip": false,
+    "ultimaCompra": null
+   },
+   "esperado": {
+    "ok": false,
+    "motivo": "Este cupón es para compras desde $ 30.000."
+   }
+  },
+  {
+   "nombre": "primera compra con compras previas",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "pct",
+    "valor": 10,
+    "pausado": false,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "web"
+    ],
+    "empieza": null,
+    "termina": null,
+    "minimo": 0,
+    "quien": "nuevos",
+    "porCliente": "libre",
+    "alcance": {
+     "tipo": "todo",
+     "productos": []
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1
+    }
+   ],
+   "historial": {
+    "pedidos": 2,
+    "usosDelCupon": 0,
+    "vip": false,
+    "ultimaCompra": null
+   },
+   "esperado": {
+    "ok": false,
+    "motivo": "Este cupón es para la primera compra."
+   }
+  },
+  {
+   "nombre": "primera compra sin compras",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "pct",
+    "valor": 10,
+    "pausado": false,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "web"
+    ],
+    "empieza": null,
+    "termina": null,
+    "minimo": 0,
+    "quien": "nuevos",
+    "porCliente": "libre",
+    "alcance": {
+     "tipo": "todo",
+     "productos": []
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1
+    }
+   ],
+   "historial": {
+    "pedidos": 0,
+    "usosDelCupon": 0,
+    "vip": false,
+    "ultimaCompra": null
+   },
+   "esperado": {
+    "ok": true,
+    "descuento": 2500,
+    "envioGratis": false,
+    "combinable": true
+   }
+  },
+  {
+   "nombre": "vip sin serlo",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "pct",
+    "valor": 10,
+    "pausado": false,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "web"
+    ],
+    "empieza": null,
+    "termina": null,
+    "minimo": 0,
+    "quien": "vip",
+    "porCliente": "libre",
+    "alcance": {
+     "tipo": "todo",
+     "productos": []
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1
+    }
+   ],
+   "historial": {
+    "pedidos": 3,
+    "usosDelCupon": 0,
+    "vip": false,
+    "ultimaCompra": null
+   },
+   "esperado": {
+    "ok": false,
+    "motivo": "Este cupón es para clientes VIP."
+   }
+  },
+  {
+   "nombre": "vip",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "pct",
+    "valor": 10,
+    "pausado": false,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "web"
+    ],
+    "empieza": null,
+    "termina": null,
+    "minimo": 0,
+    "quien": "vip",
+    "porCliente": "libre",
+    "alcance": {
+     "tipo": "todo",
+     "productos": []
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1
+    }
+   ],
+   "historial": {
+    "pedidos": 3,
+    "usosDelCupon": 0,
+    "vip": true,
+    "ultimaCompra": null
+   },
+   "esperado": {
+    "ok": true,
+    "descuento": 2500,
+    "envioGratis": false,
+    "combinable": true
+   }
+  },
+  {
+   "nombre": "en riesgo: compró hace poco",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "pct",
+    "valor": 10,
+    "pausado": false,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "web"
+    ],
+    "empieza": null,
+    "termina": null,
+    "minimo": 0,
+    "quien": "riesgo",
+    "porCliente": "libre",
+    "alcance": {
+     "tipo": "todo",
+     "productos": []
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1
+    }
+   ],
+   "historial": {
+    "pedidos": 1,
+    "usosDelCupon": 0,
+    "vip": false,
+    "ultimaCompra": "2026-10-01T10:00:00-03:00"
+   },
+   "esperado": {
+    "ok": false,
+    "motivo": "Este cupón es para quienes hace un tiempo que no compran."
+   }
+  },
+  {
+   "nombre": "en riesgo",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "pct",
+    "valor": 10,
+    "pausado": false,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "web"
+    ],
+    "empieza": null,
+    "termina": null,
+    "minimo": 0,
+    "quien": "riesgo",
+    "porCliente": "libre",
+    "alcance": {
+     "tipo": "todo",
+     "productos": []
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1
+    }
+   ],
+   "historial": {
+    "pedidos": 1,
+    "usosDelCupon": 0,
+    "vip": false,
+    "ultimaCompra": "2026-07-01T10:00:00-03:00"
+   },
+   "esperado": {
+    "ok": true,
+    "descuento": 2500,
+    "envioGratis": false,
+    "combinable": true
+   }
+  },
+  {
+   "nombre": "una vez por cliente, ya usado",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "pct",
+    "valor": 10,
+    "pausado": false,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "web"
+    ],
+    "empieza": null,
+    "termina": null,
+    "minimo": 0,
+    "quien": "todos",
+    "porCliente": "1",
+    "alcance": {
+     "tipo": "todo",
+     "productos": []
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1
+    }
+   ],
+   "historial": {
+    "pedidos": 0,
+    "usosDelCupon": 1,
+    "vip": false,
+    "ultimaCompra": null
+   },
+   "esperado": {
+    "ok": false,
+    "motivo": "Ya usaste este cupón."
+   }
+  },
+  {
+   "nombre": "tres veces, usado dos",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "pct",
+    "valor": 10,
+    "pausado": false,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "web"
+    ],
+    "empieza": null,
+    "termina": null,
+    "minimo": 0,
+    "quien": "todos",
+    "porCliente": "3",
+    "alcance": {
+     "tipo": "todo",
+     "productos": []
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1
+    }
+   ],
+   "historial": {
+    "pedidos": 0,
+    "usosDelCupon": 2,
+    "vip": false,
+    "ultimaCompra": null
+   },
+   "esperado": {
+    "ok": true,
+    "descuento": 2500,
+    "envioGratis": false,
+    "combinable": true
+   }
+  },
+  {
+   "nombre": "tres veces, usado tres",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "pct",
+    "valor": 10,
+    "pausado": false,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "web"
+    ],
+    "empieza": null,
+    "termina": null,
+    "minimo": 0,
+    "quien": "todos",
+    "porCliente": "3",
+    "alcance": {
+     "tipo": "todo",
+     "productos": []
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1
+    }
+   ],
+   "historial": {
+    "pedidos": 0,
+    "usosDelCupon": 3,
+    "vip": false,
+    "ultimaCompra": null
+   },
+   "esperado": {
+    "ok": false,
+    "motivo": "Ya usaste este cupón las veces posibles."
+   }
+  },
+  {
+   "nombre": "no combinable",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "pct",
+    "valor": 10,
+    "pausado": false,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "web"
+    ],
+    "empieza": null,
+    "termina": null,
+    "minimo": 0,
+    "quien": "todos",
+    "porCliente": "libre",
+    "alcance": {
+     "tipo": "todo",
+     "productos": []
+    },
+    "combinable": false
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1
+    }
+   ],
+   "historial": {
+    "pedidos": 0,
+    "usosDelCupon": 0,
+    "vip": false,
+    "ultimaCompra": null
+   },
+   "esperado": {
+    "ok": true,
+    "descuento": 2500,
+    "envioGratis": false,
+    "combinable": false
+   }
+  },
+  {
+   "nombre": "sólo una categoría",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "pct",
+    "valor": 10,
+    "pausado": false,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "web"
+    ],
+    "empieza": null,
+    "termina": null,
+    "minimo": 0,
+    "quien": "todos",
+    "porCliente": "libre",
+    "alcance": {
+     "tipo": "categoria",
+     "productos": [],
+     "categoria": "Yerbas"
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2,
+     "categoria": "Mates"
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1,
+     "categoria": "Yerbas"
+    }
+   ],
+   "historial": {
+    "pedidos": 0,
+    "usosDelCupon": 0,
+    "vip": false,
+    "ultimaCompra": null
+   },
+   "esperado": {
+    "ok": true,
+    "descuento": 500,
+    "envioGratis": false,
+    "combinable": true
+   }
+  },
+  {
+   "nombre": "categoría sin guardar vale para todo",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "pct",
+    "valor": 10,
+    "pausado": false,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "web"
+    ],
+    "empieza": null,
+    "termina": null,
+    "minimo": 0,
+    "quien": "todos",
+    "porCliente": "libre",
+    "alcance": {
+     "tipo": "categoria",
+     "productos": []
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2,
+     "categoria": "Mates"
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1,
+     "categoria": "Yerbas"
+    }
+   ],
+   "historial": {
+    "pedidos": 0,
+    "usosDelCupon": 0,
+    "vip": false,
+    "ultimaCompra": null
+   },
+   "esperado": {
+    "ok": true,
+    "descuento": 2500,
+    "envioGratis": false,
+    "combinable": true
+   }
+  },
+  {
+   "nombre": "categoría que no está en el carrito",
+   "cupon": {
+    "codigo": "HOLA",
+    "tipo": "pct",
+    "valor": 10,
+    "pausado": false,
+    "usos": 0,
+    "limite": 0,
+    "canales": [
+     "web"
+    ],
+    "empieza": null,
+    "termina": null,
+    "minimo": 0,
+    "quien": "todos",
+    "porCliente": "libre",
+    "alcance": {
+     "tipo": "categoria",
+     "productos": [],
+     "categoria": "Bombillas"
+    },
+    "combinable": true
+   },
+   "lineas": [
+    {
+     "id": "a",
+     "precio": 10000,
+     "cantidad": 2,
+     "categoria": "Mates"
+    },
+    {
+     "id": "b",
+     "precio": 5000,
+     "cantidad": 1,
+     "categoria": "Yerbas"
+    }
+   ],
+   "historial": {
+    "pedidos": 0,
+    "usosDelCupon": 0,
+    "vip": false,
+    "ultimaCompra": null
+   },
+   "esperado": {
+    "ok": false,
+    "motivo": "Este cupón no vale para los productos de tu carrito."
+   }
+  }
+ ]
+}

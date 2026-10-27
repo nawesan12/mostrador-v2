@@ -44,7 +44,14 @@ type PedidoNuevo struct {
 	Email         string `json:"-"`
 	CiudadEnvio   string `json:"-"`
 	CodigoPublico string `json:"-"`
+	// Cupón ya validado por la vidriera y lo que descontó (va dentro de Descuento). El uso se cuenta
+	// acá, en la transacción: si se agotó en el medio, ErrCupon.
+	Cupon          string `json:"-"`
+	DescuentoCupon int64  `json:"-"`
 }
+
+// ErrCupon: el cupón se agotó o se pausó entre que se validó y se usó.
+var ErrCupon = errors.New("pedidos: cupón agotado")
 
 var (
 	pagos   = []string{"mp", "tarjeta", "payway", "modo", "uala", "transf", "efectivo"}
@@ -128,15 +135,42 @@ func CrearDesdeProductos(ctx context.Context, pool tx, tiendaID string, n Pedido
 		if _, err := t.Exec(ctx, `SELECT 1 FROM tiendas WHERE id = $1 FOR UPDATE`, tiendaID); err != nil {
 			return err
 		}
+		var cupon *string
+		if n.Cupon != "" {
+			cupon = &n.Cupon
+			tag, err := t.Exec(ctx, `UPDATE cupones SET usos = usos + 1, vendio = vendio + $3, desconto = desconto + $4
+				WHERE tienda_id = $1 AND codigo = $2 AND NOT pausado AND (limite = 0 OR usos < limite)`,
+				tiendaID, n.Cupon, total+n.CostoEnvio-n.Descuento, n.DescuentoCupon)
+			if err != nil {
+				return err
+			}
+			if tag.RowsAffected() == 0 {
+				return ErrCupon
+			}
+			// El tope por cliente se vuelve a mirar acá: con la tienda bloqueada, dos compras a la vez
+			// del mismo email no pasan las dos.
+			if n.Email != "" {
+				var pasado bool
+				if err := t.QueryRow(ctx, `SELECT count(p.*) >= CASE c.por_cliente WHEN '1' THEN 1 WHEN '3' THEN 3 ELSE 2147483647 END
+					FROM cupones c LEFT JOIN pedidos p ON p.tienda_id = c.tienda_id AND p.cupon = c.codigo
+						AND p.estado <> 'Cancelado' AND lower(p.comprador->>'email') = lower($3)
+					WHERE c.tienda_id = $1 AND c.codigo = $2 GROUP BY c.por_cliente`, tiendaID, n.Cupon, n.Email).Scan(&pasado); err != nil {
+					return err
+				}
+				if pasado {
+					return ErrCupon
+				}
+			}
+		}
 		return t.QueryRow(ctx, `
 			INSERT INTO pedidos (tienda_id, numero, comprador, canal, pago, estado_pago, envio, estado, facturado,
-				items, subtotal, costo_envio, total, nota, estados_en, ciudad_envio, codigo_publico)
+				items, subtotal, costo_envio, total, nota, estados_en, ciudad_envio, codigo_publico, cupon)
 			SELECT $1, coalesce(max(numero), 1000) + 1, $2, $3, $4, $5, $6, $7, false, $8, $9, $11::bigint, $9::bigint + $11::bigint - $12::bigint, $10,
-				jsonb_build_object($7::text, now()), $13, $14
+				jsonb_build_object($7::text, now()), $13, $14, $15
 			FROM pedidos WHERE tienda_id = $1
 			RETURNING numero`,
 			tiendaID, comprador, n.Canal, n.Pago, estadoPago, n.Envio, estado, js, total, n.Nota,
-			n.CostoEnvio, n.Descuento, n.CiudadEnvio, codigo).Scan(&numero)
+			n.CostoEnvio, n.Descuento, n.CiudadEnvio, codigo, cupon).Scan(&numero)
 	})
 	return numero, total + n.CostoEnvio - n.Descuento, err
 }

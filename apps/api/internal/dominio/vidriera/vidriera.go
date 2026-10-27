@@ -256,6 +256,7 @@ type Compra struct {
 	Direccion string `json:"direccion"`
 	Envio     string `json:"envio"`
 	Pago      string `json:"pago"`
+	Cupon     string `json:"cupon"`
 }
 
 // Resultado de comprar: el pedido, su código público y (con Mercado Pago) adónde pagar.
@@ -314,16 +315,35 @@ func Comprar(ctx context.Context, pool tx, mp Pagador, sitio, slug string, c Com
 		return Resultado{}, ErrInvalido
 	}
 	n.Canal, n.Envio = "web", c.Envio
+	costoEnvio := opcion.Precio
+	// Cupón: se vuelve a evaluar acá con los precios y el historial del servidor.
+	var descCupon int64
+	combinable := true
+	if codigo := strings.ToUpper(strings.TrimSpace(c.Cupon)); codigo != "" {
+		r, err := EvaluarCupon(ctx, pool, id, codigo, c.Email, lineasDe(c, porID), hoy)
+		if err != nil {
+			return Resultado{}, err
+		}
+		if !r.OK {
+			return Resultado{}, ErrCupon{Motivo: r.Motivo}
+		}
+		n.Cupon, descCupon, combinable = codigo, r.Descuento, r.Combinable
+		if r.EnvioGratis {
+			costoEnvio = 0
+		}
+	}
 	n.Pago = "transf"
 	if c.Pago == "mercadopago" {
 		n.Pago = "mp"
-	} else {
-		n.Descuento = subtotal * transferencia / 100
+	} else if combinable {
+		n.Descuento = (subtotal - descCupon) * transferencia / 100
 	}
+	n.Descuento += descCupon
+	n.DescuentoCupon = descCupon
 	f := false
 	n.Pagado = &f
 	n.Cliente, n.Telefono = &c.Nombre, &c.Telefono
-	n.Email, n.CostoEnvio, n.CiudadEnvio = c.Email, opcion.Precio, strings.TrimSpace(c.CP)
+	n.Email, n.CostoEnvio, n.CiudadEnvio = c.Email, costoEnvio, strings.TrimSpace(c.CP)
 	nota := strings.TrimSpace(fmt.Sprintf("Tienda online · DNI %s · Entrega: %s (%s)", c.DNI, c.Direccion, c.CP))
 	n.Nota = &nota
 	b := make([]byte, 18)
@@ -332,6 +352,9 @@ func Comprar(ctx context.Context, pool tx, mp Pagador, sitio, slug string, c Com
 	numero, total, err := pedidos.CrearDesdeProductos(ctx, pool, id, n)
 	if errors.Is(err, pedidos.ErrSinStock) {
 		return Resultado{}, ErrSinStock
+	}
+	if errors.Is(err, pedidos.ErrCupon) {
+		return Resultado{}, ErrCupon{Motivo: "Este cupón se acaba de agotar."}
 	}
 	if err != nil {
 		return Resultado{}, err

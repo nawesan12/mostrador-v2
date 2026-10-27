@@ -178,7 +178,6 @@ func Crear(ctx context.Context, pool tx, tiendaID string, n Nuevo, ahora time.Ti
 			termina = &t
 		}
 	}
-	alcance, _ := json.Marshal(map[string]any{"tipo": n.Alcance, "productos": n.Productos})
 	opciones, _ := json.Marshal(n.Opciones)
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
 		// Uno por código entre los vigentes: se bloquea la tienda para que dos altas no choquen.
@@ -194,6 +193,8 @@ func Crear(ctx context.Context, pool tx, tiendaID string, n Nuevo, ahora time.Ti
 			return ErrRepetido
 		}
 		donde := "en toda la tienda"
+		// La categoría queda guardada en el alcance: la tienda online la necesita para aplicarlo.
+		categoria := ""
 		switch n.Alcance {
 		case "categoria":
 			var cat *string
@@ -202,6 +203,7 @@ func Crear(ctx context.Context, pool tx, tiendaID string, n Nuevo, ahora time.Ti
 			donde = "en una categoría"
 			if cat != nil {
 				donde = "en " + strings.ToLower(*cat)
+				categoria = *cat
 			}
 		case "productos":
 			var nombres []string
@@ -212,6 +214,7 @@ func Crear(ctx context.Context, pool tx, tiendaID string, n Nuevo, ahora time.Ti
 				donde = "en " + strings.Join(nombres, ", ")
 			}
 		}
+		alcance, _ := json.Marshal(map[string]any{"tipo": n.Alcance, "productos": n.Productos, "categoria": categoria})
 		desc := encabezado(n) + " " + donde
 		if n.Minimo > 0 {
 			desc += " · mín. " + pesos(n.Minimo)
