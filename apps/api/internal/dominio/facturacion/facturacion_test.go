@@ -81,7 +81,9 @@ func TestFacturacionConARCA(t *testing.T) {
 	defer falso.Close()
 	s := &facturacion.Servicio{Pool: b.App, Cifra: cifrador(t), HTTP: falso.Client(),
 		Direcciones: func(arca.Ambiente) arca.Direcciones { return arca.Direcciones{WSAA: falso.WSAA(), WSFE: falso.WSFE()} }}
-	ahora := time.Date(2026, 10, 23, 15, 0, 0, 0, time.UTC)
+	// El reloj real (un minuto adelante): la cola encola con now() de Postgres; con una fecha fija, lo
+	// encolado quedaba en el futuro del test y no se drenaba.
+	ahora := time.Now().UTC().Add(time.Minute)
 	stock := 100
 	prod, err := listas.Guardar(ctx, b.App, luna, "", listas.Editable{Nombre: "Mate", Precio: 1000, Stock: &stock})
 	if err != nil {
