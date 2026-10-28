@@ -79,15 +79,3 @@ func normalizar(t *testing.T, b []byte) []byte {
 	out, _ := json.Marshal(v)
 	return out
 }
-
-func TestTextoDeHTML(t *testing.T) {
-	for entrada, quiero := range map[string]string{
-		"<p>Hola <b>mundo</b></p><p>Chau&nbsp;&amp; listo</p>": "Hola mundo\nChau & listo",
-		"Uno<br>Dos<br/><br/><br/><br/>Tres":                   "Uno\nDos\n\nTres",
-		"":                                                     "",
-	} {
-		if r := TextoDeHTML(entrada); r != quiero {
-			t.Errorf("TextoDeHTML(%q) = %q, quiero %q", entrada, r, quiero)
-		}
-	}
-}

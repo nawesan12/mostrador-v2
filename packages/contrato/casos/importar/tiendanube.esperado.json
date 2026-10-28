@@ -8,13 +8,8 @@
 				"descripcion": "La mejor Bola con el nivel máximo de desempeño. Atrapará cualquier Pokémon sin fallar.",
 				"categoria": "Poké Balls",
 				"precio": 19,
-				"costo": null,
-				"sku": null,
-				"stock": null,
-				"foto": "https://d26lpennugtm8s.cloudfront.net/stores/001/234/products/servine-640-0.jpg",
-				"canales": {
-					"web": true
-				},
+				"sku": "",
+				"stock": 15,
 				"fotos": [
 					"https://d26lpennugtm8s.cloudfront.net/stores/001/234/products/servine-640-0.jpg",
 					"https://d26lpennugtm8s.cloudfront.net/stores/001/234/products/onyx-640-0.jpg",
@@ -38,8 +33,7 @@
 						"sku": "BSG1234A",
 						"precio": null,
 						"stock": 5,
-						"foto": null,
-						"activa": null
+						"foto": null
 					},
 					{
 						"valores": {
@@ -48,8 +42,7 @@
 						"sku": "BSG1234B",
 						"precio": null,
 						"stock": 5,
-						"foto": null,
-						"activa": null
+						"foto": null
 					},
 					{
 						"valores": {
@@ -58,12 +51,14 @@
 						"sku": "BSG1234C",
 						"precio": null,
 						"stock": 5,
-						"foto": null,
-						"activa": null
+						"foto": null
 					}
-				]
+				],
+				"canales": {
+					"web": true
+				}
 			},
-			"recortes": 0
+			"recortado": false
 		},
 		{
 			"externo": "9001",
@@ -73,13 +68,8 @@
 				"descripcion": "Remera de algodón peinado.\nLavar con agua fría.",
 				"categoria": "Remeras",
 				"precio": 15900,
-				"costo": null,
-				"sku": null,
-				"stock": null,
-				"foto": "https://acdn.mitiendanube.com/stores/001/products/remera-blanca.webp",
-				"canales": {
-					"web": true
-				},
+				"sku": "",
+				"stock": 1003,
 				"fotos": [
 					"https://acdn.mitiendanube.com/stores/001/products/remera-blanca.webp",
 					"https://acdn.mitiendanube.com/stores/001/products/remera-negra.webp"
@@ -109,8 +99,7 @@
 						"sku": "REM-M-BL",
 						"precio": null,
 						"stock": 4,
-						"foto": null,
-						"activa": null
+						"foto": null
 					},
 					{
 						"valores": {
@@ -120,44 +109,43 @@
 						"sku": "REM-M-NE",
 						"precio": 18900,
 						"stock": 0,
-						"foto": null,
-						"activa": null
+						"foto": null
 					},
 					{
 						"valores": {
 							"Color": "Negro",
 							"Talle": "L"
 						},
-						"sku": null,
+						"sku": "",
 						"precio": 19901,
 						"stock": 999,
-						"foto": null,
-						"activa": null
+						"foto": null
 					}
-				]
+				],
+				"canales": {
+					"web": true
+				}
 			},
-			"recortes": 0
+			"recortado": false
 		},
 		{
 			"externo": "9002",
 			"urlVieja": "/productos/yerba-mate-organica/",
 			"producto": {
 				"nombre": "Yerba Mate Orgánica 1 kg",
-				"descripcion": null,
+				"descripcion": "",
 				"categoria": null,
 				"precio": 7350,
-				"costo": null,
 				"sku": "YER-1K",
 				"stock": 12,
-				"foto": null,
+				"fotos": [],
+				"opciones": [],
+				"variantes": [],
 				"canales": {
 					"web": true
-				},
-				"fotos": null,
-				"opciones": null,
-				"variantes": null
+				}
 			},
-			"recortes": 0
+			"recortado": false
 		}
 	],
 	"clientes": [

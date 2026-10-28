@@ -2,32 +2,17 @@ package tiendanube
 
 import (
 	"encoding/json"
-	"html"
 	"math"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 
-	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/listas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/importar"
 )
 
 // StockIlimitado es lo que se carga cuando Tiendanube no lleva el stock (stock_management false o
 // stock null). El mismo valor que usa el importador de Empretienda.
 const StockIlimitado = 999
-
-// Los topes del editor de productos (ProductoEditable en el contrato).
-const (
-	maxNombre      = 120
-	maxDescripcion = 4000
-	maxCategoria   = 60
-	maxFotos       = 8
-	maxOpciones    = 3
-	maxValores     = 20
-	maxTexto       = 20
-	maxVariantes   = 100
-	maxSKU         = 40
-)
 
 // Texto es un campo por idioma ({"es": "...", "pt": "..."}). Tiendanube los manda así aunque la tienda
 // tenga un solo idioma.
@@ -69,10 +54,12 @@ type ProductoTN struct {
 		Subcategories json.RawMessage `json:"subcategories"`
 	} `json:"categories"`
 	Images []struct {
+		ID       int64  `json:"id"`
 		Src      string `json:"src"`
 		Position int    `json:"position"`
 	} `json:"images"`
 	Variants []struct {
+		ImageID          *int64  `json:"image_id"`
 		Price            *string `json:"price"`
 		PromotionalPrice *string `json:"promotional_price"`
 		StockManagement  bool    `json:"stock_management"`
@@ -82,90 +69,55 @@ type ProductoTN struct {
 	} `json:"variants"`
 }
 
-// Importado es un producto listo para guardar, con lo que hace falta para la migración.
+// Importado es un producto listo para guardar, con lo que hace falta para la migración: el id en
+// Tiendanube y el path de su ficha vieja (para la redirección 301).
 type Importado struct {
-	Externo  string          `json:"externo"`
-	URLVieja string          `json:"urlVieja"`
-	Producto listas.Editable `json:"producto"`
-	// Recortes cuenta lo que no entró en los topes de Mostrador (fotos, opciones, valores,
-	// variantes, textos largos), para avisarle a la tienda.
-	Recortes int `json:"recortes"`
+	Externo   string            `json:"externo"`
+	URLVieja  string            `json:"urlVieja"`
+	Producto  importar.Producto `json:"producto"`
+	Recortado bool              `json:"recortado"`
 }
 
 // Producto convierte un producto de Tiendanube. ok es false si no se puede importar (sin nombre o
-// sin variantes: la API siempre manda al menos una).
+// sin variantes: la API siempre manda al menos una). Los topes los pone importar.Ajustar, igual que
+// para las demás plataformas.
 func Producto(p ProductoTN, idioma string) (Importado, bool) {
-	nombre := espacios(p.Name.En(idioma))
-	if len([]rune(nombre)) < 2 || len(p.Variants) == 0 {
+	if len(p.Variants) == 0 {
 		return Importado{}, false
 	}
-	recortes := 0
-	cortar := func(s string, n int) string {
-		r := []rune(s)
-		if len(r) <= n {
-			return s
-		}
-		recortes++
-		return strings.TrimSpace(string(r[:n]))
-	}
-
-	e := listas.Editable{
-		Nombre:  cortar(nombre, maxNombre),
-		Canales: map[string]bool{"web": true},
-	}
-	if d := TextoDeHTML(p.Description.En(idioma)); d != "" {
-		d = cortar(d, maxDescripcion)
-		e.Descripcion = &d
+	c := importar.Crudo{
+		Nombre:      p.Name.En(idioma),
+		Descripcion: importar.TextoRico(p.Description.En(idioma)),
 	}
 	// La categoría más específica: una que no sea madre de otra de las que trae el producto.
 	madres := map[int64]bool{}
-	for _, c := range p.Categories {
-		if c.Parent != nil {
-			madres[*c.Parent] = true
+	for _, cat := range p.Categories {
+		if cat.Parent != nil {
+			madres[*cat.Parent] = true
 		}
 	}
-	for _, c := range p.Categories {
-		if !madres[c.ID] {
-			if n := espacios(c.Name.En(idioma)); n != "" {
-				n = cortar(n, maxCategoria)
-				e.Categoria = &n
-			}
+	for _, cat := range p.Categories {
+		if !madres[cat.ID] {
+			c.Categoria = strings.TrimSpace(cat.Name.En(idioma))
 			break
 		}
 	}
-
-	// Fotos en el orden de la tienda (position), sin repetidas. Las tiendas viejas las tienen en http
-	// y el CDN de Tiendanube también las sirve en https: el editor sólo acepta https.
+	// Fotos en el orden de la tienda. Las tiendas viejas las tienen en http y el CDN de Tiendanube
+	// también las sirve en https (el editor sólo acepta https).
 	imgs := append(p.Images[:0:0], p.Images...)
 	sort.SliceStable(imgs, func(i, j int) bool { return imgs[i].Position < imgs[j].Position })
-	vistas := map[string]bool{}
+	fotoDe := map[int64]string{}
 	for _, im := range imgs {
 		src := strings.TrimSpace(im.Src)
 		if strings.HasPrefix(src, "http://") {
 			src = "https://" + strings.TrimPrefix(src, "http://")
 		}
-		if !strings.HasPrefix(src, "https://") || vistas[src] {
-			continue
-		}
-		vistas[src] = true
-		if len(e.Fotos) == maxFotos {
-			recortes++
-			continue
-		}
-		e.Fotos = append(e.Fotos, src)
-	}
-	if len(e.Fotos) > 0 {
-		e.Foto = &e.Fotos[0]
+		c.Fotos = append(c.Fotos, src)
+		fotoDe[im.ID] = src
 	}
 
 	// Precio y stock de cada variante: el de oferta si es menor; sin stock_management, ilimitado.
-	type variante struct {
-		valores []string
-		precio  int64
-		stock   int
-		sku     string
-	}
-	vars := make([]variante, 0, len(p.Variants))
+	vars := make([]importar.VarianteCruda, 0, len(p.Variants))
 	for _, v := range p.Variants {
 		precio := pesos(v.Price)
 		if oferta := pesos(v.PromotionalPrice); oferta > 0 && (precio == 0 || oferta < precio) {
@@ -175,92 +127,47 @@ func Producto(p ProductoTN, idioma string) (Importado, bool) {
 		if v.StockManagement && v.Stock != nil {
 			stock = max(0, *v.Stock)
 		}
-		sku := ""
+		vc := importar.VarianteCruda{Precio: precio, Stock: stock}
 		if v.SKU != nil {
-			sku = cortar(strings.TrimSpace(*v.SKU), maxSKU)
+			vc.SKU = strings.TrimSpace(*v.SKU)
 		}
-		valores := make([]string, 0, len(v.Values))
+		if v.ImageID != nil {
+			vc.Foto = fotoDe[*v.ImageID]
+		}
 		for _, val := range v.Values {
-			valores = append(valores, espacios(val.En(idioma)))
+			vc.Valores = append(vc.Valores, val.En(idioma))
 		}
-		vars = append(vars, variante{valores, precio, stock, sku})
+		vars = append(vars, vc)
 	}
-
-	// El precio del producto es el más bajo; las variantes que cuestan otra cosa llevan el suyo.
-	e.Precio = vars[0].precio
+	c.Precio, c.Stock, c.SKU = vars[0].Precio, vars[0].Stock, vars[0].SKU
 	for _, v := range vars {
-		e.Precio = min(e.Precio, v.precio)
+		c.Precio = min(c.Precio, v.Precio)
 	}
 
 	// Sin atributos (o con una sola variante sin valores) es un producto simple.
-	nOpc := min(len(p.Attributes), maxOpciones)
-	if len(p.Attributes) > maxOpciones {
-		recortes++
-	}
-	if nOpc == 0 || len(vars[0].valores) == 0 {
-		stock, sku := vars[0].stock, vars[0].sku
-		e.Stock = &stock
-		if sku != "" {
-			e.SKU = &sku
-		}
-		return Importado{Externo: strconv.FormatInt(p.ID, 10), URLVieja: urlVieja(p, idioma), Producto: e, Recortes: recortes}, true
-	}
-
-	opciones := make([]listas.Opcion, nOpc)
-	for i := range nOpc {
-		n := espacios(p.Attributes[i].En(idioma))
-		if n == "" {
-			n = "Opción " + strconv.Itoa(i+1)
-		}
-		opciones[i].Nombre = cortar(n, maxTexto)
-	}
-	// Los valores, en el orden en que aparecen. Las variantes con un valor que no entra se descartan.
-	usadas := map[string]bool{}
-	for _, v := range vars {
-		if len(v.valores) < nOpc {
-			recortes++
-			continue
-		}
-		if len(e.Variantes) == maxVariantes {
-			recortes++
-			continue
-		}
-		valores := map[string]string{}
-		fuera := false
-		for i := range nOpc {
-			val := v.valores[i]
-			if val == "" {
-				fuera = true
-				break
+	if len(p.Attributes) > 0 && len(vars[0].Valores) > 0 {
+		for i, a := range p.Attributes {
+			o := importar.Opcion{Nombre: strings.TrimSpace(a.En(idioma))}
+			if o.Nombre == "" {
+				o.Nombre = "Opción " + strconv.Itoa(i+1)
 			}
-			val = cortar(val, maxTexto)
-			if ya, ok := igual(opciones[i].Valores, val); ok {
-				val = ya
-			} else if len(opciones[i].Valores) == maxValores {
-				fuera = true
-				break
-			} else {
-				opciones[i].Valores = append(opciones[i].Valores, val)
+			// Los valores, en el orden en que aparecen en las variantes.
+			vistos := map[string]bool{}
+			for _, v := range vars {
+				if i < len(v.Valores) && v.Valores[i] != "" && !vistos[strings.ToLower(v.Valores[i])] {
+					vistos[strings.ToLower(v.Valores[i])] = true
+					o.Valores = append(o.Valores, v.Valores[i])
+				}
 			}
-			valores[opciones[i].Nombre] = val
+			c.Opciones = append(c.Opciones, o)
 		}
-		clave := claveDe(valores, opciones)
-		if fuera || usadas[clave] {
-			recortes++
-			continue
-		}
-		usadas[clave] = true
-		ve := listas.VarianteEditable{Valores: valores, Stock: ptr(v.stock)}
-		if v.sku != "" {
-			ve.SKU = ptr(v.sku)
-		}
-		if v.precio != e.Precio {
-			ve.Precio = ptr(v.precio)
-		}
-		e.Variantes = append(e.Variantes, ve)
+		c.Variantes = vars
 	}
-	e.Opciones = opciones
-	return Importado{Externo: strconv.FormatInt(p.ID, 10), URLVieja: urlVieja(p, idioma), Producto: e, Recortes: recortes}, true
+	i, ok := importar.Ajustar(c)
+	if !ok {
+		return Importado{}, false
+	}
+	return Importado{Externo: strconv.FormatInt(p.ID, 10), URLVieja: urlVieja(p, idioma), Producto: i.Producto, Recortado: i.Recortado}, true
 }
 
 // urlVieja es el path de la ficha en la tienda de Tiendanube (/productos/<handle>/).
@@ -284,45 +191,4 @@ func pesos(s *string) int64 {
 	return int64(math.Round(f))
 }
 
-var (
-	reSalto    = regexp.MustCompile(`(?i)<br\s*/?>|</p>|</li>|</h[1-6]>`)
-	reEtiqueta = regexp.MustCompile(`<[^>]+>`)
-	reEspacios = regexp.MustCompile(`[ \t\r\f\v]+`)
-	reLineas   = regexp.MustCompile(`\n{3,}`)
-)
-
-// TextoDeHTML pasa la descripción en HTML a texto, con los párrafos como renglones.
-func TextoDeHTML(s string) string {
-	s = reSalto.ReplaceAllString(s, "\n")
-	s = reEtiqueta.ReplaceAllString(s, "")
-	s = html.UnescapeString(s)
-	s = strings.ReplaceAll(s, " ", " ")
-	lineas := strings.Split(s, "\n")
-	for i, l := range lineas {
-		lineas[i] = strings.TrimSpace(reEspacios.ReplaceAllString(l, " "))
-	}
-	return strings.TrimSpace(reLineas.ReplaceAllString(strings.Join(lineas, "\n"), "\n\n"))
-}
-
 func espacios(s string) string { return strings.Join(strings.Fields(s), " ") }
-
-// igual busca el valor sin mirar mayúsculas y devuelve cómo quedó escrito la primera vez.
-func igual(xs []string, x string) (string, bool) {
-	for _, v := range xs {
-		if strings.EqualFold(v, x) {
-			return v, true
-		}
-	}
-	return "", false
-}
-
-func claveDe(valores map[string]string, opciones []listas.Opcion) string {
-	var b strings.Builder
-	for _, o := range opciones {
-		b.WriteString(strings.ToLower(valores[o.Nombre]))
-		b.WriteByte(0)
-	}
-	return b.String()
-}
-
-func ptr[T any](v T) *T { return &v }
