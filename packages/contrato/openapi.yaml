@@ -644,6 +644,26 @@ paths:
         '204': { description: Publicada }
         '401': { $ref: '#/components/responses/Problema' }
         '404': { $ref: '#/components/responses/Problema' }
+  /v1/panel/resenas/{id}:
+    post:
+      operationId: accionResena
+      summary: Ocultar o mostrar una reseña (no se borra), o responderla públicamente (vacía, la saca).
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accion]
+              properties:
+                accion: { type: string, enum: [ocultar, mostrar, responder] }
+                respuesta: { type: string, maxLength: 1000 }
+      responses:
+        '204': { description: Hecho }
+        '401': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
   /v1/panel/links:
     post:
       operationId: crearLink
@@ -780,6 +800,56 @@ paths:
               schema: { type: object, required: [numero, codigo, total], properties: { numero: { type: integer }, codigo: { type: string }, total: { type: integer }, url: { type: string } } }
         '400': { $ref: '#/components/responses/Problema' }
         '409': { $ref: '#/components/responses/Problema' }
+  /v1/publico/tiendas/{slug}/resenas:
+    post:
+      operationId: dejarResena
+      summary: Una reseña de la tienda (409 ya_reseno si ese pedido ya tiene). Con el código público de un pedido cobrado queda con compra (una por pedido y producto). Tope de 10 por hora por IP.
+      security: []
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [autor, estrellas]
+              properties:
+                codigo: { type: string, description: 'El código público del pedido' }
+                productoId: { type: string }
+                autor: { type: string, minLength: 2, maxLength: 60 }
+                estrellas: { type: integer, minimum: 1, maximum: 5 }
+                texto: { type: string, maxLength: 1000 }
+      responses:
+        '201': { description: Guardada }
+        '400': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+        '429': { $ref: '#/components/responses/Problema' }
+  /v1/publico/tiendas/{slug}/preguntas:
+    post:
+      operationId: preguntarEnTienda
+      summary: Una pregunta sobre un producto publicado; se ve en la ficha cuando la tienda la responde. Tope de 10 por hora por IP.
+      security: []
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [productoId, nombre, pregunta]
+              properties:
+                productoId: { type: string }
+                nombre: { type: string, minLength: 2, maxLength: 60 }
+                email: { type: string, maxLength: 120 }
+                pregunta: { type: string, minLength: 3, maxLength: 500 }
+      responses:
+        '201': { description: Guardada }
+        '400': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+        '429': { $ref: '#/components/responses/Problema' }
   /v1/publico/tiendas/{slug}/pedidos/{codigo}:
     get:
       operationId: confirmacionPedido
@@ -2305,7 +2375,7 @@ components:
             type: object
             required: [id, producto, foto, pregunta, creada, sugerida, respuesta]
             properties:
-              id: { type: string }
+              id: { type: string, description: 'Las de la tienda online empiezan con "t-"; las demás son de Mercado Libre' }
               producto: { type: string }
               foto: { type: [string, 'null'] }
               pregunta: { type: string }
@@ -2316,13 +2386,18 @@ components:
           type: array
           items:
             type: object
-            required: [autor, estrellas, texto, origen, creada]
+            required: [id, autor, estrellas, texto, origen, creada, producto, conCompra, oculta, respuesta]
             properties:
+              id: { type: string }
               autor: { type: string }
               estrellas: { type: integer }
               texto: { type: string }
               origen: { type: string, description: 'Tienda, Mercado Libre, Google' }
               creada: { type: string, format: date-time }
+              producto: { type: [string, 'null'], description: 'El producto reseñado (si sigue existiendo)' }
+              conCompra: { type: boolean, description: 'La dejó quien compró: trajo el código de un pedido cobrado' }
+              oculta: { type: boolean, description: 'La tienda la ocultó (no se borra)' }
+              respuesta: { type: [string, 'null'], description: 'La respuesta pública de la tienda' }
         promedio: { type: [number, 'null'] }
         total: { type: integer }
         porEstrellas: { type: array, items: { type: integer }, description: 'De 5 a 1 estrella' }

@@ -5,6 +5,9 @@
 	import { goto } from '$app/navigation';
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
+	import FormResena from '../FormResena.svelte';
+	import PreguntasProducto from '../PreguntasProducto.svelte';
+	import type { TemaOpiniones } from '../opiniones.ts';
 	import { carritoDe } from '../carrito.svelte.ts';
 	import CampoCupon from '../CampoCupon.svelte';
 	import { CuponCheckout, totales } from '../cupon.svelte.ts';
@@ -54,6 +57,8 @@
 			nombre: string;
 			alias: string | null;
 			esCbu?: boolean;
+			/** El código del pedido: con él, la reseña queda con compra. */
+			codigo?: string;
 		} | null;
 		/** La confirmación de un turno (pagina 'turno'). */
 		turno?: import('../tipos.ts').TurnoPublico | null;
@@ -348,6 +353,21 @@
 		})),
 		{ t: 'Nosotros', href: `${base}/nosotros`, on: pagina === 'nosotros' }
 	]);
+	// Reseñas y preguntas con las piezas de Quebracho: Newsreader en los títulos, esquinas rectas.
+	const tema: TemaOpiniones = {
+		texto: '#2B2520',
+		suave: '#6F6358',
+		campo: '#F7F3EE',
+		tarjeta: '#E6DED2',
+		borde: 'rgba(43,37,32,.14)',
+		acento: '#2B2520',
+		sobreAcento: '#EFE9E1',
+		estrella: '#4F5B3A',
+		radio: '0px',
+		fuente: "'Familjen Grotesk', sans-serif",
+		titulos: "'Newsreader', serif",
+		pesoTitulos: 400
+	};
 	const estrellas = (n: number) =>
 		Array.from({ length: 5 }, (_, i) =>
 			n >= i + 1 ? I.phStarFill : n >= i + 0.5 ? I.phStarHalfFill : I.phStar
@@ -655,8 +675,19 @@
 											“{r.texto}”
 										</p>
 										<div style="margin-top:10px;font-size:13px;color:#6F6358">
-											{r.autor} · {r.producto}
+											{r.autor}{#if r.producto}
+												· {r.conCompra ? 'compró' : 'sobre'} {r.producto}{/if}
 										</div>
+										{#if r.conCompra}<div
+												style="margin-top:6px;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;letter-spacing:.04em;color:#4F5B3A"
+											>
+												<Icon icon={I.phSealCheckFill} size={13} />Compra verificada
+											</div>{/if}
+										{#if r.respuesta}<div
+												style="margin-top:10px;padding:12px 14px;background:#E6DED2;font-size:13.5px;line-height:1.55;color:#6F6358"
+											>
+												<b style="color:#2B2520">Respuesta de {tienda.nombre}</b><br />{r.respuesta}
+											</div>{/if}
 									</div>
 								</div>
 							{/each}
@@ -920,6 +951,15 @@
 							</div>{/each}
 					</div>
 				</div>
+			</section>
+			<section style="padding:clamp(48px,7cqw,90px) clamp(16px,4cqw,52px) 0;max-width:860px">
+				<PreguntasProducto
+					slug={tienda.slug}
+					productoId={producto.id}
+					preguntas={tienda.preguntas}
+					tema={{ ...tema, tarjeta: 'transparent' }}
+					titulo="Preguntas sobre este producto"
+				/>
 			</section>
 			{#if related.length}
 				<section style="padding:clamp(56px,8cqw,100px) clamp(16px,4cqw,52px)">
@@ -1379,6 +1419,9 @@
 					style="display:inline-block;margin-top:26px;text-decoration:none;padding:15px 24px;background:#2B2520;color:#EFE9E1;font:600 14px 'Familjen Grotesk';letter-spacing:.04em"
 					>Volver a la tienda</a
 				>
+				<div style="margin-top:clamp(40px,6cqw,64px)">
+					<FormResena slug={tienda.slug} {tema} codigo={pedido.codigo} nombre={pedido.nombre} />
+				</div>
 			</section>
 		{/if}
 

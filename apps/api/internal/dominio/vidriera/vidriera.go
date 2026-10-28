@@ -69,12 +69,14 @@ type Tienda struct {
 	Categorias  []Categoria       `json:"categorias"`
 	Productos   []ProductoPublico `json:"productos"`
 	MasVendidos []string          `json:"masVendidos"`
-	Resenas     []any             `json:"resenas"`
-	Promedio    *float64          `json:"promedio"`
-	Fotos       []string          `json:"fotos"`
-	Cobros      map[string]any    `json:"cobros"`
-	Envios      Envios            `json:"envios"`
-	Vitrina     bool              `json:"vitrina"`
+	Resenas     []ResenaPublica   `json:"resenas"`
+	// Preguntas respondidas, por producto.
+	Preguntas []PreguntaPublica `json:"preguntas"`
+	Promedio  *float64          `json:"promedio"`
+	Fotos     []string          `json:"fotos"`
+	Cobros    map[string]any    `json:"cobros"`
+	Envios    Envios            `json:"envios"`
+	Vitrina   bool              `json:"vitrina"`
 	// Turnos: servicios, profesionales, seña y horario; null si la tienda no toma turnos.
 	Turnos   *turnos.Resumen `json:"turnos"`
 	Medicion Medicion        `json:"medicion"`
@@ -85,6 +87,21 @@ type Tienda struct {
 type Medicion struct {
 	GA4   *string `json:"ga4"`
 	Pixel *string `json:"pixel"`
+}
+
+type ResenaPublica struct {
+	Texto     string  `json:"texto"`
+	Autor     string  `json:"autor"`
+	Producto  string  `json:"producto"`
+	Estrellas int     `json:"estrellas"`
+	ConCompra bool    `json:"conCompra"`
+	Respuesta *string `json:"respuesta"`
+}
+
+type PreguntaPublica struct {
+	ProductoID string `json:"productoId"`
+	Pregunta   string `json:"pregunta"`
+	Respuesta  string `json:"respuesta"`
 }
 
 type Envios struct {
@@ -124,7 +141,7 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 	if err != nil {
 		return Tienda{}, err
 	}
-	out := Tienda{Slug: slug, Secciones: []string{"hero", "cats", "prods", "revs", "ig", "wa"}, Resenas: []any{},
+	out := Tienda{Slug: slug, Secciones: []string{"hero", "cats", "prods", "revs", "ig", "wa"}, Resenas: []ResenaPublica{}, Preguntas: []PreguntaPublica{},
 		Envios: Envios{Retiro: true, Correo: true}, Fotos: []string{}, MasVendidos: []string{}}
 	// Los más vendidos de los últimos 30 días (los ítems de los pedidos guardan el nombre).
 	vendidos := map[string]int{}
@@ -185,6 +202,42 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 		if err := filas.Err(); err != nil {
 			return err
 		}
+		// Reseñas visibles (las 60 últimas) y su promedio; preguntas respondidas.
+		var suma, cant int
+		rs, err := t.Query(ctx, `SELECT r.texto, r.autor, coalesce(p.nombre, ''), r.estrellas, r.pedido_numero IS NOT NULL, r.respuesta
+			FROM resenas r LEFT JOIN productos p ON p.tienda_id = r.tienda_id AND p.id = r.producto_id
+			WHERE r.tienda_id = $1 AND NOT r.oculta ORDER BY r.creada DESC LIMIT 60`, id)
+		if err != nil {
+			return err
+		}
+		for rs.Next() {
+			var r ResenaPublica
+			if err := rs.Scan(&r.Texto, &r.Autor, &r.Producto, &r.Estrellas, &r.ConCompra, &r.Respuesta); err != nil {
+				rs.Close()
+				return err
+			}
+			out.Resenas = append(out.Resenas, r)
+			suma, cant = suma+r.Estrellas, cant+1
+		}
+		rs.Close()
+		if cant > 0 {
+			prom := float64(suma) / float64(cant)
+			out.Promedio = &prom
+		}
+		qs, err := t.Query(ctx, `SELECT producto_id::text, pregunta, respuesta FROM preguntas
+			WHERE tienda_id = $1 AND respuesta IS NOT NULL ORDER BY respondida_en DESC LIMIT 200`, id)
+		if err != nil {
+			return err
+		}
+		for qs.Next() {
+			var q PreguntaPublica
+			if err := qs.Scan(&q.ProductoID, &q.Pregunta, &q.Respuesta); err != nil {
+				qs.Close()
+				return err
+			}
+			out.Preguntas = append(out.Preguntas, q)
+		}
+		qs.Close()
 		rows, err := t.Query(ctx, `SELECT i->>'nombre', sum((i->>'cantidad')::int) FROM pedidos, jsonb_array_elements(items) i
 			WHERE tienda_id = $1 AND estado <> 'Cancelado' AND creado_en > now() - interval '30 days' GROUP BY 1`, id)
 		if err != nil {

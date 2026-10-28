@@ -142,7 +142,14 @@ export interface Datos {
 	devoluciones(): Promise<{ devoluciones: Devolucion[]; tasa: number }>;
 	resolverDevolucion(id: string, accion: 'aprobar' | 'cambio' | 'deshacer'): Promise<Resultado>;
 	resenas(): Promise<ResenasYPreguntas>;
+	/** Responder una pregunta de Mercado Libre o de la tienda online (id "t-…"). */
 	responderPregunta(id: string, respuesta: string): Promise<Resultado>;
+	/** Ocultar o mostrar una reseña (no se borra), o responderla en público. */
+	accionResena(
+		id: string,
+		accion: 'ocultar' | 'mostrar' | 'responder',
+		respuesta?: string
+	): Promise<Resultado>;
 	listasPrecio(): Promise<ListasPrecio>;
 	cupones(): Promise<Cupones>;
 	marketing(): Promise<Marketing>;
