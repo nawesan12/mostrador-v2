@@ -284,7 +284,7 @@ URL, para que no quede en el historial ni en logs.
 - La CSP se suma sólo en `/t/`: scripts y conexiones al propio sitio, a Google y a Meta. El resto
   del sitio sigue sin CSP hasta el PR de endurecimiento.
 
-## 26. Panel de partners (PR #PR_PARTNERS)
+## 26. Panel de partners (PR #75)
 
 - Un partner es una cuenta de usuario (no una tienda): `partners.partners` (nivel, código del link,
   cupón, perfil público y datos de cobro), `partners.clics` (contador por mes) y `partners.pagos`

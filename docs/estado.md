@@ -6,6 +6,7 @@
 
 | PR | Qué |
 |---|---|
+| #75 | Panel de partners (`/partners/panel`): Inicio (comisión del mes, próximo pago, activas/en prueba/perdidas, progreso de nivel, para hacer), Mis tiendas, Link y cupón (QR en PNG/SVG, clics, altas, conversiones), Comisiones y pagos (mes a mes, factura como link, datos de cobro), Perfil público con vista previa y Materiales (`/marca?ref=…`). Go: migración 00037 (`partners.*`, RLS por persona con `db.EnUsuario`), atribución por `ref` o cupón del origen, comisión % del nivel × plan por 12 meses (tabla compartida con la web), rutas internas con clave del BFF para aprobar/liquidar/pagar y `mostradorctl partner-demo`. Demo: "Ver el panel de partners de ejemplo" en /partners (decisiones §26) |
 | #1–#9 | Bootstrap, design system (`/componentes`), fundación Go (roles, RLS, outbox), sandbox D1 + contrato, auth, landing parte 1 |
 | #10–#11 | Landing parte 2 y arreglos de mobile |
 | #12–#16 | Legales (arrepentimiento con código ARR), Seguridad, Nosotros, 404, formularios (contacto, partners, novedades), `/migrar`, `/estado` con monitor real (cron de `mostrador-jobs`) |
