@@ -214,8 +214,19 @@
 	async function lote(l: (typeof LOTE)[number]) {
 		const numeros = [...seleccion.keys()];
 		// Las tarjetas A6 de los paquetes se imprimen en otra pestaña (4 por A4).
-		if (l.accion === 'tarjetas')
-			return window.open(`${resolve('/panel/pedidos/imprimir')}?n=${numeros.join(',')}`, '_blank');
+		if (l.accion === 'tarjetas') {
+			// La impresión toma hasta 40 pedidos por vez.
+			if (numeros.length > 40)
+				ui.toast({
+					k: 'warn',
+					title: 'Se imprimen las primeras 40 tarjetas',
+					desc: 'Para el resto, seleccioná otra tanda'
+				});
+			return window.open(
+				`${resolve('/panel/pedidos/imprimir')}?n=${numeros.slice(0, 40).join(',')}`,
+				'_blank'
+			);
+		}
 		const r = await fetch('/panel/pedidos/lote', {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },

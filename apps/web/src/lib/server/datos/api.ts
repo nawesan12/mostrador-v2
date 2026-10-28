@@ -225,10 +225,10 @@ export class DatosApi implements Datos {
 		return this.pedir<void>('/v1/panel/carritos', 'PUT', a);
 	}
 	tarjeta() {
-		return this.pedir<Tarjeta>('/v1/panel/tarjeta-para-paquetes');
+		return this.pedir<Tarjeta>('/v1/panel/tarjeta');
 	}
 	guardarTarjeta(t: Tarjeta) {
-		return this.pedir<void>('/v1/panel/tarjeta-para-paquetes', 'PUT', t);
+		return this.pedir<void>('/v1/panel/tarjeta', 'PUT', t);
 	}
 	async recordarCarrito(id: string) {
 		return resultado(

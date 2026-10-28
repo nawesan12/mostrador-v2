@@ -55,12 +55,16 @@
 
 	async function guardar() {
 		guardando = true;
+		// Sin conexión, fetch rechaza: «Guardar» vuelve a quedar habilitado igual.
 		const r = await fetch('/panel/tarjeta-para-paquetes', {
 			method: 'PUT',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify(t)
-		});
-		guardando = false;
+		})
+			.catch(() => null)
+			.finally(() => (guardando = false));
+		if (!r)
+			return ui.toast({ k: 'err', title: 'No se guardó la tarjeta', desc: 'Revisá la conexión.' });
 		if (!r.ok)
 			return ui.toast({
 				k: 'err',

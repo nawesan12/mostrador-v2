@@ -71,7 +71,16 @@ const MESES = [
 
 /** "Lucía" de "Lucía Pérez"; "20 de octubre"; "Mate y bombilla" (y "y 2 más"). */
 export function completar(texto: string, v: Variables) {
-	const fecha = `${v.fecha.getDate()} de ${MESES[v.fecha.getMonth()]}`;
+	// En hora de Argentina, aunque se imprima desde otra zona horaria.
+	const [mes, dia] = new Intl.DateTimeFormat('en-CA', {
+		timeZone: 'America/Argentina/Buenos_Aires',
+		month: 'numeric',
+		day: 'numeric'
+	})
+		.formatToParts(v.fecha)
+		.filter((x) => x.type === 'month' || x.type === 'day')
+		.map((x) => Number(x.value));
+	const fecha = `${dia} de ${MESES[mes - 1]}`;
 	const productos =
 		v.productos.length <= 2
 			? v.productos.join(' y ')
