@@ -82,6 +82,16 @@ import type {
 	Tienda
 } from './tipos.ts';
 
+/** Un producto de una API sin galería ni variantes todavía se ve como uno sin opciones. */
+function conVariantes(p: Producto): Producto {
+	return {
+		...p,
+		fotos: p.fotos ?? (p.foto ? [p.foto] : []),
+		opciones: p.opciones ?? [],
+		variantes: p.variantes ?? []
+	};
+}
+
 export class DatosApi implements Datos {
 	constructor(
 		private base: string,
@@ -204,12 +214,12 @@ export class DatosApi implements Datos {
 	}
 	async producto(id: string) {
 		const r = await this.intentar(`/v1/panel/productos/${encodeURIComponent(id)}`, 'GET');
-		return r.ok ? ((await r.json()) as Producto) : null;
+		return r.ok ? conVariantes((await r.json()) as Producto) : null;
 	}
 	async guardarProducto(id: string | null, p: ProductoEditable) {
-		if (!id) return this.pedir<Producto>('/v1/panel/productos', 'POST', p);
+		if (!id) return conVariantes(await this.pedir<Producto>('/v1/panel/productos', 'POST', p));
 		const r = await this.intentar(`/v1/panel/productos/${encodeURIComponent(id)}`, 'PUT', p);
-		return r.ok ? ((await r.json()) as Producto) : null;
+		return r.ok ? conVariantes((await r.json()) as Producto) : null;
 	}
 
 	movimientosHoy() {
@@ -243,6 +253,8 @@ export class DatosApi implements Datos {
 	async crearPedido(n: PedidoNuevo) {
 		const r = await this.intentar('/v1/panel/pedidos', 'POST', n);
 		if (r.status === 409) return 'sin-stock' as const;
+		// Una variante que no es del producto, inactiva o que falta: el pedido no se arma.
+		if (r.status === 400 || r.status === 422) return 'invalido' as const;
 		return (await r.json()) as { numero: number; total: number };
 	}
 	devoluciones() {

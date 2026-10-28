@@ -9,6 +9,7 @@
 	import { anim } from '#lib/panel/anim.ts';
 	import { pesos } from '#lib/panel/formato.ts';
 	import { rutaDe } from '#lib/panel/navegacion.ts';
+	import { vendibles } from '#lib/panel/vendibles.ts';
 	import { getShell } from '#lib/panel/shell.svelte.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 
@@ -50,8 +51,10 @@
 
 	// ---- Productos ----
 	let buscar = $state('');
+	// Con opciones, cada variante es un renglón ("Remera · M · Negro").
+	const todos = $derived(vendibles(data.productos));
 	const encontrados = $derived(
-		data.productos
+		todos
 			.filter(
 				(p) =>
 					!buscar.trim() ||
@@ -62,21 +65,21 @@
 	const items = new SvelteMap<string, number>();
 	const renglones = $derived(
 		[...items]
-			.map(([id, q]) => ({ p: data.productos.find((x) => x.id === id)!, q }))
+			.map(([clave, q]) => ({ p: todos.find((x) => x.clave === clave)!, q }))
 			.filter((x) => x.p)
 	);
-	function sumar(id: string, d: number) {
-		const p = data.productos.find((x) => x.id === id);
+	function sumar(clave: string, d: number) {
+		const p = todos.find((x) => x.clave === clave);
 		if (!p) return;
-		const q = (items.get(id) ?? 0) + d;
+		const q = (items.get(clave) ?? 0) + d;
 		if (q > p.stock)
 			return ui.toast({
 				k: 'warn',
 				title: `Quedan ${p.stock} de ${p.nombre}`,
 				desc: 'No alcanza el stock'
 			});
-		if (q <= 0) items.delete(id);
-		else items.set(id, q);
+		if (q <= 0) items.delete(clave);
+		else items.set(clave, q);
 	}
 
 	// ---- Envío y cobro ----
@@ -119,7 +122,11 @@
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({
-				items: renglones.map((x) => ({ productoId: x.p.id, cantidad: x.q })),
+				items: renglones.map((x) => ({
+					productoId: x.p.id,
+					varianteId: x.p.varianteId,
+					cantidad: x.q
+				})),
 				pago: cobro === 'link' ? 'mp' : medio,
 				canal,
 				envio,
@@ -248,12 +255,12 @@
 					/></label
 				>
 				<div class="productos">
-					{#each encontrados as p (p.id)}
+					{#each encontrados as p (p.clave)}
 						<button
 							type="button"
 							class="prod"
 							disabled={!p.stock}
-							onclick={() => sumar(p.id, 1)}
+							onclick={() => sumar(p.clave, 1)}
 							aria-label="Sumar {p.nombre}"
 						>
 							{#if p.foto}<img src={unsplash(p.foto, 96, '&h=96')} alt="" />{/if}
@@ -300,7 +307,7 @@
 		<aside class="resumen">
 			<div class="r-cab">Resumen</div>
 			<div class="r-items">
-				{#each renglones as x (x.p.id)}
+				{#each renglones as x (x.p.clave)}
 					<div class="item">
 						<span class="i-txt"
 							><span class="i-n">{x.p.nombre}</span><span class="i-s">{pesos(x.p.precio)} c/u</span
@@ -310,14 +317,14 @@
 							<button
 								type="button"
 								aria-label="Restar {x.p.nombre}"
-								onclick={() => sumar(x.p.id, -1)}><Icon icon={I.phMinusBold} size={12} /></button
+								onclick={() => sumar(x.p.clave, -1)}><Icon icon={I.phMinusBold} size={12} /></button
 							>
 							<b>{x.q}</b>
 							<button
 								type="button"
 								class="q-mas"
 								aria-label="Sumar {x.p.nombre}"
-								onclick={() => sumar(x.p.id, 1)}><Icon icon={I.phPlusBold} size={12} /></button
+								onclick={() => sumar(x.p.clave, 1)}><Icon icon={I.phPlusBold} size={12} /></button
 							>
 						</span>
 					</div>

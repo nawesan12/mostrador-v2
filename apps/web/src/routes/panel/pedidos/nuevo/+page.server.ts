@@ -1,4 +1,5 @@
 import { datosDe } from '#lib/server/datos/index.ts';
+import type { VarianteFila } from '#lib/panel/vendibles.ts';
 import type { PageServerLoad } from './$types';
 
 /** Crear pedido: productos con stock y clientes para elegir. `?cliente=` llega precargado. */
@@ -16,6 +17,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			sku: string;
 			precio: number;
 			stock: number;
+			variantes: VarianteFila[];
 		}[],
 		clientes: (
 			clientes.filas as {

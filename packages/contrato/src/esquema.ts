@@ -2102,7 +2102,7 @@ export interface components {
         NombreLista: "clientes" | "productos" | "inventario" | "facturacion" | "envios";
         ListaGenerica: {
             total: number;
-            /** @description Registros de la lista (la forma depende de la lista: ver FilaCliente, FilaProducto, …) */
+            /** @description Registros de la lista (la forma depende de la lista: ver FilaCliente, FilaProducto, …). Productos: cada fila trae `variantes: {id, texto, sku, precio, stock, activa}[]`. Inventario: `variantes: {id: "producto:variante", varianteId, texto, sku, stock, activa}[]` y el stock de la fila es el total; ajustar, ingreso y conteo aceptan esos ids */
             filas: {
                 [key: string]: unknown;
             }[];
@@ -2129,17 +2129,62 @@ export interface components {
             costo?: number;
             sku?: string;
             stock?: number;
+            /** @description La portada (fotos[0]). Sin `fotos`: reemplaza la portada y deja el resto; null vacía la galería */
             foto?: string | null;
+            /** @description Galería: la primera es la portada (ids de foto o URLs https). Sin vacías; las repetidas se descartan */
+            fotos?: string[];
+            /** @description Talle, Color, Presentación… Con opciones se vende por variante y el `stock` del producto se ignora (es la suma de las activas). Sin mandar: quedan las que había; [] las saca. Hasta 100 combinaciones; nombres y valores repetidos se comparan sin mayúsculas ni tildes */
+            opciones?: components["schemas"]["OpcionProducto"][];
+            /** @description Sólo las que se tocan, identificadas por sus valores. Al guardar se generan las combinaciones: las nuevas arrancan con stock 0 y activas; las que dejan de existir se borran */
+            variantes?: components["schemas"]["VarianteEditable"][];
             /** @description Dónde se publica: web, ml, ig, google */
             canales?: {
                 [key: string]: boolean;
             };
+        };
+        OpcionProducto: {
+            nombre: string;
+            /** @description Sin repetidos */
+            valores: string[];
+        };
+        VarianteEditable: {
+            /** @description Una clave por opción, con un valor de esa opción: identifica la combinación */
+            valores: {
+                [key: string]: string;
+            };
+            sku?: string;
+            /** @description null: usa el precio del producto */
+            precio?: number | null;
+            /** @description Sin mandar: el que tenía (0 si es nueva) */
+            stock?: number;
+            /** @description Una de las fotos del producto */
+            foto?: string | null;
+            /** @description Sin mandar: la que tenía (true si es nueva) */
+            activa?: boolean;
+        };
+        Variante: {
+            id: string;
+            /** @description Una clave por opción del producto, con un valor de esa opción */
+            valores: {
+                [key: string]: string;
+            };
+            sku: string;
+            /** @description null: usa el precio del producto */
+            precio: number | null;
+            stock: number;
+            /** @description Una de las fotos del producto */
+            foto: string | null;
+            activa: boolean;
         };
         Producto: components["schemas"]["ProductoEditable"] & {
             id: string;
             publicado: boolean;
             vendidos30d: number;
             slug: string;
+            fotos: string[];
+            opciones: components["schemas"]["OpcionProducto"][];
+            /** @description En el orden de las combinaciones */
+            variantes: components["schemas"]["Variante"][];
         };
         MovimientoStock: {
             /** @enum {string} */
@@ -2236,6 +2281,8 @@ export interface components {
         PedidoNuevo: {
             items: {
                 productoId: string;
+                /** @description Obligatoria si el producto tiene opciones; activa y de ese producto */
+                varianteId?: string | null;
                 cantidad: number;
             }[];
             /** @enum {string} */
@@ -3109,6 +3156,9 @@ export interface components {
                 foto: string | null;
                 cantidad: number;
                 precio: number;
+                varianteId: string | null;
+                /** @description Texto de la variante al comprar: "Talle M · Color Negro" */
+                variante: string | null;
             }[];
             subtotal: number;
             costoEnvio: number;
@@ -4757,6 +4807,7 @@ export interface operations {
                 "application/json": {
                     carrito: {
                         id: string;
+                        varianteId?: string | null;
                         cantidad: number;
                     }[];
                     email: string;

@@ -11,6 +11,7 @@ const Nuevo = v.object({
 		v.array(
 			v.object({
 				productoId: v.pipe(v.string(), v.maxLength(80)),
+				varianteId: v.optional(v.nullable(v.pipe(v.string(), v.maxLength(120))), null),
 				cantidad: v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(10_000))
 			})
 		),
@@ -33,7 +34,8 @@ export const POST: RequestHandler = async ({ locals, request, platform }) => {
 	if (!r.success) error(400, r.issues[0].message);
 	const res = await datosDe(locals).crearPedido({ ...r.output, envio: r.output.envio ?? 'retiro' });
 	if (res === 'sin-stock') error(409, 'No alcanza el stock de algún producto.');
-	if (res === 'invalido') error(400, 'Hay un producto que no existe.');
+	if (res === 'invalido')
+		error(400, 'Hay un producto que no existe o al que le falta elegir la variante.');
 	// Aviso de la venta por Telegram (si la tienda vinculó su chat). No demora la respuesta.
 	if (locals.sandbox) {
 		const total = '$ ' + Math.round(res.total).toLocaleString('es-AR');

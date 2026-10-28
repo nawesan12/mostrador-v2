@@ -14,6 +14,7 @@
 	import CampoCupon from '../CampoCupon.svelte';
 	import { CuponCheckout, totales } from '../cupon.svelte.ts';
 	import { cotizar, cpValido } from '../envio.ts';
+	import { Seleccion, tarjetaDe } from '../seleccion.svelte.ts';
 	import { partirTitulo } from '../titulo.ts';
 	import type { OpcionEnvio, ProductoPublico, TiendaPublica } from '../tipos.ts';
 
@@ -104,22 +105,27 @@
 				: `https://images.unsplash.com/photo-${f}?auto=format&fit=crop&w=${w}${h ? '&h=' + h : ''}&q=72`;
 	const porId = $derived(new Map(tienda.productos.map((p) => [p.id, p])));
 	const rank = $derived(new Map(tienda.masVendidos.map((id, i) => [id, i])));
-	const tarjeta = (p: ProductoPublico) => ({
-		id: p.id,
-		n: p.nombre,
-		cat: p.categoria,
-		price: fmt(p.precio),
-		old: p.anterior ? fmt(p.anterior) : null,
-		tr: fmt(p.precio * (1 - tienda.cobros.transferencia / 100)),
-		img: img(p.foto, 600, 800),
-		tag:
-			p.stock === 0
+	// Con variantes de precios distintos, "Desde"; "Sin stock" sólo si no queda ninguna.
+	const tarjeta = (p: ProductoPublico) => {
+		const t = tarjetaDe(p);
+		const rebaja = p.anterior && !t.desde ? p.anterior : null;
+		return {
+			id: p.id,
+			n: p.nombre,
+			cat: p.categoria,
+			price: (t.desde ? 'Desde ' : '') + fmt(t.precio),
+			old: rebaja ? fmt(rebaja) : null,
+			tr: fmt(t.precio * (1 - tienda.cobros.transferencia / 100)),
+			img: img(p.foto, 600, 800),
+			tag: t.agotado
 				? 'Sin stock'
-				: p.anterior
-					? `−${Math.round((1 - p.precio / p.anterior) * 100)}%`
+				: rebaja
+					? `−${Math.round((1 - p.precio / rebaja) * 100)}%`
 					: p.etiqueta,
-		href: `${base}/producto/${p.id}`
-	});
+			href: `${base}/producto/${p.id}`
+		};
+	};
+	const agotado = (p: ProductoPublico) => tarjetaDe(p).agotado;
 	const ver = (s: string) => tienda.secciones.includes(s as TiendaPublica['secciones'][number]);
 	const whatsapp = $derived(tienda.whatsapp.replace(/\D/g, ''));
 	const wa = (texto: string) =>
@@ -201,7 +207,7 @@
 		producto
 			? tienda.productos
 					.filter(
-						(p) => p.id !== producto!.id && p.categoria === producto!.categoria && p.stock > 0
+						(p) => p.id !== producto!.id && p.categoria === producto!.categoria && !agotado(p)
 					)
 					.slice(0, 4)
 					.map(tarjeta)
@@ -210,13 +216,22 @@
 	let cp = $state('');
 	let cotizado = $state<OpcionEnvio[] | null>(null);
 	function calcular() {
-		if (cpValido(cp)) cotizado = cotizar(cp, producto?.precio ?? subtotal, tienda);
+		if (cpValido(cp)) cotizado = cotizar(cp, sel?.precio ?? subtotal, tienda);
 	}
+	// Añada, tamaño, presentación…: lo elegido, la variante, su precio, stock y foto (seleccion.svelte.ts).
+	const sel = $derived(producto ? new Seleccion(producto) : null);
+	// El tachado no va con "Desde": no se sabe a qué variante se compara.
+	const tachado = $derived(sel && !sel.desde ? sel.anterior : null);
 	function agregar() {
-		if (!producto || producto.stock === 0 || tienda.vitrina) return;
-		carrito.sumar(producto.id, 1, producto.stock);
+		if (!sel || tienda.vitrina || !sel.agregar(carrito)) return;
 		// eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta de la tienda con su slug
 		goto(`${base}/carrito`);
+	}
+	/** Sumar desde "Para sumar": con opciones, primero se elige en la ficha. */
+	function sumar(p: ProductoPublico) {
+		if (tienda.vitrina) return;
+		// eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta de la tienda con su slug
+		if (!carrito.sumarProducto(p)) goto(`${base}/producto/${p.id}`);
 	}
 
 	// Carrito.
@@ -235,7 +250,10 @@
 	);
 	const upsell = $derived(
 		tienda.masVendidos
-			.filter((id) => !carrito.lineas.some((l) => l.id === id) && (porId.get(id)?.stock ?? 0) > 0)
+			.filter(
+				(id) =>
+					!carrito.lineas.some((l) => l.id === id) && porId.has(id) && !agotado(porId.get(id)!)
+			)
 			.slice(0, 3)
 			.map((id) => porId.get(id)!)
 	);
@@ -358,7 +376,7 @@
 		Array.from({ length: 5 }, (_, i) =>
 			n >= i + 1 ? I.phStarFill : n >= i + 0.5 ? I.phStarHalfFill : I.phStar
 		);
-	const sel = (on: boolean) => ({
+	const estilo = (on: boolean) => ({
 		bd: on ? '#E8B86A' : 'rgba(244,233,225,.14)',
 		bg: on ? 'rgba(232,184,106,.08)' : 'transparent'
 	});
@@ -939,7 +957,7 @@
 		{/if}
 
 		<!-- ============ PRODUCTO ============ -->
-		{#if pagina === 'producto' && producto}
+		{#if pagina === 'producto' && producto && sel}
 			<section style="padding:24px clamp(16px,4cqw,48px) 0">
 				<div style="font-size:12.5px;color:#BFA9A3">
 					<a href={base} style="color:inherit;text-decoration:none">Inicio</a> / {#if producto.categoria}<a
@@ -951,25 +969,45 @@
 				<div
 					style="margin-top:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:clamp(24px,4.4cqw,64px);align-items:start"
 				>
-					<div
-						style="position:relative;aspect-ratio:4/5;overflow:hidden;background:radial-gradient(70% 60% at 50% 40%,#4A2630,#24121A)"
-					>
-						{#if producto.foto}<img
-								src={img(producto.foto, 1100)}
-								alt={producto.nombre}
-								style="width:100%;height:100%;object-fit:cover"
-							/>{/if}{#if producto.anterior}<span
-								style="position:absolute;top:16px;right:16px;width:72px;height:72px;border-radius:50%;border:1px solid #E8B86A;background:rgba(30,14,18,.82);display:grid;place-items:center;text-align:center;line-height:1"
-								><span
-									><b
-										style="display:block;font-family:'Cormorant Garamond',serif;font-size:30px;color:#E8B86A"
-										>{Math.round((1 - producto.precio / producto.anterior) * 100)}%</b
-									><span style="font-size:9px;letter-spacing:.14em">OFF</span></span
-								></span
-							>{:else if producto.etiqueta}<span
-								style="position:absolute;top:16px;left:16px;padding:4px 9px;background:#9E2F40;color:#F4E9E1;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase"
-								>{producto.etiqueta}</span
-							>{/if}
+					<div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+						<div
+							style="position:relative;aspect-ratio:4/5;overflow:hidden;background:radial-gradient(70% 60% at 50% 40%,#4A2630,#24121A)"
+						>
+							{#if sel.foto}<img
+									src={img(sel.foto, 1100)}
+									alt={producto.nombre}
+									style="width:100%;height:100%;object-fit:cover"
+								/>{/if}{#if tachado}<span
+									style="position:absolute;top:16px;right:16px;width:72px;height:72px;border-radius:50%;border:1px solid #E8B86A;background:rgba(30,14,18,.82);display:grid;place-items:center;text-align:center;line-height:1"
+									><span
+										><b
+											style="display:block;font-family:'Cormorant Garamond',serif;font-size:30px;color:#E8B86A"
+											>{Math.round((1 - sel.precio / tachado) * 100)}%</b
+										><span style="font-size:9px;letter-spacing:.14em">OFF</span></span
+									></span
+								>{:else if producto.etiqueta}<span
+									style="position:absolute;top:16px;left:16px;padding:4px 9px;background:#9E2F40;color:#F4E9E1;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase"
+									>{producto.etiqueta}</span
+								>{/if}
+						</div>
+						{#if sel.fotos.length > 1}<div
+								style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px"
+							>
+								{#each sel.fotos as f, i (f)}<button
+										type="button"
+										aria-label="Ver la foto {i + 1}"
+										aria-pressed={i === sel.fotoIdx}
+										onclick={() => sel.verFoto(i)}
+										style="aspect-ratio:4/5;padding:0;border:1px solid {i === sel.fotoIdx
+											? '#E8B86A'
+											: 'rgba(244,233,225,.12)'};background:#3A2026;overflow:hidden;cursor:pointer"
+										><img
+											src={img(f, 200, 250)}
+											alt=""
+											style="display:block;width:100%;height:100%;object-fit:cover"
+										/></button
+									>{/each}
+							</div>{/if}
 					</div>
 					<div style="position:sticky;top:96px;min-width:0">
 						{#if producto.categoria}<div
@@ -984,33 +1022,99 @@
 								>{/if}
 						</h1>
 						<div style="margin-top:18px;display:flex;align-items:baseline;gap:12px">
-							<b style="font-size:28px">{fmt(producto.precio)}</b>{#if producto.anterior}<s
-									style="font-size:14px;color:#BFA9A3">{fmt(producto.anterior)}</s
-								>{/if}
+							<b style="font-size:28px">{sel.desde ? 'Desde ' : ''}{fmt(sel.precio)}</b
+							>{#if tachado}<s style="font-size:14px;color:#BFA9A3">{fmt(tachado)}</s>{/if}
 						</div>
 						<div style="margin-top:6px;display:flex;flex-direction:column;gap:3px;font-size:14px">
 							<span
 								>{tienda.cobros.cuotas} cuotas sin interés de
-								<b>{fmt(producto.precio / tienda.cobros.cuotas)}</b></span
+								<b>{fmt(sel.precio / tienda.cobros.cuotas)}</b></span
 							><span style="color:#9FD3A8;font-weight:600"
-								>{fmt(producto.precio * (1 - tienda.cobros.transferencia / 100))} por transferencia ({tienda
+								>{fmt(sel.precio * (1 - tienda.cobros.transferencia / 100))} por transferencia ({tienda
 									.cobros.transferencia}% off)</span
 							>
 						</div>
-						{#if producto.stock > 0 && producto.stock <= 3}<div
+						{#each sel.opciones as o (o.nombre)}{@const swatch = o.valores.every(
+								(x) => x.color || x.foto
+							)}
+							<div style="margin-top:20px">
+								<div
+									style="font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;margin-bottom:10px;color:{sel.aviso &&
+									!o.elegido
+										? '#E8B86A'
+										: '#BFA9A3'}"
+								>
+									{o.nombre}{#if o.elegido}<span
+											style="font-weight:400;letter-spacing:.04em;text-transform:none;color:#F4E9E1"
+											>&nbsp;· {o.elegido}</span
+										>{/if}
+								</div>
+								{#if swatch}<div style="display:flex;gap:10px;flex-wrap:wrap">
+										{#each o.valores as x (x.valor)}<button
+												type="button"
+												aria-label="{o.nombre} {x.valor}"
+												aria-pressed={x.elegido}
+												disabled={!x.disponible && !x.elegido}
+												onclick={() => sel.elegir(o.nombre, x.valor)}
+												style="position:relative;width:38px;height:38px;padding:0;border:0;border-radius:50%;overflow:hidden;background:#3A2026;cursor:pointer;opacity:{x.disponible
+													? 1
+													: 0.4};box-shadow:inset 0 0 0 1px rgba(244,233,225,.2),0 0 0 {x.elegido
+													? '2px'
+													: '0px'} #1E0E12,0 0 0 {x.elegido ? '3px' : '0px'} #E8B86A"
+												>{#if x.color}<span
+														style="display:block;width:100%;height:100%;background:{x.color}"
+													></span>{:else}<img
+														src={img(x.foto, 80, 80)}
+														alt=""
+														style="display:block;width:100%;height:100%;object-fit:cover"
+													/>{/if}{#if !x.disponible}<span
+														style="position:absolute;left:50%;top:-4px;bottom:-4px;width:1px;background:#F4E9E1;transform:rotate(45deg)"
+													></span>{/if}</button
+											>{/each}
+									</div>{:else}<div style="display:flex;gap:8px;flex-wrap:wrap">
+										{#each o.valores as x (x.valor)}{@const pv =
+												sel.opciones.length === 1
+													? sel.variantes.find((v) => v.valores[o.nombre] === x.valor)
+													: null}<button
+												type="button"
+												aria-pressed={x.elegido}
+												disabled={!x.disponible && !x.elegido}
+												onclick={() => sel.elegir(o.nombre, x.valor)}
+												style="min-width:54px;min-height:46px;padding:10px 16px;border:1px solid {x.elegido
+													? '#E8B86A'
+													: 'rgba(244,233,225,.2)'};background:{x.elegido
+													? 'rgba(232,184,106,.1)'
+													: 'transparent'};font:600 14px 'Instrument Sans';color:{x.elegido
+													? '#E8B86A'
+													: x.disponible
+														? '#F4E9E1'
+														: '#BFA9A3'};text-align:left;text-decoration:{x.disponible
+													? 'none'
+													: 'line-through'};cursor:{x.disponible ? 'pointer' : 'default'}"
+												>{x.valor}{#if pv}<span
+														style="display:block;font-size:12px;font-weight:400;color:#BFA9A3"
+														>{fmt(pv.precio ?? producto.precio)}</span
+													>{/if}</button
+											>{/each}
+									</div>{/if}
+							</div>{/each}
+						{#if sel.stock > 0 && sel.stock <= 3 && (!sel.conOpciones || sel.variante)}<div
 								style="margin-top:14px;font-size:12.5px;letter-spacing:.06em;color:#E8B86A"
 							>
-								{producto.stock === 1 ? 'Queda 1' : `Quedan ${producto.stock}`}
+								{sel.stock === 1 ? 'Queda 1' : `Quedan ${sel.stock}`}{#if sel.variante}
+									en {sel.texto.toLowerCase()}{/if}
 							</div>{/if}
 						<div style="margin-top:20px;display:flex;flex-direction:column;gap:8px">
 							<button
 								type="button"
 								onclick={agregar}
-								disabled={producto.stock === 0 || tienda.vitrina}
+								disabled={sel.stock === 0 || tienda.vitrina}
 								style="padding:17px;border:0;background:#E8B86A;color:#1E0E12;font:700 14.5px 'Instrument Sans';letter-spacing:.08em;text-transform:uppercase;cursor:pointer"
-								>{producto.stock === 0 ? 'Sin stock' : 'Agregar al carrito'}</button
+								>{sel.boton('Agregar al carrito')}</button
 							>{#if whatsapp}<a
-									href={wa(`¡Hola! Quiero comprar ${producto.nombre} (${fmt(producto.precio)}).`)}
+									href={wa(
+										`¡Hola! Quiero comprar ${producto.nombre}${sel.variante ? ` (${sel.texto})` : ''} (${fmt(sel.precio)}).`
+									)}
 									target="_blank"
 									rel="noopener"
 									style="display:flex;justify-content:center;align-items:center;gap:8px;padding:15px;border:1px solid rgba(244,233,225,.4);font-size:14px;font-weight:600;color:#F4E9E1;text-decoration:none"
@@ -1147,7 +1251,7 @@
 						style="margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:clamp(22px,4cqw,56px);align-items:start"
 					>
 						<div style="min-width:0">
-							{#each lineas as c (c.id)}<div
+							{#each lineas as c (c.clave)}<div
 									style="display:flex;gap:16px;padding:16px 0;border-bottom:1px solid rgba(244,233,225,.1)"
 								>
 									{#if c.producto.foto}<img
@@ -1164,7 +1268,7 @@
 											><b style="white-space:nowrap">{fmt(c.subtotal)}</b>
 										</div>
 										<span style="font-size:12.5px;color:#BFA9A3;margin-top:4px"
-											>{fmt(c.producto.precio)} c/u</span
+											>{c.variante ? `${c.variante} · ` : ''}{fmt(c.producto.precio)} c/u</span
 										>
 										<span style="flex:1;min-height:12px"></span>
 										<div style="display:flex;justify-content:space-between;align-items:center">
@@ -1173,7 +1277,7 @@
 												><button
 													type="button"
 													aria-label="Uno menos"
-													onclick={() => carrito.fijar(c.id, c.cantidad - 1)}
+													onclick={() => carrito.fijar(c.clave, c.cantidad - 1)}
 													style="width:34px;height:32px;display:grid;place-items:center;border:0;background:transparent;cursor:pointer;color:#F4E9E1"
 													><Icon icon={I.phMinus} size={12} /></button
 												><b style="width:24px;text-align:center;font-size:14px">{c.cantidad}</b
@@ -1181,13 +1285,13 @@
 													type="button"
 													aria-label="Uno más"
 													disabled={c.cantidad >= c.producto.stock}
-													onclick={() => carrito.fijar(c.id, c.cantidad + 1)}
+													onclick={() => carrito.fijar(c.clave, c.cantidad + 1)}
 													style="width:34px;height:32px;display:grid;place-items:center;border:0;background:transparent;cursor:pointer;color:#F4E9E1"
 													><Icon icon={I.phPlus} size={12} /></button
 												></span
 											><button
 												type="button"
-												onclick={() => carrito.fijar(c.id, 0)}
+												onclick={() => carrito.fijar(c.clave, 0)}
 												style="border:0;background:transparent;padding:0;font:400 12.5px 'Instrument Sans';color:#BFA9A3;text-decoration:underline;cursor:pointer"
 												>Quitar</button
 											>
@@ -1221,10 +1325,10 @@
 											<div
 												style="display:flex;justify-content:space-between;align-items:center;margin-top:4px"
 											>
-												<b style="font-size:14px">{fmt(p.precio)}</b><button
+												<b style="font-size:14px">{tarjeta(p).price}</b><button
 													type="button"
 													aria-label="Sumar {p.nombre}"
-													onclick={() => carrito.sumar(p.id, 1, p.stock)}
+													onclick={() => sumar(p)}
 													style="width:28px;height:28px;border:1px solid #E8B86A;background:transparent;color:#E8B86A;display:grid;place-items:center;cursor:pointer"
 													><Icon icon={I.phPlus} size={13} /></button
 												>
@@ -1365,7 +1469,8 @@
 								role="radiogroup"
 								aria-label="Forma de entrega"
 							>
-								{#each opciones as s (s.id)}{@const on = envio === s.id}{@const c = sel(on)}<button
+								{#each opciones as s (s.id)}{@const on = envio === s.id}{@const c =
+										estilo(on)}<button
 										type="button"
 										role="radio"
 										aria-checked={on}
@@ -1397,7 +1502,7 @@
 								role="radiogroup"
 								aria-label="Forma de pago"
 							>
-								{#each pagos as s (s.id)}{@const on = pago === s.id}{@const c = sel(on)}<button
+								{#each pagos as s (s.id)}{@const on = pago === s.id}{@const c = estilo(on)}<button
 										type="button"
 										role="radio"
 										aria-checked={on}
@@ -1441,7 +1546,7 @@
 							Tu pedido
 						</div>
 						<div style="margin-top:14px;display:flex;flex-direction:column;gap:12px">
-							{#each lineas as c (c.id)}<div style="display:flex;gap:12px;align-items:center">
+							{#each lineas as c (c.clave)}<div style="display:flex;gap:12px;align-items:center">
 									<span style="position:relative;flex:none"
 										>{#if c.producto.foto}<img
 												src={img(c.producto.foto, 96, 132)}
@@ -1454,7 +1559,10 @@
 										></span
 									><span
 										style="flex:1;min-width:0;font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;line-height:1.1"
-										>{c.producto.nombre}</span
+										>{c.producto.nombre}{#if c.variante}<span
+												style="display:block;margin-top:2px;font-family:'Instrument Sans',sans-serif;font-size:12.5px;font-weight:400;color:#BFA9A3"
+												>{c.variante}</span
+											>{/if}</span
 									><b style="font-size:14px;white-space:nowrap">{fmt(c.subtotal)}</b>
 								</div>{/each}
 						</div>

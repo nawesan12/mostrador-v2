@@ -26,7 +26,10 @@ export type FiltrosPedidos = import('../sandbox/pedidos.ts').FiltrosPedidos;
 export type Resultado = 'ok' | 'no-existe' | 'no-se-puede';
 export type ListaGenerica = components['schemas']['ListaGenerica'];
 export type NombreLista = components['schemas']['NombreLista'];
-export type Producto = components['schemas']['Producto'];
+/** El de la API: ProductoEditable manda variantes editables; la ficha devuelve las completas. */
+export type Producto = Omit<components['schemas']['Producto'], 'variantes'> & {
+	variantes: components['schemas']['Variante'][];
+};
 export type ProductoEditable = components['schemas']['ProductoEditable'];
 export type FiltrosLista = import('../sandbox/listas.ts').FiltrosLista;
 export type MovimientoStock = components['schemas']['MovimientoStock'];

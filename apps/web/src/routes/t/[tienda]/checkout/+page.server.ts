@@ -7,6 +7,7 @@ import { avisarVenta } from '#lib/server/telegram.ts';
 import { evaluarCupon } from '#lib/server/tienda/cupon.ts';
 import { resolverTienda } from '#lib/server/tienda/publica.ts';
 import { cotizar, cpValido } from '#lib/tienda/envio.ts';
+import { precioDe } from '#lib/tienda/variantes.ts';
 import type { Actions } from './$types';
 
 const Pedido = v.object({
@@ -14,6 +15,7 @@ const Pedido = v.object({
 		v.array(
 			v.object({
 				id: v.pipe(v.string(), v.maxLength(80)),
+				varianteId: v.optional(v.nullable(v.pipe(v.string(), v.maxLength(120))), null),
 				cantidad: v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(99))
 			})
 		),
@@ -71,14 +73,27 @@ export const actions: Actions = {
 			if (g.url && /^https:\/\/(www\.)?mercadopago\.com(\.ar)?\//.test(g.url)) redirect(303, g.url);
 			redirect(303, `/t/${r.tienda.slug}/pedido/${g.codigo}`);
 		}
-		// Los precios y el envío salen del servidor, nunca del navegador.
+		// Los precios y el envío salen del servidor, nunca del navegador. Con opciones, la variante
+		// tiene que ser de ese producto, estar activa (las públicas lo están) y tener stock.
 		const porId = new Map(r.tienda.productos.map((x) => [x.id, x]));
 		let subtotal = 0;
 		for (const l of p.carrito) {
 			const x = porId.get(l.id);
 			if (!x)
 				return fail(409, { error: 'Algún producto ya no está publicado. Revisá el carrito.' });
-			subtotal += x.precio * l.cantidad;
+			if (!x.opciones.length) {
+				if (l.varianteId) return fail(400, { error: 'Revisá el carrito.' });
+				subtotal += x.precio * l.cantidad;
+				continue;
+			}
+			const variante = x.variantes.find((y) => y.id === l.varianteId);
+			if (!variante)
+				return fail(409, {
+					error: `Elegí de nuevo la variante de ${x.nombre}: la que tenías ya no está.`
+				});
+			if (variante.stock < l.cantidad)
+				return fail(409, { error: 'Algún producto se quedó sin stock. Revisá el carrito.' });
+			subtotal += precioDe(variante, x.precio) * l.cantidad;
 		}
 		const opcion = cotizar(p.envio === 'retiro' ? '0000' : p.cp, subtotal, r.tienda).find(
 			(o) => o.id === p.envio
@@ -97,7 +112,11 @@ export const actions: Actions = {
 		const total = subtotal + envio - descuento;
 		const res = await r.datos.crearPedido(
 			{
-				items: p.carrito.map((l) => ({ productoId: l.id, cantidad: l.cantidad })),
+				items: p.carrito.map((l) => ({
+					productoId: l.id,
+					varianteId: l.varianteId,
+					cantidad: l.cantidad
+				})),
 				pago: p.pago === 'transferencia' ? 'transf' : 'mp',
 				canal: 'web',
 				envio: p.envio,

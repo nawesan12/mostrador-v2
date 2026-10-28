@@ -6,6 +6,8 @@
  */
 import type { components } from '@mostrador/contrato/esquema';
 import type { Demo, Pedido } from './demo.ts';
+import type { OpcionProducto } from '#lib/tienda/tipos.ts';
+import { stockTotal, textoVariante, type Variante } from '#lib/tienda/variantes.ts';
 
 type ListaGenerica = components['schemas']['ListaGenerica'];
 
@@ -246,6 +248,11 @@ export type CambioProducto = {
 	sku?: string;
 	stock?: number;
 	foto?: string | null;
+	/** La galería (reemplaza a la de ejemplo; `foto` es la primera). */
+	fotos?: string[];
+	/** Opciones y variantes editadas (reemplazan a las de ejemplo; el stock, también). */
+	opciones?: OpcionProducto[];
+	variantes?: Variante[];
 	canales?: Record<string, boolean>;
 	publicado?: boolean;
 	/** Producto creado por el visitante. */
@@ -258,11 +265,16 @@ export type RegProducto = {
 	nombre: string;
 	descripcion: string;
 	foto: string | null;
+	fotos: string[];
+	opciones: OpcionProducto[];
+	/** Con su stock (el de ejemplo o el editado, más los ajustes y las ventas). */
+	variantes: Variante[];
 	sku: string;
 	categoria: string;
 	precio: number;
 	costo: number;
 	margen: number;
+	/** Con opciones, la suma de sus variantes activas. */
 	stock: number;
 	/** Unidades por semana, las últimas 8 (de la más vieja a la actual). */
 	ventas: number[];
@@ -273,6 +285,27 @@ export type RegProducto = {
 	lowm: boolean;
 	star: boolean;
 };
+
+/** Clave del stock de una variante en los cambios del sandbox (ajustes y ventas). */
+export const claveStock = (productoId: string, varianteId?: string | null) =>
+	varianteId ? `${productoId}:${varianteId}` : productoId;
+
+/** Galería, opciones y variantes (con su stock) de un producto, con lo que cambió el visitante. */
+function conVariantes(
+	id: string,
+	c: CambioProducto,
+	ejemplo: { opciones: OpcionProducto[]; fotos: string[]; variantes: Variante[] } | undefined,
+	fotoBase: string | null,
+	ajustes: Map<string, number>
+) {
+	const fotos = c.fotos ?? ejemplo?.fotos ?? (fotoBase ? [fotoBase] : []);
+	const opciones = c.opciones ?? ejemplo?.opciones ?? [];
+	const variantes = (opciones.length ? (c.variantes ?? ejemplo?.variantes ?? []) : []).map((v) => ({
+		...v,
+		stock: Math.max(0, v.stock + (ajustes.get(claveStock(id, v.id)) ?? 0))
+	}));
+	return { fotos, foto: c.fotos ? (c.fotos[0] ?? null) : fotoBase, opciones, variantes };
+}
 
 export function registrosProductos(
 	d: Demo,
@@ -311,16 +344,25 @@ export function registrosProductos(
 					...(semilla(p.id + 'ig') < 0.7 ? ['ig'] : [])
 				];
 		const precio = c.precio ?? p.precio;
+		const v = conVariantes(
+			p.id,
+			c,
+			d.variantes.get(p.id),
+			c.foto !== undefined ? c.foto : p.foto,
+			ajustes
+		);
 		return armar({
 			id: p.id,
 			nombre: c.nombre ?? p.nombre,
 			descripcion: c.descripcion ?? p.detalle ?? '',
-			foto: c.foto !== undefined ? c.foto : p.foto,
+			...v,
 			sku: c.sku ?? `SKU-${1000 + i}`,
 			categoria: (c.categoria ?? p.categoria) || 'Sin categoría',
 			precio,
 			costo: c.costo ?? Math.round((precio * (1 - margen / 100)) / 10) * 10,
-			stock: Math.max(0, (c.stock ?? d.stock[p.id] ?? 0) + (ajustes.get(p.id) ?? 0)),
+			stock: v.opciones.length
+				? stockTotal(v.variantes)
+				: Math.max(0, (c.stock ?? d.stock[p.id] ?? 0) + (ajustes.get(p.id) ?? 0)),
 			ventas: vendidos.get(p.id) ?? Array(8).fill(0),
 			vendidos30: ultimos30.get(p.id) ?? 0,
 			canales,
@@ -330,23 +372,26 @@ export function registrosProductos(
 	const nuevos = [...cambios]
 		.filter(([, c]) => c.nuevo)
 		.sort((a, b) => (b[1].creado ?? 0) - (a[1].creado ?? 0))
-		.map(([id, c]) =>
-			armar({
+		.map(([id, c]) => {
+			const v = conVariantes(id, c, undefined, c.foto ?? null, ajustes);
+			return armar({
 				id,
 				nombre: c.nombre ?? 'Producto nuevo',
 				descripcion: c.descripcion ?? '',
-				foto: c.foto ?? null,
+				...v,
 				sku: c.sku ?? '',
 				categoria: c.categoria || 'Sin categoría',
 				precio: c.precio ?? 0,
 				costo: c.costo ?? 0,
-				stock: Math.max(0, (c.stock ?? 0) + (ajustes.get(id) ?? 0)),
+				stock: v.opciones.length
+					? stockTotal(v.variantes)
+					: Math.max(0, (c.stock ?? 0) + (ajustes.get(id) ?? 0)),
 				ventas: Array(8).fill(0),
 				vendidos30: 0,
 				canales: Object.keys(c.canales ?? { web: true }).filter((k) => c.canales?.[k] ?? true),
 				publicado: c.publicado ?? false
-			})
-		);
+			});
+		});
 	return [...nuevos, ...delCatalogo];
 }
 
@@ -363,7 +408,7 @@ function armar(p: Omit<RegProducto, 'margen' | 'estado' | 'lowm' | 'star'>): Reg
 }
 
 export const DEF_PRODUCTOS: DefLista<RegProducto> = {
-	buscar: (r) => `${r.nombre} ${r.sku} ${r.categoria}`,
+	buscar: (r) => `${r.nombre} ${r.sku} ${r.categoria} ${r.variantes.map((v) => v.sku).join(' ')}`,
 	segmento: 'estado',
 	facetas: ['categoria', 'canales'],
 	rango: { clave: 'precio' },
@@ -411,6 +456,15 @@ export type RegInventario = {
 	proveedor: string;
 	costo: number;
 	publicadoEnMl: boolean;
+	/** Stock por variante (vacío sin opciones). `id` es el que aceptan las acciones: producto:variante. */
+	variantes: {
+		id: string;
+		varianteId: string;
+		texto: string;
+		sku: string;
+		stock: number;
+		activa: boolean;
+	}[];
 };
 
 const UBICACIONES = ['Local', 'Depósito', 'Local + Depósito'];
@@ -451,13 +505,21 @@ export function registrosInventario(productos: RegProducto[]): RegInventario[] {
 			// Mismo proveedor para toda una categoría.
 			proveedor: PROVEEDORES[Math.floor(semilla(p.categoria) * PROVEEDORES.length)],
 			costo: p.costo,
-			publicadoEnMl: p.canales.includes('ml') && p.publicado
+			publicadoEnMl: p.canales.includes('ml') && p.publicado,
+			variantes: p.variantes.map((v) => ({
+				id: claveStock(p.id, v.id),
+				varianteId: v.id,
+				texto: textoVariante(p.opciones, v.valores),
+				sku: v.sku,
+				stock: v.stock,
+				activa: v.activa
+			}))
 		};
 	});
 }
 
 export const DEF_INVENTARIO: DefLista<RegInventario> = {
-	buscar: (r) => `${r.nombre} ${r.sku} ${r.proveedor}`,
+	buscar: (r) => `${r.nombre} ${r.sku} ${r.proveedor} ${r.variantes.map((v) => v.sku).join(' ')}`,
 	segmento: 'st',
 	facetas: ['loc', 'proveedor'],
 	rango: { clave: 'cover', menor: true },

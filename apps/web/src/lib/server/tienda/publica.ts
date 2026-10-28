@@ -55,6 +55,13 @@ export async function resolverTienda(
 		if (r.status === 404) return null;
 		if (!r.ok) throw new Error(`API ${r.status}`);
 		const tienda = (await r.json()) as TiendaPublica;
+		// Una API sin variantes todavía: los productos se ven como sin opciones.
+		tienda.productos = tienda.productos.map((p) => ({
+			...p,
+			fotos: p.fotos ?? (p.foto ? [p.foto] : []),
+			opciones: p.opciones ?? [],
+			variantes: p.variantes ?? []
+		}));
 		return {
 			tienda: { ...tienda, turnos: tienda.turnos ?? null, medicion: medicionSegura(tienda) },
 			datos: null,

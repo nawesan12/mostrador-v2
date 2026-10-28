@@ -1,4 +1,5 @@
 import { datosDe } from '#lib/server/datos/index.ts';
+import type { VarianteFila } from '#lib/panel/vendibles.ts';
 import type { PageServerLoad } from './$types';
 
 /** El punto de venta: los productos (con su stock) y la caja de hoy. */
@@ -17,6 +18,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			categoria: string;
 			precio: number;
 			stock: number;
+			variantes: VarianteFila[];
 			publicado: boolean;
 		}[],
 		caja: hoy.caja

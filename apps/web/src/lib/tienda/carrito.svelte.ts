@@ -1,14 +1,14 @@
 /**
  * El carrito de la tienda online: vive en el navegador (por tienda) y el servidor lo valida al
- * cerrar la compra (precios y stock salen de la base, nunca de acá).
+ * cerrar la compra (precios y stock salen de la base, nunca de acá). Una línea por producto y
+ * variante (lineas.ts).
  */
 import { browser } from '$app/env';
 import { agregado, recordarCompra } from './medicion.ts';
+import { claveLinea, detalleLineas, MAX_LINEAS, migrarLineas, type Linea } from './lineas.ts';
 import type { ProductoPublico } from './tipos.ts';
 
-export type Linea = { id: string; cantidad: number };
-
-const MAX_LINEAS = 50;
+export type { Linea };
 
 export class Carrito {
 	lineas = $state<Linea[]>([]);
@@ -20,10 +20,7 @@ export class Carrito {
 		this.#clave = `carrito:${slug}`;
 		if (!browser) return;
 		try {
-			const g = JSON.parse(localStorage.getItem(this.#clave) ?? '[]') as Linea[];
-			this.lineas = Array.isArray(g)
-				? g.filter((l) => typeof l.id === 'string' && l.cantidad > 0).slice(0, MAX_LINEAS)
-				: [];
+			this.lineas = migrarLineas(JSON.parse(localStorage.getItem(this.#clave) ?? '[]'));
 		} catch {
 			this.lineas = [];
 		}
@@ -41,22 +38,39 @@ export class Carrito {
 		return this.lineas.reduce((s, l) => s + l.cantidad, 0);
 	}
 
-	sumar(id: string, cantidad = 1, tope = 99) {
-		const l = this.lineas.find((x) => x.id === id);
+	/** Suma un producto (y su variante, si tiene opciones). */
+	sumar(id: string, cantidad = 1, tope = 99, varianteId: string | null = null) {
+		const clave = claveLinea({ id, varianteId });
+		const l = this.lineas.find((x) => claveLinea(x) === clave);
 		const antes = l?.cantidad ?? 0;
 		if (l) l.cantidad = Math.min(tope, l.cantidad + cantidad);
 		else if (this.lineas.length < MAX_LINEAS)
-			this.lineas.push({ id, cantidad: Math.min(tope, cantidad) });
+			this.lineas.push({ id, varianteId, cantidad: Math.min(tope, cantidad) });
 		this.#guardar();
 		// add_to_cart / AddToCart (sólo con medición y consentimiento: lib/tienda/medicion.ts).
-		agregado(this.#slug, id, (this.lineas.find((x) => x.id === id)?.cantidad ?? 0) - antes);
+		agregado(
+			this.#slug,
+			id,
+			(this.lineas.find((x) => claveLinea(x) === clave)?.cantidad ?? 0) - antes
+		);
 	}
 
-	fijar(id: string, cantidad: number) {
+	/**
+	 * Sumar desde una tarjeta o "te puede gustar": un producto con opciones no se suma sin elegir
+	 * (devuelve false y la plantilla lleva a la ficha).
+	 */
+	sumarProducto(p: ProductoPublico, cantidad = 1) {
+		if (p.opciones?.length) return false;
+		if (p.stock > 0) this.sumar(p.id, cantidad, p.stock);
+		return true;
+	}
+
+	/** Cantidad de una línea (por su clave: el id del producto, o producto~variante). */
+	fijar(clave: string, cantidad: number) {
 		this.lineas =
 			cantidad > 0
-				? this.lineas.map((l) => (l.id === id ? { ...l, cantidad } : l))
-				: this.lineas.filter((l) => l.id !== id);
+				? this.lineas.map((l) => (claveLinea(l) === clave ? { ...l, cantidad } : l))
+				: this.lineas.filter((l) => claveLinea(l) !== clave);
 		this.#guardar();
 	}
 
@@ -67,14 +81,9 @@ export class Carrito {
 		this.#guardar();
 	}
 
-	/** Las líneas con su producto (las de productos que ya no están se descartan). */
+	/** Las líneas con su producto (precio, foto y stock de la variante). */
 	detalle(productos: ProductoPublico[]) {
-		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- local, no se modifica
-		const porId = new Map(productos.map((p) => [p.id, p]));
-		return this.lineas.flatMap((l) => {
-			const p = porId.get(l.id);
-			return p ? [{ ...l, producto: p, subtotal: p.precio * l.cantidad }] : [];
-		});
+		return detalleLineas(this.lineas, productos);
 	}
 }
 

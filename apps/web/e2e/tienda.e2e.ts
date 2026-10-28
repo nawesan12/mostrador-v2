@@ -18,7 +18,9 @@ test('tienda: se compra de punta a punta y el pedido entra al panel', async ({ p
 	await page.goto(`/t/${slug}`);
 	expect(await sinDesborde(page)).toBeLessThanOrEqual(0);
 	await page.goto(`/t/${slug}/catalogo`);
-	await page.locator('a[href*="/producto/"]').first().click();
+	expect(await sinDesborde(page)).toBeLessThanOrEqual(0);
+	// Uno sin opciones (los que tienen se compran eligiendo: variantes.e2e.ts).
+	await page.goto(`/t/${slug}/producto/bombilla-alpaca`);
 	await listo(page);
 	await page.getByRole('button', { name: 'Agregar al carrito' }).click();
 	await expect(page).toHaveURL(/\/carrito$/);
@@ -53,6 +55,9 @@ test('tienda: la vitrina de una plantilla se mira pero no se compra', async ({ p
 	await page.goto('/t/tienda-lumbre');
 	await expect(page.getByText(/tienda de ejemplo/)).toBeVisible();
 	await page.locator('a[href*="/producto/"]').first().click();
-	await expect(page.getByRole('button', { name: 'Agregar al carrito' })).toBeDisabled();
+	// Con opciones, el botón pide elegir; igual no se puede comprar.
+	await expect(
+		page.getByRole('button', { name: /^(Agregar al carrito|Elegí)/ }).first()
+	).toBeDisabled();
 	expect((await page.goto('/t/no-existe-esta'))?.status()).toBe(404);
 });
