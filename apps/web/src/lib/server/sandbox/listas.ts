@@ -624,9 +624,11 @@ export const DEF_FACTURACION: DefLista<RegComprobante> = {
 		total: (a, b) => b.total - a.total
 	},
 	resumen: (todos, l) => ({
-		facturado: l.filter((r) => r.estado === 'ok').reduce((s, r) => s + r.total, 0),
+		facturado: l
+			.filter((r) => r.estado === 'ok' && !r.numero.startsWith('NC'))
+			.reduce((s, r) => s + r.total, 0),
 		ultimos30: todos
-			.filter((r) => r.estado === 'ok' && r.dias < 30)
+			.filter((r) => r.estado === 'ok' && !r.numero.startsWith('NC') && r.dias < 30)
 			.reduce((s, r) => s + r.total, 0),
 		porResolver: todos.filter((r) => r.estado === 'pend' || r.estado === 'rej').length
 	})

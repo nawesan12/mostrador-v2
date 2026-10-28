@@ -131,8 +131,14 @@
 		error = null;
 		if (!pem.trim()) return (error = 'Pegá el certificado o subí el archivo .crt.');
 		ocupado = true;
-		const r = await pedir('PUT', { certificado: pem.trim() });
-		ocupado = false;
+		let r: Awaited<ReturnType<typeof pedir>>;
+		try {
+			r = await pedir('PUT', { certificado: pem.trim() });
+		} catch {
+			return (error = 'No pudimos conectarnos. Revisá la conexión y probá de nuevo.');
+		} finally {
+			ocupado = false;
+		}
 		if ('error' in r) return (error = String(r.error));
 		await invalidateAll();
 		paso = 3;
@@ -141,11 +147,19 @@
 
 	async function probar() {
 		ocupado = true;
-		const r = await fetch('/panel/integraciones/arca/probar', { method: 'POST' });
-		prueba = r.ok
-			? ((await r.json()) as ArcaPrueba)
-			: { ok: false, ultimo: 0, detalle: 'No pudimos hablar con el servidor. Probá de nuevo.' };
-		ocupado = false;
+		const sinServidor = {
+			ok: false,
+			ultimo: 0,
+			detalle: 'No pudimos hablar con el servidor. Probá de nuevo.'
+		};
+		try {
+			const r = await fetch('/panel/integraciones/arca/probar', { method: 'POST' });
+			prueba = r.ok ? ((await r.json()) as ArcaPrueba) : sinServidor;
+		} catch {
+			prueba = sinServidor;
+		} finally {
+			ocupado = false;
+		}
 	}
 
 	async function alCobrar(v: boolean) {

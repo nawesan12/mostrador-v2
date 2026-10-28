@@ -33,6 +33,10 @@ func Error(w http.ResponseWriter, err error) {
 		problema.Escribir(w, problema.SinPermiso("Sólo quien es dueña o admin maneja la conexión con ARCA."))
 	case errors.Is(err, ErrSinARCA):
 		problema.Escribir(w, problema.Conflicto("sin_arca", "Primero conectá ARCA con tu certificado."))
+	case errors.Is(err, arca.ErrCertificadoVencido):
+		problema.Escribir(w, problema.Invalido("Ese certificado ya venció: generá uno nuevo en ARCA con el pedido que bajaste de acá."))
+	case errors.Is(err, arca.ErrCertificado):
+		problema.Escribir(w, problema.Invalido("No pudimos leer el certificado: pegá el archivo .crt completo que te dio ARCA, desde -----BEGIN CERTIFICATE-----."))
 	case errors.Is(err, ErrCertificado):
 		problema.Escribir(w, problema.Invalido("Ese certificado no es de esta conexión: tiene que ser el que ARCA generó con el pedido que bajaste de acá, del mismo CUIT."))
 	case errors.As(err, &r):

@@ -97,6 +97,8 @@ func correr() error {
 		f := &facturacion.Servicio{Pool: app}
 		if c, err := cifrado.Nuevo(cfg.ClaveCifrado); err == nil && cfg.ClaveCifrado != "" {
 			f.Cifra = c
+		} else {
+			slog.Error("facturacion: sin clave de cifrado válida, las facturas quedan pendientes", "error", err)
 		}
 		t := time.NewTicker(30 * time.Second)
 		defer t.Stop()

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -20,7 +21,7 @@ type Facturas interface {
 func Comprobantes(ctx context.Context, pool tx, tiendaID string, ahora time.Time) ([]Registro, error) {
 	regs := []Registro{}
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		filas, err := t.Query(ctx, `SELECT c.id::text, c.tipo, c.punto_venta, c.numero, c.estado, coalesce(c.motivo, ''), c.receptor->>'nombre',
+		filas, err := t.Query(ctx, `SELECT c.id::text, c.tipo, c.punto_venta, c.numero, c.estado, coalesce(c.motivo, ''), coalesce(c.receptor->>'nombre', 'Consumidor final'),
 				c.total, c.pedido_numero, coalesce(p.canal, 'web'), c.creado_en,
 				EXISTS (SELECT 1 FROM comprobantes n WHERE n.asociado = c.id AND n.estado = 'emitido')
 			FROM comprobantes c LEFT JOIN pedidos p ON p.tienda_id = c.tienda_id AND p.numero = c.pedido_numero
@@ -85,12 +86,13 @@ var DefFacturacion = Def{
 	Resumen: func(todos, l []Registro) map[string]float64 {
 		var fact, ult30, res float64
 		for _, r := range l {
-			if r["estado"] == "ok" {
+			// Las notas de crédito no suman a lo facturado.
+			if r["estado"] == "ok" && !strings.HasPrefix(fmt.Sprint(r["numero"]), "NC") {
 				fact += numero(r["total"])
 			}
 		}
 		for _, r := range todos {
-			if r["estado"] == "ok" && numero(r["dias"]) < 30 {
+			if r["estado"] == "ok" && !strings.HasPrefix(fmt.Sprint(r["numero"]), "NC") && numero(r["dias"]) < 30 {
 				ult30 += numero(r["total"])
 			}
 			if r["estado"] == "pend" || r["estado"] == "rej" {

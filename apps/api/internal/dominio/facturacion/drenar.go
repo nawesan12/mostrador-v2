@@ -6,7 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"math"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -168,7 +170,7 @@ func (s *Servicio) emitir(ctx context.Context, tienda, cuit string, amb arca.Amb
 			s.fallo(ctx, tienda, p, err)
 			return
 		}
-		if q.CAE != "" && q.Total == c.TotalDec() {
+		if q.CAE != "" && mismoTotal(q.Total, c.Total) {
 			s.emitido(ctx, tienda, p, arca.Autorizado{Numero: *p.numeroIntentado, CAE: q.CAE, VenceCAE: q.VenceCAE})
 			return
 		}
@@ -244,4 +246,11 @@ func (s *Servicio) marcarTodos(ctx context.Context, tienda, motivo string) error
 			tienda, motivo)
 		return err
 	})
+}
+
+// mismoTotal compara el ImpTotal que devuelve ARCA ("12100", "12100.0", "12100.00") con el total en
+// pesos, por valor y no por texto.
+func mismoTotal(texto string, pesos int64) bool {
+	v, err := strconv.ParseFloat(strings.TrimSpace(texto), 64)
+	return err == nil && !math.IsInf(v, 0) && !math.IsNaN(v) && int64(math.Round(v*100)) == pesos*100
 }

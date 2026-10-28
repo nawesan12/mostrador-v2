@@ -52,16 +52,22 @@
 			return (error = 'La factura A necesita el CUIT del cliente: revisá que esté bien.');
 		if (!monto) return (error = 'Poné el monto total.');
 		enviando = true;
-		const r = await fetch('/panel/listas/facturacion', {
-			method: 'POST',
-			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({
-				ids: [],
-				accion: 'emitir',
-				valor: { cliente, tipo: letra, cuit: limpiarCuit(cuit), concepto, total: monto }
-			})
-		});
-		enviando = false;
+		let r: Response;
+		try {
+			r = await fetch('/panel/listas/facturacion', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({
+					ids: [],
+					accion: 'emitir',
+					valor: { cliente, tipo: letra, cuit: limpiarCuit(cuit), concepto, total: monto }
+				})
+			});
+		} catch {
+			return (error = 'No pudimos conectarnos. Revisá la conexión y probá de nuevo.');
+		} finally {
+			enviando = false;
+		}
 		// La API explica qué pasó (sin ARCA, rechazo de ARCA, datos): se muestra tal cual.
 		if (!r.ok) return (error = (await mensaje(r)) ?? 'No pudimos emitirla. Probá de nuevo.');
 		const n = ((await r.json()) as { hechos: number }).hechos;
@@ -92,12 +98,22 @@
 		if (!detalle) return;
 		const c = detalle;
 		anulando = true;
-		const r = await fetch('/panel/listas/facturacion', {
-			method: 'POST',
-			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({ ids: [c.id], accion: 'anular' })
-		});
-		anulando = false;
+		let r: Response;
+		try {
+			r = await fetch('/panel/listas/facturacion', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ ids: [c.id], accion: 'anular' })
+			});
+		} catch {
+			return ui.toast({
+				k: 'err',
+				title: 'No se pudo anular',
+				desc: 'Revisá la conexión y probá de nuevo.'
+			});
+		} finally {
+			anulando = false;
+		}
 		const n = r.ok ? ((await r.json()) as { hechos: number }).hechos : 0;
 		verDetalle = false;
 		if (!n)

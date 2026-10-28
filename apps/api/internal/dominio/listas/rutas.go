@@ -128,6 +128,9 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, fact 
 				n, err = fact.Reintentar(r.Context(), id, c.IDs, time.Now())
 			case "anular":
 				n, err = fact.Anular(r.Context(), id, c.IDs, time.Now())
+			default:
+				problema.Escribir(w, problema.Invalido("Esa acción no está disponible en Facturación."))
+				return
 			}
 			if err != nil && n == 0 {
 				problema.Escribir(w, problema.Invalido(err.Error()))

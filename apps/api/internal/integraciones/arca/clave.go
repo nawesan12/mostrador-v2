@@ -107,8 +107,9 @@ type DatosCertificado struct {
 }
 
 var (
-	ErrCertificado      = errors.New("arca: el certificado no se puede leer")
-	ErrCertificadoAjeno = errors.New("arca: el certificado no corresponde a la clave")
+	ErrCertificado        = errors.New("arca: el certificado no se puede leer")
+	ErrCertificadoAjeno   = errors.New("arca: el certificado no corresponde a la clave")
+	ErrCertificadoVencido = errors.New("arca: el certificado venció")
 )
 
 // RevisarCertificado lee el PEM que pegó la tienda y comprueba que sea de su clave y de su CUIT.
@@ -143,7 +144,7 @@ func RevisarCertificado(certPEM, clavePEM []byte, cuit string, ahora time.Time) 
 		return d, ErrCertificadoAjeno
 	}
 	if ahora.After(c.NotAfter) {
-		return d, errors.New("arca: el certificado venció")
+		return d, ErrCertificadoVencido
 	}
 	return d, nil
 }

@@ -9,7 +9,7 @@ CREATE TABLE arca_config (
 	punto_venta int NOT NULL CHECK (punto_venta BETWEEN 1 AND 99998),
 	ambiente text NOT NULL DEFAULT 'homologacion' CHECK (ambiente IN ('homologacion', 'produccion')),
 	clave bytea NOT NULL,
-	certificado text,
+	certificado text CHECK (length(certificado) <= 16384),
 	certificado_vence timestamptz,
 	facturar_al_cobrar boolean NOT NULL DEFAULT true,
 	actualizada_en timestamptz NOT NULL DEFAULT now()
@@ -45,8 +45,8 @@ CREATE TABLE comprobantes (
 	cae_vence date,
 	estado text NOT NULL CHECK (estado IN ('pendiente', 'emitido', 'rechazado', 'no_facturado')),
 	motivo text CHECK (length(motivo) <= 300),
-	codigo_arca text,
-	receptor jsonb NOT NULL CHECK (jsonb_typeof(receptor) = 'object'),
+	codigo_arca text CHECK (length(codigo_arca) <= 20),
+	receptor jsonb NOT NULL CHECK (jsonb_typeof(receptor) = 'object' AND octet_length(receptor::text) <= 1000),
 	concepto text CHECK (length(concepto) <= 200),
 	total bigint NOT NULL CHECK (total > 0),
 	neto bigint NOT NULL,
@@ -62,6 +62,8 @@ CREATE TABLE comprobantes (
 );
 CREATE UNIQUE INDEX comprobantes_numero ON comprobantes (tienda_id, tipo, punto_venta, numero) WHERE numero IS NOT NULL;
 CREATE UNIQUE INDEX comprobantes_pedido ON comprobantes (tienda_id, pedido_numero) WHERE pedido_numero IS NOT NULL AND tipo IN (1, 6, 11);
+-- Una sola nota de crédito por comprobante, aunque lleguen dos a la vez.
+CREATE UNIQUE INDEX comprobantes_asociado ON comprobantes (asociado) WHERE asociado IS NOT NULL;
 CREATE INDEX comprobantes_cola ON comprobantes (reintentar_en) WHERE estado = 'pendiente';
 CREATE INDEX comprobantes_recientes ON comprobantes (tienda_id, creado_en DESC);
 SELECT app.aplicar_rls('comprobantes');
@@ -92,7 +94,7 @@ GRANT EXECUTE ON FUNCTION app.tiendas_con_facturas_pendientes(int) TO mostrador_
 -- guardó, la factura está encolada.
 -- +goose StatementBegin
 CREATE FUNCTION app.encolar_factura() RETURNS trigger
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, app AS $$
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, app, pg_temp AS $$
 DECLARE
 	c arca_config%ROWTYPE;
 	v_tipo int;
@@ -123,6 +125,7 @@ BEGIN
 END
 $$;
 -- +goose StatementEnd
+REVOKE ALL ON FUNCTION app.encolar_factura() FROM PUBLIC;
 CREATE TRIGGER encolar_factura AFTER INSERT OR UPDATE OF estado_pago ON pedidos
 	FOR EACH ROW WHEN (NEW.total > 0) EXECUTE FUNCTION app.encolar_factura();
 

@@ -189,6 +189,8 @@ export function configFacturacion(emitir: () => void): ConfigLista<Comprobante> 
 				icon: I.phEnvelopeSimpleFill,
 				async hacer(ids, ctx) {
 					const n = await ctx.accion(ids, 'enviar');
+					// 0: falló (ya avisó) o no había emitidas entre las elegidas.
+					if (!n) return;
 					ctx.ui.toast({
 						k: 'ok',
 						title: `${n} ${n === 1 ? 'factura enviada' : 'facturas enviadas'}`,
@@ -206,6 +208,7 @@ export function configFacturacion(emitir: () => void): ConfigLista<Comprobante> 
 				icon: I.phArrowClockwiseBold,
 				async hacer(ids, ctx) {
 					const n = await ctx.accion(ids, 'reintentar');
+					if (!n) return;
 					ctx.ui.toast({
 						k: 'ok',
 						title: `${n} ${n === 1 ? 'comprobante reintentado' : 'comprobantes reintentados'}`,
