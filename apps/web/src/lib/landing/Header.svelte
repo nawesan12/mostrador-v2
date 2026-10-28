@@ -46,7 +46,7 @@
 			'#integraciones',
 			I.phPlugsConnectedFill,
 			'Integraciones',
-			'Mercado Pago, ML, Andreani y más',
+			'Mercado Pago, ML, ARCA y más',
 			'#E6F7FD',
 			'#0B8DB8'
 		],

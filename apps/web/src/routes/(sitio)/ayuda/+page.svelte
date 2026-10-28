@@ -25,7 +25,7 @@
 	const MAS_BUSCADO = [
 		'Cuotas sin interés',
 		'Factura A',
-		'Andreani',
+		'Correo Argentino',
 		'Dominio propio',
 		'Migrar de Tiendanube'
 	];

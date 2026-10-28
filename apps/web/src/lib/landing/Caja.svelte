@@ -46,7 +46,7 @@
 		{
 			ico: I.phTruckFill,
 			col: '#E8875F',
-			t: 'Etiquetas Andreani',
+			t: 'Etiquetas Correo Argentino',
 			s: '8 envíos',
 			v: '−$ 41.600',
 			vc: '#F0A58A'
@@ -96,7 +96,7 @@
 						class="logos"
 						><span title="Claude"><Icon icon={I.siClaude} size={18} /></span><span title="ChatGPT"
 							><Icon icon={I.siOpenai} size={18} /></span
-						><span title="Gemini"><Icon icon={I.siGooglegemini} size={18} /></span></span
+						></span
 					>
 				</div>
 				<div class="ia-d">

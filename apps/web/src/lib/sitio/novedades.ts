@@ -20,12 +20,6 @@ export const NOVEDADES: [string, Novedad[]][] = [
 					'Cada venta, liquidación y factura pasa sola a Caja, separada de tus gastos personales. Ves tu ganancia real en pesos o en dólares.'
 			},
 			{
-				tipo: 'nuevo',
-				titulo: 'Cobros con MODO',
-				texto:
-					'Aceptá pagos con las apps de más de 30 bancos y ofrecé cuotas sin interés de cada banco.'
-			},
-			{
 				tipo: 'mejora',
 				titulo: 'Pedidos 3 veces más rápidos',
 				texto:
@@ -52,11 +46,6 @@ export const NOVEDADES: [string, Novedad[]][] = [
 				tipo: 'mejora',
 				titulo: 'Plantillas con diseño propio',
 				texto: 'Sumamos 10 plantillas completamente nuevas, cada una pensada para un rubro.'
-			},
-			{
-				tipo: 'arreglo',
-				titulo: 'Envíos de OCA a Tierra del Fuego',
-				texto: 'Corregimos el cálculo de envío para códigos postales que empiezan con 94.'
 			}
 		]
 	],

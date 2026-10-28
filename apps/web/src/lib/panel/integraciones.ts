@@ -1,6 +1,7 @@
 /**
  * Las integraciones del panel (design/PanelOperacion.dc.html, sInt: el orden y lo conectado de la
- * tienda de ejemplo salen de `INT`; TikTok Shop queda afuera porque no opera en Argentina). Cada una
+ * tienda de ejemplo salen de `INT`; TikTok Shop queda afuera porque no opera en Argentina, y Andreani,
+ * OCA, MODO y Gemini porque no se pueden conectar sin contrato o no admiten conectores). Cada una
  * dice qué sincroniza y qué opciones tiene en "Configurar" (el handoff no la diseña: se arma con sus
  * piezas).
  */
@@ -129,32 +130,6 @@ export const INTEGRACIONES: Integracion[] = [
 		demo: true
 	},
 	{
-		id: 'andreani',
-		nombre: 'Andreani',
-		detalle: 'Etiquetas y seguimiento',
-		categoria: 'envios',
-		marca: 'andreani',
-		hace: [
-			'Cotiza el envío por código postal en el checkout',
-			'Imprime las etiquetas de todos los pedidos',
-			'El cliente recibe el seguimiento'
-		],
-		opciones: [
-			{ id: 'retiro', t: 'Retiro en el local', d: 'Andreani pasa a buscar los paquetes', def: true }
-		],
-		demo: true
-	},
-	{
-		id: 'modo',
-		nombre: 'MODO',
-		detalle: 'Apps bancarias',
-		categoria: 'cobros',
-		marca: 'modo',
-		hace: ['Cobra con las apps de los bancos', 'Promociones bancarias en el checkout'],
-		opciones: [],
-		demo: true
-	},
-	{
 		id: 'payway',
 		nombre: 'Payway',
 		detalle: 'Tarjetas y cuotas',
@@ -175,24 +150,18 @@ export const INTEGRACIONES: Integracion[] = [
 		demo: false
 	},
 	{
-		id: 'oca',
-		nombre: 'OCA',
-		detalle: 'Envíos a todo el país',
-		categoria: 'envios',
-		marca: 'oca',
-		hace: ['Cotiza y genera etiquetas de OCA', 'Retiro en sucursal o a domicilio'],
-		opciones: [],
-		demo: false
-	},
-	{
 		id: 'correo',
 		nombre: 'Correo Argentino',
 		detalle: 'Sucursal y domicilio',
 		categoria: 'envios',
 		marca: 'correo',
-		hace: ['Cotiza y genera etiquetas de Correo Argentino'],
+		hace: [
+			'Cotiza el envío por código postal en el checkout',
+			'Imprime las etiquetas de todos los pedidos',
+			'El cliente recibe el seguimiento'
+		],
 		opciones: [],
-		demo: false
+		demo: true
 	},
 	{
 		id: 'caja',
@@ -263,11 +232,13 @@ export const INTEGRACIONES: Integracion[] = [
 export const IAS = [
 	{ id: 'claude', nombre: 'Claude', icon: I.siClaude, col: '#D97757' },
 	{ id: 'chatgpt', nombre: 'ChatGPT', icon: I.siOpenai, col: '#10A37F' },
-	{ id: 'gemini', nombre: 'Gemini', icon: I.siGooglegemini, col: '#4285F4' },
 	{ id: 'mcp', nombre: 'Otra IA (MCP)', icon: I.phPlugsConnectedBold, col: '#8A5A3E' }
 ] as const;
 
 export type IdIa = (typeof IAS)[number]['id'];
+
+/** La que se muestra cuando el cliente MCP no es de una IA conocida. */
+export const OTRA_IA = IAS[2];
 
 /** A qué IA corresponde un cliente MCP, por el nombre con que se registró (el resto: "Otra IA"). */
 export function iaDe(nombre: string): (typeof IAS)[number] {
@@ -275,10 +246,8 @@ export function iaDe(nombre: string): (typeof IAS)[number] {
 		? 'claude'
 		: /chatgpt|openai/i.test(nombre)
 			? 'chatgpt'
-			: /gemini|google/i.test(nombre)
-				? 'gemini'
-				: 'mcp';
-	return IAS.find((p) => p.id === id)!;
+			: 'mcp';
+	return IAS.find((p) => p.id === id) ?? OTRA_IA;
 }
 
 /** Qué puede hacer la IA (aiPerms del handoff). "Ver" está siempre. */

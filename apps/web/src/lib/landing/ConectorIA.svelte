@@ -7,7 +7,6 @@
 	const PROVEEDORES = [
 		['claude', 'Claude', I.siClaude, '#D97757'],
 		['chatgpt', 'ChatGPT', I.siOpenai, '#10A37F'],
-		['gemini', 'Gemini', I.siGooglegemini, '#4285F4'],
 		['mcp', 'Otra IA (MCP)', I.phPlugsConnectedBold, '#8A5A3E']
 	] as const;
 	let elegido = $state<string>('claude');
@@ -21,8 +20,8 @@
 			<div class="etiq"><span></span>Conector de IA</div>
 			<h2>Tu negocio, desde la IA que ya usás.</h2>
 			<p class="bajada">
-				Conectá Mostrador a Claude, ChatGPT, Gemini o cualquier IA compatible con MCP. Entrás con tu
-				cuenta, elegís qué puede hacer y le hablás como a un empleado más.
+				Conectá Mostrador a Claude, ChatGPT o cualquier IA compatible con MCP. Entrás con tu cuenta,
+				elegís qué puede hacer y le hablás como a un empleado más.
 			</p>
 			<div class="provs" role="group" aria-label="Elegí tu IA">
 				{#each PROVEEDORES as [k, t, ico, c] (k)}

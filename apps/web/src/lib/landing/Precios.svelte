@@ -150,8 +150,9 @@
 				<div>
 					<b>¿Necesitás más?</b>
 					<div>
-						2.000 respuestas con IA extra por $ 4.900, cuando quieras. Las campañas de WhatsApp se
-						cobran al costo de Meta, sin recargo. Te avisamos al llegar al 80 %.
+						2.000 respuestas con IA extra por $ 4.900, cuando quieras. Los mensajes de WhatsApp los
+						cobra Meta a su costo, sin recargo: los primeros 1.000 de atención de cada mes son
+						gratis. Te avisamos al llegar al 80 %.
 					</div>
 				</div>
 			</div>

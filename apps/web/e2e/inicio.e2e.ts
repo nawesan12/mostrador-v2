@@ -146,10 +146,10 @@ test('integraciones filtra por categoría', async ({ page }) => {
 	await listo(page);
 	const sec = page.locator('section#integraciones');
 	const tarjetas = sec.locator('.integ');
-	await expect(tarjetas).toHaveCount(54);
+	await expect(tarjetas).toHaveCount(34);
 	await sec.getByRole('button', { name: /^Envíos/ }).click();
-	await expect(tarjetas).toHaveCount(8);
-	await expect(sec.locator('.n', { hasText: 'Andreani' })).toBeVisible();
+	await expect(tarjetas).toHaveCount(2);
+	await expect(sec.locator('.n', { hasText: 'Correo Argentino' })).toBeVisible();
 });
 
 test('precios: la calculadora y el ciclo anual cambian los montos', async ({ page }) => {

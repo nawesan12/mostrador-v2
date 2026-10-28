@@ -16,7 +16,7 @@
 			<div class="etiq"><span></span>Integraciones</div>
 			<h2>Conectado con todo el comercio argentino.</h2>
 		</div>
-		<p>{INTEG.length} integraciones nativas, sin apps pagas aparte. Las activás con un clic.</p>
+		<p>Las herramientas que ya usás, conectadas a tu tienda. Sin apps pagas aparte.</p>
 	</div>
 	<div class="cats" use:anim={'reveal'} role="group" aria-label="Categoría">
 		{#each CATS as [id, label] (id)}
@@ -177,7 +177,7 @@
 		color: #7a6252;
 		margin-top: 2px;
 	}
-	/* En mobile, de a 3: si no, son 70 tarjetas de a una y el scroll no termina más. */
+	/* En mobile, de a 3: si no, son 34 tarjetas de a una y el scroll no termina más. */
 	@media (max-width: 640px) {
 		.grilla {
 			grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -192,6 +192,10 @@
 		}
 		.integ:hover {
 			transform: none;
+		}
+		/* Si la última queda sola en su renglón, lo ocupa entero. */
+		.integ:last-child:nth-child(3n + 1) {
+			grid-column: 1 / -1;
 		}
 		.logo {
 			height: 32px;

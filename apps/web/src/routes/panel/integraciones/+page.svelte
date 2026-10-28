@@ -14,6 +14,7 @@
 		CATEGORIAS,
 		DE_MEDICION,
 		IAS,
+		OTRA_IA,
 		INTEGRACIONES,
 		PERMISOS_IA,
 		type AjusteIntegracion,
@@ -326,10 +327,6 @@
 			'Volvé a Aplicaciones y conectores, tocá Crear, ponele Mostrador de nombre, pegá la dirección y elegí\u00a0OAuth.',
 			'Tocá Crear: ChatGPT te trae acá para que permitas el\u00a0acceso.'
 		],
-		gemini: [
-			'Gemini se conecta desde Gemini CLI: en settings.json sumá Mostrador en mcpServers, con httpUrl y la\u00a0dirección.',
-			'Corré /mcp auth mostrador: se abre esta página para que permitas el\u00a0acceso.'
-		],
 		mcp: [
 			'En tu IA, buscá dónde se agregan servidores MCP remotos (a veces dice conectores o\u00a0integraciones).',
 			'Pegá la dirección. Usa OAuth: la IA te trae acá para que permitas el\u00a0acceso.'
@@ -412,7 +409,7 @@
 		{#if data.mcp.conexiones.length}
 			<div class="conexiones" aria-label="IAs conectadas">
 				{#each data.mcp.conexiones as c (c.id)}
-					{@const p = IAS.find((x) => x.id === c.ia) ?? IAS[3]}
+					{@const p = IAS.find((x) => x.id === c.ia) ?? OTRA_IA}
 					<div class="cx">
 						<span class="p-ico" style:color={p.col}><Icon icon={p.icon} size={17} /></span>
 						<span class="g-txt"

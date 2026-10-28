@@ -36,7 +36,7 @@
 		[
 			I.phCreditCardFill,
 			'Pagos certificados PCI',
-			'Los datos de tarjeta nunca pasan por Mostrador: los procesan Mercado Pago, Payway y MODO.'
+			'Los datos de tarjeta nunca pasan por Mostrador: los procesan Mercado Pago, Payway y Getnet.'
 		],
 		[
 			I.phPulseFill,

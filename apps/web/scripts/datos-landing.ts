@@ -38,7 +38,32 @@ const out = ctx.__out as Record<string, unknown>;
 // Pago, Payway o Getnet), Stripe y PayPal (no cobran en pesos acá), TikTok Shop y YouTube Shopping (no
 // están en Argentina), Pinterest (sin catálogo para Argentina), Lemon y Cuenta DNI (sin API para
 // comercios), Uber Flash (es para personas), Cruz del Sur y Via Cargo (sin API pública).
+// Segunda vuelta (28/10): Naranja X y MODO (sin API para comercios), PedidosYa y Rappi (sin API
+// abierta), FedEx y DHL (internacionales), Binance Pay (cripto), Messenger (va con Facebook), Excel
+// (ya está Sheets), Gemini (su app no admite conectores), Andreani, OCA, Moova y PedidosYa Envíos
+// (piden contrato o volumen), y Tango, HubSpot, Klaviyo, Notion, Slack y Gmail (licencia paga,
+// auditoría paga o fuera del comercio chico).
 const SIN_INTEGRACION = [
+	'Naranja X',
+	'MODO',
+	'PedidosYa',
+	'Rappi',
+	'FedEx',
+	'DHL',
+	'Binance Pay',
+	'Messenger',
+	'Excel',
+	'Gemini',
+	'Andreani',
+	'OCA',
+	'Moova',
+	'PedidosYa Envíos',
+	'Tango',
+	'HubSpot',
+	'Klaviyo',
+	'Notion',
+	'Slack',
+	'Gmail',
 	'Visa',
 	'Mastercard',
 	'American Express',
@@ -63,9 +88,31 @@ out.INTEG = [
 		'Empretienda',
 		'canales',
 		{ w: 'Empretienda', abbr: 'ET', bg: '#2E2A6B', fg: '#fff' },
-		'Importá productos y clientes'
+		'Importá tu tienda'
 	]
 ];
+// Instagram y Facebook Shopping no existen en Argentina desde 8/2023: quedan los mensajes. Las
+// migraciones no son de un clic.
+const TEXTOS: Record<string, string> = {
+	Instagram: 'Mensajes en la bandeja',
+	Facebook: 'Mensajes en la bandeja',
+	Tiendanube: 'Importá tu tienda'
+};
+// Agrupadas por categoría, en el orden del handoff: así las migraciones quedan junto a los canales.
+const ORDEN = [...new Set((out.INTEG as unknown[][]).map((i) => i[1] as string))];
+out.INTEG = (out.INTEG as unknown[][])
+	.map((i) => (TEXTOS[i[0] as string] ? [i[0], i[1], i[2], TEXTOS[i[0] as string]] : i))
+	.sort((a, b) => ORDEN.indexOf(a[1] as string) - ORDEN.indexOf(b[1] as string));
+// Andreani salió de las integraciones: el feed despacha por Correo Argentino.
+const aCorreo = (v: unknown): unknown =>
+	Array.isArray(v)
+		? v.map(aCorreo)
+		: v && typeof v === 'object'
+			? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, aCorreo(x)]))
+			: v === 'andreani'
+				? 'correo'
+				: v;
+out.FEED = aCorreo(out.FEED);
 
 // Logos que el handoff pide y no existen en Iconify (en el diseño se ven vacíos): reemplazos.
 const SUSTITUTOS: Record<string, Record<string, string>> = {

@@ -11,14 +11,14 @@
 		phQuestion,
 		phShieldCheckFill
 	} from '#lib/icons.ts';
-	import { IAS } from '#lib/panel/integraciones.ts';
+	import { IAS, OTRA_IA } from '#lib/panel/integraciones.ts';
 
 	/**
 	 * Consentimiento del OAuth del conector MCP. No está en el handoff: se arma con las piezas de
 	 * design/Mostrador Ingresar.dc.html (columna del formulario, nota, casilla, botones y panel lateral).
 	 */
 	let { data } = $props();
-	const ia = $derived(IAS.find((p) => p.id === data.ia.id) ?? IAS[3]);
+	const ia = $derived(IAS.find((p) => p.id === data.ia.id) ?? OTRA_IA);
 	let acciones = $state(true);
 </script>
 

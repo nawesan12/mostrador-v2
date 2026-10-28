@@ -89,7 +89,6 @@
 						<span><Icon icon={I.siMercadopago} size={16} style="color:#00B1EA" />QR</span>
 						<span><Icon icon={I.logosVisa} size={30} /></span>
 						<span><Icon icon={I.logosMastercard} size={22} /></span>
-						<span class="modo">MODO</span>
 					</div>
 				</div>
 			</div>
@@ -420,9 +419,6 @@
 		color: #2a140c;
 		font-size: 13px;
 		font-weight: 600;
-	}
-	.medios .modo {
-		font-weight: 700;
 	}
 	.ia {
 		flex: 1 1 520px;

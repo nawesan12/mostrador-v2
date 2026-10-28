@@ -9,7 +9,7 @@ export const FEED = [
 	['ig', 'Pedido desde Instagram', 'Sofía · Kit matero', 58400],
 	['arca', 'Factura B emitida', 'Venta en el local #0412', 8500],
 	['tg', 'Pedido por Telegram', 'Martín · Yerba 1 kg x3', 20400],
-	['andreani', 'Envío despachado', 'Pedido #1046 · Córdoba', 21990]
+	['correo', 'Envío despachado', 'Pedido #1046 · Córdoba', 21990]
 ] as const;
 
 export const INTEG = [
@@ -35,21 +35,13 @@ export const INTEG = [
 		{
 			icon: I.logosInstagramIcon
 		},
-		'Shopping y mensajes'
+		'Mensajes en la bandeja'
 	],
 	[
 		'Facebook',
 		'canales',
 		{
 			icon: I.logosFacebook
-		},
-		'Catálogo y tienda'
-	],
-	[
-		'Messenger',
-		'canales',
-		{
-			icon: I.logosMessenger
 		},
 		'Mensajes en la bandeja'
 	],
@@ -81,26 +73,42 @@ export const INTEG = [
 		'Tu local en el mapa'
 	],
 	[
-		'PedidosYa',
+		'Tiendanube',
 		'canales',
 		{
-			w: 'PedidosYa',
-			abbr: 'PYa',
-			bg: '#FA0050',
+			w: 'Tiendanube',
+			abbr: 'TN',
+			bg: '#2C3357',
 			fg: '#fff'
 		},
-		'Pedidos del delivery'
+		'Importá tu tienda'
 	],
 	[
-		'Rappi',
+		'Shopify',
 		'canales',
 		{
-			w: 'Rappi',
-			abbr: 'Rappi',
-			bg: '#FF441F',
+			icon: I.logosShopify
+		},
+		'Importá tu tienda'
+	],
+	[
+		'WooCommerce',
+		'canales',
+		{
+			icon: I.logosWoocommerceIcon
+		},
+		'Importá tu tienda'
+	],
+	[
+		'Empretienda',
+		'canales',
+		{
+			w: 'Empretienda',
+			abbr: 'ET',
+			bg: '#2E2A6B',
 			fg: '#fff'
 		},
-		'Pedidos del delivery'
+		'Importá tu tienda'
 	],
 	[
 		'Mercado Pago',
@@ -123,17 +131,6 @@ export const INTEG = [
 		'Tarjetas y cuotas'
 	],
 	[
-		'MODO',
-		'cobros',
-		{
-			w: 'MODO',
-			abbr: 'MODO',
-			bg: '#00A88F',
-			fg: '#fff'
-		},
-		'Pago con apps bancarias'
-	],
-	[
 		'Ualá',
 		'cobros',
 		{
@@ -145,37 +142,15 @@ export const INTEG = [
 		'Ualá Bis y link de pago'
 	],
 	[
-		'Naranja X',
+		'Getnet',
 		'cobros',
 		{
-			w: 'naranja X',
-			abbr: 'NX',
-			bg: '#FE5000',
+			w: 'Getnet',
+			abbr: 'getnet',
+			bg: '#EC0000',
 			fg: '#fff'
 		},
-		'Plan Z y cuotas'
-	],
-	[
-		'Andreani',
-		'envios',
-		{
-			w: 'Andreani',
-			abbr: 'AND',
-			bg: '#E2001A',
-			fg: '#fff'
-		},
-		'Etiquetas y seguimiento'
-	],
-	[
-		'OCA',
-		'envios',
-		{
-			w: 'OCA',
-			abbr: 'OCA',
-			bg: '#4B2A85',
-			fg: '#fff'
-		},
-		'Envíos a todo el país'
+		'Posnet y link de pago'
 	],
 	[
 		'Correo Argentino',
@@ -189,22 +164,15 @@ export const INTEG = [
 		'Sucursal y domicilio'
 	],
 	[
-		'DHL',
+		'Enviopack',
 		'envios',
 		{
-			icon: I.siDhl,
-			col: '#D40511'
+			w: 'Enviopack',
+			abbr: 'EP',
+			bg: '#00B6E6',
+			fg: '#fff'
 		},
-		'Envíos internacionales'
-	],
-	[
-		'FedEx',
-		'envios',
-		{
-			icon: I.siFedex,
-			col: '#4D148C'
-		},
-		'Envíos internacionales'
+		'Cotizador multi transporte'
 	],
 	[
 		'ARCA',
@@ -250,14 +218,6 @@ export const INTEG = [
 		'Email marketing'
 	],
 	[
-		'HubSpot',
-		'gestion',
-		{
-			icon: I.logosHubspot
-		},
-		'CRM'
-	],
-	[
 		'Zapier',
 		'gestion',
 		{
@@ -274,12 +234,61 @@ export const INTEG = [
 		'Exportes automáticos'
 	],
 	[
-		'Slack',
+		'Colppy',
 		'gestion',
 		{
-			icon: I.logosSlackIcon
+			w: 'Colppy',
+			abbr: 'colppy',
+			bg: '#2BB673',
+			fg: '#fff'
 		},
-		'Avisos al equipo'
+		'Contabilidad'
+	],
+	[
+		'Xubio',
+		'gestion',
+		{
+			w: 'Xubio',
+			abbr: 'xubio',
+			bg: '#00A3E0',
+			fg: '#fff'
+		},
+		'Contabilidad'
+	],
+	[
+		'Google Sheets',
+		'gestion',
+		{
+			icon: I.siGooglesheets,
+			col: '#34A853'
+		},
+		'Stock y precios en planilla'
+	],
+	[
+		'Google Calendar',
+		'gestion',
+		{
+			icon: I.logosGoogleCalendar
+		},
+		'Turnos y retiros'
+	],
+	[
+		'Make',
+		'gestion',
+		{
+			icon: I.siMake,
+			col: '#6D00CC'
+		},
+		'Automatizaciones'
+	],
+	[
+		'n8n',
+		'gestion',
+		{
+			icon: I.siN8n,
+			col: '#EA4B71'
+		},
+		'Automatizaciones'
 	],
 	[
 		'Caja',
@@ -308,15 +317,6 @@ export const INTEG = [
 		'Conector y apps'
 	],
 	[
-		'Gemini',
-		'ia',
-		{
-			icon: I.siGooglegemini,
-			col: '#4285F4'
-		},
-		'Extensión con tu cuenta'
-	],
-	[
 		'Cualquier IA (MCP)',
 		'ia',
 		{
@@ -324,202 +324,6 @@ export const INTEG = [
 			col: '#8A5A3E'
 		},
 		'Servidor MCP abierto'
-	],
-	[
-		'Tiendanube',
-		'canales',
-		{
-			w: 'Tiendanube',
-			abbr: 'TN',
-			bg: '#2C3357',
-			fg: '#fff'
-		},
-		'Migración en un clic'
-	],
-	[
-		'Shopify',
-		'canales',
-		{
-			icon: I.logosShopify
-		},
-		'Importá tu tienda'
-	],
-	[
-		'WooCommerce',
-		'canales',
-		{
-			icon: I.logosWoocommerceIcon
-		},
-		'Importá tu tienda'
-	],
-	[
-		'Getnet',
-		'cobros',
-		{
-			w: 'Getnet',
-			abbr: 'getnet',
-			bg: '#EC0000',
-			fg: '#fff'
-		},
-		'Posnet y link de pago'
-	],
-	[
-		'Binance Pay',
-		'cobros',
-		{
-			icon: I.siBinance,
-			col: '#F0B90B'
-		},
-		'USDT y cripto'
-	],
-	[
-		'Enviopack',
-		'envios',
-		{
-			w: 'Enviopack',
-			abbr: 'EP',
-			bg: '#00B6E6',
-			fg: '#fff'
-		},
-		'Cotizador multi transporte'
-	],
-	[
-		'Moova',
-		'envios',
-		{
-			w: 'Moova',
-			abbr: 'moova',
-			bg: '#6B2FFA',
-			fg: '#fff'
-		},
-		'Envíos en el día'
-	],
-	[
-		'PedidosYa Envíos',
-		'envios',
-		{
-			w: 'PedidosYa',
-			abbr: 'PYa',
-			bg: '#FA0050',
-			fg: '#fff'
-		},
-		'Cadetería en minutos'
-	],
-	[
-		'Colppy',
-		'gestion',
-		{
-			w: 'Colppy',
-			abbr: 'colppy',
-			bg: '#2BB673',
-			fg: '#fff'
-		},
-		'Contabilidad'
-	],
-	[
-		'Xubio',
-		'gestion',
-		{
-			w: 'Xubio',
-			abbr: 'xubio',
-			bg: '#00A3E0',
-			fg: '#fff'
-		},
-		'Contabilidad'
-	],
-	[
-		'Tango',
-		'gestion',
-		{
-			w: 'Tango',
-			abbr: 'TANGO',
-			bg: '#E30613',
-			fg: '#fff'
-		},
-		'Gestión y ERP'
-	],
-	[
-		'Google Sheets',
-		'gestion',
-		{
-			icon: I.siGooglesheets,
-			col: '#34A853'
-		},
-		'Stock y precios en planilla'
-	],
-	[
-		'Excel',
-		'gestion',
-		{
-			icon: I.siMicrosoftexcel,
-			col: '#217346'
-		},
-		'Importar y exportar'
-	],
-	[
-		'Gmail',
-		'gestion',
-		{
-			icon: I.logosGoogleGmail
-		},
-		'Mails a clientes'
-	],
-	[
-		'Google Calendar',
-		'gestion',
-		{
-			icon: I.logosGoogleCalendar
-		},
-		'Turnos y retiros'
-	],
-	[
-		'Notion',
-		'gestion',
-		{
-			icon: I.logosNotionIcon
-		},
-		'Reportes del equipo'
-	],
-	[
-		'Klaviyo',
-		'gestion',
-		{
-			col: '#232426',
-			w: 'Klaviyo',
-			abbr: 'K',
-			bg: '#232426',
-			fg: '#fff'
-		},
-		'Email y SMS'
-	],
-	[
-		'Make',
-		'gestion',
-		{
-			icon: I.siMake,
-			col: '#6D00CC'
-		},
-		'Automatizaciones'
-	],
-	[
-		'n8n',
-		'gestion',
-		{
-			icon: I.siN8n,
-			col: '#EA4B71'
-		},
-		'Automatizaciones'
-	],
-	[
-		'Empretienda',
-		'canales',
-		{
-			w: 'Empretienda',
-			abbr: 'ET',
-			bg: '#2E2A6B',
-			fg: '#fff'
-		},
-		'Importá productos y clientes'
 	]
 ] as const;
 

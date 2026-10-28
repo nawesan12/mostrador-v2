@@ -271,13 +271,13 @@ export const ARTICULOS: Articulo[] = [
 	{
 		slug: 'envios-por-codigo-postal',
 		categoria: 'pedidos',
-		titulo: 'Configurar envíos por código postal con Andreani y OCA',
+		titulo: 'Configurar envíos por código postal con Correo Argentino',
 		resumen: 'El cliente ve el costo y el plazo antes de pagar.',
 		destacado: 2,
 		cuerpo: [
 			{
 				t: 'p',
-				x: 'Conectás tu contrato de Andreani u OCA (o Correo Argentino) desde Integraciones. En el checkout, el cliente pone su código postal y ve el costo y cuándo le llega.'
+				x: 'Conectás tu cuenta de MiCorreo de Correo Argentino desde Integraciones. En el checkout, el cliente pone su código postal y ve el costo y cuándo le llega.'
 			},
 			{
 				t: 'lista',
@@ -682,7 +682,7 @@ export const FAQ: [string, string][] = [
 	],
 	[
 		'¿Puedo cobrar en cuotas sin interés?',
-		'Sí. Conectás Mercado Pago, Payway o MODO y prendés las cuotas que quieras ofrecer desde Cupones › Automáticas.'
+		'Sí. Conectás Mercado Pago, Payway o Getnet y prendés las cuotas que quieras ofrecer desde Cupones › Automáticas.'
 	],
 	[
 		'¿Mostrador cobra comisión por venta?',

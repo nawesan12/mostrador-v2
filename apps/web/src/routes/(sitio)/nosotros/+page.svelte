@@ -38,7 +38,11 @@
 		],
 		[I.phShieldCheckFill, 'Seguridad de serie', 'Lo que protege tu negocio no es un extra.'],
 		[I.phHandHeartFill, 'Gente que atiende', 'Respondemos personas, por WhatsApp, en minutos.'],
-		[I.phMapTrifoldFill, 'Hecho para Argentina', 'Cuotas, ARCA, Andreani y el CP de cada pueblo.']
+		[
+			I.phMapTrifoldFill,
+			'Hecho para Argentina',
+			'Cuotas, ARCA, Correo Argentino y el CP de cada pueblo.'
+		]
 	] as const;
 	const EQUIPO = [
 		['1531058240690-006c446962d8', 'Martina Ruiz', 'Cofundadora · Producto'],
