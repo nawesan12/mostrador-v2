@@ -29,12 +29,12 @@
 			<div class="barra"><div style:width="{l.mig}%"></div></div>
 			<div class="items">
 				<span
-					><Icon icon={I.phCheckCircleFill} size={14} style="color:#2F8F63" />1.204 productos</span
+					><Icon icon={I.phCheckCircleFill} size={14} style="color:#237550" />1.204 productos</span
 				>
 				<span
-					><Icon icon={I.phCheckCircleFill} size={14} style="color:#2F8F63" />3.880 clientes</span
+					><Icon icon={I.phCheckCircleFill} size={14} style="color:#237550" />3.880 clientes</span
 				>
-				<span><Icon icon={I.phCircleNotch} size={14} style="color:#C24E25" />Pedidos</span>
+				<span><Icon icon={I.phCircleNotch} size={14} style="color:#b0441d" />Pedidos</span>
 			</div>
 		</div>
 	</div>
@@ -96,7 +96,7 @@
 		font-weight: 600;
 	}
 	.pct {
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.barra {
 		margin-top: 12px;
@@ -133,7 +133,7 @@
 		gap: 8px;
 		font-size: 14px;
 		font-weight: 600;
-		color: #d2582f;
+		color: #b0441d;
 	}
 	.etiq span {
 		width: 6px;

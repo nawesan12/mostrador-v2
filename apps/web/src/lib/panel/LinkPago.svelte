@@ -289,7 +289,7 @@
 		padding: 12px 20px;
 		border-radius: 999px;
 		border: 0;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		color: #fff;
 		font:
 			600 14px 'Instrument Sans',

@@ -50,7 +50,11 @@ for (const id of [...PROPIAS.filter((x) => x !== 'tijera'), 'ceibo', 'patio']) {
 		await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
 		await page.goto('/demo');
 		await page.locator('html[data-listo]').waitFor({ state: 'attached' });
-		await page.getByRole('button', { name: new RegExp(`^${p.nombre},`) }).click();
+		// El nombre del botón es su texto visible ("Miga Gastronomía · …"); "Miga" no es "Miga Clásica".
+		await page
+			.getByRole('button', { name: new RegExp(`^${p.nombre}(?! Clásica)`) })
+			.first()
+			.click();
 		await expect(page).toHaveURL(/\/panel$/);
 		const ajustes = await (await page.request.get('/panel/turnos/ajustes/__data.json')).ok();
 		expect(ajustes).toBe(true);

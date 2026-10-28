@@ -169,7 +169,7 @@
 	.ck-siempre {
 		font-size: 12px;
 		font-weight: 600;
-		color: #2f8f63;
+		color: #237550;
 	}
 	.tg {
 		position: relative;

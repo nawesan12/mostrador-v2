@@ -119,7 +119,7 @@ export function configInventario(
 				vs: `mínimo ${r.min}`,
 				stepper: r.stock,
 				act: reponer
-					? { t: 'Pedir', icon: I.phShoppingCartFill, bg: 'rgba(210,88,47,.14)', fg: '#C24E25' }
+					? { t: 'Pedir', icon: I.phShoppingCartFill, bg: 'rgba(210,88,47,.14)', fg: '#b0441d' }
 					: undefined
 			};
 		},

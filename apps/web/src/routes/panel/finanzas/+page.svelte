@@ -227,7 +227,7 @@
 		padding: 11px 20px;
 		border-radius: 999px;
 		border: 0;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		color: #fff;
 		font:
 			600 14px 'Instrument Sans',
@@ -487,7 +487,7 @@
 	.ok {
 		font-size: 12.5px;
 		font-weight: 600;
-		color: #2f8f63;
+		color: #237550;
 		display: flex;
 		align-items: center;
 		gap: 5px;
@@ -536,7 +536,7 @@
 		color: var(--tx);
 	}
 	.mov b.entra {
-		color: #2f8f63;
+		color: #237550;
 	}
 	@media (max-width: 560px) {
 		.barras {

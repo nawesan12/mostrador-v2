@@ -120,7 +120,7 @@
 
 			{#if pedido.nota}
 				<div class="nota">
-					<Icon icon={I.phSparkleFill} size={16} style="color:#C24E25;margin-top:2px;flex:none" />
+					<Icon icon={I.phSparkleFill} size={16} style="color:#b0441d;margin-top:2px;flex:none" />
 					<div><b>Hornero:</b> {pedido.nota}</div>
 				</div>
 			{/if}
@@ -366,7 +366,7 @@
 		background: var(--sf3);
 		display: grid;
 		place-items: center;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.i-txt {
 		flex: 1;
@@ -398,7 +398,7 @@
 		padding-top: 4px;
 	}
 	.gratis {
-		color: #2f8f63;
+		color: #237550;
 		font-weight: 600;
 	}
 	.total {
@@ -436,7 +436,7 @@
 		color: var(--fa);
 	}
 	.m-s.ok {
-		color: #2f8f63;
+		color: #237550;
 		font-weight: 600;
 	}
 	.borde {
@@ -498,7 +498,7 @@
 		padding: 13px;
 		border-radius: 999px;
 		border: 0;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		color: #fff;
 		font-size: 14.5px;
 		font-weight: 600;

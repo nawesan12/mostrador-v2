@@ -118,7 +118,7 @@
 		<div class="armar" use:anim={'reveal'}>
 			<span>¿Ninguna te convence? Hornero arma una a medida con tu Instagram.</span>
 			<a href={registro}
-				><Icon icon={phSparkleFill} size={15} style="color:#D2582F" />Armar la mía</a
+				><Icon icon={phSparkleFill} size={15} style="color:#b0441d" />Armar la mía</a
 			>
 		</div>
 	</div>

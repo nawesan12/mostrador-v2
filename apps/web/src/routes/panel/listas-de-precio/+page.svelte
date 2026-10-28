@@ -401,7 +401,7 @@
 	}
 	.aplicar {
 		border: 0;
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 	}
 </style>

@@ -369,7 +369,7 @@
 	}
 	.cur .n {
 		border: 0;
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 		font-weight: 700;
 		box-shadow: 0 0 0 4px rgba(210, 88, 47, 0.25);
@@ -452,7 +452,7 @@
 		align-items: center;
 		gap: 6px;
 		font-size: 13px;
-		color: #2f8f63;
+		color: #237550;
 		font-weight: 600;
 	}
 	.arriba a {
@@ -529,7 +529,7 @@
 		padding: 13px 24px;
 		border-radius: 999px;
 		border: 0;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		color: #fff;
 		font-size: 15px;
 		font-weight: 600;

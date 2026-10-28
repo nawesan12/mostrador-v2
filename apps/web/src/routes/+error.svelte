@@ -53,7 +53,7 @@
 					</form>
 					<div class="accesos">
 						{#each ACCESOS as [href, ico, t] (href)}
-							<a {href}><Icon icon={ico} size={19} style="color:#C24E25" />{t}</a>
+							<a {href}><Icon icon={ico} size={19} style="color:#b0441d" />{t}</a>
 						{/each}
 					</div>
 				</div>
@@ -99,7 +99,7 @@
 		line-height: 0.8;
 		letter-spacing: -0.07em;
 		font-weight: 600;
-		color: #d2582f;
+		color: #b0441d;
 	}
 	h1 {
 		margin: 18px 0 0;

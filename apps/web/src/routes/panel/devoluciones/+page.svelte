@@ -125,12 +125,12 @@
 		padding: 9px 14px;
 		border-radius: 999px;
 		background: rgba(47, 143, 99, 0.12);
-		color: #2f8f63;
+		color: #237550;
 		white-space: nowrap;
 	}
 	.tasa.alta {
 		background: rgba(227, 169, 59, 0.2);
-		color: #9a6a10;
+		color: #8a5f0e;
 	}
 	.lista {
 		display: flex;
@@ -174,11 +174,11 @@
 		padding: 3px 9px;
 		border-radius: 999px;
 		background: rgba(47, 143, 99, 0.13);
-		color: #2f8f63;
+		color: #237550;
 	}
 	.estado.pend {
 		background: rgba(227, 169, 59, 0.2);
-		color: #9a6a10;
+		color: #8a5f0e;
 	}
 	.s {
 		display: block;

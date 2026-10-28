@@ -122,7 +122,7 @@
 	.reco {
 		font-size: 11px;
 		font-weight: 700;
-		color: #c24e25;
+		color: #b0441d;
 		background: rgba(210, 88, 47, 0.12);
 		padding: 2px 7px;
 		border-radius: 999px;
@@ -134,7 +134,7 @@
 		line-height: 1.4;
 	}
 	.c-d.trae {
-		color: #2f8f63;
+		color: #237550;
 		font-weight: 500;
 	}
 	.conectar {
@@ -154,7 +154,7 @@
 		gap: 6px;
 		font-size: 13px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 		white-space: nowrap;
 	}
 	.espera :global(.gira) {

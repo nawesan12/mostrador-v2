@@ -88,7 +88,7 @@
 			<div class="tarjeta lista">
 				{#each resultados as a (a.slug)}
 					<a href={enlace(a)} class="art">
-						<Icon icon={I.phArticle} size={20} style="color:#C24E25;flex:none" />
+						<Icon icon={I.phArticle} size={20} style="color:#b0441d;flex:none" />
 						<span class="a-txt"
 							><span class="a-t">{a.titulo}</span><span class="a-s"
 								>{categoria(a.categoria)?.nombre} · {minutos(a)} min de lectura</span
@@ -121,7 +121,7 @@
 			<div class="tarjeta lista">
 				{#each destacados() as a (a.slug)}
 					<a href={enlace(a)} class="art">
-						<Icon icon={I.phArticle} size={20} style="color:#C24E25;flex:none" />
+						<Icon icon={I.phArticle} size={20} style="color:#b0441d;flex:none" />
 						<span class="a-txt"
 							><span class="a-t">{a.titulo}</span><span class="a-s"
 								>{categoria(a.categoria)?.nombre.split(' ')[0]} · {minutos(a)} min de lectura</span

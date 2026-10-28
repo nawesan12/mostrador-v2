@@ -509,7 +509,7 @@
 	.m-st {
 		font-size: 13px;
 		font-weight: 600;
-		color: #2f8f63;
+		color: #237550;
 	}
 	.m-st.apagado {
 		color: var(--fa);
@@ -559,7 +559,7 @@
 		padding: 12px 14px;
 		border-radius: 14px;
 		background: rgba(227, 169, 59, 0.16);
-		color: #9a6a10;
+		color: #8a5f0e;
 		font-size: 13.5px;
 		line-height: 1.45;
 	}
@@ -674,7 +674,7 @@
 	}
 	.resultado.ok {
 		background: rgba(47, 143, 99, 0.1);
-		color: #2f8f63;
+		color: #237550;
 	}
 	.resultado :global(svg) {
 		flex: none;

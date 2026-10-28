@@ -174,7 +174,7 @@ export function configClientes(
 				act: c.cupon
 					? { t: 'Cupón enviado', icon: I.phCheckBold, bg: 'var(--chip)', fg: 'var(--mu)' }
 					: perdido(c)
-						? { t: 'Cupón', icon: I.phTicketFill, bg: 'rgba(210,88,47,.14)', fg: '#C24E25' }
+						? { t: 'Cupón', icon: I.phTicketFill, bg: 'rgba(210,88,47,.14)', fg: '#b0441d' }
 						: { t: 'Escribir', icon: I.phWhatsappLogoFill, bg: '#E9F8EE', fg: '#1F6F4A' }
 			};
 		},

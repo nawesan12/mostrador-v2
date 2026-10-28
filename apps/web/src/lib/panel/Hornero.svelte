@@ -424,7 +424,7 @@
 		flex: none;
 		border-radius: 12px;
 		background: rgba(210, 88, 47, 0.12);
-		color: #c24e25;
+		color: #b0441d;
 		display: grid;
 		place-items: center;
 	}
@@ -445,7 +445,7 @@
 	.i-n {
 		font-size: 12.5px;
 		font-weight: 600;
-		color: #9a6a10;
+		color: #8a5f0e;
 		margin-top: 6px;
 	}
 	.i-acc {
@@ -478,7 +478,7 @@
 		gap: 6px;
 		font-size: 13px;
 		font-weight: 600;
-		color: #2f8f63;
+		color: #237550;
 	}
 	.pie {
 		padding: 12px 14px 14px;
@@ -538,7 +538,7 @@
 		flex: none;
 		border: 0;
 		border-radius: 50%;
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 		display: grid;
 		place-items: center;

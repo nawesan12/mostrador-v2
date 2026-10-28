@@ -519,7 +519,7 @@
 									n = { ...n, ...p };
 								}}
 							>
-								<Icon icon={icono} size={20} style="color:#D2582F" />
+								<Icon icon={icono} size={20} style="color:#b0441d" />
 								<span class="o-t">{t}</span>
 								<span class="o-d">{d}</span>
 							</button>
@@ -543,7 +543,7 @@
 							<button
 								type="button"
 								onclick={() => (n.codigo = SUGERIDOS[sugerido++ % SUGERIDOS.length])}
-								><Icon icon={I.phSparkleFill} size={14} style="color:#D2582F" />Sugerir</button
+								><Icon icon={I.phSparkleFill} size={14} style="color:#b0441d" />Sugerir</button
 							>
 						</div>
 					</div>
@@ -726,7 +726,7 @@
 				</div>
 				<div class="calcula">
 					<div class="ca-t">
-						<Icon icon={I.phSparkleFill} size={14} style="color:#D2582F" />Lo que calcula Hornero
+						<Icon icon={I.phSparkleFill} size={14} style="color:#b0441d" />Lo que calcula Hornero
 					</div>
 					<div class="ca-f"><span>Ventas extra estimadas</span><b>{pesos(est.ventas)}</b></div>
 					<div class="ca-f"><span>Te cuesta en descuentos</span><b>{pesos(est.costo)}</b></div>
@@ -974,7 +974,7 @@
 							title: 'Elegí el producto',
 							desc: 'Programar ofertas relámpago desde acá llega con la tienda online'
 						})}
-					><Icon icon={I.phLightningBold} size={15} style="color:#D2582F" />Programar oferta
+					><Icon icon={I.phLightningBold} size={15} style="color:#b0441d" />Programar oferta
 					relámpago</button
 				>
 			</div>
@@ -1016,7 +1016,7 @@
 		padding: 11px 18px;
 		border-radius: 999px;
 		border: 0;
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 		font:
 			600 14px 'Instrument Sans',
@@ -1478,7 +1478,7 @@
 		padding: 13px 18px;
 		border-radius: 999px;
 		border: 0;
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 		font:
 			600 14.5px 'Instrument Sans',
@@ -1710,7 +1710,7 @@
 		line-height: 1.4;
 	}
 	.tip span:first-child {
-		color: #d2582f;
+		color: #b0441d;
 		font-weight: 700;
 	}
 	.cu-acc {

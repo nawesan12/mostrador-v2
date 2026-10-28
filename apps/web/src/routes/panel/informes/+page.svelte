@@ -304,7 +304,7 @@
 		flex: none;
 		border-radius: 12px;
 		background: rgba(210, 88, 47, 0.12);
-		color: #c24e25;
+		color: #b0441d;
 		display: grid;
 		place-items: center;
 	}
@@ -312,7 +312,7 @@
 		display: block;
 		font-size: 12px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.in-d {
 		display: block;

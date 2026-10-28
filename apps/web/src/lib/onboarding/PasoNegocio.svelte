@@ -89,7 +89,7 @@
 			<button type="button" class:on aria-pressed={on} onclick={() => o.alternarObjetivo(i)}>
 				<span class="o-ico"><Icon icon={ico} size={18} /></span>
 				<span class="o-x">{t}</span>
-				{#if on}<Icon icon={I.phCheckCircleFill} size={18} style="color:#D2582F;flex:none" />{/if}
+				{#if on}<Icon icon={I.phCheckCircleFill} size={18} style="color:#b0441d;flex:none" />{/if}
 			</button>
 		{/each}
 	</div>
@@ -154,11 +154,11 @@
 		gap: 4px;
 		font-size: 12px;
 		font-weight: 600;
-		color: #2f8f63;
+		color: #237550;
 	}
 	.h-busca {
 		gap: 6px;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.h-busca :global(.gira) {
 		animation: gira 0.9s linear infinite;
@@ -319,7 +319,7 @@
 		color: #7a6252;
 	}
 	.on .o-ico {
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 	}
 	.o-x {

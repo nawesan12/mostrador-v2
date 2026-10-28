@@ -81,7 +81,7 @@
 		gap: 8px;
 		font-size: 14px;
 		font-weight: 600;
-		color: #d2582f;
+		color: #b0441d;
 	}
 	.etiq span {
 		width: 6px;
@@ -170,7 +170,7 @@
 		background: #fcede5;
 		display: grid;
 		place-items: center;
-		color: #d2582f;
+		color: #b0441d;
 	}
 	.g-t {
 		margin-top: 16px;

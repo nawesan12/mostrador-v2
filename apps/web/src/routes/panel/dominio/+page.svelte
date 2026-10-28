@@ -240,7 +240,7 @@
 	}
 	.ico.principal {
 		background: rgba(210, 88, 47, 0.12);
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.txt {
 		flex: 1 1 200px;
@@ -260,7 +260,7 @@
 		font-weight: 700;
 		padding: 2px 8px;
 		border-radius: 999px;
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 	}
 	.d {
@@ -277,11 +277,11 @@
 		padding: 4px 10px;
 		border-radius: 999px;
 		background: rgba(47, 143, 99, 0.12);
-		color: #2f8f63;
+		color: #237550;
 	}
 	.estado.espera {
 		background: rgba(227, 169, 59, 0.18);
-		color: #9a6a10;
+		color: #8a5f0e;
 	}
 	.sec {
 		padding: 8px 12px;

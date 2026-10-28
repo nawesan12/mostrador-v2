@@ -200,7 +200,7 @@
 	</div>
 
 	<div class="doble" use:anim={{ t: 'rise', delay: 150 }}>
-		<Icon icon={I.phShieldCheckFill} size={22} style="color:#2F8F63" />
+		<Icon icon={I.phShieldCheckFill} size={22} style="color:#237550" />
 		<span
 			><b>Verificación en dos pasos obligatoria</b> para Dueños y Administradores. {activos.length -
 				sin2fa.length} de {activos.length}
@@ -281,7 +281,7 @@
 		padding: 11px 20px;
 		border-radius: 999px;
 		border: 0;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		color: #fff;
 		font:
 			600 14px 'Instrument Sans',
@@ -351,7 +351,7 @@
 	}
 	.inv {
 		background: rgba(227, 169, 59, 0.18);
-		color: #9a6a10;
+		color: #8a5f0e;
 	}
 	.p-e {
 		display: block;
@@ -591,7 +591,7 @@
 	}
 	.b-pri {
 		border: 0;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		color: #fff;
 	}
 	.b-pri:disabled {

@@ -107,7 +107,7 @@
 		gap: 7px;
 		padding: 10px 16px;
 		border-radius: 999px;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		color: #fff;
 		font-size: 14px;
 		font-weight: 600;

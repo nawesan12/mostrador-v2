@@ -35,7 +35,7 @@ export async function avisar(
 					to: [s.contacto],
 					subject: `${c.tipo === 'abre' ? '⚠️' : '✅'} ${c.titulo}`,
 					text: `${c.detalle}\n\nSeguilo en ${cfg.sitio}/estado\nPara no recibir más avisos: ${baja}`,
-					html: `<p style="font-family:Helvetica,Arial,sans-serif;font-size:15px;color:#2A140C">${esc(c.detalle)}</p><p style="font-family:Helvetica,Arial,sans-serif;font-size:14px"><a href="${cfg.sitio}/estado" style="color:#C24E25">Ver el estado del sistema</a> · <a href="${esc(baja)}" style="color:#7A6252">No recibir más avisos</a></p>`
+					html: `<p style="font-family:Helvetica,Arial,sans-serif;font-size:15px;color:#2A140C">${esc(c.detalle)}</p><p style="font-family:Helvetica,Arial,sans-serif;font-size:14px"><a href="${cfg.sitio}/estado" style="color:#b0441d">Ver el estado del sistema</a> · <a href="${esc(baja)}" style="color:#7A6252">No recibir más avisos</a></p>`
 				})
 			});
 			if (r.ok) enviados++;

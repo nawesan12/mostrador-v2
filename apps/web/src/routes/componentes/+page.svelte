@@ -153,7 +153,7 @@
 			<Icon icon={phSidebarSimpleFill} size={16} />Hoja
 		</button>
 		<button type="button" class="btn btn-secondary" onclick={() => (confirmar = true)}>
-			<Icon icon={phWarningFill} size={16} style="color:#9A6A10" />Confirmación
+			<Icon icon={phWarningFill} size={16} style="color:#8a5f0e" />Confirmación
 		</button>
 		<Segmentado
 			label="Tema"
@@ -274,7 +274,7 @@
 		</button>
 	{/snippet}
 	<div class="nota-hornero">
-		<Icon icon={phSparkleFill} size={16} style="color:#C24E25;margin-top:2px" />
+		<Icon icon={phSparkleFill} size={16} style="color:#b0441d;margin-top:2px" />
 		<div><b>Hornero:</b> pidió que vaya envuelto para regalo. Ya lo anoté en la etiqueta.</div>
 	</div>
 	<div class="bloque">
@@ -550,7 +550,7 @@
 		place-items: center;
 		border-radius: 15px;
 		background: rgba(227, 169, 59, 0.2);
-		color: #9a6a10;
+		color: #8a5f0e;
 	}
 	.conf-t {
 		margin-top: 16px;

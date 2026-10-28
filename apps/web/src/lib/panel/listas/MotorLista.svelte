@@ -398,7 +398,7 @@
 			></button>
 			<span class="l-r">{rangoTxt}</span>
 			<span class="l-v"
-				><Icon icon={I.phLightningFill} size={13} style="color:#D2582F" />{n} {config.unidad}</span
+				><Icon icon={I.phLightningFill} size={13} style="color:#b0441d" />{n} {config.unidad}</span
 			>
 		</div>
 		<div
@@ -635,7 +635,7 @@
 		padding: 10px 18px;
 		border-radius: 999px;
 		border: 0;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		color: #fff;
 		font-size: 13.5px;
 		font-weight: 600;
@@ -815,7 +815,7 @@
 		height: 18px;
 		padding: 0 5px;
 		border-radius: 999px;
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 		font-size: 11px;
 		font-weight: 700;
@@ -901,7 +901,7 @@
 		border-radius: 999px;
 		border: 0;
 		background: rgba(210, 88, 47, 0.12);
-		color: #c24e25;
+		color: #b0441d;
 		font-size: 12.5px;
 		font-weight: 600;
 	}

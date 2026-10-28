@@ -66,7 +66,7 @@
 		height: 34px;
 		border-radius: 10px;
 		background: #fcede5;
-		color: #c24e25;
+		color: #b0441d;
 		display: grid;
 		place-items: center;
 	}
@@ -100,7 +100,7 @@
 	.falta {
 		font-size: 12px;
 		font-weight: 700;
-		color: #9a6a10;
+		color: #8a5f0e;
 		background: rgba(227, 169, 59, 0.2);
 		padding: 4px 9px;
 		border-radius: 999px;

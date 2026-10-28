@@ -55,14 +55,14 @@
 		</div>
 		<div class="checks" use:anim={{ t: 'fade', delay: 380 }}>
 			<span
-				><Icon icon={I.phCheckCircleFill} size={16} style="color:#2F8F63" />14 días gratis, sin
+				><Icon icon={I.phCheckCircleFill} size={16} style="color:#237550" />14 días gratis, sin
 				tarjeta</span
 			>
 			<span
-				><Icon icon={I.phCheckCircleFill} size={16} style="color:#2F8F63" />0% de comisión por venta</span
+				><Icon icon={I.phCheckCircleFill} size={16} style="color:#237550" />0% de comisión por venta</span
 			>
 			<span
-				><Icon icon={I.phCheckCircleFill} size={16} style="color:#2F8F63" />Te migramos gratis</span
+				><Icon icon={I.phCheckCircleFill} size={16} style="color:#237550" />Te migramos gratis</span
 			>
 		</div>
 
@@ -97,7 +97,7 @@
 							><Icon
 								icon={I.phLockSimpleFill}
 								size={11}
-								style="color:#2F8F63"
+								style="color:#237550"
 							/>laesquina.com.ar</span
 						>
 					</div>
@@ -327,6 +327,7 @@
 	}
 	h1 span,
 	.m-h1 span {
+		/* Texto grande: el terracota de la marca ya pasa AA (3:1). */
 		color: #d2582f;
 	}
 	.bajada {
@@ -684,7 +685,7 @@
 	.firma {
 		font-size: 9.5px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.burbuja {
 		font-size: 12px;

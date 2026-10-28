@@ -117,7 +117,7 @@
 
 			<div class="caja fact" use:anim={{ t: 'reveal', delay: 100 }} use:spot>
 				<div class="sello">
-					<Icon icon={I.phReceiptFill} size={22} style="color:#D2582F" /><span class="s-n"
+					<Icon icon={I.phReceiptFill} size={22} style="color:#b0441d" /><span class="s-n"
 						>Facturación y cobros</span
 					>
 				</div>
@@ -163,7 +163,7 @@
 		gap: 8px;
 		font-size: 14px;
 		font-weight: 600;
-		color: #d2582f;
+		color: #b0441d;
 	}
 	.etiq span {
 		width: 6px;
@@ -209,7 +209,7 @@
 	.incl {
 		font-size: 12px;
 		font-weight: 600;
-		color: #2f8f63;
+		color: #237550;
 		background: rgba(47, 143, 99, 0.12);
 		padding: 3px 9px;
 		border-radius: 999px;
@@ -350,7 +350,7 @@
 	.bl-txt .b {
 		font-size: 13px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.bl-pago {
 		display: flex;
@@ -450,7 +450,7 @@
 	.excl {
 		font-size: 12px;
 		font-weight: 700;
-		color: #c24e25;
+		color: #b0441d;
 		background: #fff;
 		padding: 3px 9px;
 		border-radius: 999px;
@@ -547,12 +547,12 @@
 	.ok {
 		font-size: 13px;
 		font-weight: 600;
-		color: #2f8f63;
+		color: #237550;
 	}
 	.emitida {
 		font-size: 13px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	@media (max-width: 520px) {
 		.bandeja {

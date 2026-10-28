@@ -214,7 +214,7 @@
 		place-items: center;
 		border-radius: 15px;
 		background: rgba(210, 88, 47, 0.12);
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.m-t {
 		margin-top: 16px;

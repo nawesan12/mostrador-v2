@@ -111,7 +111,7 @@
 		<div class="valores">
 			{#each VALORES as [ico, t, d] (t)}
 				<div class="valor">
-					<Icon icon={ico} size={28} style="color:#D2582F" />
+					<Icon icon={ico} size={28} style="color:#b0441d" />
 					<div class="v-t">{t}</div>
 					<p>{d}</p>
 				</div>
@@ -174,7 +174,7 @@
 		font-weight: 600;
 	}
 	h1 span {
-		color: #d2582f;
+		color: #b0441d;
 	}
 	.mosaico {
 		margin-top: clamp(28px, 4vw, 48px);
@@ -206,7 +206,7 @@
 	}
 	.cifra {
 		border-radius: 28px;
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 		padding: 20px;
 		display: flex;
@@ -256,7 +256,7 @@
 	.hito > span {
 		font-size: 22px;
 		font-weight: 600;
-		color: #d2582f;
+		color: #b0441d;
 		letter-spacing: -0.02em;
 	}
 	.hito b {

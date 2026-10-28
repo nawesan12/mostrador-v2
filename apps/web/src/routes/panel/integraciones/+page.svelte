@@ -866,7 +866,7 @@
 		padding: 3px 8px;
 		border-radius: 999px;
 		background: rgba(210, 88, 47, 0.12);
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.ia-d {
 		font-size: 13.5px;
@@ -894,7 +894,7 @@
 	.prov.on {
 		border-color: rgba(47, 143, 99, 0.5);
 		background: rgba(47, 143, 99, 0.06);
-		color: #2f8f63;
+		color: #237550;
 	}
 	.p-ico {
 		width: 36px;
@@ -1073,10 +1073,10 @@
 		color: var(--fa);
 	}
 	.t-st.on {
-		color: #2f8f63;
+		color: #237550;
 	}
 	.t-st.vence {
-		color: #9a6a10;
+		color: #8a5f0e;
 	}
 	.t-btn {
 		padding: 8px 14px;
@@ -1107,7 +1107,7 @@
 	.m-st {
 		font-size: 13px;
 		font-weight: 600;
-		color: #2f8f63;
+		color: #237550;
 	}
 	.m-st.apagada {
 		color: var(--fa);
@@ -1174,7 +1174,7 @@
 		line-height: 1.45;
 	}
 	.m-pasos a {
-		color: #c24e25;
+		color: #b0441d;
 		font-weight: 600;
 	}
 	.m-feed-st {
@@ -1189,7 +1189,7 @@
 		gap: 6px;
 		font-size: 13.5px;
 		font-weight: 600;
-		color: #2f8f63;
+		color: #237550;
 	}
 	.b-chico {
 		margin-top: 12px;
@@ -1209,7 +1209,7 @@
 		padding: 12px 14px;
 		border-radius: 14px;
 		background: rgba(227, 169, 59, 0.16);
-		color: #9a6a10;
+		color: #8a5f0e;
 		font-size: 13.5px;
 		line-height: 1.45;
 	}
@@ -1239,7 +1239,7 @@
 	.m-hace li :global(svg) {
 		flex: none;
 		margin-top: 2px;
-		color: #2f8f63;
+		color: #237550;
 	}
 	.m-cuenta {
 		margin-top: 12px;
@@ -1254,7 +1254,7 @@
 		color: var(--tx);
 	}
 	.m-cuenta a {
-		color: #c24e25;
+		color: #b0441d;
 		font-weight: 600;
 	}
 	.espera {

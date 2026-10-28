@@ -125,7 +125,7 @@
 			{/each}
 		</div>
 		<div class="ejemplo">
-			<Icon icon={I.phCalculatorFill} size={30} style="color:#C24E25;flex:none" />
+			<Icon icon={I.phCalculatorFill} size={30} style="color:#b0441d;flex:none" />
 			<div class="ej-txt">
 				<b>Ejemplo: 12 tiendas en plan Pro</b>
 				<div>Nivel Plata, 25&nbsp;% de comisión sobre $&nbsp;49.900 por mes</div>
@@ -157,7 +157,7 @@
 						</div>
 						<div class="p-d">{d}</div>
 						<div class="p-val">
-							<Icon icon={I.phStarFill} size={14} style="color:#D2582F" /><b>4,9</b><span
+							<Icon icon={I.phStarFill} size={14} style="color:#b0441d" /><b>4,9</b><span
 								>· {tiendas} tiendas armadas</span
 							>
 						</div>
@@ -336,7 +336,7 @@
 		color: #fbf7f2;
 	}
 	.terracota {
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 	}
 	.nv-n {
@@ -395,7 +395,7 @@
 		font-size: 30px;
 		font-weight: 600;
 		letter-spacing: -0.03em;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.ej-v .d {
 		font-size: 12.5px;
@@ -446,7 +446,7 @@
 	}
 	.nivel-chip.oro {
 		background: #fcede5;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.p-d {
 		font-size: 14px;

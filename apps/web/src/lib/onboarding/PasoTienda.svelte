@@ -76,7 +76,7 @@
 	<div class="lado">
 		<div class="caja">
 			<div class="c-cab">
-				<Icon icon={I.phSparkleFill} size={15} style="color:#D2582F" /><span
+				<Icon icon={I.phSparkleFill} size={15} style="color:#b0441d" /><span
 					>Recomendadas para tu rubro</span
 				>
 			</div>
@@ -130,7 +130,7 @@
 			</div>
 		</div>
 		<div class="caja dominio">
-			<Icon icon={I.phCheckCircleFill} size={18} style="color:#2F8F63;flex:none" />
+			<Icon icon={I.phCheckCircleFill} size={18} style="color:#237550;flex:none" />
 			<span
 				><span class="d-t">laesquina.com.ar</span><span class="d-d"
 					>Disponible · lo reservamos por vos</span

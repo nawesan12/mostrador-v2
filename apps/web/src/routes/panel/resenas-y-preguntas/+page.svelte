@@ -248,7 +248,7 @@
 	.s-t {
 		font-size: 12px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 		margin-bottom: 4px;
 	}
 	.s-txt {
@@ -295,7 +295,7 @@
 		gap: 6px;
 		font-size: 13px;
 		font-weight: 600;
-		color: #2f8f63;
+		color: #237550;
 	}
 	.r-txt {
 		margin-top: 6px;

@@ -367,7 +367,7 @@
 		font-size: 46px;
 		font-weight: 600;
 		letter-spacing: -0.045em;
-		color: #c24e25;
+		color: #b0441d;
 		margin-top: 2px;
 	}
 	.ahorro a {
@@ -461,7 +461,7 @@
 		left: 20px;
 		padding: 5px 11px;
 		border-radius: 999px;
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 		font-size: 12px;
 		font-weight: 700;
@@ -515,7 +515,7 @@
 		font-weight: 600;
 	}
 	.hi .pl-cta {
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 	}
 	.pl-cta:hover {
 		color: #fff;

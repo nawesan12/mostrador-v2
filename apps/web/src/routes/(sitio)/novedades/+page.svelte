@@ -74,7 +74,7 @@
 			</div>
 			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- página pública -->
 			<a class="proponer" href="/contacto"
-				><Icon icon={I.phLightbulbFill} size={20} style="color:#C24E25" />Proponé una mejora<Icon
+				><Icon icon={I.phLightbulbFill} size={20} style="color:#b0441d" />Proponé una mejora<Icon
 					icon={I.phArrowRightBold}
 					size={13}
 					style="margin-left:auto"
@@ -203,7 +203,7 @@
 		padding: 8px 14px;
 		border: 0;
 		border-radius: 999px;
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 		font-size: 13.5px;
 		font-weight: 600;

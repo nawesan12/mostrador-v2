@@ -2,9 +2,9 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
 /**
- * WCAG 2.1 A y AA con axe en las páginas principales. El contraste de los colores de marca
- * (terracota #D2582F, verde #2F8F63) está en revisión con Nahuel: hasta decidirlo, la regla
- * color-contrast no corta la prueba.
+ * WCAG 2.1 A y AA con axe en las páginas principales. El texto de marca ya usa los tonos que pasan
+ * (terracota #B0441D, verde #237550, ámbar #8A5F0E); color-contrast todavía no corta la prueba por
+ * los logos de terceros (exentos), las miniaturas decorativas de la demo y algunos chips.
  */
 const listo = (page: Page) => page.locator('html[data-listo]').waitFor({ state: 'attached' });
 

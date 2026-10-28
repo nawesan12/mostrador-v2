@@ -272,7 +272,7 @@
 				</div>
 				{#if c.sugerencia}
 					<div class="sugerencia">
-						<Icon icon={I.phSparkleFill} size={15} style="color:#C24E25;margin-top:2px;flex:none" />
+						<Icon icon={I.phSparkleFill} size={15} style="color:#b0441d;margin-top:2px;flex:none" />
 						<span><b>Sugerencia:</b> {c.sugerencia}</span>
 						<button type="button" onclick={() => mandar(c!.sugerencia!)}>Enviar</button>
 					</div>
@@ -286,7 +286,7 @@
 									texto
 										? mandar(texto)
 										: shell.abrirLink({ para: c!.nombre, concepto: `Pedido de ${c!.nombre}` })}
-								><Icon icon={icono} size={14} style="color:#C24E25" />{t}</button
+								><Icon icon={icono} size={14} style="color:#b0441d" />{t}</button
 							>
 						{/each}
 					</div>
@@ -650,7 +650,7 @@
 	}
 	.tomar.devolver {
 		background: rgba(210, 88, 47, 0.12);
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.hilo {
 		flex: 1;
@@ -694,7 +694,7 @@
 	.ai {
 		font-size: 10.5px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.msg.yo {
 		background: #fce3d6;
@@ -748,7 +748,7 @@
 		color: #7a6252;
 	}
 	.tp-pie b {
-		color: #c24e25;
+		color: #b0441d;
 		font-size: 14px;
 		white-space: nowrap;
 	}
@@ -771,7 +771,7 @@
 		padding: 7px 12px;
 		border-radius: 999px;
 		border: 0;
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 		font-size: 12.5px;
 		font-weight: 600;
@@ -923,7 +923,7 @@
 		line-height: 1.45;
 	}
 	.f-sabe b {
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.f-crear {
 		padding: 11px;

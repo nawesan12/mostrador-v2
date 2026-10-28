@@ -327,7 +327,7 @@
 		box-shadow: var(--sh);
 	}
 	.items a.on :global(svg) {
-		color: #d2582f;
+		color: #b0441d;
 	}
 	.i-l {
 		flex: 1;
@@ -338,10 +338,10 @@
 		padding: 1px 8px;
 		border-radius: 999px;
 		background: rgba(210, 88, 47, 0.13);
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.on .badge {
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 	}
 	.c-t {
@@ -419,7 +419,7 @@
 		text-align: center;
 		font-size: 13px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 		background: #fff;
 		padding: 8px;
 		border-radius: 999px;

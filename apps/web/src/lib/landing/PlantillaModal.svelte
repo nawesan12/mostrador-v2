@@ -115,7 +115,7 @@
 				</div>
 				<div class="feats">
 					{#each ['Checkout con Mercado Pago y cuotas', 'Botón de WhatsApp y catálogo', 'Optimizada para Google y celular', 'Editor de arrastrar y soltar'] as f (f)}
-						<span><Icon icon={I.phCheckCircleFill} size={16} style="color:#2F8F63" />{f}</span>
+						<span><Icon icon={I.phCheckCircleFill} size={16} style="color:#237550" />{f}</span>
 					{/each}
 				</div>
 				<div class="esp"></div>
@@ -330,7 +330,7 @@
 		justify-content: center;
 		gap: 8px;
 		color: #fff;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		font-size: 15.5px;
 		font-weight: 600;
 		padding: 15px;

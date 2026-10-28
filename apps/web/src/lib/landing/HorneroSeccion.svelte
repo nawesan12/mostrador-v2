@@ -186,7 +186,7 @@
 										<div class="a">Pagar $ 44.600</div>
 										<div class="b">Hasta 6 cuotas sin interés</div>
 									</div>
-									<Icon icon={I.phArrowUpRightBold} size={15} style="color:#C24E25" />
+									<Icon icon={I.phArrowUpRightBold} size={15} style="color:#b0441d" />
 								</div>
 							</div>
 						{:else}
@@ -417,7 +417,7 @@
 		gap: 7px;
 		font-size: 12.5px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 		background: rgba(210, 88, 47, 0.1);
 		padding: 6px 10px 6px 6px;
 		border-radius: 999px;
@@ -468,7 +468,7 @@
 	.firma {
 		font-size: 11px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 		display: flex;
 		align-items: center;
 		gap: 4px;
@@ -515,7 +515,7 @@
 	.prod-p {
 		font-size: 15px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.pago {
 		border-radius: 12px;
@@ -609,7 +609,7 @@
 		width: 44px;
 		height: 44px;
 		border-radius: 13px;
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 		display: grid;
 		place-items: center;

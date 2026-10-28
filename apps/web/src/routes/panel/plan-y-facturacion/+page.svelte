@@ -253,7 +253,7 @@
 			<div class="u-cab">
 				<span>Uso de este mes</span>
 				<button type="button" onclick={pack}
-					><Icon icon={I.phSparkleFill} size={13} style="color:#D2582F" />+2.000 respuestas · $
+					><Icon icon={I.phSparkleFill} size={13} style="color:#b0441d" />+2.000 respuestas · $
 					4.900</button
 				>
 			</div>
@@ -386,7 +386,7 @@
 		<b class="m-t">{oferta[0]}</b>
 		<div class="m-d">{oferta[1]}</div>
 		<div class="oferta">
-			<Icon icon={oferta[2]} size={28} style="color:#C24E25" />
+			<Icon icon={oferta[2]} size={28} style="color:#b0441d" />
 			<div>
 				<b>{oferta[3]}</b>
 				<div class="m-s">{oferta[4]}</div>
@@ -466,7 +466,7 @@
 		margin-left: 6px;
 		font-size: 11px;
 		font-weight: 700;
-		color: #2f8f63;
+		color: #237550;
 	}
 	.planes {
 		display: grid;
@@ -498,7 +498,7 @@
 		left: 18px;
 		padding: 4px 10px;
 		border-radius: 999px;
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 		font-size: 11.5px;
 		font-weight: 700;
@@ -545,7 +545,7 @@
 	.p-incluye :global(svg) {
 		flex: none;
 		margin-top: 2px;
-		color: #d2582f;
+		color: #b0441d;
 	}
 	.oscuro .p-incluye :global(svg) {
 		color: #f0a58a;
@@ -562,7 +562,7 @@
 			sans-serif;
 	}
 	.oscuro .p-btn {
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 	}
 	.p-btn.actual {
@@ -618,7 +618,7 @@
 		border: 0;
 		padding: 0;
 		font-size: 13px;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.u-f {
 		display: flex;
@@ -729,7 +729,7 @@
 		padding: 3px 9px;
 		border-radius: 999px;
 		background: rgba(47, 143, 99, 0.12);
-		color: #2f8f63;
+		color: #237550;
 	}
 	.vacio {
 		padding: 18px;
@@ -915,7 +915,7 @@
 	}
 	.b-pri {
 		border: 0;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		color: #fff;
 	}
 	.b-roja {

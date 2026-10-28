@@ -97,7 +97,7 @@
 		background: transparent;
 		font-size: 13px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 		padding: 0;
 	}
 	.tabs {
@@ -173,6 +173,6 @@
 	.pie a {
 		font-size: 13px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 	}
 </style>

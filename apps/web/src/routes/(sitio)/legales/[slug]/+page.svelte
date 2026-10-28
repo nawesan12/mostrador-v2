@@ -122,7 +122,7 @@
 								target={o.href.startsWith('http') ? '_blank' : undefined}
 								rel={o.href.startsWith('http') ? 'noopener' : undefined}
 							>
-								<Icon icon={o.icono} size={24} style="color:#D2582F" />
+								<Icon icon={o.icono} size={24} style="color:#b0441d" />
 								<b>{o.titulo}</b>
 								<span class="o-txt">{o.texto}</span>
 								<span class="o-ir">Ir<Icon icon={I.phArrowUpRightBold} size={12} /></span>
@@ -380,7 +380,7 @@
 		color: #5c4536;
 	}
 	.toc a:hover {
-		color: #c24e25;
+		color: #b0441d;
 	}
 	article {
 		flex: 1 1 520px;
@@ -405,7 +405,7 @@
 		font-weight: 700;
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.vinetas {
 		margin: 12px 0 0;
@@ -444,7 +444,7 @@
 		align-items: baseline;
 	}
 	h2 span {
-		color: #d2582f;
+		color: #b0441d;
 		font-size: 0.8em;
 	}
 	article p {
@@ -454,7 +454,7 @@
 		color: #4a3428;
 	}
 	article :global(a) {
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.organismos {
 		margin-top: 18px;
@@ -482,7 +482,7 @@
 	.o-ir {
 		font-size: 13px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 		display: flex;
 		align-items: center;
 		gap: 4px;
@@ -513,7 +513,7 @@
 		font-size: 28px;
 		font-weight: 600;
 		letter-spacing: -0.03em;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.c-pie {
 		font-size: 12.5px;
@@ -588,7 +588,7 @@
 		background: #fcede5;
 		display: grid;
 		place-items: center;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.campos {
 		margin-top: 16px;
@@ -703,7 +703,7 @@
 		padding: 0;
 		font-size: 13.5px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 		text-decoration: underline;
 	}
 	.cierre {

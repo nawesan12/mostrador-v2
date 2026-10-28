@@ -87,7 +87,7 @@
 					<span class="t-ico"><Icon icon={ico} size={17} /></span><span class="t-x">{t}</span><Icon
 						icon={I.phCheckBold}
 						size={14}
-						style="color:#2F8F63"
+						style="color:#237550"
 					/>
 				</div>
 			{/each}
@@ -96,7 +96,7 @@
 			<Icon
 				icon={I.phLockKeyFill}
 				size={13}
-				style="color:#C24E25;display:inline;vertical-align:-1px"
+				style="color:#b0441d;display:inline;vertical-align:-1px"
 			/> Solo leemos lo necesario. Nunca movemos tu plata sin permiso.
 		</div>
 	</div>
@@ -262,7 +262,7 @@
 		flex: none;
 		border-radius: 10px;
 		background: #fcede5;
-		color: #c24e25;
+		color: #b0441d;
 		display: grid;
 		place-items: center;
 	}

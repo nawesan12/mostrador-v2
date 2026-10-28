@@ -110,12 +110,12 @@
 
 	<div class="contactos" use:anim={{ t: 'rise', delay: 120 }}>
 		<button type="button" class="contacto" onclick={() => shell.hornero()}>
-			<Icon icon={I.phSparkleFill} size={24} style="color:#D2582F" />
+			<Icon icon={I.phSparkleFill} size={24} style="color:#b0441d" />
 			<div class="c-t">Hornero</div>
 			<div class="c-d">Responde al instante, 24 h</div>
 		</button>
 		<a class="contacto" href={resolve('/(sitio)/contacto')}>
-			<Icon icon={I.phEnvelopeSimpleFill} size={24} style="color:#C24E25" />
+			<Icon icon={I.phEnvelopeSimpleFill} size={24} style="color:#b0441d" />
 			<div class="c-t">Soporte</div>
 			<div class="c-d">Personas reales · te respondemos en el día</div>
 		</a>

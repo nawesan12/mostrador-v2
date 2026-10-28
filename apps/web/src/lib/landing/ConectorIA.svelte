@@ -47,7 +47,7 @@
 				{/each}
 			</div>
 			<div class="seguro">
-				<Icon icon={I.phShieldCheckFill} size={16} style="color:#2F8F63" />Reembolsos y descuentos
+				<Icon icon={I.phShieldCheckFill} size={16} style="color:#237550" />Reembolsos y descuentos
 				siempre te piden confirmación.
 			</div>
 		</div>
@@ -103,7 +103,7 @@
 		gap: 8px;
 		font-size: 14px;
 		font-weight: 600;
-		color: #d2582f;
+		color: #b0441d;
 	}
 	.etiq span {
 		width: 6px;
@@ -199,7 +199,7 @@
 		gap: 6px;
 		font-size: 12px;
 		font-weight: 600;
-		color: #2f8f63;
+		color: #237550;
 	}
 	.conectado span {
 		width: 7px;
@@ -272,7 +272,7 @@
 		padding: 8px 14px;
 		border-radius: 999px;
 		border: 0;
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 		font-size: 13px;
 		font-weight: 600;
