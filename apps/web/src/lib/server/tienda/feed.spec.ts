@@ -12,6 +12,9 @@ const producto = (p: Partial<ProductoPublico>): ProductoPublico => ({
 	foto: 'https://cdn.x.com/p.jpg',
 	etiqueta: null,
 	stock: 3,
+	fotos: [],
+	opciones: [],
+	variantes: [],
 	...p
 });
 

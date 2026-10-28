@@ -22,14 +22,21 @@ async function tienda() {
 	const db = dbSandbox(d1);
 	const sb = (await crear(db, 'moda'))!;
 	const datos = new DatosSandbox(db, sb);
-	const producto = (await datos.tiendaPublica()).productos.find((p) => p.stock > 2)!;
+	const p = (await datos.tiendaPublica()).productos.find((x) => x.stock > 2)!;
+	// En moda todo tiene talles: se compra la primera variante con stock.
+	const varianteId = p.opciones.length ? p.variantes.find((v) => v.stock > 0)!.id : null;
+	const producto = { ...p, varianteId };
 	return { sb, datos, producto };
 }
 
 /** Una compra en la tienda online, como el checkout (Mercado Pago queda cobrado; transferencia, no). */
-async function comprar(datos: DatosSandbox, productoId: string, pagado: boolean) {
+async function comprar(
+	datos: DatosSandbox,
+	producto: { id: string; varianteId: string | null },
+	pagado: boolean
+) {
 	const r = await datos.crearPedido({
-		items: [{ productoId, cantidad: 1 }],
+		items: [{ productoId: producto.id, varianteId: producto.varianteId, cantidad: 1 }],
 		pago: pagado ? 'mp' : 'transf',
 		canal: 'web',
 		envio: 'retiro',
@@ -43,7 +50,7 @@ async function comprar(datos: DatosSandbox, productoId: string, pagado: boolean)
 describe('reseñas y preguntas de la tienda online (demo)', () => {
 	it('con el código de un pedido cobrado queda con compra, una sola vez', async () => {
 		const { sb, datos, producto } = await tienda();
-		const numero = await comprar(datos, producto.id, true);
+		const numero = await comprar(datos, producto, true);
 		const codigo = await codigoPedido(sb.id, numero);
 		const r = { codigo, autor: 'Lucía', estrellas: 5, texto: 'Llegó perfecto.' };
 		expect(await datos.dejarResena(r)).toBe('ok');
@@ -65,7 +72,7 @@ describe('reseñas y preguntas de la tienda online (demo)', () => {
 
 	it('sin código, con uno inventado o de un pedido sin cobrar: se guarda sin compra', async () => {
 		const { sb, datos, producto } = await tienda();
-		const sinCobrar = await comprar(datos, producto.id, false);
+		const sinCobrar = await comprar(datos, producto, false);
 		const codigo = await codigoPedido(sb.id, sinCobrar);
 		expect(await datos.dejarResena({ codigo, autor: 'Ana', estrellas: 4 })).toBe('ok');
 		expect(await datos.dejarResena({ codigo, autor: 'Ana', estrellas: 4 })).toBe('ok');
