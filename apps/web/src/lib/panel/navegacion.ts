@@ -93,6 +93,7 @@ export const AREAS: Area[] = [
 		iconFill: I.phStorefrontFill,
 		items: [
 			it('Mi tienda', I.phPaintBrushBroad, I.phPaintBrushBroadFill),
+			it('Tarjeta para paquetes', I.phEnvelopeSimple, I.phEnvelopeSimpleFill),
 			it('Configuración', I.phGearSix, I.phGearSixFill),
 			it('Integraciones', I.phPlugsConnected, I.phPlugsConnectedFill)
 		]

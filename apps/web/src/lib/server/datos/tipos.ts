@@ -41,6 +41,7 @@ export type Marketing = components['schemas']['Marketing'];
 export type Evento = components['schemas']['Evento'];
 export type Finanzas = components['schemas']['Finanzas'];
 export type MiTienda = components['schemas']['MiTienda'];
+export type Tarjeta = components['schemas']['Tarjeta'];
 export type Configuracion = components['schemas']['Configuracion'];
 export type PlanCuenta = components['schemas']['PlanCuenta'];
 export type Dominios = components['schemas']['Dominios'];
@@ -156,6 +157,9 @@ export interface Datos {
 	actividad(): Promise<Evento[]>;
 	finanzas(): Promise<Finanzas>;
 	miTienda(): Promise<MiTienda>;
+	/** La tarjeta A6 para los paquetes (modelo, textos y QR del dorso). */
+	tarjeta(): Promise<Tarjeta>;
+	guardarTarjeta(t: Tarjeta): Promise<void>;
 	configuracion(): Promise<Configuracion>;
 	planCuenta(): Promise<PlanCuenta>;
 	/** El hub de Integraciones (Mercado Pago se lee de mercadoPago()). */

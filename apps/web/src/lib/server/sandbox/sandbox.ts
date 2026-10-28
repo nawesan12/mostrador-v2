@@ -78,6 +78,7 @@ import type {
 	AccionLote,
 	PedidoNuevo,
 	AutomaticosCarritos,
+	Tarjeta,
 	Resultado,
 	MovimientoStock,
 	FiltrosLista,
@@ -150,6 +151,7 @@ import { COSTO_MENSAJE, contextoDemo, tableroDemo, type CambiosTablero } from '.
 import RUBROS from '@mostrador/contrato/rubros.json';
 import { plantilla as buscarPlantilla } from '#lib/plantillas.ts';
 import { SITE } from '#lib/site.ts';
+import { TARJETA_INICIAL } from '#lib/panel/tarjeta.ts';
 import type {
 	ProximosTurnos,
 	TiendaPublica,
@@ -984,6 +986,16 @@ export class DatosSandbox implements Datos {
 
 	async carritos() {
 		return carritosDemo(await this.demo(), Date.now(), await this.estadoCarritos(), 120);
+	}
+
+	async tarjeta(): Promise<Tarjeta> {
+		const t = (await cambiosDe(this.db, this.sb.id, 'tarjeta')).get('tarjeta') as
+			Tarjeta | undefined;
+		return { ...TARJETA_INICIAL, ...t };
+	}
+
+	async guardarTarjeta(t: Tarjeta) {
+		await guardarCambio(this.db, this.sb.id, 'tarjeta', 'tarjeta', t);
 	}
 
 	async guardarAutomaticos(a: AutomaticosCarritos) {
