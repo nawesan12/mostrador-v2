@@ -20,6 +20,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/links"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/listas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/mitienda"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/partners"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/precios"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/tiendas"
@@ -115,6 +116,7 @@ func Nuevo(d Dependencias) http.Handler {
 		hoy.Rutas(mux, d.App, tienda)
 		finanzas.Rutas(mux, d.App, tienda)
 		mitienda.Rutas(mux, d.App, tienda, d.Sitio)
+		partners.Rutas(mux, d.App, d.ClaveBFF, nil)
 		configuracion.Rutas(mux, d.App, d.Sitio, d.MercadoPago != nil && d.MercadoPago.Config.TokenPlataforma != "")
 		if d.MercadoPago != nil {
 			d.MercadoPago.Rutas(mux)
