@@ -2030,7 +2030,12 @@
 						mandamos a todo el país{tienda.envios.retiro ? ', o lo retirás en el local' : ''}.
 					</p>
 				</div>
-				<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr))">
+				<div
+					style="display:grid;grid-template-columns:repeat({tienda.promedio ||
+					tienda.cobros.transferencia > 0
+						? 3
+						: 2},minmax(0,1fr))"
+				>
 					{#each [{ v: String(tienda.productos.length), t: 'Productos' }, { v: String(tienda.cobros.cuotas), t: 'Cuotas sin interés' }, ...(tienda.promedio ? [{ v: tienda.promedio.toLocaleString('es-AR'), t: 'En reseñas' }] : tienda.cobros.transferencia > 0 ? [{ v: `${tienda.cobros.transferencia}%`, t: 'Off por transferencia' }] : [])] as s (s.t)}<div
 							style="padding:clamp(18px,2.6cqw,32px);border-right:2px solid #2A2A2A;display:flex;flex-direction:column;justify-content:flex-end;min-width:0"
 						>

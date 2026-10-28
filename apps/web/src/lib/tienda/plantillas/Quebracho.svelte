@@ -1230,7 +1230,11 @@
 									>{fmt(subtotal)}</b
 								></span
 							>
-							<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+							<div
+								style="display:grid;grid-template-columns:{tienda.cobros.transferencia > 0
+									? '1fr 1fr'
+									: '1fr'};gap:6px"
+							>
 								<span
 									style="padding:10px;background:#fff;border:1px solid #2B2520;text-align:center"
 									><b style="display:block"
