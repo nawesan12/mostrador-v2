@@ -60,6 +60,7 @@ func (s *Servicio) Arrepentirse(ctx context.Context, tienda, nombreTienda string
 		return "", ErrInvalido
 	}
 	var codigo string
+	nuevo := true
 	err := s.Pool.EnTienda(ctx, tienda, func(t pgx.Tx) error {
 		var numero int
 		var total int64
@@ -88,18 +89,27 @@ func (s *Servicio) Arrepentirse(ctx context.Context, tienda, nombreTienda string
 			return ErrFueraDePlazo
 		}
 		if err := t.QueryRow(ctx, `SELECT codigo FROM devoluciones WHERE pedido_numero = $1 AND origen = 'arrepentimiento'`, numero).Scan(&codigo); err == nil {
+			nuevo = false
 			return nil
 		} else if !errors.Is(err, pgx.ErrNoRows) {
 			return err
 		}
-		return t.QueryRow(ctx, `INSERT INTO devoluciones (tienda_id, codigo, pedido_numero, nombre, email, motivo, monto)
-			VALUES ($1, format('ARR-%s-%s', $2::int, nextval('devoluciones_numero')), $3, $4, $5, $6, $7) RETURNING codigo`,
+		// Dos pedidos a la vez por la misma compra: el segundo no choca, devuelve el mismo código.
+		err = t.QueryRow(ctx, `INSERT INTO devoluciones (tienda_id, codigo, pedido_numero, nombre, email, motivo, monto)
+			VALUES ($1, format('ARR-%s-%s', $2::int, nextval('devoluciones_numero')), $3, $4, $5, $6, $7)
+			ON CONFLICT (tienda_id, pedido_numero) WHERE origen = 'arrepentimiento' DO NOTHING RETURNING codigo`,
 			tienda, ahora.Year(), numero, p.Nombre, p.Email, p.Motivo, total).Scan(&codigo)
+		if errors.Is(err, pgx.ErrNoRows) {
+			nuevo = false
+			return t.QueryRow(ctx, `SELECT codigo FROM devoluciones WHERE pedido_numero = $1 AND origen = 'arrepentimiento'`, numero).Scan(&codigo)
+		}
+		return err
 	})
 	if err != nil {
 		return "", err
 	}
-	if s.Correo != nil {
+	// El mail sale una vez, con el trámite nuevo (no en cada repetición).
+	if s.Correo != nil && nuevo {
 		if err := s.Correo.Enviar(ctx, mailRecibido(p.Email, p.Nombre, nombreTienda, codigo)); err != nil {
 			slog.Warn("devoluciones: no salió el mail", "codigo", codigo, "error", err)
 		}
@@ -223,8 +233,15 @@ func (s *Servicio) Rutas(mux *http.ServeMux, tienda func(*http.Request) string) 
 			problema.Escribir(w, problema.Invalido("Pedido inválido."))
 			return
 		}
-		if err := s.Resolver(r.Context(), id, r.PathValue("id"), b.Accion); err != nil {
-			problema.Escribir(w, problema.NoEncontrado("Esa devolución no existe."))
+		switch err := s.Resolver(r.Context(), id, r.PathValue("id"), b.Accion); {
+		case errors.Is(err, ErrInvalido):
+			problema.Escribir(w, problema.Invalido("Esa acción no existe."))
+			return
+		case errors.Is(err, ErrNoEncontrado):
+			problema.Escribir(w, problema.NoEncontrado("Esa devolución no existe o ya no admite esa acción."))
+			return
+		case err != nil:
+			problema.Escribir(w, problema.Interno())
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)

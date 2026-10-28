@@ -29,7 +29,7 @@ const Pedido = v.object({
 });
 
 export const actions: Actions = {
-	default: async ({ request, params, cookies }) => {
+	default: async ({ request, params, cookies, getClientAddress }) => {
 		const r = await resolverTienda(params.tienda, cookies.get(COOKIE));
 		if (!r) error(404, 'Esta tienda no existe.');
 		const f = Object.fromEntries(await request.formData());
@@ -49,7 +49,12 @@ export const actions: Actions = {
 				`${String(env.API_URL)}/v1/publico/tiendas/${r.tienda.slug}/arrepentimiento`,
 				{
 					method: 'POST',
-					headers: { 'content-type': 'application/json' },
+					// La IP real (con la clave del BFF) para el tope por IP de Go.
+					headers: {
+						'content-type': 'application/json',
+						'x-mostrador-bff': String(env.CLAVE_BFF ?? ''),
+						'x-cliente-ip': request.headers.get('cf-connecting-ip') ?? getClientAddress()
+					},
 					body: JSON.stringify({
 						codigo: numero ? '' : p.pedido,
 						numero,
@@ -76,7 +81,8 @@ export const actions: Actions = {
 		const t = await r.datos.arrepentirse(numero, {
 			nombre: p.nombre,
 			email: p.email,
-			motivo: p.motivo
+			motivo: p.motivo,
+			porNumero: !p.pedido.includes('-')
 		});
 		if (t === 'no-existe') return fail(400, { error: 'No encontramos ese pedido.', previo: f });
 		if (t === 'fuera-de-plazo')

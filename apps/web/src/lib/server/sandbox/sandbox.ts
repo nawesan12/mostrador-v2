@@ -2634,7 +2634,13 @@ export class DatosSandbox implements Datos {
 				return { ...x, estado: estados.get(x.id) ?? x.estado };
 			})
 			.sort((a, b) => Date.parse(b.creada) - Date.parse(a.creada));
-		return { ...base, devoluciones: [...propias, ...base.devoluciones] };
+		// La tasa cuenta también las que pidió el visitante (botón de arrepentimiento).
+		const entregados = d.pedidos.filter((x) => x.estado === 'Entregado').length;
+		const todas = [...propias, ...base.devoluciones];
+		return {
+			devoluciones: todas,
+			tasa: Math.round((todas.length / Math.max(1, entregados)) * 1000) / 10
+		};
 	}
 
 	/**
@@ -2643,17 +2649,27 @@ export class DatosSandbox implements Datos {
 	 */
 	async arrepentirse(
 		numero: number,
-		p: { nombre: string; email: string; motivo: string },
+		/** `porNumero`: llegó con el número a secas (no el código firmado): el email tiene que coincidir. */
+		p: { nombre: string; email: string; motivo: string; porNumero?: boolean },
 		ahora = Date.now()
 	): Promise<string | 'no-existe' | 'fuera-de-plazo'> {
-		const d = await this.demo();
+		const [d, cambios] = await Promise.all([this.demo(), this.cambiosPedidos()]);
 		const pedido = d.pedidos.find((x) => x.numero === numero);
 		if (!pedido) return 'no-existe';
-		if (ahora - pedido.creado > 10 * 86_400_000) return 'fuera-de-plazo';
+		if (p.porNumero) {
+			const email = d.clientes.find((c) => c.id === pedido.clienteId)?.email;
+			if (!email || email.toLowerCase() !== p.email.trim().toLowerCase()) return 'no-existe';
+		}
+		// Los 10 días corren desde que la recibió (si ya se entregó), si no desde la compra.
+		const desde = cambios.get(numero)?.en?.Entregado ?? pedido.creado;
+		if (ahora - desde > 10 * 86_400_000) return 'fuera-de-plazo';
 		const nuevas = await cambiosDe(this.db, this.sb.id, 'devolucion-nueva');
 		const ya = [...nuevas.values()].find((v) => (v as Devolucion | null)?.pedido === numero) as
 			(Devolucion & { codigo: string }) | undefined;
 		if (ya) return ya.codigo;
+		// Si ya tiene una devolución de ejemplo, no se abre otra: el mismo trámite.
+		const deEjemplo = (await this.devoluciones()).devoluciones.find((x) => x.pedido === numero);
+		if (deEjemplo) return `ARR-${new Date(ahora).getFullYear()}-${deEjemplo.id.toUpperCase()}`;
 		const codigo = `ARR-${new Date(ahora).getFullYear()}-${(nuevas.size + 1001).toString()}`;
 		const dev: Devolucion & { codigo: string } = {
 			id: `arr-${numero}`,
