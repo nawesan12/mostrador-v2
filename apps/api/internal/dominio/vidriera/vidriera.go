@@ -192,6 +192,9 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 		// Sin alias ni CBU cargados no se ofrece transferencia (nunca un alias inventado).
 		if n.Alias != "" || n.CBU != "" {
 			out.Cobros["datosTransferencia"] = map[string]string{"alias": n.Alias, "cbu": n.CBU, "titular": n.Titular}
+		} else {
+			// Sin datos para transferir tampoco hay descuento por transferencia (0 = no se ofrece).
+			out.Cobros["transferencia"] = 0
 		}
 		var err error
 		if out.Turnos, err = turnos.ResumenDe(ctx, t, id, mp); err != nil {

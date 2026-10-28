@@ -62,6 +62,8 @@ export async function resolverTienda(
 			opciones: p.opciones ?? [],
 			variantes: p.variantes ?? []
 		}));
+		// Sin alias ni CBU no se ofrece transferencia: tampoco su descuento (0 = no hay).
+		if (!tienda.cobros.datosTransferencia) tienda.cobros.transferencia = 0;
 		return {
 			tienda: { ...tienda, turnos: tienda.turnos ?? null, medicion: medicionSegura(tienda) },
 			datos: null,
