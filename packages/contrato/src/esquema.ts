@@ -543,6 +543,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/tarjeta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** La tarjeta A6 para los paquetes (con los valores de fábrica si no se guardó). */
+        get: operations["tarjeta"];
+        /** Guarda la tarjeta A6. */
+        put: operations["guardarTarjeta"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/carritos": {
         parameters: {
             query?: never;
@@ -2673,6 +2691,19 @@ export interface components {
             }[];
             paleta: number;
         };
+        /** @description La tarjeta A6 para los paquetes (pieza 7a de Imprimibles). Los textos aceptan {nombre}, {fecha}, {productos} y {pedido} */
+        Tarjeta: {
+            /** @enum {string} */
+            modelo: "arco" | "sello" | "carta";
+            titulo: string;
+            mensaje: string;
+            dorsoTitulo: string;
+            dorsoTexto: string;
+            /** @enum {string} */
+            qr: "resena" | "cupon" | "instagram" | "whatsapp";
+            cupon: string;
+            instagram: string;
+        };
         MiTienda: {
             plantilla: string;
             /** @description Dónde se ve la tienda (dominio o dirección de Mostrador) */
@@ -4402,6 +4433,49 @@ export interface operations {
             401: components["responses"]["Problema"];
             404: components["responses"]["Problema"];
             409: components["responses"]["Problema"];
+        };
+    };
+    tarjeta: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tarjeta */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tarjeta"];
+                };
+            };
+        };
+    };
+    guardarTarjeta: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Tarjeta"];
+            };
+        };
+        responses: {
+            /** @description Guardada */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
         };
     };
     carritos: {

@@ -57,6 +57,7 @@ import type {
 	PedidoNuevo,
 	ResenasYPreguntas,
 	AutomaticosCarritos,
+	Tarjeta,
 	Carritos,
 	Conversacion,
 	ConversacionBreve,
@@ -243,6 +244,12 @@ export class DatosApi implements Datos {
 	}
 	guardarAutomaticos(a: AutomaticosCarritos) {
 		return this.pedir<void>('/v1/panel/carritos', 'PUT', a);
+	}
+	tarjeta() {
+		return this.pedir<Tarjeta>('/v1/panel/tarjeta');
+	}
+	guardarTarjeta(t: Tarjeta) {
+		return this.pedir<void>('/v1/panel/tarjeta', 'PUT', t);
 	}
 	async recordarCarrito(id: string) {
 		return resultado(

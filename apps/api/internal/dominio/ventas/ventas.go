@@ -77,6 +77,7 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, pregu
 			h(w, r, id)
 		}
 	}
+	rutasTarjeta(mux, pool, con)
 	mux.HandleFunc("GET /v1/panel/bandeja", con(func(w http.ResponseWriter, _ *http.Request, _ string) {
 		escribir(w, map[string]any{"conversaciones": []any{}, "atendidasHoy": 0})
 	}))
