@@ -30,6 +30,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/vidriera"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/telegram"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/limite"
@@ -59,6 +60,8 @@ type Dependencias struct {
 	Facturacion *facturacion.Servicio
 	// Correo para los avisos de la tienda (arrepentimiento). nil: no se manda.
 	Correo correo.Correo
+	// Hornero en Telegram: vínculo del chat (panel) y lo que pide el bot por el BFF.
+	Telegram *telegram.Servicio
 }
 
 // Nuevo devuelve el handler raíz de la API.
@@ -151,6 +154,9 @@ func Nuevo(d Dependencias) http.Handler {
 				s, ok := cuentas.SesionDe(r)
 				return ok && (s.Rol == "duenio" || s.Rol == "admin")
 			}})
+		if d.Telegram != nil {
+			d.Telegram.Rutas(mux, d.ClaveBFF)
+		}
 		ip := func(r *http.Request) string { return cuentas.ClienteDe(r, d.ClaveBFF).IP }
 		dev := &devoluciones.Servicio{Pool: d.App, Correo: d.Correo}
 		dev.Rutas(mux, tienda)

@@ -159,6 +159,17 @@ func GuardarMeta(ctx context.Context, pool interface {
 	})
 }
 
+// ContextoHornero es lo que Hornero sabe de la tienda además del tablero (el panel y Telegram usan
+// el mismo). Se llena con cada dominio (pedidos, productos, clientes).
+func ContextoHornero(_ context.Context, _ interface {
+	EnTienda(context.Context, string, func(pgx.Tx) error) error
+}, _ string) map[string]any {
+	return map[string]any{
+		"ventasPorDia": []any{}, "productos": []any{}, "canales30d": []any{},
+		"clientes": map[string]int{"total": 0, "nuevos30d": 0, "conWhatsApp": 0, "sinVolver": 0},
+	}
+}
+
 func rutasTablero(mux *http.ServeMux, pool interface {
 	EnTienda(context.Context, string, func(pgx.Tx) error) error
 }, tienda func(*http.Request) string) {
@@ -227,10 +238,7 @@ func rutasTablero(mux *http.ServeMux, pool interface {
 			problema.Escribir(w, problema.SinSesion())
 			return
 		}
-		escribir(w, map[string]any{
-			"ventasPorDia": []any{}, "productos": []any{}, "canales30d": []any{},
-			"clientes": map[string]int{"total": 0, "nuevos30d": 0, "conWhatsApp": 0, "sinVolver": 0},
-		})
+		escribir(w, ContextoHornero(r.Context(), pool, tienda(r)))
 	})
 	// Las ideas salen de carritos, stock y campañas: sin esos dominios todavía no hay ninguna.
 	mux.HandleFunc("POST /v1/panel/hornero/ideas/{idea}", func(w http.ResponseWriter, r *http.Request) {

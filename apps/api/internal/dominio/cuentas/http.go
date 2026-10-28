@@ -58,6 +58,12 @@ func (s *Servicio) Autenticar(next http.Handler) http.Handler {
 	})
 }
 
+// EsBFF dice si el pedido trae la clave compartida del BFF (comparada en tiempo constante). Sin
+// clave configurada, nunca.
+func EsBFF(r *http.Request, claveBFF string) bool {
+	return claveBFF != "" && subtle.ConstantTimeCompare([]byte(r.Header.Get("X-Mostrador-BFF")), []byte(claveBFF)) == 1
+}
+
 // ClienteDe arma IP y agente. La IP del visitante la manda el BFF en X-Cliente-IP, y sólo se le cree
 // si el pedido trae la clave compartida del BFF; si no, vale la IP de la conexión.
 func ClienteDe(r *http.Request, claveBFF string) Cliente {
@@ -65,7 +71,7 @@ func ClienteDe(r *http.Request, claveBFF string) Cliente {
 	if err != nil {
 		ip = r.RemoteAddr
 	}
-	if claveBFF != "" && subtle.ConstantTimeCompare([]byte(r.Header.Get("X-Mostrador-BFF")), []byte(claveBFF)) == 1 {
+	if EsBFF(r, claveBFF) {
 		if v := net.ParseIP(r.Header.Get("X-Cliente-IP")); v != nil {
 			ip = v.String()
 		}

@@ -18,6 +18,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ia"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/telegram"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/cifrado"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/config"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
@@ -87,6 +88,7 @@ func correr() error {
 				cfg.Sitio, cfg.ClaveCifrado, slog.Default()),
 			IA:          &ia.Servicio{Pool: app},
 			Facturacion: facturacionDe(app, cfg.ClaveCifrado),
+			Telegram:    &telegram.Servicio{Pool: app},
 		}),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,

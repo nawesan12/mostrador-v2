@@ -2092,10 +2092,117 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/telegram": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Hornero en Telegram — si hay un chat vinculado a la tienda y con qué nombre. */
+        get: operations["estadoTelegram"];
+        put?: never;
+        post?: never;
+        /** Desvincula el chat (dueña o admin). Devuelve el chat que estaba para que el BFF le avise; el navegador no lo ve. */
+        delete: operations["desvincularTelegram"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/telegram/codigo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Código de un solo uso (10 min) para vincular un chat con el bot (dueña o admin). El anterior deja de servir. */
+        post: operations["codigoTelegram"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/telegram/vincular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** El /start del bot: canjea el código y vincula el chat. Sólo el BFF (X-Mostrador-BFF). */
+        post: operations["vincularTelegram"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/telegram/desvincular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** El /desvincular del bot. Sólo el BFF. */
+        post: operations["desvincularChatTelegram"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/telegram/contexto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Lo que necesita Hornero para responder en el chat (lo mismo que el panel) y cuántos mensajes lleva hoy la tienda (suma este). Sólo el BFF. */
+        post: operations["contextoTelegram"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        EstadoTelegram: {
+            vinculado: boolean;
+            /** @description Nombre de quien vinculó el chat */
+            nombre?: string;
+            /** Format: date-time */
+            desde?: string;
+        };
+        CodigoTelegram: {
+            /** @description 8 letras y números (sin 0, 1, I ni O) */
+            codigo: string;
+            /** Format: date-time */
+            venceEn: string;
+        };
+        ContextoTelegram: {
+            tienda: components["schemas"]["Tienda"];
+            hoy: components["schemas"]["Tablero"];
+            semana: components["schemas"]["Tablero"];
+            contexto: components["schemas"]["ContextoHornero"];
+            /** @description Mensajes a Hornero hoy (hora de Argentina), contando este */
+            usos: number;
+        };
         ResumenPanel: {
             /** @description Números del menú (0: sin insignia) */
             insignias: {
@@ -7357,6 +7464,177 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problema"];
                 };
             };
+        };
+    };
+    estadoTelegram: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Estado */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EstadoTelegram"];
+                };
+            };
+        };
+    };
+    desvincularTelegram: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Desvinculado */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: int64 */
+                        chat: number;
+                    };
+                };
+            };
+            /** @description No había chat vinculado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            403: components["responses"]["Problema"];
+        };
+    };
+    codigoTelegram: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Código */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CodigoTelegram"];
+                };
+            };
+            403: components["responses"]["Problema"];
+        };
+    };
+    vincularTelegram: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    codigo: string;
+                    /** Format: int64 */
+                    chat: number;
+                    /** @description Nombre de quien escribe en Telegram */
+                    nombre: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Vinculado */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        tienda: string;
+                    };
+                };
+            };
+            403: components["responses"]["Problema"];
+            /** @description codigo_invalido (vencido, usado o inexistente) o chat_ocupado (el chat está en otra tienda) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problema"];
+                };
+            };
+            429: components["responses"]["Problema"];
+        };
+    };
+    desvincularChatTelegram: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: int64 */
+                    chat: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Desvinculado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            403: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+        };
+    };
+    contextoTelegram: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: int64 */
+                    chat: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Contexto */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContextoTelegram"];
+                };
+            };
+            403: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
         };
     };
 }

@@ -33,6 +33,9 @@ type Config struct {
 	MPToken, MPSecretoWebhook string
 	// Clave maestra (32 bytes en base64) para cifrar tokens de terceros en la base.
 	ClaveCifrado string
+	// Token del bot de Telegram (Hornero para la dueña): con él, el worker avisa cada venta al chat
+	// vinculado. Vacío: no se avisa. Es el mismo TELEGRAM_BOT_TOKEN que tiene el Worker.
+	TelegramToken string
 }
 
 // Desarrollo dice si se está corriendo en local.
@@ -63,6 +66,7 @@ func Leer() (Config, error) {
 		MPToken:          os.Getenv("MOSTRADOR_MP_TOKEN"),
 		MPSecretoWebhook: os.Getenv("MOSTRADOR_MP_SECRETO_WEBHOOK"),
 		ClaveCifrado:     os.Getenv("MOSTRADOR_CLAVE_CIFRADO"),
+		TelegramToken:    os.Getenv("MOSTRADOR_TELEGRAM_BOT_TOKEN"),
 	}
 	switch c.Entorno {
 	case "desarrollo", "staging", "produccion":
