@@ -414,7 +414,7 @@
 			t: 'Ayuda',
 			l: [
 				{ t: 'Envíos', href: `${base}/nosotros` },
-				{ t: 'Devoluciones', href: '/legales/arrepentimiento' },
+				{ t: 'Devoluciones', href: `/t/${tienda.slug}/arrepentimiento` },
 				{ t: 'Medios de pago', href: `${base}/nosotros` }
 			]
 		},
@@ -2426,7 +2426,7 @@
 			>
 				<span style="display:flex;gap:6px 16px;flex-wrap:wrap"
 					><a
-						href="/legales/arrepentimiento"
+						href="/t/{tienda.slug}/arrepentimiento"
 						style="color:inherit;text-decoration:underline;text-underline-offset:3px;font-weight:700;display:inline-flex;align-items:center;gap:5px"
 						><Icon icon={I.phArrowCounterClockwiseBold} size={13} />Botón de arrepentimiento</a
 					><a
