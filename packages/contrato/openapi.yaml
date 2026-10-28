@@ -1934,6 +1934,212 @@ paths:
               schema: { $ref: '#/components/schemas/TurnoPublico' }
         '404': { $ref: '#/components/responses/Problema' }
         '409': { description: 'tarde: falta menos que la anticipación mínima', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problema' } } } }
+  # ---- Backoffice del equipo de Mostrador (/staff). Sesión propia (equipo.sesiones), nunca la de una tienda.
+  /v1/equipo/ingresar:
+    post:
+      operationId: equipoIngresar
+      summary: Ingreso de una persona del equipo (cuenta aparte de las de las tiendas)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [email, clave], properties: { email: { type: string }, clave: { type: string } } }
+      responses:
+        '200': { description: Sesión del equipo, content: { application/json: { schema: { $ref: '#/components/schemas/SesionNueva' } } } }
+        '400': { $ref: '#/components/responses/Problema' }
+        '401': { $ref: '#/components/responses/Problema' }
+        '429': { $ref: '#/components/responses/Problema' }
+  /v1/equipo/salir:
+    post:
+      operationId: equipoSalir
+      responses:
+        '204': { description: Sesión cerrada }
+  /v1/equipo/sesion:
+    get:
+      operationId: equipoSesion
+      responses:
+        '200': { description: Quién está y qué puede hacer, content: { application/json: { schema: { $ref: '#/components/schemas/SesionEquipo' } } } }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/equipo/inicio:
+    get:
+      operationId: equipoInicio
+      responses:
+        '200': { description: Números y alertas del día, content: { application/json: { schema: { $ref: '#/components/schemas/InicioEquipo' } } } }
+        '401': { $ref: '#/components/responses/Problema' }
+        '403': { $ref: '#/components/responses/Problema' }
+  /v1/equipo/tiendas:
+    get:
+      operationId: equipoTiendas
+      summary: 'Todas las tiendas, con el motor de listas (filas: FilaTiendaEquipo). Segmento: estado. Facetas: plan, rubro, plantilla, partner. Rango: días desde el alta (menor que).'
+      parameters:
+        - { name: q, in: query, schema: { type: string, maxLength: 100 } }
+        - { name: seg, in: query, schema: { type: string } }
+        - { name: facetas, in: query, schema: { type: string } }
+        - { name: rango, in: query, schema: { type: integer, minimum: 0 } }
+        - { name: orden, in: query, schema: { type: string, enum: [recientes, nombre, mrr] } }
+        - { name: desde, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+        - { name: cuantos, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 60 } }
+      responses:
+        '200': { description: Lista, content: { application/json: { schema: { $ref: '#/components/schemas/ListaGenerica' } } } }
+        '401': { $ref: '#/components/responses/Problema' }
+        '403': { $ref: '#/components/responses/Problema' }
+  /v1/equipo/tiendas/{id}:
+    get:
+      operationId: equipoFichaTienda
+      summary: Ficha de una tienda. Queda en la auditoría (ver_ficha).
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: Ficha, content: { application/json: { schema: { $ref: '#/components/schemas/FichaTiendaEquipo' } } } }
+        '401': { $ref: '#/components/responses/Problema' }
+        '403': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+  /v1/equipo/tiendas/{id}/acciones:
+    post:
+      operationId: equipoAccionTienda
+      summary: 'Una acción sobre la tienda, con su permiso por rol. Se aplica y se audita en la misma transacción (equipo.accion_tienda).'
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AccionTiendaEquipo' }
+      responses:
+        '204': { description: Hecho }
+        '400': { $ref: '#/components/responses/Problema' }
+        '401': { $ref: '#/components/responses/Problema' }
+        '403': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+  /v1/equipo/tiendas/{id}/notas:
+    post:
+      operationId: equipoNota
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [texto], properties: { texto: { type: string, minLength: 1, maxLength: 1000 } } }
+      responses:
+        '201': { description: Nota, content: { application/json: { schema: { $ref: '#/components/schemas/NotaEquipo' } } } }
+        '400': { $ref: '#/components/responses/Problema' }
+        '403': { $ref: '#/components/responses/Problema' }
+  /v1/equipo/tiendas/{id}/mirar:
+    post:
+      operationId: equipoMirarTienda
+      summary: 'Token de sólo lectura (30 min) para ver el panel de la tienda como la ve la dueña. Queda en la auditoría (mirar_tienda).'
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: Token, content: { application/json: { schema: { $ref: '#/components/schemas/SesionNueva' } } } }
+        '403': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+  /v1/equipo/consultas:
+    get:
+      operationId: equipoConsultas
+      summary: 'Bandeja: contacto y arrepentimientos (con código ARR y plazo legal), con la gente del equipo para asignar.'
+      responses:
+        '200': { description: Bandeja, content: { application/json: { schema: { $ref: '#/components/schemas/BandejaEquipo' } } } }
+        '403': { $ref: '#/components/responses/Problema' }
+  /v1/equipo/consultas/{tipo}/{id}:
+    get:
+      operationId: equipoConsulta
+      summary: Una consulta con sus respuestas. Queda en la auditoría (ver_consulta).
+      parameters:
+        - { name: tipo, in: path, required: true, schema: { $ref: '#/components/schemas/TipoConsulta' } }
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Consulta, content: { application/json: { schema: { $ref: '#/components/schemas/ConsultaDetalle' } } } }
+        '403': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+    post:
+      operationId: equipoActualizarConsulta
+      summary: Cambia el estado o la persona asignada.
+      parameters:
+        - { name: tipo, in: path, required: true, schema: { $ref: '#/components/schemas/TipoConsulta' } }
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                estado: { $ref: '#/components/schemas/EstadoConsulta' }
+                asignadoA: { type: [string, 'null'], description: 'Id de la persona del equipo; null la desasigna' }
+      responses:
+        '204': { description: Hecho }
+        '400': { $ref: '#/components/responses/Problema' }
+        '403': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+  /v1/equipo/consultas/{tipo}/{id}/responder:
+    post:
+      operationId: equipoResponder
+      summary: 'Responde por mail (outbox → correo). Una consulta nueva pasa a en curso.'
+      parameters:
+        - { name: tipo, in: path, required: true, schema: { $ref: '#/components/schemas/TipoConsulta' } }
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [asunto, texto]
+              properties:
+                asunto: { type: string, minLength: 3, maxLength: 140 }
+                texto: { type: string, minLength: 3, maxLength: 4000 }
+      responses:
+        '201': { description: Respuesta encolada, content: { application/json: { schema: { $ref: '#/components/schemas/RespuestaEquipo' } } } }
+        '400': { $ref: '#/components/responses/Problema' }
+        '403': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+  /v1/equipo/partners:
+    get:
+      operationId: equipoPartners
+      responses:
+        '200': { description: Postulaciones y partners activos, content: { application/json: { schema: { $ref: '#/components/schemas/PartnersEquipo' } } } }
+        '403': { $ref: '#/components/responses/Problema' }
+  /v1/equipo/partners/{id}:
+    post:
+      operationId: equipoDecidirPartner
+      summary: 'Aprueba o rechaza una postulación (el rechazo pide motivo). Avisa por mail y, al aprobar, da de alta al partner (paquete partners).'
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision: { type: string, enum: [aprobar, rechazar] }
+                motivo: { type: string, maxLength: 500 }
+      responses:
+        '204': { description: Hecho }
+        '400': { $ref: '#/components/responses/Problema' }
+        '403': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+  /v1/equipo/facturacion:
+    get:
+      operationId: equipoFacturacion
+      responses:
+        '200': { description: Abonos y comprobantes, content: { application/json: { schema: { $ref: '#/components/schemas/FacturacionEquipo' } } } }
+        '403': { $ref: '#/components/responses/Problema' }
+  /v1/equipo/auditoria:
+    get:
+      operationId: equipoAuditoria
+      parameters:
+        - { name: miembro, in: query, schema: { type: string } }
+        - { name: accion, in: query, schema: { type: string } }
+        - { name: tienda, in: query, schema: { type: string } }
+      responses:
+        '200': { description: Últimos 300 registros, content: { application/json: { schema: { $ref: '#/components/schemas/AuditoriaEquipo' } } } }
+        '403': { $ref: '#/components/responses/Problema' }
 components:
   responses:
     Problema:
@@ -1942,6 +2148,327 @@ components:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problema' }
   schemas:
+    # ---- Backoffice del equipo
+    SesionNueva:
+      type: object
+      required: [token, venceEn]
+      properties:
+        token: { type: string }
+        venceEn: { type: string, format: date-time }
+    RolEquipo:
+      type: string
+      enum: [soporte, administracion, duenio]
+    PermisoEquipo:
+      type: string
+      enum: [tiendas.ver, tiendas.mirar, tiendas.notas, tiendas.prueba, tiendas.pack, tiendas.plan, tiendas.credito, tiendas.pausar, tiendas.cerrar, consultas.ver, consultas.responder, partners.ver, partners.decidir, facturacion.ver, auditoria.ver]
+    MiembroEquipo:
+      type: object
+      required: [id, nombre, rol]
+      properties:
+        id: { type: string }
+        nombre: { type: string }
+        rol: { $ref: '#/components/schemas/RolEquipo' }
+    SesionEquipo:
+      type: object
+      required: [miembro, rol, permisos, venceEn]
+      properties:
+        miembro:
+          type: object
+          required: [id, nombre, email]
+          properties:
+            id: { type: string }
+            nombre: { type: string }
+            email: { type: string }
+        rol: { $ref: '#/components/schemas/RolEquipo' }
+        permisos: { type: array, items: { $ref: '#/components/schemas/PermisoEquipo' } }
+        venceEn: { type: string, format: date-time }
+    EstadoTiendaEquipo:
+      type: string
+      enum: [prueba, activa, cobro_rechazado, cancelada, pausada, cerrada]
+    TiendaBreve:
+      type: object
+      required: [id, nombre, slug, fecha]
+      properties:
+        id: { type: string }
+        nombre: { type: string }
+        slug: { type: string }
+        fecha: { type: string, description: 'YYYY-MM-DD (vence la prueba, se dio de baja…)' }
+        motivo: { type: [string, 'null'] }
+    AlertaEquipo:
+      type: object
+      required: [tipo, titulo, detalle]
+      properties:
+        tipo: { type: string, enum: [cobro_rechazado, integracion, arrepentimiento] }
+        titulo: { type: string }
+        detalle: { type: string }
+        tiendaId: { type: [string, 'null'] }
+        consulta: { type: [string, 'null'], description: 'tipo/id de la consulta (arrepentimiento por vencer)' }
+    InicioEquipo:
+      type: object
+      required: [kpis, pruebas, bajas, alertas]
+      properties:
+        kpis:
+          type: object
+          required: [tiendasActivas, nuevasSemana, pruebasPorVencer, mrr, bajasMes, consultasSinResponder, postulacionesNuevas]
+          properties:
+            tiendasActivas: { type: integer, description: 'Sin cerrar ni pausar' }
+            nuevasSemana: { type: integer }
+            pruebasPorVencer: { type: integer, description: 'En prueba que vencen en 3 días o menos' }
+            mrr: { type: integer, description: 'Centavos por mes de los abonos activos (el anual, con el 25 % menos)' }
+            bajasMes: { type: integer }
+            consultasSinResponder: { type: integer }
+            postulacionesNuevas: { type: integer }
+        pruebas: { type: array, items: { $ref: '#/components/schemas/TiendaBreve' } }
+        bajas: { type: array, items: { $ref: '#/components/schemas/TiendaBreve' } }
+        alertas: { type: array, items: { $ref: '#/components/schemas/AlertaEquipo' } }
+    FilaTiendaEquipo:
+      type: object
+      required: [id, nombre, slug, titular, email, plan, ciclo, estado, rubro, plantilla, partner, creadaEn, dias, mrr]
+      properties:
+        id: { type: string }
+        nombre: { type: string }
+        slug: { type: string }
+        titular: { type: string }
+        email: { type: string }
+        plan: { type: string, enum: [gratis, emprende, pro, negocio] }
+        ciclo: { type: string, enum: [mes, anio] }
+        estado: { $ref: '#/components/schemas/EstadoTiendaEquipo' }
+        rubro: { type: string }
+        plantilla: { type: string }
+        partner: { type: string, description: 'Ref del link de partner que la trajo ("" si ninguno)' }
+        creadaEn: { type: string, format: date-time }
+        dias: { type: integer, description: 'Días desde el alta (el rango de la lista)' }
+        mrr: { type: integer, description: 'Centavos por mes que aporta' }
+    AccionTiendaEquipo:
+      type: object
+      required: [accion]
+      properties:
+        accion: { type: string, enum: [extender_prueba, cambiar_plan, aplicar_credito, regalar_pack, pausar, reactivar, cerrar] }
+        dias: { type: integer, minimum: 1, maximum: 30, description: extender_prueba }
+        plan: { type: string, enum: [gratis, emprende, pro, negocio], description: cambiar_plan }
+        monto: { type: integer, minimum: 100, maximum: 150000000, description: 'aplicar_credito, en centavos' }
+        cantidad: { type: integer, minimum: 1, maximum: 5, description: regalar_pack }
+        motivo: { type: string, maxLength: 500, description: 'Obligatorio para crédito, pausar y cerrar' }
+        confirmacion: { type: string, description: 'cerrar: la dirección (slug) de la tienda, escrita a mano' }
+    NotaEquipo:
+      type: object
+      required: [id, texto, autor, creadaEn]
+      properties:
+        id: { type: string }
+        texto: { type: string }
+        autor: { type: string }
+        creadaEn: { type: string, format: date-time }
+    FichaTiendaEquipo:
+      type: object
+      required: [tienda, negocio, titular, personas, plan, uso, integraciones, dominios, actividad, notas]
+      properties:
+        tienda:
+          type: object
+          required: [id, nombre, slug, rubro, plantilla, creadaEn, estado, partner]
+          properties:
+            id: { type: string }
+            nombre: { type: string }
+            slug: { type: string }
+            rubro: { type: string }
+            plantilla: { type: string }
+            creadaEn: { type: string, format: date-time }
+            estado: { $ref: '#/components/schemas/EstadoTiendaEquipo' }
+            partner: { type: string }
+            motivoBaja: { type: [string, 'null'] }
+        negocio:
+          type: object
+          description: 'Datos del negocio (Configuración › Negocio): razón social, CUIT, teléfono, dirección…'
+          additionalProperties: { type: string }
+        titular:
+          type: [object, 'null']
+          required: [nombre, email, desde]
+          properties:
+            nombre: { type: string }
+            email: { type: string }
+            desde: { type: string, format: date-time }
+        personas: { type: integer }
+        plan:
+          type: object
+          required: [actual, ciclo, precio, enPrueba, pruebaHasta, proximoCobro, suscripcion, credito]
+          properties:
+            actual: { type: string, enum: [gratis, emprende, pro, negocio] }
+            ciclo: { type: string, enum: [mes, anio] }
+            precio: { type: integer, description: 'Centavos por mes' }
+            enPrueba: { type: boolean }
+            pruebaHasta: { type: string, format: date-time }
+            proximoCobro: { type: [string, 'null'], format: date-time }
+            suscripcion: { type: [string, 'null'], description: 'Estado de la suscripción en Mercado Pago (authorized, paused, cancelled, pending)' }
+            credito: { type: integer, description: 'Saldo a favor en centavos' }
+        uso:
+          type: object
+          required: [productos, pedidosMes, packsMes]
+          properties:
+            productos: { type: integer }
+            pedidosMes: { type: integer }
+            packsMes: { type: integer, description: 'Packs de Hornero sumados este mes' }
+        integraciones:
+          type: array
+          items:
+            type: object
+            required: [id, nombre, salud]
+            properties:
+              id: { type: string }
+              nombre: { type: string }
+              salud: { type: string, enum: [ok, reconectar] }
+        dominios:
+          type: array
+          items:
+            type: object
+            required: [nombre, verificado, principal]
+            properties:
+              nombre: { type: string }
+              verificado: { type: boolean }
+              principal: { type: boolean }
+        actividad:
+          type: array
+          items:
+            type: object
+            required: [id, cuando, quien, accion]
+            properties:
+              id: { type: string }
+              cuando: { type: string, format: date-time }
+              quien: { type: string, enum: [persona, hornero, sistema, staff, integracion] }
+              accion: { type: string }
+        notas: { type: array, items: { $ref: '#/components/schemas/NotaEquipo' } }
+    TipoConsulta:
+      type: string
+      enum: [contacto, arrepentimiento]
+    EstadoConsulta:
+      type: string
+      enum: [nueva, en_curso, resuelta]
+    ConsultaEquipo:
+      type: object
+      required: [id, tipo, estado, nombre, email, asunto, mensaje, creadaEn, asignadoA]
+      properties:
+        id: { type: string }
+        tipo: { $ref: '#/components/schemas/TipoConsulta' }
+        estado: { $ref: '#/components/schemas/EstadoConsulta' }
+        nombre: { type: string }
+        email: { type: string }
+        asunto: { type: string }
+        mensaje: { type: string }
+        creadaEn: { type: string, format: date-time }
+        asignadoA: { type: [string, 'null'] }
+        codigo: { type: string, description: 'Arrepentimiento: ARR-AAAA-NNNNNN' }
+        plazo: { type: string, description: 'Arrepentimiento: YYYY-MM-DD, último día para devolver (10 días hábiles)' }
+        plan: { type: string }
+        whatsapp: { type: [string, 'null'] }
+        web: { type: [string, 'null'] }
+        facturacion: { type: [string, 'null'] }
+        origen: { type: [string, 'null'] }
+    ConsultaDetalle:
+      allOf:
+        - { $ref: '#/components/schemas/ConsultaEquipo' }
+        - type: object
+          required: [respuestas]
+          properties:
+            documento: { type: string, description: 'Arrepentimiento: DNI o CUIT' }
+            respuestas: { type: array, items: { $ref: '#/components/schemas/RespuestaEquipo' } }
+    RespuestaEquipo:
+      type: object
+      required: [id, autor, asunto, texto, creadaEn]
+      properties:
+        id: { type: string }
+        autor: { type: string }
+        asunto: { type: string }
+        texto: { type: string }
+        creadaEn: { type: string, format: date-time }
+    BandejaEquipo:
+      type: object
+      required: [consultas, miembros]
+      properties:
+        consultas: { type: array, items: { $ref: '#/components/schemas/ConsultaEquipo' } }
+        miembros: { type: array, items: { $ref: '#/components/schemas/MiembroEquipo' } }
+    PostulacionEquipo:
+      type: object
+      required: [id, nombre, email, agencia, web, especialidades, estado, motivo, creadaEn]
+      properties:
+        id: { type: string }
+        nombre: { type: string }
+        email: { type: string }
+        agencia: { type: string }
+        web: { type: [string, 'null'] }
+        especialidades: { type: array, items: { type: string, enum: [diseno, desarrollo, marketing, contabilidad, fotografia] } }
+        estado: { type: string, enum: [nueva, aprobada, rechazada] }
+        motivo: { type: [string, 'null'] }
+        creadaEn: { type: string, format: date-time }
+    PartnerActivoEquipo:
+      type: object
+      required: [codigo, nombre, nivel, tiendas, activas, comision]
+      properties:
+        codigo: { type: string, description: 'Ref del link (/empezar?ref=…)' }
+        nombre: { type: string }
+        nivel: { type: string, enum: [partner, plata, oro] }
+        tiendas: { type: integer, description: Tiendas referidas }
+        activas: { type: integer, description: Con abono activo }
+        comision: { type: integer, description: 'Centavos por mes a pagar (20/25/30 % de los abonos activos)' }
+    PartnersEquipo:
+      type: object
+      required: [postulaciones, activos]
+      properties:
+        postulaciones: { type: array, items: { $ref: '#/components/schemas/PostulacionEquipo' } }
+        activos: { type: array, items: { $ref: '#/components/schemas/PartnerActivoEquipo' } }
+    FacturacionEquipo:
+      type: object
+      required: [kpis, suscripciones, comprobantes]
+      properties:
+        kpis:
+          type: object
+          required: [mrr, cobrosMes, activas, conProblemas, creditos]
+          properties:
+            mrr: { type: integer }
+            cobrosMes: { type: integer, description: 'Centavos que se cobran en lo que queda del mes' }
+            activas: { type: integer }
+            conProblemas: { type: integer, description: 'Cobro rechazado en Mercado Pago' }
+            creditos: { type: integer, description: 'Saldo a favor de todas las tiendas, en centavos' }
+        suscripciones:
+          type: array
+          items:
+            type: object
+            required: [tiendaId, nombre, plan, ciclo, monto, estado, proximoCobro, credito]
+            properties:
+              tiendaId: { type: string }
+              nombre: { type: string }
+              plan: { type: string, enum: [emprende, pro, negocio] }
+              ciclo: { type: string, enum: [mes, anio] }
+              monto: { type: integer, description: 'Centavos por cobro (el anual, por año)' }
+              estado: { $ref: '#/components/schemas/EstadoTiendaEquipo' }
+              proximoCobro: { type: [string, 'null'], format: date-time }
+              credito: { type: integer }
+        comprobantes:
+          type: array
+          description: 'Facturas de Mostrador a cada tienda (ARCA). Vacío hasta conectar ARCA.'
+          items:
+            type: object
+            required: [numero, tienda, fecha, monto]
+            properties:
+              numero: { type: string }
+              tienda: { type: string }
+              fecha: { type: string }
+              monto: { type: integer }
+    AuditoriaEquipo:
+      type: object
+      required: [registros, miembros]
+      properties:
+        registros:
+          type: array
+          items:
+            type: object
+            required: [id, cuando, miembro, accion, texto, tiendaId, tienda]
+            properties:
+              id: { type: string }
+              cuando: { type: string, format: date-time }
+              miembro: { $ref: '#/components/schemas/MiembroEquipo' }
+              accion: { type: string }
+              texto: { type: string }
+              tiendaId: { type: [string, 'null'] }
+              tienda: { type: [string, 'null'] }
+        miembros: { type: array, items: { $ref: '#/components/schemas/MiembroEquipo' } }
     ResumenPanel:
       type: object
       required: [insignias, notificaciones, canales, prueba]

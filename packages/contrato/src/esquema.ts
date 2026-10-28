@@ -1904,10 +1904,571 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/equipo/ingresar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ingreso de una persona del equipo (cuenta aparte de las de las tiendas) */
+        post: operations["equipoIngresar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/equipo/salir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["equipoSalir"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/equipo/sesion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["equipoSesion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/equipo/inicio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["equipoInicio"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/equipo/tiendas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Todas las tiendas, con el motor de listas (filas: FilaTiendaEquipo). Segmento: estado. Facetas: plan, rubro, plantilla, partner. Rango: días desde el alta (menor que). */
+        get: operations["equipoTiendas"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/equipo/tiendas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ficha de una tienda. Queda en la auditoría (ver_ficha). */
+        get: operations["equipoFichaTienda"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/equipo/tiendas/{id}/acciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Una acción sobre la tienda, con su permiso por rol. Se aplica y se audita en la misma transacción (equipo.accion_tienda). */
+        post: operations["equipoAccionTienda"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/equipo/tiendas/{id}/notas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["equipoNota"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/equipo/tiendas/{id}/mirar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Token de sólo lectura (30 min) para ver el panel de la tienda como la ve la dueña. Queda en la auditoría (mirar_tienda). */
+        post: operations["equipoMirarTienda"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/equipo/consultas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bandeja: contacto y arrepentimientos (con código ARR y plazo legal), con la gente del equipo para asignar. */
+        get: operations["equipoConsultas"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/equipo/consultas/{tipo}/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Una consulta con sus respuestas. Queda en la auditoría (ver_consulta). */
+        get: operations["equipoConsulta"];
+        put?: never;
+        /** Cambia el estado o la persona asignada. */
+        post: operations["equipoActualizarConsulta"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/equipo/consultas/{tipo}/{id}/responder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Responde por mail (outbox → correo). Una consulta nueva pasa a en curso. */
+        post: operations["equipoResponder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/equipo/partners": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["equipoPartners"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/equipo/partners/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Aprueba o rechaza una postulación (el rechazo pide motivo). Avisa por mail y, al aprobar, da de alta al partner (paquete partners). */
+        post: operations["equipoDecidirPartner"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/equipo/facturacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["equipoFacturacion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/equipo/auditoria": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["equipoAuditoria"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        SesionNueva: {
+            token: string;
+            /** Format: date-time */
+            venceEn: string;
+        };
+        /** @enum {string} */
+        RolEquipo: "soporte" | "administracion" | "duenio";
+        /** @enum {string} */
+        PermisoEquipo: "tiendas.ver" | "tiendas.mirar" | "tiendas.notas" | "tiendas.prueba" | "tiendas.pack" | "tiendas.plan" | "tiendas.credito" | "tiendas.pausar" | "tiendas.cerrar" | "consultas.ver" | "consultas.responder" | "partners.ver" | "partners.decidir" | "facturacion.ver" | "auditoria.ver";
+        MiembroEquipo: {
+            id: string;
+            nombre: string;
+            rol: components["schemas"]["RolEquipo"];
+        };
+        SesionEquipo: {
+            miembro: {
+                id: string;
+                nombre: string;
+                email: string;
+            };
+            rol: components["schemas"]["RolEquipo"];
+            permisos: components["schemas"]["PermisoEquipo"][];
+            /** Format: date-time */
+            venceEn: string;
+        };
+        /** @enum {string} */
+        EstadoTiendaEquipo: "prueba" | "activa" | "cobro_rechazado" | "cancelada" | "pausada" | "cerrada";
+        TiendaBreve: {
+            id: string;
+            nombre: string;
+            slug: string;
+            /** @description YYYY-MM-DD (vence la prueba, se dio de baja…) */
+            fecha: string;
+            motivo?: string | null;
+        };
+        AlertaEquipo: {
+            /** @enum {string} */
+            tipo: "cobro_rechazado" | "integracion" | "arrepentimiento";
+            titulo: string;
+            detalle: string;
+            tiendaId?: string | null;
+            /** @description tipo/id de la consulta (arrepentimiento por vencer) */
+            consulta?: string | null;
+        };
+        InicioEquipo: {
+            kpis: {
+                /** @description Sin cerrar ni pausar */
+                tiendasActivas: number;
+                nuevasSemana: number;
+                /** @description En prueba que vencen en 3 días o menos */
+                pruebasPorVencer: number;
+                /** @description Centavos por mes de los abonos activos (el anual, con el 25 % menos) */
+                mrr: number;
+                bajasMes: number;
+                consultasSinResponder: number;
+                postulacionesNuevas: number;
+            };
+            pruebas: components["schemas"]["TiendaBreve"][];
+            bajas: components["schemas"]["TiendaBreve"][];
+            alertas: components["schemas"]["AlertaEquipo"][];
+        };
+        FilaTiendaEquipo: {
+            id: string;
+            nombre: string;
+            slug: string;
+            titular: string;
+            email: string;
+            /** @enum {string} */
+            plan: "gratis" | "emprende" | "pro" | "negocio";
+            /** @enum {string} */
+            ciclo: "mes" | "anio";
+            estado: components["schemas"]["EstadoTiendaEquipo"];
+            rubro: string;
+            plantilla: string;
+            /** @description Ref del link de partner que la trajo ("" si ninguno) */
+            partner: string;
+            /** Format: date-time */
+            creadaEn: string;
+            /** @description Días desde el alta (el rango de la lista) */
+            dias: number;
+            /** @description Centavos por mes que aporta */
+            mrr: number;
+        };
+        AccionTiendaEquipo: {
+            /** @enum {string} */
+            accion: "extender_prueba" | "cambiar_plan" | "aplicar_credito" | "regalar_pack" | "pausar" | "reactivar" | "cerrar";
+            /** @description extender_prueba */
+            dias?: number;
+            /**
+             * @description cambiar_plan
+             * @enum {string}
+             */
+            plan?: "gratis" | "emprende" | "pro" | "negocio";
+            /** @description aplicar_credito, en centavos */
+            monto?: number;
+            /** @description regalar_pack */
+            cantidad?: number;
+            /** @description Obligatorio para crédito, pausar y cerrar */
+            motivo?: string;
+            /** @description cerrar: la dirección (slug) de la tienda, escrita a mano */
+            confirmacion?: string;
+        };
+        NotaEquipo: {
+            id: string;
+            texto: string;
+            autor: string;
+            /** Format: date-time */
+            creadaEn: string;
+        };
+        FichaTiendaEquipo: {
+            tienda: {
+                id: string;
+                nombre: string;
+                slug: string;
+                rubro: string;
+                plantilla: string;
+                /** Format: date-time */
+                creadaEn: string;
+                estado: components["schemas"]["EstadoTiendaEquipo"];
+                partner: string;
+                motivoBaja?: string | null;
+            };
+            /** @description Datos del negocio (Configuración › Negocio): razón social, CUIT, teléfono, dirección… */
+            negocio: {
+                [key: string]: string;
+            };
+            titular: {
+                nombre: string;
+                email: string;
+                /** Format: date-time */
+                desde: string;
+            } | null;
+            personas: number;
+            plan: {
+                /** @enum {string} */
+                actual: "gratis" | "emprende" | "pro" | "negocio";
+                /** @enum {string} */
+                ciclo: "mes" | "anio";
+                /** @description Centavos por mes */
+                precio: number;
+                enPrueba: boolean;
+                /** Format: date-time */
+                pruebaHasta: string;
+                /** Format: date-time */
+                proximoCobro: string | null;
+                /** @description Estado de la suscripción en Mercado Pago (authorized, paused, cancelled, pending) */
+                suscripcion: string | null;
+                /** @description Saldo a favor en centavos */
+                credito: number;
+            };
+            uso: {
+                productos: number;
+                pedidosMes: number;
+                /** @description Packs de Hornero sumados este mes */
+                packsMes: number;
+            };
+            integraciones: {
+                id: string;
+                nombre: string;
+                /** @enum {string} */
+                salud: "ok" | "reconectar";
+            }[];
+            dominios: {
+                nombre: string;
+                verificado: boolean;
+                principal: boolean;
+            }[];
+            actividad: {
+                id: string;
+                /** Format: date-time */
+                cuando: string;
+                /** @enum {string} */
+                quien: "persona" | "hornero" | "sistema" | "staff" | "integracion";
+                accion: string;
+            }[];
+            notas: components["schemas"]["NotaEquipo"][];
+        };
+        /** @enum {string} */
+        TipoConsulta: "contacto" | "arrepentimiento";
+        /** @enum {string} */
+        EstadoConsulta: "nueva" | "en_curso" | "resuelta";
+        ConsultaEquipo: {
+            id: string;
+            tipo: components["schemas"]["TipoConsulta"];
+            estado: components["schemas"]["EstadoConsulta"];
+            nombre: string;
+            email: string;
+            asunto: string;
+            mensaje: string;
+            /** Format: date-time */
+            creadaEn: string;
+            asignadoA: string | null;
+            /** @description Arrepentimiento: ARR-AAAA-NNNNNN */
+            codigo?: string;
+            /** @description Arrepentimiento: YYYY-MM-DD, último día para devolver (10 días hábiles) */
+            plazo?: string;
+            plan?: string;
+            whatsapp?: string | null;
+            web?: string | null;
+            facturacion?: string | null;
+            origen?: string | null;
+        };
+        ConsultaDetalle: components["schemas"]["ConsultaEquipo"] & {
+            /** @description Arrepentimiento: DNI o CUIT */
+            documento?: string;
+            respuestas: components["schemas"]["RespuestaEquipo"][];
+        };
+        RespuestaEquipo: {
+            id: string;
+            autor: string;
+            asunto: string;
+            texto: string;
+            /** Format: date-time */
+            creadaEn: string;
+        };
+        BandejaEquipo: {
+            consultas: components["schemas"]["ConsultaEquipo"][];
+            miembros: components["schemas"]["MiembroEquipo"][];
+        };
+        PostulacionEquipo: {
+            id: string;
+            nombre: string;
+            email: string;
+            agencia: string;
+            web: string | null;
+            especialidades: ("diseno" | "desarrollo" | "marketing" | "contabilidad" | "fotografia")[];
+            /** @enum {string} */
+            estado: "nueva" | "aprobada" | "rechazada";
+            motivo: string | null;
+            /** Format: date-time */
+            creadaEn: string;
+        };
+        PartnerActivoEquipo: {
+            /** @description Ref del link (/empezar?ref=…) */
+            codigo: string;
+            nombre: string;
+            /** @enum {string} */
+            nivel: "partner" | "plata" | "oro";
+            /** @description Tiendas referidas */
+            tiendas: number;
+            /** @description Con abono activo */
+            activas: number;
+            /** @description Centavos por mes a pagar (20/25/30 % de los abonos activos) */
+            comision: number;
+        };
+        PartnersEquipo: {
+            postulaciones: components["schemas"]["PostulacionEquipo"][];
+            activos: components["schemas"]["PartnerActivoEquipo"][];
+        };
+        FacturacionEquipo: {
+            kpis: {
+                mrr: number;
+                /** @description Centavos que se cobran en lo que queda del mes */
+                cobrosMes: number;
+                activas: number;
+                /** @description Cobro rechazado en Mercado Pago */
+                conProblemas: number;
+                /** @description Saldo a favor de todas las tiendas, en centavos */
+                creditos: number;
+            };
+            suscripciones: {
+                tiendaId: string;
+                nombre: string;
+                /** @enum {string} */
+                plan: "emprende" | "pro" | "negocio";
+                /** @enum {string} */
+                ciclo: "mes" | "anio";
+                /** @description Centavos por cobro (el anual, por año) */
+                monto: number;
+                estado: components["schemas"]["EstadoTiendaEquipo"];
+                /** Format: date-time */
+                proximoCobro: string | null;
+                credito: number;
+            }[];
+            /** @description Facturas de Mostrador a cada tienda (ARCA). Vacío hasta conectar ARCA. */
+            comprobantes: {
+                numero: string;
+                tienda: string;
+                fecha: string;
+                monto: number;
+            }[];
+        };
+        AuditoriaEquipo: {
+            registros: {
+                id: string;
+                /** Format: date-time */
+                cuando: string;
+                miembro: components["schemas"]["MiembroEquipo"];
+                accion: string;
+                texto: string;
+                tiendaId: string | null;
+                tienda: string | null;
+            }[];
+            miembros: components["schemas"]["MiembroEquipo"][];
+        };
         ResumenPanel: {
             /** @description Números del menú (0: sin insignia) */
             insignias: {
@@ -6714,6 +7275,445 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problema"];
                 };
             };
+        };
+    };
+    equipoIngresar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    email: string;
+                    clave: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Sesión del equipo */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SesionNueva"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            401: components["responses"]["Problema"];
+            429: components["responses"]["Problema"];
+        };
+    };
+    equipoSalir: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sesión cerrada */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    equipoSesion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Quién está y qué puede hacer */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SesionEquipo"];
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    equipoInicio: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Números y alertas del día */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InicioEquipo"];
+                };
+            };
+            401: components["responses"]["Problema"];
+            403: components["responses"]["Problema"];
+        };
+    };
+    equipoTiendas: {
+        parameters: {
+            query?: {
+                q?: string;
+                seg?: string;
+                facetas?: string;
+                rango?: number;
+                orden?: "recientes" | "nombre" | "mrr";
+                desde?: number;
+                cuantos?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Lista */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListaGenerica"];
+                };
+            };
+            401: components["responses"]["Problema"];
+            403: components["responses"]["Problema"];
+        };
+    };
+    equipoFichaTienda: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ficha */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FichaTiendaEquipo"];
+                };
+            };
+            401: components["responses"]["Problema"];
+            403: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+        };
+    };
+    equipoAccionTienda: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccionTiendaEquipo"];
+            };
+        };
+        responses: {
+            /** @description Hecho */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
+            401: components["responses"]["Problema"];
+            403: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+        };
+    };
+    equipoNota: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    texto: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Nota */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotaEquipo"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            403: components["responses"]["Problema"];
+        };
+    };
+    equipoMirarTienda: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Token */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SesionNueva"];
+                };
+            };
+            403: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+        };
+    };
+    equipoConsultas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bandeja */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BandejaEquipo"];
+                };
+            };
+            403: components["responses"]["Problema"];
+        };
+    };
+    equipoConsulta: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tipo: components["schemas"]["TipoConsulta"];
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Consulta */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsultaDetalle"];
+                };
+            };
+            403: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+        };
+    };
+    equipoActualizarConsulta: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tipo: components["schemas"]["TipoConsulta"];
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    estado?: components["schemas"]["EstadoConsulta"];
+                    /** @description Id de la persona del equipo; null la desasigna */
+                    asignadoA?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Hecho */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
+            403: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+        };
+    };
+    equipoResponder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tipo: components["schemas"]["TipoConsulta"];
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    asunto: string;
+                    texto: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Respuesta encolada */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RespuestaEquipo"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            403: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+        };
+    };
+    equipoPartners: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Postulaciones y partners activos */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnersEquipo"];
+                };
+            };
+            403: components["responses"]["Problema"];
+        };
+    };
+    equipoDecidirPartner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    decision: "aprobar" | "rechazar";
+                    motivo?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Hecho */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
+            403: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+        };
+    };
+    equipoFacturacion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Abonos y comprobantes */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FacturacionEquipo"];
+                };
+            };
+            403: components["responses"]["Problema"];
+        };
+    };
+    equipoAuditoria: {
+        parameters: {
+            query?: {
+                miembro?: string;
+                accion?: string;
+                tienda?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Últimos 300 registros */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditoriaEquipo"];
+                };
+            };
+            403: components["responses"]["Problema"];
         };
     };
 }
