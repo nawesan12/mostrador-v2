@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/outbox"
 )
 
 var (
@@ -137,11 +139,25 @@ func ResponderPregunta(ctx context.Context, pool tx, tienda, id, respuesta strin
 		return ErrResenaInvalida
 	}
 	return pool.EnTienda(ctx, tienda, func(t pgx.Tx) error {
-		tag, err := t.Exec(ctx, `UPDATE preguntas SET respuesta = $2, respondida_en = now() WHERE id::text = $1`, strings.TrimPrefix(id, "t-"), respuesta)
-		if err == nil && tag.RowsAffected() == 0 {
+		// La primera respuesta le llega por mail a quien preguntó (si dejó su email).
+		var email string
+		var primera bool
+		err := t.QueryRow(ctx, `SELECT coalesce(email, ''), respuesta IS NULL FROM preguntas WHERE id::text = $1 FOR UPDATE`,
+			strings.TrimPrefix(id, "t-")).Scan(&email, &primera)
+		if errors.Is(err, pgx.ErrNoRows) {
 			return ErrResenaInvalida
 		}
-		return err
+		if err != nil {
+			return err
+		}
+		if _, err := t.Exec(ctx, `UPDATE preguntas SET respuesta = $2, respondida_en = now() WHERE id::text = $1`,
+			strings.TrimPrefix(id, "t-"), respuesta); err != nil {
+			return err
+		}
+		if primera && email != "" {
+			return outbox.Publicar(ctx, t, tienda, "pregunta.respondida", map[string]string{"id": strings.TrimPrefix(id, "t-")})
+		}
+		return nil
 	})
 }
 
