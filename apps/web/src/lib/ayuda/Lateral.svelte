@@ -22,7 +22,7 @@
 		</div>
 	</div>
 	<a class="migrar" href={resolve('/(sitio)/migrar')}>
-		<img src="/hornero/caja.png" alt="" width="56" height="56" />
+		<img src="/hornero/caja.webp" alt="" width="56" height="56" />
 		<span><b>¿Venís de otra plataforma?</b><span>Te mudamos gratis en un día</span></span>
 		<Icon icon={I.phArrowRightBold} size={15} />
 	</a>

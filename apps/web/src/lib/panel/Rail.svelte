@@ -42,7 +42,7 @@
 		onclick={() => shell.hornero()}
 	>
 		<span class="pulso"></span>
-		<span class="av"><img src="/hornero/avatar.png" alt="" /></span>
+		<span class="av"><img src="/hornero/avatar.webp" alt="" /></span>
 	</button>
 	{#if foto}
 		<img

@@ -10,7 +10,7 @@
 		inset: 0;
 		z-index: 90;
 		pointer-events: none;
-		background-image: url('/textura/grain.png');
+		background-image: url('/textura/grain.webp');
 		opacity: 0.55;
 		mix-blend-mode: multiply;
 	}

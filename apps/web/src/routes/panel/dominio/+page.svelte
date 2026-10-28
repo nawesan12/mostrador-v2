@@ -164,7 +164,7 @@
 		</div>
 		<div class="col">
 			<div class="ssl">
-				<img src="/hornero/seguridad.png" alt="" width="54" height="54" />
+				<img src="/hornero/seguridad.webp" alt="" width="54" height="54" />
 				<div>
 					<b>SSL gratis y automático</b>
 					<div>Renovamos el certificado solos cada 90 días</div>

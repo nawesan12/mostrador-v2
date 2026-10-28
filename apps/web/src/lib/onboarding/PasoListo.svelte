@@ -71,7 +71,7 @@
 				stroke-dashoffset="19.6"
 			></circle></svg
 		>
-		<div class="ave"><img src="/hornero/celebrando.png" alt="Hornero celebrando" /></div>
+		<div class="ave"><img src="/hornero/celebrando.webp" alt="Hornero celebrando" /></div>
 	</div>
 	<h1>Tu mostrador está 94% listo.</h1>
 	<p class="bajada">Y no tuviste que cargar nada a mano. Ya podés vender por todos tus canales.</p>
@@ -98,7 +98,7 @@
 	</div>
 	<div class="caja">
 		<div class="cj-cab">
-			<img src="/caja/05-exito.png" alt="Caja" width="56" height="56" />
+			<img src="/caja/05-exito.webp" alt="Caja" width="56" height="56" />
 			<div class="cj-txt">
 				<div class="cj-t">
 					{o.e.caja

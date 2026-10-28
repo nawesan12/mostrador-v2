@@ -19,7 +19,7 @@
 			>{/if}</a
 	>
 	<button type="button" class="hornero" aria-label="Hornero" onclick={() => shell.hornero()}
-		><span><img src="/hornero/avatar.png" alt="" /></span></button
+		><span><img src="/hornero/avatar.webp" alt="" /></span></button
 	>
 	<a href={rutaDe('Productos')} class:on={seccion === 'Productos'}
 		><Icon icon={I.phTagFill} size={23} />Productos</a

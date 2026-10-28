@@ -58,7 +58,7 @@
 			onclick={() => (l.widgetOpen = !l.widgetOpen)}
 		>
 			<span class="pulso" use:anim={{ t: 'pulse', dur: 2600 }}></span>
-			<span class="foto"><img src="/hornero/avatar.png" alt="" /></span>
+			<span class="foto"><img src="/hornero/avatar.webp" alt="" /></span>
 			{#if !l.widgetOpen}<span class="aviso">1</span>{/if}
 		</button>
 	</div>

@@ -2,8 +2,12 @@
 	import { onMount } from 'svelte';
 	import { banner, guardarEleccion, leerEleccion } from '#lib/consentimiento.svelte.ts';
 
-	/** Banner de cookies del handoff (design/CookieBanner.dc.html). Abajo a la izquierda. */
-	let visible = $state(false);
+	/**
+	 * Banner de cookies del handoff (design/CookieBanner.dc.html). Abajo a la izquierda. Viene en el
+	 * HTML del servidor (así se pinta con la página, no al hidratar: era el LCP de la landing); a quien
+	 * ya eligió lo oculta el script de app.html antes de pintar, y al montar se saca.
+	 */
+	let visible = $state(true);
 	let cfg = $state(false);
 	let an = $state(true);
 	let mk = $state(false);
@@ -16,6 +20,7 @@
 		visible = leerEleccion() === null;
 		// "Reconfigurar" desde la página de Cookies vuelve a abrir el panel.
 		const abrir = () => {
+			delete document.documentElement.dataset.cookies;
 			cfg = true;
 			visible = true;
 		};
@@ -33,7 +38,7 @@
 {#if visible}
 	<div class="ck" role="dialog" aria-label="Cookies" aria-live="polite">
 		<div class="ck-top">
-			<img src="/hornero/asomado.png" alt="" width="54" height="54" />
+			<img src="/hornero/asomado.webp" alt="" width="54" height="54" />
 			<div class="ck-txt">
 				<b>Usamos cookies</b>
 				<p>
@@ -100,6 +105,9 @@
 {/if}
 
 <style>
+	:global(html[data-cookies]) .ck {
+		display: none;
+	}
 	.ck {
 		position: fixed;
 		left: 16px;

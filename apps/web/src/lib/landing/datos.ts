@@ -285,7 +285,7 @@ export const INTEG = [
 		'Caja',
 		'ia',
 		{
-			img: '/caja/01-saludo.png'
+			img: '/caja/01-saludo.webp'
 		},
 		'Finanzas y monotributo'
 	],

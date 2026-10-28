@@ -56,7 +56,7 @@
 					{#each legal.chips as c (c)}<span>{c}</span>{/each}
 				</div>
 			</div>
-			<img src="/hornero/{legal.ilustracion}.png" alt="" width="170" height="170" />
+			<img src="/hornero/{legal.ilustracion}.webp" alt="" width="170" height="170" />
 		</div>
 	</div>
 </section>
@@ -164,7 +164,7 @@
 					<div class="revocar">
 						{#if codigo && !otro}
 							<div class="exito" role="status">
-								<img src="/hornero/exito.png" alt="" width="96" height="96" />
+								<img src="/hornero/exito.webp" alt="" width="96" height="96" />
 								<div class="exito-txt">
 									<b>Recibimos tu pedido</b>
 									<p>
@@ -233,7 +233,7 @@
 			{/each}
 
 			<div class="cierre">
-				<img src="/hornero/hablando.png" alt="" width="56" height="56" />
+				<img src="/hornero/hablando.webp" alt="" width="56" height="56" />
 				<div class="cierre-txt">
 					<b>{legal.cierre.titulo}</b>
 					<div>{legal.cierre.texto}</div>

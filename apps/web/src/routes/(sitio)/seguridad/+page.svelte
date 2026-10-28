@@ -101,7 +101,7 @@
 						</div>{/each}
 				</div>
 			</div>
-			<img src="/hornero/seguridad.png" alt="" width="320" height="320" />
+			<img src="/hornero/seguridad.webp" alt="" width="320" height="320" />
 		</div>
 	</div>
 </section>

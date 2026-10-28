@@ -227,7 +227,7 @@
 
 	{#if tip && !tipHecho}
 		<div class="tip" use:anim={{ t: 'rise', delay: 40 }}>
-			<img src="/hornero/pensando.png" alt="" width="40" height="40" />
+			<img src="/hornero/pensando.webp" alt="" width="40" height="40" />
 			<div class="tip-t"><b>Hornero:</b> {tip.texto}</div>
 			<button
 				type="button"
@@ -546,7 +546,7 @@
 			{#if !lista.total}
 				<div class="vacio">
 					<div>
-						<img src="/hornero/lupa.png" alt="" width="110" height="110" />
+						<img src="/hornero/lupa.webp" alt="" width="110" height="110" />
 						<div class="v-t">Nada con esos filtros</div>
 						<button type="button" class="v-b" onclick={limpiar}>Limpiar filtros</button>
 					</div>

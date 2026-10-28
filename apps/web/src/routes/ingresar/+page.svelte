@@ -114,7 +114,7 @@
 <div class="pag">
 	<div class="der">
 		<div class="arriba">
-			<a href={resolve('/')}><img src="/wordmark-brown.png" alt="mostrador" class="marca" /></a>
+			<a href={resolve('/')}><img src="/wordmark-brown.webp" alt="mostrador" class="marca" /></a>
 			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- /ayuda llega con las páginas públicas -->
 			<a class="ayuda" href="/ayuda"><Icon icon={phQuestion} size={16} />Ayuda</a>
 		</div>
@@ -316,7 +316,7 @@
 						<a class="volver" href={aModo('login')}
 							><Icon icon={phArrowLeftBold} size={14} />Volver</a
 						>
-						<img src="/hornero/pensando.png" alt="" class="ave-chica" />
+						<img src="/hornero/pensando.webp" alt="" class="ave-chica" />
 						<div>
 							<h1>¿Te olvidaste la contraseña?</h1>
 							<p class="bajada">
@@ -368,7 +368,7 @@
 				{:else if modo === 'restablecer'}
 					<!-- No está en el handoff: se arma con las piezas del modo "recuperar" y el medidor del registro. -->
 					<form method="POST" action="?/restablecer" class="col" use:enhance={conEnvio} novalidate>
-						<img src="/hornero/seguridad.png" alt="" class="ave-chica" />
+						<img src="/hornero/seguridad.webp" alt="" class="ave-chica" />
 						<div>
 							<h1>Elegí tu nueva contraseña</h1>
 							<p class="bajada">
@@ -410,7 +410,7 @@
 						<a class="volver" href={aModo('login')}
 							><Icon icon={phArrowLeftBold} size={14} />Volver</a
 						>
-						<img src="/hornero/whatsapp.png" alt="" class="ave-chica" />
+						<img src="/hornero/whatsapp.webp" alt="" class="ave-chica" />
 						<div>
 							<h1>Entrá con tu WhatsApp</h1>
 							<p class="bajada">
@@ -437,7 +437,7 @@
 				{:else if modo === 'enlace'}
 					<!-- Link del WhatsApp: pide un clic, así la vista previa del link no lo consume. -->
 					<form method="POST" action="?/entrar" class="col" use:enhance={conEnvio}>
-						<img src="/hornero/saludo.png" alt="" class="ave-chica" />
+						<img src="/hornero/saludo.webp" alt="" class="ave-chica" />
 						<div>
 							<h1>Entrá a tu cuenta</h1>
 							<p class="bajada">Tocá el botón para entrar. El link vale una sola vez.</p>
@@ -454,7 +454,7 @@
 						class="col enviado"
 						use:enhance={conEnvio}
 					>
-						<img src="/hornero/exito.png" alt="" class="ave-exito" />
+						<img src="/hornero/exito.webp" alt="" class="ave-exito" />
 						<div>
 							<h1>{form?.canal === 'whatsapp' ? 'Revisá tu WhatsApp' : 'Revisá tu email'}</h1>
 							<p class="bajada">
@@ -508,7 +508,7 @@
 			>
 		</div>
 		<div class="medio">
-			<img class="ave" src="/hornero/saludo.png" alt="" />
+			<img class="ave" src="/hornero/saludo.webp" alt="" />
 			<div class="lema">Todo lo de las otras, por menos plata y más seguro.</div>
 			<div class="testi">
 				<div class="testi-cab">

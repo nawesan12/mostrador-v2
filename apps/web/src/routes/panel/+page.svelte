@@ -260,7 +260,7 @@
 		type="button"
 		class="hornero"
 		aria-label="Preguntale a Hornero"
-		onclick={() => shell.hornero()}><span><img src="/hornero/avatar.png" alt="" /></span></button
+		onclick={() => shell.hornero()}><span><img src="/hornero/avatar.webp" alt="" /></span></button
 	>
 	<div class="hola">
 		<h1>{saludo(ahora)}{t.hola ? `, ${t.hola}` : ''}</h1>
@@ -569,7 +569,7 @@
 	<div class="hornero-card" use:anim={{ t: 'rise' }}>
 		<div class="arcos"></div>
 		<div class="h-cab">
-			<div class="h-av"><img src="/hornero/avatar.png" alt="Hornero" /></div>
+			<div class="h-av"><img src="/hornero/avatar.webp" alt="Hornero" /></div>
 			<div>
 				<div class="h-n">Hornero</div>
 				<div class="h-s">

@@ -100,7 +100,7 @@
 					<a class="sec" href="#directorio">Buscar un partner</a>
 				</div>
 			</div>
-			<img src="/hornero/celebrando.png" alt="" width="300" height="300" />
+			<img src="/hornero/celebrando.webp" alt="" width="300" height="300" />
 		</div>
 	</div>
 </section>
@@ -181,7 +181,7 @@
 			<div class="tarjeta">
 				{#if enviado}
 					<div class="exito" role="status">
-						<img src="/hornero/exito.png" alt="" width="120" height="120" />
+						<img src="/hornero/exito.webp" alt="" width="120" height="120" />
 						<div class="ex-t">¡Bienvenido al programa!</div>
 						<p>
 							Te mandamos el acceso al panel de partners por email. Revisá también la carpeta de

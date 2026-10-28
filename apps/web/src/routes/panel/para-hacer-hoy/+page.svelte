@@ -103,7 +103,7 @@
 			<h1>{titulo}</h1>
 			<div class="b-s">Hornero ordenó tus tareas por lo que más plata te mueve.</div>
 		</div>
-		<img src="/hornero/portapapeles.png" alt="" width="96" height="96" />
+		<img src="/hornero/portapapeles.webp" alt="" width="96" height="96" />
 	</div>
 
 	{#each data.grupos as g (g.titulo)}

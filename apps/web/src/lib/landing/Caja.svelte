@@ -67,7 +67,7 @@
 		<div class="txt">
 			<div class="duo">
 				<img src="/mark.svg" alt="Mostrador" width="30" height="30" /><span class="mas">+</span><img
-					src="/caja/01-saludo.png"
+					src="/caja/01-saludo.webp"
 					alt="Caja"
 					width="40"
 					height="40"
@@ -141,7 +141,7 @@
 			</div>
 			<div class="tarjeta">
 				<div class="t-cab">
-					<img src="/caja/05-exito.png" alt="" width="34" height="34" />
+					<img src="/caja/05-exito.webp" alt="" width="34" height="34" />
 					<div>
 						<div class="t-n">Caja · Actividad</div>
 						<div class="t-s">Negocio · octubre</div>

@@ -131,7 +131,7 @@
 							src={unsplash(m.foto, 84, '&h=84&crop=faces')}
 							alt=""
 							class:pend={m.pendiente}
-						/>{:else}<img src="/hornero/avatar.png" alt="" class:pend={m.pendiente} />{/if}
+						/>{:else}<img src="/hornero/avatar.webp" alt="" class:pend={m.pendiente} />{/if}
 					<span class="punto" style:background={punto(m)}></span>
 				</span>
 				<span class="p-txt">

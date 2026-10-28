@@ -57,7 +57,7 @@
 						{/each}
 					</div>
 				</div>
-				<img src="/hornero/horno-vacio.png" alt="" width="400" height="400" />
+				<img src="/hornero/horno-vacio.webp" alt="" width="400" height="400" />
 			</div>
 		</div>
 	</main>

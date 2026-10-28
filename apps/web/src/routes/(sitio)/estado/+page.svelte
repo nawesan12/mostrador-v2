@@ -174,7 +174,7 @@
 			</div>
 		</div>
 		<div class="avisos">
-			<img src="/hornero/desenchufado.png" alt="" width="84" height="84" />
+			<img src="/hornero/desenchufado.webp" alt="" width="84" height="84" />
 			<div class="a-t">Enterate antes que tus clientes</div>
 			<p>Te avisamos por email o WhatsApp si algo falla y cuando se resuelve.</p>
 			{#if form && 'suscripto' in form}

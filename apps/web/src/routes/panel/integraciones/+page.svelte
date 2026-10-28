@@ -370,7 +370,7 @@
 
 	<section class="ia" use:anim={{ t: 'rise', delay: 50 }}>
 		<div class="ia-cab">
-			<img src="/hornero/whatsapp.png" alt="" width="52" height="52" />
+			<img src="/hornero/whatsapp.webp" alt="" width="52" height="52" />
 			<div class="ia-txt">
 				<div class="ia-t">Manejá Mostrador desde tu IA<span class="mcp">MCP</span></div>
 				<div class="ia-d">

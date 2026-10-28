@@ -21,7 +21,7 @@
 
 <div class="hornero">
 	<div class="h-cab">
-		<img src="/hornero/avatar.png" alt="" width="52" height="52" />
+		<img src="/hornero/avatar.webp" alt="" width="52" height="52" />
 		<div>
 			<b>Preguntale a Hornero</b>
 			<div class="h-s">Busca en la ayuda y te lleva a la respuesta</div>

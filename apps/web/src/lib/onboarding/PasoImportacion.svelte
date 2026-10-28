@@ -96,7 +96,8 @@
 	<div class="hornero">
 		<div class="arcos"></div>
 		<div class="h-cab">
-			<span class="h-av"><img src="/hornero/caja.png" alt="Hornero" width="52" height="52" /></span>
+			<span class="h-av"><img src="/hornero/caja.webp" alt="Hornero" width="52" height="52" /></span
+			>
 			<div>
 				<div class="h-t">Hornero está ordenando</div>
 				<div class="h-d">Mientras importamos, mejora lo que llega</div>
