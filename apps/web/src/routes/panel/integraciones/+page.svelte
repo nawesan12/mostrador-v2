@@ -21,6 +21,7 @@
 	} from '#lib/panel/integraciones.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 	import { validarGa4, validarPixel } from '#lib/tienda/medicion.ts';
+	import Arca from './Arca.svelte';
 
 	/**
 	 * Integraciones (design/PanelOperacion.dc.html, sInt). "Configurar" no está diseñado: se arma con
@@ -230,8 +231,22 @@
 			await guardarMedicion(antes);
 		});
 	}
+	// ARCA tiene su asistente (datos fiscales, pedido de certificado, certificado y prueba).
+	// Facturación manda acá con ?arca para abrirlo.
+	let arcaAbierto = $state(false);
+	$effect(() => {
+		if (page.url.searchParams.get('arca') === null) return;
+		arcaAbierto = true;
+		replaceState(resolve('/panel/integraciones'), {});
+	});
+	const venceArca = $derived(
+		data.arca.certificadoVence
+			? Math.ceil((Date.parse(data.arca.certificadoVence) - Date.now()) / 86_400_000)
+			: null
+	);
 
 	async function boton(i: Integracion) {
+		if (i.id === 'arca') return void (arcaAbierto = true);
 		const on = data.estado.conectadas[i.id];
 		if (on || esMedicion(i.id)) return abrir(i);
 		if (i.id === 'mp' || i.id === 'ml') return conectarMP(i.id);
@@ -461,9 +476,15 @@
 					>
 				</div>
 				<div class="t-pie">
-					<span class="t-st" class:on
-						>{on ? '● Conectada' : i.pronto ? 'Próximamente' : 'Disponible'}</span
-					>
+					{#if i.id === 'arca' && on && venceArca !== null && venceArca < 30}
+						<span class="t-st vence"
+							>{venceArca > 0 ? `Vence en ${venceArca} días` : 'Certificado vencido'}</span
+						>
+					{:else}
+						<span class="t-st" class:on
+							>{on ? '● Conectada' : i.pronto ? 'Próximamente' : 'Disponible'}</span
+						>
+					{/if}
 					<button
 						type="button"
 						class="t-btn"
@@ -713,6 +734,8 @@
 		</div>
 	{/if}
 </Modal>
+
+<Arca bind:open={arcaAbierto} arca={data.arca} demo={data.demo} />
 
 <Modal
 	bind:open={modalIa}
@@ -1051,6 +1074,9 @@
 	}
 	.t-st.on {
 		color: #2f8f63;
+	}
+	.t-st.vence {
+		color: #9a6a10;
 	}
 	.t-btn {
 		padding: 8px 14px;

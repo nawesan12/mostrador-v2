@@ -126,7 +126,9 @@
 				body: JSON.stringify({ ids, accion, valor })
 			});
 			if (!r.ok) {
-				ui.toast({ k: 'err', title: 'No se pudo', desc: 'Probá de nuevo en un rato.' });
+				// El servidor explica qué pasó (por ejemplo, el rechazo de ARCA): se muestra tal cual.
+				const m = ((await r.json().catch(() => null)) as { message?: string } | null)?.message;
+				ui.toast({ k: 'err', title: 'No se pudo', desc: m ?? 'Probá de nuevo en un rato.' });
 				return 0;
 			}
 			const { hechos } = (await r.json()) as { hechos: number };

@@ -11,10 +11,11 @@ import type { PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const d = datosDe(locals);
 	const db = locals.sandbox ? dbSandbox(env.SANDBOX) : null;
-	const [estado, mp, ml, tg, conexiones, medicion, tienda] = await Promise.all([
+	const [estado, mp, ml, arca, tg, conexiones, medicion, tienda] = await Promise.all([
 		d.integraciones(),
 		d.mercadoPago(),
 		d.mercadoLibre(),
+		d.arca(),
 		db && locals.sandbox ? vinculoDe(db, locals.sandbox.id) : null,
 		db && locals.sandbox
 			? conexionesDe(db, locals.sandbox.id)
@@ -53,6 +54,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		// Google Merchant Center y Meta Commerce Manager leen el mismo feed.
 		feed: `${url.origin}/t/${tienda.slug}/feed.xml`,
 		tienda: `${url.origin}/t/${tienda.slug}`,
+		arca,
 		telegram: {
 			disponible: habilitado() && !!locals.sandbox,
 			nombre: tg?.nombre ?? null,

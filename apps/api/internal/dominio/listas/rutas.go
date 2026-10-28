@@ -30,7 +30,8 @@ func sinInternos(l Lista) Lista {
 }
 
 // Rutas registra el motor de listas y los productos.
-func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string) {
+// fact puede ser nil (sin ARCA en el servidor): la lista de Facturación sale vacía.
+func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, fact Facturas) {
 	con := func(h func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			id := tienda(r)
@@ -61,9 +62,8 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string) {
 			regs, err = Envios(r.Context(), pool, id, time.Now())
 			def = DefEnvios
 		case "facturacion":
-			// Los comprobantes llegan con ARCA.
-			escribir(w, Lista{Filas: []Registro{}, Segmentos: map[string]int{}, Facetas: map[string]map[string]int{}, Resumen: map[string]float64{}})
-			return
+			regs, err = Comprobantes(r.Context(), pool, id, time.Now())
+			def = DefFacturacion
 		default:
 			problema.Escribir(w, problema.NoEncontrado("Esa lista no existe."))
 			return
@@ -120,7 +120,25 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string) {
 		if r.PathValue("lista") == "envios" && (c.Accion == "etiquetas" || c.Accion == "sin-etiqueta") {
 			n, err = Etiquetas(r.Context(), pool, id, c.IDs, c.Accion == "etiquetas")
 		}
-		// Cupones, etiquetas de clientes, mensajes y facturas llegan con Cupones, WhatsApp y ARCA: hasta entonces, 0.
+		if r.PathValue("lista") == "facturacion" && fact != nil {
+			switch c.Accion {
+			case "emitir":
+				n, err = fact.EmitirManual(r.Context(), id, c.Valor, time.Now())
+			case "reintentar":
+				n, err = fact.Reintentar(r.Context(), id, c.IDs, time.Now())
+			case "anular":
+				n, err = fact.Anular(r.Context(), id, c.IDs, time.Now())
+			default:
+				problema.Escribir(w, problema.Invalido("Esa acción no está disponible en Facturación."))
+				return
+			}
+			if err != nil && n == 0 {
+				problema.Escribir(w, problema.Invalido(err.Error()))
+				return
+			}
+			err = nil
+		}
+		// Etiquetas de clientes y mensajes llegan con WhatsApp: hasta entonces, 0.
 		if err != nil {
 			problema.Escribir(w, problema.Invalido(err.Error()))
 			return

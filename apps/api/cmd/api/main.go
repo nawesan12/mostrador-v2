@@ -13,10 +13,12 @@ import (
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/arrepentimiento"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/facturacion"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/formularios"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ia"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/cifrado"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/config"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
@@ -82,7 +84,8 @@ func correr() error {
 				cfg.MPSecretoWebhook, cfg.Sitio, cfg.ClaveCifrado, slog.Default()),
 			MercadoLibre: mercadolibre.DesdeConfig(app, cfg.OAuth["mercadolibre"][0], cfg.OAuth["mercadolibre"][1],
 				cfg.Sitio, cfg.ClaveCifrado, slog.Default()),
-			IA: &ia.Servicio{Pool: app},
+			IA:          &ia.Servicio{Pool: app},
+			Facturacion: facturacionDe(app, cfg.ClaveCifrado),
 		}),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
@@ -104,4 +107,18 @@ func correr() error {
 	apagar, cancelar := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancelar()
 	return srv.Shutdown(apagar)
+}
+
+// facturacionDe arma la facturación con ARCA. Sin clave de cifrado la clave privada no se puede
+// guardar: la facturación responde que falta configurarla, el resto de la API sigue.
+func facturacionDe(app *db.Pool, claveCifrado string) *facturacion.Servicio {
+	s := &facturacion.Servicio{Pool: app}
+	if claveCifrado != "" {
+		if c, err := cifrado.Nuevo(claveCifrado); err == nil {
+			s.Cifra = c
+		} else {
+			slog.Error("facturacion: clave de cifrado inválida", "error", err)
+		}
+	}
+	return s
 }
