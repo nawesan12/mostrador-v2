@@ -1,0 +1,208 @@
+{
+	"productos": [
+		{
+			"externo": "1234",
+			"urlVieja": "/productos/master-ball/",
+			"producto": {
+				"nombre": "Master Ball",
+				"descripcion": "La mejor Bola con el nivel máximo de desempeño. Atrapará cualquier Pokémon sin fallar.",
+				"categoria": "Poké Balls",
+				"precio": 19,
+				"costo": null,
+				"sku": null,
+				"stock": null,
+				"foto": "https://d26lpennugtm8s.cloudfront.net/stores/001/234/products/servine-640-0.jpg",
+				"canales": {
+					"web": true
+				},
+				"fotos": [
+					"https://d26lpennugtm8s.cloudfront.net/stores/001/234/products/servine-640-0.jpg",
+					"https://d26lpennugtm8s.cloudfront.net/stores/001/234/products/onyx-640-0.jpg",
+					"https://d26lpennugtm8s.cloudfront.net/stores/001/234/products/stoutland-640-0.jpg"
+				],
+				"opciones": [
+					{
+						"nombre": "Size",
+						"valores": [
+							"Small",
+							"Medium",
+							"Large"
+						]
+					}
+				],
+				"variantes": [
+					{
+						"valores": {
+							"Size": "Small"
+						},
+						"sku": "BSG1234A",
+						"precio": null,
+						"stock": 5,
+						"foto": null,
+						"activa": null
+					},
+					{
+						"valores": {
+							"Size": "Medium"
+						},
+						"sku": "BSG1234B",
+						"precio": null,
+						"stock": 5,
+						"foto": null,
+						"activa": null
+					},
+					{
+						"valores": {
+							"Size": "Large"
+						},
+						"sku": "BSG1234C",
+						"precio": null,
+						"stock": 5,
+						"foto": null,
+						"activa": null
+					}
+				]
+			},
+			"recortes": 0
+		},
+		{
+			"externo": "9001",
+			"urlVieja": "/productos/remera-oversize-algodon/",
+			"producto": {
+				"nombre": "Remera Oversize Algodón",
+				"descripcion": "Remera de algodón peinado.\nLavar con agua fría.",
+				"categoria": "Remeras",
+				"precio": 15900,
+				"costo": null,
+				"sku": null,
+				"stock": null,
+				"foto": "https://acdn.mitiendanube.com/stores/001/products/remera-blanca.webp",
+				"canales": {
+					"web": true
+				},
+				"fotos": [
+					"https://acdn.mitiendanube.com/stores/001/products/remera-blanca.webp",
+					"https://acdn.mitiendanube.com/stores/001/products/remera-negra.webp"
+				],
+				"opciones": [
+					{
+						"nombre": "Talle",
+						"valores": [
+							"M",
+							"L"
+						]
+					},
+					{
+						"nombre": "Color",
+						"valores": [
+							"Blanco",
+							"Negro"
+						]
+					}
+				],
+				"variantes": [
+					{
+						"valores": {
+							"Color": "Blanco",
+							"Talle": "M"
+						},
+						"sku": "REM-M-BL",
+						"precio": null,
+						"stock": 4,
+						"foto": null,
+						"activa": null
+					},
+					{
+						"valores": {
+							"Color": "Negro",
+							"Talle": "M"
+						},
+						"sku": "REM-M-NE",
+						"precio": 18900,
+						"stock": 0,
+						"foto": null,
+						"activa": null
+					},
+					{
+						"valores": {
+							"Color": "Negro",
+							"Talle": "L"
+						},
+						"sku": null,
+						"precio": 19901,
+						"stock": 999,
+						"foto": null,
+						"activa": null
+					}
+				]
+			},
+			"recortes": 0
+		},
+		{
+			"externo": "9002",
+			"urlVieja": "/productos/yerba-mate-organica/",
+			"producto": {
+				"nombre": "Yerba Mate Orgánica 1 kg",
+				"descripcion": null,
+				"categoria": null,
+				"precio": 7350,
+				"costo": null,
+				"sku": "YER-1K",
+				"stock": 12,
+				"foto": null,
+				"canales": {
+					"web": true
+				},
+				"fotos": null,
+				"opciones": null,
+				"variantes": null
+			},
+			"recortes": 0
+		}
+	],
+	"clientes": [
+		{
+			"externo": "101",
+			"nombre": "John Doe",
+			"email": "john.doe@example.com",
+			"telefono": "",
+			"ciudad": "Springfield",
+			"provincia": "Oregon",
+			"notas": ""
+		},
+		{
+			"externo": "5001",
+			"nombre": "Lucía Gómez",
+			"email": "lucia.gomez@gmail.com",
+			"telefono": "+54 9 11 5555-0101",
+			"ciudad": "Palermo",
+			"provincia": "Capital Federal",
+			"notas": ""
+		}
+	],
+	"pedidos": [
+		{
+			"externo": "7001",
+			"numeroExterno": "1203",
+			"fecha": "2026-03-02T17:10:00Z",
+			"clienteEmail": "lucia.gomez@gmail.com",
+			"clienteNombre": "Lucía Gómez",
+			"total": 34800,
+			"estado": "open",
+			"items": [
+				{
+					"nombre": "Remera Oversize Algodón",
+					"variante": "M / Blanco",
+					"cantidad": 2,
+					"precio": 15900
+				},
+				{
+					"nombre": "Yerba Mate Orgánica 1 kg",
+					"variante": "",
+					"cantidad": 1,
+					"precio": 3000
+				}
+			]
+		}
+	]
+}

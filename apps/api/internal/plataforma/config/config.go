@@ -63,6 +63,7 @@ func Leer() (Config, error) {
 			"google":       {os.Getenv("MOSTRADOR_GOOGLE_CLIENT_ID"), os.Getenv("MOSTRADOR_GOOGLE_SECRETO")},
 			"mercadopago":  {os.Getenv("MOSTRADOR_MP_CLIENT_ID"), os.Getenv("MOSTRADOR_MP_SECRETO")},
 			"mercadolibre": {os.Getenv("MOSTRADOR_ML_CLIENT_ID"), os.Getenv("MOSTRADOR_ML_SECRETO")},
+			"tiendanube":   {os.Getenv("MOSTRADOR_TN_CLIENT_ID"), os.Getenv("MOSTRADOR_TN_SECRETO")},
 		},
 		WhatsAppToken:    os.Getenv("MOSTRADOR_WHATSAPP_TOKEN"),
 		WhatsAppNumeroID: os.Getenv("MOSTRADOR_WHATSAPP_NUMERO_ID"),
