@@ -33,6 +33,8 @@ const files = readdirSync(design).filter(
 );
 // Íconos que no aparecen en el handoff pero se usan (reemplazos de logos que no existen en Iconify).
 const EXTRA = [
+	// Salir del backoffice del equipo.
+	'ph:sign-out-bold',
 	'simple-icons:googlesheets',
 	'simple-icons:microsoftexcel',
 	// /estado cuando algo falla o todavía no hay datos (el handoff sólo dibuja "todo funciona").

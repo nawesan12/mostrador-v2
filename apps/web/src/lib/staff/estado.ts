@@ -109,3 +109,6 @@ export function fechaCorta(iso: string, ahora = Date.now()) {
 		...(mismo ? {} : { year: 'numeric' })
 	}).format(d);
 }
+
+/** Los montos del backoffice vienen en centavos (como en Go): "$ 49.900". */
+export const centavos = (c: number) => '$ ' + Math.round(c / 100).toLocaleString('es-AR');

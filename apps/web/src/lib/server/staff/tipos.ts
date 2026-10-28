@@ -20,6 +20,7 @@ export type TipoConsulta = S['TipoConsulta'];
 export type EstadoConsulta = S['EstadoConsulta'];
 export type RespuestaEquipo = S['RespuestaEquipo'];
 export type PartnersEquipo = S['PartnersEquipo'];
+export type PostulacionEquipo = S['PostulacionEquipo'];
 export type FacturacionEquipo = S['FacturacionEquipo'];
 export type AuditoriaEquipo = S['AuditoriaEquipo'];
 export type SesionNueva = S['SesionNueva'];

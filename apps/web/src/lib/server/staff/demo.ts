@@ -182,7 +182,7 @@ export function tiendasDemo(ahora: number): Tienda[] {
 	const usados = new Set<string>();
 	const out: Tienda[] = [];
 	for (let i = 0; i < 168; i++) {
-		let nombre = '';
+		let nombre: string;
 		do {
 			nombre = `${PRIMERO[Math.floor(r() * PRIMERO.length)]} ${SEGUNDO[Math.floor(r() * SEGUNDO.length)]}`;
 		} while (usados.has(nombre) && usados.size < PRIMERO.length * SEGUNDO.length);
@@ -701,12 +701,20 @@ export class EquipoDemo implements T.DatosEquipo {
 							}
 						]
 					: []),
-				...(r() < 0.5 ? [{ id: 'mercadolibre', nombre: 'Mercado Libre', salud: 'ok' as const }] : []),
+				...(r() < 0.5
+					? [{ id: 'mercadolibre', nombre: 'Mercado Libre', salud: 'ok' as const }]
+					: []),
 				...(r() < 0.4 ? [{ id: 'ga4', nombre: 'Google Analytics', salud: 'ok' as const }] : [])
 			],
 			dominios:
 				paga && r() < 0.6
-					? [{ nombre: `${t.slug.replace(/-/g, '')}.com.ar`, verificado: r() < 0.8, principal: true }]
+					? [
+							{
+								nombre: `${t.slug.replace(/-/g, '')}.com.ar`,
+								verificado: r() < 0.8,
+								principal: true
+							}
+						]
 					: [],
 			actividad: [
 				['persona', 'Publicó 3 productos nuevos', 2],
