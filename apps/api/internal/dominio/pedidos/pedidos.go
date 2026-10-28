@@ -305,12 +305,13 @@ type Detalle struct {
 		Pedidos int       `json:"pedidos"`
 		Gastado int64     `json:"gastado"`
 	} `json:"comprador"`
-	EstadoPago  string  `json:"estadoPago"`
-	Factura     *string `json:"factura"`
-	Seguimiento *string `json:"seguimiento"`
-	Llega       *string `json:"llega"`
-	Nota        *string `json:"nota"`
-	Historial   []Paso  `json:"historial"`
+	EstadoPago  string   `json:"estadoPago"`
+	Factura     *string  `json:"factura"`
+	Seguimiento *string  `json:"seguimiento"`
+	Llega       *string  `json:"llega"`
+	Nota        *string  `json:"nota"`
+	Entrega     *Entrega `json:"entrega"`
+	Historial   []Paso   `json:"historial"`
 }
 
 // Obtener devuelve el detalle de un pedido.
@@ -320,11 +321,11 @@ func Obtener(ctx context.Context, pool tx, tiendaID string, numero int) (Detalle
 		var comprador Comprador
 		var estadosEn map[string]time.Time
 		err := t.QueryRow(ctx, `SELECT `+columnasFila+`, comprador, subtotal, costo_envio, estado_pago, factura,
-				seguimiento, nota, estados_en
+				seguimiento, nota, estados_en, entrega
 			FROM pedidos WHERE tienda_id = $1 AND numero = $2`, tiendaID, numero).Scan(
 			&d.Numero, &d.Cliente, &d.Foto, &d.Ciudad, &d.Canal, &d.Pago, &d.Envio, &d.Estado, &d.Total, &d.Creado,
 			&d.Items, &d.VIP, &d.Hornero, &d.Mayorista, &comprador, &d.Subtotal, &d.CostoEnvio, &d.EstadoPago,
-			&d.Factura, &d.Seguimiento, &d.Nota, &estadosEn)
+			&d.Factura, &d.Seguimiento, &d.Nota, &estadosEn, &d.Entrega)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return ErrNoExiste
 		}

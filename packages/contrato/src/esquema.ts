@@ -3755,6 +3755,11 @@ export interface components {
             llega: string | null;
             /** @description Lo que anotó Hornero de la charla */
             nota: string | null;
+            /** @description Adónde se manda (para la etiqueta); null si retira o no se cargó */
+            entrega: {
+                direccion: string;
+                cp: string;
+            } | null;
             historial: {
                 texto: string;
                 /** Format: date-time */

@@ -73,7 +73,7 @@
 
 	const base = $derived(`/t/${tienda.slug}`);
 	const carrito = $derived(carritoDe(tienda.slug));
-	let ancho = $state(1200);
+	let ancho = $state(page.data.movil ? 390 : 1200);
 	const nar = $derived(ancho < 820);
 	const wide = $derived(!nar);
 
@@ -535,7 +535,9 @@
 					style="font-size:12px;color:#8A968C">{p.old}</s
 				>{/if}</span
 		>
-		<span style="font-size:11.5px;color:#2F5D50;font-weight:600">{p.transf} por transferencia</span>
+		{#if tienda.cobros.transferencia > 0}<span
+				style="font-size:11.5px;color:#2F5D50;font-weight:600">{p.transf} por transferencia</span
+			>{/if}
 		<span style="flex:1"></span>
 		{@render paso(p, 30)}
 	</div>
@@ -556,7 +558,7 @@
 				>{tienda.envios.gratisDesde
 					? `Envío gratis desde ${fmt(tienda.envios.gratisDesde)}`
 					: `${tienda.cobros.cuotas} cuotas sin interés`}</span
-			>{#if wide}<span style="opacity:.6">·</span><span
+			>{#if wide && tienda.cobros.transferencia > 0}<span style="opacity:.6">·</span><span
 					>{tienda.cobros.transferencia}% off pagando por transferencia</span
 				>{/if}
 		</div>
@@ -726,24 +728,24 @@
 								></a
 							>
 						{/if}
-						<div
-							style="padding:20px;border-radius:16px;background:#fff;display:flex;align-items:center;gap:14px;flex-wrap:wrap"
-						>
-							<Icon icon={I.phBankBold} size={34} style="color:#2F5D50;flex:none" />
-							<div style="flex:1;min-width:160px">
-								<b style="font-size:17px;letter-spacing:-.02em"
-									>{tienda.cobros.transferencia}% off por transferencia</b
-								>
-								<div style="font-size:13.5px;color:#56645A;margin-top:2px">
-									O hasta {tienda.cobros.cuotas} cuotas sin interés con&nbsp;tarjeta
-								</div>
-							</div>
-							<a
-								href="{base}/catalogo"
-								style="padding:11px 14px;border-radius:10px;background:#1E2B22;color:#EEF1E8;font:700 13.5px 'Schibsted Grotesk';white-space:nowrap;text-decoration:none"
-								>Comprar</a
+						{#if tienda.cobros.transferencia > 0}<div
+								style="padding:20px;border-radius:16px;background:#fff;display:flex;align-items:center;gap:14px;flex-wrap:wrap"
 							>
-						</div>
+								<Icon icon={I.phBankBold} size={34} style="color:#2F5D50;flex:none" />
+								<div style="flex:1;min-width:160px">
+									<b style="font-size:17px;letter-spacing:-.02em"
+										>{tienda.cobros.transferencia}% off por transferencia</b
+									>
+									<div style="font-size:13.5px;color:#56645A;margin-top:2px">
+										O hasta {tienda.cobros.cuotas} cuotas sin interés con&nbsp;tarjeta
+									</div>
+								</div>
+								<a
+									href="{base}/catalogo"
+									style="padding:11px 14px;border-radius:10px;background:#1E2B22;color:#EEF1E8;font:700 13.5px 'Schibsted Grotesk';white-space:nowrap;text-decoration:none"
+									>Comprar</a
+								>
+							</div>{/if}
 					</div>
 				</section>
 			{/if}
@@ -1091,7 +1093,9 @@
 										<div
 											style="font-size:12px;color:#6B7A6E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
 										>
-											<b style="color:#2F5D50">{p.transf} por transferencia</b>
+											{#if tienda.cobros.transferencia > 0}<b style="color:#2F5D50"
+													>{p.transf} por transferencia</b
+												>{/if}
 										</div>
 									</div>
 									<div style="text-align:right;flex:none;min-width:{nar ? 0 : 74}px">
@@ -1288,10 +1292,10 @@
 							<div style="margin-top:4px;font-size:13.5px">
 								{tienda.cobros.cuotas} cuotas sin interés de {fmt(
 									sel.precio / tienda.cobros.cuotas
-								)} ·
-								<b style="color:#2F5D50"
-									>{fmt(sel.precio * (1 - tienda.cobros.transferencia / 100))} por transferencia</b
-								>
+								)}{#if tienda.cobros.transferencia > 0}
+									· <b style="color:#2F5D50"
+										>{fmt(sel.precio * (1 - tienda.cobros.transferencia / 100))} por transferencia</b
+									>{/if}
 							</div>
 							{#if sel.stock > 0 && sel.stock <= 3 && (!sel.conOpciones || sel.variante)}<div
 									style="margin-top:8px;font-size:13px;font-weight:700;color:#C2412D"
@@ -1583,9 +1587,10 @@
 								subtotal / tienda.cobros.cuotas
 							)}</span
 						>
-						<span style="font-size:13.5px;color:#2F5D50;font-weight:700"
-							>{fmt(subtotal * (1 - tienda.cobros.transferencia / 100))} pagando por transferencia</span
-						>
+						{#if tienda.cobros.transferencia > 0}<span
+								style="font-size:13.5px;color:#2F5D50;font-weight:700"
+								>{fmt(subtotal * (1 - tienda.cobros.transferencia / 100))} pagando por transferencia</span
+							>{/if}
 						<a
 							href="{base}/checkout"
 							style="padding:15px;border-radius:10px;background:#2F5D50;color:#fff;font:800 15px 'Schibsted Grotesk';text-align:center;text-decoration:none"
@@ -2401,8 +2406,8 @@
 				<div style="min-width:0">
 					<div style="font-weight:800;font-size:24px;letter-spacing:-.03em">{tienda.nombre}</div>
 					<p style="margin:8px 0 0;font-size:13.5px;color:#B9C6BB;line-height:1.5">
-						{tienda.cobros.cuotas} cuotas sin interés y {tienda.cobros.transferencia}% off por
-						transferencia, en toda la&nbsp;tienda.
+						{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}
+							y {tienda.cobros.transferencia}% off por transferencia{/if}, en toda la&nbsp;tienda.
 					</p>
 				</div>
 				{#each foot as f (f.t)}<div

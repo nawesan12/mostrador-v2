@@ -83,7 +83,7 @@
 
 	const base = $derived(`/t/${tienda.slug}`);
 	const carrito = $derived(carritoDe(tienda.slug));
-	let ancho = $state(1200);
+	let ancho = $state(page.data.movil ? 390 : 1200);
 	const nar = $derived(ancho < 820);
 	const wide = $derived(!nar);
 
@@ -469,9 +469,10 @@
 				><span style="min-width:0"
 					><b style="font-size:16px">{p.price}</b>{#if p.old}<s
 							style="margin-left:6px;font-size:13px;color:#8B879A">{p.old}</s
-						>{/if}<span style="display:block;font-size:12px;color:#2F7D4F;font-weight:600"
-						>{p.transf} transf.</span
-					></span
+						>{/if}{#if tienda.cobros.transferencia > 0}<span
+							style="display:block;font-size:12px;color:#2F7D4F;font-weight:600"
+							>{p.transf} transf.</span
+						>{/if}</span
 				><button
 					type="button"
 					aria-label="Sumar {p.n} al carrito"
@@ -503,9 +504,10 @@
 			>{#if wide}<span style="display:flex;gap:4px"
 					><span style="padding:2px 7px;border-radius:6px;background:rgba(246,244,241,.14)"
 						>{tienda.cobros.cuotas} cuotas sin interés</span
-					><span style="padding:2px 7px;border-radius:6px;background:rgba(246,244,241,.14)"
-						>{tienda.cobros.transferencia}% off por transferencia</span
-					></span
+					>{#if tienda.cobros.transferencia > 0}<span
+							style="padding:2px 7px;border-radius:6px;background:rgba(246,244,241,.14)"
+							>{tienda.cobros.transferencia}% off por transferencia</span
+						>{/if}</span
 				>{/if}
 		</div>
 
@@ -756,8 +758,8 @@
 							Categorías
 						</h2>
 						<span style="font-size:14px;color:#5A566B"
-							>{tienda.cobros.cuotas} cuotas sin interés · {tienda.cobros.transferencia}% off por
-							transferencia</span
+							>{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}
+								· {tienda.cobros.transferencia}% off por transferencia{/if}</span
 						>
 					</div>
 					<div
@@ -1366,8 +1368,8 @@
 				</h1>
 				<p style="margin:10px 0 0;font-size:15.5px;color:#5A566B;max-width:560px">
 					{listado.length}
-					{listado.length === 1 ? 'producto' : 'productos'} · {tienda.cobros.cuotas} cuotas sin interés
-					o {tienda.cobros.transferencia}% off por&nbsp;transferencia.
+					{listado.length === 1 ? 'producto' : 'productos'} · {tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}
+						o {tienda.cobros.transferencia}% off por&nbsp;transferencia{/if}.
 				</p>
 				<div
 					style="margin-top:20px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px"
@@ -1491,9 +1493,9 @@
 						<span
 							>{tienda.cobros.cuotas} cuotas sin interés de
 							<b>{fmt(sel.precio / tienda.cobros.cuotas)}</b></span
-						><span style="color:#2F7D4F;font-weight:700"
-							>{fmt(sel.precio * (1 - tienda.cobros.transferencia / 100))} por transferencia</span
-						>
+						>{#if tienda.cobros.transferencia > 0}<span style="color:#2F7D4F;font-weight:700"
+								>{fmt(sel.precio * (1 - tienda.cobros.transferencia / 100))} por transferencia</span
+							>{/if}
 					</div>
 					{#each sel.opciones as o (o.nombre)}{@const swatch = o.valores.every(
 							(x) => x.color || x.foto
@@ -1828,9 +1830,9 @@
 									subtotal / tienda.cobros.cuotas
 								)}</span
 							>
-							<span style="color:#2F7D4F;font-weight:700"
-								>{fmt(subtotal * (1 - tienda.cobros.transferencia / 100))} pagando por transferencia</span
-							>
+							{#if tienda.cobros.transferencia > 0}<span style="color:#2F7D4F;font-weight:700"
+									>{fmt(subtotal * (1 - tienda.cobros.transferencia / 100))} pagando por transferencia</span
+								>{/if}
 							<a
 								href="{base}/checkout"
 								style="margin-top:4px;padding:16px;border-radius:999px;background:#1E1B2E;color:#fff;font:700 15px 'Instrument Sans';text-align:center;text-decoration:none"
@@ -2242,7 +2244,7 @@
 						Envíos y pagos
 					</div>
 					<div style="margin-top:12px;display:flex;flex-direction:column">
-						{#each [...(tienda.envios.gratisDesde ? [['Envío gratis', `Desde ${fmt(tienda.envios.gratisDesde)}`]] : []), ['Envíos', 'A todo el país'], ['Tarjetas', `${tienda.cobros.cuotas} cuotas sin interés`], ['Transferencia', `${tienda.cobros.transferencia}% off`]] as [d, h] (d)}<div
+						{#each [...(tienda.envios.gratisDesde ? [['Envío gratis', `Desde ${fmt(tienda.envios.gratisDesde)}`]] : []), ['Envíos', 'A todo el país'], ['Tarjetas', `${tienda.cobros.cuotas} cuotas sin interés`], ...(tienda.cobros.transferencia > 0 ? [['Transferencia', `${tienda.cobros.transferencia}% off`]] : [])] as [d, h] (d)}<div
 								style="display:flex;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid rgba(30,27,46,.06);font-size:14.5px;font-weight:500"
 							>
 								<span>{d}</span><span style="text-align:right">{h}</span>
@@ -2282,8 +2284,9 @@
 						{tienda.nombre}
 					</div>
 					<p style="margin:10px 0 0;font-size:14px;color:#B3AEC6;line-height:1.55;max-width:300px">
-						{tienda.cobros.cuotas} cuotas sin interés y {tienda.cobros.transferencia}% off por
-						transferencia{tienda.direccion || tienda.ciudad
+						{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}
+							y {tienda.cobros.transferencia}% off por transferencia{/if}{tienda.direccion ||
+						tienda.ciudad
 							? `. ${tienda.direccion || tienda.ciudad}`
 							: ''}.
 					</p>

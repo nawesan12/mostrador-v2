@@ -72,7 +72,7 @@
 
 	const base = $derived(`/t/${tienda.slug}`);
 	const carrito = $derived(carritoDe(tienda.slug));
-	let ancho = $state(1200);
+	let ancho = $state(page.data.movil ? 390 : 1200);
 	const nar = $derived(ancho < 820);
 	const wide = $derived(!nar);
 
@@ -147,15 +147,19 @@
 			bbg: '#D9452B',
 			bfg: '#F4EADB'
 		},
-		{
-			k: 'Transferencia',
-			t: `${tienda.cobros.transferencia}% off`,
-			d: 'Pagando por transferencia, te mandamos el alias al confirmar el pedido.',
-			bg: '#D9452B',
-			fg: '#F4EADB',
-			bbg: '#F4EADB',
-			bfg: '#D9452B'
-		}
+		...(tienda.cobros.transferencia > 0
+			? [
+					{
+						k: 'Transferencia',
+						t: `${tienda.cobros.transferencia}% off`,
+						d: 'Pagando por transferencia, te mandamos el alias al confirmar el pedido.',
+						bg: '#D9452B',
+						fg: '#F4EADB',
+						bbg: '#F4EADB',
+						bfg: '#D9452B'
+					}
+				]
+			: [])
 	]);
 	const cats = $derived(tienda.categorias.slice(0, 6));
 	const best = $derived(
@@ -463,7 +467,7 @@
 				>{tienda.envios.gratisDesde
 					? `Envío gratis desde ${fmt(tienda.envios.gratisDesde)}`
 					: `${tienda.cobros.cuotas} cuotas sin interés`}</span
-			>{#if wide}<span
+			>{#if wide && tienda.cobros.transferencia > 0}<span
 					style="display:flex;gap:4px;padding:2px 7px;border-radius:6px;background:rgba(251,241,230,.14)"
 					>{tienda.cobros.transferencia}% off por transferencia</span
 				>{/if}
@@ -906,9 +910,11 @@
 						<b style="font-size:30px">{sel.desde ? 'Desde ' : ''}{fmt(sel.precio)}</b
 						>{#if tachado}<s style="color:#7A5F4C">{fmt(tachado)}</s>{/if}
 					</div>
-					<div style="margin-top:4px;font-size:14px;color:#2F7A43;font-weight:700">
-						{fmt(sel.precio * (1 - tienda.cobros.transferencia / 100))} por transferencia
-					</div>
+					{#if tienda.cobros.transferencia > 0}
+						<div style="margin-top:4px;font-size:14px;color:#2F7A43;font-weight:700">
+							{fmt(sel.precio * (1 - tienda.cobros.transferencia / 100))} por transferencia
+						</div>
+					{/if}
 					<div style="margin-top:2px;font-size:13.5px;color:#7A5F4C">
 						{tienda.cobros.cuotas} cuotas sin interés de {fmt(sel.precio / tienda.cobros.cuotas)}
 					</div>
@@ -1248,9 +1254,11 @@
 									>{fmt(subtotal)}</b
 								></span
 							>
-							<span style="color:#2F7A43;font-weight:700"
-								>{fmt(subtotal * (1 - tienda.cobros.transferencia / 100))} pagando por transferencia</span
-							>
+							{#if tienda.cobros.transferencia > 0}
+								<span style="color:#2F7A43;font-weight:700"
+									>{fmt(subtotal * (1 - tienda.cobros.transferencia / 100))} pagando por transferencia</span
+								>
+							{/if}
 							<span style="font-size:13px;color:#7A5F4C"
 								>{tienda.cobros.cuotas} cuotas sin interés de {fmt(
 									subtotal / tienda.cobros.cuotas

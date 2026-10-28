@@ -36,6 +36,8 @@ export type Pedido = {
 	estadoPago: string;
 	envio: Envio;
 	ciudadEnvio: string;
+	/** Adónde se manda (los de la tienda online); los de ejemplo la arman con el cliente. */
+	entrega?: { direccion: string; cp: string } | null;
 	estado: EstadoPedido;
 	facturado: boolean;
 	items: ItemPedido[];

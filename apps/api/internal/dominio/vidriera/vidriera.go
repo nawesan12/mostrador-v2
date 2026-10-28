@@ -455,6 +455,9 @@ func Comprar(ctx context.Context, pool tx, mp Pagador, sitio, slug string, c Com
 	n.Pagado = &f
 	n.Cliente, n.Telefono = &c.Nombre, &c.Telefono
 	n.Email, n.CostoEnvio, n.CiudadEnvio = c.Email, costoEnvio, strings.TrimSpace(c.CP)
+	if c.Envio != "retiro" {
+		n.Entrega = &pedidos.Entrega{Direccion: strings.TrimSpace(c.Direccion), CP: strings.TrimSpace(c.CP)}
+	}
 	nota := strings.TrimSpace(fmt.Sprintf("Tienda online · DNI %s · Entrega: %s (%s)", c.DNI, c.Direccion, c.CP))
 	n.Nota = &nota
 	b := make([]byte, 18)

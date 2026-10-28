@@ -214,6 +214,12 @@
 	async function lote(l: (typeof LOTE)[number]) {
 		const numeros = [...seleccion.keys()];
 		// Las tarjetas A6 de los paquetes se imprimen en otra pestaña (4 por A4).
+		// Las etiquetas se imprimen en otra pestaña y los pedidos quedan listos para despachar.
+		if (l.accion === 'etiquetas')
+			window.open(
+				`${resolve('/panel/pedidos/imprimir')}?que=etiquetas&n=${numeros.slice(0, 40).join(',')}`,
+				'_blank'
+			);
 		if (l.accion === 'tarjetas') {
 			// La impresión toma hasta 40 pedidos por vez.
 			if (numeros.length > 40)
@@ -292,12 +298,9 @@
 			}
 		});
 	}
+	/** La etiqueta de envío del pedido (10 × 15 cm), en otra pestaña para imprimir o guardar en PDF. */
 	const imprimir = (p: Detalle) =>
-		ui.toast({
-			k: p.envio === 'retiro' || p.envio === 'moto' ? 'ok' : (p.envio as 'andreani'),
-			title: 'Etiqueta lista',
-			desc: `${NOMBRE_ENVIO[p.envio]} · lista para imprimir`
-		});
+		window.open(`${resolve('/panel/pedidos/imprimir')}?que=etiquetas&f=a6&n=${p.numero}`, '_blank');
 
 	// ---- Filtros visibles ----
 	let mas = $state(false);

@@ -1218,7 +1218,13 @@ export class DatosSandbox implements Datos {
 	async crearPedido(
 		n: PedidoNuevo,
 		/** Tienda online: email de quien compra y el cupón que usó (para "una vez por cliente"). */
-		web?: { email: string; cupon: string | null; descuentoCupon: number; total?: number }
+		web?: {
+			email: string;
+			cupon: string | null;
+			descuentoCupon: number;
+			total?: number;
+			entrega?: { direccion: string; cp: string } | null;
+		}
 	): Promise<{ numero: number; total: number } | 'sin-stock' | 'invalido'> {
 		const d = await this.base();
 		const productos = new Map((await this.regProductos()).map((p) => [p.id, p]));
@@ -1278,6 +1284,7 @@ export class DatosSandbox implements Datos {
 							: 'Aprobado',
 			envio,
 			ciudadEnvio: d.catalogo.ciudad,
+			entrega: envio === 'retiro' ? null : (web?.entrega ?? null),
 			estado:
 				n.pagado === false
 					? 'Sin pagar'

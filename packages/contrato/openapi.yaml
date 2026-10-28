@@ -3916,7 +3916,7 @@ components:
       allOf:
         - { $ref: '#/components/schemas/PedidoFila' }
         - type: object
-          required: [items, subtotal, costoEnvio, comprador, estadoPago, factura, seguimiento, llega, nota, historial]
+          required: [items, subtotal, costoEnvio, comprador, estadoPago, factura, seguimiento, llega, nota, entrega, historial]
           properties:
             items:
               type: array
@@ -3948,6 +3948,13 @@ components:
             seguimiento: { type: [string, 'null'] }
             llega: { type: [string, 'null'], format: date }
             nota: { type: [string, 'null'], description: 'Lo que anotó Hornero de la charla' }
+            entrega:
+              type: [object, 'null']
+              description: 'Adónde se manda (para la etiqueta); null si retira o no se cargó'
+              required: [direccion, cp]
+              properties:
+                direccion: { type: string }
+                cp: { type: string }
             historial:
               type: array
               items:

@@ -71,7 +71,7 @@
 
 	const base = $derived(`/t/${tienda.slug}`);
 	const carrito = $derived(carritoDe(tienda.slug));
-	let ancho = $state(1200);
+	let ancho = $state(page.data.movil ? 390 : 1200);
 	const nar = $derived(ancho < 820);
 	const wide = $derived(!nar);
 	const footSpan = $derived(nar ? 'auto' : 'span 2');
@@ -117,7 +117,9 @@
 			t: `${tienda.cobros.cuotas} cuotas sin interés`,
 			d: 'Con todas las tarjetas'
 		},
-		{ i: I.phBank, t: `${tienda.cobros.transferencia}% off`, d: 'Pagando por transferencia' },
+		...(tienda.cobros.transferencia > 0
+			? [{ i: I.phBank, t: `${tienda.cobros.transferencia}% off`, d: 'Pagando por transferencia' }]
+			: []),
 		tienda.envios.retiro
 			? { i: I.phStorefrontFill, t: 'Retiro en el local', d: tienda.ciudad || 'Sin costo' }
 			: { i: I.phArrowsClockwise, t: 'Arrepentimiento', d: 'Tenés 10 días para devolverlo' }
@@ -379,8 +381,8 @@
 					? `Envío gratis desde ${fmt(tienda.envios.gratisDesde)}`
 					: `${tienda.cobros.cuotas} cuotas sin interés`}</span
 			>{#if wide}<span style="opacity:.7"
-					>{tienda.cobros.cuotas} cuotas sin interés · {tienda.cobros.transferencia}% off por
-					transferencia</span
+					>{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}
+						· {tienda.cobros.transferencia}% off por transferencia{/if}</span
 				>{/if}
 		</div>
 
@@ -562,9 +564,11 @@
 								<span style="display:block;margin-top:2px;font-size:12.5px;color:#6E655C"
 									>{p.cuotas}</span
 								>
-								<span style="display:block;font-size:12.5px;color:#2F6B47;font-weight:600"
-									>{p.transf} por transferencia</span
-								>
+								{#if tienda.cobros.transferencia > 0}
+									<span style="display:block;font-size:12.5px;color:#2F6B47;font-weight:600"
+										>{p.transf} por transferencia</span
+									>
+								{/if}
 							</a>
 						{/each}
 					</div>
@@ -826,11 +830,12 @@
 							<span style="display:flex;align-items:center;gap:8px"
 								><Icon icon={I.phCreditCard} size={17} />{tienda.cobros.cuotas} cuotas sin interés de
 								<b>{fmt(sel.precio / tienda.cobros.cuotas)}</b></span
-							><span style="display:flex;align-items:center;gap:8px;color:#2F6B47;font-weight:600"
-								><Icon icon={I.phBank} size={17} />{fmt(
-									sel.precio * (1 - tienda.cobros.transferencia / 100)
-								)} por transferencia ({tienda.cobros.transferencia}% off)</span
-							>
+							>{#if tienda.cobros.transferencia > 0}<span
+									style="display:flex;align-items:center;gap:8px;color:#2F6B47;font-weight:600"
+									><Icon icon={I.phBank} size={17} />{fmt(
+										sel.precio * (1 - tienda.cobros.transferencia / 100)
+									)} por transferencia ({tienda.cobros.transferencia}% off)</span
+								>{/if}
 						</div>
 						{#each sel.opciones as o (o.nombre)}{@const swatch = o.valores.every(
 								(x) => x.color || x.foto
@@ -1149,9 +1154,11 @@
 									subtotal / tienda.cobros.cuotas
 								)}</span
 							>
-							<span style="font-size:13.5px;color:#2F6B47;font-weight:600"
-								>{fmt(subtotal * (1 - tienda.cobros.transferencia / 100))} pagando por transferencia</span
-							>
+							{#if tienda.cobros.transferencia > 0}
+								<span style="font-size:13.5px;color:#2F6B47;font-weight:600"
+									>{fmt(subtotal * (1 - tienda.cobros.transferencia / 100))} pagando por transferencia</span
+								>
+							{/if}
 							<a
 								href="{base}/checkout"
 								style="margin-top:6px;padding:17px;border-radius:2px;background:#1C1A17;color:#F4EFEA;font:600 14.5px 'Instrument Sans';letter-spacing:.04em;text-align:center;text-decoration:none"
@@ -1999,8 +2006,8 @@
 						{tienda.nombre}
 					</div>
 					<p style="margin:12px 0 0;font-size:14px;color:#6E655C;line-height:1.55">
-						{tienda.cobros.cuotas} cuotas sin interés y {tienda.cobros.transferencia}% off por
-						transferencia, en toda la tienda.
+						{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}
+							y {tienda.cobros.transferencia}% off por transferencia{/if}, en toda la tienda.
 					</p>
 				</div>
 				{#each foot as f (f.t)}<div

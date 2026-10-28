@@ -138,7 +138,8 @@ export const actions: Actions = {
 				email: p.email,
 				cupon: cupon?.ok ? p.cupon.toUpperCase() : null,
 				descuentoCupon: descCupon,
-				total
+				total,
+				entrega: p.envio === 'retiro' ? null : { direccion: p.direccion, cp: p.cp }
 			}
 		);
 		if (res === 'sin-stock')

@@ -34,6 +34,12 @@ type Linea struct {
 }
 
 // PedidoNuevo es lo que manda el punto de venta o Crear pedido (components/schemas/PedidoNuevo).
+// Entrega: la dirección y el código postal del envío.
+type Entrega struct {
+	Direccion string `json:"direccion"`
+	CP        string `json:"cp"`
+}
+
 type PedidoNuevo struct {
 	Items   []Linea `json:"items"`
 	Pago    string  `json:"pago"`
@@ -56,6 +62,8 @@ type PedidoNuevo struct {
 	Email         string `json:"-"`
 	CiudadEnvio   string `json:"-"`
 	CodigoPublico string `json:"-"`
+	// Adónde se manda (la tienda online), para la etiqueta de envío.
+	Entrega *Entrega `json:"-"`
 	// Cupón ya validado por la vidriera y lo que descontó (va dentro de Descuento). El uso se cuenta
 	// acá, en la transacción: si se agotó en el medio, ErrCupon.
 	Cupon          string `json:"-"`
@@ -177,13 +185,13 @@ func CrearDesdeProductos(ctx context.Context, pool tx, tiendaID string, n Pedido
 		}
 		return t.QueryRow(ctx, `
 			INSERT INTO pedidos (tienda_id, numero, comprador, canal, pago, estado_pago, envio, estado, facturado,
-				items, subtotal, costo_envio, total, nota, estados_en, ciudad_envio, codigo_publico, cupon)
+				items, subtotal, costo_envio, total, nota, estados_en, ciudad_envio, codigo_publico, cupon, entrega)
 			SELECT $1, coalesce(max(numero), 1000) + 1, $2, $3, $4, $5, $6, $7, false, $8, $9, $11::bigint, $9::bigint + $11::bigint - $12::bigint, $10,
-				jsonb_build_object($7::text, now()), $13, $14, $15
+				jsonb_build_object($7::text, now()), $13, $14, $15, $16
 			FROM pedidos WHERE tienda_id = $1
 			RETURNING numero`,
 			tiendaID, comprador, n.Canal, n.Pago, estadoPago, n.Envio, estado, js, total, n.Nota,
-			n.CostoEnvio, n.Descuento, n.CiudadEnvio, codigo, cupon).Scan(&numero)
+			n.CostoEnvio, n.Descuento, n.CiudadEnvio, codigo, cupon, n.Entrega).Scan(&numero)
 	})
 	return numero, total + n.CostoEnvio - n.Descuento, err
 }

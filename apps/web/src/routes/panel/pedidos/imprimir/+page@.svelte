@@ -6,6 +6,7 @@
 	import Segmentado from '#lib/components/Segmentado.svelte';
 	import Seo from '#lib/components/Seo.svelte';
 	import * as I from '#lib/icons.ts';
+	import EtiquetaEnvio from '#lib/panel/EtiquetaEnvio.svelte';
 	import TarjetaA6 from '#lib/panel/TarjetaA6.svelte';
 	import { EJEMPLO, type Variables } from '#lib/panel/tarjeta.ts';
 
@@ -36,6 +37,12 @@
 			tarjetas.slice(i * 4, i * 4 + 4)
 		)
 	);
+	const etiquetas = $derived(data.que === 'etiquetas' ? data.pedidos : []);
+	const hojasEtiquetas = $derived(
+		Array.from({ length: Math.ceil(etiquetas.length / 4) }, (_, i) =>
+			etiquetas.slice(i * 4, i * 4 + 4)
+		)
+	);
 	/** El dorso de una hoja A4: cada fila con las columnas cambiadas. */
 	const espejo = (h: Una[]) => [h[1], h[0], h[3], h[2]];
 
@@ -63,17 +70,47 @@
 		><Icon icon={I.phArrowLeftBold} size={14} />Pedidos</a
 	>
 	<span class="b-t"
-		>{tarjetas.length}
-		{tarjetas.length === 1 ? 'tarjeta' : 'tarjetas'}</span
+		>{#if data.que === 'etiquetas'}{etiquetas.length}
+			{etiquetas.length === 1 ? 'etiqueta' : 'etiquetas'}{:else}{tarjetas.length}
+			{tarjetas.length === 1 ? 'tarjeta' : 'tarjetas'}{/if}</span
 	>
 	<Segmentado opciones={FORMATOS} value={data.formato} label="Formato" onchange={formato} />
-	<a class="editar" href={resolve('/panel/tarjeta-para-paquetes')}>Editar la tarjeta</a>
-	<button type="button" class="imprimir" onclick={() => print()} disabled={!tarjetas.length}
+	{#if data.que === 'tarjetas'}<a class="editar" href={resolve('/panel/tarjeta-para-paquetes')}
+			>Editar la tarjeta</a
+		>{/if}
+	<button
+		type="button"
+		class="imprimir"
+		onclick={() => print()}
+		disabled={data.que === 'etiquetas' ? !etiquetas.length : !tarjetas.length}
 		><Icon icon={I.phPrinterFill} size={15} />Imprimir</button
 	>
 </div>
 
-{#if !tarjetas.length}
+{#if data.que === 'etiquetas'}
+	{#if !etiquetas.length}
+		<p class="vacio">No encontramos esos pedidos.</p>
+	{:else if data.formato === 'a6'}
+		<div class="hojas">
+			{#each etiquetas as p (p.numero)}
+				<div class="hoja a6"><EtiquetaEnvio {p} remitente={data.remitente} /></div>
+			{/each}
+		</div>
+	{:else}
+		<div class="hojas">
+			{#each hojasEtiquetas as h, i (i)}
+				<div class="hoja a4">
+					{#each h as p (p.numero)}<div class="celda">
+							<EtiquetaEnvio {p} remitente={data.remitente} />
+						</div>{/each}
+					<span class="corte v arriba"></span><span class="corte v abajo"></span><span
+						class="corte h izq"
+					></span><span class="corte h der"></span>
+				</div>
+			{/each}
+		</div>
+	{/if}
+{:else if !tarjetas.length}
 	<p class="vacio">No encontramos esos pedidos.</p>
 {:else if data.formato === 'a6'}
 	<div class="hojas">

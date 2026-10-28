@@ -321,6 +321,32 @@ export function detalleDemo(
 				? new Date(p.creado + 3 * DIA - 3 * 3_600_000).toISOString().slice(0, 10)
 				: null,
 		nota: deHornero(p) && p.numero % 3 === 0 ? NOTAS[p.numero % NOTAS.length] : null,
+		entrega: entregaDe(p),
 		historial
+	};
+}
+
+const CALLES = [
+	'Av. Corrientes',
+	'Gorriti',
+	'Belgrano',
+	'San Martín',
+	'Mitre',
+	'Rivadavia',
+	'Sarmiento',
+	'Urquiza'
+];
+
+/** Adónde va: la que cargó quien compró o, en los de ejemplo, una verosímil (siempre la misma). */
+function entregaDe(p: {
+	numero: number;
+	envio: string;
+	entrega?: { direccion: string; cp: string } | null;
+}) {
+	if (p.envio === 'retiro') return null;
+	if (p.entrega !== undefined) return p.entrega;
+	return {
+		direccion: `${CALLES[p.numero % CALLES.length]} ${100 + ((p.numero * 37) % 4800)}`,
+		cp: String(1000 + ((p.numero * 131) % 8000))
 	};
 }
