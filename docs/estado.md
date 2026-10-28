@@ -6,6 +6,7 @@
 
 | PR | Qué |
 |---|---|
+| #76 | Backoffice del equipo (`/staff`): roles Soporte, Administración y Dueño con su navegación; Inicio (tiendas, MRR, pruebas por vencer, bajas, alertas), Tiendas (lista y ficha con acciones auditadas, notas y "ver como la dueña" en sólo lectura), Consultas (contacto y arrepentimiento con plazo legal, responder por mail), Partners, Facturación y Auditoría. Go: rol `mostrador_staff`, esquema `equipo`, migración 00039. Demo de ejemplo con selector de rol |
 | #1–#9 | Bootstrap, design system (`/componentes`), fundación Go (roles, RLS, outbox), sandbox D1 + contrato, auth, landing parte 1 |
 | #10–#11 | Landing parte 2 y arreglos de mobile |
 | #12–#16 | Legales (arrepentimiento con código ARR), Seguridad, Nosotros, 404, formularios (contacto, partners, novedades), `/migrar`, `/estado` con monitor real (cron de `mostrador-jobs`) |

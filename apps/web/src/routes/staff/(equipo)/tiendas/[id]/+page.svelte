@@ -113,6 +113,21 @@
 			};
 		};
 
+	const NEGOCIO: Record<string, string> = {
+		razonSocial: 'Razón social',
+		cuit: 'CUIT',
+		condicion: 'Condición frente al IVA',
+		telefono: 'Teléfono',
+		direccion: 'Dirección',
+		email: 'Email',
+		whatsapp: 'WhatsApp'
+	};
+	const SUSCRIPCION: Record<string, string> = {
+		authorized: 'Activa',
+		pending: 'Esperando el primer cobro',
+		paused: 'Pausada',
+		cancelled: 'Cancelada'
+	};
 	const QUIEN = {
 		persona: 'La tienda',
 		hornero: 'Hornero',
@@ -160,7 +175,9 @@
 			>
 		</div>
 		{#each Object.entries(f.negocio) as [k, v] (k)}
-			{#if v}<div class="fila"><span class="f-s dato">{k}</span><span>{v}</span></div>{/if}
+			{#if v}<div class="fila">
+					<span class="f-s dato">{NEGOCIO[k] ?? k}</span><span>{v}</span>
+				</div>{/if}
 		{/each}
 		<div class="fila">
 			<span class="f-s dato">Personas en la cuenta</span><span>{f.personas}</span>
@@ -186,7 +203,9 @@
 		</div>
 		<div class="fila">
 			<span class="f-s dato">Suscripción de Mercado Pago</span><span class="corto"
-				>{f.plan.suscripcion ?? 'Sin suscripción'}</span
+				>{f.plan.suscripcion
+					? (SUSCRIPCION[f.plan.suscripcion] ?? f.plan.suscripcion)
+					: 'Sin suscripción'}</span
 			>
 		</div>
 		<div class="fila">
@@ -400,7 +419,6 @@
 	}
 	.dato {
 		flex: 1;
-		text-transform: capitalize;
 	}
 	.corto {
 		max-width: 50%;

@@ -212,7 +212,7 @@
 	}
 	.staff :global(.kpis) {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
 		gap: 12px;
 	}
 	.staff :global(.kpi) {
@@ -354,6 +354,9 @@
 		}
 		.staff :global(.cab h1) {
 			font-size: 26px;
+		}
+		.staff :global(.kpis) {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
 	}
 </style>
