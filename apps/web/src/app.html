@@ -8,8 +8,14 @@
 		<!-- Quien ya eligió cookies no ve el banner (que llega en el HTML, así pinta enseguida). -->
 		<script>
 			try {
-				if (localStorage.getItem('mostrador-cookies'))
-					document.documentElement.dataset.cookies = '1';
+				// Sólo una elección válida (como leerEleccion): 'all', 'nec' o {an, mk}.
+				var c = localStorage.getItem('mostrador-cookies');
+				var ok = c === 'all' || c === 'nec';
+				if (!ok && c) {
+					var o = JSON.parse(c);
+					ok = !!o && typeof o === 'object' && !Array.isArray(o);
+				}
+				if (ok) document.documentElement.dataset.cookies = '1';
 			} catch (e) {}
 		</script>
 		%sveltekit.head%
