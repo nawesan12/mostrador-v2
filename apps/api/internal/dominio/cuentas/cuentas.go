@@ -62,6 +62,9 @@ type Servicio struct {
 	HTTP *http.Client
 	// SesionIA resuelve los tokens de las IA conectadas (paquete ia). nil: no se aceptan.
 	SesionIA func(ctx context.Context, token string) (Datos, error)
+	// SesionEquipo resuelve los tokens de "ver la tienda" del backoffice (paquete equipo): una
+	// sesión de sólo lectura del panel de esa tienda. nil: no se aceptan.
+	SesionEquipo func(ctx context.Context, token string) (Datos, error)
 }
 
 // Cliente es de dónde viene el pedido (para la sesión y los límites).
@@ -277,6 +280,8 @@ type Datos struct {
 	// si esa conexión puede escribir. Las sesiones de personas los dejan vacíos.
 	IA         string `json:"-"`
 	IAAcciones bool   `json:"-"`
+	// Mirada: una persona del equipo viendo el panel como la dueña. Sólo lectura (equipo.SoloLectura).
+	Mirada bool `json:"-"`
 }
 
 // Sesion resuelve el token. Actualiza "visto" como mucho una vez por hora (como en Caja: no escribir

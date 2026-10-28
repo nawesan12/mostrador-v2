@@ -43,12 +43,13 @@ export type Ctx = {
 export type Opcion = { k: string; t: string; marca?: string; icon?: IconData; col?: string };
 
 export type ConfigLista<R extends { id: string }> = {
-	lista: NombreLista;
+	/** Nombre de la lista del panel (el backoffice usa los suyos, con `ruta` en MotorLista). */
+	lista: NombreLista | 'tiendas-equipo';
 	titulo: string;
 	unidad: string;
 	buscar: string;
 	kpi: (l: ListaGenerica) => string;
-	primario: { t: string; icon: IconData; hacer: (ctx: Ctx) => void | Promise<void> };
+	primario?: { t: string; icon: IconData; hacer: (ctx: Ctx) => void | Promise<void> };
 	tip?: (
 		l: ListaGenerica
 	) => { texto: string; boton: string; hacer: (ctx: Ctx) => Promise<void> } | null;

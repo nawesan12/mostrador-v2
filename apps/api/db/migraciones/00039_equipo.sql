@@ -196,23 +196,23 @@ BEGIN
 	END IF;
 	CASE p_accion
 	WHEN 'extender_prueba' THEN
-		IF (p_datos->>'dias')::int NOT BETWEEN 1 AND 30 THEN
+		IF coalesce((p_datos->>'dias')::int, 0) NOT BETWEEN 1 AND 30 THEN
 			RAISE EXCEPTION 'días fuera de rango' USING ERRCODE = '22023';
 		END IF;
 		UPDATE tiendas SET prueba_hasta = greatest(coalesce(prueba_hasta, creada_en + interval '14 days'), now())
 			+ make_interval(days => (p_datos->>'dias')::int) WHERE id = p_tienda;
 	WHEN 'cambiar_plan' THEN
-		IF p_datos->>'plan' NOT IN ('gratis', 'emprende', 'pro', 'negocio') THEN
+		IF coalesce(p_datos->>'plan', '') NOT IN ('gratis', 'emprende', 'pro', 'negocio') THEN
 			RAISE EXCEPTION 'plan desconocido' USING ERRCODE = '22023';
 		END IF;
 		UPDATE tiendas SET plan = p_datos->>'plan' WHERE id = p_tienda;
 	WHEN 'aplicar_credito' THEN
-		IF (p_datos->>'monto')::bigint NOT BETWEEN 100 AND 150000000 THEN
+		IF coalesce((p_datos->>'monto')::bigint, 0) NOT BETWEEN 100 AND 150000000 THEN
 			RAISE EXCEPTION 'monto fuera de rango' USING ERRCODE = '22023';
 		END IF;
 		UPDATE tiendas SET credito = credito + (p_datos->>'monto')::bigint WHERE id = p_tienda;
 	WHEN 'regalar_pack' THEN
-		IF (p_datos->>'cantidad')::int NOT BETWEEN 1 AND 5 THEN
+		IF coalesce((p_datos->>'cantidad')::int, 0) NOT BETWEEN 1 AND 5 THEN
 			RAISE EXCEPTION 'cantidad fuera de rango' USING ERRCODE = '22023';
 		END IF;
 		UPDATE tiendas SET packs = packs || jsonb_build_object(v_mes, coalesce((packs->>v_mes)::int, 0) + (p_datos->>'cantidad')::int)

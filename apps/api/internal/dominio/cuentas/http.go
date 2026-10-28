@@ -46,6 +46,9 @@ func (s *Servicio) Autenticar(next http.Handler) http.Handler {
 			if errors.Is(err, ErrSinSesion) && s.SesionIA != nil {
 				d, err = s.SesionIA(r.Context(), t)
 			}
+			if errors.Is(err, ErrSinSesion) && s.SesionEquipo != nil {
+				d, err = s.SesionEquipo(r.Context(), t)
+			}
 			if err == nil {
 				r = r.WithContext(context.WithValue(r.Context(), claveCtx{}, d))
 			} else if !errors.Is(err, ErrSinSesion) {

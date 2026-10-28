@@ -24,7 +24,9 @@
 		abrir,
 		extra,
 		antes,
-		despues
+		despues,
+		ruta = undefined,
+		exportar = true
 	}: {
 		config: ConfigLista<R>;
 		lista: ListaGenerica;
@@ -36,7 +38,12 @@
 		antes?: Snippet;
 		/** Algo debajo de la lista. */
 		despues?: Snippet;
+		/** De dónde se piden las ventanas y adónde van las acciones (por defecto, la del panel). */
+		ruta?: string;
+		/** Mostrar "Exportar" (el backoffice del equipo no exporta datos personales). */
+		exportar?: boolean;
 	} = $props();
+	const base = $derived(ruta ?? `/panel/listas/${config.lista}`);
 	const ui = getUi();
 	const f = $derived(leer(page.url.searchParams));
 	const vista = $derived(
@@ -93,7 +100,7 @@
 		const params = escribir(f);
 		params.set('desde', String(desde));
 		params.set('cuantos', String(VENTANA));
-		const r = await fetch(`/panel/listas/${config.lista}?${params}`);
+		const r = await fetch(`${base}?${params}`);
 		if (!r.ok) return pedidas.delete(desde);
 		const l = (await r.json()) as ListaGenerica;
 		const copia = filas.slice();
@@ -120,7 +127,7 @@
 		ui,
 		refrescar: () => invalidateAll(),
 		async accion(ids, accion, valor) {
-			const r = await fetch(`/panel/listas/${config.lista}`, {
+			const r = await fetch(base, {
 				method: 'POST',
 				headers: { 'content-type': 'application/json' },
 				body: JSON.stringify({ ids, accion, valor })
@@ -203,9 +210,9 @@
 			<div class="c-s">{config.kpi(lista)}</div>
 		</div>
 		<!-- eslint-disable svelte/no-navigation-without-resolve -- la descarga del CSV no es una navegación -->
-		<a
+		{#if exportar}<a
 			class="secundario"
-			href="/panel/listas/{config.lista}/exportar?{escribir(f)}"
+			href="{base}/exportar?{escribir(f)}"
 			download
 			onclick={() =>
 				ui.toast({
@@ -213,12 +220,15 @@
 					title: `Exportando ${n} ${config.unidad}`,
 					desc: 'Con los filtros aplicados · en CSV para Excel'
 				})}><Icon icon={I.phDownloadSimpleBold} size={14} />Exportar</a
-		>
+			>{/if}
 		<!-- eslint-enable svelte/no-navigation-without-resolve -->
 		{@render extra?.()}
-		<button type="button" class="primario" onclick={() => config.primario.hacer(ctx)}
-			><Icon icon={config.primario.icon} size={15} />{config.primario.t}</button
-		>
+		{#if config.primario}
+			{@const p = config.primario}
+			<button type="button" class="primario" onclick={() => p.hacer(ctx)}
+				><Icon icon={p.icon} size={15} />{p.t}</button
+			>
+		{/if}
 	</div>
 
 	{@render antes?.()}

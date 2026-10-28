@@ -70,7 +70,7 @@ func (w *Worker) Pasada(ctx context.Context) (int, error) {
 	tomados := 0
 	err := w.Pool.EnTx(ctx, func(tx pgx.Tx) error {
 		filas, err := tx.Query(ctx, `
-			SELECT id, tienda_id, tipo, datos, intentos FROM outbox
+			SELECT id, coalesce(tienda_id::text, ''), tipo, datos, intentos FROM outbox
 			WHERE publicado_en IS NULL AND proximo_intento <= now()
 			ORDER BY proximo_intento, id
 			LIMIT $1
