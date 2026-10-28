@@ -43,7 +43,7 @@
 		<div class="revocar">
 			{#if form?.tramite}
 				<div class="exito" role="status">
-					<img src="/hornero/exito.png" alt="" width="88" height="88" />
+					<img src="/hornero/exito.webp" alt="" width="88" height="88" />
 					<div>
 						<b>Recibimos tu pedido</b>
 						<p>

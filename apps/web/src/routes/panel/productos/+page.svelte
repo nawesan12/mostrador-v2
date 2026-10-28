@@ -236,7 +236,7 @@
 	{#snippet antes()}
 		<div class="foto">
 			<div class="arcos"></div>
-			<img src="/hornero/foto.png" alt="" width="64" height="64" />
+			<img src="/hornero/foto.webp" alt="" width="64" height="64" />
 			<div class="f-txt">
 				<div class="f-t">Cargá productos con una foto</div>
 				<div class="f-d">

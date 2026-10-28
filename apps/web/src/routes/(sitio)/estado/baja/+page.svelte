@@ -15,7 +15,7 @@
 <div class="ancho">
 	<div class="tarjeta">
 		<img
-			src={ok ? '/hornero/saludo.png' : '/hornero/desenchufado.png'}
+			src={ok ? '/hornero/saludo.webp' : '/hornero/desenchufado.webp'}
 			alt=""
 			width="110"
 			height="110"

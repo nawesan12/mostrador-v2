@@ -21,7 +21,7 @@
 <header>
 	<div class="in">
 		<a class="marca" href="/" aria-label="Mostrador, inicio"
-			><img src="/wordmark-brown.png" alt="mostrador" width="94" height="20" /></a
+			><img src="/wordmark-brown.webp" alt="mostrador" width="94" height="20" /></a
 		>
 		<nav aria-label="Secciones">
 			{#each NAV as [href, t] (href)}

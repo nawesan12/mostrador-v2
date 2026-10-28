@@ -136,7 +136,7 @@
 		</div>
 		<div class="notas" use:anim={'reveal'}>
 			<div class="nota">
-				<img src="/hornero/avatar.png" alt="" width="40" height="40" />
+				<img src="/hornero/avatar.webp" alt="" width="40" height="40" />
 				<div>
 					<b>¿Qué cuenta como respuesta con IA?</b>
 					<div>

@@ -56,7 +56,7 @@
 <footer>
 	<div class="cols">
 		<div class="marca">
-			<div class="logo"><Marca alto={18} /><img src="/wordmark-brown.png" alt="mostrador" /></div>
+			<div class="logo"><Marca alto={18} /><img src="/wordmark-brown.webp" alt="mostrador" /></div>
 			<div class="lema">Hecho en Argentina para negocios argentinos.</div>
 		</div>
 		{#each COLUMNAS as [titulo, links] (titulo)}

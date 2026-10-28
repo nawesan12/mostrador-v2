@@ -35,7 +35,7 @@
 	<div class="d-arcos" data-px="0.3"></div>
 	<div class="d-in">
 		<a class="pildora" href="#hornero" use:anim={'rise'}>
-			<span class="avatar"><img src="/hornero/avatar.png" alt="" /></span>Conocé a Hornero, tu
+			<span class="avatar"><img src="/hornero/avatar.webp" alt="" /></span>Conocé a Hornero, tu
 			asistente con IA<Icon icon={I.phArrowRight} size={14} />
 		</a>
 		<h1 use:anim={{ t: 'rise', delay: 80 }}>
@@ -172,7 +172,7 @@
 			<div class="vend-d" data-px="-0.22"><Vendido /></div>
 			<div class="ave-d" data-px="-0.1">
 				<div class="flota" use:anim={{ t: 'float', dur: 3800 }}>
-					<img src="/hornero/saludo.png" alt="Hornero saludando" />
+					<img src="/hornero/saludo.webp" alt="Hornero saludando" />
 				</div>
 			</div>
 		</div>
@@ -236,7 +236,7 @@
 				</div>
 			</div>
 			<div class="m-hornero" use:anim={{ t: 'float', dur: 4200, delay: 400 }}>
-				<span class="m-av"><img src="/hornero/avatar.png" alt="Hornero" /></span>
+				<span class="m-av"><img src="/hornero/avatar.webp" alt="Hornero" /></span>
 				<span class="m-hor-txt"
 					><b>Hornero</b> respondió 41 consultas<br /><span>mientras atendías el local</span></span
 				>

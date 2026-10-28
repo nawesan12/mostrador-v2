@@ -85,7 +85,7 @@
 	</div>
 
 	<div class="caja" use:anim={{ t: 'rise', delay: 45 }}>
-		<img src="/caja/05-exito.png" alt="Caja" width="52" height="52" />
+		<img src="/caja/05-exito.webp" alt="Caja" width="52" height="52" />
 		{#if data.caja}
 			<div class="cj-txt">
 				<div class="cj-t">

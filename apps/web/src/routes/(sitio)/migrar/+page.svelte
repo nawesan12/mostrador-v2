@@ -159,7 +159,7 @@
 						perdés ni una venta en el camino.
 					</p>
 				</div>
-				<img src="/hornero/caja.png" alt="" width="260" height="260" />
+				<img src="/hornero/caja.webp" alt="" width="260" height="260" />
 			</div>
 			<div class="tabs" role="group" aria-label="Plataforma de origen" bind:this={tabs}>
 				{#each ORIGENES as og, i (og.id)}

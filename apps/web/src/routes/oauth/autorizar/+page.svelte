@@ -32,7 +32,7 @@
 <div class="pag">
 	<div class="der">
 		<div class="arriba">
-			<a href={resolve('/')}><img src="/wordmark-brown.png" alt="mostrador" class="marca" /></a>
+			<a href={resolve('/')}><img src="/wordmark-brown.webp" alt="mostrador" class="marca" /></a>
 			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- página pública del centro de ayuda -->
 			<a class="ayuda" href="/ayuda"><Icon icon={phQuestion} size={16} />Ayuda</a>
 		</div>
@@ -40,7 +40,7 @@
 		<div class="centro">
 			<div class="caja">
 				<form method="POST" class="col">
-					<img src="/hornero/seguridad.png" alt="" class="ave-chica" />
+					<img src="/hornero/seguridad.webp" alt="" class="ave-chica" />
 					<div>
 						<h1>¿Conectar {data.ia.nombre} con tu&nbsp;Mostrador?</h1>
 						<p class="bajada">
@@ -106,7 +106,7 @@
 			<span>Ventas</span><span>Pedidos</span><span>Stock</span><span>Cupones</span>
 		</div>
 		<div class="medio">
-			<img class="ave" src="/hornero/saludo.png" alt="" />
+			<img class="ave" src="/hornero/saludo.webp" alt="" />
 			<div class="lema">Preguntale a tu IA cómo viene el&nbsp;día.</div>
 		</div>
 		<div class="garantias">

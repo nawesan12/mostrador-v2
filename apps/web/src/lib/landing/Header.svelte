@@ -87,7 +87,7 @@
 	<div class="fila">
 		<a href={resolve('/')} class="logo" aria-label="Mostrador, inicio">
 			<Marca />
-			<img src="/wordmark-brown.png" alt="mostrador" />
+			<img src="/wordmark-brown.webp" alt="mostrador" />
 		</a>
 		<nav class="nav" aria-label="Secciones">
 			{#each NAV as [h, t] (h)}
@@ -133,7 +133,7 @@
 			</div>
 			<a href="#hornero" class="hornero" onclick={() => (l.menu = false)} use:entrar={MENU.length}>
 				<span class="arcos"></span>
-				<img src="/hornero/saludo.png" alt="" />
+				<img src="/hornero/saludo.webp" alt="" />
 				<span class="h-txt"
 					><span class="t">Conocé a Hornero</span><span class="d"
 						>Atiende y vende por vos las 24 horas</span

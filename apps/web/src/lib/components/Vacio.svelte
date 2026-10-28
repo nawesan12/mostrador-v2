@@ -11,7 +11,7 @@
 </script>
 
 <div class="vacio">
-	<div class="ave"><img src="/hornero/{hornero}.png" alt="" width="96" height="96" /></div>
+	<div class="ave"><img src="/hornero/{hornero}.webp" alt="" width="96" height="96" /></div>
 	<div class="titulo">{titulo}</div>
 	{#if texto}<div class="texto">{texto}</div>{/if}
 	{#if children}<div class="acciones">{@render children()}</div>{/if}

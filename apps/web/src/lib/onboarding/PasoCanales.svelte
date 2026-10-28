@@ -45,7 +45,7 @@
 	{o.conectadas} de {CONEXIONES.length} conectadas. Podés sumar más después desde Integraciones.
 </div>
 <div class="caja">
-	<img src="/caja/01-saludo.png" alt="Caja" width="64" height="64" />
+	<img src="/caja/01-saludo.webp" alt="Caja" width="64" height="64" />
 	<div class="cj-txt">
 		<div class="cj-t">
 			<b>Sumá Caja y sabé cuánto ganás de verdad</b><span>3 MESES DE PRO MAX GRATIS</span>

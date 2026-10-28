@@ -111,7 +111,7 @@
 					</div>
 				</div>
 				<div class="ia-ave" use:anim={{ t: 'float', dur: 3800 }}>
-					<img src="/hornero/hablando.png" alt="Hornero" />
+					<img src="/hornero/hablando.webp" alt="Hornero" />
 				</div>
 			</div>
 

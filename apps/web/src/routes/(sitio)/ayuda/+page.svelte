@@ -51,7 +51,7 @@
 <section class="hero">
 	<div class="ancho">
 		<div class="h-in">
-			<img src="/hornero/lupa.png" alt="" width="110" height="110" />
+			<img src="/hornero/lupa.webp" alt="" width="110" height="110" />
 			<h1>¿En qué te ayudamos?</h1>
 			<form
 				class="buscador"

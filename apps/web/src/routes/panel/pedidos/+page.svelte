@@ -726,7 +726,7 @@
 			{#if !lista.total}
 				<div class="vacio">
 					<div>
-						<img src="/hornero/lupa.png" alt="" width="110" height="110" />
+						<img src="/hornero/lupa.webp" alt="" width="110" height="110" />
 						<div class="v-t">Ningún pedido con esos filtros</div>
 						<button type="button" class="v-b" onclick={limpiar}>Limpiar filtros</button>
 					</div>

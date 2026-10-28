@@ -94,7 +94,7 @@
 				<button>Preguntar</button>
 			</form>
 		</div>
-		<img src="/hornero/lupa.png" alt="" width="130" height="130" />
+		<img src="/hornero/lupa.webp" alt="" width="130" height="130" />
 	</div>
 
 	<div class="guias" use:anim={{ t: 'rise', delay: 60 }}>

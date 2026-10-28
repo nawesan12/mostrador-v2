@@ -468,7 +468,7 @@
 
 	{#if data.consejo}
 		<div class="consejo" use:anim={{ t: 'rise', delay: 90 }}>
-			<img src="/hornero/grafico.png" alt="" width="56" height="56" />
+			<img src="/hornero/grafico.webp" alt="" width="56" height="56" />
 			<div class="co-txt">
 				<div class="co-t">{data.consejo.titulo}</div>
 				<div class="co-d">{data.consejo.texto}</div>
@@ -874,7 +874,7 @@
 		</div>
 		{#if !lista.length}
 			<div class="vacio">
-				<img src="/hornero/lupa.png" alt="" width="100" height="100" />
+				<img src="/hornero/lupa.webp" alt="" width="100" height="100" />
 				<div>No hay cupones con ese filtro</div>
 			</div>
 		{/if}
@@ -1856,7 +1856,7 @@
 	.grano {
 		position: absolute;
 		inset: 0;
-		background: url('/textura/grain.png');
+		background: url('/textura/grain.webp');
 		opacity: 0.15;
 		pointer-events: none;
 	}

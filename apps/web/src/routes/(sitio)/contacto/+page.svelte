@@ -85,7 +85,7 @@
 		<div class="tarjeta">
 			{#if enviado}
 				<div class="exito" role="status">
-					<img src="/hornero/celebrando.png" alt="" width="140" height="140" />
+					<img src="/hornero/celebrando.webp" alt="" width="140" height="140" />
 					<div class="ex-t">¡Listo, {form && 'nombre' in form ? form.nombre : ''}!</div>
 					<p>Te respondemos en menos de 24 h. Mientras tanto, podés crear tu tienda&nbsp;gratis.</p>
 					<div class="ex-acc">

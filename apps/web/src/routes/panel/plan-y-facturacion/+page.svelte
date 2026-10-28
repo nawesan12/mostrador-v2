@@ -365,7 +365,7 @@
 	</div>
 	{#if paso === 0}
 		<div class="m-cab">
-			<img src="/hornero/preocupado.png" alt="" width="64" height="64" />
+			<img src="/hornero/preocupado.webp" alt="" width="64" height="64" />
 			<div>
 				<b>¿Por qué te vas?</b>
 				<div class="m-s">Nos ayuda a mejorar. Es opcional.</div>

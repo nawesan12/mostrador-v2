@@ -141,7 +141,7 @@
 			<div class="cab">
 				<div class="arcos"></div>
 				<div class="cab-in">
-					<div class="av"><img src="/hornero/avatar.png" alt="" /></div>
+					<div class="av"><img src="/hornero/avatar.webp" alt="" /></div>
 					<div class="quien">
 						<Dialog.Title class="nombre">Hornero</Dialog.Title>
 						<div class="estado"><span class="punto"></span>Tu asistente · en línea</div>

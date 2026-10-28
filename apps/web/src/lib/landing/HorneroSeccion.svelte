@@ -114,7 +114,7 @@
 					><path fill="#fff" d={ARCO}></path></svg
 				>
 				<div class="ave" data-px="-0.08" use:anim={{ t: 'float', dur: 4200 }}>
-					<div class="ave-in"><img src="/hornero/saludo.png" alt="Hornero" /></div>
+					<div class="ave-in"><img src="/hornero/saludo.webp" alt="Hornero" /></div>
 				</div>
 				{#each METRICAS as m, i (m.b)}
 					<div
@@ -149,7 +149,7 @@
 						<div class="sub">Cliente nueva · llegó por Instagram</div>
 					</div>
 					<span class="atiende"
-						><span class="av"><img src="/hornero/avatar.png" alt="Hornero" /></span>Hornero
+						><span class="av"><img src="/hornero/avatar.webp" alt="Hornero" /></span>Hornero
 						atendiendo</span
 					>
 				</div>
