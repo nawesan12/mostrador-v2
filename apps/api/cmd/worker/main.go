@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/avisos"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/equipo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/facturacion"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ia"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ventas"
@@ -89,7 +90,7 @@ func correr() error {
 	av := &avisos.Servicio{Pool: app, Correo: mails, Sitio: cfg.Sitio}
 	// Aviso de cada venta al Telegram de la dueña. Sin token, el manejador no manda nada.
 	tg := &telegram.Servicio{Pool: app, Bot: &telegram.Bot{Token: cfg.TelegramToken}}
-	for _, ms := range []map[string]outbox.Manejador{mp.Manejadores(), ml.Manejadores(), av.Manejadores(), mc.Manejadores(), tg.Manejadores()} {
+	for _, ms := range []map[string]outbox.Manejador{mp.Manejadores(), ml.Manejadores(), av.Manejadores(), mc.Manejadores(), tg.Manejadores(), equipo.Manejadores(mails)} {
 		for tipo, m := range ms {
 			w.Manejadores[tipo] = m
 		}

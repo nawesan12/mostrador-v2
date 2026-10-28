@@ -5,6 +5,9 @@
 //	mostradorctl partner-demo <email>
 //	                         demo del panel de partners para una cuenta que ya existe (sólo local:
 //	                         superusuario de MOSTRADOR_BASE_DE_DATOS_ADMIN sobre la base del migrador)
+//	mostradorctl equipo-alta <email> <nombre> <rol>
+//	                         da de alta (o actualiza) a alguien del equipo para /staff; la clave sale de
+//	                         MOSTRADOR_CLAVE_NUEVA y el rol es soporte, administracion o duenio
 //
 // Las claves de los roles salen de MOSTRADOR_CLAVE_<ROL> (vacías en desarrollo).
 package main
@@ -19,6 +22,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/partners"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/config"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
@@ -26,7 +30,7 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Fprintln(os.Stderr, "uso: mostradorctl bootstrap|migrar|partner-demo <email>")
+		fmt.Fprintln(os.Stderr, "uso: mostradorctl bootstrap|migrar|partner-demo <email>|equipo-alta")
 		os.Exit(2)
 	}
 	if err := correr(os.Args[1]); err != nil {
@@ -94,8 +98,42 @@ func correr(cmd string) error {
 			return err
 		}
 		fmt.Println("demo de partners lista: /partners/panel con", os.Args[2])
+	case "equipo-alta":
+		if len(os.Args) != 5 {
+			return fmt.Errorf("uso: mostradorctl equipo-alta <email> <nombre> <soporte|administracion|duenio>")
+		}
+		if err := cfg.Exigir("BaseMigrador"); err != nil {
+			return err
+		}
+		return altaEquipo(ctx, cfg.BaseMigrador, os.Args[2], os.Args[3], os.Args[4], os.Getenv("MOSTRADOR_CLAVE_NUEVA"))
 	default:
 		return fmt.Errorf("comando desconocido %q", cmd)
 	}
 	return nil
+}
+
+// altaEquipo crea o actualiza a una persona del equipo (con el migrador: la API no puede).
+func altaEquipo(ctx context.Context, url, email, nombre, rol, clave string) error {
+	if rol != "soporte" && rol != "administracion" && rol != "duenio" {
+		return fmt.Errorf("rol %q: tiene que ser soporte, administracion o duenio", rol)
+	}
+	if len([]rune(clave)) < 12 {
+		return fmt.Errorf("poné la clave en MOSTRADOR_CLAVE_NUEVA (al menos 12 caracteres)")
+	}
+	hash, err := cuentas.HashClave(clave)
+	if err != nil {
+		return err
+	}
+	conn, err := pgx.Connect(ctx, url)
+	if err != nil {
+		return err
+	}
+	defer conn.Close(ctx)
+	_, err = conn.Exec(ctx, `INSERT INTO equipo.miembros (email, nombre, clave_hash, rol) VALUES (lower($1), $2, $3, $4)
+		ON CONFLICT (email) DO UPDATE SET nombre = excluded.nombre, clave_hash = excluded.clave_hash, rol = excluded.rol, activo = true`,
+		strings.TrimSpace(email), strings.TrimSpace(nombre), hash, rol)
+	if err == nil {
+		fmt.Println("listo:", email, "es", rol)
+	}
+	return err
 }

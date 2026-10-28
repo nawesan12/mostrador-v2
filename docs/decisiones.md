@@ -448,3 +448,13 @@ URL, para que no quede en el historial ni en logs.
 - Sin diseño en el handoff: el panel usa las piezas del panel de la tienda (barra de arriba, pestañas y
   tarjetas de Configuración, KPIs de Cupones, filas de MotorLista, Hoja, Modal, Segmentado, Alerta,
   Vacío con Hornero) y la tarjeta del directorio de /partners para la vista previa del perfil.
+
+
+## 27. Backoffice del equipo (/staff)
+
+- **Roles y permisos:** Soporte (lee tiendas, notas, extiende pruebas, regala packs, responde consultas), Administración (además plan, crédito, pausar, partners, facturación y auditoría) y Dueño (todo, incluido cerrar). La matriz vive en Go (`equipo.Permisos`), en SQL (`equipo.permisos`) y en la web (`lib/staff/permisos.ts`); los tests comparan las tres contra `apps/api/internal/dominio/equipo/testdata/permisos.json`.
+- **Base de datos:** la API entra al backoffice con el rol `mostrador_staff` (pool aparte, `MOSTRADOR_BASE_STAFF`): lee todas las tiendas por políticas propias y sólo escribe en el esquema `equipo` (sesiones, notas, auditoría, respuestas). Los cambios a una tienda pasan por `equipo.accion_tienda` (SECURITY DEFINER), que chequea el permiso y anota en las dos auditorías en la misma transacción. RLS no se saltea en ningún caso.
+- **Sesiones separadas:** la del equipo tiene su cookie (`__Host-mostrador_equipo`) y su tabla; un token de tienda no entra a `/v1/equipo/*` ni al revés. Las altas las hace `mostradorctl equipo-alta <email> <nombre> <rol>` con el migrador.
+- **Ver la tienda como la dueña:** crea una mirada de 30 minutos con un token de sólo lectura; el panel muestra un aviso fijo y Go rechaza cualquier escritura (`equipo.SoloLectura`). Entrar a ver queda en la auditoría.
+- **Demo:** `/staff` muestra un backoffice de ejemplo con datos inventados (no toca los sandboxes de los visitantes), con selector de rol para ver cómo cambia la navegación; las acciones responden "en la demo no se aplica".
+- **Partners:** aprobar o rechazar una postulación queda acá; el alta del partner con nivel, link y cupón la hace el panel de partners (PR #75) cuando entren los dos.

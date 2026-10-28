@@ -14,6 +14,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cupones"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/devoluciones"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/equipo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/facturacion"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/finanzas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/formularios"
@@ -63,6 +64,8 @@ type Dependencias struct {
 	Correo correo.Correo
 	// Hornero en Telegram: vínculo del chat (panel) y lo que pide el bot por el BFF.
 	Telegram *telegram.Servicio
+	// Backoffice del equipo (/v1/equipo/*) y "ver la tienda" de sólo lectura. nil: no se monta.
+	Equipo *equipo.Servicio
 }
 
 // Nuevo devuelve el handler raíz de la API.
@@ -104,6 +107,10 @@ func Nuevo(d Dependencias) http.Handler {
 				d.Cuentas.SesionIA = d.IA.ParaCuentas
 				d.IA.Rutas(mux, func(r *http.Request) string { return cuentas.ClienteDe(r, d.ClaveBFF).IP })
 				conGuardia = d.IA.Guardia(mux)
+			}
+			if d.Equipo != nil {
+				d.Cuentas.SesionEquipo = d.Equipo.ParaCuentas
+				conGuardia = equipo.SoloLectura(conGuardia)
 			}
 			h = d.Cuentas.Autenticar(conGuardia)
 		}
@@ -168,6 +175,9 @@ func Nuevo(d Dependencias) http.Handler {
 		}
 		if d.Formularios != nil {
 			d.Formularios.Rutas(mux, ip)
+		}
+		if d.Equipo != nil {
+			d.Equipo.Rutas(mux)
 		}
 	}
 	return recuperar(d.Log, h)

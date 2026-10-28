@@ -5,6 +5,10 @@ declare global {
 			sandbox: import('#lib/server/sandbox/sandbox.ts').Sandbox | null;
 			/** Token de la sesión de la API Go (DATA_SOURCE=api), leído de la cookie httpOnly. */
 			token: string | null;
+			/** Token de la sesión del equipo (/staff, DATA_SOURCE=api), leído de su cookie. */
+			equipo: string | null;
+			/** El panel abierto por alguien del equipo en sólo lectura ("ver la tienda"). */
+			mirada: boolean;
 		}
 		interface Error {
 			message: string;

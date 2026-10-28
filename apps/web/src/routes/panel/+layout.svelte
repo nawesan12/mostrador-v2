@@ -63,6 +63,14 @@
 	<meta name="theme-color" content={shell.tema === 'dark' ? '#22140d' : '#f7f1ea'} />
 </svelte:head>
 
+{#if data.mirada}
+	<form class="mirada" method="POST" action="/staff/mirada/salir">
+		<span
+			>Estás viendo {data.tienda.nombre} como la ve la dueña, en modo lectura: no se puede cambiar nada.</span
+		>
+		<button type="submit">Volver al equipo</button>
+	</form>
+{/if}
 <div class="panel" data-theme={shell.tema}>
 	<Rail area={donde.area} foto={data.demo ? '1545262722-9e0d80a0bc01' : null} {iniciales} />
 	<BarraLateral
@@ -93,6 +101,30 @@
 </div>
 
 <style>
+	.mirada {
+		position: sticky;
+		top: 0;
+		z-index: 60;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-wrap: wrap;
+		gap: 8px 14px;
+		padding: 9px 16px;
+		background: #2a140c;
+		color: #fbf7f2;
+		font-size: 13.5px;
+		text-align: center;
+	}
+	.mirada button {
+		padding: 6px 14px;
+		border-radius: 999px;
+		border: 1px solid rgba(251, 247, 242, 0.3);
+		background: transparent;
+		color: inherit;
+		font: inherit;
+		font-weight: 600;
+	}
 	.panel {
 		display: flex;
 		min-height: 100vh;

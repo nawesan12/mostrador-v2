@@ -1,0 +1,44 @@
+{
+	"soporte": [
+		"tiendas.ver",
+		"tiendas.mirar",
+		"tiendas.notas",
+		"tiendas.prueba",
+		"tiendas.pack",
+		"consultas.ver",
+		"consultas.responder"
+	],
+	"administracion": [
+		"tiendas.ver",
+		"tiendas.mirar",
+		"tiendas.notas",
+		"tiendas.prueba",
+		"tiendas.pack",
+		"tiendas.plan",
+		"tiendas.credito",
+		"tiendas.pausar",
+		"consultas.ver",
+		"consultas.responder",
+		"partners.ver",
+		"partners.decidir",
+		"facturacion.ver",
+		"auditoria.ver"
+	],
+	"duenio": [
+		"tiendas.ver",
+		"tiendas.mirar",
+		"tiendas.notas",
+		"tiendas.prueba",
+		"tiendas.pack",
+		"tiendas.plan",
+		"tiendas.credito",
+		"tiendas.pausar",
+		"tiendas.cerrar",
+		"consultas.ver",
+		"consultas.responder",
+		"partners.ver",
+		"partners.decidir",
+		"facturacion.ver",
+		"auditoria.ver"
+	]
+}

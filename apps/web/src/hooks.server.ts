@@ -4,6 +4,7 @@ import { env } from 'cloudflare:workers';
 import { csrfForbidden } from '#lib/server/csrf.ts';
 import { COOKIE, dbSandbox, leer } from '#lib/server/sandbox/sandbox.ts';
 import { COOKIE_SESION } from '#lib/server/auth/sesion.ts';
+import { COOKIE_EQUIPO, COOKIE_MIRADA } from '#lib/server/staff/index.ts';
 
 /**
  * Rutas que usan el sandbox de la demo: sólo ahí se lee D1 (la landing no gasta lecturas).
@@ -62,9 +63,20 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const started = Date.now();
 	event.locals.sandbox = null;
 	event.locals.token = null;
+	event.locals.equipo = null;
+	event.locals.mirada = false;
 	if (String(env.DATA_SOURCE) === 'api') {
 		// La sesión la valida Go en cada pedido del panel; acá sólo se lee la cookie.
 		event.locals.token = event.cookies.get(COOKIE_SESION) ?? null;
+		if (event.url.pathname.startsWith('/staff'))
+			event.locals.equipo = event.cookies.get(COOKIE_EQUIPO) ?? null;
+		// Alguien del equipo viendo una tienda: el panel usa ese token de sólo lectura (Go rechaza
+		// cualquier escritura con él) y muestra el aviso fijo.
+		const mirada = event.cookies.get(COOKIE_MIRADA);
+		if (mirada && event.url.pathname.startsWith('/panel')) {
+			event.locals.token = mirada;
+			event.locals.mirada = true;
+		}
 	} else if (CON_SANDBOX.test(event.url.pathname)) {
 		event.locals.sandbox = await leer(dbSandbox(env.SANDBOX), event.cookies.get(COOKIE));
 	}

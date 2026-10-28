@@ -13,6 +13,7 @@ import (
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/arrepentimiento"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/equipo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/facturacion"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/formularios"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ia"
@@ -70,6 +71,16 @@ func correr() error {
 		return err
 	}
 	defer app.Close()
+	// Backoffice del equipo: con el rol mostrador_staff (lee todas las tiendas, no escribe en ninguna).
+	var eq *equipo.Servicio
+	if cfg.BaseStaff != "" {
+		staff, err := db.Abrir(ctx, cfg.BaseStaff)
+		if err != nil {
+			return err
+		}
+		defer staff.Close()
+		eq = &equipo.Servicio{Staff: staff, App: app, Sitio: cfg.Sitio, ClaveBFF: cfg.ClaveBFF}
+	}
 
 	srv := &http.Server{
 		Addr: cfg.Direccion,
@@ -89,6 +100,7 @@ func correr() error {
 			IA:          &ia.Servicio{Pool: app},
 			Facturacion: facturacionDe(app, cfg.ClaveCifrado),
 			Telegram:    &telegram.Servicio{Pool: app},
+			Equipo:      eq,
 		}),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
