@@ -246,6 +246,10 @@ func TestTiendaConVariantes(t *testing.T) {
 	ctx := context.Background()
 	b := pruebadb.Nueva(t)
 	luna := pruebadb.CrearTienda(t, b.App, "luna")
+	// Con datos para transferir (sin ellos la tienda no ofrece transferencia).
+	if err := configuracion.GuardarNegocio(ctx, b.App, luna, configuracion.Negocio{Nombre: "Luna", Alias: "luna.tienda"}); err != nil {
+		t.Fatal(err)
+	}
 	pruebadb.CrearTienda(t, b.App, "sol")
 	cinco, uno, precio, no := 5, 1, int64(26000), false
 	p, err := listas.Guardar(ctx, b.App, luna, "", listas.Editable{Nombre: "Buzo frisa", Precio: 24000,
