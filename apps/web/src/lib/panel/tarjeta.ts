@@ -95,7 +95,7 @@ export function completar(texto: string, v: Variables) {
 /** El ejemplo de la vista previa (el pedido de Lucía de Imprimibles). */
 export const EJEMPLO: Variables = {
 	nombre: 'Lucía Pérez',
-	fecha: new Date(2026, 9, 20),
+	fecha: new Date('2026-10-20T12:00:00-03:00'),
 	productos: ['Mate de calabaza', 'Bombilla de alpaca'],
 	pedido: 1048
 };
