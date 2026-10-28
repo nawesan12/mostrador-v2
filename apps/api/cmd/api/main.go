@@ -143,7 +143,7 @@ func facturacionDe(app *db.Pool, claveCifrado string) *facturacion.Servicio {
 // importacionDe arma la importación con las fuentes que hay. Sin clave de cifrado se puede importar
 // igual desde lo que no pide credencial (una tienda pública, un CSV).
 func importacionDe(app *db.Pool, claveCifrado string) *importacion.Servicio {
-	s := &importacion.Servicio{Pool: app, Fuentes: importacion.Fuentes()}
+	s := &importacion.Servicio{Pool: app, Fuentes: importacion.Fuentes(importacion.Dependencias{})}
 	if claveCifrado != "" {
 		if c, err := cifrado.Nuevo(claveCifrado); err == nil {
 			s.Cifra = c

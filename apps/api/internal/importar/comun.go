@@ -93,6 +93,9 @@ type Importado struct {
 	Producto  Producto
 	Recortado bool
 	Estimado  bool
+	// Externo es el id en la plataforma vieja y URL el path de su ficha allá (para la redirección
+	// 301): los pone cada plataforma, no Ajustar.
+	Externo, URL string
 }
 
 // Resultado es lo de una página (y lo que comparan los casos compartidos con la web).

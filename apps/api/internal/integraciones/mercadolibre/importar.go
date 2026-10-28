@@ -3,9 +3,13 @@ package mercadolibre
 import (
 	"context"
 	"fmt"
+	"math"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
+
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/importar"
 )
 
 // Importar las publicaciones que la tienda ya tiene en Mercado Libre (la migración). Es al revés de
@@ -128,4 +132,77 @@ func (s *Servicio) LeerPublicaciones(ctx context.Context, tiendaID, scroll strin
 		}
 	}
 	return p, nil
+}
+
+// Crudo pasa una publicación a lo que guarda Mostrador, antes de los topes (importar.Ajustar). Las
+// variaciones son las combinaciones de atributos (Color, Talle) con su precio, stock y foto.
+func (it ItemML) Crudo() importar.Crudo {
+	fotos := map[string]string{}
+	c := importar.Crudo{
+		Nombre:      it.Title,
+		Descripcion: it.Descripcion,
+		Categoria:   it.Categoria,
+		Precio:      int64(math.Round(it.Price)),
+		Stock:       max(0, it.AvailableQuantity),
+		SKU:         skuDe(it.SellerCustomField, it.Attributes),
+	}
+	for _, p := range it.Pictures {
+		if p.SecureURL != "" {
+			c.Fotos = append(c.Fotos, p.SecureURL)
+			fotos[p.ID] = p.SecureURL
+		}
+	}
+	if len(it.Variations) == 0 {
+		return c
+	}
+	// Las opciones salen de la primera variación (todas traen los mismos atributos, en el mismo orden).
+	for _, a := range it.Variations[0].AttributeCombinations {
+		c.Opciones = append(c.Opciones, importar.Opcion{Nombre: a.Name})
+	}
+	for _, v := range it.Variations {
+		vc := importar.VarianteCruda{
+			Precio: int64(math.Round(v.Price)),
+			Stock:  max(0, v.AvailableQuantity),
+		}
+		if v.SellerCustomField != nil {
+			vc.SKU = strings.TrimSpace(*v.SellerCustomField)
+		}
+		if len(v.PictureIDs) > 0 {
+			vc.Foto = fotos[v.PictureIDs[0]]
+		}
+		for i, o := range c.Opciones {
+			val := ""
+			for _, a := range v.AttributeCombinations {
+				if a.Name == o.Nombre && a.ValueName != nil {
+					val = strings.TrimSpace(*a.ValueName)
+				}
+			}
+			vc.Valores = append(vc.Valores, val)
+			if val != "" && !slices.Contains(c.Opciones[i].Valores, val) {
+				c.Opciones[i].Valores = append(c.Opciones[i].Valores, val)
+			}
+		}
+		c.Variantes = append(c.Variantes, vc)
+	}
+	c.Precio = c.Variantes[0].Precio
+	for _, v := range c.Variantes {
+		c.Precio = min(c.Precio, v.Precio)
+	}
+	return c
+}
+
+// skuDe: el SKU propio de la publicación (seller_custom_field) o el atributo SELLER_SKU.
+func skuDe(campo *string, atributos []struct {
+	ID        string  `json:"id"`
+	ValueName *string `json:"value_name"`
+}) string {
+	if campo != nil && strings.TrimSpace(*campo) != "" {
+		return strings.TrimSpace(*campo)
+	}
+	for _, a := range atributos {
+		if a.ID == "SELLER_SKU" && a.ValueName != nil {
+			return strings.TrimSpace(*a.ValueName)
+		}
+	}
+	return ""
 }

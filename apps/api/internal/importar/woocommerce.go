@@ -1,7 +1,9 @@
 package importar
 
 import (
+	"net/url"
 	"slices"
+	"strconv"
 )
 
 // WooCommerce publica su catálogo en la Store API (/wp-json/wc/store/v1/products?per_page=100&page=N),
@@ -33,6 +35,7 @@ type ProductoWoo struct {
 	Name             string      `json:"name"`
 	Type             string      `json:"type"`
 	SKU              string      `json:"sku"`
+	Permalink        string      `json:"permalink"`
 	Description      string      `json:"description"`
 	ShortDescription string      `json:"short_description"`
 	Prices           *preciosWoo `json:"prices"`
@@ -173,7 +176,12 @@ func DeWoo(p ProductoWoo, variaciones []ProductoWoo) (Importado, bool) {
 		}
 	}
 	c.Estimado = c.Estimado || estimado
-	return Ajustar(c)
+	i, ok := Ajustar(c)
+	i.Externo = strconv.FormatInt(p.ID, 10)
+	if u, err := url.Parse(p.Permalink); err == nil && u.Path != "" && u.Path != "/" {
+		i.URL = u.Path
+	}
+	return i, ok
 }
 
 // PaginaWoo convierte una página de productos con las variaciones de sus variables.

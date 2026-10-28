@@ -52,7 +52,7 @@ func (s *Servicio) Paso(ctx context.Context, ev outbox.Evento) error {
 	if abrir == nil {
 		return s.fallar(ctx, tienda, e, etapa, "Todavía no podemos importar desde esa plataforma.")
 	}
-	o := Origen{Plataforma: plataforma, URL: urlOrigen}
+	o := Origen{TiendaID: tienda, Plataforma: plataforma, URL: urlOrigen}
 	if len(cred) > 0 {
 		if s.Cifra == nil {
 			return s.fallar(ctx, tienda, e, etapa, "No pudimos leer la credencial guardada. Empezá la importación de nuevo.")

@@ -3,6 +3,8 @@ package importar
 import (
 	"encoding/json"
 	"slices"
+	"strconv"
+	"strings"
 )
 
 // Shopify publica su catálogo sin clave en /products.json?limit=250&page=N. No publica cuánto stock
@@ -126,7 +128,12 @@ func DeShopify(p ProductoShopify) (Importado, bool) {
 			})
 		}
 	}
-	return Ajustar(c)
+	i, ok := Ajustar(c)
+	i.Externo = strconv.FormatInt(p.ID, 10)
+	if h := strings.Trim(p.Handle, "/ "); h != "" {
+		i.URL = "/products/" + h
+	}
+	return i, ok
 }
 
 // PaginaShopify convierte una página de /products.json: los importados, cuántos productos traía y

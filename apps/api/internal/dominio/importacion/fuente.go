@@ -25,6 +25,7 @@ type Abrir func(ctx context.Context, o Origen) (Fuente, error)
 
 // Origen: de dónde se importa.
 type Origen struct {
+	TiendaID   string
 	Plataforma string
 	URL        string
 	Credencial []byte
@@ -79,10 +80,4 @@ type ItemViejo struct {
 // adónde va en Mostrador (path relativo a la tienda).
 type URLVieja struct {
 	Desde, Hacia string
-}
-
-// Fuentes devuelve las fuentes por plataforma que tiene el servidor. Cada paquete de plataforma
-// se suma acá cuando esté; mientras falte, crear una importación desde ella responde sin_fuente.
-func Fuentes() map[string]Abrir {
-	return map[string]Abrir{}
 }

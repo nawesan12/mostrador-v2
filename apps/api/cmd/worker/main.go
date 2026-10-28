@@ -92,7 +92,7 @@ func correr() error {
 	// Aviso de cada venta al Telegram de la dueña. Sin token, el manejador no manda nada.
 	tg := &telegram.Servicio{Pool: app, Bot: &telegram.Bot{Token: cfg.TelegramToken}}
 	// Importación desde otra plataforma: cada paso guarda una página y encola el siguiente.
-	imp := &importacion.Servicio{Pool: app, Fuentes: importacion.Fuentes()}
+	imp := &importacion.Servicio{Pool: app, Fuentes: importacion.Fuentes(importacion.Dependencias{MercadoLibre: ml})}
 	if c, err := cifrado.Nuevo(cfg.ClaveCifrado); err == nil && cfg.ClaveCifrado != "" {
 		imp.Cifra = c
 	}
