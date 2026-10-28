@@ -14,6 +14,7 @@
 	/** Mis tiendas: las que trajo el partner, sumar una nueva y las que colabora. */
 	let { data } = $props();
 	const ui = getUi();
+	const NB = String.fromCharCode(160);
 	const p = $derived(data.panel!);
 
 	type Filtro = 'todas' | 'activa' | 'prueba' | 'perdidas';
@@ -67,7 +68,7 @@
 					<span class="quien">
 						<span class="q-t">{t.nombre}</span>
 						<span class="q-s"
-							>{nombrePlan(t.plan)}{t.ciclo === 'anio' ? ' anual' : ''} · desde {fechaCorta(
+							>{nombrePlan(t.plan)}{t.ciclo === 'anio' ? ' anual' : ''} · desde{NB}{fechaCorta(
 								t.alta
 							)}</span
 						>
@@ -75,7 +76,7 @@
 					<span class="chip-f" style:background={c.bg} style:color={c.fg}>{c.t}</span>
 					<span class="valor">
 						<span class="v-v">{t.comisionMes ? pesos(t.comisionMes) : '—'}</span>
-						<span class="v-s"
+						<span class="v-s hasta"
 							>{t.comisionMes ? `por mes hasta ${mesFin(t.finComision)}` : 'sin comisión'}</span
 						>
 					</span>
@@ -190,7 +191,8 @@
 		pointer-events: none;
 	}
 	@media (max-width: 759px) {
-		.f-in .chip-f {
+		.f-in .chip-f,
+		.valor .hasta {
 			display: none;
 		}
 	}

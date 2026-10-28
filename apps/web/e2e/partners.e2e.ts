@@ -22,7 +22,7 @@ test('panel de partners de ejemplo: inicio, tiendas, link, comisiones, perfil y 
 	// Inicio: el mes, el próximo pago, el nivel y las tareas.
 	await expect(page.getByRole('heading', { name: 'Hola, Ana' })).toBeVisible();
 	await expect(page.getByText('Pampa Code · Partner Plata')).toBeVisible();
-	await expect(page.getByText('Comisión estimada del mes')).toBeVisible();
+	await expect(page.getByText('Comisión del mes')).toBeVisible();
 	await expect(page.getByRole('progressbar')).toBeVisible();
 	await expect(page.getByText(/para Partner Oro/)).toBeVisible();
 	await expect(

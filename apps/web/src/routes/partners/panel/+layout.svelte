@@ -326,6 +326,9 @@
 		padding: 0;
 		font-family: inherit;
 	}
+	.socio :global(.t-cab .mas) {
+		margin-top: 0;
+	}
 	/* KPIs (Cupones). */
 	.socio :global(.kpis) {
 		display: grid;
@@ -650,6 +653,10 @@
 		}
 		.socio :global(.f-in) {
 			gap: 10px;
+		}
+		/* En el celular el detalle de la fila baja de renglón en vez de cortarse. */
+		.socio :global(.q-s) {
+			white-space: normal;
 		}
 	}
 </style>

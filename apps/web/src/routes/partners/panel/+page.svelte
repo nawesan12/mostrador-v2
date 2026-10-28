@@ -29,11 +29,11 @@
 <div class="kpis" use:anim={{ t: 'rise' }}>
 	<div class="kpi grande">
 		<div class="k-t">
-			<Icon icon={I.phHandCoinsFill} size={15} style="color:#D2582F" />Comisión estimada del mes
+			<Icon icon={I.phHandCoinsFill} size={15} style="color:#D2582F" />Comisión del mes
 		</div>
 		<div class="k-v">{pesos(r.estimado)}</div>
 		<div class="k-d">
-			{r.generan}
+			Estimada · {r.generan}
 			{r.generan === 1 ? 'tienda genera' : 'tiendas generan'} comisión
 		</div>
 	</div>
