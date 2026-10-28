@@ -1,6 +1,6 @@
 <script lang="ts">
 	/** El rótulo con punto que encabeza las secciones del sitio (handoff). */
-	let { texto, color = '#D2582F' }: { texto: string; color?: string } = $props();
+	let { texto, color = '#B0441D' }: { texto: string; color?: string } = $props();
 </script>
 
 <div class="etiq" style:color><span></span>{texto}</div>

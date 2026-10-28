@@ -37,7 +37,7 @@ export const CATEGORIAS: Categoria[] = [
 		nombre: 'Primeros pasos',
 		icono: I.phRocketLaunchFill,
 		bg: '#FCEDE5',
-		fg: '#C24E25'
+		fg: '#b0441d'
 	},
 	{
 		slug: 'productos',
@@ -51,14 +51,14 @@ export const CATEGORIAS: Categoria[] = [
 		nombre: 'Pedidos y envíos',
 		icono: I.phPackageFill,
 		bg: '#FFF4DC',
-		fg: '#9A6A10'
+		fg: '#8a5f0e'
 	},
 	{
 		slug: 'cobros',
 		nombre: 'Cobros y medios de pago',
 		icono: I.phCreditCardFill,
 		bg: '#E6F4EC',
-		fg: '#2F8F63'
+		fg: '#237550'
 	},
 	{
 		slug: 'whatsapp',

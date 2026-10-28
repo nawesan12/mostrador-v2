@@ -628,7 +628,7 @@
 			></button>
 			<span class="l-r">{rango}</span>
 			<span class="l-v"
-				><Icon icon={I.phLightningFill} size={13} style="color:#D2582F" />Lista virtual · {n} filas, rápida
+				><Icon icon={I.phLightningFill} size={13} style="color:#b0441d" />Lista virtual · {n} filas, rápida
 				igual</span
 			>
 		</div>
@@ -661,12 +661,7 @@
 									onclick={() => tildar(p)}
 									>{#if sel}<Icon icon={I.phCheckBold} size={12} />{/if}</button
 								>
-								<button
-									type="button"
-									class="abrir"
-									onclick={() => abrir(p.numero)}
-									aria-label="Ver el pedido #{p.numero} de {p.cliente}"
-								>
+								<button type="button" class="abrir" onclick={() => abrir(p.numero)}>
 									<span class="av">
 										{#if p.foto}<img src={cara(p.foto)} alt="" />{:else}<span class="av-ini"
 												>{iniciales(p.cliente)}</span
@@ -1005,7 +1000,7 @@
 		height: 18px;
 		padding: 0 5px;
 		border-radius: 999px;
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 		font-size: 11px;
 		font-weight: 700;
@@ -1091,7 +1086,7 @@
 		border-radius: 999px;
 		border: 0;
 		background: rgba(210, 88, 47, 0.12);
-		color: #c24e25;
+		color: #b0441d;
 		font-size: 12.5px;
 		font-weight: 600;
 	}
@@ -1235,7 +1230,7 @@
 	.q-ai {
 		font-size: 10.5px;
 		font-weight: 700;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.q-s {
 		display: block;

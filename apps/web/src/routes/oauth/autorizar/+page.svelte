@@ -76,7 +76,7 @@
 					{/if}
 
 					<div class="nota">
-						<Icon icon={phInfoFill} size={18} style="color:#C24E25;flex:none;margin-top:1px" />
+						<Icon icon={phInfoFill} size={18} style="color:#b0441d;flex:none;margin-top:1px" />
 						<span
 							>Podés desconectarla cuando quieras en Integraciones. En la demo, el acceso vence con
 							tu tienda de prueba, a las 24&nbsp;horas.</span
@@ -300,7 +300,7 @@
 	.permisos li :global(svg) {
 		flex: none;
 		margin-top: 1px;
-		color: #2f8f63;
+		color: #237550;
 	}
 	.permisos b,
 	.terminos b {
@@ -386,7 +386,7 @@
 		align-items: center;
 		gap: 8px;
 		border: 0;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		color: #fff;
 		box-shadow:
 			inset 0 1px 0 rgba(255, 255, 255, 0.25),

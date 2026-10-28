@@ -118,7 +118,7 @@
 		height: 36px;
 		border-radius: 50%;
 		border: 0;
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 		display: grid;
 		place-items: center;

@@ -184,7 +184,7 @@
 		padding: 11px 20px;
 		border-radius: 999px;
 		border: 0;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		color: #fff;
 		font-size: 14px;
 		font-weight: 600;
@@ -246,7 +246,7 @@
 		color: var(--mu);
 	}
 	.t-v {
-		color: #2f8f63;
+		color: #237550;
 	}
 	.barra {
 		margin-top: 8px;
@@ -377,7 +377,7 @@
 		gap: 6px;
 		font-size: 13px;
 		font-weight: 600;
-		color: #2f8f63;
+		color: #237550;
 		white-space: nowrap;
 	}
 	.vacio {

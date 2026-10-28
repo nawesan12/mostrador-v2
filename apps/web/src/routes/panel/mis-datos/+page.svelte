@@ -133,7 +133,7 @@
 			<div class="recientes">
 				{#each data.recientes as r (r.en)}
 					<div>
-						<Icon icon={I.phCheckCircleFill} size={18} style="color:#2F8F63" /><span
+						<Icon icon={I.phCheckCircleFill} size={18} style="color:#237550" /><span
 							>{NOMBRES[r.tipo] ?? r.tipo}<span class="rd">{cuando(r.en)}</span></span
 						>
 					</div>
@@ -255,7 +255,7 @@
 		padding: 11px 20px;
 		border-radius: 999px;
 		border: 0;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		color: #fff;
 		font:
 			600 14px 'Instrument Sans',
@@ -355,7 +355,7 @@
 		color: var(--mu);
 	}
 	.derechos a {
-		color: #c24e25;
+		color: #b0441d;
 		font-weight: 600;
 	}
 	.peligro {

@@ -134,7 +134,7 @@
 								<Icon
 									icon={phCheckCircleFill}
 									size={18}
-									style="color:#2F8F63;flex:none;margin-top:1px"
+									style="color:#237550;flex:none;margin-top:1px"
 								/>
 								Listo, tu contraseña cambió. Ya podés ingresar con la nueva.
 							</div>
@@ -464,7 +464,7 @@
 							</p>
 						</div>
 						<div class="nota">
-							<Icon icon={phInfoFill} size={18} style="color:#C24E25;flex:none;margin-top:1px" />
+							<Icon icon={phInfoFill} size={18} style="color:#b0441d;flex:none;margin-top:1px" />
 							{#if form?.canal === 'whatsapp'}
 								¿No te llegó? Revisá que el número sea el de tu cuenta. Si seguís sin verlo, podemos
 								mandártelo por email.
@@ -639,7 +639,7 @@
 		margin-left: auto;
 		display: flex;
 		flex: none;
-		color: #d2582f;
+		color: #b0441d;
 	}
 	.testi p {
 		margin: 10px 0 0;
@@ -742,7 +742,7 @@
 		align-items: center;
 		gap: 12px;
 		font-size: 13px;
-		color: #9a8576;
+		color: var(--marron-2);
 	}
 	.o span {
 		flex: 1;
@@ -864,7 +864,7 @@
 		padding: 0;
 		font-size: 14px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.cta {
 		display: flex;
@@ -874,7 +874,7 @@
 		padding: 16px;
 		border: 0;
 		border-radius: 999px;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		color: #fff;
 		font-size: 15.5px;
 		font-weight: 600;

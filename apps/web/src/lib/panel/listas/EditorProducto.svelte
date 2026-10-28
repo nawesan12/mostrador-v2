@@ -627,7 +627,7 @@
 		align-items: center;
 		justify-content: center;
 		gap: 2px;
-		color: #c24e25;
+		color: #b0441d;
 		font-size: 11px;
 		font-weight: 600;
 		text-align: center;
@@ -683,7 +683,7 @@
 		padding: 0;
 		font-size: 12.5px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.t {
 		font-size: 14px;
@@ -735,10 +735,10 @@
 		flex-wrap: wrap;
 	}
 	.margen b {
-		color: #2f8f63;
+		color: #237550;
 	}
 	.margen b.bajo {
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.costo {
 		width: 110px;
@@ -926,7 +926,7 @@
 	.g-u {
 		margin-top: 6px;
 		font-size: 12.5px;
-		color: #2f8f63;
+		color: #237550;
 		overflow-wrap: anywhere;
 	}
 	.g-n {
@@ -968,7 +968,7 @@
 		padding: 13px;
 		border-radius: 999px;
 		border: 0;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		color: #fff;
 		font-size: 14.5px;
 		font-weight: 600;

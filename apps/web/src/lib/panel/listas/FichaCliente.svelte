@@ -245,7 +245,7 @@
 		letter-spacing: -0.02em;
 	}
 	.kpi b.alerta {
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.tarjeta {
 		padding: 14px 16px;
@@ -354,7 +354,7 @@
 		padding: 13px;
 		border-radius: 999px;
 		border: 0;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		color: #fff;
 		font-size: 14.5px;
 		font-weight: 600;

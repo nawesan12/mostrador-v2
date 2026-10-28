@@ -57,7 +57,7 @@
 			<div class="canales">
 				{#each CANALES as [ico, t, v, d] (t)}
 					<div class="canal">
-						<Icon icon={ico} size={24} style="color:#C24E25" />
+						<Icon icon={ico} size={24} style="color:#b0441d" />
 						<div class="ca-t">{t}</div>
 						<div class="ca-v">{v}</div>
 						<div class="ca-d">{d}</div>
@@ -290,7 +290,7 @@
 		padding: 16px;
 		border: 0;
 		border-radius: 999px;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		color: #fff;
 		font-size: 15.5px;
 		font-weight: 600;
@@ -306,7 +306,7 @@
 		text-align: center;
 	}
 	.pie a {
-		color: #c24e25;
+		color: #b0441d;
 		text-decoration: underline;
 	}
 	.exito {

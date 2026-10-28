@@ -235,7 +235,7 @@
 								>
 								<span class="rol" class:duenio={m.rol === 'duenio'}>{ROL[m.rol]}</span>
 								{#if m.dobleFactor}<span title="Doble verificación activa"
-										><Icon icon={I.phShieldCheckFill} size={17} style="color:#2F8F63" /></span
+										><Icon icon={I.phShieldCheckFill} size={17} style="color:#237550" /></span
 									>{/if}
 							</div>
 						{/each}
@@ -297,7 +297,7 @@
 							</div>
 							<div class="incluye">
 								{#each p.incluye as f (f)}<span
-										><Icon icon={I.phCheckBold} size={13} style="color:#2F8F63" />{f}</span
+										><Icon icon={I.phCheckBold} size={13} style="color:#237550" />{f}</span
 									>{/each}
 							</div>
 							<button type="button" onclick={() => elegir(p.id, p.nombre)}
@@ -398,7 +398,7 @@
 		font-weight: 600;
 	}
 	.tabs button[aria-current='page'] :global(svg) {
-		color: #d2582f;
+		color: #b0441d;
 	}
 	.contenido {
 		display: flex;
@@ -525,7 +525,7 @@
 	}
 	.rol.duenio {
 		background: rgba(210, 88, 47, 0.12);
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.mas {
 		margin-top: 12px;
@@ -534,7 +534,7 @@
 		gap: 6px;
 		font-size: 13.5px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 		text-decoration: none;
 	}
 	.lista {
@@ -555,7 +555,7 @@
 		flex: none;
 		border-radius: 11px;
 		background: rgba(47, 143, 99, 0.12);
-		color: #2f8f63;
+		color: #237550;
 		display: grid;
 		place-items: center;
 	}
@@ -594,7 +594,7 @@
 	.esta {
 		font-size: 12px;
 		font-weight: 600;
-		color: #2f8f63;
+		color: #237550;
 	}
 	.sesion button {
 		border: 0;
@@ -637,7 +637,7 @@
 		font-weight: 700;
 		padding: 3px 9px;
 		border-radius: 999px;
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 	}
 	.precio {
@@ -674,7 +674,7 @@
 			sans-serif;
 	}
 	.plan.actual button {
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 	}
 	.m-t {

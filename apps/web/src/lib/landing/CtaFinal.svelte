@@ -104,7 +104,7 @@
 		border-radius: 999px;
 	}
 	.pri {
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		padding: 16px 26px;
 		box-shadow:
 			inset 0 1px 0 rgba(255, 255, 255, 0.3),

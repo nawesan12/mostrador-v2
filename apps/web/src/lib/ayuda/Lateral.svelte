@@ -13,11 +13,11 @@
 		<b>¿Preferís una persona?</b>
 		<div class="vias">
 			<a href={resolve('/(sitio)/contacto')}
-				><Icon icon={I.phEnvelopeSimpleFill} size={18} style="color:#C24E25" />Escribinos · te
+				><Icon icon={I.phEnvelopeSimpleFill} size={18} style="color:#b0441d" />Escribinos · te
 				respondemos en el día</a
 			>
 			<a href={resolve('/(sitio)/estado')}
-				><Icon icon={I.phActivityBold} size={18} style="color:#2F8F63" />Estado del sistema</a
+				><Icon icon={I.phActivityBold} size={18} style="color:#237550" />Estado del sistema</a
 			>
 		</div>
 	</div>

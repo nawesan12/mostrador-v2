@@ -269,7 +269,7 @@
 		background: #fcede5;
 		display: grid;
 		place-items: center;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.c-t {
 		margin-top: 14px;
@@ -321,7 +321,7 @@
 		align-items: center;
 		gap: 6px;
 		font-weight: 600;
-		color: #2f8f63;
+		color: #237550;
 	}
 	.t-no {
 		color: #7a6252;

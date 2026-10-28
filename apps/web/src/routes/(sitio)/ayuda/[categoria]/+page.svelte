@@ -43,7 +43,7 @@
 					})}
 					class="art"
 				>
-					<Icon icon={I.phArticle} size={20} style="color:#C24E25;flex:none" />
+					<Icon icon={I.phArticle} size={20} style="color:#b0441d;flex:none" />
 					<span class="a-txt"
 						><span class="a-t">{a.titulo}</span><span class="a-s"
 							>{a.resumen} · {minutos(a)} min de lectura</span

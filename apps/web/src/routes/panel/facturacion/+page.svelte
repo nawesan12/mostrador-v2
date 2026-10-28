@@ -314,7 +314,7 @@
 		min-height: 44px;
 		font-size: 14px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.nw {
 		white-space: nowrap;

@@ -163,7 +163,7 @@
 					</div>
 				{:else}
 					<div class="inc vacio">
-						<Icon icon={I.phCheckCircleFill} size={22} style="color:#2F8F63;flex:none" />
+						<Icon icon={I.phCheckCircleFill} size={22} style="color:#237550;flex:none" />
 						<div>
 							<div class="i-t">Sin incidentes en los últimos 90 días</div>
 							<p>Si algo falla, aparece acá con lo que pasó y cuándo se resolvió.</p>
@@ -347,7 +347,7 @@
 		justify-content: space-between;
 		margin-top: 6px;
 		font-size: 11.5px;
-		color: #9a8576;
+		color: var(--marron-2);
 	}
 	.abajo {
 		padding: clamp(40px, 6vw, 64px) 0 clamp(56px, 8vw, 100px);
@@ -461,7 +461,7 @@
 		padding: 10px 16px;
 		border: 0;
 		border-radius: 999px;
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 		font-size: 14px;
 		font-weight: 600;

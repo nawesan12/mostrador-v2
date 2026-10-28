@@ -124,7 +124,7 @@
 						class="pill chica"
 						aria-pressed={adjunto(k)}
 						onclick={() => alternar(k)}
-						><Icon icon={icono} size={14} style="color:#C24E25" />{t}</button
+						><Icon icon={icono} size={14} style="color:#b0441d" />{t}</button
 					>
 				{/each}
 			</div>
@@ -164,7 +164,7 @@
 						<span>{data.tienda.nombre}</span><Icon
 							icon={I.phSealCheckFill}
 							size={14}
-							style="color:#2F8F63"
+							style="color:#237550"
 						/>
 					</div>
 					<div class="chat">
@@ -297,7 +297,7 @@
 		font:
 			600 12.5px 'Instrument Sans',
 			sans-serif;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.pills {
 		display: flex;
@@ -374,7 +374,7 @@
 		letter-spacing: -0.03em;
 	}
 	.nu-v.verde {
-		color: #2f8f63;
+		color: #237550;
 	}
 	.acc {
 		display: flex;
@@ -396,7 +396,7 @@
 		padding: 12px;
 		border-radius: 999px;
 		border: 0;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		color: #fff;
 		font:
 			600 14px 'Instrument Sans',
@@ -511,7 +511,7 @@
 	}
 	.estado.activa {
 		background: rgba(47, 143, 99, 0.13);
-		color: #2f8f63;
+		color: #237550;
 	}
 	.ca-d {
 		font-size: 12.5px;
@@ -546,7 +546,7 @@
 		font:
 			600 13.5px 'Instrument Sans',
 			sans-serif;
-		color: #c24e25;
+		color: #b0441d;
 		text-decoration: none;
 	}
 	.cu-lista {
@@ -570,7 +570,7 @@
 		padding: 6px 10px;
 		border-radius: 10px;
 		background: rgba(210, 88, 47, 0.1);
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.cu-txt {
 		flex: 1;

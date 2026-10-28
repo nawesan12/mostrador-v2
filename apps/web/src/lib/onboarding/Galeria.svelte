@@ -244,7 +244,7 @@
 	.para {
 		left: 10px;
 		font-size: 11.5px;
-		color: #c24e25;
+		color: #b0441d;
 		background: #fff;
 		padding: 5px 9px;
 	}

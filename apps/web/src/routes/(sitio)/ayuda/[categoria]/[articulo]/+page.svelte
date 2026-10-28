@@ -43,7 +43,7 @@
 						<h2>{b.x}</h2>
 					{:else if b.t === 'nota'}
 						<div class="nota">
-							<Icon icon={I.phSparkleFill} size={16} style="color:#C24E25;flex:none" /><span
+							<Icon icon={I.phSparkleFill} size={16} style="color:#b0441d;flex:none" /><span
 								>{b.x}</span
 							>
 						</div>
@@ -88,7 +88,7 @@
 							})}
 							class="art"
 						>
-							<Icon icon={I.phArticle} size={20} style="color:#C24E25;flex:none" />
+							<Icon icon={I.phArticle} size={20} style="color:#b0441d;flex:none" />
 							<span class="a-txt"
 								><span class="a-t">{o.titulo}</span><span class="a-s"
 									>{minutos(o)} min de lectura</span
@@ -179,7 +179,7 @@
 		text-wrap: pretty;
 	}
 	.cuerpo ol li::marker {
-		color: #c24e25;
+		color: #b0441d;
 		font-weight: 700;
 	}
 	.nota {

@@ -147,7 +147,7 @@
 		border-radius: 13px;
 		display: grid;
 		place-items: center;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		color: #fff;
 		font-weight: 700;
 		font-size: 18px;
@@ -181,7 +181,7 @@
 	.m-c {
 		margin-top: 2px;
 		font-size: 13.5px;
-		color: #2f8f63;
+		color: #237550;
 		font-weight: 600;
 	}
 	.acepta {
@@ -210,7 +210,7 @@
 		padding: 15px;
 		border-radius: 999px;
 		border: 0;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		color: #fff;
 		font:
 			600 15.5px 'Instrument Sans',
@@ -244,7 +244,7 @@
 		display: grid;
 		place-items: center;
 		background: rgba(47, 143, 99, 0.14);
-		color: #2f8f63;
+		color: #237550;
 	}
 	.l-t {
 		margin-top: 14px;

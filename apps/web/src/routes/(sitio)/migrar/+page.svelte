@@ -192,7 +192,7 @@
 								<Icon
 									icon={I.phCheckCircleFill}
 									size={18}
-									style="color:#2F8F63;flex:none;margin-top:1px"
+									style="color:#237550;flex:none;margin-top:1px"
 								/>{t}
 							</div>
 						{/each}
@@ -209,7 +209,7 @@
 		<div class="pasos">
 			{#each PASOS as [t, d], i (t)}
 				<div class="paso">
-					<div class="p-n" class:ultimo={i === PASOS.length - 1}>0{i + 1}</div>
+					<div class="p-n" class:ultimo={i === PASOS.length - 1} aria-hidden="true">0{i + 1}</div>
 					<div class="p-t">{t}</div>
 					<div class="p-d">{d}</div>
 				</div>
@@ -218,7 +218,7 @@
 		<div class="ventajas">
 			{#each VENTAJAS as [ico, t, d] (t)}
 				<div class="ventaja">
-					<Icon icon={ico} size={26} style="color:#C24E25;flex:none" />
+					<Icon icon={ico} size={26} style="color:#b0441d;flex:none" />
 					<div>
 						<b>{t}</b>
 						<p>{d}</p>
@@ -383,7 +383,7 @@
 		outline: none;
 	}
 	.falso {
-		color: #9a8576;
+		color: var(--marron-2);
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -392,7 +392,7 @@
 		padding: 11px 18px;
 		border: 0;
 		border-radius: 999px;
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 		font-size: 14px;
 		font-weight: 600;
@@ -449,7 +449,7 @@
 		color: #e7d6c6;
 	}
 	.p-n.ultimo {
-		color: #d2582f;
+		color: #b0441d;
 	}
 	.p-t {
 		margin-top: 10px;

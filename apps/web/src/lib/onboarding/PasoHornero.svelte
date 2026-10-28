@@ -45,21 +45,21 @@
 				><Icon icon={I.logosWhatsappIcon} size={16} />WhatsApp<Icon
 					icon={I.phCheckBold}
 					size={13}
-					style="color:#2F8F63"
+					style="color:#237550"
 				/></span
 			>
 			<span
 				><Icon icon={I.logosInstagramIcon} size={15} />Instagram<Icon
 					icon={I.phCheckBold}
 					size={13}
-					style="color:#2F8F63"
+					style="color:#237550"
 				/></span
 			>
 			<span
 				><span class="ml">ML</span>Preguntas de ML<Icon
 					icon={I.phCheckBold}
 					size={13}
-					style="color:#2F8F63"
+					style="color:#237550"
 				/></span
 			>
 			<span class="off"><Icon icon={I.logosTelegram} size={15} />Telegram</span>
@@ -73,7 +73,7 @@
 			>
 		</div>
 		<div class="regla">
-			<Icon icon={I.phSealPercentFill} size={20} style="color:#C24E25" />
+			<Icon icon={I.phSealPercentFill} size={20} style="color:#b0441d" />
 			<span
 				><b>Descuentos:</b> puede ofrecer hasta 10% sin preguntarte<br /><span class="r-d"
 					>Más que eso, te pide aprobación por WhatsApp.</span
@@ -240,7 +240,7 @@
 	.firma {
 		font-size: 11px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 		display: flex;
 		align-items: center;
 		gap: 4px;

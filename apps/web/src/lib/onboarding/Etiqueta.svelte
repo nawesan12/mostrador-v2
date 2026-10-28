@@ -17,7 +17,7 @@
 		gap: 8px;
 		font-size: 14px;
 		font-weight: 600;
-		color: #d2582f;
+		color: #b0441d;
 	}
 	.rotulo span {
 		width: 6px;

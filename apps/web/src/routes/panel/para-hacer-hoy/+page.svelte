@@ -285,7 +285,7 @@
 	.valor {
 		font-size: 13px;
 		font-weight: 600;
-		color: #2f8f63;
+		color: #237550;
 		white-space: nowrap;
 	}
 	.hacer {

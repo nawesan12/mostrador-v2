@@ -114,7 +114,7 @@
 					<Icon
 						icon={I.phNotePencilFill}
 						size={16}
-						style="color:#C24E25;margin-top:2px;flex:none"
+						style="color:#b0441d;margin-top:2px;flex:none"
 					/>
 					<div>{turno.nota}</div>
 				</div>
@@ -122,7 +122,7 @@
 
 			{#if turno.estado === 'cancelado' && turno.senaPagada && !turno.senaDevuelta}
 				<div class="nota">
-					<Icon icon={I.phWarningFill} size={16} style="color:#9A6A10;margin-top:2px;flex:none" />
+					<Icon icon={I.phWarningFill} size={16} style="color:#8a5f0e;margin-top:2px;flex:none" />
 					<div>
 						Cancelar no devuelve la seña sola. Si corresponde, devolvela desde acá con
 						Mercado&nbsp;Pago.
@@ -242,7 +242,7 @@
 	}
 	.i-ico {
 		border-radius: 12px;
-		color: #2f8f63;
+		color: #237550;
 		background: rgba(47, 143, 99, 0.12);
 	}
 	.f-txt {

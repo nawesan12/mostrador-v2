@@ -155,11 +155,11 @@
 				>
 			</div>
 			<div class="kpi">
-				<span>Stock bajo</span><b style:color="#9A6A10">{r.bajo ?? 0}</b><em>menos que el mínimo</em
+				<span>Stock bajo</span><b style:color="#8a5f0e">{r.bajo ?? 0}</b><em>menos que el mínimo</em
 				>
 			</div>
 			<div class="kpi">
-				<span>Rotación</span><b style:color="#2F8F63">{r.rotacion ?? 0} días</b><em>promedio</em>
+				<span>Rotación</span><b style:color="#237550">{r.rotacion ?? 0} días</b><em>promedio</em>
 			</div>
 		</div>
 	{/snippet}
@@ -198,7 +198,7 @@
 	{/snippet}
 	<div class="h-cuerpo">
 		<div class="nota">
-			<Icon icon={I.phSparkleFill} size={16} style="color:#C24E25;margin-top:2px;flex:none" />
+			<Icon icon={I.phSparkleFill} size={16} style="color:#b0441d;margin-top:2px;flex:none" />
 			<div>
 				<b>Hornero:</b> armé el pedido con lo que vendés por día, para que te alcance dos veces el mínimo.
 				Cambiá las cantidades si querés.
@@ -560,7 +560,7 @@
 		padding: 13px 22px;
 		border-radius: 999px;
 		border: 0;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		color: #fff;
 		font-size: 14.5px;
 		font-weight: 600;

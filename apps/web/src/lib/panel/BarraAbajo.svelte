@@ -71,7 +71,7 @@
 		color: var(--mu);
 	}
 	.on {
-		color: #d2582f !important;
+		color: #b0441d !important;
 	}
 	.badge {
 		position: absolute;
@@ -82,7 +82,7 @@
 		height: 18px;
 		padding: 0 5px;
 		border-radius: 999px;
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 		font-size: 10.5px;
 		font-weight: 700;

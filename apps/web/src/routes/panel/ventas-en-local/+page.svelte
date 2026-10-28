@@ -453,7 +453,7 @@
 		height: 24px;
 		padding: 0 7px;
 		border-radius: 999px;
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 		font-size: 12px;
 		font-weight: 700;
@@ -624,7 +624,7 @@
 		padding: 15px;
 		border-radius: 999px;
 		border: 0;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		color: #fff;
 		font-size: 15.5px;
 		font-weight: 600;
@@ -645,7 +645,7 @@
 		place-items: center;
 		border-radius: 15px;
 		background: rgba(210, 88, 47, 0.12);
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.m-t {
 		margin-top: 16px;

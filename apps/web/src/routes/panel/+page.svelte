@@ -122,7 +122,7 @@
 			t: 'Cargar con foto',
 			k: 'Hornero completa la ficha',
 			bg: 'rgba(210,88,47,.12)',
-			fg: '#C24E25',
+			fg: '#b0441d',
 			href: rutaDe('Productos')
 		},
 		{
@@ -130,7 +130,7 @@
 			t: 'Link de pago',
 			k: 'Cobrá por WhatsApp',
 			bg: 'rgba(47,143,99,.13)',
-			fg: '#2F8F63',
+			fg: '#237550',
 			href: rutaDe('Pedidos'),
 			abrir: () => shell.abrirLink()
 		},
@@ -139,7 +139,7 @@
 			t: 'Cobrar en el local',
 			k: 'Punto de venta',
 			bg: 'rgba(227,169,59,.2)',
-			fg: '#9A6A10',
+			fg: '#8a5f0e',
 			href: rutaDe('Ventas en local')
 		},
 		{
@@ -169,7 +169,7 @@
 				title: plural(t.paraHacer.preparar, 'pedido para preparar', 'pedidos para preparar'),
 				sub: 'Despachá antes de las 17 h',
 				bg: 'rgba(210,88,47,.13)',
-				fg: '#C24E25',
+				fg: '#b0441d',
 				href: `${rutaDe('Pedidos')}?estado=para-preparar`
 			},
 			t.paraHacer.chats && {
@@ -177,7 +177,7 @@
 				title: plural(t.paraHacer.chats, 'chat sin responder', 'chats sin responder'),
 				sub: `El más viejo, hace ${haceCorto(new Date(Date.now() - t.paraHacer.chatMasViejoMin * 60_000).toISOString())}`,
 				bg: 'rgba(47,143,99,.13)',
-				fg: '#2F8F63',
+				fg: '#237550',
 				href: rutaDe('WhatsApp')
 			},
 			t.paraHacer.transferencias && {
@@ -189,7 +189,7 @@
 				),
 				sub: `${pesos(t.paraHacer.transferenciasMonto)} en total`,
 				bg: 'rgba(227,169,59,.18)',
-				fg: '#9A6A10',
+				fg: '#8a5f0e',
 				href: `${rutaDe('Pedidos')}?estado=pago-pendiente`
 			},
 			t.paraHacer.sinStock && {
@@ -833,7 +833,7 @@
 		color: var(--mu);
 	}
 	.sub b {
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.periodos {
 		display: flex;
@@ -860,7 +860,7 @@
 		padding: 11px 20px;
 		border-radius: 999px;
 		border: 0;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		color: #fff;
 		font-size: 14px;
 		font-weight: 600;
@@ -1001,7 +1001,7 @@
 		background: var(--sf3);
 		display: grid;
 		place-items: center;
-		color: #d2582f;
+		color: #b0441d;
 	}
 	.k-v {
 		margin-top: 10px;
@@ -1016,10 +1016,10 @@
 	}
 	.k-d {
 		font-weight: 600;
-		color: #2f8f63;
+		color: #237550;
 	}
 	.k-d.baja {
-		color: #9a6a10;
+		color: #8a5f0e;
 	}
 
 	/* Grilla de tarjetas */
@@ -1067,7 +1067,7 @@
 	.cuenta {
 		font-size: 12.5px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 		background: rgba(210, 88, 47, 0.12);
 		padding: 3px 9px;
 		border-radius: 999px;
@@ -1080,7 +1080,7 @@
 		border-radius: 999px;
 	}
 	.chip.verde {
-		color: #2f8f63;
+		color: #237550;
 		background: rgba(47, 143, 99, 0.12);
 	}
 	.chip.gris {
@@ -1088,7 +1088,7 @@
 		background: var(--chip);
 	}
 	.chip.ambar {
-		color: #9a6a10;
+		color: #8a5f0e;
 		background: rgba(227, 169, 59, 0.18);
 	}
 	.vacio {
@@ -1141,7 +1141,7 @@
 	.b-ia {
 		border: 0;
 		background: rgba(210, 88, 47, 0.12);
-		color: #c24e25;
+		color: #b0441d;
 	}
 
 	/* Ventas */
@@ -1181,13 +1181,13 @@
 		gap: 3px;
 		font-size: 13.5px;
 		font-weight: 600;
-		color: #2f8f63;
+		color: #237550;
 		background: rgba(47, 143, 99, 0.12);
 		padding: 4px 10px;
 		border-radius: 999px;
 	}
 	.v-delta.baja {
-		color: #9a6a10;
+		color: #8a5f0e;
 		background: rgba(227, 169, 59, 0.18);
 	}
 	.leyenda {
@@ -1315,7 +1315,7 @@
 	.ver {
 		font-size: 13.5px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 		display: flex;
 		align-items: center;
 		gap: 4px;
@@ -1453,7 +1453,7 @@
 		gap: 6px;
 		font-size: 12.5px;
 		font-weight: 600;
-		color: #2f8f63;
+		color: #237550;
 	}
 	.v-punto {
 		position: relative;
@@ -1585,7 +1585,7 @@
 		white-space: nowrap;
 		font-size: 11.5px;
 		font-weight: 600;
-		color: #2f8f63;
+		color: #237550;
 	}
 	.prog {
 		font-size: 11.5px;
@@ -1673,7 +1673,7 @@
 		line-height: 1.5;
 	}
 	.naranja {
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.h-acc {
 		position: relative;
@@ -1755,10 +1755,10 @@
 		font-weight: 600;
 	}
 	.cv-bot {
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.cv-vos {
-		color: #9a6a10;
+		color: #8a5f0e;
 	}
 	.dots {
 		width: 4px;

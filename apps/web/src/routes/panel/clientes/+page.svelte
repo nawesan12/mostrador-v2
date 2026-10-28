@@ -181,7 +181,7 @@
 		place-items: center;
 		border-radius: 15px;
 		background: rgba(210, 88, 47, 0.12);
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.m-ico.violeta {
 		background: rgba(106, 79, 160, 0.12);

@@ -53,13 +53,13 @@
 						<span class="f-txt"><span class="f-t">{f.t}</span><span class="f-s">{f.s}</span></span>
 						<span class="f-v">{f.v}</span>
 						{#if f.listo}
-							<Icon icon={I.phCheckCircleFill} size={18} style="color:#2F8F63;flex:none" />
+							<Icon icon={I.phCheckCircleFill} size={18} style="color:#237550;flex:none" />
 						{:else}
 							<Icon
 								icon={I.phCircleNotchBold}
 								size={18}
 								class="gira"
-								style="color:#C24E25;flex:none"
+								style="color:#b0441d;flex:none"
 							/>
 						{/if}
 					</div>
@@ -148,7 +148,7 @@
 		font-weight: 600;
 	}
 	.pct {
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.barra {
 		margin-top: 10px;
@@ -232,7 +232,7 @@
 		flex: none;
 		border-radius: 12px;
 		background: rgba(227, 169, 59, 0.2);
-		color: #9a6a10;
+		color: #8a5f0e;
 		display: grid;
 		place-items: center;
 	}
@@ -273,7 +273,7 @@
 		gap: 6px;
 		font-size: 13px;
 		font-weight: 600;
-		color: #2f8f63;
+		color: #237550;
 	}
 	.hornero {
 		flex: 1 1 300px;

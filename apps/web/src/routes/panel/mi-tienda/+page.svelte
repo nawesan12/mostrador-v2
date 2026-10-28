@@ -99,7 +99,7 @@
 				{@const [icono, t] = SECCIONES[s.id]}
 				<div class="sec">
 					<Icon icon={I.phDotsSixVerticalBold} size={15} style="color:var(--fa)" />
-					<Icon icon={icono} size={16} style="color:#C24E25" />
+					<Icon icon={icono} size={16} style="color:#b0441d" />
 					<span class="s-t" class:oculta={!s.visible}>{t}</span>
 					<button type="button" aria-label="Subir {t}" disabled={i === 0} onclick={() => subir(i)}
 						><Icon icon={I.phCaretUpBold} size={12} /></button
@@ -244,7 +244,7 @@
 		padding: 11px 20px;
 		border-radius: 999px;
 		border: 0;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		color: #fff;
 		font:
 			600 14px 'Instrument Sans',

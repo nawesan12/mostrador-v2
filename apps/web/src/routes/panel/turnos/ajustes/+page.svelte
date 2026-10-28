@@ -641,7 +641,7 @@
 		gap: 5px;
 		font-size: 13.5px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 		text-decoration: none;
 	}
 	h1 {
@@ -695,7 +695,7 @@
 		font-weight: 600;
 	}
 	.tabs button[aria-current='page'] :global(svg) {
-		color: #d2582f;
+		color: #b0441d;
 	}
 	.contenido {
 		display: flex;
@@ -731,7 +731,7 @@
 		flex: none;
 		border-radius: 11px;
 		background: rgba(47, 143, 99, 0.12);
-		color: #2f8f63;
+		color: #237550;
 		display: grid;
 		place-items: center;
 	}
@@ -801,7 +801,7 @@
 		font:
 			600 13px 'Instrument Sans',
 			sans-serif;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.t-cab {
 		display: flex;
@@ -880,7 +880,7 @@
 		padding: 2px 8px;
 		border-radius: 999px;
 		background: rgba(210, 88, 47, 0.12);
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.tag.gris {
 		background: var(--chip);

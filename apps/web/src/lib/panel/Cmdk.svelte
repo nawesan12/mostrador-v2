@@ -295,7 +295,7 @@
 		display: grid;
 		place-items: center;
 		background: rgba(210, 88, 47, 0.1);
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.txt {
 		flex: 1;

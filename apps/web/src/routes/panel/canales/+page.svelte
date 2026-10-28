@@ -239,7 +239,7 @@
 		color: var(--fa);
 	}
 	.ca-e.on {
-		color: #2f8f63;
+		color: #237550;
 	}
 	.punto {
 		width: 6px;

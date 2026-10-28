@@ -309,7 +309,7 @@
 	}
 	.corona {
 		background: #fcede5;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.f-x {
 		flex: 1;
@@ -321,7 +321,7 @@
 	.f-link {
 		font-size: 13.5px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 		background: none;
 		border: 0;
 		padding: 0;
@@ -560,7 +560,7 @@
 	.pri {
 		color: #fff;
 		border: 0;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		padding: 16px 26px;
 		box-shadow:
 			inset 0 1px 0 rgba(255, 255, 255, 0.3),
