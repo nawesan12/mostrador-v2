@@ -574,7 +574,7 @@
 		padding: 10px 12px;
 		border-radius: 12px;
 		background: rgba(210, 88, 47, 0.08);
-		color: #c24e25;
+		color: #b0441d;
 		font-size: 13px;
 		line-height: 1.45;
 		text-wrap: pretty;

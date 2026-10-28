@@ -52,7 +52,7 @@
 			<Icon
 				icon={c.tipo === 'arrepentimiento' ? I.phArrowUUpLeftFill : I.phEnvelopeSimpleFill}
 				size={18}
-				style="color:#C24E25;flex:none"
+				style="color:#b0441d;flex:none"
 			/>
 			<span class="f-txt"
 				><b>{c.tipo === 'arrepentimiento' ? `${c.codigo} · ` : ''}{c.asunto || c.nombre}</b><span

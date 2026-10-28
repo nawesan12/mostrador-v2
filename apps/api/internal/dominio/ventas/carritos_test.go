@@ -2,6 +2,7 @@ package ventas_test
 
 import (
 	"context"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/configuracion"
 	"strings"
 	"testing"
 	"time"
@@ -20,6 +21,10 @@ func TestCarritosAbandonados(t *testing.T) {
 	ctx := context.Background()
 	b := pruebadb.Nueva(t)
 	luna := pruebadb.CrearTienda(t, b.App, "luna")
+	// Con datos para transferir (sin ellos la tienda no ofrece transferencia).
+	if err := configuracion.GuardarNegocio(ctx, b.App, luna, configuracion.Negocio{Nombre: "Luna", Alias: "luna.tienda"}); err != nil {
+		t.Fatal(err)
+	}
 	sol := pruebadb.CrearTienda(t, b.App, "sol")
 	mails := &correo.Memoria{}
 	w := &outbox.Worker{Pool: b.Worker, Manejadores: (&ventas.MailsCarritos{Pool: b.App, Correo: mails, Sitio: "https://mostradorapp.com.ar"}).Manejadores()}

@@ -188,7 +188,7 @@
 				{#if linea}<div class="p-d">{linea}</div>{/if}
 				{#if perfil.descripcion}<div class="p-txt">{perfil.descripcion}</div>{/if}
 				<div class="p-val">
-					<Icon icon={I.phStorefrontFill} size={14} style="color:#D2582F" /><b>{activas}</b><span
+					<Icon icon={I.phStorefrontFill} size={14} style="color:#b0441d" /><b>{activas}</b><span
 						>tiendas activas con Mostrador</span
 					>
 				</div>
@@ -288,7 +288,7 @@
 		font-size: 44px;
 		font-weight: 600;
 		letter-spacing: -0.03em;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.p-in {
 		padding: 18px;
@@ -315,7 +315,7 @@
 	}
 	.nivel-chip.oro {
 		background: #fcede5;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.p-d {
 		font-size: 14px;
@@ -358,7 +358,7 @@
 		flex-wrap: wrap;
 		font-size: 13px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.p-contacto span {
 		display: inline-flex;

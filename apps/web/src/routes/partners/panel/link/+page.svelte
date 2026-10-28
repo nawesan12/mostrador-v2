@@ -107,7 +107,7 @@
 <div class="kpis" use:anim={{ t: 'rise', delay: 40 }}>
 	<div class="kpi">
 		<div class="k-t">
-			<Icon icon={I.phCursorClickFill} size={15} style="color:#D2582F" />Clics este mes
+			<Icon icon={I.phCursorClickFill} size={15} style="color:#b0441d" />Clics este mes
 		</div>
 		<div class="k-v">{clicsMes.toLocaleString('es-AR')}</div>
 		<div class="k-d">Visitas a tu link</div>
@@ -119,13 +119,13 @@
 	</div>
 	<div class="kpi">
 		<div class="k-t">
-			<Icon icon={I.phCheckCircleFill} size={15} style="color:#2F8F63" />Conversiones
+			<Icon icon={I.phCheckCircleFill} size={15} style="color:#237550" />Conversiones
 		</div>
 		<div class="k-v">{conversiones}</div>
 		<div class="k-d">Con plan pago</div>
 	</div>
 	<div class="kpi">
-		<div class="k-t"><Icon icon={I.phTrendUpBold} size={15} style="color:#2F8F63" />Conversión</div>
+		<div class="k-t"><Icon icon={I.phTrendUpBold} size={15} style="color:#237550" />Conversión</div>
 		<div class="k-v">{tasa}&nbsp;%</div>
 		<div class="k-d">De las altas a plan pago</div>
 	</div>

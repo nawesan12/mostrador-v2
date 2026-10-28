@@ -264,7 +264,7 @@
 		font-weight: 600;
 	}
 	.tabs a[aria-current='page'] :global(svg) {
-		color: #d2582f;
+		color: #b0441d;
 	}
 	.cuerpo {
 		display: flex;
@@ -319,7 +319,7 @@
 		gap: 6px;
 		font-size: 13.5px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 		text-decoration: none;
 		border: 0;
 		background: transparent;
@@ -476,7 +476,7 @@
 		flex: none;
 		border-radius: 11px;
 		background: rgba(47, 143, 99, 0.12);
-		color: #2f8f63;
+		color: #237550;
 		display: grid;
 		place-items: center;
 	}
@@ -555,7 +555,7 @@
 	.socio :global(.chips button[aria-pressed='true']) {
 		border-color: #d2582f;
 		background: rgba(210, 88, 47, 0.06);
-		color: #c24e25;
+		color: #b0441d;
 	}
 	/* Modal (Configuración, invitar). El modal se monta en el body: su contenido va en un .pm. */
 	:global(.pm .roles) {

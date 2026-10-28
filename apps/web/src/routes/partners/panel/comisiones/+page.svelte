@@ -399,7 +399,7 @@
 		gap: 6px;
 		font-size: 13.5px;
 		font-weight: 600;
-		color: #c24e25;
+		color: #b0441d;
 		text-decoration: none;
 	}
 	@media (max-width: 759px) {

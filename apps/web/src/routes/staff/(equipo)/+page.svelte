@@ -42,7 +42,7 @@
 		<div class="t-t">Alertas</div>
 		{#each data.inicio.alertas as a, i (i)}
 			<div class="fila">
-				<Icon icon={ALERTA[a.tipo]} size={18} style="color:#C24E25;flex:none" />
+				<Icon icon={ALERTA[a.tipo]} size={18} style="color:#b0441d;flex:none" />
 				<span class="f-txt"><b>{a.titulo}</b><span class="f-s">{a.detalle}</span></span>
 				{#if a.tiendaId}<a class="borde" href={ficha(a.tiendaId)}>Ver</a>{:else if a.consulta}<a
 						class="borde"

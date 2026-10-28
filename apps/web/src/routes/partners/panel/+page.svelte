@@ -29,7 +29,7 @@
 <div class="kpis" use:anim={{ t: 'rise' }}>
 	<div class="kpi grande">
 		<div class="k-t">
-			<Icon icon={I.phHandCoinsFill} size={15} style="color:#D2582F" />Comisión del mes
+			<Icon icon={I.phHandCoinsFill} size={15} style="color:#b0441d" />Comisión del mes
 		</div>
 		<div class="k-v">{pesos(r.estimado)}</div>
 		<div class="k-d">
@@ -39,14 +39,14 @@
 	</div>
 	<div class="kpi">
 		<div class="k-t">
-			<Icon icon={I.phCalendarCheckFill} size={15} style="color:#2F8F63" />Próximo pago
+			<Icon icon={I.phCalendarCheckFill} size={15} style="color:#237550" />Próximo pago
 		</div>
 		<div class="k-v">{pesos(r.proximo.monto)}</div>
 		<div class="k-d">{ESTADO_PAGO[r.proximo.estado].t} · {r.proximo.cuando}</div>
 	</div>
 	<div class="kpi">
 		<div class="k-t">
-			<Icon icon={I.phStorefrontFill} size={15} style="color:#2F8F63" />Tiendas activas
+			<Icon icon={I.phStorefrontFill} size={15} style="color:#237550" />Tiendas activas
 		</div>
 		<div class="k-v">{r.activas}</div>
 		<div class="k-d">Con plan pago</div>
@@ -177,7 +177,7 @@
 	}
 	.nivel.oro {
 		background: #fcede5;
-		color: #c24e25;
+		color: #b0441d;
 	}
 	.progreso {
 		margin-top: 14px;

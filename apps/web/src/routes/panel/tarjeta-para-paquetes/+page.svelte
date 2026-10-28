@@ -184,7 +184,7 @@
 			<div class="p-t sep">El QR lleva a</div>
 			{#each DESTINOS as [d, texto] (d)}
 				<button type="button" class="sec" aria-pressed={t.qr === d} onclick={() => (t.qr = d)}
-					><Icon icon={ICONOS[d]} size={16} style="color:#C24E25" /><span class="s-t">{texto}</span
+					><Icon icon={ICONOS[d]} size={16} style="color:#b0441d" /><span class="s-t">{texto}</span
 					>{#if t.qr === d}<Icon icon={I.phCheckBold} size={14} />{/if}</button
 				>
 			{/each}
@@ -263,7 +263,7 @@
 		padding: 11px 20px;
 		border-radius: 999px;
 		border: 0;
-		background: linear-gradient(180deg, #e06a3e, #d2582f);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
 		color: #fff;
 		font:
 			600 14px 'Instrument Sans',
