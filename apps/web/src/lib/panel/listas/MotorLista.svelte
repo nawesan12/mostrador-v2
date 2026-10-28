@@ -211,15 +211,15 @@
 		</div>
 		<!-- eslint-disable svelte/no-navigation-without-resolve -- la descarga del CSV no es una navegación -->
 		{#if exportar}<a
-			class="secundario"
-			href="{base}/exportar?{escribir(f)}"
-			download
-			onclick={() =>
-				ui.toast({
-					k: 'ok',
-					title: `Exportando ${n} ${config.unidad}`,
-					desc: 'Con los filtros aplicados · en CSV para Excel'
-				})}><Icon icon={I.phDownloadSimpleBold} size={14} />Exportar</a
+				class="secundario"
+				href="{base}/exportar?{escribir(f)}"
+				download
+				onclick={() =>
+					ui.toast({
+						k: 'ok',
+						title: `Exportando ${n} ${config.unidad}`,
+						desc: 'Con los filtros aplicados · en CSV para Excel'
+					})}><Icon icon={I.phDownloadSimpleBold} size={14} />Exportar</a
 			>{/if}
 		<!-- eslint-enable svelte/no-navigation-without-resolve -->
 		{@render extra?.()}
