@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/avisos"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/equipo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ia"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
@@ -68,7 +69,7 @@ func correr() error {
 		mails = &correo.Resend{Clave: cfg.ResendClave, De: cfg.CorreoDe}
 	}
 	av := &avisos.Servicio{Pool: app, Correo: mails, Sitio: cfg.Sitio}
-	for _, ms := range []map[string]outbox.Manejador{mp.Manejadores(), ml.Manejadores(), av.Manejadores()} {
+	for _, ms := range []map[string]outbox.Manejador{mp.Manejadores(), ml.Manejadores(), av.Manejadores(), equipo.Manejadores(mails)} {
 		for tipo, m := range ms {
 			w.Manejadores[tipo] = m
 		}
