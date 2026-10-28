@@ -1,0 +1,25 @@
+{
+	"comisiones": [
+		{ "caso": "Partner, Pro mensual, el mes del alta", "nivel": "partner", "plan": "pro", "ciclo": "mes", "alta": "2026-01-15T15:00:00Z", "mes": "2026-01", "comision": 9980 },
+		{ "caso": "Plata, Pro mensual (el ejemplo de la landing)", "nivel": "plata", "plan": "pro", "ciclo": "mes", "alta": "2026-01-15T15:00:00Z", "mes": "2026-06", "comision": 12475 },
+		{ "caso": "Oro, Pro mensual", "nivel": "oro", "plan": "pro", "ciclo": "mes", "alta": "2026-01-15T15:00:00Z", "mes": "2026-06", "comision": 14970 },
+		{ "caso": "Oro, Negocio mensual", "nivel": "oro", "plan": "negocio", "ciclo": "mes", "alta": "2026-01-15T15:00:00Z", "mes": "2026-06", "comision": 44970 },
+		{ "caso": "Partner, Emprende mensual", "nivel": "partner", "plan": "emprende", "ciclo": "mes", "alta": "2026-01-15T15:00:00Z", "mes": "2026-06", "comision": 3980 },
+		{ "caso": "Plata, Pro anual: sobre lo que paga por mes", "nivel": "plata", "plan": "pro", "ciclo": "anio", "alta": "2026-01-15T15:00:00Z", "mes": "2026-06", "comision": 9356 },
+		{ "caso": "El mes 12 (el último) todavía cuenta", "nivel": "plata", "plan": "pro", "ciclo": "mes", "alta": "2026-01-15T15:00:00Z", "mes": "2026-12", "comision": 12475 },
+		{ "caso": "Al año del alta ya no", "nivel": "plata", "plan": "pro", "ciclo": "mes", "alta": "2026-01-15T15:00:00Z", "mes": "2027-01", "comision": 0 },
+		{ "caso": "Antes del alta, nada", "nivel": "plata", "plan": "pro", "ciclo": "mes", "alta": "2026-01-15T15:00:00Z", "mes": "2025-12", "comision": 0 },
+		{ "caso": "Plan gratis, nada", "nivel": "oro", "plan": "gratis", "ciclo": "mes", "alta": "2026-01-15T15:00:00Z", "mes": "2026-03", "comision": 0 },
+		{ "caso": "El alta se cuenta en hora de Argentina (31/12 a las 23)", "nivel": "partner", "plan": "pro", "ciclo": "mes", "alta": "2026-01-01T02:00:00Z", "mes": "2026-11", "comision": 9980 },
+		{ "caso": "…y su mes 13 es diciembre de 2026", "nivel": "partner", "plan": "pro", "ciclo": "mes", "alta": "2026-01-01T02:00:00Z", "mes": "2026-12", "comision": 0 }
+	],
+	"niveles": [
+		{ "asignado": "partner", "activas": 0, "nivel": "partner" },
+		{ "asignado": "partner", "activas": 4, "nivel": "partner" },
+		{ "asignado": "partner", "activas": 5, "nivel": "plata" },
+		{ "asignado": "partner", "activas": 19, "nivel": "plata" },
+		{ "asignado": "partner", "activas": 20, "nivel": "oro" },
+		{ "asignado": "plata", "activas": 0, "nivel": "plata" },
+		{ "asignado": "oro", "activas": 3, "nivel": "oro" }
+	]
+}

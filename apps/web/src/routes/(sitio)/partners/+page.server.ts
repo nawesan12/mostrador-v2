@@ -1,6 +1,10 @@
 import { Postulacion } from '#lib/server/formularios-esquemas.ts';
+import { usaSandbox } from '#lib/server/datos/index.ts';
 import { procesar } from '#lib/server/formularios.ts';
-import type { Actions } from './$types';
+import type { Actions, PageServerLoad } from './$types';
+
+/** En la demo pública se puede recorrer el panel de partners de ejemplo. */
+export const load: PageServerLoad = () => ({ demo: usaSandbox() });
 
 export const actions: Actions = {
 	default: async (event) => {

@@ -410,3 +410,41 @@ URL, para que no quede en el historial ni en logs.
   con `MOSTRADOR_TELEGRAM_BOT_TOKEN` (sin token, no hace nada) y lo marca en `pedidos.avisos.telegram`
   (una sola vez aunque el outbox entregue dos). Un 4xx de Telegram (bot bloqueado, chat borrado) no
   se reintenta; un 429 o 5xx, sí. Los turnos nuevos todavía no avisan por Telegram con la API.
+
+
+## 26. Panel de partners (PR #75)
+
+- Un partner es una cuenta de usuario (no una tienda): `partners.partners` (nivel, código del link,
+  cupón, perfil público y datos de cobro), `partners.clics` (contador por mes) y `partners.pagos`
+  (liquidación de cada mes con el detalle por tienda congelado y el link de la factura), migración
+  00037. RLS forzada por persona: `db.EnUsuario` fija `app.usuario_id`, como `EnTienda` fija la tienda.
+- Atribución: una tienda es del partner si su origen (`/empezar`, migración 00030) trae su `ref`
+  (sin distinguir mayúsculas) o su cupón. La lee `partners.tiendas_referidas()` (security definer:
+  abre sólo esas tiendas y sólo nombre, plan, ciclo y fechas). El origen no cambia después del alta,
+  así que una comisión no cambia de dueño.
+- Comisión del mes = % del nivel × lo que la tienda paga por mes (el anual, dividido 12), redondeado al
+  peso, durante los meses calendario 0 a 11 desde el alta (en hora de Argentina), sólo si la tienda
+  está activa. Precios: `mercadopago.PrecioDe` en Go y `panel/planes.ts` en la web; misma tabla de
+  casos (`partners/testdata/comisiones.json`).
+- Estados de una tienda referida: en prueba (primeros 14 días, aunque haya elegido plan), activa (plan
+  pago), sin plan pago (terminó la prueba en Gratis) y de baja (canceló o cerró). "Perdidas" en Inicio
+  = sin plan pago + de baja.
+- Nivel efectivo = el mayor entre el que dio el equipo y el que alcanzan las tiendas activas (Plata
+  desde 5, Oro desde 20, como dice la landing). Directorio: Plata en adelante (lo publicado en la
+  landing manda sobre la especificación, que decía sólo Oro).
+- Pagos: se liquida a fin de mes y se paga el 10 del mes siguiente, contra la factura del partner (un
+  link https, no se suben archivos). Si pasó el 10 y no hay factura, se muestra "se paga cuando subas
+  tu factura". Mientras está pendiente, la liquidación se puede rehacer; aprobada o pagada, no.
+- Aprobar, liquidar y marcar pagos lo hará el backoffice: por ahora son rutas internas con la clave del
+  BFF (`/v1/interno/partners*`). Para probar en local: `mostradorctl partner-demo <email>` (sólo
+  desarrollo, como superusuario) siembra la misma demo que el sandbox.
+- Clics: la primera visita a `/empezar?ref=…` (sin origen previo) suma uno, después de responder. En la
+  demo los clics son de ejemplo.
+- El link de referido usa `SITE` (la dirección que funciona hoy); los QR de Imprimibles con `?ref=` pasan
+  por `/empezar` en `mostradorapp.com.ar`, como el resto de las piezas impresas.
+- Alta de una tienda para una clienta: arma el mail (mailto) con el link o abre el link para crearla.
+  Pendiente: transferir la titularidad de una tienda (hoy la dueña suma al partner al equipo) y entrar
+  al panel de una tienda donde se colabora (no hay cambio de tienda en la sesión todavía).
+- Sin diseño en el handoff: el panel usa las piezas del panel de la tienda (barra de arriba, pestañas y
+  tarjetas de Configuración, KPIs de Cupones, filas de MotorLista, Hoja, Modal, Segmentado, Alerta,
+  Vacío con Hornero) y la tarjeta del directorio de /partners para la vista previa del perfil.

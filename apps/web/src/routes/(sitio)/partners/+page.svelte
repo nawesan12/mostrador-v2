@@ -11,7 +11,7 @@
 	import type { PageProps } from './$types';
 
 	/** Programa de partners (design/Mostrador Partners.dc.html). */
-	let { form }: PageProps = $props();
+	let { data, form }: PageProps = $props();
 	const err = $derived((form && 'errores' in form ? form.errores : {}) as Record<string, string>);
 	const previo = $derived(
 		(form && 'errores' in form ? form : {}) as Record<string, string> & {
@@ -177,6 +177,11 @@
 					Te damos acceso al panel de partners, una cuenta de prueba sin límite y una capacitación
 					de una hora con el equipo.
 				</p>
+				{#if data.demo}
+					<form id="ejemplo" class="ver-ejemplo" method="POST" action="/partners/panel/ejemplo">
+						<button class="btn btn-secondary">Ver el panel de partners de ejemplo</button>
+					</form>
+				{/if}
 			</div>
 			<div class="tarjeta">
 				{#if enviado}
@@ -297,6 +302,10 @@
 	.sec {
 		border: 1.5px solid rgba(251, 247, 242, 0.3);
 		color: #fbf7f2 !important;
+	}
+	.ver-ejemplo {
+		margin-top: 18px;
+		scroll-margin-top: 90px;
 	}
 	.hero-in > img {
 		width: clamp(170px, 24vw, 300px);

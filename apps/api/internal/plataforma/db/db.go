@@ -49,6 +49,23 @@ func (p *Pool) EnTienda(ctx context.Context, tiendaID string, fn func(pgx.Tx) er
 	})
 }
 
+// ErrSinUsuario: se pidió un acceso por persona sin persona.
+var ErrSinUsuario = errors.New("acceso a datos sin usuario")
+
+// EnUsuario corre fn en una transacción con la persona fijada (`app.usuario_id`): lo que no es de
+// una tienda sino de alguien (la ficha de partner). RLS compara contra esa persona.
+func (p *Pool) EnUsuario(ctx context.Context, usuarioID string, fn func(pgx.Tx) error) error {
+	if usuarioID == "" {
+		return ErrSinUsuario
+	}
+	return p.enTx(ctx, func(tx pgx.Tx) error {
+		if _, err := tx.Exec(ctx, "SELECT set_config('app.usuario_id', $1, true)", usuarioID); err != nil {
+			return err
+		}
+		return fn(tx)
+	})
+}
+
 // EnTx corre fn en una transacción sin tienda: sólo sirve para lo que no depende de una
 // (alta de tienda con app.crear_tienda, el worker sobre el outbox, lecturas de staff).
 func (p *Pool) EnTx(ctx context.Context, fn func(pgx.Tx) error) error {
