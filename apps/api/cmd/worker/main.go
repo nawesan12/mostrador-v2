@@ -13,6 +13,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/equipo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/facturacion"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ia"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/importacion"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ventas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
@@ -90,7 +91,12 @@ func correr() error {
 	av := &avisos.Servicio{Pool: app, Correo: mails, Sitio: cfg.Sitio}
 	// Aviso de cada venta al Telegram de la dueña. Sin token, el manejador no manda nada.
 	tg := &telegram.Servicio{Pool: app, Bot: &telegram.Bot{Token: cfg.TelegramToken}}
-	for _, ms := range []map[string]outbox.Manejador{mp.Manejadores(), ml.Manejadores(), av.Manejadores(), mc.Manejadores(), tg.Manejadores(), equipo.Manejadores(mails)} {
+	// Importación desde otra plataforma: cada paso guarda una página y encola el siguiente.
+	imp := &importacion.Servicio{Pool: app, Fuentes: importacion.Fuentes()}
+	if c, err := cifrado.Nuevo(cfg.ClaveCifrado); err == nil && cfg.ClaveCifrado != "" {
+		imp.Cifra = c
+	}
+	for _, ms := range []map[string]outbox.Manejador{mp.Manejadores(), ml.Manejadores(), av.Manejadores(), mc.Manejadores(), tg.Manejadores(), equipo.Manejadores(mails), imp.Manejadores()} {
 		for tipo, m := range ms {
 			w.Manejadores[tipo] = m
 		}

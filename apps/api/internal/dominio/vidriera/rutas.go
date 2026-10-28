@@ -233,4 +233,19 @@ func Rutas(mux *http.ServeMux, pool tx, mp Pagador, sitio string, dev *devolucio
 		}
 		escribir(w, http.StatusOK, c)
 	})
+	// Un link de la tienda vieja (importada): 301 al path de Mostrador, relativo a la tienda. Lo pide
+	// el BFF cuando un path de /t/{slug} no existe; el cuerpo repite el destino para no leer el header.
+	mux.HandleFunc("GET /v1/publico/tiendas/{slug}/redireccion", func(w http.ResponseWriter, r *http.Request) {
+		hacia, err := Redireccion(r.Context(), pool, r.PathValue("slug"), r.URL.Query().Get("path"))
+		if errors.Is(err, ErrNoExiste) {
+			problema.Escribir(w, problema.NoEncontrado("Esa dirección no existe en la tienda."))
+			return
+		}
+		if err != nil {
+			error404(w, err)
+			return
+		}
+		w.Header().Set("Location", hacia)
+		escribir(w, http.StatusMovedPermanently, map[string]string{"hacia": hacia})
+	})
 }

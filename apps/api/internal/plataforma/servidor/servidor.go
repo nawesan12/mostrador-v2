@@ -20,6 +20,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/formularios"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/hoy"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ia"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/importacion"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/links"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/listas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/mitienda"
@@ -66,6 +67,8 @@ type Dependencias struct {
 	Telegram *telegram.Servicio
 	// Backoffice del equipo (/v1/equipo/*) y "ver la tienda" de sólo lectura. nil: no se monta.
 	Equipo *equipo.Servicio
+	// Importar la tienda desde otra plataforma (el avance lo hace el worker). nil: no se monta.
+	Importacion *importacion.Servicio
 }
 
 // Nuevo devuelve el handler raíz de la API.
@@ -165,6 +168,9 @@ func Nuevo(d Dependencias) http.Handler {
 			}})
 		if d.Telegram != nil {
 			d.Telegram.Rutas(mux, d.ClaveBFF)
+		}
+		if d.Importacion != nil {
+			d.Importacion.Rutas(mux)
 		}
 		ip := func(r *http.Request) string { return cuentas.ClienteDe(r, d.ClaveBFF).IP }
 		dev := &devoluciones.Servicio{Pool: d.App, Correo: d.Correo}

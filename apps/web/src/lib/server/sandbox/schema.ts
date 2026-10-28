@@ -112,3 +112,85 @@ export const archivos = sqliteTable(
 	},
 	(t) => [index('archivos_duenio').on(t.duenio), index('archivos_sandbox').on(t.sandboxId)]
 );
+
+/** Migración desde otras plataformas (migración 0007): ficha de cliente, historial, redirecciones y trabajo. */
+export const clientesSandbox = sqliteTable(
+	'clientes',
+	{
+		sandboxId: text('sandbox_id')
+			.notNull()
+			.references(() => sandboxes.id, { onDelete: 'cascade' }),
+		id: text('id').notNull(),
+		nombre: text('nombre').notNull(),
+		email: text('email'),
+		telefono: text('telefono'),
+		ciudad: text('ciudad').notNull().default(''),
+		provincia: text('provincia').notNull().default(''),
+		notas: text('notas').notNull().default(''),
+		origen: text('origen').notNull(),
+		externo: text('externo'),
+		creadoEn: integer('creado_en').notNull()
+	},
+	(t) => [primaryKey({ columns: [t.sandboxId, t.id] })]
+);
+
+export const historialPedidos = sqliteTable(
+	'historial_pedidos',
+	{
+		sandboxId: text('sandbox_id')
+			.notNull()
+			.references(() => sandboxes.id, { onDelete: 'cascade' }),
+		id: text('id').notNull(),
+		plataforma: text('plataforma').notNull(),
+		externo: text('externo').notNull(),
+		numeroExterno: text('numero_externo').notNull().default(''),
+		fecha: integer('fecha').notNull(),
+		clienteEmail: text('cliente_email'),
+		clienteNombre: text('cliente_nombre').notNull().default(''),
+		total: integer('total').notNull(),
+		items: text('items').notNull().default('[]'),
+		estado: text('estado').notNull().default('')
+	},
+	(t) => [
+		primaryKey({ columns: [t.sandboxId, t.id] }),
+		index('historial_pedidos_email').on(t.sandboxId, t.clienteEmail)
+	]
+);
+
+export const redirecciones = sqliteTable(
+	'redirecciones',
+	{
+		sandboxId: text('sandbox_id')
+			.notNull()
+			.references(() => sandboxes.id, { onDelete: 'cascade' }),
+		desde: text('desde').notNull(),
+		hacia: text('hacia').notNull(),
+		origen: text('origen').notNull(),
+		creada: integer('creada').notNull()
+	},
+	(t) => [primaryKey({ columns: [t.sandboxId, t.desde] })]
+);
+
+export const importaciones = sqliteTable(
+	'importaciones',
+	{
+		sandboxId: text('sandbox_id')
+			.notNull()
+			.references(() => sandboxes.id, { onDelete: 'cascade' }),
+		id: text('id').notNull(),
+		plataforma: text('plataforma').notNull(),
+		urlOrigen: text('url_origen').notNull().default(''),
+		estado: text('estado').notNull().default('pendiente'),
+		etapa: text('etapa').notNull().default('productos'),
+		cursor: text('cursor'),
+		pasos: integer('pasos').notNull().default(0),
+		progreso: text('progreso').notNull(),
+		errores: text('errores').notNull().default('[]'),
+		creada: integer('creada').notNull(),
+		terminada: integer('terminada')
+	},
+	(t) => [
+		primaryKey({ columns: [t.sandboxId, t.id] }),
+		index('importaciones_recientes').on(t.sandboxId, t.creada)
+	]
+);

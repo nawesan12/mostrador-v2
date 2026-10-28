@@ -82,6 +82,7 @@ import type {
 	Tablero,
 	Tienda
 } from './tipos.ts';
+import type { Importacion, ImportacionNueva, PedidoHistorial } from '../importacion/fuente.ts';
 
 /** Un producto de una API sin galería ni variantes todavía se ve como uno sin opciones. */
 function conVariantes(p: Producto): Producto {
@@ -287,6 +288,38 @@ export class DatosApi implements Datos {
 				respuesta
 			})
 		);
+	}
+
+	// ---------------------------------------------------------------- Importación
+
+	async importacionActual() {
+		const r = await this.pedir<Importacion | undefined>('/v1/panel/importaciones/actual');
+		return r ?? null;
+	}
+	async crearImportacion(n: ImportacionNueva) {
+		const r = await this.intentar('/v1/panel/importaciones', 'POST', n, [400]);
+		if (r.ok) return (await r.json()) as Importacion;
+		if (r.status === 400) return 'invalido';
+		const p = (await r.json().catch(() => null)) as { code?: string } | null;
+		if (p?.code === 'importacion_activa') return 'activa';
+		if (p?.code === 'sin_fuente') return 'sin-fuente';
+		error(r.status, 'No pudimos empezar la importación.');
+	}
+	async cancelarImportacion(id: string) {
+		const r = await this.intentar(
+			`/v1/panel/importaciones/${encodeURIComponent(id)}/cancelar`,
+			'POST',
+			{}
+		);
+		if (r.ok) return (await r.json()) as Importacion;
+		return r.status === 404 ? 'no-existe' : 'terminada';
+	}
+	/** Con la API avanza el worker por el outbox: acá sólo se lee cómo va. */
+	avanzarImportacion() {
+		return this.importacionActual();
+	}
+	historialCliente(id: string) {
+		return this.pedir<PedidoHistorial[]>(`/v1/panel/clientes/${encodeURIComponent(id)}/historial`);
 	}
 
 	async crearLink(l: { monto: number; concepto: string; cuotas: boolean; pedido: number | null }) {

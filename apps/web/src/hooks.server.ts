@@ -5,6 +5,7 @@ import { csrfForbidden } from '#lib/server/csrf.ts';
 import { COOKIE, dbSandbox, leer } from '#lib/server/sandbox/sandbox.ts';
 import { COOKIE_SESION } from '#lib/server/auth/sesion.ts';
 import { COOKIE_EQUIPO, COOKIE_MIRADA } from '#lib/server/staff/index.ts';
+import { redireccionTienda } from '#lib/server/tienda/redireccion.ts';
 
 /**
  * Rutas que usan el sandbox de la demo: sólo ahí se lee D1 (la landing no gasta lecturas).
@@ -80,7 +81,19 @@ export const handle: Handle = async ({ event, resolve }) => {
 	} else if (CON_SANDBOX.test(event.url.pathname)) {
 		event.locals.sandbox = await leer(dbSandbox(env.SANDBOX), event.cookies.get(COOKIE));
 	}
-	const res = secure(await resolve(event));
+	let res = secure(await resolve(event));
+	// Un link de la tienda vieja (importada): si el path de la tienda no existe y había una dirección
+	// guardada, 301 a la nueva. Sólo ante un 404, así las páginas que existen no consultan nada.
+	if (
+		res.status === 404 &&
+		event.request.method === 'GET' &&
+		event.url.pathname.startsWith('/t/')
+	) {
+		const hacia = await redireccionTienda(event.url.pathname, event.cookies.get(COOKIE)).catch(
+			() => null
+		);
+		if (hacia) res = secure(new Response(null, { status: 301, headers: { location: hacia } }));
+	}
 	try {
 		res.headers.set('Server-Timing', `app;dur=${Date.now() - started}`);
 		// En desarrollo, Vite inyecta scripts y un websocket propios: la CSP va sólo en el build.

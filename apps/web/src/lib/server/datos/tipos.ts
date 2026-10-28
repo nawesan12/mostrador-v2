@@ -5,6 +5,7 @@
  */
 import type { components } from '@mostrador/contrato/esquema';
 import type { AjusteIntegracion, EstadoIntegraciones } from '#lib/panel/integraciones.ts';
+import type { Importacion, ImportacionNueva, PedidoHistorial } from '../importacion/fuente.ts';
 
 export type Rubro = components['schemas']['Rubro'];
 export type Tienda = components['schemas']['Tienda'];
@@ -279,6 +280,20 @@ export interface Datos {
 	estadoTurno(id: string, estado: EstadoTurno): Promise<Turno | 'no-existe'>;
 	/** Devuelve la seña pagada con Mercado Pago. */
 	devolverSena(id: string): Promise<Turno | 'no-existe' | 'sin-sena' | 'sin-cobros'>;
+	/** La importación en curso o, si no hay, la última (null: nunca hubo). */
+	importacionActual(): Promise<Importacion | null>;
+	/** Empieza a importar desde otra plataforma (una sola activa). */
+	crearImportacion(
+		n: ImportacionNueva
+	): Promise<Importacion | 'invalido' | 'sin-fuente' | 'activa'>;
+	cancelarImportacion(id: string): Promise<Importacion | 'no-existe' | 'terminada'>;
+	/**
+	 * En la demo hace un paso (no hay outbox: avanza por pedidos del navegador); con la API sólo
+	 * devuelve cómo va, porque avanza el worker.
+	 */
+	avanzarImportacion(): Promise<Importacion | null>;
+	/** Los pedidos importados de otra plataforma de un cliente (el id de la lista). */
+	historialCliente(id: string): Promise<PedidoHistorial[]>;
 	/** Un link de pago; devuelve el código. */
 	crearLink(l: {
 		monto: number;

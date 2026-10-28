@@ -2312,6 +2312,81 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/CodigoTelegram' }
         '403': { $ref: '#/components/responses/Problema' }
+  /v1/panel/importaciones:
+    post:
+      operationId: crearImportacion
+      summary: 'Empieza a importar la tienda desde otra plataforma (dueña o admin). Una sola activa por tienda. Con la API avanza sola por el outbox; en la demo, de a un lote por pedido del navegador (avanzarImportacion).'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ImportacionNueva' }
+      responses:
+        '201':
+          description: Creada (pendiente, con el primer paso encolado)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Importacion' }
+        '400': { $ref: '#/components/responses/Problema' }
+        '403': { $ref: '#/components/responses/Problema' }
+        '409': { description: 'importacion_activa, sin_fuente (todavía no se importa desde esa plataforma) o sin_cifrado', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problema' } } } }
+  /v1/panel/importaciones/actual:
+    get:
+      operationId: importacionActual
+      summary: La importación en curso o, si no hay, la última.
+      responses:
+        '200':
+          description: Importación
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Importacion' }
+        '204': { description: Nunca se importó nada }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/importaciones/{id}/cancelar:
+    post:
+      operationId: cancelarImportacion
+      summary: Frena una importación en curso (dueña o admin). Lo ya guardado queda; la credencial se borra.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Cancelada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Importacion' }
+        '403': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+        '409': { description: 'terminada: ya había terminado', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problema' } } } }
+  /v1/panel/clientes/{id}/historial:
+    get:
+      operationId: historialCliente
+      summary: 'Los pedidos importados de otra plataforma de un cliente (el id de la lista de Clientes), del más nuevo al más viejo, hasta 200. No son pedidos de Mostrador.'
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Historial
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/PedidoHistorial' } }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/publico/tiendas/{slug}/redireccion:
+    get:
+      operationId: redireccionTienda
+      summary: 'Un link de la tienda vieja: 301 con Location = el path en Mostrador, relativo a la tienda. Lo pide el BFF cuando un path de /t/{slug} no existe.'
+      security: []
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+        - { name: path, in: query, required: true, schema: { type: string, maxLength: 2000 }, description: 'El path pedido (se normaliza: sin query, en minúsculas, sin barra final)' }
+      responses:
+        '301':
+          description: Redirección
+          headers:
+            Location: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { type: object, required: [hacia], properties: { hacia: { type: string } } }
+        '404': { $ref: '#/components/responses/Problema' }
   /v1/telegram/vincular:
     post:
       operationId: vincularTelegram
@@ -2582,6 +2657,66 @@ components:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problema' }
   schemas:
+    Plataforma:
+      type: string
+      enum: [tiendanube, shopify, woocommerce, mercadolibre, empretienda, csv]
+    ImportacionNueva:
+      type: object
+      required: [plataforma]
+      properties:
+        plataforma: { $ref: '#/components/schemas/Plataforma' }
+        url: { type: string, maxLength: 300, description: 'La dirección de la tienda vieja (http o https)' }
+        credencial: { type: string, maxLength: 4096, description: 'Token o clave de la plataforma vieja si la fuente la pide. Se guarda cifrada y nunca vuelve; en la demo no se guarda' }
+    ProgresoImportacion:
+      type: object
+      required: [productos, clientes, pedidos, redirecciones, repetidos, recortados]
+      properties:
+        productos: { type: integer }
+        clientes: { type: integer }
+        pedidos: { type: integer }
+        redirecciones: { type: integer }
+        repetidos: { type: integer, description: 'Lo que ya estaba (mismo email, SKU, URL o pedido)' }
+        recortados: { type: integer, description: 'Lo que entró con algo cortado (textos largos, más de 8 fotos o de 100 líneas)' }
+    ErrorImportacion:
+      type: object
+      required: [etapa, externo, detalle]
+      properties:
+        etapa: { type: string }
+        externo: { type: string, description: 'El id en la plataforma vieja (vacío si el error es de la fuente)' }
+        detalle: { type: string }
+    Importacion:
+      type: object
+      required: [id, plataforma, urlOrigen, estado, etapa, progreso, errores, creada, terminada]
+      properties:
+        id: { type: string }
+        plataforma: { $ref: '#/components/schemas/Plataforma' }
+        urlOrigen: { type: string }
+        estado: { type: string, enum: [pendiente, corriendo, lista, fallida, cancelada] }
+        etapa: { type: string, enum: [productos, clientes, pedidos, redirecciones] }
+        progreso: { $ref: '#/components/schemas/ProgresoImportacion' }
+        errores: { type: array, maxItems: 50, description: 'Los últimos 50', items: { $ref: '#/components/schemas/ErrorImportacion' } }
+        creada: { type: string, format: date-time }
+        terminada: { type: [string, 'null'], format: date-time }
+    PedidoHistorial:
+      type: object
+      required: [id, plataforma, numero, fecha, total, items, estado]
+      properties:
+        id: { type: string }
+        plataforma: { $ref: '#/components/schemas/Plataforma' }
+        numero: { type: string, description: 'El número en la plataforma vieja (#1043)' }
+        fecha: { type: string, format: date-time }
+        total: { type: integer, description: 'En pesos' }
+        items:
+          type: array
+          items:
+            type: object
+            required: [nombre, variante, cantidad, precio]
+            properties:
+              nombre: { type: string }
+              variante: { type: string }
+              cantidad: { type: integer }
+              precio: { type: integer }
+        estado: { type: string, description: 'Tal como venía de la plataforma' }
     EstadoTelegram:
       type: object
       required: [vinculado]

@@ -138,12 +138,24 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, fact 
 			}
 			err = nil
 		}
+		if r.PathValue("lista") == "clientes" && c.Accion == "crear" {
+			n, err = CrearCliente(r.Context(), pool, id, c.Valor)
+		}
 		// Etiquetas de clientes y mensajes llegan con WhatsApp: hasta entonces, 0.
 		if err != nil {
 			problema.Escribir(w, problema.Invalido(err.Error()))
 			return
 		}
 		escribir(w, map[string]int{"hechos": n})
+	}))
+	// Los pedidos importados de otra plataforma de un cliente (su ficha).
+	mux.HandleFunc("GET /v1/panel/clientes/{id}/historial", con(func(w http.ResponseWriter, r *http.Request, id string) {
+		l, err := Historial(r.Context(), pool, id, r.PathValue("id"))
+		if err != nil {
+			problema.Escribir(w, problema.Interno())
+			return
+		}
+		escribir(w, l)
 	}))
 	mux.HandleFunc("GET /v1/panel/inventario/movimientos", con(func(w http.ResponseWriter, r *http.Request, id string) {
 		m, err := MovimientosHoy(r.Context(), pool, id, time.Now())

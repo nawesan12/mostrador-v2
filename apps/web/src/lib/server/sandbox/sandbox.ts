@@ -118,6 +118,8 @@ import {
 	DEF_PRODUCTOS,
 	listarGenerico,
 	registrosClientes,
+	unirClientes,
+	claveHistorial,
 	registrosEnvios,
 	registrosFacturacion,
 	registrosInventario,
@@ -132,6 +134,15 @@ import {
 	type RegProducto
 } from './listas.ts';
 import { inicioDelDia } from './tablero.ts';
+import {
+	aHistorial,
+	avanzarImportacion,
+	cancelarImportacion,
+	crearImportacion,
+	importacionActual,
+	importadosDe
+} from './importacion.ts';
+import type { ImportacionNueva, PedidoHistorial } from '../importacion/fuente.ts';
 import { cuitValido, limpiarCuit } from '#lib/panel/cuit.ts';
 import {
 	bandejaDemo,
@@ -632,8 +643,59 @@ export class DatosSandbox implements Datos {
 		);
 	}
 	private async regClientes() {
-		const d = await this.demo();
-		return registrosClientes(d, this.sb.creadoEn, Date.now(), await this.cambiosClientes());
+		const [d, cambios, { fichas, historial }] = await Promise.all([
+			this.demo(),
+			this.cambiosClientes(),
+			importadosDe(this.db, this.sb.id)
+		]);
+		const ahora = Date.now();
+		const regs = registrosClientes(d, this.sb.creadoEn, ahora, cambios);
+		if (!fichas.length && !historial.length) return regs;
+		return unirClientes(regs, this.emailsClientes(d, cambios), fichas, historial, ahora);
+	}
+	/** El email de cada cliente de la lista (los de ejemplo y los cargados en el panel), por id. */
+	private emailsClientes(d: Demo, cambios: Map<string, CambioCliente>) {
+		const m = new Map<string, string | null>(d.clientes.map((c) => [c.id, c.email]));
+		for (const [id, c] of cambios) if (c.nuevo) m.set(id, c.nuevo.email);
+		return m;
+	}
+
+	// ---------------------------------------------------------------- Importación
+
+	importacionActual() {
+		return importacionActual(this.db, this.sb.id);
+	}
+	crearImportacion(n: ImportacionNueva) {
+		return crearImportacion(this.db, this.sb.id, n);
+	}
+	cancelarImportacion(id: string) {
+		return cancelarImportacion(this.db, this.sb.id, id);
+	}
+	/** Sin outbox: un paso por pedido del navegador, con la misma función que el editor de productos. */
+	avanzarImportacion() {
+		return avanzarImportacion(this.db, this.sb.id, {
+			guardarProducto: (p) => this.guardarProducto(null, p),
+			skus: async () =>
+				new Set((await this.regProductos()).map((p) => p.sku.trim()).filter(Boolean))
+		});
+	}
+	/** Los pedidos importados de un cliente de la lista, del más nuevo al más viejo. */
+	async historialCliente(id: string): Promise<PedidoHistorial[]> {
+		const [d, cambios, { fichas, historial }] = await Promise.all([
+			this.demo(),
+			this.cambiosClientes(),
+			importadosDe(this.db, this.sb.id)
+		]);
+		if (!historial.length) return [];
+		const clave =
+			this.emailsClientes(d, cambios).get(id)?.toLowerCase() ||
+			fichas.find((f) => f.id === id)?.email ||
+			id;
+		return historial
+			.filter((h) => claveHistorial(h) === clave)
+			.sort((a, b) => b.fecha - a.fecha)
+			.slice(0, 200)
+			.map(aHistorial);
 	}
 	private async cambiosClientes() {
 		const c = await cambiosDe(this.db, this.sb.id, 'cliente');

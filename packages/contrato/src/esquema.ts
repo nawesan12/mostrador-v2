@@ -2263,6 +2263,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/importaciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Empieza a importar la tienda desde otra plataforma (dueña o admin). Una sola activa por tienda. Con la API avanza sola por el outbox; en la demo, de a un lote por pedido del navegador (avanzarImportacion). */
+        post: operations["crearImportacion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/importaciones/actual": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** La importación en curso o, si no hay, la última. */
+        get: operations["importacionActual"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/importaciones/{id}/cancelar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Frena una importación en curso (dueña o admin). Lo ya guardado queda; la credencial se borra. */
+        post: operations["cancelarImportacion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/clientes/{id}/historial": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Los pedidos importados de otra plataforma de un cliente (el id de la lista de Clientes), del más nuevo al más viejo, hasta 200. No son pedidos de Mostrador. */
+        get: operations["historialCliente"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/publico/tiendas/{slug}/redireccion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Un link de la tienda vieja: 301 con Location = el path en Mostrador, relativo a la tienda. Lo pide el BFF cuando un path de /t/{slug} no existe. */
+        get: operations["redireccionTienda"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/telegram/vincular": {
         parameters: {
             query?: never;
@@ -2584,6 +2669,65 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @enum {string} */
+        Plataforma: "tiendanube" | "shopify" | "woocommerce" | "mercadolibre" | "empretienda" | "csv";
+        ImportacionNueva: {
+            plataforma: components["schemas"]["Plataforma"];
+            /** @description La dirección de la tienda vieja (http o https) */
+            url?: string;
+            /** @description Token o clave de la plataforma vieja si la fuente la pide. Se guarda cifrada y nunca vuelve; en la demo no se guarda */
+            credencial?: string;
+        };
+        ProgresoImportacion: {
+            productos: number;
+            clientes: number;
+            pedidos: number;
+            redirecciones: number;
+            /** @description Lo que ya estaba (mismo email, SKU, URL o pedido) */
+            repetidos: number;
+            /** @description Lo que entró con algo cortado (textos largos, más de 8 fotos o de 100 líneas) */
+            recortados: number;
+        };
+        ErrorImportacion: {
+            etapa: string;
+            /** @description El id en la plataforma vieja (vacío si el error es de la fuente) */
+            externo: string;
+            detalle: string;
+        };
+        Importacion: {
+            id: string;
+            plataforma: components["schemas"]["Plataforma"];
+            urlOrigen: string;
+            /** @enum {string} */
+            estado: "pendiente" | "corriendo" | "lista" | "fallida" | "cancelada";
+            /** @enum {string} */
+            etapa: "productos" | "clientes" | "pedidos" | "redirecciones";
+            progreso: components["schemas"]["ProgresoImportacion"];
+            /** @description Los últimos 50 */
+            errores: components["schemas"]["ErrorImportacion"][];
+            /** Format: date-time */
+            creada: string;
+            /** Format: date-time */
+            terminada: string | null;
+        };
+        PedidoHistorial: {
+            id: string;
+            plataforma: components["schemas"]["Plataforma"];
+            /** @description El número en la plataforma vieja (#1043) */
+            numero: string;
+            /** Format: date-time */
+            fecha: string;
+            /** @description En pesos */
+            total: number;
+            items: {
+                nombre: string;
+                variante: string;
+                cantidad: number;
+                precio: number;
+            }[];
+            /** @description Tal como venía de la plataforma */
+            estado: string;
+        };
         EstadoTelegram: {
             vinculado: boolean;
             /** @description Nombre de quien vinculó el chat */
@@ -8563,6 +8707,154 @@ export interface operations {
                 };
             };
             403: components["responses"]["Problema"];
+        };
+    };
+    crearImportacion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportacionNueva"];
+            };
+        };
+        responses: {
+            /** @description Creada (pendiente, con el primer paso encolado) */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Importacion"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            403: components["responses"]["Problema"];
+            /** @description importacion_activa, sin_fuente (todavía no se importa desde esa plataforma) o sin_cifrado */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problema"];
+                };
+            };
+        };
+    };
+    importacionActual: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Importación */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Importacion"];
+                };
+            };
+            /** @description Nunca se importó nada */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    cancelarImportacion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cancelada */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Importacion"];
+                };
+            };
+            403: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+            /** @description terminada: ya había terminado */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problema"];
+                };
+            };
+        };
+    };
+    historialCliente: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Historial */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PedidoHistorial"][];
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    redireccionTienda: {
+        parameters: {
+            query: {
+                /** @description El path pedido (se normaliza: sin query, en minúsculas, sin barra final) */
+                path: string;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redirección */
+            301: {
+                headers: {
+                    Location?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        hacia: string;
+                    };
+                };
+            };
+            404: components["responses"]["Problema"];
         };
     };
     vincularTelegram: {

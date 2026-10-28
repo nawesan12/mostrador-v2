@@ -175,18 +175,7 @@ export function registrosClientes(
 			const gastado =
 				ps.reduce((s, p) => s + p.total, 0) +
 				Math.round((previos * ticket * (0.6 + r)) / 100) * 100;
-			const seg: RegCliente['seg'] =
-				pedidos >= 12 && ultima < 60
-					? 'vip'
-					: pedidos >= 4 && ultima < 90
-						? 'freq'
-						: pedidos <= 1 && ultima < 30
-							? 'new'
-							: ultima > 180
-								? 'sleep'
-								: ultima > 75
-									? 'risk'
-									: 'freq';
+			const seg = segmentoDe(pedidos, ultima);
 			const meses = Array.from({ length: 12 }, (_, k) => {
 				const d1 = ahora - (11 - k) * 30 * DIA;
 				const d0 = d1 - 30 * DIA;
@@ -217,6 +206,107 @@ export function registrosClientes(
 			};
 		})
 	];
+}
+
+/** Los mismos cortes que el handoff (PanelListas) y que Go (listas.segmento). */
+export function segmentoDe(pedidos: number, ultima: number): RegCliente['seg'] {
+	if (pedidos >= 12 && ultima < 60) return 'vip';
+	if (pedidos >= 4 && ultima < 90) return 'freq';
+	if (pedidos <= 1 && ultima < 30) return 'new';
+	if (ultima > 180) return 'sleep';
+	if (ultima > 75) return 'risk';
+	return 'freq';
+}
+
+/** Una ficha de cliente importada o cargada (tabla `clientes` de la demo). */
+export type FichaImportada = {
+	id: string;
+	nombre: string;
+	email: string | null;
+	telefono: string | null;
+	ciudad: string;
+	origen: string;
+	creadoEn: number;
+};
+/** Un pedido viejo importado (tabla `historial_pedidos`). */
+export type PedidoImportado = {
+	clienteEmail: string | null;
+	clienteNombre: string;
+	fecha: number;
+	total: number;
+};
+
+/** La clave de un pedido viejo: el email en minúsculas o, sin email, el nombre (como Go). */
+export const claveHistorial = (h: Pick<PedidoImportado, 'clienteEmail' | 'clienteNombre'>) =>
+	h.clienteEmail?.toLowerCase() || h.clienteNombre;
+
+/**
+ * Une a la lista de Clientes las fichas importadas (aunque no tengan pedidos) y el historial de
+ * otras plataformas, por email en minúsculas, como Go (listas.Clientes). El historial suma a
+ * pedidos, gastado, última compra, meses y segmento. `emails` es el email de cada fila (por id).
+ */
+export function unirClientes(
+	regs: RegCliente[],
+	emails: Map<string, string | null>,
+	fichas: FichaImportada[],
+	historial: PedidoImportado[],
+	ahora: number
+): RegCliente[] {
+	const filas = regs.map((r) => ({ ...r, meses: [...r.meses] }));
+	const por = new Map<string, RegCliente>();
+	for (const r of filas) {
+		const e = emails.get(r.id)?.toLowerCase();
+		if (e) por.set(e, r);
+	}
+	const nueva = (id: string, nombre: string, canal: string, creado: number): RegCliente => {
+		const r: RegCliente = {
+			id,
+			nombre,
+			foto: null,
+			ini: Math.floor(semilla(id) * 5),
+			ciudad: '',
+			canal,
+			telefono: null,
+			pedidos: 0,
+			ultima: Math.max(0, (ahora - creado) / DIA),
+			gastado: 0,
+			seg: 'new',
+			meses: Array(12).fill(0),
+			cuit: false,
+			wa: false,
+			cupon: false,
+			etiquetas: []
+		};
+		filas.push(r);
+		por.set(id, r);
+		return r;
+	};
+	// Las fichas: completan teléfono y ciudad; sin email, su id es el de la ficha.
+	for (const f of [...fichas].sort((a, b) => a.creadoEn - b.creadoEn)) {
+		const clave = f.email?.toLowerCase() || f.id;
+		const r =
+			por.get(clave) ?? nueva(clave, f.nombre, f.origen === 'panel' ? 'pos' : 'web', f.creadoEn);
+		if (!r.telefono && f.telefono) r.telefono = f.telefono;
+		r.wa = !!r.telefono;
+		if (!r.ciudad) r.ciudad = f.ciudad;
+	}
+	// El historial: suma al cliente del mismo email (o crea la fila si no había).
+	const tocados = new Set<RegCliente>();
+	for (const h of historial) {
+		const clave = claveHistorial(h);
+		if (!clave) continue;
+		const r = por.get(clave) ?? nueva(clave, h.clienteNombre || clave, 'web', h.fecha);
+		const dias = Math.max(0, (ahora - h.fecha) / DIA);
+		if (!tocados.has(r) && r.pedidos === 0) r.ultima = dias;
+		tocados.add(r);
+		r.pedidos++;
+		r.gastado += h.total;
+		r.ultima = Math.min(r.ultima, dias);
+		const k = 11 - Math.floor(dias / 30);
+		if (k >= 0 && k < 12 && r.meses[k] < 3) r.meses[k]++;
+	}
+	for (const r of tocados) r.seg = segmentoDe(r.pedidos, r.ultima);
+	return filas;
 }
 
 export const DEF_CLIENTES: DefLista<RegCliente> = {

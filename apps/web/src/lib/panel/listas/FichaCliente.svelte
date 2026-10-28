@@ -46,6 +46,35 @@
 		'dic'
 	];
 	const mesDe = (k: number) => MESES[(new Date().getMonth() - (11 - k) + 24) % 12];
+
+	/** Pedidos importados de la tienda anterior (no son pedidos de Mostrador: sólo se muestran). */
+	type Viejo = { id: string; plataforma: string; numero: string; fecha: string; total: number };
+	const PLATAFORMA: Record<string, string> = {
+		tiendanube: 'Tiendanube',
+		shopify: 'Shopify',
+		woocommerce: 'WooCommerce',
+		mercadolibre: 'Mercado Libre',
+		empretienda: 'Empretienda',
+		csv: 'Planilla'
+	};
+	let historial = $state<Viejo[]>([]);
+	$effect(() => {
+		const id = open ? cliente?.id : null;
+		historial = [];
+		if (!id) return;
+		let vivo = true;
+		fetch(`/panel/clientes/${encodeURIComponent(id)}/historial`)
+			.then((r) => (r.ok ? (r.json() as Promise<Viejo[]>) : []))
+			.then((l) => {
+				if (vivo) historial = l;
+			})
+			.catch(() => {});
+		return () => {
+			vivo = false;
+		};
+	});
+	const fecha = (iso: string) =>
+		new Date(iso).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' });
 </script>
 
 <Hoja bind:open titulo={cliente?.nombre ?? 'Cliente'} ancho={520}>
@@ -109,6 +138,23 @@
 					{/each}
 				</div>
 			</div>
+
+			{#if historial.length}
+				<div class="tarjeta">
+					<div class="t">De tu tienda anterior</div>
+					{#each historial as h (h.id)}
+						<div class="dato">
+							<span class="d-ico"><Icon icon={I.phClockCounterClockwiseFill} size={16} /></span>
+							<span class="d-t"
+								><span>{PLATAFORMA[h.plataforma] ?? h.plataforma} · {fecha(h.fecha)}</span><b
+									>{h.numero ? `Pedido ${h.numero}` : 'Pedido'}</b
+								></span
+							>
+							<b class="monto">{pesos(h.total)}</b>
+						</div>
+					{/each}
+				</div>
+			{/if}
 
 			<div class="tarjeta">
 				<div class="t">Contacto</div>
@@ -308,6 +354,11 @@
 		display: block;
 		font-size: 14px;
 		font-weight: 600;
+	}
+	.monto {
+		font-size: 14px;
+		font-weight: 600;
+		white-space: nowrap;
 	}
 	.wa {
 		border: 0;

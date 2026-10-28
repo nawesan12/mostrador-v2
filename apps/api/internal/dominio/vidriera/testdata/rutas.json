@@ -1,0 +1,25 @@
+{
+	"normalizar": [
+		{ "entrada": "/productos/remera-negra/", "sale": "/productos/remera-negra" },
+		{ "entrada": "https://mitienda.mitiendanube.com/productos/Remera-Negra/?variant=12#fotos", "sale": "/productos/remera-negra" },
+		{ "entrada": "http://tienda.com.ar", "sale": "" },
+		{ "entrada": "tienda.com.ar/products/mate", "sale": "/tienda.com.ar/products/mate" },
+		{ "entrada": "products//mate-imperial", "sale": "/products/mate-imperial" },
+		{ "entrada": "/producto/a%C3%B1o-nuevo", "sale": "/producto/año-nuevo" },
+		{ "entrada": "/MATES/Calabaza", "sale": "/mates/calabaza" },
+		{ "entrada": "/", "sale": "" },
+		{ "entrada": "", "sale": "" },
+		{ "entrada": "?page=2", "sale": "" },
+		{ "entrada": "/con\\barra", "sale": "" }
+	],
+	"hacia": [
+		{ "entrada": "/", "valido": true },
+		{ "entrada": "/producto/0b6c", "valido": true },
+		{ "entrada": "/catalogo?categoria=Mates", "valido": true },
+		{ "entrada": "//otro.com/x", "valido": false },
+		{ "entrada": "/\\otro.com", "valido": false },
+		{ "entrada": "https://otro.com", "valido": false },
+		{ "entrada": "producto/1", "valido": false },
+		{ "entrada": "/con espacio", "valido": false }
+	]
+}

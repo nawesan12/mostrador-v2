@@ -458,3 +458,42 @@ URL, para que no quede en el historial ni en logs.
 - **Ver la tienda como la dueña:** crea una mirada de 30 minutos con un token de sólo lectura; el panel muestra un aviso fijo y Go rechaza cualquier escritura (`equipo.SoloLectura`). Entrar a ver queda en la auditoría.
 - **Demo:** `/staff` muestra un backoffice de ejemplo con datos inventados (no toca los sandboxes de los visitantes), con selector de rol para ver cómo cambia la navegación; las acciones responden "en la demo no se aplica".
 - **Partners:** aprobar o rechazar una postulación queda acá; el alta del partner con nivel, link y cupón la hace el panel de partners (PR #75) cuando entren los dos.
+
+
+## 29. Migración desde otras plataformas: las bases (migración 00041, sandbox 0007)
+
+- Cuatro tablas con `app.aplicar_rls`: `clientes` (la ficha propia, origen `panel` o
+  `importado:<plataforma>`, única por tienda y `lower(email)`), `historial_pedidos` (pedidos viejos,
+  únicos por tienda, plataforma y externo), `redirecciones` (PK tienda y `desde`) e `importaciones`
+  (una sola activa por tienda, índice parcial). La credencial de la plataforma vieja va cifrada con
+  `plataforma/cifrado` (contexto `importacion:<tienda>`) y se borra al terminar, fallar o cancelar.
+- **El historial no es un pedido de Mostrador**: no entra en Pedidos ni en el Resumen, no toca stock,
+  facturas ni numeración. Sí cuenta para la lista y la ficha del cliente.
+- **Avance por el outbox, sin polling**: crear inserta la importación y el evento `importacion.paso`
+  (`{id, paso}`) en la misma transacción. El paso lee una página de la `Fuente` fuera de la
+  transacción (es red), y en otra transacción bloquea la fila, verifica que `pasos` siga igual y que
+  siga activa, guarda la página, avanza cursor y etapa (productos → clientes → pedidos →
+  redirecciones) y encola el paso siguiente. Un evento entregado dos veces o el de una importación
+  cancelada no hace nada. Un error de la fuente vuelve al outbox (espera creciente); en el último
+  intento, o si envuelve `ErrDefinitivo`, la importación queda fallida con el error. Tope de 20.000
+  pasos por si una fuente repite el cursor.
+- Cada ítem va en su savepoint: el que no pasa las validaciones queda en `errores` (los últimos 50) y
+  el resto entra. Los productos se guardan con `listas.GuardarEnTx` (lo mismo que el editor, sin armar
+  la ficha que lee todo el catálogo); su URL vieja queda redirigida a `/producto/<id>`. Repetidos:
+  URL ya redirigida o SKU que ya existe (producto), mismo email o mismo externo sin email (cliente),
+  mismo externo (pedido). El upsert de clientes sólo completa lo que falta, nunca pisa nombre ni email.
+- **Clientes**: la lista une por email en minúsculas los derivados de pedidos, las fichas (aunque no
+  tengan compras) y el historial (suma pedidos, gastado, última compra, meses y segmento). El id de
+  la fila es el email en minúsculas; sin email, el nombre (pedidos) o el id de la ficha. El alta de
+  Clientes del panel ahora guarda una ficha en Go (antes no hacía nada).
+- **Redirecciones**: el path viejo se normaliza igual en Go y en TS (sin dominio, query ni barra
+  final, decodificado, en minúsculas; `vidriera/testdata/rutas.json`). `hacia` es un path relativo a la
+  tienda y nunca `//…` ni `/\…`. El hook de SvelteKit, sólo ante un 404 de un GET en `/t/<slug>/…`,
+  pregunta a Go (`GET /v1/publico/tiendas/{slug}/redireccion?path=`, 301 con Location) o a la D1 del
+  sandbox, y responde 301 a `/t/<slug><hacia>`. Las páginas que existen no consultan nada.
+- **Demo**: mismas tablas en D1 con `sandbox_id` y `ON DELETE CASCADE` (la purga del cron se las lleva
+  con el sandbox). Sin outbox, el navegador pide "avanzar" (`POST /panel/importaciones`) y cada pedido
+  hace un paso; `pasos` hace de candado con un UPDATE condicional. Un error de la fuente la deja
+  fallida (no hay reintentos con espera). La credencial no se guarda en la demo.
+- Las fuentes reales se registran en `importacion.Fuentes()` (Go) y `FUENTES` (TS); mientras falte la
+  de una plataforma, crear responde 409 `sin_fuente`.

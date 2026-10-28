@@ -87,8 +87,23 @@ func valor[T any](p *T, def T) T {
 // Guardar crea (id vacío) o actualiza un producto y devuelve su ficha. Con opciones, genera o ajusta
 // las variantes y el stock del producto pasa a ser la suma de las activas.
 func Guardar(ctx context.Context, pool tx, tiendaID, id string, e Editable) (Producto, error) {
-	if err := e.Validar(); err != nil {
+	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		var err error
+		id, err = GuardarEnTx(ctx, t, tiendaID, id, e)
+		return err
+	})
+	if err != nil {
 		return Producto{}, err
+	}
+	return Obtener(ctx, pool, tiendaID, id, time.Now())
+}
+
+// GuardarEnTx es Guardar dentro de una transacción con la tienda fijada, sin armar la ficha (que lee
+// todo el catálogo): lo usa la importación para guardar un lote con las mismas reglas que el panel.
+// Devuelve el id.
+func GuardarEnTx(ctx context.Context, t pgx.Tx, tiendaID, id string, e Editable) (string, error) {
+	if err := e.Validar(); err != nil {
+		return "", err
 	}
 	canales, _ := json.Marshal(e.Canales)
 	if e.Canales == nil {
@@ -98,88 +113,82 @@ func Guardar(ctx context.Context, pool tx, tiendaID, id string, e Editable) (Pro
 	if e.Fotos != nil {
 		var err error
 		if fotosPedidas, err = limpiarFotos(e.Fotos); err != nil {
-			return Producto{}, err
+			return "", err
 		}
 	}
 	var opcionesPedidas []Opcion
 	if e.Opciones != nil {
 		var err error
 		if opcionesPedidas, err = limpiarOpciones(e.Opciones); err != nil {
-			return Producto{}, err
+			return "", err
 		}
 	}
-	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		opciones, fotos := []Opcion{}, []string{}
-		if id != "" {
-			err := t.QueryRow(ctx, `SELECT opciones, fotos FROM productos WHERE tienda_id = $1 AND id::text = $2 FOR UPDATE`,
-				tiendaID, id).Scan(&opciones, &fotos)
-			if errors.Is(err, pgx.ErrNoRows) {
-				return ErrNoExiste
-			}
-			if err != nil {
-				return err
-			}
+	opciones, fotos := []Opcion{}, []string{}
+	if id != "" {
+		err := t.QueryRow(ctx, `SELECT opciones, fotos FROM productos WHERE tienda_id = $1 AND id::text = $2 FOR UPDATE`,
+			tiendaID, id).Scan(&opciones, &fotos)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", ErrNoExiste
 		}
-		switch {
-		case e.Fotos != nil:
-			fotos = fotosPedidas
-		case e.Foto == nil:
-			fotos = []string{}
-		default:
-			resto := []string{}
-			for i, f := range fotos {
-				if i > 0 && f != *e.Foto {
-					resto = append(resto, f)
-				}
-			}
-			fotos = append([]string{*e.Foto}, resto...)
+		if err != nil {
+			return "", err
 		}
-		var foto *string
-		if len(fotos) > 0 {
-			foto = &fotos[0]
-		}
-		if e.Opciones != nil {
-			opciones = opcionesPedidas
-		}
-		if len(e.Variantes) > 0 && len(opciones) == 0 {
-			return errors.New("para cargar variantes, el producto tiene que tener opciones")
-		}
-		// Con opciones, el stock lo pone la suma de las variantes (no el que manda el editor).
-		stock := e.Stock
-		if len(opciones) > 0 {
-			stock = nil
-		}
-		if id == "" {
-			if err := t.QueryRow(ctx, `INSERT INTO productos (tienda_id, nombre, descripcion, categoria, precio, costo, sku, stock, foto, canales, fotos, opciones)
-				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
-				tiendaID, strings.TrimSpace(e.Nombre), valor(e.Descripcion, ""), e.Categoria, e.Precio, valor(e.Costo, 0),
-				valor(e.SKU, ""), valor(stock, 0), foto, canales, fotos, opciones).Scan(&id); err != nil {
-				return err
-			}
-		} else if _, err := t.Exec(ctx, `UPDATE productos SET nombre = $3, descripcion = coalesce($4, descripcion),
-				categoria = $5, precio = $6, costo = coalesce($7, costo), sku = coalesce($8, sku),
-				stock = coalesce($9, stock), foto = $10, canales = $11, publicado = true, fotos = $12, opciones = $13
-			WHERE tienda_id = $1 AND id::text = $2`,
-			tiendaID, id, strings.TrimSpace(e.Nombre), e.Descripcion, e.Categoria, e.Precio, e.Costo, e.SKU, stock, foto, canales,
-			fotos, opciones); err != nil {
-			return err
-		}
-		if err := sincronizarVariantes(ctx, t, tiendaID, id, opciones, fotos, e.Variantes); err != nil {
-			return err
-		}
-		if len(opciones) == 0 {
-			return nil
-		}
-		// El trigger suma con cada cambio de variante; esto cubre el caso de opciones nuevas sin cambios.
-		_, err := t.Exec(ctx, `UPDATE productos SET stock = (SELECT coalesce(sum(stock), 0) FROM variantes
-				WHERE tienda_id = $1 AND producto_id::text = $2 AND activa)
-			WHERE tienda_id = $1 AND id::text = $2`, tiendaID, id)
-		return err
-	})
-	if err != nil {
-		return Producto{}, err
 	}
-	return Obtener(ctx, pool, tiendaID, id, time.Now())
+	switch {
+	case e.Fotos != nil:
+		fotos = fotosPedidas
+	case e.Foto == nil:
+		fotos = []string{}
+	default:
+		resto := []string{}
+		for i, f := range fotos {
+			if i > 0 && f != *e.Foto {
+				resto = append(resto, f)
+			}
+		}
+		fotos = append([]string{*e.Foto}, resto...)
+	}
+	var foto *string
+	if len(fotos) > 0 {
+		foto = &fotos[0]
+	}
+	if e.Opciones != nil {
+		opciones = opcionesPedidas
+	}
+	if len(e.Variantes) > 0 && len(opciones) == 0 {
+		return "", errors.New("para cargar variantes, el producto tiene que tener opciones")
+	}
+	// Con opciones, el stock lo pone la suma de las variantes (no el que manda el editor).
+	stock := e.Stock
+	if len(opciones) > 0 {
+		stock = nil
+	}
+	if id == "" {
+		if err := t.QueryRow(ctx, `INSERT INTO productos (tienda_id, nombre, descripcion, categoria, precio, costo, sku, stock, foto, canales, fotos, opciones)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
+			tiendaID, strings.TrimSpace(e.Nombre), valor(e.Descripcion, ""), e.Categoria, e.Precio, valor(e.Costo, 0),
+			valor(e.SKU, ""), valor(stock, 0), foto, canales, fotos, opciones).Scan(&id); err != nil {
+			return "", err
+		}
+	} else if _, err := t.Exec(ctx, `UPDATE productos SET nombre = $3, descripcion = coalesce($4, descripcion),
+			categoria = $5, precio = $6, costo = coalesce($7, costo), sku = coalesce($8, sku),
+			stock = coalesce($9, stock), foto = $10, canales = $11, publicado = true, fotos = $12, opciones = $13
+		WHERE tienda_id = $1 AND id::text = $2`,
+		tiendaID, id, strings.TrimSpace(e.Nombre), e.Descripcion, e.Categoria, e.Precio, e.Costo, e.SKU, stock, foto, canales,
+		fotos, opciones); err != nil {
+		return "", err
+	}
+	if err := sincronizarVariantes(ctx, t, tiendaID, id, opciones, fotos, e.Variantes); err != nil {
+		return "", err
+	}
+	if len(opciones) == 0 {
+		return id, nil
+	}
+	// El trigger suma con cada cambio de variante; esto cubre el caso de opciones nuevas sin cambios.
+	_, err := t.Exec(ctx, `UPDATE productos SET stock = (SELECT coalesce(sum(stock), 0) FROM variantes
+			WHERE tienda_id = $1 AND producto_id::text = $2 AND activa)
+		WHERE tienda_id = $1 AND id::text = $2`, tiendaID, id)
+	return id, err
 }
 
 // Obtener devuelve la ficha de un producto.

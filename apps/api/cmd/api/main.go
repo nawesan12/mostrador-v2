@@ -17,6 +17,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/facturacion"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/formularios"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ia"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/importacion"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/telegram"
@@ -101,6 +102,7 @@ func correr() error {
 			Facturacion: facturacionDe(app, cfg.ClaveCifrado),
 			Telegram:    &telegram.Servicio{Pool: app},
 			Equipo:      eq,
+			Importacion: importacionDe(app, cfg.ClaveCifrado),
 		}),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
@@ -133,6 +135,18 @@ func facturacionDe(app *db.Pool, claveCifrado string) *facturacion.Servicio {
 			s.Cifra = c
 		} else {
 			slog.Error("facturacion: clave de cifrado inválida", "error", err)
+		}
+	}
+	return s
+}
+
+// importacionDe arma la importación con las fuentes que hay. Sin clave de cifrado se puede importar
+// igual desde lo que no pide credencial (una tienda pública, un CSV).
+func importacionDe(app *db.Pool, claveCifrado string) *importacion.Servicio {
+	s := &importacion.Servicio{Pool: app, Fuentes: importacion.Fuentes()}
+	if claveCifrado != "" {
+		if c, err := cifrado.Nuevo(claveCifrado); err == nil {
+			s.Cifra = c
 		}
 	}
 	return s
