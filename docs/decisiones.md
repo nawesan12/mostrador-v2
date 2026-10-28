@@ -324,7 +324,7 @@ URL, para que no quede en el historial ni en logs.
   falso, pero el WSAA real sólo se prueba con un certificado de homologación de verdad (WSASS con la
   clave fiscal de Nahuel). Se cierra cargando ese certificado en una tienda de prueba y tocando
   "Probar conexión".
-## 27. Reseñas y preguntas de la tienda online (PR #76)
+## 27. Reseñas y preguntas de la tienda online (PR #77)
 
 - **Con compra se deriva del pedido**, no se marca a mano: una reseña es "con compra" si trae el
   código del pedido (el público en Go, el firmado de la confirmación en la demo) y ese pedido está
