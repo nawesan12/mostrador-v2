@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import Icon from '#lib/components/Icon.svelte';
 	import Modal from '#lib/components/Modal.svelte';
+	import Segmentado from '#lib/components/Segmentado.svelte';
 	import Seo from '#lib/components/Seo.svelte';
 	import * as I from '#lib/icons.ts';
 	import EditorProducto from '#lib/panel/listas/EditorProducto.svelte';
@@ -81,63 +82,133 @@
 		});
 	}
 
-	// Importar desde Empretienda: primero la lista de fichas, después de a 5 con barra de avance.
-	let empre = $state(false);
-	let tiendaEt = $state('');
-	let avance = $state<{ hechas: number; total: number } | null>(null);
-	let errorEt = $state('');
-	async function importarEmpretienda() {
-		errorEt = '';
-		avance = { hechas: 0, total: 0 };
-		const r = await fetch('/panel/productos/empretienda', {
+	// Importar tienda (Shopify, WooCommerce o Empretienda): primero cuántas páginas hay, después
+	// una página por pedido con barra de avance. Al terminar, el resumen queda en el modal.
+	type Fuente = 'shopify' | 'woocommerce' | 'empretienda';
+	const FUENTES = [
+		['shopify', 'Shopify'],
+		['woocommerce', 'WooCommerce'],
+		['empretienda', 'Empretienda']
+	] as const;
+	const NOMBRE = Object.fromEntries(FUENTES) as Record<Fuente, string>;
+	const EJEMPLO: Record<Fuente, string> = {
+		shopify: 'mitienda.myshopify.com',
+		woocommerce: 'mitienda.com.ar',
+		empretienda: 'mitienda.empretienda.com.ar'
+	};
+	type Lote = {
+		leidos: number;
+		creados: number;
+		repetidos: number;
+		recortados: number;
+		fallidos: number;
+		conVariantes: number;
+		stockEstimado: boolean;
+		fin: boolean;
+	};
+	let importando = $state(false);
+	let fuente = $state<Fuente>('shopify');
+	let tiendaImp = $state('');
+	let avance = $state<{ hechas: number; total: number | null } | null>(null);
+	let errorImp = $state('');
+	let resumen = $state<(Omit<Lote, 'leidos' | 'fin'> & { fuente: Fuente }) | null>(null);
+	const post = (url: string, cuerpo: unknown) =>
+		fetch(url, {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({ tienda: tiendaEt })
+			body: JSON.stringify(cuerpo)
 		});
+	function abrirImportar() {
+		resumen = null;
+		errorImp = '';
+		importando = true;
+	}
+	async function importarTienda() {
+		errorImp = '';
+		avance = { hechas: 0, total: null };
+		const r = await post('/panel/productos/tienda', { fuente, tienda: tiendaImp });
 		if (!r.ok) {
 			avance = null;
-			errorEt =
+			errorImp =
 				((await r.json().catch(() => null)) as { message?: string } | null)?.message ??
 				'No pudimos leer la tienda.';
 			return;
 		}
-		const { origen, fichas } = (await r.json()) as { origen: string; fichas: string[] };
-		avance = { hechas: 0, total: fichas.length };
-		const suma = { creados: 0, repetidos: 0, conVariantes: 0, fallidas: 0 };
-		for (let i = 0; i < fichas.length; i += 5) {
-			const l = await fetch('/panel/productos/empretienda/lote', {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({ origen, fichas: fichas.slice(i, i + 5) })
+		const d = (await r.json()) as {
+			fuente: Fuente;
+			origen: string;
+			total: number | null;
+			paginas: number | null;
+			fichas?: string[];
+		};
+		// Si el link era de otra plataforma, se usa la que respondió.
+		fuente = d.fuente;
+		avance = { hechas: 0, total: d.total };
+		const suma = {
+			creados: 0,
+			repetidos: 0,
+			recortados: 0,
+			fallidos: 0,
+			conVariantes: 0,
+			stockEstimado: false
+		};
+		// Sin total (Shopify no siempre lo dice): hasta una página incompleta, con el tope de 100.
+		const paginas = d.paginas ?? 100;
+		for (let pagina = 1; pagina <= paginas; pagina++) {
+			const fichas = d.fichas?.slice((pagina - 1) * 5, pagina * 5);
+			const l = await post('/panel/productos/tienda/lote', {
+				fuente: d.fuente,
+				origen: d.origen,
+				pagina,
+				...(fichas ? { fichas } : {})
 			});
-			const x = l.ok
-				? ((await l.json()) as {
-						creados: number;
-						repetidos: number;
-						conVariantes: number;
-						fallidas: string[];
-					})
-				: { creados: 0, repetidos: 0, conVariantes: 0, fallidas: fichas.slice(i, i + 5) };
+			// Una página que no respondió cuenta como no leída y se sigue con la próxima.
+			const x: Lote = l.ok
+				? await l.json()
+				: {
+						creados: 0,
+						repetidos: 0,
+						recortados: 0,
+						conVariantes: 0,
+						leidos: 5,
+						fallidos: fichas?.length ?? 5,
+						stockEstimado: false,
+						fin: false
+					};
 			suma.creados += x.creados;
 			suma.repetidos += x.repetidos;
+			suma.recortados += x.recortados;
+			suma.fallidos += x.fallidos;
 			suma.conVariantes += x.conVariantes;
-			suma.fallidas += x.fallidas.length;
-			avance = { hechas: Math.min(fichas.length, i + 5), total: fichas.length };
+			suma.stockEstimado ||= x.stockEstimado;
+			const hechas: number = (avance?.hechas ?? 0) + x.leidos;
+			avance = { hechas: d.total ? Math.min(d.total, hechas) : hechas, total: d.total };
+			if (x.fin && !d.fichas) break;
 		}
 		await invalidateAll();
-		empre = false;
 		avance = null;
-		const notas = [
-			suma.repetidos && `${suma.repetidos} ya estaban`,
-			suma.conVariantes && `${suma.conVariantes} con variantes anotadas en la descripción`,
-			suma.fallidas && `${suma.fallidas} no se pudieron leer`
-		].filter(Boolean);
-		ui.toast({
-			k: suma.creados ? 'ok' : 'info',
-			title: `${suma.creados} ${suma.creados === 1 ? 'producto importado' : 'productos importados'} de Empretienda`,
-			desc: notas.length ? notas.join(' · ') + '.' : 'Con fotos, precios, stock y categorías.'
-		});
+		resumen = { ...suma, fuente: d.fuente };
 	}
+	/** Los renglones del resumen: sólo los que tienen algo que decir. */
+	const notas = $derived(
+		resumen
+			? [
+					resumen.repetidos &&
+						(resumen.repetidos === 1
+							? '1 ya estaba y no se\u00a0repitió.'
+							: `${resumen.repetidos} ya estaban y no se\u00a0repitieron.`),
+					resumen.recortados &&
+						`${resumen.recortados} ${resumen.recortados === 1 ? 'se recortó' : 'se recortaron'}: más de 8\u00a0fotos, opciones o\u00a0textos largos.`,
+					resumen.conVariantes &&
+						`${resumen.conVariantes} con variantes anotadas en la\u00a0descripción.`,
+					resumen.fallidos && `${resumen.fallidos} no se pudieron\u00a0leer.`,
+					resumen.stockEstimado &&
+						(resumen.fuente === 'shopify'
+							? 'Shopify no publica el stock: revisalo.'
+							: `${NOMBRE[resumen.fuente]} no publicó el stock de algunos: revisalo.`)
+				].filter((x): x is string => !!x)
+			: []
+	);
 
 	let archivo = $state<HTMLInputElement>();
 	async function importar(e: Event) {
@@ -184,43 +255,70 @@
 
 <input bind:this={archivo} type="file" accept=".csv,text/csv" hidden onchange={importar} />
 
-<Modal bind:open={empre} titulo="Importar desde Empretienda" ancho={460} padding={24}>
+<Modal bind:open={importando} titulo="Importar tienda" ancho={460} padding={24}>
 	<span class="m-ico"><Icon icon={I.phStorefrontFill} size={26} style="color:#2E2A6B" /></span>
-	<div class="m-t">Traé tus productos de&nbsp;Empretienda</div>
-	<div class="m-d">
-		Pegá el link de tu tienda y traemos cada producto con sus fotos, precio, stock, categoría y
-		descripción. Si importás dos veces, no se&nbsp;duplican.
-	</div>
-	{#if avance}
-		<div class="m-c">
-			{avance.total ? `Importando ${avance.hechas} de ${avance.total}…` : 'Leyendo tu tienda…'}
+	{#if resumen}
+		<div class="m-t" role="status">
+			{resumen.creados}
+			{resumen.creados === 1 ? 'producto importado' : 'productos importados'} de&nbsp;{NOMBRE[
+				resumen.fuente
+			]}
 		</div>
-		<div
-			class="m-barra"
-			role="progressbar"
-			aria-label="Avance de la importación"
-			aria-valuenow={avance.hechas}
-			aria-valuemax={avance.total || 1}
-		>
-			<span style="width:{avance.total ? (avance.hechas / avance.total) * 100 : 4}%"></span>
+		{#if notas.length}
+			<ul class="m-notas">
+				{#each notas as n (n)}<li>{n}</li>{/each}
+			</ul>
+		{:else}
+			<div class="m-d">Con fotos, precios, variantes y&nbsp;categorías.</div>
+		{/if}
+		<div class="m-acc">
+			<button type="button" class="b-pri" onclick={() => (importando = false)}>Listo</button>
 		</div>
 	{:else}
-		<label class="m-c" for="tienda-et">Link de tu tienda</label>
-		<input
-			id="tienda-et"
-			class="m-in"
-			bind:value={tiendaEt}
-			placeholder="mitienda.empretienda.com.ar"
-			autocomplete="url"
-			onkeydown={(e) => e.key === 'Enter' && tiendaEt.trim() && importarEmpretienda()}
-		/>
-		{#if errorEt}<div class="m-err" role="alert">{errorEt}</div>{/if}
-		<div class="m-acc">
-			<button type="button" class="b-sec" onclick={() => (empre = false)}>Cancelar</button>
-			<button type="button" class="b-pri" disabled={!tiendaEt.trim()} onclick={importarEmpretienda}
-				>Importar</button
-			>
+		<div class="m-t">Traé tus productos de otra&nbsp;tienda</div>
+		<div class="m-d">
+			Pegá el link y traemos cada producto con fotos, precio, variantes, categoría y descripción. Si
+			importás dos veces, no se&nbsp;duplican.
 		</div>
+		{#if avance}
+			<div class="m-c">
+				{avance.hechas
+					? avance.total
+						? `Importando ${avance.hechas} de ${avance.total}…`
+						: `Importando ${avance.hechas}…`
+					: 'Leyendo tu tienda…'}
+			</div>
+			<div
+				class="m-barra"
+				role="progressbar"
+				aria-label="Avance de la importación"
+				aria-valuenow={avance.hechas}
+				aria-valuemax={avance.total || 1}
+			>
+				<span style="width:{avance.total ? (avance.hechas / avance.total) * 100 : 4}%"></span>
+			</div>
+		{:else}
+			<div class="m-c">Plataforma</div>
+			<div class="m-seg">
+				<Segmentado opciones={FUENTES} bind:value={fuente} label="Plataforma de tu tienda" />
+			</div>
+			<label class="m-c" for="tienda-imp">Link de tu tienda</label>
+			<input
+				id="tienda-imp"
+				class="m-in"
+				bind:value={tiendaImp}
+				placeholder={EJEMPLO[fuente]}
+				autocomplete="url"
+				onkeydown={(e) => e.key === 'Enter' && tiendaImp.trim() && importarTienda()}
+			/>
+			{#if errorImp}<div class="m-err" role="alert">{errorImp}</div>{/if}
+			<div class="m-acc">
+				<button type="button" class="b-sec" onclick={() => (importando = false)}>Cancelar</button>
+				<button type="button" class="b-pri" disabled={!tiendaImp.trim()} onclick={importarTienda}
+					>Importar</button
+				>
+			</div>
+		{/if}
 	{/if}
 </Modal>
 
@@ -229,8 +327,8 @@
 		<button type="button" class="secundario" onclick={() => archivo?.click()}
 			><Icon icon={I.phFileXlsBold} size={15} />Importar Excel</button
 		>
-		<button type="button" class="secundario" onclick={() => (empre = true)}
-			><Icon icon={I.phLinkBold} size={15} />Desde Empretienda</button
+		<button type="button" class="secundario" onclick={abrirImportar}
+			><Icon icon={I.phLinkBold} size={15} />Importar tienda</button
 		>
 	{/snippet}
 	{#snippet antes()}
@@ -444,6 +542,24 @@
 		margin-top: 8px;
 		font-size: 13px;
 		color: #b83a2e;
+	}
+	.m-seg {
+		margin-top: 6px;
+	}
+	.m-seg :global(.seg) {
+		display: flex;
+	}
+	/* Las tres plataformas entran a 375 px: menos aire a los costados de cada una. */
+	.m-seg :global(.seg button) {
+		flex: auto;
+		padding-inline: 6px;
+	}
+	.m-notas {
+		margin: 10px 0 0;
+		padding-left: 18px;
+		font-size: 14px;
+		line-height: 1.55;
+		color: var(--mu);
 	}
 	.m-barra {
 		margin-top: 8px;

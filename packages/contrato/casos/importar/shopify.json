@@ -1,0 +1,402 @@
+{
+  "products": [
+    {
+      "id": 7340901859408,
+      "title": "Women's Allbirds Flip Flop - Dusty Pink",
+      "handle": "womens-allbirds-flip-flop-dusty-pink",
+      "body_html": "<p>Sun on your feet. Comfort underneath. Light, easy, and made for warm weather, these flip flops bring everyday comfort to sunny days, beach walks, and everything in between. Just slip them on and go.</p>",
+      "vendor": "Allbirds",
+      "product_type": "Shoes",
+      "tags": [
+        "allbirds::carbon-score => undefined",
+        "allbirds::cfId => color-a4d5d0f6620dc304306f503bf67bc5f9",
+        "allbirds::complete => true"
+      ],
+      "options": [
+        {
+          "name": "Size",
+          "position": 1,
+          "values": ["5", "6", "7", "8", "9", "10", "11"]
+        }
+      ],
+      "variants": [
+        {
+          "id": 42146889039952,
+          "title": "5",
+          "option1": "5",
+          "option2": null,
+          "option3": null,
+          "sku": "A12513W050",
+          "available": false,
+          "price": "50.00",
+          "compare_at_price": null
+        },
+        {
+          "id": 42146889072720,
+          "title": "6",
+          "option1": "6",
+          "option2": null,
+          "option3": null,
+          "sku": "A12513W060",
+          "available": false,
+          "price": "50.00",
+          "compare_at_price": null
+        },
+        {
+          "id": 42146889105488,
+          "title": "7",
+          "option1": "7",
+          "option2": null,
+          "option3": null,
+          "sku": "A12513W070",
+          "available": false,
+          "price": "50.00",
+          "compare_at_price": null
+        },
+        {
+          "id": 42146889138256,
+          "title": "8",
+          "option1": "8",
+          "option2": null,
+          "option3": null,
+          "sku": "A12513W080",
+          "available": false,
+          "price": "50.00",
+          "compare_at_price": null
+        },
+        {
+          "id": 42146889171024,
+          "title": "9",
+          "option1": "9",
+          "option2": null,
+          "option3": null,
+          "sku": "A12513W090",
+          "available": false,
+          "price": "50.00",
+          "compare_at_price": null
+        },
+        {
+          "id": 42146889203792,
+          "title": "10",
+          "option1": "10",
+          "option2": null,
+          "option3": null,
+          "sku": "A12513W100",
+          "available": true,
+          "price": "50.00",
+          "compare_at_price": null
+        },
+        {
+          "id": 42146889236560,
+          "title": "11",
+          "option1": "11",
+          "option2": null,
+          "option3": null,
+          "sku": "A12513W110",
+          "available": false,
+          "price": "50.00",
+          "compare_at_price": null
+        }
+      ],
+      "images": [
+        {
+          "id": 36231482212432,
+          "src": "https://cdn.shopify.com/s/files/1/1104/4168/files/A12513_26Q2_Allbirds-Flip-Flop-Dusty-Pink_PDP_LEFT.png?v=1774646345",
+          "variant_ids": []
+        },
+        {
+          "id": 36231482245200,
+          "src": "https://cdn.shopify.com/s/files/1/1104/4168/files/A12513_26Q2_Allbirds-Flip-Flop-Dusty-Pink_PDP_BACK.png?v=1774646345",
+          "variant_ids": []
+        },
+        {
+          "id": 36231482277968,
+          "src": "https://cdn.shopify.com/s/files/1/1104/4168/files/A12513_26Q2_Allbirds-Flip-Flop-Dusty-Pink_PDP_TD.png?v=1774646346",
+          "variant_ids": []
+        }
+      ]
+    },
+    {
+      "id": 7258385809488,
+      "title": "Men's Canvas Runner NZ - Deep Navy Stripes (Blizzard Sole)",
+      "handle": "mens-canvas-runner-nz",
+      "body_html": "<p> </p>",
+      "vendor": "Allbirds",
+      "product_type": "Shoes",
+      "tags": [
+        "allbirds::carbon-score => undefined",
+        "allbirds::cfId => color-1cef6be0d20d9c20d604095208afc4c8",
+        "allbirds::complete => true"
+      ],
+      "options": [
+        {
+          "name": "Size",
+          "position": 1,
+          "values": [
+            "8",
+            "8.5",
+            "9",
+            "9.5",
+            "10",
+            "10.5",
+            "11",
+            "11.5",
+            "12",
+            "12.5",
+            "13",
+            "13.5",
+            "14"
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "id": 41884546990160,
+          "title": "8",
+          "option1": "8",
+          "option2": null,
+          "option3": null,
+          "sku": "A12498M080",
+          "available": false,
+          "price": "100.00",
+          "compare_at_price": null
+        },
+        {
+          "id": 41884547022928,
+          "title": "8.5",
+          "option1": "8.5",
+          "option2": null,
+          "option3": null,
+          "sku": "A12498M085",
+          "available": true,
+          "price": "100.00",
+          "compare_at_price": null
+        },
+        {
+          "id": 41884547055696,
+          "title": "9",
+          "option1": "9",
+          "option2": null,
+          "option3": null,
+          "sku": "A12498M090",
+          "available": false,
+          "price": "100.00",
+          "compare_at_price": null
+        },
+        {
+          "id": 41884547088464,
+          "title": "9.5",
+          "option1": "9.5",
+          "option2": null,
+          "option3": null,
+          "sku": "A12498M095",
+          "available": false,
+          "price": "100.00",
+          "compare_at_price": null
+        },
+        {
+          "id": 41884547121232,
+          "title": "10",
+          "option1": "10",
+          "option2": null,
+          "option3": null,
+          "sku": "A12498M100",
+          "available": true,
+          "price": "100.00",
+          "compare_at_price": null
+        },
+        {
+          "id": 41884547154000,
+          "title": "10.5",
+          "option1": "10.5",
+          "option2": null,
+          "option3": null,
+          "sku": "A12498M105",
+          "available": true,
+          "price": "100.00",
+          "compare_at_price": null
+        },
+        {
+          "id": 41884547186768,
+          "title": "11",
+          "option1": "11",
+          "option2": null,
+          "option3": null,
+          "sku": "A12498M110",
+          "available": true,
+          "price": "100.00",
+          "compare_at_price": null
+        },
+        {
+          "id": 41884547219536,
+          "title": "11.5",
+          "option1": "11.5",
+          "option2": null,
+          "option3": null,
+          "sku": "A12498M115",
+          "available": false,
+          "price": "100.00",
+          "compare_at_price": null
+        },
+        {
+          "id": 41884547252304,
+          "title": "12",
+          "option1": "12",
+          "option2": null,
+          "option3": null,
+          "sku": "A12498M120",
+          "available": false,
+          "price": "100.00",
+          "compare_at_price": null
+        },
+        {
+          "id": 41884547285072,
+          "title": "12.5",
+          "option1": "12.5",
+          "option2": null,
+          "option3": null,
+          "sku": "A12498M125",
+          "available": false,
+          "price": "100.00",
+          "compare_at_price": null
+        },
+        {
+          "id": 41884547317840,
+          "title": "13",
+          "option1": "13",
+          "option2": null,
+          "option3": null,
+          "sku": "A12498M130",
+          "available": false,
+          "price": "100.00",
+          "compare_at_price": null
+        },
+        {
+          "id": 41884547350608,
+          "title": "13.5",
+          "option1": "13.5",
+          "option2": null,
+          "option3": null,
+          "sku": "A12498M135",
+          "available": false,
+          "price": "100.00",
+          "compare_at_price": null
+        },
+        {
+          "id": 41884547383376,
+          "title": "14",
+          "option1": "14",
+          "option2": null,
+          "option3": null,
+          "sku": "A12498M140",
+          "available": true,
+          "price": "100.00",
+          "compare_at_price": null
+        }
+      ],
+      "images": [
+        {
+          "id": 36223203442768,
+          "src": "https://cdn.shopify.com/s/files/1/1104/4168/files/A12500_26Q1_Runner-NZ-Canvas-Stripes-Deep-Navy-Blizzard-Sole_PDP_LEFT.png?v=1774550585",
+          "variant_ids": []
+        },
+        {
+          "id": 36223203475536,
+          "src": "https://cdn.shopify.com/s/files/1/1104/4168/files/A12500_26Q1_Runner-NZ-Canvas-Stripes-Deep-Navy-Blizzard-Sole_PDP_BACK.png?v=1774550584",
+          "variant_ids": [41884547022928]
+        },
+        {
+          "id": 36223203508304,
+          "src": "https://cdn.shopify.com/s/files/1/1104/4168/files/A12500_26Q1_Runner-NZ-Canvas-Stripes-Deep-Navy-Blizzard-Sole_PDP_TD.png?v=1774550586",
+          "variant_ids": []
+        }
+      ]
+    },
+    {
+      "id": 8000000000001,
+      "title": "  Yerbera   de lata  ",
+      "handle": "yerbera-de-lata",
+      "body_html": "<h2>Yerbera &amp; azucarera</h2>\n<ul>\n  <li>Capacidad: 1&nbsp;kg</li>\n  <li>Lata pintada a mano&#8230; con tapa</li>\n</ul><p>Ideal para el mate&rsquo;</p>",
+      "vendor": "Armado a mano",
+      "product_type": "",
+      "tags": ["cocina"],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": ["Default Title"]
+        }
+      ],
+      "variants": [
+        {
+          "id": 8000000000101,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": "YER-01",
+          "available": true,
+          "price": "12499.50",
+          "compare_at_price": "15000.00"
+        }
+      ],
+      "images": [
+        {
+          "id": 901,
+          "src": "https://cdn.shopify.com/s/files/1/0000/0001/files/yerbera-1.jpg?v=1",
+          "variant_ids": []
+        },
+        {
+          "id": 902,
+          "src": "https://cdn.shopify.com/s/files/1/0000/0001/files/yerbera-2.jpg?v=1",
+          "variant_ids": []
+        },
+        {
+          "id": 903,
+          "src": "https://cdn.shopify.com/s/files/1/0000/0001/files/yerbera-3.jpg?v=1",
+          "variant_ids": []
+        },
+        {
+          "id": 899,
+          "src": "http://inseguro.ejemplo.com/yerbera.jpg",
+          "variant_ids": []
+        },
+        {
+          "id": 904,
+          "src": "https://cdn.shopify.com/s/files/1/0000/0001/files/yerbera-4.jpg?v=1",
+          "variant_ids": []
+        },
+        {
+          "id": 905,
+          "src": "https://cdn.shopify.com/s/files/1/0000/0001/files/yerbera-5.jpg?v=1",
+          "variant_ids": []
+        },
+        {
+          "id": 906,
+          "src": "https://cdn.shopify.com/s/files/1/0000/0001/files/yerbera-6.jpg?v=1",
+          "variant_ids": []
+        },
+        {
+          "id": 907,
+          "src": "https://cdn.shopify.com/s/files/1/0000/0001/files/yerbera-7.jpg?v=1",
+          "variant_ids": []
+        },
+        {
+          "id": 908,
+          "src": "https://cdn.shopify.com/s/files/1/0000/0001/files/yerbera-8.jpg?v=1",
+          "variant_ids": []
+        },
+        {
+          "id": 909,
+          "src": "https://cdn.shopify.com/s/files/1/0000/0001/files/yerbera-9.jpg?v=1",
+          "variant_ids": []
+        },
+        {
+          "id": 910,
+          "src": "https://cdn.shopify.com/s/files/1/0000/0001/files/yerbera-10.jpg?v=1",
+          "variant_ids": []
+        }
+      ]
+    }
+  ]
+}

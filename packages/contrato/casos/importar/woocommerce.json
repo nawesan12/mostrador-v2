@@ -1,0 +1,413 @@
+{
+  "productos": [
+    {
+      "id": 34,
+      "name": "Mate de calabaza &#8220;Pampa&#8221;",
+      "slug": "mate-pampa",
+      "parent": 0,
+      "type": "simple",
+      "variation": "",
+      "permalink": "https://tienda.ejemplo.com.ar/producto/mate-pampa/",
+      "sku": "MAT-01",
+      "short_description": "<p>Curado y listo.</p>",
+      "description": "<p>Calabaza forrada en cuero.</p>\n<p>Con virola de alpaca.</p>",
+      "on_sale": true,
+      "prices": {
+        "price": "1250050",
+        "regular_price": "1400000",
+        "sale_price": "1250050",
+        "price_range": null,
+        "currency_code": "ARS",
+        "currency_symbol": "$",
+        "currency_minor_unit": 2,
+        "currency_decimal_separator": ",",
+        "currency_thousand_separator": ".",
+        "currency_prefix": "$ ",
+        "currency_suffix": ""
+      },
+      "price_html": "",
+      "average_rating": "0",
+      "review_count": 0,
+      "images": [
+        {
+          "id": 1,
+          "src": "https://tienda.ejemplo.com.ar/wp-content/uploads/2026/03/mate-1.jpg",
+          "thumbnail": "",
+          "srcset": "",
+          "sizes": "",
+          "name": "mate-1.jpg",
+          "alt": ""
+        },
+        {
+          "id": 2,
+          "src": "https://tienda.ejemplo.com.ar/wp-content/uploads/2026/03/mate-2.jpg",
+          "thumbnail": "",
+          "srcset": "",
+          "sizes": "",
+          "name": "mate-2.jpg",
+          "alt": ""
+        }
+      ],
+      "categories": [
+        {
+          "id": 15,
+          "name": "Mates &amp; bombillas",
+          "slug": "mates",
+          "link": "https://tienda.ejemplo.com.ar/categoria/mates/"
+        }
+      ],
+      "tags": [],
+      "attributes": [],
+      "variations": [],
+      "has_options": false,
+      "is_purchasable": true,
+      "is_in_stock": true,
+      "is_on_backorder": false,
+      "low_stock_remaining": null,
+      "sold_individually": false,
+      "add_to_cart": {
+        "text": "Añadir al carrito",
+        "description": "",
+        "url": "",
+        "minimum": 1,
+        "maximum": 9999,
+        "multiple_of": 1
+      }
+    },
+    {
+      "id": 40,
+      "name": "Remera lisa",
+      "slug": "remera-lisa",
+      "parent": 0,
+      "type": "variable",
+      "variation": "",
+      "permalink": "https://tienda.ejemplo.com.ar/producto/remera-lisa/",
+      "sku": "REM",
+      "short_description": "<p>Algodón peinado 24/1.</p>",
+      "description": "",
+      "on_sale": false,
+      "prices": {
+        "price": "1800000",
+        "regular_price": "1800000",
+        "sale_price": "1800000",
+        "price_range": null,
+        "currency_code": "ARS",
+        "currency_symbol": "$",
+        "currency_minor_unit": 2,
+        "currency_decimal_separator": ",",
+        "currency_thousand_separator": ".",
+        "currency_prefix": "$ ",
+        "currency_suffix": ""
+      },
+      "price_html": "",
+      "average_rating": "0",
+      "review_count": 0,
+      "images": [
+        {
+          "id": 10,
+          "src": "https://tienda.ejemplo.com.ar/wp-content/uploads/2026/03/remera.jpg",
+          "thumbnail": "",
+          "srcset": "",
+          "sizes": "",
+          "name": "remera.jpg",
+          "alt": ""
+        }
+      ],
+      "categories": [
+        {
+          "id": 20,
+          "name": "Remeras",
+          "slug": "remeras",
+          "link": ""
+        }
+      ],
+      "tags": [],
+      "attributes": [
+        {
+          "id": 1,
+          "name": "Color",
+          "taxonomy": "pa_color",
+          "has_variations": true,
+          "terms": [
+            {
+              "id": 51,
+              "name": "Negro",
+              "slug": "negro",
+              "default": true
+            },
+            {
+              "id": 52,
+              "name": "Blanco",
+              "slug": "blanco",
+              "default": false
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "Talle",
+          "taxonomy": "pa_talle",
+          "has_variations": true,
+          "terms": [
+            {
+              "id": 61,
+              "name": "S",
+              "slug": "s",
+              "default": false
+            },
+            {
+              "id": 62,
+              "name": "M",
+              "slug": "m",
+              "default": false
+            },
+            {
+              "id": 63,
+              "name": "L",
+              "slug": "l",
+              "default": false
+            }
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Material",
+          "taxonomy": null,
+          "has_variations": false,
+          "terms": [
+            {
+              "id": 0,
+              "name": "Algodón",
+              "slug": "algodon",
+              "default": false
+            }
+          ]
+        }
+      ],
+      "variations": [
+        {
+          "id": 41,
+          "attributes": [
+            {
+              "name": "Color",
+              "value": "negro"
+            },
+            {
+              "name": "Talle",
+              "value": "s"
+            }
+          ]
+        },
+        {
+          "id": 42,
+          "attributes": [
+            {
+              "name": "Color",
+              "value": "negro"
+            },
+            {
+              "name": "Talle",
+              "value": "m"
+            }
+          ]
+        },
+        {
+          "id": 43,
+          "attributes": [
+            {
+              "name": "Color",
+              "value": "negro"
+            },
+            {
+              "name": "Talle",
+              "value": "l"
+            }
+          ]
+        },
+        {
+          "id": 44,
+          "attributes": [
+            {
+              "name": "Color",
+              "value": "blanco"
+            },
+            {
+              "name": "Talle",
+              "value": ""
+            }
+          ]
+        }
+      ],
+      "has_options": true,
+      "is_purchasable": true,
+      "is_in_stock": true,
+      "is_on_backorder": false,
+      "low_stock_remaining": null,
+      "sold_individually": false,
+      "add_to_cart": {
+        "text": "Elegir opciones",
+        "description": "",
+        "url": "",
+        "minimum": 1,
+        "maximum": 9999,
+        "multiple_of": 1
+      }
+    }
+  ],
+  "variaciones": [
+    {
+      "id": 41,
+      "name": "Remera lisa",
+      "slug": "remera-lisa",
+      "parent": 40,
+      "type": "variation",
+      "variation": "Color: Negro, Talle: S",
+      "permalink": "https://tienda.ejemplo.com.ar/producto/remera-lisa/?attribute_pa_color=x",
+      "sku": "REM-N-S",
+      "short_description": "",
+      "description": "",
+      "on_sale": false,
+      "prices": {
+        "price": "1800000",
+        "regular_price": "1800000",
+        "sale_price": "1800000",
+        "price_range": null,
+        "currency_code": "ARS",
+        "currency_symbol": "$",
+        "currency_minor_unit": 2,
+        "currency_decimal_separator": ",",
+        "currency_thousand_separator": ".",
+        "currency_prefix": "$ ",
+        "currency_suffix": ""
+      },
+      "images": [],
+      "categories": [],
+      "tags": [],
+      "attributes": [],
+      "variations": [],
+      "has_options": false,
+      "is_purchasable": true,
+      "is_in_stock": true,
+      "is_on_backorder": false,
+      "low_stock_remaining": 3
+    },
+    {
+      "id": 42,
+      "name": "Remera lisa",
+      "slug": "remera-lisa",
+      "parent": 40,
+      "type": "variation",
+      "variation": "Color: Negro, Talle: M",
+      "permalink": "https://tienda.ejemplo.com.ar/producto/remera-lisa/?attribute_pa_color=x",
+      "sku": "REM-N-M",
+      "short_description": "",
+      "description": "",
+      "on_sale": false,
+      "prices": {
+        "price": "1800000",
+        "regular_price": "1800000",
+        "sale_price": "1800000",
+        "price_range": null,
+        "currency_code": "ARS",
+        "currency_symbol": "$",
+        "currency_minor_unit": 2,
+        "currency_decimal_separator": ",",
+        "currency_thousand_separator": ".",
+        "currency_prefix": "$ ",
+        "currency_suffix": ""
+      },
+      "images": [],
+      "categories": [],
+      "tags": [],
+      "attributes": [],
+      "variations": [],
+      "has_options": false,
+      "is_purchasable": true,
+      "is_in_stock": false,
+      "is_on_backorder": false,
+      "low_stock_remaining": null
+    },
+    {
+      "id": 43,
+      "name": "Remera lisa",
+      "slug": "remera-lisa",
+      "parent": 40,
+      "type": "variation",
+      "variation": "Color: Negro, Talle: L",
+      "permalink": "https://tienda.ejemplo.com.ar/producto/remera-lisa/?attribute_pa_color=x",
+      "sku": "REM-N-L",
+      "short_description": "",
+      "description": "",
+      "on_sale": false,
+      "prices": {
+        "price": "1950000",
+        "regular_price": "1950000",
+        "sale_price": "1950000",
+        "price_range": null,
+        "currency_code": "ARS",
+        "currency_symbol": "$",
+        "currency_minor_unit": 2,
+        "currency_decimal_separator": ",",
+        "currency_thousand_separator": ".",
+        "currency_prefix": "$ ",
+        "currency_suffix": ""
+      },
+      "images": [],
+      "categories": [],
+      "tags": [],
+      "attributes": [],
+      "variations": [],
+      "has_options": false,
+      "is_purchasable": true,
+      "is_in_stock": true,
+      "is_on_backorder": false,
+      "low_stock_remaining": null
+    },
+    {
+      "id": 44,
+      "name": "Remera lisa",
+      "slug": "remera-lisa",
+      "parent": 40,
+      "type": "variation",
+      "variation": "Color: Blanco",
+      "permalink": "https://tienda.ejemplo.com.ar/producto/remera-lisa/?attribute_pa_color=x",
+      "sku": "REM-B",
+      "short_description": "",
+      "description": "",
+      "on_sale": true,
+      "prices": {
+        "price": "1700000",
+        "regular_price": "1800000",
+        "sale_price": "1700000",
+        "price_range": null,
+        "currency_code": "ARS",
+        "currency_symbol": "$",
+        "currency_minor_unit": 2,
+        "currency_decimal_separator": ",",
+        "currency_thousand_separator": ".",
+        "currency_prefix": "$ ",
+        "currency_suffix": ""
+      },
+      "images": [
+        {
+          "id": 99,
+          "src": "https://tienda.ejemplo.com.ar/wp-content/uploads/2026/03/remera-blanca.jpg",
+          "thumbnail": "",
+          "srcset": "",
+          "sizes": "",
+          "name": "",
+          "alt": ""
+        }
+      ],
+      "categories": [],
+      "tags": [],
+      "attributes": [],
+      "variations": [],
+      "has_options": false,
+      "is_purchasable": true,
+      "is_in_stock": true,
+      "is_on_backorder": false,
+      "low_stock_remaining": null
+    }
+  ]
+}

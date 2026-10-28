@@ -1,0 +1,111 @@
+{
+  "productos": [
+    {
+      "nombre": "Mate de calabaza “Pampa”",
+      "descripcion": "Calabaza forrada en cuero.\nCon virola de alpaca.",
+      "categoria": "Mates & bombillas",
+      "precio": 12501,
+      "sku": "MAT-01",
+      "stock": 1,
+      "fotos": [
+        "https://tienda.ejemplo.com.ar/wp-content/uploads/2026/03/mate-1.jpg",
+        "https://tienda.ejemplo.com.ar/wp-content/uploads/2026/03/mate-2.jpg"
+      ],
+      "opciones": [],
+      "variantes": [],
+      "canales": {
+        "web": true
+      }
+    },
+    {
+      "nombre": "Remera lisa",
+      "descripcion": "Algodón peinado 24/1.",
+      "categoria": "Remeras",
+      "precio": 17000,
+      "sku": "",
+      "stock": 7,
+      "fotos": [
+        "https://tienda.ejemplo.com.ar/wp-content/uploads/2026/03/remera.jpg",
+        "https://tienda.ejemplo.com.ar/wp-content/uploads/2026/03/remera-blanca.jpg"
+      ],
+      "opciones": [
+        {
+          "nombre": "Color",
+          "valores": ["Negro", "Blanco"]
+        },
+        {
+          "nombre": "Talle",
+          "valores": ["S", "M", "L"]
+        }
+      ],
+      "variantes": [
+        {
+          "valores": {
+            "Color": "Negro",
+            "Talle": "S"
+          },
+          "sku": "REM-N-S",
+          "precio": 18000,
+          "stock": 3,
+          "foto": null
+        },
+        {
+          "valores": {
+            "Color": "Negro",
+            "Talle": "M"
+          },
+          "sku": "REM-N-M",
+          "precio": 18000,
+          "stock": 0,
+          "foto": null
+        },
+        {
+          "valores": {
+            "Color": "Negro",
+            "Talle": "L"
+          },
+          "sku": "REM-N-L",
+          "precio": 19500,
+          "stock": 1,
+          "foto": null
+        },
+        {
+          "valores": {
+            "Color": "Blanco",
+            "Talle": "S"
+          },
+          "sku": "REM-B",
+          "precio": null,
+          "stock": 1,
+          "foto": "https://tienda.ejemplo.com.ar/wp-content/uploads/2026/03/remera-blanca.jpg"
+        },
+        {
+          "valores": {
+            "Color": "Blanco",
+            "Talle": "M"
+          },
+          "sku": "REM-B",
+          "precio": null,
+          "stock": 1,
+          "foto": "https://tienda.ejemplo.com.ar/wp-content/uploads/2026/03/remera-blanca.jpg"
+        },
+        {
+          "valores": {
+            "Color": "Blanco",
+            "Talle": "L"
+          },
+          "sku": "REM-B",
+          "precio": null,
+          "stock": 1,
+          "foto": "https://tienda.ejemplo.com.ar/wp-content/uploads/2026/03/remera-blanca.jpg"
+        }
+      ],
+      "canales": {
+        "web": true
+      }
+    }
+  ],
+  "stockEstimado": true,
+  "recortes": 0,
+  "omitidos": 0
+}

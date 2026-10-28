@@ -4,23 +4,13 @@
  * `imagenes`, `p_nombre`, `categorias_flatten`, `cdn_products`), además de la descripción en el HTML.
  */
 import type { ProductoEditable } from './datos/tipos.ts';
+import { leer, origenDe as origenComun, texto } from './importar/comun.ts';
 
 /** Stock "ilimitado" de Empretienda: en Mostrador queda con este número y se ajusta a mano. */
 export const STOCK_ILIMITADO = 999;
 
 /** Acepta "mitienda", "mitienda.empretienda.com.ar" o el link completo; devuelve el origen https. */
-export function origenDe(entrada: string): string | null {
-	let t = entrada.trim().toLowerCase();
-	if (!t) return null;
-	if (/^[a-z0-9-]{2,63}$/.test(t)) t += '.empretienda.com.ar';
-	try {
-		const u = new URL(t.includes('://') ? t : `https://${t}`);
-		if (!/^([a-z0-9-]+\.)+[a-z]{2,}$/.test(u.hostname) || u.port) return null;
-		return `https://${u.hostname}`;
-	} catch {
-		return null;
-	}
-}
+export const origenDe = (entrada: string) => origenComun(entrada, '.empretienda.com.ar');
 
 /** Las fichas del sitemap: en Empretienda son las URL con prioridad 0.8. */
 export function fichasDelSitemap(xml: string, origen: string): string[] {
@@ -54,20 +44,6 @@ function variable<T>(html: string, nombre: string): T | undefined {
 		return undefined;
 	}
 }
-
-const texto = (html: string) =>
-	html
-		.replace(/<br\s*\/?>/gi, '\n')
-		.replace(/<\/p>/gi, '\n')
-		.replace(/<[^>]+>/g, '')
-		.replace(/&nbsp;/g, ' ')
-		.replace(/&amp;/g, '&')
-		.replace(/&lt;/g, '<')
-		.replace(/&gt;/g, '>')
-		.replace(/&quot;/g, '"')
-		.replace(/&#0?39;/g, "'")
-		.replace(/\n{3,}/g, '\n\n')
-		.trim();
 
 type Stock = {
 	s_cantidad: number;
@@ -128,14 +104,4 @@ export function productoDeFicha(html: string, url: string): ProductoEditable | n
 	};
 }
 
-/** Pide una página de la tienda, con tope de tamaño y de tiempo. */
-export async function leer(url: string, f: typeof fetch = fetch): Promise<string | null> {
-	const r = await f(url, {
-		headers: { 'user-agent': 'Mostrador (importación de la tienda del dueño)' },
-		redirect: 'follow',
-		signal: AbortSignal.timeout(8000)
-	}).catch(() => null);
-	if (!r?.ok) return null;
-	const t = await r.text();
-	return t.length > 2_000_000 ? null : t;
-}
+export { leer };

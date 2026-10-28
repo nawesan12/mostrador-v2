@@ -976,7 +976,8 @@ export class DatosSandbox implements Datos {
 
 	async guardarProducto(id: string | null, p: ProductoEditable): Promise<Producto | null> {
 		const cambios = await this.cambiosProductos();
-		const clave = id ?? `n${Date.now().toString(36)}`;
+		// El sufijo al azar: dos productos creados en el mismo milisegundo (una importación) no se pisan.
+		const clave = id ?? `n${Date.now().toString(36)}${crypto.randomUUID().slice(0, 4)}`;
 		const actual = id ? (await this.regProductos()).find((x) => x.id === id) : undefined;
 		if (id && !actual) return null;
 		const antes = cambios.get(clave) ?? {};

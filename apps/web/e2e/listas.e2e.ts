@@ -104,13 +104,65 @@ test('productos: importar un CSV', async ({ page }) => {
 	await expect(page.locator('.fila')).toHaveCount(2);
 });
 
-test('productos: importar desde Empretienda pide un link válido', async ({ page }) => {
+test('productos: importar tienda pide un link válido', async ({ page }) => {
 	await demo(page, '/panel/productos');
-	await page.getByRole('button', { name: 'Desde Empretienda' }).click();
+	await page.getByRole('button', { name: 'Importar tienda' }).click();
 	const importar = page.getByRole('button', { name: 'Importar', exact: true });
 	await expect(importar).toBeDisabled();
+	await page.getByRole('button', { name: 'Empretienda' }).click();
+	await expect(page.getByLabel('Link de tu tienda')).toHaveAttribute(
+		'placeholder',
+		'mitienda.empretienda.com.ar'
+	);
 	await page.getByLabel('Link de tu tienda').fill('no existe nada');
 	await importar.click();
 	await expect(page.getByRole('alert')).toContainText('mitienda.empretienda.com.ar');
 	expect(await sinDesborde(page)).toBeLessThanOrEqual(0);
+});
+
+test('productos: importar tienda de Shopify muestra el resumen', async ({ page }) => {
+	// Nada sale a la red: los dos pasos del BFF se responden acá.
+	const lotes: unknown[] = [];
+	await page.route('**/panel/productos/tienda', (r) =>
+		r.fulfill({
+			json: {
+				fuente: 'shopify',
+				origen: 'https://mitienda.myshopify.com',
+				total: 7,
+				paginas: 2,
+				omitidas: 0
+			}
+		})
+	);
+	await page.route('**/panel/productos/tienda/lote', (r) => {
+		lotes.push(r.request().postDataJSON());
+		const primera = lotes.length === 1;
+		return r.fulfill({
+			json: {
+				leidos: primera ? 5 : 2,
+				creados: primera ? 4 : 2,
+				repetidos: primera ? 1 : 0,
+				recortados: primera ? 0 : 1,
+				fallidos: 0,
+				conVariantes: 0,
+				stockEstimado: true,
+				fin: !primera
+			}
+		});
+	});
+	await demo(page, '/panel/productos');
+	await page.getByRole('button', { name: 'Importar tienda' }).click();
+	await page.getByRole('button', { name: 'WooCommerce' }).click();
+	await page.getByLabel('Link de tu tienda').fill('mitienda.myshopify.com');
+	await page.getByRole('button', { name: 'Importar', exact: true }).click();
+	await expect(page.getByRole('status')).toContainText('6 productos importados de Shopify');
+	await expect(page.getByText('1 ya estaba y no se')).toBeVisible();
+	await expect(page.getByText('1 se recortó')).toBeVisible();
+	await expect(page.getByText('Shopify no publica el stock: revisalo.')).toBeVisible();
+	expect(lotes).toEqual([
+		{ fuente: 'shopify', origen: 'https://mitienda.myshopify.com', pagina: 1 },
+		{ fuente: 'shopify', origen: 'https://mitienda.myshopify.com', pagina: 2 }
+	]);
+	expect(await sinDesborde(page)).toBeLessThanOrEqual(0);
+	await page.getByRole('button', { name: 'Listo' }).click();
 });
