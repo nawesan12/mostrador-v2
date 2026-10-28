@@ -53,3 +53,28 @@ test('tienda: un cupón se valida, descuenta y suma un uso en el panel', async (
 	await listo(page);
 	await expect(page.getByText('42 de 100 usos')).toBeVisible();
 });
+
+test('tienda: el link de un cupón lo deja aplicado en el checkout', async ({ page }) => {
+	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	await page.goto('/demo');
+	await listo(page);
+	await page.getByRole('button', { name: /^Ceibo/ }).click();
+	await expect(page).toHaveURL(/\/panel$/);
+	const slug = (await page.locator('.t-d').first().textContent())!.split('/t/')[1].trim();
+
+	await page.goto(`/t/${slug}/c/finde10`);
+	await expect(page).toHaveURL(new RegExp(`/t/${slug}/catalogo$`));
+	await listo(page);
+	await page.locator('a[href*="/producto/"]').first().click();
+	await listo(page);
+	await page.getByRole('button', { name: 'Agregar al carrito' }).click();
+	await page.getByRole('link', { name: 'Finalizar compra' }).click();
+	await listo(page);
+	await expect(page.getByRole('status').filter({ hasText: 'FINDE10' })).toBeVisible();
+
+	// Quitarlo no lo vuelve a traer.
+	await page.getByRole('button', { name: 'Quitar' }).click();
+	await page.reload();
+	await listo(page);
+	await expect(page.getByLabel('¿Tenés un cupón?')).toHaveValue('');
+});
