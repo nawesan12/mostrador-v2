@@ -170,6 +170,142 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/partners/yo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** El panel de partners de la persona de la sesión (/partners/panel). 404 si no es partner. */
+        get: operations["panelPartner"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/partners/yo/perfil": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** El perfil público que se ve en "Buscar un partner". */
+        put: operations["guardarPerfilPartner"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/partners/yo/cobro": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Datos de cobro (CBU/CVU o alias, titular, CUIT con verificador, condición frente al IVA). */
+        put: operations["guardarCobroPartner"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/partners/yo/pagos/{mes}/factura": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** El link (https) de la factura del partner para un pago que todavía no se pagó. */
+        put: operations["subirFacturaPartner"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/partners/clics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Un clic en el link de un partner (/empezar?ref=…). Sólo con la clave del BFF; un ref desconocido no hace nada. */
+        post: operations["sumarClicPartner"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/interno/partners": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Uso interno (backoffice, clave del BFF): convierte la cuenta del email en partner o le cambia el nivel. */
+        post: operations["aprobarPartner"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/interno/partners/liquidaciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Uso interno: arma (o rehace, si sigue pendiente) la liquidación de un mes. */
+        post: operations["liquidarPartner"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/interno/partners/pagos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Uso interno: pasa un pago a aprobada o pagada. */
+        put: operations["estadoPagoPartner"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/novedades/suscripciones": {
         parameters: {
             query?: never;
@@ -3006,6 +3142,113 @@ export interface components {
             web?: string;
             especialidades?: ("diseno" | "desarrollo" | "marketing" | "contabilidad" | "fotografia")[];
         };
+        /** @enum {string} */
+        NivelPartner: "partner" | "plata" | "oro";
+        /** @enum {string} */
+        EspecialidadPartner: "diseno" | "desarrollo" | "marketing" | "contabilidad" | "fotografia";
+        PerfilPartner: {
+            nombre: string;
+            ciudad: string;
+            descripcion: string;
+            especialidades: components["schemas"]["EspecialidadPartner"][];
+            casos: {
+                nombre: string;
+                /** @description https:// */
+                url: string;
+            }[];
+            email: string;
+            /** @description Sólo dígitos, con característica */
+            whatsapp: string;
+            /** @description https:// o vacío */
+            web: string;
+            /** @description URL https:// de la imagen, o vacío */
+            logo: string;
+        };
+        CobroPartner: {
+            /**
+             * @description CBU/CVU (22 dígitos con verificadores) o alias de Mercado Pago o del banco
+             * @enum {string}
+             */
+            tipo: "cbu" | "alias";
+            valor: string;
+            titular: string;
+            /** @description 11 dígitos con verificador */
+            cuit: string;
+            /** @enum {string} */
+            condicionIva: "monotributo" | "responsable_inscripto" | "exento";
+        };
+        TiendaReferida: {
+            id: string;
+            nombre: string;
+            slug: string;
+            plan: components["schemas"]["Plan"];
+            /** @enum {string} */
+            ciclo: "mes" | "anio";
+            /** @enum {string} */
+            estado: "prueba" | "activa" | "gratis" | "baja";
+            /** Format: date */
+            alta: string;
+            /**
+             * Format: date
+             * @description Primer día del mes en que deja de generar comisión (12 meses desde el alta)
+             */
+            finComision: string;
+            /** @description En pesos: % del nivel sobre lo que paga por mes; 0 si no está activa o pasaron los 12 meses */
+            comisionMes: number;
+        };
+        PagoPartner: {
+            /** @description YYYY-MM */
+            mes: string;
+            /** @enum {string} */
+            estado: "pendiente" | "aprobada" | "pagada";
+            /** @description En pesos */
+            monto: number;
+            detalle: {
+                tiendaId: string;
+                tienda: string;
+                plan: components["schemas"]["Plan"];
+                comision: number;
+            }[];
+            facturaUrl: string | null;
+            /**
+             * Format: date
+             * @description El 10 del mes siguiente
+             */
+            fechaPago: string;
+            /** Format: date */
+            pagadoEn: string | null;
+        };
+        PanelPartner: {
+            /** Format: date */
+            hoy: string;
+            partner: {
+                nombre: string;
+                email: string;
+                nivel: components["schemas"]["NivelPartner"];
+                nivelEfectivo: components["schemas"]["NivelPartner"];
+                porcentaje: number;
+                /** @description El ref del link (/empezar?ref=…) */
+                codigo: string;
+                cupon: string;
+                /** Format: date */
+                aprobadoEn: string;
+                perfil: components["schemas"]["PerfilPartner"];
+                cobro: components["schemas"]["CobroPartner"] | null;
+            };
+            tiendas: components["schemas"]["TiendaReferida"][];
+            clics: {
+                mes: string;
+                n: number;
+            }[];
+            pagos: components["schemas"]["PagoPartner"][];
+            colaboraciones: {
+                tiendaId: string;
+                nombre: string;
+                slug: string;
+                /** @enum {string} */
+                rol: "admin" | "ventas" | "deposito";
+            }[];
+        };
         PedidoArrepentimiento: {
             /** @description El de la cuenta */
             email: string;
@@ -3500,6 +3743,224 @@ export interface operations {
             };
             400: components["responses"]["Problema"];
             429: components["responses"]["Problema"];
+        };
+    };
+    panelPartner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Panel */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PanelPartner"];
+                };
+            };
+            401: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+        };
+    };
+    guardarPerfilPartner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PerfilPartner"];
+            };
+        };
+        responses: {
+            /** @description Guardado (limpio) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PerfilPartner"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            401: components["responses"]["Problema"];
+        };
+    };
+    guardarCobroPartner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CobroPartner"];
+            };
+        };
+        responses: {
+            /** @description Guardado (limpio) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CobroPartner"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            401: components["responses"]["Problema"];
+        };
+    };
+    subirFacturaPartner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                mes: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    url: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Guardada */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+        };
+    };
+    sumarClicPartner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    ref: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Contado (o ignorado) */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            403: components["responses"]["Problema"];
+        };
+    };
+    aprobarPartner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    email: string;
+                    nivel?: components["schemas"]["NivelPartner"];
+                    /** @description De la agencia; arma el link y el cupón */
+                    nombre?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Aprobado */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        codigo: string;
+                    };
+                };
+            };
+            403: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+        };
+    };
+    liquidarPartner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    email: string;
+                    mes: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Liquidación */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagoPartner"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            403: components["responses"]["Problema"];
+        };
+    };
+    estadoPagoPartner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    email: string;
+                    mes: string;
+                    /** @enum {string} */
+                    estado: "aprobada" | "pagada";
+                };
+            };
+        };
+        responses: {
+            /** @description Cambiado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            403: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
         };
     };
     suscribirNovedades: {

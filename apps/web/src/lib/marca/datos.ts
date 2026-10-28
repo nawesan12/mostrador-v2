@@ -121,6 +121,24 @@ export const QR = {
 	paquete: `${SITIO}/onboarding?utm_source=tarjeta-paquete`
 } as const;
 
+/**
+ * Los QR con el link de un partner (Materiales del panel de partners abre /marca?ref=…): pasan por
+ * /empezar, que guarda el ref y lleva a crear la cuenta. Un ref raro se ignora.
+ */
+export function qrCon(ref: string | null) {
+	if (!ref || !/^[A-Za-z0-9_.-]{1,40}$/.test(ref)) return QR;
+	const via = (utm: string) => `${SITIO}/empezar?utm_source=${utm}&ref=${ref}`;
+	return {
+		...QR,
+		carpeta: via('carpeta'),
+		flyer: via('flyer'),
+		flyerJugada: via('flyer-jugada'),
+		onepager: via('onepager'),
+		rollup: via('rollup'),
+		triptico: via('triptico')
+	};
+}
+
 /** vCard 3.0 para el QR de la tarjeta personal. */
 export function vcard(p: { nombre: string; cargo: string; telefono: string; mail: string }) {
 	const esc = (s: string) => s.replace(/[\\,;]/g, (c) => '\\' + c).replace(/\n/g, ' ');

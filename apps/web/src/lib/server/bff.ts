@@ -27,7 +27,7 @@ export class ClienteBff {
 	) {}
 
 	protected async pedir<T>(
-		metodo: 'GET' | 'POST',
+		metodo: 'GET' | 'POST' | 'PUT',
 		ruta: string,
 		cuerpo?: unknown,
 		token?: string

@@ -130,6 +130,138 @@ paths:
         '202': { description: Registrada }
         '400': { $ref: '#/components/responses/Problema' }
         '429': { $ref: '#/components/responses/Problema' }
+  /v1/partners/yo:
+    get:
+      operationId: panelPartner
+      summary: El panel de partners de la persona de la sesión (/partners/panel). 404 si no es partner.
+      responses:
+        '200':
+          description: Panel
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PanelPartner' }
+        '401': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+  /v1/partners/yo/perfil:
+    put:
+      operationId: guardarPerfilPartner
+      summary: El perfil público que se ve en "Buscar un partner".
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PerfilPartner' }
+      responses:
+        '200':
+          description: Guardado (limpio)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PerfilPartner' }
+        '400': { $ref: '#/components/responses/Problema' }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/partners/yo/cobro:
+    put:
+      operationId: guardarCobroPartner
+      summary: Datos de cobro (CBU/CVU o alias, titular, CUIT con verificador, condición frente al IVA).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CobroPartner' }
+      responses:
+        '200':
+          description: Guardado (limpio)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CobroPartner' }
+        '400': { $ref: '#/components/responses/Problema' }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/partners/yo/pagos/{mes}/factura:
+    put:
+      operationId: subirFacturaPartner
+      summary: El link (https) de la factura del partner para un pago que todavía no se pagó.
+      parameters:
+        - { name: mes, in: path, required: true, schema: { type: string, pattern: '^\d{4}-\d{2}$' } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [url], properties: { url: { type: string, maxLength: 500 } } }
+      responses:
+        '204': { description: Guardada }
+        '400': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+  /v1/partners/clics:
+    post:
+      operationId: sumarClicPartner
+      summary: Un clic en el link de un partner (/empezar?ref=…). Sólo con la clave del BFF; un ref desconocido no hace nada.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [ref], properties: { ref: { type: string, maxLength: 40 } } }
+      responses:
+        '204': { description: Contado (o ignorado) }
+        '403': { $ref: '#/components/responses/Problema' }
+  /v1/interno/partners:
+    post:
+      operationId: aprobarPartner
+      summary: 'Uso interno (backoffice, clave del BFF): convierte la cuenta del email en partner o le cambia el nivel.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string }
+                nivel: { $ref: '#/components/schemas/NivelPartner' }
+                nombre: { type: string, description: 'De la agencia; arma el link y el cupón' }
+      responses:
+        '200':
+          description: Aprobado
+          content:
+            application/json:
+              schema: { type: object, required: [codigo], properties: { codigo: { type: string } } }
+        '403': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+  /v1/interno/partners/liquidaciones:
+    post:
+      operationId: liquidarPartner
+      summary: 'Uso interno: arma (o rehace, si sigue pendiente) la liquidación de un mes.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [email, mes], properties: { email: { type: string }, mes: { type: string } } }
+      responses:
+        '200':
+          description: Liquidación
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PagoPartner' }
+        '400': { $ref: '#/components/responses/Problema' }
+        '403': { $ref: '#/components/responses/Problema' }
+  /v1/interno/partners/pagos:
+    put:
+      operationId: estadoPagoPartner
+      summary: 'Uso interno: pasa un pago a aprobada o pagada.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, mes, estado]
+              properties:
+                email: { type: string }
+                mes: { type: string }
+                estado: { type: string, enum: [aprobada, pagada] }
+      responses:
+        '204': { description: Cambiado }
+        '403': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
   /v1/novedades/suscripciones:
     post:
       operationId: suscribirNovedades
@@ -3237,6 +3369,108 @@ components:
         especialidades:
           type: array
           items: { type: string, enum: [diseno, desarrollo, marketing, contabilidad, fotografia] }
+    NivelPartner: { type: string, enum: [partner, plata, oro] }
+    EspecialidadPartner: { type: string, enum: [diseno, desarrollo, marketing, contabilidad, fotografia] }
+    PerfilPartner:
+      type: object
+      required: [nombre, ciudad, descripcion, especialidades, casos, email, whatsapp, web, logo]
+      properties:
+        nombre: { type: string, maxLength: 80 }
+        ciudad: { type: string, maxLength: 60 }
+        descripcion: { type: string, maxLength: 280 }
+        especialidades: { type: array, items: { $ref: '#/components/schemas/EspecialidadPartner' } }
+        casos:
+          type: array
+          maxItems: 6
+          items:
+            type: object
+            required: [nombre, url]
+            properties:
+              nombre: { type: string, maxLength: 60 }
+              url: { type: string, description: 'https://' }
+        email: { type: string }
+        whatsapp: { type: string, description: 'Sólo dígitos, con característica' }
+        web: { type: string, description: 'https:// o vacío' }
+        logo: { type: string, description: 'URL https:// de la imagen, o vacío' }
+    CobroPartner:
+      type: object
+      required: [tipo, valor, titular, cuit, condicionIva]
+      properties:
+        tipo: { type: string, enum: [cbu, alias], description: 'CBU/CVU (22 dígitos con verificadores) o alias de Mercado Pago o del banco' }
+        valor: { type: string }
+        titular: { type: string, maxLength: 80 }
+        cuit: { type: string, description: '11 dígitos con verificador' }
+        condicionIva: { type: string, enum: [monotributo, responsable_inscripto, exento] }
+    TiendaReferida:
+      type: object
+      required: [id, nombre, slug, plan, ciclo, estado, alta, finComision, comisionMes]
+      properties:
+        id: { type: string }
+        nombre: { type: string }
+        slug: { type: string }
+        plan: { $ref: '#/components/schemas/Plan' }
+        ciclo: { type: string, enum: [mes, anio] }
+        estado: { type: string, enum: [prueba, activa, gratis, baja] }
+        alta: { type: string, format: date }
+        finComision: { type: string, format: date, description: 'Primer día del mes en que deja de generar comisión (12 meses desde el alta)' }
+        comisionMes: { type: integer, description: 'En pesos: % del nivel sobre lo que paga por mes; 0 si no está activa o pasaron los 12 meses' }
+    PagoPartner:
+      type: object
+      required: [mes, estado, monto, detalle, facturaUrl, fechaPago, pagadoEn]
+      properties:
+        mes: { type: string, description: 'YYYY-MM' }
+        estado: { type: string, enum: [pendiente, aprobada, pagada] }
+        monto: { type: integer, description: 'En pesos' }
+        detalle:
+          type: array
+          items:
+            type: object
+            required: [tiendaId, tienda, plan, comision]
+            properties:
+              tiendaId: { type: string }
+              tienda: { type: string }
+              plan: { $ref: '#/components/schemas/Plan' }
+              comision: { type: integer }
+        facturaUrl: { type: [string, 'null'] }
+        fechaPago: { type: string, format: date, description: 'El 10 del mes siguiente' }
+        pagadoEn: { type: [string, 'null'], format: date }
+    PanelPartner:
+      type: object
+      required: [hoy, partner, tiendas, clics, pagos, colaboraciones]
+      properties:
+        hoy: { type: string, format: date }
+        partner:
+          type: object
+          required: [nombre, email, nivel, nivelEfectivo, porcentaje, codigo, cupon, aprobadoEn, perfil, cobro]
+          properties:
+            nombre: { type: string }
+            email: { type: string }
+            nivel: { $ref: '#/components/schemas/NivelPartner' }
+            nivelEfectivo: { $ref: '#/components/schemas/NivelPartner' }
+            porcentaje: { type: integer }
+            codigo: { type: string, description: 'El ref del link (/empezar?ref=…)' }
+            cupon: { type: string }
+            aprobadoEn: { type: string, format: date }
+            perfil: { $ref: '#/components/schemas/PerfilPartner' }
+            cobro:
+              oneOf:
+                - { $ref: '#/components/schemas/CobroPartner' }
+                - { type: 'null' }
+        tiendas: { type: array, items: { $ref: '#/components/schemas/TiendaReferida' } }
+        clics:
+          type: array
+          items: { type: object, required: [mes, n], properties: { mes: { type: string }, n: { type: integer } } }
+        pagos: { type: array, items: { $ref: '#/components/schemas/PagoPartner' } }
+        colaboraciones:
+          type: array
+          items:
+            type: object
+            required: [tiendaId, nombre, slug, rol]
+            properties:
+              tiendaId: { type: string }
+              nombre: { type: string }
+              slug: { type: string }
+              rol: { type: string, enum: [admin, ventas, deposito] }
     PedidoArrepentimiento:
       type: object
       required: [email, nombre, documento, plan]

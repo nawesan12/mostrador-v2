@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import Seo from '#lib/components/Seo.svelte';
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
@@ -13,7 +14,7 @@
 		EVENTO_INICIAL,
 		MAIL,
 		PRUEBA_DIAS,
-		QR,
+		qrCon,
 		VERSUS,
 		VS_PRO,
 		fmt
@@ -23,6 +24,8 @@
 
 	/** Imprimibles (design/Imprimibles Mostrador.dc.html): A6 a A3 en mm; roll-up y backing a escala. */
 	const fam = crearFamilia('imprimibles');
+	// Con ?ref= (Materiales del panel de partners) los QR llevan al link del partner.
+	const QR = $derived(qrCon(page.url.searchParams.get('ref')));
 
 	let evento = $state({ ...EVENTO_INICIAL });
 	const CAMPOS_EVENTO: [string, string][] = [

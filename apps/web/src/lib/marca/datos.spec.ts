@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EMPRESA, anioHotSale, fechaIso } from './datos.ts';
+import { EMPRESA, QR, anioHotSale, fechaIso, qrCon } from './datos.ts';
 
 describe('datos de las piezas de marca', () => {
 	it('la fecha es la de Argentina, no la de UTC', () => {
@@ -18,5 +18,13 @@ describe('datos de las piezas de marca', () => {
 		expect(EMPRESA.cuit).toBe('20-44859234-1');
 		expect(EMPRESA.ciudad).toBe('Mar del Plata');
 		expect(EMPRESA.region).toBe('Provincia de Buenos Aires');
+	});
+
+	it('los QR con el ref de un partner pasan por /empezar', () => {
+		expect(qrCon(null)).toBe(QR);
+		expect(qrCon('<x>')).toBe(QR);
+		const q = qrCon('pampa-code');
+		expect(q.flyer).toBe('https://mostradorapp.com.ar/empezar?utm_source=flyer&ref=pampa-code');
+		expect(q.paquete).toBe(QR.paquete);
 	});
 });
