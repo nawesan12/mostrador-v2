@@ -173,14 +173,14 @@
 		align-items: center;
 		gap: 10px;
 		color: #2a140c;
-		background: #fff;
-		border: 1px solid rgba(58, 29, 18, 0.14);
 		font-size: 16px;
 		font-weight: 600;
 		padding: 17px 24px;
 		border-radius: 999px;
 		white-space: nowrap;
-		box-shadow: 0 6px 16px -10px rgba(58, 29, 18, 0.3);
+		border: 0;
+		background: linear-gradient(180deg, #ffffff 0%, #f5efe9 100%);
+		box-shadow: var(--inflado-claro);
 	}
 	.cta-sec:hover {
 		color: #2a140c;

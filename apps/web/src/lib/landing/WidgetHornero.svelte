@@ -111,13 +111,17 @@
 		font-size: 13px;
 		font-weight: 600;
 		color: #2a140c;
-		background: #f4ece2;
 		padding: 7px 12px;
 		border-radius: 999px;
+		border: 0;
+		background: linear-gradient(180deg, #ffffff 0%, #f5efe9 100%);
+		box-shadow: var(--inflado-claro);
 	}
 	.g-acc a.calc {
 		color: #fff;
-		background: #d2582f;
+		border: 0;
+		background: linear-gradient(180deg, #ee7a4a 0%, #d2582f 55%, #bc4920 100%);
+		box-shadow: var(--inflado-naranja);
 	}
 	.avatar {
 		position: relative;

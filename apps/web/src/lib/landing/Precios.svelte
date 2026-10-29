@@ -252,13 +252,17 @@
 		text-align: center;
 		padding: 13px;
 		border-radius: 999px;
-		background: rgba(251, 247, 242, 0.1);
 		color: #fff;
 		font-size: 14.5px;
 		font-weight: 600;
+		border: 0;
+		background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06));
+		box-shadow: var(--inflado-vidrio);
 	}
 	.hi .pl-cta {
-		background: linear-gradient(180deg, #c24e25, #b0441d);
+		border: 0;
+		background: linear-gradient(180deg, #ee7a4a 0%, #d2582f 55%, #bc4920 100%);
+		box-shadow: var(--inflado-naranja);
 	}
 	.pl-cta:hover {
 		color: #fff;
@@ -288,9 +292,11 @@
 	.empresa a {
 		padding: 11px 18px;
 		border-radius: 999px;
-		background: #fbf7f2;
 		color: #2a140c;
 		font-size: 14px;
 		font-weight: 600;
+		border: 0;
+		background: linear-gradient(180deg, #ffffff 0%, #f5efe9 100%);
+		box-shadow: var(--inflado-claro);
 	}
 </style>

@@ -225,16 +225,15 @@
 		align-items: center;
 		gap: 8px;
 		color: #fff;
-		background: #2a140c;
 		font-size: 14.5px;
 		font-weight: 600;
 		padding: 10px 18px;
 		border-radius: 999px;
 		flex: none;
 		white-space: nowrap;
-		box-shadow:
-			inset 0 1px 0 rgba(255, 255, 255, 0.15),
-			0 8px 20px -10px rgba(42, 20, 12, 0.7);
+		border: 0;
+		background: linear-gradient(180deg, #4a2617 0%, #2a140c 60%, #1d0d07 100%);
+		box-shadow: var(--inflado-oscuro);
 	}
 	.cta:hover {
 		color: #fff;
@@ -304,11 +303,7 @@
 			font-size: 15px;
 			font-weight: 700;
 			background: linear-gradient(180deg, #ee7a4a 0%, #d2582f 55%, #bc4920 100%);
-			box-shadow:
-				inset 0 2px 0 rgba(255, 255, 255, 0.38),
-				inset 0 -3px 0 rgba(120, 38, 12, 0.35),
-				0 1px 2px rgba(120, 38, 12, 0.3),
-				0 14px 30px -12px rgba(210, 88, 47, 0.85);
+			box-shadow: var(--inflado-naranja);
 		}
 		.cta:hover {
 			background: linear-gradient(180deg, #ee7a4a 0%, #d2582f 55%, #bc4920 100%);
@@ -460,12 +455,14 @@
 	}
 	.b-ing {
 		color: #2a140c;
-		background: #fff;
-		border: 1px solid rgba(58, 29, 18, 0.14);
+		border: 0;
+		background: linear-gradient(180deg, #ffffff 0%, #f5efe9 100%);
+		box-shadow: var(--inflado-claro);
 	}
 	.b-cta {
 		color: #fff;
-		background: #2a140c;
+		background: linear-gradient(180deg, #ee7a4a 0%, #d2582f 55%, #bc4920 100%);
+		box-shadow: var(--inflado-naranja);
 	}
 	.b-cta:hover {
 		color: #fff;

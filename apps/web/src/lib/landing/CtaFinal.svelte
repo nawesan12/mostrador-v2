@@ -104,15 +104,16 @@
 		border-radius: 999px;
 	}
 	.pri {
-		background: linear-gradient(180deg, #c24e25, #b0441d);
 		padding: 16px 26px;
-		box-shadow:
-			inset 0 1px 0 rgba(255, 255, 255, 0.3),
-			0 16px 34px -14px rgba(210, 88, 47, 0.8);
+		border: 0;
+		background: linear-gradient(180deg, #ee7a4a 0%, #d2582f 55%, #bc4920 100%);
+		box-shadow: var(--inflado-naranja);
 	}
 	.sec {
-		border: 1px solid rgba(255, 255, 255, 0.4);
 		padding: 16px 24px;
+		border: 0;
+		background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06));
+		box-shadow: var(--inflado-vidrio);
 	}
 	.ctas a:hover {
 		color: #fff;

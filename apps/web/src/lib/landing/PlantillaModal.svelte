@@ -330,14 +330,13 @@
 		justify-content: center;
 		gap: 8px;
 		color: #fff;
-		background: linear-gradient(180deg, #c24e25, #b0441d);
 		font-size: 15.5px;
 		font-weight: 600;
 		padding: 15px;
 		border-radius: 999px;
-		box-shadow:
-			inset 0 1px 0 rgba(255, 255, 255, 0.3),
-			0 14px 30px -14px rgba(210, 88, 47, 0.8);
+		border: 0;
+		background: linear-gradient(180deg, #ee7a4a 0%, #d2582f 55%, #bc4920 100%);
+		box-shadow: var(--inflado-naranja);
 	}
 	.usar:hover {
 		color: #fff;

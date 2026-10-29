@@ -5,6 +5,19 @@
  */
 
 :root {
+	/* Botones inflados: brillo arriba, sombra adentro abajo y una sombra debajo del color del botón. */
+	--inflado-naranja:
+		inset 0 2px 0 rgba(255, 255, 255, 0.38), inset 0 -3px 0 rgba(120, 38, 12, 0.35),
+		0 1px 2px rgba(120, 38, 12, 0.3), 0 14px 30px -12px rgba(210, 88, 47, 0.85);
+	--inflado-oscuro:
+		inset 0 2px 0 rgba(255, 255, 255, 0.16), inset 0 -3px 0 rgba(0, 0, 0, 0.4),
+		0 1px 2px rgba(0, 0, 0, 0.3), 0 14px 28px -14px rgba(42, 20, 12, 0.8);
+	--inflado-claro:
+		inset 0 2px 0 #fff, inset 0 -3px 0 rgba(58, 29, 18, 0.1), 0 0 0 1px rgba(58, 29, 18, 0.1),
+		0 12px 24px -14px rgba(58, 29, 18, 0.45);
+	--inflado-vidrio:
+		inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 -2px 0 rgba(0, 0, 0, 0.25),
+		0 0 0 1px rgba(255, 255, 255, 0.12), 0 10px 22px -14px rgba(0, 0, 0, 0.6);
 	/* Margen lateral de las secciones: la mitad en el celular, para no desperdiciar ancho. */
 	--lado: 28px;
 	/* Marca */
@@ -212,11 +225,9 @@ html.lenis body {
 }
 
 .btn-primary {
-	background: linear-gradient(180deg, #e06a3e, var(--terracota));
+	background: linear-gradient(180deg, #ee7a4a 0%, #d2582f 55%, #bc4920 100%);
 	color: #fff;
-	box-shadow:
-		inset 0 1px 0 rgba(255, 255, 255, 0.3),
-		0 10px 24px -10px rgba(210, 88, 47, 0.8);
+	box-shadow: var(--inflado-naranja);
 }
 .btn-primary:hover {
 	color: #fff;
@@ -244,11 +255,7 @@ html.lenis body {
 	white-space: nowrap;
 	text-decoration: none;
 	cursor: pointer;
-	box-shadow:
-		inset 0 2px 0 rgba(255, 255, 255, 0.38),
-		inset 0 -3px 0 rgba(120, 38, 12, 0.35),
-		0 1px 2px rgba(120, 38, 12, 0.3),
-		0 14px 30px -12px rgba(210, 88, 47, 0.85);
+	box-shadow: var(--inflado-naranja);
 	transition:
 		transform 0.15s var(--ease),
 		box-shadow 0.2s,
@@ -273,8 +280,9 @@ html.lenis body {
 }
 
 .btn-dark {
-	background: var(--tostado);
+	background: linear-gradient(180deg, #4a2617 0%, #2a140c 60%, #1d0d07 100%);
 	color: #fff;
+	box-shadow: var(--inflado-oscuro);
 }
 .btn-dark:hover {
 	color: #fff;
@@ -285,6 +293,11 @@ html.lenis body {
 	background: var(--sf);
 	color: var(--tx);
 	border-color: var(--ln2);
+	/* Inflado suave: sirve en el tema claro y en el oscuro del panel. */
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.5),
+		inset 0 -2px 0 rgba(0, 0, 0, 0.08),
+		0 6px 14px -10px rgba(0, 0, 0, 0.4);
 }
 .btn-secondary:hover {
 	color: var(--tx);

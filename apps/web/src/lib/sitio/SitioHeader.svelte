@@ -107,14 +107,13 @@
 		gap: 7px;
 		padding: 10px 16px;
 		border-radius: 999px;
-		background: linear-gradient(180deg, #c24e25, #b0441d);
 		color: #fff;
 		font-size: 14px;
 		font-weight: 600;
 		white-space: nowrap;
-		box-shadow:
-			inset 0 1px 0 rgba(255, 255, 255, 0.25),
-			0 8px 20px -10px rgba(210, 88, 47, 0.8);
+		border: 0;
+		background: linear-gradient(180deg, #ee7a4a 0%, #d2582f 55%, #bc4920 100%);
+		box-shadow: var(--inflado-naranja);
 	}
 	.crear:hover {
 		color: #fff;
