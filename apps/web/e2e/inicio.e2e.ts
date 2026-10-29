@@ -13,7 +13,7 @@ test('la portada carga con los encabezados de seguridad y sin desborde', async (
 	expect(res?.status()).toBe(200);
 	expect(res?.headers()['x-content-type-options']).toBe('nosniff');
 	await listo(page);
-	await expect(page.locator('h1:visible')).toContainText('Más seguro y por menos.');
+	await expect(page.locator('h1:visible')).toContainText('Sin complicaciones.');
 	expect(await sinDesborde(page)).toBeLessThanOrEqual(0);
 });
 
