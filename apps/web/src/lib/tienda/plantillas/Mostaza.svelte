@@ -2347,7 +2347,7 @@
 						style="color:inherit;text-decoration:underline;text-underline-offset:3px;font-weight:700;display:inline-flex;align-items:center;gap:5px"
 						><Icon icon={I.phArrowCounterClockwiseBold} size={13} />Botón de arrepentimiento</a
 					><a
-						href="/legales/consumidor"
+						href="/legales/defensa-del-consumidor"
 						style="color:inherit;opacity:0.75;text-decoration:underline;text-underline-offset:3px;font-weight:500"
 						>Defensa de las y los consumidores</a
 					><a
@@ -2366,7 +2366,7 @@
 					><span
 						style="width:24px;height:24px;border-radius:50%;background:#FCEDE5;display:grid;place-items:center"
 						><img src="/mark.svg" alt="" style="width:13px;height:auto;display:block" /></span
-					>Tienda creada con <b style="font-weight:800;letter-spacing:-.02em">mostrador</b></a
+					>Tienda creada con <b style="font-weight:800;letter-spacing:-.02em">Tu Local Web</b></a
 				>
 			</div>
 		</footer>
