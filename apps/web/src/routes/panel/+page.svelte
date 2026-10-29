@@ -252,7 +252,12 @@
 	let recordando = $state(false);
 </script>
 
-<Seo title="Panel · {data.tienda.nombre}" description="Panel de Tu Local Web" path="/panel" noindex />
+<Seo
+	title="Panel · {data.tienda.nombre}"
+	description="Panel de Tu Local Web"
+	path="/panel"
+	noindex
+/>
 
 <!-- eslint-disable svelte/no-navigation-without-resolve -- rutas del panel armadas con rutaDe -->
 <div class="cab" use:anim={{ t: 'rise' }}>

@@ -17,7 +17,7 @@ import {
 } from './tiendanube.ts';
 
 describe('importar: Tiendanube (mismos casos que Go)', () => {
-	it('productos, clientes y pedidos de la API → lo que guarda Mostrador', () => {
+	it('productos, clientes y pedidos de la API → lo que guarda Tu Local Web', () => {
 		expect(
 			resultadoTiendanube(casos as unknown as Parameters<typeof resultadoTiendanube>[0])
 		).toEqual(esperado);

@@ -17,7 +17,7 @@
 	import PasoTienda from '#lib/onboarding/PasoTienda.svelte';
 	import type { PageProps } from './$types';
 
-	/** Onboarding de 8 pasos (design/Onboarding Tu Local Web.dc.html). */
+	/** Onboarding de 8 pasos (design/Onboarding Mostrador.dc.html). */
 	let { data, form }: PageProps = $props();
 	const o = setOnboarding(new Onboarding());
 	const paso = $derived(o.e.paso);

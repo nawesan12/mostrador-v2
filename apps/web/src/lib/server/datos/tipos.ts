@@ -187,7 +187,7 @@ export interface Datos {
 	despublicarDeMercadoLibre(productoId: string): Promise<void>;
 	/** La conexión con ARCA (facturación electrónica); nunca trae la clave. */
 	arca(): Promise<ArcaConfig>;
-	/** Genera la clave (queda en Mostrador) y devuelve el pedido de certificado para subir a ARCA. */
+	/** Genera la clave (queda en Tu Local Web) y devuelve el pedido de certificado para subir a ARCA. */
 	arcaPedido(a: ArcaAlta): Promise<ArcaPedido>;
 	/** El certificado que devolvió ARCA (PEM); el error es el texto para mostrar. */
 	arcaCertificado(pem: string): Promise<ArcaCertificado | { error: string }>;

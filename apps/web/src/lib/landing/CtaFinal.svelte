@@ -6,7 +6,7 @@
 	import { unsplash } from './formato.ts';
 
 	/** "Abrí tu local web hoy." — CTA final de la landing. */
-	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Tu Local Web.dc.html).
+	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Mostrador.dc.html).
 	const registro = resolve('/onboarding');
 </script>
 

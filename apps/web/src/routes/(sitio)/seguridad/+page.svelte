@@ -91,8 +91,8 @@
 				<Etiqueta texto="Seguridad" color="#F0A58A" />
 				<h1>Tu negocio no se cae. Y nada se pierde.</h1>
 				<p>
-					Lo que en otras plataformas es opcional o cuesta extra, en Tu Local Web viene activado desde
-					el primer día.
+					Lo que en otras plataformas es opcional o cuesta extra, en Tu Local Web viene activado
+					desde el primer día.
 				</p>
 				<div class="datos">
 					{#each DATOS as [v, t] (t)}<div>

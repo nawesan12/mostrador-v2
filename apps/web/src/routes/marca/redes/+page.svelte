@@ -7,7 +7,7 @@
 	import { DESDE, PRUEBA_DIAS, VS_PRO, anioHotSale, fmt } from '#lib/marca/datos.ts';
 	import { crearFamilia } from '#lib/marca/familia.svelte.ts';
 
-	/** Redes (design/Redes Tu Local Web.dc.html): cada pieza a su medida en px, mostrada al 30–50 %. */
+	/** Redes (design/Redes Mostrador.dc.html): cada pieza a su medida en px, mostrada al 30–50 %. */
 	const fam = crearFamilia('redes');
 	const ANIO_HOT_SALE = anioHotSale();
 </script>

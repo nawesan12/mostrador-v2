@@ -9,7 +9,7 @@
 
 	/** Modal de plantilla de la landing (handoff: tplModal). */
 	const l = getLanding();
-	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Tu Local Web.dc.html).
+	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Mostrador.dc.html).
 	const registro = resolve('/onboarding');
 	const DESC = {
 		ed: 'Imagen grande y colecciones destacadas. Ideal si tenés buenas fotos y una marca para mostrar.',

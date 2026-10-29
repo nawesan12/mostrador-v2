@@ -1,4 +1,4 @@
-// Comando api: el servidor HTTP de Mostrador para el VPS.
+// Comando api: el servidor HTTP de Tu Local Web para el VPS.
 package main
 
 import (

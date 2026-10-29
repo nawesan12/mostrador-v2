@@ -1,6 +1,6 @@
 /**
  * Lo común a los importadores de catálogo (Empretienda, Shopify, WooCommerce): leer la tienda con
- * topes, pasar HTML a texto, redondear precios y ajustar cada producto a los topes de Mostrador.
+ * topes, pasar HTML a texto, redondear precios y ajustar cada producto a los topes de Tu Local Web.
  *
  * `ajustar`, `textoRico` y `pesos` tienen su gemelo en Go (`apps/api/internal/importar/comun.go`):
  * los dos pasan los casos de `packages/contrato/casos/importar/`. Si cambia una regla, cambia en los
@@ -143,7 +143,7 @@ export function pesos(valor: unknown, decimales = 0): number | null {
 	return (n - q * div) * 2 >= div ? q + 1 : q;
 }
 
-/** Sin mayúsculas ni tildes: así compara Mostrador nombres de opciones y valores repetidos. */
+/** Sin mayúsculas ni tildes: así compara Tu Local Web nombres de opciones y valores repetidos. */
 export const normal = (s: string) =>
 	s
 		.normalize('NFD')
@@ -208,7 +208,7 @@ export const resumir = (items: Importado[], omitidos: number): Resultado => ({
 });
 
 /**
- * Ajusta un producto a los topes de Mostrador. Lo que no entra se recorta y se marca: nombre y
+ * Ajusta un producto a los topes de Tu Local Web. Lo que no entra se recorta y se marca: nombre y
  * textos se cortan; fotos (sólo https), opciones y valores se limitan; si las combinaciones pasan
  * de 100, se sacan valores de la opción más larga. Las variantes que quedan sin valor se descartan.
  * Null si el nombre no llega a 2 letras.
@@ -344,7 +344,7 @@ export async function pedir(
 ): Promise<{ texto: string; cabeceras: Headers } | null> {
 	const r = await f(url, {
 		// En ASCII: con tildes, workerd lo manda como UTF-8 y hay tiendas que no responden.
-		headers: { 'user-agent': 'Mostrador (importacion de la tienda del dueno)' },
+		headers: { 'user-agent': 'Tu Local Web (importacion de la tienda del dueno)' },
 		redirect: 'follow',
 		signal: AbortSignal.timeout(8000)
 	}).catch(() => null);

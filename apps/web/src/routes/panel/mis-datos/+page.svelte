@@ -102,7 +102,9 @@
 	<div class="cab" use:anim={{ t: 'rise' }}>
 		<div class="c-txt">
 			<h1>Mis datos</h1>
-			<div class="c-s">Todo lo que guardaste en Tu Local Web es tuyo. Llevátelo cuando quieras.</div>
+			<div class="c-s">
+				Todo lo que guardaste en Tu Local Web es tuyo. Llevátelo cuando quieras.
+			</div>
 		</div>
 		<button type="button" class="todo" onclick={() => bajar('todo', 'csv')}
 			><Icon icon={I.phArchiveBold} size={15} />Exportar todo</button

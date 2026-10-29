@@ -45,7 +45,7 @@ const sinVariantes = (p: ProductoShopify) =>
 		p.options[0].name === 'Title' &&
 		(p.options[0].values ?? []).every((v) => v === 'Default Title'));
 
-/** Un producto de `/products.json` → producto de Mostrador (null si no tiene nombre). */
+/** Un producto de `/products.json` → producto de Tu Local Web (null si no tiene nombre). */
 export function deShopify(p: ProductoShopify): Importado | null {
 	const variantes = p.variants ?? [];
 	const imagenes = p.images ?? [];

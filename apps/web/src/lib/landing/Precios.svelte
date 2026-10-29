@@ -8,7 +8,7 @@
 	import { fmt } from './formato.ts';
 
 	/** Precios de la landing (handoff: #precios y #planes): calculadora, planes y comparativa. */
-	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Tu Local Web.dc.html).
+	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Mostrador.dc.html).
 	const registro = resolve('/onboarding');
 
 	let ventas = $state(6_000_000);
@@ -152,7 +152,7 @@
 					<div>
 						2.000 respuestas con IA extra por $ 4.900, cuando quieras. Los mensajes de WhatsApp los
 						cobra Meta a su costo, sin recargo: los primeros 1.000 de atención de cada mes son
-						gratis. Te avisamos al llegar al 80 %.
+						gratis. Te avisamos al llegar&nbsp;al&nbsp;80&nbsp;%.
 					</div>
 				</div>
 			</div>

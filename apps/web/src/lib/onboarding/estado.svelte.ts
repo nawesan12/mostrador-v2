@@ -1,5 +1,5 @@
 /**
- * Estado del onboarding (design/Onboarding Tu Local Web.dc.html). Lo que se elige queda en el navegador
+ * Estado del onboarding (design/Onboarding Mostrador.dc.html). Lo que se elige queda en el navegador
  * (localStorage, como en el handoff: "ob-step" y "ob-tpl" los escribe también la landing) y se manda
  * al servidor al terminar o, con la API, en cada paso.
  */

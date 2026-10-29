@@ -11,7 +11,7 @@
 	 * Hero del handoff: la composición "panorámica" desde 1180 px (heroDesktop por defecto) y la
 	 * apilada en tablet/mobile. Se dibujan las dos y el CSS muestra una: sin saltos al hidratar.
 	 */
-	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Tu Local Web.dc.html).
+	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Mostrador.dc.html).
 	const registro = resolve('/onboarding');
 	const ARCO =
 		'M3 76a3 3 0 0 1-3-3V5a5 5 0 0 1 5-5h90a5 5 0 0 1 5 5v68a3 3 0 0 1-3 3H82a3 3 0 0 1-3-3V21H21v52a3 3 0 0 1-3 3Z';

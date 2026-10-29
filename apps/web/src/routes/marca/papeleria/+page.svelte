@@ -27,7 +27,7 @@
 	} from '#lib/marca/datos.ts';
 	import { crearFamilia } from '#lib/marca/familia.svelte.ts';
 
-	/** Papelería (design/Papeleria Tu Local Web.dc.html): medidas reales en mm, imprenta con sangrado. */
+	/** Papelería (design/Papeleria Mostrador.dc.html): medidas reales en mm, imprenta con sangrado. */
 	const fam = crearFamilia('papeleria');
 
 	let persona = $state({ ...PERSONA_INICIAL });
@@ -742,7 +742,8 @@
 						<div
 							style="display:grid;grid-template-columns:24mm 1fr 20mm;padding:3mm 0;border-bottom:1px solid #EADFD4"
 						>
-							<span>KIT-POS-01</span><span>Kit punto de venta Tu Local Web (lector QR + soporte)</span
+							<span>KIT-POS-01</span><span
+								>Kit punto de venta Tu Local Web (lector QR + soporte)</span
 							><span style="text-align:right">1</span>
 						</div>
 						<div

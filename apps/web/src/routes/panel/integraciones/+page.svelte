@@ -540,8 +540,8 @@
 		</ul>
 		{#if mp && data.mp.usuario}
 			<div class="m-cuenta">
-				Cuenta de Mercado Pago <b>#{data.mp.usuario}</b>. La plata de cada venta va directo ahí:
-				Tu Local Web no cobra&nbsp;comisión.
+				Cuenta de Mercado Pago <b>#{data.mp.usuario}</b>. La plata de cada venta va directo ahí: Tu
+				Local Web no cobra&nbsp;comisión.
 			</div>
 		{/if}
 		{#if abierta.id === 'tg'}

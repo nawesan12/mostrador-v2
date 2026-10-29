@@ -11,7 +11,7 @@
 
 	/*
 	 * El handoff no tiene una pantalla de "entrar a la demo": se arma con la galería de plantillas del
-	 * onboarding (design/Onboarding Tu Local Web.dc.html, `gallery`), tal cual, como página.
+	 * onboarding (design/Onboarding Mostrador.dc.html, `gallery`), tal cual, como página.
 	 */
 	let { data, form } = $props();
 	// Viene del consentimiento de una IA: después de elegir, vuelve ahí.

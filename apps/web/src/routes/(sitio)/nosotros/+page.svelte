@@ -90,8 +90,8 @@
 				<Titulo etiqueta="Nuestra historia" titulo="Nació de un problema propio" />
 				<p class="h-txt">
 					Vendíamos yerba por internet y cada mes pagábamos más en comisiones, apps y planes que en
-					envíos. Armamos Tu Local Web para que cualquier emprendedor tenga todo lo que necesita, en un
-					solo lugar y por un precio justo.
+					envíos. Armamos Tu Local Web para que cualquier emprendedor tenga todo lo que necesita, en
+					un solo lugar y por un precio justo.
 				</p>
 			</div>
 			<div class="hitos">

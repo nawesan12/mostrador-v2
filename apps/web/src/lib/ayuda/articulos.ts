@@ -578,7 +578,10 @@ export const ARTICULOS: Articulo[] = [
 					'Cuando se propagan (de minutos a unas horas), la tienda queda en tu dominio con certificado SSL.'
 				]
 			},
-			{ t: 'nota', x: 'Mientras tanto, tu tienda sigue funcionando en la dirección de Tu Local Web.' }
+			{
+				t: 'nota',
+				x: 'Mientras tanto, tu tienda sigue funcionando en la dirección de Tu Local Web.'
+			}
 		],
 		claves: 'dominio com.ar dns nic ssl'
 	},

@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: Mostrador
+  title: Tu Local Web
   version: 0.1.0
   description: |
     Contrato único entre el front (SvelteKit, BFF) y sus dos fuentes de datos: el sandbox de la
@@ -1143,7 +1143,7 @@ paths:
     post:
       operationId: pedidoCertificadoArca
       summary: >-
-        Genera la clave (queda cifrada en Mostrador y no sale nunca) y devuelve el pedido de certificado
+        Genera la clave (queda cifrada en Tu Local Web y no sale nunca) y devuelve el pedido de certificado
         (CSR en PEM) para subir a ARCA. Reemplaza la clave anterior: el certificado que había deja de
         servir. Sólo dueña o admin.
       requestBody:
@@ -1311,7 +1311,7 @@ paths:
   /v1/panel/cuenta/suscripcion:
     post:
       operationId: suscribirPlan
-      summary: El abono de Mostrador. Crea la suscripción pendiente y devuelve dónde cargar la tarjeta; el plan cambia cuando Mercado Pago avisa.
+      summary: El abono de Tu Local Web. Crea la suscripción pendiente y devuelve dónde cargar la tarjeta; el plan cambia cuando Mercado Pago avisa.
       requestBody:
         required: true
         content:
@@ -1760,7 +1760,7 @@ paths:
   /v1/panel/cuenta/plan:
     get:
       operationId: planCuenta
-      summary: Plan, uso del mes, medio de pago y facturas de Mostrador.
+      summary: Plan, uso del mes, medio de pago y facturas de Tu Local Web.
       responses:
         '200':
           description: Plan
@@ -2411,7 +2411,7 @@ paths:
   /v1/panel/clientes/{id}/historial:
     get:
       operationId: historialCliente
-      summary: 'Los pedidos importados de otra plataforma de un cliente (el id de la lista de Clientes), del más nuevo al más viejo, hasta 200. No son pedidos de Mostrador.'
+      summary: 'Los pedidos importados de otra plataforma de un cliente (el id de la lista de Clientes), del más nuevo al más viejo, hasta 200. No son pedidos de Tu Local Web.'
       parameters:
         - { name: id, in: path, required: true, schema: { type: string } }
       responses:
@@ -2424,7 +2424,7 @@ paths:
   /v1/publico/tiendas/{slug}/redireccion:
     get:
       operationId: redireccionTienda
-      summary: 'Un link de la tienda vieja: 301 con Location = el path en Mostrador, relativo a la tienda. Lo pide el BFF cuando un path de /t/{slug} no existe.'
+      summary: 'Un link de la tienda vieja: 301 con Location = el path en Tu Local Web, relativo a la tienda. Lo pide el BFF cuando un path de /t/{slug} no existe.'
       security: []
       parameters:
         - { name: slug, in: path, required: true, schema: { type: string } }
@@ -3535,7 +3535,7 @@ components:
       required: [plantilla, direccion, diseno, sinPublicar, vista]
       properties:
         plantilla: { type: string }
-        direccion: { type: string, description: 'Dónde se ve la tienda (dominio o dirección de Mostrador)' }
+        direccion: { type: string, description: 'Dónde se ve la tienda (dominio o dirección de Tu Local Web)' }
         diseno: { $ref: '#/components/schemas/DisenoTienda' }
         sinPublicar: { type: boolean }
         vista:
@@ -3777,7 +3777,7 @@ components:
       type: object
       required: [disponible, conectada, reautorizar, cajaQR]
       properties:
-        disponible: { type: boolean, description: 'La aplicación de Mostrador tiene credenciales' }
+        disponible: { type: boolean, description: 'La aplicación de Tu Local Web tiene credenciales' }
         conectada: { type: boolean }
         usuario: { type: string, description: 'user_id de la cuenta de Mercado Pago' }
         desde: { type: string, format: date-time }
@@ -4820,7 +4820,7 @@ components:
               credito: { type: integer }
         comprobantes:
           type: array
-          description: 'Facturas de Mostrador a cada tienda (ARCA). Vacío hasta conectar ARCA.'
+          description: 'Facturas de Tu Local Web a cada tienda (ARCA). Vacío hasta conectar ARCA.'
           items:
             type: object
             required: [numero, tienda, fecha, monto]

@@ -20,8 +20,8 @@
 			<div class="etiq"><span></span>Conector de IA</div>
 			<h2>Tu negocio, desde la IA que ya usás.</h2>
 			<p class="bajada">
-				Conectá Tu Local Web a Claude, ChatGPT o cualquier IA compatible con MCP. Entrás con tu cuenta,
-				elegís qué puede hacer y le hablás como a un empleado más.
+				Conectá Tu Local Web a Claude, ChatGPT o cualquier IA compatible con MCP. Entrás con tu
+				cuenta, elegís qué puede hacer y le hablás como a un empleado más.
 			</p>
 			<div class="provs" role="group" aria-label="Elegí tu IA">
 				{#each PROVEEDORES as [k, t, ico, c] (k)}

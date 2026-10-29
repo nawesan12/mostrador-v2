@@ -2065,7 +2065,7 @@ export class DatosSandbox implements Datos {
 			},
 			medio: { marca: 'visa', ultimos: '4821', vence: '08/29' },
 			facturacion: { razonSocial: c.negocio.razonSocial, cuit: c.negocio.cuit, tipo: 'Factura A' },
-			// Está en prueba: la primera factura de Mostrador llega cuando termina.
+			// Está en prueba: la primera factura de Tu Local Web llega cuando termina.
 			facturas: [],
 			cancelado: e.cancelado ? { hasta: new Date(fin).toISOString() } : null
 		};

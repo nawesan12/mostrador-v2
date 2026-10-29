@@ -1,5 +1,5 @@
 /**
- * Importar desde Tiendanube con su API oficial (la app de socio de Mostrador, con OAuth). Gemelo en
+ * Importar desde Tiendanube con su API oficial (la app de socio de Tu Local Web, con OAuth). Gemelo en
  * Go: `apps/api/internal/integraciones/tiendanube/` (api.go, convertir.go y clientes.go). Los dos
  * pasan el caso de `packages/contrato/casos/importar/tiendanube.json`; si cambia una regla, cambia en
  * los dos lados y se regenera lo esperado con `go test -run TestCaso -actualizar`.
@@ -22,7 +22,7 @@ export const localDe = (v: unknown) =>
 	typeof v === 'string' && /^http:\/\/(localhost|127\.0\.0\.1):\d{2,5}$/.test(v) ? v : null;
 const AUTORIZAR = 'https://www.tiendanube.com/apps/%s/authorize';
 const TOKEN = 'https://www.tiendanube.com/apps/authorize/token';
-const USER_AGENT = 'Mostrador (soporte@mostradorapp.com.ar)';
+const USER_AGENT = 'Tu Local Web (soporte@tulocalweb.com.ar)';
 /** Lo mismo que el importador de Empretienda cuando la tienda no lleva el stock. */
 export const STOCK_ILIMITADO = 999;
 /** Tope de lo que se lee de una página (en el Worker la memoria es poca). */
@@ -99,7 +99,7 @@ export type ImportadoTN = {
 	recortado: boolean;
 };
 
-/** Un producto de la API → producto de Mostrador (null sin nombre o sin variantes). */
+/** Un producto de la API → producto de Tu Local Web (null sin nombre o sin variantes). */
 export function productoTN(p: ProductoTN, idioma: string): ImportadoTN | null {
 	const variantes = p.variants ?? [];
 	if (!variantes.length) return null;
@@ -195,7 +195,7 @@ export type Cliente = {
 	notas: string;
 };
 
-/** Un cliente de la API → la ficha de Mostrador. Sin nombre ni email no hay a quién guardar. */
+/** Un cliente de la API → la ficha de Tu Local Web. Sin nombre ni email no hay a quién guardar. */
 export function clienteTN(c: ClienteTN): Cliente | null {
 	const r: Cliente = {
 		externo: String(c.id),

@@ -5,7 +5,7 @@
 	import { VERSUS, fmt } from '#lib/marca/datos.ts';
 	import { crearFamilia } from '#lib/marca/familia.svelte.ts';
 
-	/** Las 9 imágenes OG (design/OG Tu Local Web.dc.html), 1200 × 630. */
+	/** Las 9 imágenes OG (design/OG Mostrador.dc.html), 1200 × 630. */
 	const fam = crearFamilia('og');
 </script>
 
@@ -85,8 +85,8 @@
 								></span></span
 							>
 							<span
-								style="width:52px;height:52px;border-radius:16px;background:#D71920;display:grid;place-items:center;font-weight:800;font-size:12px;color:#fff"
-								>AND</span
+								style="width:52px;height:52px;border-radius:16px;background:#FFCE00;display:grid;place-items:center;font-weight:800;font-size:12px;color:#003DA5"
+								>CA</span
 							>
 							<span
 								style="width:52px;height:52px;border-radius:16px;background:#1F3A8A;display:grid;place-items:center;font-weight:800;font-size:11px;color:#fff"

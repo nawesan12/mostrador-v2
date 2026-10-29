@@ -22,7 +22,7 @@ type ClienteTN struct {
 	BillingProvince *string `json:"billing_province"`
 }
 
-// Cliente es la ficha que se guarda en Mostrador.
+// Cliente es la ficha que se guarda en Tu Local Web.
 type Cliente struct {
 	Externo   string `json:"externo"`
 	Nombre    string `json:"nombre"`

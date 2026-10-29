@@ -62,7 +62,7 @@
 		['#seguridad', I.phShieldCheckFill, 'Seguridad', 'Copias, permisos y 2FA', '#F1E9DF', '#6B5244']
 	] as const;
 
-	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Tu Local Web.dc.html).
+	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Mostrador.dc.html).
 	const registro = resolve('/onboarding');
 	const sombra = $derived(scrolled || l.menu);
 

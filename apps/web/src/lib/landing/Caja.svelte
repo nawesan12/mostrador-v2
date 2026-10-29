@@ -66,13 +66,10 @@
 	<div class="bloque" use:anim={'reveal'}>
 		<div class="txt">
 			<div class="duo">
-				<img src="/mark.svg" alt="Tu Local Web" width="30" height="30" /><span class="mas">+</span><img
-					src="/caja/01-saludo.webp"
-					alt="Caja"
-					width="40"
-					height="40"
-					class="masc"
-				/><span class="nuevo">Nuevo · Integración con Caja</span>
+				<img src="/mark.svg" alt="Tu Local Web" width="30" height="30" /><span class="mas">+</span
+				><img src="/caja/01-saludo.webp" alt="Caja" width="40" height="40" class="masc" /><span
+					class="nuevo">Nuevo · Integración con Caja</span
+				>
 			</div>
 			<h2>Tu Local Web vende. Caja ordena la plata.</h2>
 			<p class="bajada">

@@ -22,7 +22,7 @@
 	import { crearFamilia } from '#lib/marca/familia.svelte.ts';
 	import { PLANTILLAS } from '#lib/plantillas.ts';
 
-	/** Imprimibles (design/Imprimibles Tu Local Web.dc.html): A6 a A3 en mm; roll-up y backing a escala. */
+	/** Imprimibles (design/Imprimibles Mostrador.dc.html): A6 a A3 en mm; roll-up y backing a escala. */
 	const fam = crearFamilia('imprimibles');
 	// Con ?ref= (Materiales del panel de partners) los QR llevan al link del partner.
 	const QR = $derived(qrCon(page.url.searchParams.get('ref')));

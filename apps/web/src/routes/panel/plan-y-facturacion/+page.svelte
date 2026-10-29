@@ -182,7 +182,11 @@
 		});
 	}
 	const CONSECUENCIAS = $derived([
-		[I.phCalendarCheck, `Seguís usando Tu Local Web hasta el ${fecha(data.proximoCobro)}`, '#2F8F63'],
+		[
+			I.phCalendarCheck,
+			`Seguís usando Tu Local Web hasta el ${fecha(data.proximoCobro)}`,
+			'#2F8F63'
+		],
 		[I.phStorefront, 'Después la tienda queda offline, pero no se borra', 'var(--mu)'],
 		[I.phDatabase, 'Guardamos todo 90 días por si volvés', 'var(--mu)'],
 		[I.phXCircle, 'No te volvemos a cobrar', '#2F8F63']

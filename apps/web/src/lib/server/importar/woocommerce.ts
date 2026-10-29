@@ -55,7 +55,7 @@ const stockDe = (p?: ProductoWoo): [number, boolean] =>
 			: [0, false];
 
 /**
- * Un producto de la Store API → producto de Mostrador. `variaciones` son las que se pidieron aparte
+ * Un producto de la Store API → producto de Tu Local Web. `variaciones` son las que se pidieron aparte
  * (las que falten quedan con el precio del producto y el stock que diga el producto).
  */
 export function deWoo(p: ProductoWoo, variaciones: ProductoWoo[] = []): Importado | null {

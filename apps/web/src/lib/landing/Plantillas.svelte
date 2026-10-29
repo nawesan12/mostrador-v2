@@ -9,7 +9,7 @@
 
 	/** Sección "Plantillas" de la landing (handoff): rubros destacados, paletas y la vitrina. */
 	const l = getLanding();
-	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Tu Local Web.dc.html).
+	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Mostrador.dc.html).
 	const registro = resolve('/onboarding');
 
 	// Los primeros 4 rubros, con la primera plantilla de cada uno (handoff: tplFeat).

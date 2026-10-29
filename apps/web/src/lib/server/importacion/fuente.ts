@@ -75,7 +75,7 @@ export interface Fuente {
 export type Origen = {
 	plataforma: Plataforma;
 	url: string;
-	/** La tienda de Mostrador (en la demo, el sandbox). */
+	/** La tienda de Tu Local Web (en la demo, el sandbox). */
 	tiendaId: string;
 	credencial: string | null;
 };

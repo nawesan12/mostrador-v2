@@ -7,7 +7,12 @@
 	let enviando = $state(false);
 </script>
 
-<Seo title="Equipo · Tu Local Web" description="Ingreso del equipo" path="/staff/ingresar" noindex />
+<Seo
+	title="Equipo · Tu Local Web"
+	description="Ingreso del equipo"
+	path="/staff/ingresar"
+	noindex
+/>
 
 <main class="pagina">
 	<form
