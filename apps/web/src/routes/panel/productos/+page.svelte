@@ -174,13 +174,16 @@
 		importando = false;
 	}
 	// La vuelta del OAuth trae ?tiendanube=importando (o el motivo del error), y el onboarding
-	// ?importando=1: se abre el modal con la importación en curso.
+	// ?importando=1 (arrancó) o ?importar=1 (no pudo leer la tienda): se abre el modal.
 	$effect(() => {
 		const tn = page.url.searchParams.get('tiendanube');
 		const onb = page.url.searchParams.get('importando');
-		if (!tn && !onb) return;
+		const reintentar = page.url.searchParams.get('importar');
+		if (!tn && !onb && !reintentar) return;
 		replaceState(resolve('/panel/productos'), {});
-		errorImp = '';
+		errorImp = reintentar
+			? 'No pudimos leer tu tienda con ese link. Revisalo y probá de nuevo.'
+			: '';
 		avisoTN = !tn || tn === 'importando' ? '' : (AVISOS[tn] ?? 'No pudimos conectar tu tienda.');
 		importando = true;
 		if (tn === 'importando' || onb) cola = { estado: 'pendiente' } as Importacion;

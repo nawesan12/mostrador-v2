@@ -5,8 +5,42 @@
 	import Etiqueta from './Etiqueta.svelte';
 	import { getOnboarding } from './estado.svelte.ts';
 
-	/** Paso 4, Importación: el avance por tipo de dato, lo que va ordenando Tincho y el conflicto de precios. */
+	/**
+	 * Paso 4, Importación. En la demo, la ilustración del handoff (el avance por tipo de dato, lo que
+	 * ordena Tincho y el conflicto de precios). Con la API se elige de dónde traer la tienda; la
+	 * importación real arranca al terminar el onboarding y se sigue desde Productos.
+	 */
 	const o = getOnboarding();
+	type Plataforma = 'tiendanube' | 'shopify' | 'woocommerce';
+	const ORIGENES: [Plataforma | null, string][] = [
+		['tiendanube', 'Tiendanube'],
+		['shopify', 'Shopify'],
+		['woocommerce', 'WooCommerce'],
+		[null, 'Empiezo de cero']
+	];
+	const TRAE: Record<Plataforma, string[]> = {
+		tiendanube: [
+			'Productos con variantes y todas sus fotos',
+			'Clientes',
+			'Pedidos anteriores, en un historial aparte',
+			'Tus links viejos, redirigidos a los nuevos'
+		],
+		shopify: [
+			'Productos con variantes, fotos y precios',
+			'El stock no lo publica Shopify: revisalo después'
+		],
+		woocommerce: ['Productos con variantes, fotos y precios']
+	};
+	const EJEMPLO: Record<Plataforma, string> = {
+		tiendanube: '',
+		shopify: 'mitienda.myshopify.com',
+		woocommerce: 'mitienda.com.ar'
+	};
+	const elegida = $derived(o.e.importar?.plataforma ?? null);
+	function elegir(p: Plataforma | null) {
+		o.e.importar = p ? { plataforma: p, url: o.e.importar?.url ?? '' } : null;
+		o.guardar();
+	}
 	const fmt = (n: number) => Math.round(n).toLocaleString('es-AR');
 	const filas = $derived(
 		IMPORTACION.map(([ico, t, s, total, bg, fg], i) => {
@@ -31,95 +65,132 @@
 	}
 </script>
 
-<div class="dos">
-	<div class="izq">
-		<Etiqueta
-			rotulo="Importación"
-			titulo={o.importacionLista
-				? 'Listo. Tu negocio ya está adentro.'
-				: 'Estamos armando Tu Local Web.'}
-		/>
-		<div class="progreso">
-			<div class="p-cab">
-				<span>Progreso general</span><span class="pct">{Math.floor(o.importado)}%</span>
-			</div>
-			<div class="barra"><div style:width="{Math.floor(o.importado)}%"></div></div>
-			<div class="filas">
-				{#each filas as f (f.t)}
-					<div class="fila">
-						<span class="f-ico" style:background={f.bg} style:color={f.fg}
-							><Icon icon={f.ico} size={17} /></span
-						>
-						<span class="f-txt"><span class="f-t">{f.t}</span><span class="f-s">{f.s}</span></span>
-						<span class="f-v">{f.v}</span>
-						{#if f.listo}
-							<Icon icon={I.phCheckCircleFill} size={18} style="color:#237550;flex:none" />
-						{:else}
-							<Icon
-								icon={I.phCircleNotchBold}
-								size={18}
-								class="gira"
-								style="color:#b0441d;flex:none"
-							/>
-						{/if}
-					</div>
-				{/each}
-			</div>
+{#if !o.demo}
+	<Etiqueta rotulo="Importación" titulo="¿Ya vendés en otra plataforma?" />
+	<div class="origenes" role="group" aria-label="De dónde venís">
+		{#each ORIGENES as [p, t] (t)}
+			<button type="button" aria-pressed={elegida === p} onclick={() => elegir(p)}>{t}</button>
+		{/each}
+	</div>
+	{#if o.e.importar}
+		{@const p = o.e.importar.plataforma}
+		{#if p !== 'tiendanube'}
+			<label class="campo"
+				>Link de tu tienda<input
+					bind:value={o.e.importar.url}
+					oninput={() => o.guardar()}
+					placeholder={EJEMPLO[p]}
+					autocomplete="url"
+				/></label
+			>
+		{/if}
+		<div class="trae">
+			<div class="t-t">Lo que traemos</div>
+			{#each TRAE[p] as t (t)}
+				<div class="t-f"><Icon icon={I.phCheckCircleFill} size={16} />{t}</div>
+			{/each}
 		</div>
-		{#if o.importacionLista}
-			<div class="conflicto" use:entra>
-				<div class="cf-cab">
-					<span class="cf-ico"><Icon icon={I.phGitDiffFill} size={19} /></span>
-					<div>
-						<div class="cf-t">12 productos tienen precio distinto</div>
-						<div class="cf-d">
-							En Tiendanube el Termo 1 L sale $&nbsp;42.900 y en Mercado Libre $&nbsp;47.190. ¿Cuál
-							usamos como precio base?
-						</div>
-					</div>
+		<p class="nota">
+			{p === 'tiendanube'
+				? 'Al terminar te pedimos permiso en Tiendanube y empieza a importar. La seguís desde Productos.'
+				: 'Al terminar empieza a importar y la seguís desde Productos. Si importás dos veces, no se duplica.'}
+		</p>
+	{:else}
+		<p class="nota">Cargás tus productos desde el panel, con una foto o desde un Excel.</p>
+	{/if}
+{:else}
+	<div class="dos">
+		<div class="izq">
+			<Etiqueta
+				rotulo="Importación"
+				titulo={o.importacionLista
+					? 'Listo. Tu negocio ya está adentro.'
+					: 'Estamos armando Tu Local Web.'}
+			/>
+			<div class="progreso">
+				<div class="p-cab">
+					<span>Progreso general</span><span class="pct">{Math.floor(o.importado)}%</span>
 				</div>
-				<div class="cf-ops">
-					{#each CONFLICTO as [k, t] (k)}
-						<button
-							type="button"
-							aria-pressed={o.e.conflicto === k}
-							onclick={() => ((o.e.conflicto = k), o.guardar())}>{t}</button
-						>
+				<div class="barra"><div style:width="{Math.floor(o.importado)}%"></div></div>
+				<div class="filas">
+					{#each filas as f (f.t)}
+						<div class="fila">
+							<span class="f-ico" style:background={f.bg} style:color={f.fg}
+								><Icon icon={f.ico} size={17} /></span
+							>
+							<span class="f-txt"><span class="f-t">{f.t}</span><span class="f-s">{f.s}</span></span
+							>
+							<span class="f-v">{f.v}</span>
+							{#if f.listo}
+								<Icon icon={I.phCheckCircleFill} size={18} style="color:#237550;flex:none" />
+							{:else}
+								<Icon
+									icon={I.phCircleNotchBold}
+									size={18}
+									class="gira"
+									style="color:#b0441d;flex:none"
+								/>
+							{/if}
+						</div>
 					{/each}
 				</div>
-				{#if elegido}
-					<div class="cf-ok"><Icon icon={I.phCheckCircleFill} size={15} />{elegido[2]}</div>
-				{/if}
 			</div>
-		{/if}
-	</div>
-	<div class="hornero">
-		<div class="h-cab">
-			<span class="h-av"><img src="/hornero/caja.webp" alt="Tincho" width="52" height="52" /></span
-			>
-			<div>
-				<div class="h-t">Tincho está ordenando</div>
-				<div class="h-d">Mientras importamos, mejora lo que llega</div>
-			</div>
-		</div>
-		<div class="h-log">
-			{#each registro as l (l)}
-				<div use:entra>
-					<Icon
-						icon={I.phSparkleFill}
-						size={14}
-						style="color:#F5B796;flex:none;margin-top:2px"
-					/>{l}
-				</div>
-			{/each}
-			{#if !o.importacionLista}
-				<div class="puntos" aria-label="Tincho sigue trabajando">
-					<span></span><span></span><span></span>
+			{#if o.importacionLista}
+				<div class="conflicto" use:entra>
+					<div class="cf-cab">
+						<span class="cf-ico"><Icon icon={I.phGitDiffFill} size={19} /></span>
+						<div>
+							<div class="cf-t">12 productos tienen precio distinto</div>
+							<div class="cf-d">
+								En Tiendanube el Termo 1 L sale $&nbsp;42.900 y en Mercado Libre $&nbsp;47.190.
+								¿Cuál usamos como precio base?
+							</div>
+						</div>
+					</div>
+					<div class="cf-ops">
+						{#each CONFLICTO as [k, t] (k)}
+							<button
+								type="button"
+								aria-pressed={o.e.conflicto === k}
+								onclick={() => ((o.e.conflicto = k), o.guardar())}>{t}</button
+							>
+						{/each}
+					</div>
+					{#if elegido}
+						<div class="cf-ok"><Icon icon={I.phCheckCircleFill} size={15} />{elegido[2]}</div>
+					{/if}
 				</div>
 			{/if}
 		</div>
+		<div class="hornero">
+			<div class="h-cab">
+				<span class="h-av"
+					><img src="/hornero/caja.webp" alt="Tincho" width="52" height="52" /></span
+				>
+				<div>
+					<div class="h-t">Tincho está ordenando</div>
+					<div class="h-d">Mientras importamos, mejora lo que llega</div>
+				</div>
+			</div>
+			<div class="h-log">
+				{#each registro as l (l)}
+					<div use:entra>
+						<Icon
+							icon={I.phSparkleFill}
+							size={14}
+							style="color:#F5B796;flex:none;margin-top:2px"
+						/>{l}
+					</div>
+				{/each}
+				{#if !o.importacionLista}
+					<div class="puntos" aria-label="Tincho sigue trabajando">
+						<span></span><span></span><span></span>
+					</div>
+				{/if}
+			</div>
+		</div>
 	</div>
-</div>
+{/if}
 
 <style>
 	.dos {
@@ -360,5 +431,75 @@
 		.fila :global(.gira) {
 			animation: none;
 		}
+	}
+	.origenes {
+		margin-top: 22px;
+		display: flex;
+		gap: 8px;
+		flex-wrap: wrap;
+	}
+	.origenes button {
+		padding: 11px 18px;
+		border-radius: 999px;
+		border: 1.5px solid rgba(58, 29, 18, 0.16);
+		background: #fff;
+		color: #2a140c;
+		font: inherit;
+		font-size: 14.5px;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.origenes button[aria-pressed='true'] {
+		background: #2a140c;
+		border-color: #2a140c;
+		color: #fff;
+	}
+	.campo {
+		margin-top: 18px;
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		max-width: 440px;
+		font-size: 14px;
+		font-weight: 600;
+	}
+	.campo input {
+		padding: 12px 14px;
+		border-radius: 14px;
+		border: 1.5px solid rgba(58, 29, 18, 0.16);
+		font: inherit;
+		font-size: 15px;
+		font-weight: 400;
+	}
+	.trae {
+		margin-top: 18px;
+		padding: 18px;
+		border-radius: 20px;
+		background: #fff;
+		border: 1px solid rgba(58, 29, 18, 0.1);
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		max-width: 560px;
+	}
+	.t-t {
+		font-size: 14px;
+		font-weight: 700;
+	}
+	.t-f {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 14.5px;
+	}
+	.t-f :global(svg) {
+		color: #237550;
+		flex: none;
+	}
+	.nota {
+		margin: 16px 0 0;
+		font-size: 13.5px;
+		color: #7a6252;
+		max-width: 560px;
 	}
 </style>

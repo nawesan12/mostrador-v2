@@ -27,7 +27,9 @@
 	<div class="izq">
 		<Etiqueta
 			rotulo="Tu asistente"
-			titulo="Tincho ya conoce tu negocio. ¿Cómo querés que hable?"
+			titulo={o.demo
+				? 'Tincho ya conoce tu negocio. ¿Cómo querés que hable?'
+				: '¿Cómo querés que hable Tincho?'}
 		/>
 		<div class="sub">Tono</div>
 		<div class="tonos" role="group" aria-label="Tono">
@@ -64,14 +66,16 @@
 			>
 			<span class="off"><Icon icon={I.logosTelegram} size={15} />Telegram</span>
 		</div>
-		<div class="regla">
-			<Icon icon={I.logosGoogleMaps} size={20} />
-			<span
-				><b>Horario del local:</b> lun a sáb de 8 a 20 h<br /><span class="r-d"
-					>Fuera de ese horario, Tincho atiende y vos ves todo a la mañana.</span
-				></span
-			>
-		</div>
+		{#if o.demo}
+			<div class="regla">
+				<Icon icon={I.logosGoogleMaps} size={20} />
+				<span
+					><b>Horario del local:</b> lun a sáb de 8 a 20 h<br /><span class="r-d"
+						>Fuera de ese horario, Tincho atiende y vos ves todo a la mañana.</span
+					></span
+				>
+			</div>
+		{/if}
 		<div class="regla">
 			<Icon icon={I.phSealPercentFill} size={20} style="color:#b0441d" />
 			<span

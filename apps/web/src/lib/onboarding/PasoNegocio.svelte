@@ -6,7 +6,11 @@
 	import { getOnboarding } from './estado.svelte.ts';
 	import Logo from './Logo.svelte';
 
-	/** Paso 2, Tu negocio: lo que se encontró en ARCA, Instagram y Maps, el rubro y los objetivos. */
+	/**
+	 * Paso 2, Tu negocio. En la demo, la ilustración del handoff: lo que "se encontró" en ARCA,
+	 * Instagram y Maps y el rubro. Con una cuenta real todavía no se lee nada de afuera, así que sólo
+	 * quedan los objetivos (nunca datos de otro negocio).
+	 */
 	const o = getOnboarding();
 	const COLORES = ['#6B3A22', '#E9D8C4', '#2F5D50'];
 
@@ -21,67 +25,71 @@
 	}
 </script>
 
-<Etiqueta rotulo="Tu negocio" titulo="Encontramos tu negocio. Revisá que esté todo bien." />
-<div class="datos">
-	{#each DATOS_NEGOCIO as [k, v] (k)}
-		<div>
-			<div class="d-k">{k}</div>
-			<div class="d-v">{v}</div>
-		</div>
-	{/each}
-</div>
-<div class="hallazgos">
-	{#each HALLAZGOS as h, i (h.src)}
-		{@const listo = o.revelado > i}
-		<div class="hallazgo">
-			<div class="h-cab">
-				<Logo k={h.k} tam={32} icono={18} radio={10} />
-				<span class="h-src">{h.src}</span>
-				{#if listo}
-					<span class="h-ok"><Icon icon={I.phCheckCircleFill} size={14} />Importado</span>
-				{:else}
-					<span class="h-busca"
-						><Icon icon={I.phCircleNotchBold} size={14} class="gira" />Buscando</span
-					>
-				{/if}
+{#if o.demo}
+	<Etiqueta rotulo="Tu negocio" titulo="Encontramos tu negocio. Revisá que esté todo bien." />
+	<div class="datos">
+		{#each DATOS_NEGOCIO as [k, v] (k)}
+			<div>
+				<div class="d-k">{k}</div>
+				<div class="d-v">{v}</div>
 			</div>
-			<div class="h-filas">
-				{#each h.rows as [k, v] (k)}
+		{/each}
+	</div>
+	<div class="hallazgos">
+		{#each HALLAZGOS as h, i (h.src)}
+			{@const listo = o.revelado > i}
+			<div class="hallazgo">
+				<div class="h-cab">
+					<Logo k={h.k} tam={32} icono={18} radio={10} />
+					<span class="h-src">{h.src}</span>
 					{#if listo}
-						<div use:aparece>
-							<div class="f-k">{k}</div>
-							<div class="f-v">{v}</div>
-						</div>
+						<span class="h-ok"><Icon icon={I.phCheckCircleFill} size={14} />Importado</span>
 					{:else}
-						<div>
-							<div class="f-ph1"></div>
-							<div class="f-ph2 brillo"></div>
+						<span class="h-busca"
+							><Icon icon={I.phCircleNotchBold} size={14} class="gira" />Buscando</span
+						>
+					{/if}
+				</div>
+				<div class="h-filas">
+					{#each h.rows as [k, v] (k)}
+						{#if listo}
+							<div use:aparece>
+								<div class="f-k">{k}</div>
+								<div class="f-v">{v}</div>
+							</div>
+						{:else}
+							<div>
+								<div class="f-ph1"></div>
+								<div class="f-ph2 brillo"></div>
+							</div>
+						{/if}
+					{/each}
+					{#if 'colores' in h && listo}
+						<div class="colores" use:aparece>
+							<span class="c-t">Colores</span>
+							{#each COLORES as c (c)}<span class="c" style:background={c}></span>{/each}
+							<img
+								src="https://images.unsplash.com/photo-1556745753-b2904692b3cd?auto=format&fit=crop&w=80&h=80&q=70"
+								alt=""
+								width="22"
+								height="22"
+							/>
 						</div>
 					{/if}
-				{/each}
-				{#if 'colores' in h && listo}
-					<div class="colores" use:aparece>
-						<span class="c-t">Colores</span>
-						{#each COLORES as c (c)}<span class="c" style:background={c}></span>{/each}
-						<img
-							src="https://images.unsplash.com/photo-1556745753-b2904692b3cd?auto=format&fit=crop&w=80&h=80&q=70"
-							alt=""
-							width="22"
-							height="22"
-						/>
-					</div>
-				{/if}
+				</div>
 			</div>
-		</div>
-	{/each}
-</div>
-<div class="rubro">
-	<span class="r-t">Rubro detectado</span><span class="r-1"
-		>Cafetería y almacén de especialidad</span
-	><span class="r-2">Yerba mate y accesorios</span><span class="r-mas">+ Agregar</span>
-</div>
+		{/each}
+	</div>
+	<div class="rubro">
+		<span class="r-t">Rubro detectado</span><span class="r-1"
+			>Cafetería y almacén de especialidad</span
+		><span class="r-2">Yerba mate y accesorios</span><span class="r-mas">+ Agregar</span>
+	</div>
+{:else}
+	<Etiqueta rotulo="Tu negocio" titulo="¿Qué querés resolver primero?" />
+{/if}
 <div class="objetivos">
-	<div class="o-t">¿Qué querés resolver primero?</div>
+	{#if o.demo}<div class="o-t">¿Qué querés resolver primero?</div>{/if}
 	<div class="o-d">Ordenamos tu panel y tus primeras tareas según esto. Elegí las que quieras.</div>
 	<div class="o-g">
 		{#each OBJETIVOS as [ico, t], i (t)}

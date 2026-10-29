@@ -6,7 +6,15 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import Seo from '#lib/components/Seo.svelte';
 	import * as I from '#lib/icons.ts';
-	import { CONSEJOS, ILUSTRACION, NOTA_PIE, PASOS, PORCENTAJE } from '#lib/onboarding/datos.ts';
+	import {
+		CONSEJOS,
+		CONSEJOS_REALES,
+		ILUSTRACION,
+		NOTA_PIE,
+		NOTA_PIE_REAL,
+		PASOS,
+		PORCENTAJE
+	} from '#lib/onboarding/datos.ts';
 	import { Onboarding, setOnboarding } from '#lib/onboarding/estado.svelte.ts';
 	import PasoCanales from '#lib/onboarding/PasoCanales.svelte';
 	import PasoCobros from '#lib/onboarding/PasoCobros.svelte';
@@ -25,6 +33,7 @@
 
 	let listo = $state(false);
 	onMount(() => {
+		o.demo = data.demo;
 		o.cargar();
 		// Con la API, sin sesión no se puede pasar del paso 1; al volver del registro, ?paso= manda.
 		if (data.paso !== null) o.ir(data.paso);
@@ -52,7 +61,8 @@
 				secciones: o.e.secciones,
 				config: o.e.config,
 				tono: o.e.tono,
-				equipo: o.e.equipo
+				equipo: o.e.equipo,
+				importar: o.e.importar
 			}
 		})
 	);
@@ -134,7 +144,7 @@
 			<div class="c-av"><img src={ilustracion} alt="Tincho" width="52" height="52" /></div>
 			<div>
 				<div class="c-n">Tincho</div>
-				<div class="c-t">{CONSEJOS[paso]}</div>
+				<div class="c-t">{(data.demo ? CONSEJOS : CONSEJOS_REALES)[paso]}</div>
 			</div>
 		</div>
 	</aside>
@@ -167,7 +177,10 @@
 					></button>
 				{/each}
 			</div>
-			{#if o.consejo}<div class="m-consejo"><b>Tincho:</b> {CONSEJOS[paso]}</div>{/if}
+			{#if o.consejo}<div class="m-consejo">
+					<b>Tincho:</b>
+					{(data.demo ? CONSEJOS : CONSEJOS_REALES)[paso]}
+				</div>{/if}
 		</div>
 		<div class="arriba">
 			<span class="ar-paso">Paso {paso + 1} de 8</span>
@@ -208,7 +221,9 @@
 						><Icon icon={I.phArrowLeftBold} size={14} /><span class="atras-t">Atrás</span></button
 					>
 				{/if}
-				<div class="nota">{NOTA_PIE[paso] ?? 'Todo se guarda solo.'}</div>
+				<div class="nota">
+					{(data.demo ? NOTA_PIE : NOTA_PIE_REAL)[paso] ?? 'Todo se guarda solo.'}
+				</div>
 				<button type="button" class="saltar" onclick={siguiente}
 					><span class="largo">Hacerlo después</span><span class="corto">Después</span></button
 				>

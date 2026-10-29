@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import Icon from '#lib/components/Icon.svelte';
 	import Interruptor from '#lib/components/Interruptor.svelte';
 	import TplMini from '#lib/components/TplMini.svelte';
@@ -12,11 +13,13 @@
 
 	/** Paso 5, Tu tienda: plantilla (con la vista previa), colores de Instagram, secciones y dominio. */
 	const o = getOnboarding();
+	// Con la API, la tienda de verdad; en la demo, la del handoff.
+	const real = $derived(page.data.tienda as { nombre: string; slug: string } | null);
 	const base = $derived(plantilla(o.e.plantilla) ?? PLANTILLAS[0]);
 	// Con "Usar mis colores y logo", la vista previa toma los colores, la foto y la frase de Instagram.
 	const actual = $derived({
 		...base,
-		tienda: 'Café La Esquina',
+		tienda: real?.nombre ?? 'Café La Esquina',
 		...(o.e.instagram
 			? {
 					img: `https://images.unsplash.com/photo-${DE_INSTAGRAM.img}?auto=format&fit=crop&w=900&q=75`,
@@ -46,7 +49,12 @@
 
 <div class="cab">
 	<div class="cab-t">
-		<Etiqueta rotulo="Tu tienda" titulo="Elegí cómo se ve. Ya tiene tus productos adentro." />
+		<Etiqueta
+			rotulo="Tu tienda"
+			titulo={o.demo
+				? 'Elegí cómo se ve. Ya tiene tus productos adentro.'
+				: 'Elegí cómo se ve tu tienda.'}
+		/>
 	</div>
 	<div class="disp" role="group" aria-label="Dispositivo">
 		<button type="button" aria-pressed={!mob} onclick={() => (o.dispositivo = 'desk')}
@@ -66,7 +74,8 @@
 						<span style:background="#E0A595"></span><span style:background="#E7CB8F"></span><span
 							style:background="#A9CBA8"
 						></span>
-						<span class="url">laesquina.com.ar</span>
+						<span class="url">{real ? `tulocalweb.com.ar/t/${real.slug}` : 'laesquina.com.ar'}</span
+						>
 					</div>
 				{/if}
 				<div class="zoom" class:mob><TplMini t={actual} {paleta} /></div>
@@ -98,24 +107,26 @@
 				><Icon icon={I.phSquaresFour} size={15} />Ver las {PLANTILLAS.length} plantillas</button
 			>
 		</div>
-		<div class="caja">
-			<div class="ig">
-				<Icon icon={I.logosInstagramIcon} size={20} />
-				<span class="ig-t"
-					><span>Usar mis colores y logo</span><span class="ig-d">Sacados de @cafelaesquina</span
-					></span
-				>
-				<Interruptor
-					bind:checked={o.e.instagram}
-					label="Usar mis colores y logo"
-					onchange={() => o.guardar()}
-				/>
+		{#if o.demo}
+			<div class="caja">
+				<div class="ig">
+					<Icon icon={I.logosInstagramIcon} size={20} />
+					<span class="ig-t"
+						><span>Usar mis colores y logo</span><span class="ig-d">Sacados de @cafelaesquina</span
+						></span
+					>
+					<Interruptor
+						bind:checked={o.e.instagram}
+						label="Usar mis colores y logo"
+						onchange={() => o.guardar()}
+					/>
+				</div>
+				<div class="muestras">
+					{#each ['#F3E9DC', '#6B3A22', '#2F5D50', '#3B2416'] as c (c)}<span style:background={c}
+						></span>{/each}
+				</div>
 			</div>
-			<div class="muestras">
-				{#each ['#F3E9DC', '#6B3A22', '#2F5D50', '#3B2416'] as c (c)}<span style:background={c}
-					></span>{/each}
-			</div>
-		</div>
+		{/if}
 		<div class="caja">
 			<div class="sec-t">Secciones que armamos</div>
 			<div class="secs">
@@ -129,14 +140,16 @@
 				{/each}
 			</div>
 		</div>
-		<div class="caja dominio">
-			<Icon icon={I.phCheckCircleFill} size={18} style="color:#237550;flex:none" />
-			<span
-				><span class="d-t">laesquina.com.ar</span><span class="d-d"
-					>Disponible · lo reservamos por vos</span
-				></span
-			>
-		</div>
+		{#if o.demo}
+			<div class="caja dominio">
+				<Icon icon={I.phCheckCircleFill} size={18} style="color:#237550;flex:none" />
+				<span
+					><span class="d-t">laesquina.com.ar</span><span class="d-d"
+						>Disponible · lo reservamos por vos</span
+					></span
+				>
+			</div>
+		{/if}
 	</div>
 </div>
 <Galeria />

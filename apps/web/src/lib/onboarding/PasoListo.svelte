@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
 	import { QR, RESUMEN } from './datos.ts';
@@ -10,6 +11,11 @@
 	 */
 	let { terminar }: { terminar: () => void } = $props();
 	const o = getOnboarding();
+	// Con la API, la tienda de verdad; en la demo, la del handoff.
+	const real = $derived(page.data.tienda as { nombre: string; slug: string } | null);
+	const link = $derived(
+		real ? `https://tulocalweb.com.ar/t/${real.slug}` : 'https://laesquina.com.ar'
+	);
 	let copiado = $state(false);
 	let invitacion = $state('');
 
@@ -44,7 +50,7 @@
 	}
 	async function copiar() {
 		try {
-			await navigator.clipboard.writeText('https://laesquina.com.ar');
+			await navigator.clipboard.writeText(link);
 		} catch {
 			// Sin permiso de portapapeles: igual se muestra el aviso, el link está a la vista.
 		}
@@ -73,14 +79,21 @@
 		>
 		<div class="ave"><img src="/hornero/celebrando.webp" alt="Tincho celebrando" /></div>
 	</div>
-	<h1>Tu mostrador está 94% listo.</h1>
-	<p class="bajada">Y no tuviste que cargar nada a mano. Ya podés vender por todos tus canales.</p>
-	<div class="resumen">
-		{#each RESUMEN as [v, t] (t)}<div>
-				<div class="r-v">{v}</div>
-				<div class="r-t">{t}</div>
-			</div>{/each}
-	</div>
+	{#if o.demo}
+		<h1>Tu Local Web está 94% listo.</h1>
+		<p class="bajada">
+			Y no tuviste que cargar nada a mano. Ya podés vender por todos tus canales.
+		</p>
+	{:else}
+		<h1>Tu tienda ya está creada.</h1>
+		<p class="bajada">Sumá un medio de pago y tus productos, y ya podés vender.</p>
+	{/if}
+	{#if o.demo}<div class="resumen">
+			{#each RESUMEN as [v, t] (t)}<div>
+					<div class="r-v">{v}</div>
+					<div class="r-t">{t}</div>
+				</div>{/each}
+		</div>{/if}
 	<div class="faltan">
 		<div class="f-t">Te quedan 2 cosas, cuando quieras</div>
 		<div class="f-fila">
@@ -103,7 +116,7 @@
 			</div>
 			<div class="on-txt">
 				<div class="on-t">Tu tienda ya está en línea</div>
-				<div class="on-d">laesquina.com.ar · imprimí el QR para el mostrador</div>
+				<div class="on-d">{link.replace('https://', '')} · imprimí el QR para el mostrador</div>
 				<div class="on-acc">
 					<button type="button" onclick={copiar}
 						><Icon icon={copiado ? I.phCheckBold : I.phCopyBold} size={13} />{copiado
@@ -112,9 +125,7 @@
 					>
 					<a
 						class="wa"
-						href="https://wa.me/?text={encodeURIComponent(
-							'Mirá mi tienda: https://laesquina.com.ar'
-						)}"
+						href="https://wa.me/?text={encodeURIComponent(`Mirá mi tienda: ${link}`)}"
 						target="_blank"
 						rel="noopener"><Icon icon={I.phWhatsappLogoFill} size={13} />Compartir</a
 					>

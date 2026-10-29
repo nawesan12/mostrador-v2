@@ -19,12 +19,11 @@
 		phLockSimpleFill,
 		phMapPinFill,
 		phQuestion,
-		phShieldCheckFill,
-		phStarFill
+		phShieldCheckFill
 	} from '#lib/icons.ts';
 
 	/* Recreación de design/Mostrador Ingresar.dc.html: modos login, registro, recuperar y enviado. */
-	let { form } = $props();
+	let { data, form } = $props();
 
 	type Modo =
 		'login' | 'registro' | 'recuperar' | 'enviado' | 'restablecer' | 'whatsapp' | 'enlace';
@@ -139,23 +138,25 @@
 								Listo, tu contraseña cambió. Ya podés ingresar con la nueva.
 							</div>
 						{/if}
-						<div class="sociales">
-							<button
-								type="submit"
-								formaction="?/social"
-								name="proveedor"
-								value="google"
-								class="social"><Icon icon={logosGoogleIcon} size={18} />Google</button
-							>
-							<button
-								type="submit"
-								formaction="?/social"
-								name="proveedor"
-								value="whatsapp"
-								class="social"><Icon icon={logosWhatsappIcon} size={18} />WhatsApp</button
-							>
-						</div>
-						<div class="o"><span></span>o con tu email<span></span></div>
+						{#if data.sociales}
+							<div class="sociales">
+								<button
+									type="submit"
+									formaction="?/social"
+									name="proveedor"
+									value="google"
+									class="social"><Icon icon={logosGoogleIcon} size={18} />Google</button
+								>
+								<button
+									type="submit"
+									formaction="?/social"
+									name="proveedor"
+									value="whatsapp"
+									class="social"><Icon icon={logosWhatsappIcon} size={18} />WhatsApp</button
+								>
+							</div>
+							<div class="o"><span></span>o con tu email<span></span></div>
+						{/if}
 						<label class="campo"
 							>Email<span class="in"
 								><input
@@ -209,23 +210,25 @@
 							<h1>Creá tu tienda gratis</h1>
 							<p class="bajada">14 días sin tarjeta. Después elegís el plan, o no.</p>
 						</div>
-						<div class="sociales">
-							<button
-								type="submit"
-								formaction="?/social"
-								name="proveedor"
-								value="google"
-								class="social"><Icon icon={logosGoogleIcon} size={18} />Google</button
-							>
-							<button
-								type="submit"
-								formaction="?/social"
-								name="proveedor"
-								value="whatsapp"
-								class="social"><Icon icon={logosWhatsappIcon} size={18} />WhatsApp</button
-							>
-						</div>
-						<div class="o"><span></span>o con tu email<span></span></div>
+						{#if data.sociales}
+							<div class="sociales">
+								<button
+									type="submit"
+									formaction="?/social"
+									name="proveedor"
+									value="google"
+									class="social"><Icon icon={logosGoogleIcon} size={18} />Google</button
+								>
+								<button
+									type="submit"
+									formaction="?/social"
+									name="proveedor"
+									value="whatsapp"
+									class="social"><Icon icon={logosWhatsappIcon} size={18} />WhatsApp</button
+								>
+							</div>
+							<div class="o"><span></span>o con tu email<span></span></div>
+						{/if}
 						<div class="dos">
 							<label class="campo"
 								>Tu nombre<span class="in"
@@ -330,11 +333,13 @@
 								aria-pressed={canal === 'email'}
 								onclick={() => (canal = 'email')}>Email</button
 							>
-							<button
-								type="button"
-								aria-pressed={canal === 'whatsapp'}
-								onclick={() => (canal = 'whatsapp')}>WhatsApp</button
-							>
+							{#if data.sociales}
+								<button
+									type="button"
+									aria-pressed={canal === 'whatsapp'}
+									onclick={() => (canal = 'whatsapp')}>WhatsApp</button
+								>
+							{/if}
 						</div>
 						{#if canal === 'email'}
 							<label class="campo"
@@ -510,27 +515,11 @@
 		<div class="medio">
 			<img class="ave" src="/hornero/saludo.webp" alt="" />
 			<div class="lema">Todo lo de las otras, por menos plata y más seguro.</div>
-			<div class="testi">
-				<div class="testi-cab">
-					<img
-						src="https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=96&h=96&q=60&crop=faces"
-						alt=""
-						width="40"
-						height="40"
-					/>
-					<div class="testi-quien">
-						<b>Florencia Paz</b>
-						<div>Mate &amp; Co · Posadas</div>
-					</div>
-					<span class="estrellas">
-						{#each [1, 2, 3, 4, 5] as n (n)}<Icon icon={phStarFill} size={13} />{/each}
-					</span>
-				</div>
-				<p>
-					“Me mudé desde Tiendanube en una tarde y ahora pago la mitad. Tincho me contesta los
-					WhatsApp a la noche.”
-				</p>
-			</div>
+			<ul class="hechos">
+				<li><Icon icon={phCheckCircleFill} size={16} />14 días gratis, sin tarjeta</li>
+				<li><Icon icon={phCheckCircleFill} size={16} />0% de comisión por venta</li>
+				<li><Icon icon={phCheckCircleFill} size={16} />Te ayudamos a traer tu tienda</li>
+			</ul>
 		</div>
 		<div class="garantias">
 			<span><Icon icon={phLockSimpleFill} size={15} />Conexión cifrada</span>
@@ -603,48 +592,6 @@
 		letter-spacing: -0.04em;
 		font-weight: 600;
 		max-width: 460px;
-	}
-	.testi {
-		margin-top: 22px;
-		max-width: 420px;
-		padding: 16px;
-		border-radius: 22px;
-		background: #fbf7f2;
-		color: #2a140c;
-		box-shadow: 0 30px 60px -24px rgba(0, 0, 0, 0.6);
-	}
-	.testi-cab {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-	}
-	.testi-cab img {
-		width: 40px;
-		height: 40px;
-		border-radius: 50%;
-		object-fit: cover;
-	}
-	.testi-quien {
-		min-width: 0;
-	}
-	.testi-quien b {
-		font-size: 14.5px;
-	}
-	.testi-quien div {
-		font-size: 12.5px;
-		color: #7a6252;
-		white-space: nowrap;
-	}
-	.estrellas {
-		margin-left: auto;
-		display: flex;
-		flex: none;
-		color: #b0441d;
-	}
-	.testi p {
-		margin: 10px 0 0;
-		font-size: 14.5px;
-		line-height: 1.5;
 	}
 	.garantias {
 		position: relative;
@@ -1031,5 +978,24 @@
 		height: 7px;
 		border-radius: 50%;
 		background: #3fa877;
+	}
+	.hechos {
+		margin: 18px 0 0;
+		padding: 0;
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		font-size: 15px;
+		color: #f4eae0;
+	}
+	.hechos li {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+	.hechos :global(svg) {
+		color: #7fd3a6;
+		flex: none;
 	}
 </style>

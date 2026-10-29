@@ -1,49 +1,58 @@
 <script lang="ts">
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
-	import { CONEXIONES } from './datos.ts';
+	import { CANALES_REALES, CONEXIONES } from './datos.ts';
 	import Etiqueta from './Etiqueta.svelte';
 	import { getOnboarding } from './estado.svelte.ts';
 	import Logo from './Logo.svelte';
+	import PorConfigurar from './PorConfigurar.svelte';
 
-	/** Paso 3, Canales: conectar lo que ya se usa. */
+	/** Paso 3, Canales: conectar lo que ya se usa (en la demo, simulado; con la API, al panel). */
 	const o = getOnboarding();
 </script>
 
-<div class="cab">
-	<div class="cab-t">
-		<Etiqueta rotulo="Canales" titulo="Conectá lo que ya usás. Traemos todo de una." />
-	</div>
-	<button type="button" class="todas" onclick={() => o.conectarRecomendadas()}
-		><Icon icon={I.phLightningFill} size={15} style="color:#F5B796" />Conectar las recomendadas</button
-	>
-</div>
-<div class="grilla">
-	{#each CONEXIONES as [k, n, d, trae, rec] (k)}
-		{@const c = o.e.conexiones[k] ?? 'off'}
-		<div class="con" class:on={c === 'on'}>
-			<Logo {k} />
-			<div class="c-txt">
-				<div class="c-n">
-					<span>{n}</span>{#if rec}<span class="reco">Recomendado</span>{/if}
-				</div>
-				<div class="c-d" class:trae={c === 'on'}>{c === 'on' ? trae : d}</div>
-			</div>
-			{#if c === 'off'}
-				<button type="button" class="conectar" onclick={() => o.conectar(k)}>Conectar</button>
-			{:else if c === 'wait'}
-				<span class="espera"
-					><Icon icon={I.phCircleNotchBold} size={15} class="gira" />Conectando</span
-				>
-			{:else}
-				<span class="listo" aria-label="Conectado"><Icon icon={I.phCheckBold} size={14} /></span>
-			{/if}
+{#if o.demo}
+	<div class="cab">
+		<div class="cab-t">
+			<Etiqueta rotulo="Canales" titulo="Conectá lo que ya usás. Traemos todo de una." />
 		</div>
-	{/each}
-</div>
-<div class="resumen">
-	{o.conectadas} de {CONEXIONES.length} conectadas. Podés sumar más después desde Integraciones.
-</div>
+		<button type="button" class="todas" onclick={() => o.conectarRecomendadas()}
+			><Icon icon={I.phLightningFill} size={15} style="color:#F5B796" />Conectar las recomendadas</button
+		>
+	</div>
+	<div class="grilla">
+		{#each CONEXIONES as [k, n, d, trae, rec] (k)}
+			{@const c = o.e.conexiones[k] ?? 'off'}
+			<div class="con" class:on={c === 'on'}>
+				<Logo {k} />
+				<div class="c-txt">
+					<div class="c-n">
+						<span>{n}</span>{#if rec}<span class="reco">Recomendado</span>{/if}
+					</div>
+					<div class="c-d" class:trae={c === 'on'}>{c === 'on' ? trae : d}</div>
+				</div>
+				{#if c === 'off'}
+					<button type="button" class="conectar" onclick={() => o.conectar(k)}>Conectar</button>
+				{:else if c === 'wait'}
+					<span class="espera"
+						><Icon icon={I.phCircleNotchBold} size={15} class="gira" />Conectando</span
+					>
+				{:else}
+					<span class="listo" aria-label="Conectado"><Icon icon={I.phCheckBold} size={14} /></span>
+				{/if}
+			</div>
+		{/each}
+	</div>
+	<div class="resumen">
+		{o.conectadas} de {CONEXIONES.length} conectadas. Podés sumar más después desde Integraciones.
+	</div>
+{:else}
+	<Etiqueta rotulo="Canales" titulo="Conectá lo que ya usás." />
+	<PorConfigurar
+		items={CANALES_REALES}
+		nota="Cada uno se conecta con tu cuenta, desde el panel. Lo que elegiste acá queda guardado."
+	/>
+{/if}
 
 <style>
 	.cab {

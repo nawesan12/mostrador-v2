@@ -26,6 +26,9 @@ export const load: PageServerLoad = ({ url, cookies }) => {
 	const v = url.searchParams.get('volver');
 	if (volverValido(v))
 		cookies.set(VOLVER, v!, { path: '/', httpOnly: true, sameSite: 'lax', maxAge: 600 });
+	// Google y WhatsApp sólo en la demo: en producción el ingreso social va a ser con Clerk, y hasta
+	// entonces no se ofrece un botón que no anda.
+	return { sociales: usaSandbox() };
 };
 
 function destino(cookies: RequestEvent['cookies']) {

@@ -22,6 +22,8 @@ export type Elecciones = {
 	config: Record<string, boolean>;
 	tono: Tono;
 	equipo: { email: string; rol: string }[];
+	/** De dónde traer la tienda (sólo con la API: se importa al terminar). */
+	importar: { plataforma: 'tiendanube' | 'shopify' | 'woocommerce'; url: string } | null;
 };
 
 export const INICIAL: Elecciones = {
@@ -45,15 +47,28 @@ export const INICIAL: Elecciones = {
 		pol: true
 	},
 	tono: 'cercano',
-	equipo: [{ email: 'valeria@laesquina.com.ar', rol: 'Dueña' }]
+	equipo: [{ email: 'valeria@laesquina.com.ar', rol: 'Dueña' }],
+	importar: null
+};
+
+/**
+ * Con la API (una cuenta real) no hay nada de ejemplo: ni canales conectados, ni equipo inventado.
+ * Lo de INICIAL es la ilustración de la demo.
+ */
+export const INICIAL_REAL: Elecciones = {
+	...INICIAL,
+	instagram: false,
+	conexiones: {},
+	equipo: [],
+	importar: null
 };
 
 const CLAVE = 'ob-estado';
 
-function leerGuardado(): Elecciones {
+function leerGuardado(base: Elecciones): Elecciones {
 	try {
 		const e = {
-			...INICIAL,
+			...base,
 			...(JSON.parse(localStorage.getItem(CLAVE) ?? '{}') as Partial<Elecciones>)
 		};
 		// La landing elige plantilla y paso por su cuenta ("Usar esta plantilla").
@@ -63,11 +78,13 @@ function leerGuardado(): Elecciones {
 		if (paso !== null) e.paso = Math.max(0, Math.min(7, Number(paso) || 0));
 		return e;
 	} catch {
-		return { ...INICIAL };
+		return { ...base };
 	}
 }
 
 export class Onboarding {
+	/** La demo (sandbox) muestra el onboarding ilustrado; con la API, sólo lo que pasa de verdad. */
+	demo = $state(true);
 	e = $state<Elecciones>({ ...INICIAL });
 	/** Paso 1: cuántas fuentes ya "aparecieron" (ARCA, Instagram, Maps). */
 	revelado = $state(0);
@@ -89,7 +106,13 @@ export class Onboarding {
 	}
 
 	cargar() {
-		this.e = leerGuardado();
+		this.e = leerGuardado(this.demo ? INICIAL : INICIAL_REAL);
+		if (!this.demo) {
+			// Lo de ejemplo que pudo quedar guardado de una visita a la demo, afuera.
+			this.e.equipo = this.e.equipo.filter((m) => !m.email.endsWith('@laesquina.com.ar'));
+			this.revelado = 3;
+			this.importado = 100;
+		}
 		this.entrar(this.e.paso);
 	}
 
@@ -115,6 +138,8 @@ export class Onboarding {
 	/** Lo que arranca solo al llegar a cada paso (como en el handoff). */
 	entrar(paso: number) {
 		this.detener();
+		// Las animaciones de "encontramos" e "importando" son de la demo.
+		if (!this.demo) return;
 		if (paso === 1) {
 			this.revelado = 0;
 			this.#timers.push(

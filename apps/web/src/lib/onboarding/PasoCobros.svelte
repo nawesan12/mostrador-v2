@@ -1,43 +1,56 @@
 <script lang="ts">
 	import Icon from '#lib/components/Icon.svelte';
 	import Interruptor from '#lib/components/Interruptor.svelte';
-	import { CONFIGURACION } from './datos.ts';
+	import { COBROS_REALES, CONFIGURACION } from './datos.ts';
 	import Etiqueta from './Etiqueta.svelte';
 	import { getOnboarding } from './estado.svelte.ts';
 	import Logo from './Logo.svelte';
+	import PorConfigurar from './PorConfigurar.svelte';
 
-	/** Paso 6, Cobros, envíos y facturas: lo que ya quedó configurado, para confirmar. */
+	/**
+	 * Paso 6, Cobros, envíos y facturas. En la demo, lo "ya configurado" para confirmar; con la API,
+	 * lo que hay que dejar listo antes de vender, con el link a cada pantalla.
+	 */
 	const o = getOnboarding();
 </script>
 
-<Etiqueta rotulo="Cobros, envíos y facturas" titulo="Ya lo configuramos. Solo confirmá." />
-<div class="grupos">
-	{#each CONFIGURACION as g (g.t)}
-		<div class="grupo">
-			<div class="g-cab">
-				<span class="g-ico"><Icon icon={g.i} size={18} /></span><span>{g.t}</span>
+{#if o.demo}
+	<Etiqueta rotulo="Cobros, envíos y facturas" titulo="Ya lo configuramos. Solo confirmá." />
+	<div class="grupos">
+		{#each CONFIGURACION as g (g.t)}
+			<div class="grupo">
+				<div class="g-cab">
+					<span class="g-ico"><Icon icon={g.i} size={18} /></span><span>{g.t}</span>
+				</div>
+				<div class="items">
+					{#each g.items as it (it.clave)}
+						<div class="item">
+							<Logo k={it.logo} tam={30} icono={16} radio={9} />
+							<span class="i-txt"
+								><span class="i-t">{it.t}</span><span class="i-d">{it.d}</span></span
+							>
+							{#if it.falta}
+								<span class="falta">Falta 1 paso</span>
+							{:else}
+								<Interruptor
+									checked={o.e.config[it.clave]}
+									label={it.t}
+									onchange={() => o.alternarConfig(it.clave)}
+								/>
+							{/if}
+						</div>
+					{/each}
+				</div>
 			</div>
-			<div class="items">
-				{#each g.items as it (it.clave)}
-					<div class="item">
-						<Logo k={it.logo} tam={30} icono={16} radio={9} />
-						<span class="i-txt"><span class="i-t">{it.t}</span><span class="i-d">{it.d}</span></span
-						>
-						{#if it.falta}
-							<span class="falta">Falta 1 paso</span>
-						{:else}
-							<Interruptor
-								checked={o.e.config[it.clave]}
-								label={it.t}
-								onchange={() => o.alternarConfig(it.clave)}
-							/>
-						{/if}
-					</div>
-				{/each}
-			</div>
-		</div>
-	{/each}
-</div>
+		{/each}
+	</div>
+{:else}
+	<Etiqueta rotulo="Cobros, envíos y facturas" titulo="Lo que falta para vender." />
+	<PorConfigurar
+		items={COBROS_REALES}
+		nota="Sin un medio de pago tu tienda se ve pero no cobra: empezá por Mercado Pago o transferencia."
+	/>
+{/if}
 
 <style>
 	.grupos {

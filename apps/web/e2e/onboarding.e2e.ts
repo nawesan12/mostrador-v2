@@ -31,7 +31,7 @@ test('el onboarding se recorre entero y termina en el panel con la demo armada',
 	await seguir(page);
 	await expect(page.getByRole('heading', { name: /Conectá lo que ya usás/ })).toBeVisible();
 	await page.getByRole('button', { name: 'Conectar las recomendadas' }).click();
-	await expect(page.getByText('5 de 9 conectadas.', { exact: false })).toBeVisible({
+	await expect(page.getByText('5 de 8 conectadas.', { exact: false })).toBeVisible({
 		timeout: 6000
 	});
 
@@ -66,7 +66,7 @@ test('el onboarding se recorre entero y termina en el panel con la demo armada',
 
 	// 8: listo → panel.
 	await page.locator('.pie .seguir').click();
-	await expect(page.getByRole('heading', { name: 'Tu mostrador está 94% listo.' })).toBeVisible();
+	await expect(page.getByRole('heading', { name: 'Tu Local Web está 94% listo.' })).toBeVisible();
 	expect(await sinDesborde(page)).toBeLessThanOrEqual(0);
 	await page.getByRole('button', { name: /Ir a mi panel/ }).click();
 	await expect(page).toHaveURL(/\/panel$/);
@@ -91,7 +91,7 @@ test('"Usar esta plantilla" de la landing arranca el onboarding con esa plantill
 }) => {
 	await page.goto('/');
 	await listo(page);
-	await page.getByRole('button', { name: /Ver las \d+ plantillas/ }).click();
+	await page.getByRole('button', { name: 'Ver plantillas' }).click();
 	await page
 		.getByRole('dialog')
 		.getByRole('link', { name: /Usar esta plantilla/ })
