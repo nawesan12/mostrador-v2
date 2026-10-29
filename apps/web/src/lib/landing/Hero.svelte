@@ -30,7 +30,7 @@
 				asistente con IA<Icon icon={I.phArrowRight} size={14} />
 			</a>
 			<h1 use:anim={{ t: 'rise', delay: 80 }}>
-				Todo para vender, en un solo lugar. <span>Más seguro y por menos.</span>
+				Todo tu negocio. <span>Sin complicaciones.</span>
 			</h1>
 			<p class="bajada" use:anim={{ t: 'rise', delay: 160 }}>
 				Tienda online, WhatsApp, Mercado Libre, local y facturación. Para el que recién arranca y
