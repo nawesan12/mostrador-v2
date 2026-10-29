@@ -124,3 +124,36 @@ func TestAjustarCombinaciones(t *testing.T) {
 		t.Fatalf("precios: %d %+v", p.Precio, p.Variantes)
 	}
 }
+
+func TestEmpretiendaIgualQueLaWeb(t *testing.T) {
+	var d struct {
+		Fichas []importar.FichaET `json:"fichas"`
+	}
+	if err := json.Unmarshal(leer(t, "empretienda.json"), &d); err != nil {
+		t.Fatal(err)
+	}
+	r := importar.ResultadoEmpretienda(d.Fichas)
+	// ACTUALIZAR=1 reescribe lo esperado (después hay que revisarlo y correr la web).
+	if os.Getenv("ACTUALIZAR") == "1" {
+		b, _ := json.MarshalIndent(r, "", "\t")
+		if err := os.WriteFile(filepath.Join(casos, "empretienda.esperado.json"), append(b, '\n'), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	igual(t, r, "empretienda.esperado.json")
+}
+
+func TestEmpretiendaHTML(t *testing.T) {
+	html := "<script>\nvar p_nombre = \"Mate\";\nvar stock = [{\"s_cantidad\":2,\"s_precio\":5000,\"valoratributo\":[]}];\nvar cdn_products = \"https://cdn/\";\nvar imagenes = [{\"idImagenes\":1,\"i_link\":\"a.jpg\"}];\n</script><div class=\"product-vip__description\"><p>Calabaza</p></div>"
+	f, ok := importar.FichaDeHTML(html, "https://t.empretienda.com.ar/mates/mate")
+	if !ok || f.Nombre != "Mate" || len(f.Stock) != 1 || len(f.Imagenes) != 1 || f.Descripcion != "<p>Calabaza</p>" {
+		t.Fatalf("ficha = %+v, %v", f, ok)
+	}
+	if _, ok := importar.FichaDeHTML("<html>no es una ficha</html>", "https://x"); ok {
+		t.Fatal("una página sin variables no es una ficha")
+	}
+	xml := `<urlset><url><loc>https://t.empretienda.com.ar/mates/mate</loc><priority>0.8</priority></url><url><loc>https://t.empretienda.com.ar/mates</loc><priority>0.5</priority></url><url><loc>https://otra.com/x</loc><priority>0.8</priority></url></urlset>`
+	if got := importar.FichasDelSitemap(xml, "https://t.empretienda.com.ar"); len(got) != 1 || got[0] != "https://t.empretienda.com.ar/mates/mate" {
+		t.Fatalf("fichas = %v", got)
+	}
+}

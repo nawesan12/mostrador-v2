@@ -90,7 +90,9 @@ func Publico() *http.Client {
 // ErrHTTP es una respuesta no exitosa de la tienda.
 type ErrHTTP struct{ Estado int }
 
-func (e *ErrHTTP) Error() string { return fmt.Sprintf("importar: la tienda respondió HTTP %d", e.Estado) }
+func (e *ErrHTTP) Error() string {
+	return fmt.Sprintf("importar: la tienda respondió HTTP %d", e.Estado)
+}
 
 // Pedir lee una URL con el cliente dado y devuelve el cuerpo y los headers. Una respuesta que no es
 // 200 vuelve como *ErrHTTP.

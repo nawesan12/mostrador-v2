@@ -28,7 +28,7 @@ type Dependencias struct {
 	Tiendanube *http.Client
 }
 
-// Fuentes devuelve las fuentes por plataforma. Mientras falte una (CSV, Empretienda), crear una
+// Fuentes devuelve las fuentes por plataforma. Mientras falte una (CSV), crear una
 // importación desde ella responde sin_fuente.
 func Fuentes(d Dependencias) map[string]Abrir {
 	if d.Publico == nil {
@@ -37,6 +37,7 @@ func Fuentes(d Dependencias) map[string]Abrir {
 	f := map[string]Abrir{
 		"shopify":     func(_ context.Context, o Origen) (Fuente, error) { return shopify{d.Publico, o.URL}, nil },
 		"woocommerce": func(_ context.Context, o Origen) (Fuente, error) { return woo{d.Publico, o.URL}, nil },
+		"empretienda": func(_ context.Context, o Origen) (Fuente, error) { return empretienda{d.Publico, o.URL}, nil },
 		"tiendanube": func(_ context.Context, o Origen) (Fuente, error) {
 			var c credencialTN
 			if err := json.Unmarshal(o.Credencial, &c); err != nil || c.Token == "" || c.Tienda == "" {

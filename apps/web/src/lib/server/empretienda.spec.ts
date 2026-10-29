@@ -16,7 +16,7 @@ const s = (cant: number, precio: number, valor?: string, ilimitado = 0) => ({
 	s_oferta: 0,
 	s_precio_oferta: 0,
 	s_mostrar_precio: 1,
-	valoratributo: valor ? [{ valor: { vat_valor: valor } }] : []
+	valoratributo: valor ? [{ at_nombre: 'Color', valor: { vat_valor: valor } }] : []
 });
 
 describe('empretienda', () => {
@@ -36,7 +36,7 @@ describe('empretienda', () => {
 		expect(fichasDelSitemap(xml, O)).toEqual([`${O}/medias/floyd`]);
 	});
 
-	it('arma el producto: variantes, stock sumado, categoría más específica', () => {
+	it('arma el producto: variantes reales, stock sumado, categoría más específica', () => {
 		const p = productoDeFicha(
 			ficha([s(2, 3800, 'Negro'), s(1, 3500, 'Fucsia')]),
 			`${O}/medias/lisas/floyd`
@@ -46,11 +46,14 @@ describe('empretienda', () => {
 			precio: 3500,
 			stock: 3,
 			categoria: 'Lisas',
-			foto: 'https://cdn.ejemplo/a.jpg'
+			fotos: ['https://cdn.ejemplo/a.jpg'],
+			opciones: [{ nombre: 'Color', valores: ['Negro', 'Fucsia'] }]
 		});
-		expect(p?.descripcion).toBe(
-			'Algodón peinado\nTalle único\n\nVariantes: Negro (2), Fucsia (1).'
-		);
+		expect(p?.variantes).toEqual([
+			{ valores: { Color: 'Negro' }, sku: '', precio: 3800, stock: 2, foto: null },
+			{ valores: { Color: 'Fucsia' }, sku: '', precio: null, stock: 1, foto: null }
+		]);
+		expect(p?.descripcion).toBe('Algodón peinado\nTalle único');
 	});
 
 	it('stock ilimitado y páginas que no son fichas', () => {

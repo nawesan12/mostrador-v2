@@ -134,3 +134,26 @@ func TestOrigenPublico(t *testing.T) {
 		}
 	}
 }
+
+func TestFuenteEmpretienda(t *testing.T) {
+	var srv *httptest.Server
+	srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/sitemap.xml":
+			_, _ = w.Write([]byte(`<urlset><url><loc>` + srv.URL + `/mates/mate</loc><priority>0.8</priority></url><url><loc>` + srv.URL + `/mates</loc><priority>0.5</priority></url></urlset>`))
+		case "/mates/mate":
+			_, _ = w.Write([]byte("<script>\nvar p_nombre = \"Mate imperial\";\nvar stock = [{\"s_cantidad\":2,\"s_precio\":5000,\"valoratributo\":[]}];\n</script>"))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer srv.Close()
+	f, _ := Fuentes(Dependencias{Publico: srv.Client()})["empretienda"](context.Background(), Origen{URL: srv.URL})
+	p, err := f.Pagina(context.Background(), "productos", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(p.Productos) != 1 || p.Productos[0].Producto.Nombre != "Mate imperial" || p.Productos[0].URL != "/mates/mate" || p.Siguiente != nil {
+		t.Fatalf("página = %+v", p)
+	}
+}

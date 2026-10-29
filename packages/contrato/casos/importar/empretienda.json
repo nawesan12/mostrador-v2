@@ -1,0 +1,757 @@
+{
+	"fichas": [
+		{
+			"url": "https://joliegarcia.empretienda.com.ar/medias/medias-floyd-estampadas",
+			"p_nombre": "Medias floyd estampadas",
+			"cdn_products": "https://d22fxaf9t8d39k.cloudfront.net/",
+			"imagenes": [
+				{
+					"idImagenes": 68818036,
+					"i_link": "e30ca3912cd45a0b124515be4fdff6c4f54560fe9fd2081652de859094cb90f8462500.jpg"
+				},
+				{
+					"idImagenes": 68818037,
+					"i_link": "7d863229b6c7dee0149842eed677f3030e451c43e16fe305857604fae96b468c462500.jpg"
+				},
+				{
+					"idImagenes": 68818038,
+					"i_link": "df5ccc5af4dc2904cd5812fab2321c765bd9faaf1a70e94093afbc1c2282b4aa462500.jpg"
+				},
+				{
+					"idImagenes": 68818039,
+					"i_link": "09e7164dd21a7516e3e86895892dcfab647037ec04d7a13c9c3cb02c6eaf75fd462500.jpg"
+				},
+				{
+					"idImagenes": 68818040,
+					"i_link": "76d0e04b54097c88ccaf034e1fa6b1b4ef8b8d16ed716e9ac5443a27ef0cf7a9462500.jpg"
+				}
+			],
+			"categorias_flatten": [
+				{
+					"c_nombre": "Sweaters",
+					"c_link_full": "/sweaters"
+				},
+				{
+					"c_nombre": "Bufandones nube",
+					"c_link_full": "/bufandones-nube"
+				},
+				{
+					"c_nombre": "Joggins recto",
+					"c_link_full": "/joggins-recto"
+				},
+				{
+					"c_nombre": "Joggins Con puño",
+					"c_link_full": "/joggins-recto/joggins-con-puno"
+				},
+				{
+					"c_nombre": "Baggys",
+					"c_link_full": "/baggys"
+				},
+				{
+					"c_nombre": "Palazos Darlon",
+					"c_link_full": "/palazos-darlon"
+				},
+				{
+					"c_nombre": "Remeras manga larga",
+					"c_link_full": "/remeras-manga-larga"
+				},
+				{
+					"c_nombre": "Remeras manga corta",
+					"c_link_full": "/remeras-manga-larga/remeras-manga-corta"
+				},
+				{
+					"c_nombre": "Poleras",
+					"c_link_full": "/poleras"
+				},
+				{
+					"c_nombre": "Cardigan",
+					"c_link_full": "/cardigan"
+				},
+				{
+					"c_nombre": "Bodys",
+					"c_link_full": "/bodys"
+				},
+				{
+					"c_nombre": "Buzos",
+					"c_link_full": "/buzos"
+				},
+				{
+					"c_nombre": "Medias",
+					"c_link_full": "/medias"
+				}
+			],
+			"stock": [
+				{
+					"idStock": 66632293,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 3800,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68818036,
+					"valoratributo": [
+						{
+							"at_nombre": "Medias FLOYD",
+							"valor": {
+								"vat_valor": "1."
+							}
+						}
+					]
+				},
+				{
+					"idStock": 66633254,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 3800,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68818036,
+					"valoratributo": [
+						{
+							"at_nombre": "Medias FLOYD",
+							"valor": {
+								"vat_valor": "2."
+							}
+						}
+					]
+				},
+				{
+					"idStock": 66633255,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 3800,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68818036,
+					"valoratributo": [
+						{
+							"at_nombre": "Medias FLOYD",
+							"valor": {
+								"vat_valor": "3."
+							}
+						}
+					]
+				},
+				{
+					"idStock": 66633256,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 3800,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68818036,
+					"valoratributo": [
+						{
+							"at_nombre": "Medias FLOYD",
+							"valor": {
+								"vat_valor": "4."
+							}
+						}
+					]
+				},
+				{
+					"idStock": 66633257,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 3800,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68818036,
+					"valoratributo": [
+						{
+							"at_nombre": "Medias FLOYD",
+							"valor": {
+								"vat_valor": "5."
+							}
+						}
+					]
+				},
+				{
+					"idStock": 66633258,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 3800,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68818036,
+					"valoratributo": [
+						{
+							"at_nombre": "Medias FLOYD",
+							"valor": {
+								"vat_valor": "6."
+							}
+						}
+					]
+				},
+				{
+					"idStock": 66633259,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 3800,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68818036,
+					"valoratributo": [
+						{
+							"at_nombre": "Medias FLOYD",
+							"valor": {
+								"vat_valor": "7."
+							}
+						}
+					]
+				},
+				{
+					"idStock": 66633260,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 3800,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68818036,
+					"valoratributo": [
+						{
+							"at_nombre": "Medias FLOYD",
+							"valor": {
+								"vat_valor": "8."
+							}
+						}
+					]
+				},
+				{
+					"idStock": 66633261,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 3800,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68818036,
+					"valoratributo": [
+						{
+							"at_nombre": "Medias FLOYD",
+							"valor": {
+								"vat_valor": "9."
+							}
+						}
+					]
+				},
+				{
+					"idStock": 66633262,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 3800,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68818036,
+					"valoratributo": [
+						{
+							"at_nombre": "Medias FLOYD",
+							"valor": {
+								"vat_valor": "10."
+							}
+						}
+					]
+				},
+				{
+					"idStock": 66633263,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 3800,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68818036,
+					"valoratributo": [
+						{
+							"at_nombre": "Medias FLOYD",
+							"valor": {
+								"vat_valor": "11."
+							}
+						}
+					]
+				},
+				{
+					"idStock": 66633264,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 3800,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68818036,
+					"valoratributo": [
+						{
+							"at_nombre": "Medias FLOYD",
+							"valor": {
+								"vat_valor": "12."
+							}
+						}
+					]
+				},
+				{
+					"idStock": 66633265,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 3800,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68818036,
+					"valoratributo": [
+						{
+							"at_nombre": "Medias FLOYD",
+							"valor": {
+								"vat_valor": "13."
+							}
+						}
+					]
+				},
+				{
+					"idStock": 66633266,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 3800,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68818036,
+					"valoratributo": [
+						{
+							"at_nombre": "Medias FLOYD",
+							"valor": {
+								"vat_valor": "15."
+							}
+						}
+					]
+				},
+				{
+					"idStock": 66633267,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 3800,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68818036,
+					"valoratributo": [
+						{
+							"at_nombre": "Medias FLOYD",
+							"valor": {
+								"vat_valor": "16."
+							}
+						}
+					]
+				},
+				{
+					"idStock": 66633268,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 3800,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68818036,
+					"valoratributo": [
+						{
+							"at_nombre": "Medias FLOYD",
+							"valor": {
+								"vat_valor": "17."
+							}
+						}
+					]
+				},
+				{
+					"idStock": 66633269,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 3800,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68818036,
+					"valoratributo": [
+						{
+							"at_nombre": "Medias FLOYD",
+							"valor": {
+								"vat_valor": "18."
+							}
+						}
+					]
+				},
+				{
+					"idStock": 66633270,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 3800,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68818036,
+					"valoratributo": [
+						{
+							"at_nombre": "Medias FLOYD",
+							"valor": {
+								"vat_valor": "19."
+							}
+						}
+					]
+				},
+				{
+					"idStock": 66633271,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 3800,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68818036,
+					"valoratributo": [
+						{
+							"at_nombre": "Medias FLOYD",
+							"valor": {
+								"vat_valor": "20."
+							}
+						}
+					]
+				},
+				{
+					"idStock": 66633272,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 3800,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68818036,
+					"valoratributo": [
+						{
+							"at_nombre": "Medias FLOYD",
+							"valor": {
+								"vat_valor": "22."
+							}
+						}
+					]
+				},
+				{
+					"idStock": 66633273,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 3800,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68818036,
+					"valoratributo": [
+						{
+							"at_nombre": "Medias FLOYD",
+							"valor": {
+								"vat_valor": "23."
+							}
+						}
+					]
+				},
+				{
+					"idStock": 66633274,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 3800,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68818036,
+					"valoratributo": [
+						{
+							"at_nombre": "Medias FLOYD",
+							"valor": {
+								"vat_valor": "24."
+							}
+						}
+					]
+				},
+				{
+					"idStock": 66633275,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 3800,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68818036,
+					"valoratributo": [
+						{
+							"at_nombre": "Medias FLOYD",
+							"valor": {
+								"vat_valor": "14."
+							}
+						}
+					]
+				},
+				{
+					"idStock": 66633276,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 3800,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68818036,
+					"valoratributo": [
+						{
+							"at_nombre": "Medias FLOYD",
+							"valor": {
+								"vat_valor": "21."
+							}
+						}
+					]
+				}
+			],
+			"descripcion": "<p>Estampas disponibles en fotos</p>"
+		},
+		{
+			"url": "https://joliegarcia.empretienda.com.ar/remeras-manga-larga/remeras-manga-corta/musculosa-broderie",
+			"p_nombre": "Musculosa BRODERIE",
+			"cdn_products": "https://d22fxaf9t8d39k.cloudfront.net/",
+			"imagenes": [
+				{
+					"idImagenes": 68819285,
+					"i_link": "66ff282c0533de73af35d8c9289a9abd9a08936b1cc243ca0024ccc4d35dfed4462500.jpg"
+				},
+				{
+					"idImagenes": 68819286,
+					"i_link": "67f10ff82b883bd3c1290c8a9fc480153c13f70c80f2faf26cb9ce9c95da52a7462500.jpg"
+				},
+				{
+					"idImagenes": 68783879,
+					"i_link": "eaa2af5f0b283e47badf542094cf136f1ba42deccf55c8d0436947273fdf552a462500.jpg"
+				},
+				{
+					"idImagenes": 68783880,
+					"i_link": "6a418316ff99c5d643a9da9990e1a693d4bf983034ff30cb5d59cefc520ea145462500.jpg"
+				}
+			],
+			"categorias_flatten": [
+				{
+					"c_nombre": "Sweaters",
+					"c_link_full": "/sweaters"
+				},
+				{
+					"c_nombre": "Bufandones nube",
+					"c_link_full": "/bufandones-nube"
+				},
+				{
+					"c_nombre": "Joggins recto",
+					"c_link_full": "/joggins-recto"
+				},
+				{
+					"c_nombre": "Joggins Con puño",
+					"c_link_full": "/joggins-recto/joggins-con-puno"
+				},
+				{
+					"c_nombre": "Baggys",
+					"c_link_full": "/baggys"
+				},
+				{
+					"c_nombre": "Palazos Darlon",
+					"c_link_full": "/palazos-darlon"
+				},
+				{
+					"c_nombre": "Remeras manga larga",
+					"c_link_full": "/remeras-manga-larga"
+				},
+				{
+					"c_nombre": "Remeras manga corta",
+					"c_link_full": "/remeras-manga-larga/remeras-manga-corta"
+				},
+				{
+					"c_nombre": "Poleras",
+					"c_link_full": "/poleras"
+				},
+				{
+					"c_nombre": "Cardigan",
+					"c_link_full": "/cardigan"
+				},
+				{
+					"c_nombre": "Bodys",
+					"c_link_full": "/bodys"
+				},
+				{
+					"c_nombre": "Buzos",
+					"c_link_full": "/buzos"
+				},
+				{
+					"c_nombre": "Medias",
+					"c_link_full": "/medias"
+				}
+			],
+			"stock": [
+				{
+					"idStock": 66594823,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 20000,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68819285,
+					"valoratributo": [
+						{
+							"at_nombre": "Musculosa broderie",
+							"valor": {
+								"vat_valor": "Amarillo pastel talle 3"
+							}
+						}
+					]
+				},
+				{
+					"idStock": 66594824,
+					"s_cantidad": 1,
+					"s_ilimitado": 0,
+					"s_precio": 20000,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 68819285,
+					"valoratributo": [
+						{
+							"at_nombre": "Musculosa broderie",
+							"valor": {
+								"vat_valor": "Chocolate talle 4"
+							}
+						}
+					]
+				}
+			],
+			"descripcion": "<p>Musculosa broderie con voladitos</p>"
+		},
+		{
+			"url": "https://tienda.empretienda.com.ar/remeras/remera-basica",
+			"p_nombre": "  Remera   básica ",
+			"cdn_products": "https://d22fxaf9t8d39k.cloudfront.net/",
+			"imagenes": [
+				{
+					"idImagenes": 1,
+					"i_link": "blanca.jpg"
+				},
+				{
+					"idImagenes": 2,
+					"i_link": "negra.jpg"
+				}
+			],
+			"categorias_flatten": [
+				{
+					"c_nombre": "Ropa",
+					"c_link_full": "/ropa"
+				},
+				{
+					"c_nombre": "Remeras",
+					"c_link_full": "/remeras"
+				}
+			],
+			"descripcion": "<p>100% algodón.</p>",
+			"stock": [
+				{
+					"idStock": 11,
+					"s_cantidad": 3,
+					"s_ilimitado": 0,
+					"s_precio": 12000,
+					"s_oferta": 1,
+					"s_precio_oferta": 9900,
+					"s_mostrar_precio": 1,
+					"s_imagen": 1,
+					"valoratributo": [
+						{
+							"at_nombre": "Talle",
+							"valor": {
+								"vat_valor": "S"
+							}
+						},
+						{
+							"at_nombre": "Color",
+							"valor": {
+								"vat_valor": "Blanco"
+							}
+						}
+					]
+				},
+				{
+					"idStock": 12,
+					"s_cantidad": 0,
+					"s_ilimitado": 0,
+					"s_precio": 12000,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 2,
+					"valoratributo": [
+						{
+							"at_nombre": "Talle",
+							"valor": {
+								"vat_valor": "S"
+							}
+						},
+						{
+							"at_nombre": "Color",
+							"valor": {
+								"vat_valor": "Negro"
+							}
+						}
+					]
+				},
+				{
+					"idStock": 13,
+					"s_cantidad": 0,
+					"s_ilimitado": 1,
+					"s_precio": 13500,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 0,
+					"valoratributo": [
+						{
+							"at_nombre": "Talle",
+							"valor": {
+								"vat_valor": "M"
+							}
+						},
+						{
+							"at_nombre": "Color",
+							"valor": {
+								"vat_valor": "Negro"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"url": "https://tienda.empretienda.com.ar/yerba",
+			"p_nombre": "Yerba 1 kg",
+			"cdn_products": "https://d22fxaf9t8d39k.cloudfront.net/",
+			"imagenes": [],
+			"categorias_flatten": [],
+			"descripcion": "",
+			"stock": [
+				{
+					"idStock": 21,
+					"s_cantidad": 7,
+					"s_ilimitado": 0,
+					"s_precio": 4500,
+					"s_oferta": 0,
+					"s_precio_oferta": 0,
+					"s_mostrar_precio": 1,
+					"s_imagen": 0,
+					"valoratributo": []
+				}
+			]
+		}
+	]
+}

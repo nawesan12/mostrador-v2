@@ -1,0 +1,357 @@
+{
+	"productos": [
+		{
+			"nombre": "Medias floyd estampadas",
+			"descripcion": "Estampas disponibles en fotos",
+			"categoria": "Medias",
+			"precio": 3800,
+			"sku": "",
+			"stock": 20,
+			"fotos": [
+				"https://d22fxaf9t8d39k.cloudfront.net/e30ca3912cd45a0b124515be4fdff6c4f54560fe9fd2081652de859094cb90f8462500.jpg",
+				"https://d22fxaf9t8d39k.cloudfront.net/7d863229b6c7dee0149842eed677f3030e451c43e16fe305857604fae96b468c462500.jpg",
+				"https://d22fxaf9t8d39k.cloudfront.net/df5ccc5af4dc2904cd5812fab2321c765bd9faaf1a70e94093afbc1c2282b4aa462500.jpg",
+				"https://d22fxaf9t8d39k.cloudfront.net/09e7164dd21a7516e3e86895892dcfab647037ec04d7a13c9c3cb02c6eaf75fd462500.jpg",
+				"https://d22fxaf9t8d39k.cloudfront.net/76d0e04b54097c88ccaf034e1fa6b1b4ef8b8d16ed716e9ac5443a27ef0cf7a9462500.jpg"
+			],
+			"opciones": [
+				{
+					"nombre": "Medias FLOYD",
+					"valores": [
+						"1.",
+						"2.",
+						"3.",
+						"4.",
+						"5.",
+						"6.",
+						"7.",
+						"8.",
+						"9.",
+						"10.",
+						"11.",
+						"12.",
+						"13.",
+						"15.",
+						"16.",
+						"17.",
+						"18.",
+						"19.",
+						"20.",
+						"22."
+					]
+				}
+			],
+			"variantes": [
+				{
+					"valores": {
+						"Medias FLOYD": "1."
+					},
+					"sku": "",
+					"precio": null,
+					"stock": 1,
+					"foto": "https://d22fxaf9t8d39k.cloudfront.net/e30ca3912cd45a0b124515be4fdff6c4f54560fe9fd2081652de859094cb90f8462500.jpg"
+				},
+				{
+					"valores": {
+						"Medias FLOYD": "2."
+					},
+					"sku": "",
+					"precio": null,
+					"stock": 1,
+					"foto": "https://d22fxaf9t8d39k.cloudfront.net/e30ca3912cd45a0b124515be4fdff6c4f54560fe9fd2081652de859094cb90f8462500.jpg"
+				},
+				{
+					"valores": {
+						"Medias FLOYD": "3."
+					},
+					"sku": "",
+					"precio": null,
+					"stock": 1,
+					"foto": "https://d22fxaf9t8d39k.cloudfront.net/e30ca3912cd45a0b124515be4fdff6c4f54560fe9fd2081652de859094cb90f8462500.jpg"
+				},
+				{
+					"valores": {
+						"Medias FLOYD": "4."
+					},
+					"sku": "",
+					"precio": null,
+					"stock": 1,
+					"foto": "https://d22fxaf9t8d39k.cloudfront.net/e30ca3912cd45a0b124515be4fdff6c4f54560fe9fd2081652de859094cb90f8462500.jpg"
+				},
+				{
+					"valores": {
+						"Medias FLOYD": "5."
+					},
+					"sku": "",
+					"precio": null,
+					"stock": 1,
+					"foto": "https://d22fxaf9t8d39k.cloudfront.net/e30ca3912cd45a0b124515be4fdff6c4f54560fe9fd2081652de859094cb90f8462500.jpg"
+				},
+				{
+					"valores": {
+						"Medias FLOYD": "6."
+					},
+					"sku": "",
+					"precio": null,
+					"stock": 1,
+					"foto": "https://d22fxaf9t8d39k.cloudfront.net/e30ca3912cd45a0b124515be4fdff6c4f54560fe9fd2081652de859094cb90f8462500.jpg"
+				},
+				{
+					"valores": {
+						"Medias FLOYD": "7."
+					},
+					"sku": "",
+					"precio": null,
+					"stock": 1,
+					"foto": "https://d22fxaf9t8d39k.cloudfront.net/e30ca3912cd45a0b124515be4fdff6c4f54560fe9fd2081652de859094cb90f8462500.jpg"
+				},
+				{
+					"valores": {
+						"Medias FLOYD": "8."
+					},
+					"sku": "",
+					"precio": null,
+					"stock": 1,
+					"foto": "https://d22fxaf9t8d39k.cloudfront.net/e30ca3912cd45a0b124515be4fdff6c4f54560fe9fd2081652de859094cb90f8462500.jpg"
+				},
+				{
+					"valores": {
+						"Medias FLOYD": "9."
+					},
+					"sku": "",
+					"precio": null,
+					"stock": 1,
+					"foto": "https://d22fxaf9t8d39k.cloudfront.net/e30ca3912cd45a0b124515be4fdff6c4f54560fe9fd2081652de859094cb90f8462500.jpg"
+				},
+				{
+					"valores": {
+						"Medias FLOYD": "10."
+					},
+					"sku": "",
+					"precio": null,
+					"stock": 1,
+					"foto": "https://d22fxaf9t8d39k.cloudfront.net/e30ca3912cd45a0b124515be4fdff6c4f54560fe9fd2081652de859094cb90f8462500.jpg"
+				},
+				{
+					"valores": {
+						"Medias FLOYD": "11."
+					},
+					"sku": "",
+					"precio": null,
+					"stock": 1,
+					"foto": "https://d22fxaf9t8d39k.cloudfront.net/e30ca3912cd45a0b124515be4fdff6c4f54560fe9fd2081652de859094cb90f8462500.jpg"
+				},
+				{
+					"valores": {
+						"Medias FLOYD": "12."
+					},
+					"sku": "",
+					"precio": null,
+					"stock": 1,
+					"foto": "https://d22fxaf9t8d39k.cloudfront.net/e30ca3912cd45a0b124515be4fdff6c4f54560fe9fd2081652de859094cb90f8462500.jpg"
+				},
+				{
+					"valores": {
+						"Medias FLOYD": "13."
+					},
+					"sku": "",
+					"precio": null,
+					"stock": 1,
+					"foto": "https://d22fxaf9t8d39k.cloudfront.net/e30ca3912cd45a0b124515be4fdff6c4f54560fe9fd2081652de859094cb90f8462500.jpg"
+				},
+				{
+					"valores": {
+						"Medias FLOYD": "15."
+					},
+					"sku": "",
+					"precio": null,
+					"stock": 1,
+					"foto": "https://d22fxaf9t8d39k.cloudfront.net/e30ca3912cd45a0b124515be4fdff6c4f54560fe9fd2081652de859094cb90f8462500.jpg"
+				},
+				{
+					"valores": {
+						"Medias FLOYD": "16."
+					},
+					"sku": "",
+					"precio": null,
+					"stock": 1,
+					"foto": "https://d22fxaf9t8d39k.cloudfront.net/e30ca3912cd45a0b124515be4fdff6c4f54560fe9fd2081652de859094cb90f8462500.jpg"
+				},
+				{
+					"valores": {
+						"Medias FLOYD": "17."
+					},
+					"sku": "",
+					"precio": null,
+					"stock": 1,
+					"foto": "https://d22fxaf9t8d39k.cloudfront.net/e30ca3912cd45a0b124515be4fdff6c4f54560fe9fd2081652de859094cb90f8462500.jpg"
+				},
+				{
+					"valores": {
+						"Medias FLOYD": "18."
+					},
+					"sku": "",
+					"precio": null,
+					"stock": 1,
+					"foto": "https://d22fxaf9t8d39k.cloudfront.net/e30ca3912cd45a0b124515be4fdff6c4f54560fe9fd2081652de859094cb90f8462500.jpg"
+				},
+				{
+					"valores": {
+						"Medias FLOYD": "19."
+					},
+					"sku": "",
+					"precio": null,
+					"stock": 1,
+					"foto": "https://d22fxaf9t8d39k.cloudfront.net/e30ca3912cd45a0b124515be4fdff6c4f54560fe9fd2081652de859094cb90f8462500.jpg"
+				},
+				{
+					"valores": {
+						"Medias FLOYD": "20."
+					},
+					"sku": "",
+					"precio": null,
+					"stock": 1,
+					"foto": "https://d22fxaf9t8d39k.cloudfront.net/e30ca3912cd45a0b124515be4fdff6c4f54560fe9fd2081652de859094cb90f8462500.jpg"
+				},
+				{
+					"valores": {
+						"Medias FLOYD": "22."
+					},
+					"sku": "",
+					"precio": null,
+					"stock": 1,
+					"foto": "https://d22fxaf9t8d39k.cloudfront.net/e30ca3912cd45a0b124515be4fdff6c4f54560fe9fd2081652de859094cb90f8462500.jpg"
+				}
+			],
+			"canales": {
+				"web": true
+			}
+		},
+		{
+			"nombre": "Musculosa BRODERIE",
+			"descripcion": "Musculosa broderie con voladitos",
+			"categoria": "Remeras manga corta",
+			"precio": 20000,
+			"sku": "",
+			"stock": 2,
+			"fotos": [
+				"https://d22fxaf9t8d39k.cloudfront.net/66ff282c0533de73af35d8c9289a9abd9a08936b1cc243ca0024ccc4d35dfed4462500.jpg",
+				"https://d22fxaf9t8d39k.cloudfront.net/67f10ff82b883bd3c1290c8a9fc480153c13f70c80f2faf26cb9ce9c95da52a7462500.jpg",
+				"https://d22fxaf9t8d39k.cloudfront.net/eaa2af5f0b283e47badf542094cf136f1ba42deccf55c8d0436947273fdf552a462500.jpg",
+				"https://d22fxaf9t8d39k.cloudfront.net/6a418316ff99c5d643a9da9990e1a693d4bf983034ff30cb5d59cefc520ea145462500.jpg"
+			],
+			"opciones": [
+				{
+					"nombre": "Musculosa broderie",
+					"valores": [
+						"Amarillo pastel tall",
+						"Chocolate talle 4"
+					]
+				}
+			],
+			"variantes": [
+				{
+					"valores": {
+						"Musculosa broderie": "Amarillo pastel tall"
+					},
+					"sku": "",
+					"precio": null,
+					"stock": 1,
+					"foto": "https://d22fxaf9t8d39k.cloudfront.net/66ff282c0533de73af35d8c9289a9abd9a08936b1cc243ca0024ccc4d35dfed4462500.jpg"
+				},
+				{
+					"valores": {
+						"Musculosa broderie": "Chocolate talle 4"
+					},
+					"sku": "",
+					"precio": null,
+					"stock": 1,
+					"foto": "https://d22fxaf9t8d39k.cloudfront.net/66ff282c0533de73af35d8c9289a9abd9a08936b1cc243ca0024ccc4d35dfed4462500.jpg"
+				}
+			],
+			"canales": {
+				"web": true
+			}
+		},
+		{
+			"nombre": "Remera básica",
+			"descripcion": "100% algodón.",
+			"categoria": "Remeras",
+			"precio": 9900,
+			"sku": "",
+			"stock": 1002,
+			"fotos": [
+				"https://d22fxaf9t8d39k.cloudfront.net/blanca.jpg",
+				"https://d22fxaf9t8d39k.cloudfront.net/negra.jpg"
+			],
+			"opciones": [
+				{
+					"nombre": "Talle",
+					"valores": [
+						"S",
+						"M"
+					]
+				},
+				{
+					"nombre": "Color",
+					"valores": [
+						"Blanco",
+						"Negro"
+					]
+				}
+			],
+			"variantes": [
+				{
+					"valores": {
+						"Color": "Blanco",
+						"Talle": "S"
+					},
+					"sku": "",
+					"precio": null,
+					"stock": 3,
+					"foto": "https://d22fxaf9t8d39k.cloudfront.net/blanca.jpg"
+				},
+				{
+					"valores": {
+						"Color": "Negro",
+						"Talle": "S"
+					},
+					"sku": "",
+					"precio": 12000,
+					"stock": 0,
+					"foto": "https://d22fxaf9t8d39k.cloudfront.net/negra.jpg"
+				},
+				{
+					"valores": {
+						"Color": "Negro",
+						"Talle": "M"
+					},
+					"sku": "",
+					"precio": 13500,
+					"stock": 999,
+					"foto": null
+				}
+			],
+			"canales": {
+				"web": true
+			}
+		},
+		{
+			"nombre": "Yerba 1 kg",
+			"descripcion": "",
+			"categoria": null,
+			"precio": 4500,
+			"sku": "",
+			"stock": 7,
+			"fotos": [],
+			"opciones": [],
+			"variantes": [],
+			"canales": {
+				"web": true
+			}
+		}
+	],
+	"stockEstimado": false,
+	"recortes": 2,
+	"omitidos": 0
+}
