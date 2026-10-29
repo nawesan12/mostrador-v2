@@ -76,9 +76,10 @@ test.describe('menú mobile', () => {
 		await page.keyboard.press('Escape');
 		await expect(boton).toHaveAttribute('aria-expanded', 'false');
 		await boton.click();
+		// El del menú (la píldora del hero dice lo mismo y queda debajo del menú abierto).
 		await page
+			.locator('.menu')
 			.getByRole('link', { name: /Conocé a Hornero/ })
-			.last()
 			.click();
 		await expect(boton).toHaveAttribute('aria-expanded', 'false');
 		await expect(page.locator('section#hornero h2')).toBeInViewport();
@@ -101,7 +102,7 @@ test('tablet (1024 px): sin desborde y con el hero apilado', async ({ page }) =>
 	await page.goto('/');
 	await listo(page);
 	expect(await sinDesborde(page)).toBeLessThanOrEqual(0);
-	await expect(page.locator('section.mob h1')).toBeVisible();
+	await expect(page.locator('section.hero h1')).toBeVisible();
 });
 
 test('con movimiento reducido no hay animaciones infinitas', async ({ browser }) => {
