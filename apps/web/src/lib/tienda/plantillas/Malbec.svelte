@@ -143,11 +143,15 @@
 		...(tienda.envios.gratisDesde
 			? [{ i: I.phTruck, t: 'Envío gratis', d: `Desde ${fmt(tienda.envios.gratisDesde)}` }]
 			: []),
-		{
-			i: I.phCreditCard,
-			t: `${tienda.cobros.cuotas} cuotas sin interés`,
-			d: 'Con todas las tarjetas'
-		},
+		...(tienda.cobros.cuotas > 1
+			? [
+					{
+						i: I.phCreditCard,
+						t: `${tienda.cobros.cuotas} cuotas sin interés`,
+						d: 'Con todas las tarjetas'
+					}
+				]
+			: []),
 		...(tienda.cobros.transferencia > 0
 			? [{ i: I.phBank, t: `${tienda.cobros.transferencia}% off`, d: 'Pagando por transferencia' }]
 			: []),
@@ -305,7 +309,10 @@
 					{
 						id: 'mercadopago' as const,
 						t: 'Mercado Pago',
-						d: `Tarjetas en hasta ${tienda.cobros.cuotas} cuotas sin interés, dinero en cuenta`,
+						d:
+							tienda.cobros.cuotas > 1
+								? `Tarjetas en hasta ${tienda.cobros.cuotas} cuotas sin interés, dinero en cuenta`
+								: 'Tarjetas de crédito y débito, y dinero en cuenta',
 						i: I.siMercadopago,
 						c: '#00B1EA'
 					}
@@ -475,8 +482,13 @@
 			<span
 				>{tienda.envios.gratisDesde
 					? `Envío gratis desde ${fmt(tienda.envios.gratisDesde)}`
-					: `${tienda.cobros.cuotas} cuotas sin interés`}{#if tienda.cobros.transferencia > 0}
-					· {tienda.cobros.transferencia}% off por transferencia{/if}</span
+					: tienda.cobros.cuotas > 1
+						? `${tienda.cobros.cuotas} cuotas sin interés`
+						: tienda.cobros.transferencia > 0
+							? ''
+							: 'Compra protegida'}{#if tienda.cobros.transferencia > 0}{#if tienda.envios.gratisDesde || tienda.cobros.cuotas > 1}
+						·
+					{/if}{tienda.cobros.transferencia}% off por transferencia{/if}</span
 			>
 		</div>
 
@@ -1029,10 +1041,11 @@
 							>{#if tachado}<s style="font-size:14px;color:#BFA9A3">{fmt(tachado)}</s>{/if}
 						</div>
 						<div style="margin-top:6px;display:flex;flex-direction:column;gap:3px;font-size:14px">
-							<span
-								>{tienda.cobros.cuotas} cuotas sin interés de
-								<b>{fmt(sel.precio / tienda.cobros.cuotas)}</b></span
-							>{#if tienda.cobros.transferencia > 0}<span style="color:#9FD3A8;font-weight:600"
+							{#if tienda.cobros.cuotas > 1}<span
+									>{tienda.cobros.cuotas} cuotas sin interés de
+									<b>{fmt(sel.precio / tienda.cobros.cuotas)}</b></span
+								>{/if}{#if tienda.cobros.transferencia > 0}<span
+									style="color:#9FD3A8;font-weight:600"
 									>{fmt(sel.precio * (1 - tienda.cobros.transferencia / 100))} por transferencia ({tienda
 										.cobros.transferencia}% off)</span
 								>{/if}
@@ -1361,11 +1374,11 @@
 									>{fmt(subtotal)}</b
 								></span
 							>
-							<span style="color:#5A3A40"
-								>{tienda.cobros.cuotas} cuotas sin interés de {fmt(
-									subtotal / tienda.cobros.cuotas
-								)}</span
-							>
+							{#if tienda.cobros.cuotas > 1}<span style="color:#5A3A40"
+									>{tienda.cobros.cuotas} cuotas sin interés de {fmt(
+										subtotal / tienda.cobros.cuotas
+									)}</span
+								>{/if}
 							{#if tienda.cobros.transferencia > 0}
 								<span style="color:#2F7D4F;font-weight:600"
 									>{fmt(subtotal * (1 - tienda.cobros.transferencia / 100))} por transferencia</span
@@ -2184,8 +2197,10 @@
 						{tienda.nombre}
 					</div>
 					<p style="margin:10px 0 0;font-size:14px;color:#BFA9A3;line-height:1.55">
-						{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}
-							y {tienda.cobros.transferencia}% off por transferencia{/if}, en toda la&nbsp;tienda.
+						{#if tienda.cobros.cuotas > 1}{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}
+								y {tienda.cobros.transferencia}% off por transferencia{/if}, en toda la&nbsp;tienda.{:else if tienda.cobros.transferencia > 0}{tienda
+								.cobros.transferencia}% off por transferencia, en toda la&nbsp;tienda.{:else}Compra
+							protegida, con 10 días para&nbsp;arrepentirte.{/if}
 					</p>
 				</div>
 				{#each foot as f (f.t)}<div

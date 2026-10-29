@@ -32,7 +32,7 @@ func TestMailsAQuienCompra(t *testing.T) {
 		t.Fatal(err)
 	}
 	compra := vidriera.Compra{Email: "lucia@ejemplo.com", Nombre: "Lucía Pérez", Telefono: "11 5555-0101", CP: "1414",
-		Direccion: "Gorriti 4500", Envio: "andreani", Pago: "transferencia"}
+		Direccion: "Gorriti 4500", Envio: "correo", Pago: "transferencia"}
 	compra.Carrito = append(compra.Carrito, vidriera.LineaCarrito{ID: p.ID, Cantidad: 1})
 
 	// Sin datos de transferencia, la tienda no la ofrece.

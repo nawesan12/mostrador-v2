@@ -106,8 +106,12 @@
 			sub: out
 				? 'Sin stock por ahora'
 				: sale
-					? `Antes ${fmt(p.anterior!)} · ${tienda.cobros.cuotas} cuotas`
-					: `${tienda.cobros.cuotas} × ${fmt(t.precio / tienda.cobros.cuotas)} sin interés`,
+					? tienda.cobros.cuotas > 1
+						? `Antes ${fmt(p.anterior!)} · ${tienda.cobros.cuotas} cuotas`
+						: `Antes ${fmt(p.anterior!)}`
+					: tienda.cobros.cuotas > 1
+						? `${tienda.cobros.cuotas} × ${fmt(t.precio / tienda.cobros.cuotas)} sin interés`
+						: '',
 			href: `${base}/producto/${p.id}`
 		};
 	};
@@ -128,7 +132,7 @@
 	const cinta = $derived([
 		...(tienda.envios.gratisDesde ? [`Envío gratis desde ${fmt(tienda.envios.gratisDesde)}`] : []),
 		...(tienda.envios.moto ? ['Envío en moto en el día'] : []),
-		`${tienda.cobros.cuotas} cuotas sin interés`,
+		tienda.cobros.cuotas > 1 ? `${tienda.cobros.cuotas} cuotas sin interés` : 'Compra protegida',
 		...(tienda.cobros.transferencia > 0
 			? [`${tienda.cobros.transferencia}% off por transferencia`]
 			: []),
@@ -138,7 +142,9 @@
 		tienda.envios.moto
 			? { i: I.phMopedBold, t: 'Moto en el día', d: 'En CABA' }
 			: { i: I.phTruckBold, t: 'Envíos', d: 'A todo el país' },
-		{ i: I.phCreditCardBold, t: `${tienda.cobros.cuotas} cuotas`, d: 'Sin interés' },
+		...(tienda.cobros.cuotas > 1
+			? [{ i: I.phCreditCardBold, t: `${tienda.cobros.cuotas} cuotas`, d: 'Sin interés' }]
+			: []),
 		...(tienda.cobros.transferencia > 0
 			? [{ i: I.phBankBold, t: `${tienda.cobros.transferencia}% off`, d: 'Por transferencia' }]
 			: []),
@@ -305,7 +311,10 @@
 					{
 						id: 'mercadopago' as const,
 						t: 'Mercado Pago',
-						d: `Tarjetas en hasta ${tienda.cobros.cuotas} cuotas sin interés, dinero en cuenta`,
+						d:
+							tienda.cobros.cuotas > 1
+								? `Tarjetas en hasta ${tienda.cobros.cuotas} cuotas sin interés, dinero en cuenta`
+								: 'Tarjetas de crédito y débito, y dinero en cuenta',
 						i: I.siMercadopago
 					}
 				]
@@ -448,7 +457,7 @@
 						: '13.5px'};font-weight:700;text-transform:uppercase;letter-spacing:.02em;min-width:0"
 					>{p.n}</span
 				><b style="font-size:14.5px;white-space:nowrap;color:{p.pc}">{p.price}</b></span
-			>{#if sub}<span style="display:block;margin-top:8px;font-size:12px;color:#8A8A8A"
+			>{#if sub && p.sub}<span style="display:block;margin-top:8px;font-size:12px;color:#8A8A8A"
 					>{p.sub}</span
 				>{/if}</span
 		>
@@ -558,9 +567,12 @@
 						</h1>
 						<div>
 							<p style="margin:0;font-size:17px;line-height:1.5;color:#BDBDBD;max-width:420px">
-								{tienda.nombre}{tienda.ciudad ? `, desde ${tienda.ciudad}` : ''}. {tienda.cobros
-									.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}
-									o {tienda.cobros.transferencia}% off pagando por&nbsp;transferencia{/if}.
+								{tienda.nombre}{tienda.ciudad
+									? `, desde ${tienda.ciudad}`
+									: ''}.{#if tienda.cobros.cuotas > 1}
+									{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}
+										o {tienda.cobros.transferencia}% off pagando por&nbsp;transferencia{/if}.{:else if tienda.cobros.transferencia > 0}
+									{tienda.cobros.transferencia}% off pagando por&nbsp;transferencia.{/if}
 							</p>
 							<div style="margin-top:22px;display:flex;gap:0;flex-wrap:wrap">
 								<a
@@ -900,13 +912,17 @@
 							>{sel.desde ? 'Desde ' : ''}{fmt(sel.precio)}</b
 						>{#if tachado}<s style="font-size:17px;color:#8A8A8A">{fmt(tachado)}</s>{/if}
 					</div>
-					<div style="margin-top:6px;font-size:14px;color:#BDBDBD">
-						{tienda.cobros.cuotas} × {fmt(sel.precio / tienda.cobros.cuotas)} sin interés{#if tienda.cobros.transferencia > 0}
-							·
-							<b style="color:#B9F27C"
-								>{fmt(sel.precio * (1 - tienda.cobros.transferencia / 100))} por&nbsp;transferencia</b
-							>{/if}
-					</div>
+					{#if tienda.cobros.cuotas > 1 || tienda.cobros.transferencia > 0}<div
+							style="margin-top:6px;font-size:14px;color:#BDBDBD"
+						>
+							{#if tienda.cobros.cuotas > 1}{tienda.cobros.cuotas} × {fmt(
+									sel.precio / tienda.cobros.cuotas
+								)} sin interés{/if}{#if tienda.cobros.transferencia > 0}
+								{#if tienda.cobros.cuotas > 1}·{/if}
+								<b style="color:#B9F27C"
+									>{fmt(sel.precio * (1 - tienda.cobros.transferencia / 100))} por&nbsp;transferencia</b
+								>{/if}
+						</div>{/if}
 					{#each sel.opciones as o (o.nombre)}{@const swatch = o.valores.every(
 							(x) => x.color || x.foto
 						)}
@@ -1171,9 +1187,9 @@
 								>{fmt(subtotal)}</b
 							></span
 						>
-						<span style="color:#BDBDBD"
-							>{tienda.cobros.cuotas} × {fmt(subtotal / tienda.cobros.cuotas)} sin interés</span
-						>
+						{#if tienda.cobros.cuotas > 1}<span style="color:#BDBDBD"
+								>{tienda.cobros.cuotas} × {fmt(subtotal / tienda.cobros.cuotas)} sin interés</span
+							>{/if}
 						{#if tienda.cobros.transferencia > 0}<span style="color:#B9F27C;font-weight:700"
 								>{fmt(subtotal * (1 - tienda.cobros.transferencia / 100))} por transferencia</span
 							>{/if}
@@ -2031,12 +2047,11 @@
 					</p>
 				</div>
 				<div
-					style="display:grid;grid-template-columns:repeat({tienda.promedio ||
-					tienda.cobros.transferencia > 0
-						? 3
-						: 2},minmax(0,1fr))"
+					style="display:grid;grid-template-columns:repeat({1 +
+						(tienda.cobros.cuotas > 1 ? 1 : 0) +
+						(tienda.promedio || tienda.cobros.transferencia > 0 ? 1 : 0)},minmax(0,1fr))"
 				>
-					{#each [{ v: String(tienda.productos.length), t: 'Productos' }, { v: String(tienda.cobros.cuotas), t: 'Cuotas sin interés' }, ...(tienda.promedio ? [{ v: tienda.promedio.toLocaleString('es-AR'), t: 'En reseñas' }] : tienda.cobros.transferencia > 0 ? [{ v: `${tienda.cobros.transferencia}%`, t: 'Off por transferencia' }] : [])] as s (s.t)}<div
+					{#each [{ v: String(tienda.productos.length), t: 'Productos' }, ...(tienda.cobros.cuotas > 1 ? [{ v: String(tienda.cobros.cuotas), t: 'Cuotas sin interés' }] : []), ...(tienda.promedio ? [{ v: tienda.promedio.toLocaleString('es-AR'), t: 'En reseñas' }] : tienda.cobros.transferencia > 0 ? [{ v: `${tienda.cobros.transferencia}%`, t: 'Off por transferencia' }] : [])] as s (s.t)}<div
 							style="padding:clamp(18px,2.6cqw,32px);border-right:2px solid #2A2A2A;display:flex;flex-direction:column;justify-content:flex-end;min-width:0"
 						>
 							<div

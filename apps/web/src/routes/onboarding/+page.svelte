@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import Marca from '#lib/landing/Marca.svelte';
 	import { onMount, tick } from 'svelte';
 	import { enhance } from '$app/forms';
@@ -35,6 +36,12 @@
 	onMount(() => {
 		o.demo = data.demo;
 		o.cargar();
+		// Desde /migrar: la plataforma (?desde=) y el link (?origen=) ya elegidos para el paso 4.
+		const desde = page.url.searchParams.get('desde');
+		if (!data.demo && (desde === 'tiendanube' || desde === 'shopify' || desde === 'woocommerce')) {
+			o.e.importar = { plataforma: desde, url: page.url.searchParams.get('origen') ?? '' };
+			o.guardar();
+		}
 		// Con la API, sin sesión no se puede pasar del paso 1; al volver del registro, ?paso= manda.
 		if (data.paso !== null) o.ir(data.paso);
 		else if (!data.demo && !data.conSesion) o.ir(0);

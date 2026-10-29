@@ -13,109 +13,114 @@
 	 * Migrar (design/Mostrador Migrar.dc.html), con la pestaña de cada plataforma (?desde=). El campo y
 	 * "Empezar" llevan al onboarding con el origen (?desde=, ?origen=); la importación la hace ese flujo.
 	 */
+	// Lo que trae cada plataforma, según lo que hoy hace el importador (sin prometer de más).
 	const ORIGENES = [
 		{
 			id: 'tiendanube',
 			tab: 'Desde Tiendanube',
 			ico: I.phCloudArrowDownFill,
-			t: 'Conectás tu tienda con un clic',
-			d: 'Pegás el link de tu tienda y autorizás el acceso. Traemos todo por la API oficial, sin que tengas que exportar nada.',
-			campo: 'tutienda.mitiendanube.com',
-			rotulo: 'Link de tu tienda en Tiendanube',
+			t: 'Conectás tu tienda y la traemos',
+			d: 'Autorizás el acceso desde Tiendanube y traemos todo por su API oficial, sin exportar nada.',
+			campo: null,
+			rotulo: '',
 			trae: [
-				'Productos, variantes, fotos y stock',
-				'Categorías y colecciones',
-				'Clientes y su historial de compras',
-				'Pedidos de los últimos 24 meses',
-				'Cupones y promociones activas',
-				'Páginas, políticas y redirecciones 301'
+				'Productos con variantes y todas sus fotos',
+				'Categorías',
+				'Clientes',
+				'Pedidos anteriores, en un historial aparte',
+				'Tus links viejos, redirigidos a los nuevos'
 			]
 		},
 		{
-			id: 'empretienda',
-			tab: 'Desde Empretienda',
+			id: 'shopify',
+			tab: 'Desde Shopify',
 			ico: I.phLinkBold,
 			t: 'Pegás el link de tu tienda',
-			d: 'Traemos el catálogo directo de tu tienda de Empretienda: productos, fotos, precios y categorías. Los clientes y pedidos los sumás con el Excel que bajás de tu panel.',
-			campo: 'tutienda.empretienda.com.ar',
-			rotulo: 'Link de tu tienda en Empretienda',
+			d: 'Leemos tu catálogo público, sin claves ni exportar nada.',
+			campo: 'mitienda.myshopify.com',
+			rotulo: 'Link de tu tienda en Shopify',
 			trae: [
-				'Productos, variantes y stock',
-				'Fotos (las descargamos de tu tienda)',
-				'Clientes y datos de contacto',
+				'Productos con variantes, fotos y precios',
 				'Categorías',
-				'Textos de páginas y políticas',
-				'Redirecciones 301 de tus links viejos'
+				'Tus links viejos, redirigidos a los nuevos',
+				'El stock no lo publica Shopify: lo revisás después'
+			]
+		},
+		{
+			id: 'woocommerce',
+			tab: 'Desde WooCommerce',
+			ico: I.phLinkBold,
+			t: 'Pegás el link de tu tienda',
+			d: 'Leemos tu catálogo público, sin claves ni plugins.',
+			campo: 'mitienda.com.ar',
+			rotulo: 'Link de tu tienda en WooCommerce',
+			trae: [
+				'Productos con variantes, fotos y precios',
+				'Categorías',
+				'Tus links viejos, redirigidos a los nuevos'
 			]
 		},
 		{
 			id: 'mercadolibre',
 			tab: 'Desde Mercado Libre',
 			ico: I.phStorefrontFill,
-			t: 'Traemos tus publicaciones de Mercado Libre',
-			d: 'Conectás tu cuenta de Mercado Libre y armamos la tienda con tus publicaciones. El stock queda sincronizado en los dos lados.',
-			campo: 'Tu usuario de Mercado Libre',
-			rotulo: 'Usuario de Mercado Libre',
+			t: 'Conectás tu cuenta de Mercado Libre',
+			d: 'Publicás tus productos en Mercado Libre desde el panel. Traer tus publicaciones de hoy llega pronto.',
+			campo: null,
+			rotulo: '',
 			trae: [
-				'Publicaciones con fotos y variantes',
-				'Stock sincronizado en tiempo real',
-				'Preguntas frecuentes de tus productos',
-				'Reputación y reseñas como prueba social',
-				'Precios con y sin comisión de Mercado Libre',
-				'Pedidos de Mercado Libre en el mismo panel'
+				'Tus productos publicados en Mercado Libre desde el panel',
+				'Precio y stock desde un solo lugar'
 			]
+		},
+		{
+			id: 'empretienda',
+			tab: 'Desde Empretienda',
+			ico: I.phHeadsetFill,
+			t: 'Te la mudamos nosotros',
+			d: 'Empretienda no deja leer las tiendas desde nuestros servidores. Escribinos y la mudamos con vos.',
+			campo: null,
+			rotulo: '',
+			trae: ['Productos con fotos y precios', 'Categorías']
 		}
 	] as const;
+	/** Las que se importan solas desde el onboarding (con ?desde= y ?origen=). */
+	const SOLAS = ['tiendanube', 'shopify', 'woocommerce'];
 	const PASOS = [
-		['Conectás o subís tus datos', '5 minutos'],
-		['Revisás la tienda nueva', 'Con tu misma estructura y diseño parecido'],
-		['Cambiamos el dominio', 'Sin cortes y con redirecciones 301'],
-		['Vendés desde Tu Local Web', 'Tu equipo te acompaña la primera semana']
+		['Conectás o pegás el link', 'En dos minutos'],
+		['Revisás lo importado', 'Precios, stock y fotos, antes de vender'],
+		['Elegís plantilla y cobros', 'Mercado Pago, transferencia y envíos'],
+		['Vendés desde Tu Local Web', 'Y apuntás tu dominio cuando quieras']
 	] as const;
 	const VENTAJAS = [
+		[I.phGiftFill, '14 días gratis', 'Probás todo sin tarjeta antes de elegir un plan.'],
 		[
-			I.phGiftFill,
-			'Primer mes gratis',
-			'Si venís de otra plataforma, el primer mes del plan que elijas no se paga.'
-		],
-		[
-			I.phHeadsetFill,
-			'Una persona te acompaña',
-			'Te asignamos alguien del equipo que revisa la migración con vos por videollamada.'
+			I.phCloudArrowDownFill,
+			'Importar no se cobra',
+			'Traer tu tienda es gratis, en cualquier plan.'
 		],
 		[
 			I.phChartLineUpFill,
-			'Tu SEO intacto',
-			'Redireccionamos cada link viejo al nuevo para que Google no te baje posiciones.'
-		]
-	] as const;
-	const TESTIMONIOS = [
-		[
-			'1562322140-8baeececf3df',
-			'Pasé 1.200 productos con variantes desde Tiendanube y no tuve que tocar nada. Ahora pago la mitad.',
-			'Florencia Paz',
-			'Mate & Co · Posadas'
-		],
-		[
-			'1520333789090-1afc82db536a',
-			'Vendíamos sólo en Mercado Libre y ahora tenemos tienda propia con el mismo stock, desde un solo panel.',
-			'Tomás Acosta',
-			'Sonido Sur · CABA'
+			'Tus links viejos siguen andando',
+			'Cuando apuntás tu dominio a Tu Local Web, cada link viejo de producto lleva al nuevo.'
 		]
 	] as const;
 	const FAQ = [
 		[
 			'¿Tengo que cerrar mi tienda vieja?',
-			'No hasta que estés conforme. Las dos conviven mientras revisás todo y recién cambiamos el dominio cuando nos das el ok.'
+			'No. Las dos conviven mientras revisás todo; cuando estés conforme, apuntás tu dominio a Tu Local Web.'
 		],
 		[
-			'¿Pierdo mis reseñas o mi posicionamiento?',
-			'Traemos las reseñas de productos y creamos redirecciones 301 de cada URL vieja, así Google entiende que es la misma tienda.'
+			'¿Pierdo mi posicionamiento en Google?',
+			'Cada producto importado guarda su dirección vieja: cuando tu dominio apunta a Tu Local Web, esa dirección lleva al producto nuevo con una redirección 301.'
 		],
-		['¿Cuánto cuesta migrar?', 'Nada. La migración es gratis y el primer mes del plan también.'],
 		[
-			'¿Y si tengo más de 10.000 productos?',
-			'Lo hacemos en tandas durante la noche para no afectar tus ventas. Escribinos y lo coordinamos.'
+			'¿Cuánto cuesta migrar?',
+			'Nada: importar tu tienda es gratis y tenés 14 días para probar sin tarjeta.'
+		],
+		[
+			'¿Y si tengo muchos productos?',
+			'Se importan en tandas, sin que tengas que dejar la pantalla abierta. Si son más de 10.000, escribinos.'
 		]
 	] as const;
 
@@ -142,7 +147,7 @@
 
 <Seo
 	title="Migrar a Tu Local Web · Tu Local Web"
-	description="Te mudamos gratis desde Tiendanube, Empretienda o Mercado Libre: productos, clientes, pedidos y tu posicionamiento en Google."
+	description="Traé tu tienda gratis desde Tiendanube, Shopify o WooCommerce: productos con fotos y variantes, y desde Tiendanube también clientes y pedidos."
 	path="/migrar"
 	image="migrar"
 />
@@ -153,10 +158,10 @@
 			<div class="cab">
 				<div class="cab-txt">
 					<Etiqueta texto="Migración gratis" />
-					<h1>Mudate a Tu Local Web en un día.</h1>
+					<h1>Mudate a Tu Local Web.</h1>
 					<p>
-						Traemos tus productos, clientes y pedidos, y cuidamos tu posicionamiento en Google. No
-						perdés ni una venta en el camino.
+						Traemos tus productos con fotos y variantes, y desde Tiendanube también tus clientes y
+						pedidos. Tus links viejos siguen llevando a tus productos.
 					</p>
 				</div>
 				<img src="/hornero/caja.webp" alt="" width="260" height="260" />
@@ -173,16 +178,24 @@
 					<span class="c-ico"><Icon icon={o.ico} size={26} style="color:#F0A58A" /></span>
 					<div class="c-t">{o.t}</div>
 					<p>{o.d}</p>
-					<form action="/onboarding" method="GET">
-						<input type="hidden" name="desde" value={o.id} />
-						{#if o.id === 'empretienda'}
-							<!-- El archivo se sube en el paso de importación del onboarding. -->
-							<span class="falso">{o.campo}</span>
-						{:else}
-							<input name="origen" placeholder={o.campo} aria-label={o.rotulo} autocomplete="off" />
-						{/if}
-						<button type="submit">Empezar</button>
-					</form>
+					{#if SOLAS.includes(o.id)}
+						<form action="/onboarding" method="GET">
+							<input type="hidden" name="desde" value={o.id} />
+							{#if o.campo}
+								<input
+									name="origen"
+									placeholder={o.campo}
+									aria-label={o.rotulo}
+									autocomplete="off"
+								/>
+							{/if}
+							<button type="submit">Empezar</button>
+						</form>
+					{:else}
+						<form action={o.id === 'empretienda' ? '/contacto' : '/onboarding'} method="GET">
+							<button type="submit">{o.id === 'empretienda' ? 'Escribinos' : 'Empezar'}</button>
+						</form>
+					{/if}
 				</div>
 				<div class="trae">
 					<div class="tr-t">Lo que traemos</div>
@@ -232,26 +245,6 @@
 <section class="bloque beige">
 	<div class="ancho">
 		<div class="dos">
-			<div>
-				<Titulo etiqueta="Quienes ya se mudaron" titulo="“En una tarde estaba vendiendo.”" />
-				<div class="testimonios">
-					{#each TESTIMONIOS as [img, q, n, neg] (n)}
-						<div class="testimonio">
-							<img
-								src="https://images.unsplash.com/photo-{img}?auto=format&fit=crop&w=96&h=96&q=72&crop=faces"
-								alt=""
-								width="48"
-								height="48"
-								loading="lazy"
-							/>
-							<div>
-								<p>“{q}”</p>
-								<div class="quien"><b>{n}</b> · {neg}</div>
-							</div>
-						</div>
-					{/each}
-				</div>
-			</div>
 			<div>
 				<Etiqueta texto="Preguntas" />
 				<div class="faq"><Faq items={FAQ} /></div>
@@ -370,8 +363,7 @@
 		border-radius: 999px;
 		background: #fff;
 	}
-	form input,
-	.falso {
+	form input {
 		flex: 1;
 		min-width: 0;
 		padding: 10px 14px;
@@ -381,12 +373,6 @@
 		font-weight: 500;
 		color: #2a140c;
 		outline: none;
-	}
-	.falso {
-		color: var(--marron-2);
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
 	}
 	form button {
 		padding: 11px 18px;
@@ -488,38 +474,6 @@
 		grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
 		gap: clamp(20px, 4vw, 48px);
 		align-items: start;
-	}
-	.testimonios {
-		margin-top: 22px;
-		display: flex;
-		flex-direction: column;
-		gap: 12px;
-	}
-	.testimonio {
-		display: flex;
-		gap: 14px;
-		padding: 18px;
-		border-radius: 24px;
-		background: #fff;
-		box-shadow: 0 1px 2px rgba(58, 29, 18, 0.06);
-	}
-	.testimonio img {
-		border-radius: 50%;
-		object-fit: cover;
-		flex: none;
-	}
-	.testimonio p {
-		margin: 0;
-		font-size: 15.5px;
-		line-height: 1.5;
-	}
-	.quien {
-		margin-top: 8px;
-		font-size: 13px;
-		color: #7a6252;
-	}
-	.quien b {
-		color: #2a140c;
 	}
 	.faq {
 		margin-top: 14px;

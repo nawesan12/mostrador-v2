@@ -126,10 +126,12 @@ type Envios struct {
 	Correo      bool   `json:"correo"`
 }
 
-// Cobros por defecto hasta que la tienda los configure.
+// Cobros por defecto hasta que la tienda los configure. Cuotas sin interés: ninguna (0), porque
+// las absorbe la tienda y no se le promete al que compra lo que la tienda no eligió; las plantillas
+// no las muestran con menos de 2.
 const (
 	transferencia = 15
-	cuotas        = 6
+	cuotas        = 0
 )
 
 var slugValido = regexp.MustCompile(`^[a-z0-9-]{2,60}$`)

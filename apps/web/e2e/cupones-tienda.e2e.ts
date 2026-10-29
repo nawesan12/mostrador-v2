@@ -7,13 +7,14 @@ test('tienda: un cupón se valida, descuenta y suma un uso en el panel', async (
 	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
 	await page.goto('/demo');
 	await listo(page);
-	await page.getByRole('button', { name: /^Ceibo/ }).click();
+	await page.getByRole('button', { name: /^Litoral/ }).click();
 	await expect(page).toHaveURL(/\/panel$/);
 	const slug = (await page.locator('.t-d').first().textContent())!.split('/t/')[1].trim();
 
 	await page.goto(`/t/${slug}/catalogo`);
 	await listo(page);
-	await page.locator('a[href*="/producto/"]').first().click();
+	await page.goto(`/t/${slug}/producto/bombilla-alpaca`);
+	await listo(page);
 	await listo(page);
 	await page.getByRole('button', { name: 'Agregar al carrito' }).click();
 	await expect(page).toHaveURL(/\/carrito$/);
@@ -25,7 +26,7 @@ test('tienda: un cupón se valida, descuenta y suma un uso en el panel', async (
 	await page.getByLabel('Teléfono').fill('11 5555-0101');
 	await page.getByLabel('Código postal').fill('1414');
 	await page.getByLabel(/Dirección/).fill('Gorriti 4500');
-	await page.getByRole('radio', { name: /Andreani/ }).click();
+	await page.getByRole('radio', { name: /Correo Argentino/ }).click();
 	await page.getByRole('radio', { name: /Mercado Pago/ }).click();
 	const total = page.locator('b', { hasText: /^\$/ }).last();
 	const antes = pesos((await total.textContent())!);
@@ -58,14 +59,15 @@ test('tienda: el link de un cupón lo deja aplicado en el checkout', async ({ pa
 	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
 	await page.goto('/demo');
 	await listo(page);
-	await page.getByRole('button', { name: /^Ceibo/ }).click();
+	await page.getByRole('button', { name: /^Litoral/ }).click();
 	await expect(page).toHaveURL(/\/panel$/);
 	const slug = (await page.locator('.t-d').first().textContent())!.split('/t/')[1].trim();
 
 	await page.goto(`/t/${slug}/c/finde10`);
 	await expect(page).toHaveURL(new RegExp(`/t/${slug}/catalogo$`));
 	await listo(page);
-	await page.locator('a[href*="/producto/"]').first().click();
+	await page.goto(`/t/${slug}/producto/bombilla-alpaca`);
+	await listo(page);
 	await listo(page);
 	await page.getByRole('button', { name: 'Agregar al carrito' }).click();
 	await page.getByRole('link', { name: 'Finalizar compra' }).click();

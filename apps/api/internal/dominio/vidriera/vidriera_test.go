@@ -25,7 +25,7 @@ func (m *mpFalso) PagarPedido(_ context.Context, _ string, numero int, vuelta st
 
 func compra(id string, cantidad int, pago string) vidriera.Compra {
 	c := vidriera.Compra{Email: "lucia@ejemplo.com", Nombre: "Lucía Pérez", Telefono: "11 5555-0101", CP: "1414",
-		Direccion: "Gorriti 4500", Envio: "andreani", Pago: pago}
+		Direccion: "Gorriti 4500", Envio: "correo", Pago: pago}
 	c.Carrito = append(c.Carrito, vidriera.LineaCarrito{ID: id, Cantidad: cantidad})
 	return c
 }
@@ -60,7 +60,7 @@ func TestTiendaOnline(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := int64(20000 + 6900 - 3000); r.Total != want || r.URL != "" || len(r.Codigo) < 16 {
+	if want := int64(20000 + 5500 - 3000); r.Total != want || r.URL != "" || len(r.Codigo) < 16 {
 		t.Fatalf("resultado: %+v (quería total %d)", r, want)
 	}
 	c, err := vidriera.VerPedido(ctx, b.App, "luna", r.Codigo)
@@ -150,7 +150,7 @@ func TestCompraConCupon(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := int64(20000 + 6900 - 2000); r.Total != want {
+	if want := int64(20000 + 5500 - 2000); r.Total != want {
 		t.Fatalf("total con cupón: %d, quería %d", r.Total, want)
 	}
 	// Una vez por cliente: el mismo email ya no puede.

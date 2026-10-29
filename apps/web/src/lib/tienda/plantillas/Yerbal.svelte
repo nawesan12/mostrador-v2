@@ -379,7 +379,10 @@
 					{
 						id: 'mercadopago' as const,
 						t: 'Mercado Pago',
-						d: `Tarjetas en hasta ${tienda.cobros.cuotas} cuotas sin interés, dinero en cuenta`,
+						d:
+							tienda.cobros.cuotas > 1
+								? `Tarjetas en hasta ${tienda.cobros.cuotas} cuotas sin interés, dinero en cuenta`
+								: 'Tarjetas de crédito y débito, y dinero en cuenta',
 						i: I.siMercadopago,
 						c: '#00B1EA'
 					}
@@ -557,7 +560,9 @@
 			<Icon icon={I.phTruckBold} size={15} /><span
 				>{tienda.envios.gratisDesde
 					? `Envío gratis desde ${fmt(tienda.envios.gratisDesde)}`
-					: `${tienda.cobros.cuotas} cuotas sin interés`}</span
+					: tienda.cobros.cuotas > 1
+						? `${tienda.cobros.cuotas} cuotas sin interés`
+						: 'Compra protegida'}</span
 			>{#if wide && tienda.cobros.transferencia > 0}<span style="opacity:.6">·</span><span
 					>{tienda.cobros.transferencia}% off pagando por transferencia</span
 				>{/if}
@@ -736,9 +741,11 @@
 									<b style="font-size:17px;letter-spacing:-.02em"
 										>{tienda.cobros.transferencia}% off por transferencia</b
 									>
-									<div style="font-size:13.5px;color:#56645A;margin-top:2px">
-										O hasta {tienda.cobros.cuotas} cuotas sin interés con&nbsp;tarjeta
-									</div>
+									{#if tienda.cobros.cuotas > 1}<div
+											style="font-size:13.5px;color:#56645A;margin-top:2px"
+										>
+											O hasta {tienda.cobros.cuotas} cuotas sin interés con&nbsp;tarjeta
+										</div>{/if}
 								</div>
 								<a
 									href="{base}/catalogo"
@@ -1289,14 +1296,17 @@
 									>{sel.desde ? 'Desde ' : ''}{fmt(sel.precio)}</b
 								>{#if tachado}<s style="color:#8A968C">{fmt(tachado)}</s>{/if}
 							</div>
-							<div style="margin-top:4px;font-size:13.5px">
-								{tienda.cobros.cuotas} cuotas sin interés de {fmt(
-									sel.precio / tienda.cobros.cuotas
-								)}{#if tienda.cobros.transferencia > 0}
-									· <b style="color:#2F5D50"
-										>{fmt(sel.precio * (1 - tienda.cobros.transferencia / 100))} por transferencia</b
-									>{/if}
-							</div>
+							{#if tienda.cobros.cuotas > 1 || tienda.cobros.transferencia > 0}<div
+									style="margin-top:4px;font-size:13.5px"
+								>
+									{#if tienda.cobros.cuotas > 1}{tienda.cobros.cuotas} cuotas sin interés de {fmt(
+											sel.precio / tienda.cobros.cuotas
+										)}{/if}{#if tienda.cobros.transferencia > 0}{#if tienda.cobros.cuotas > 1}
+											·
+										{/if}<b style="color:#2F5D50"
+											>{fmt(sel.precio * (1 - tienda.cobros.transferencia / 100))} por transferencia</b
+										>{/if}
+								</div>{/if}
 							{#if sel.stock > 0 && sel.stock <= 3 && (!sel.conOpciones || sel.variante)}<div
 									style="margin-top:8px;font-size:13px;font-weight:700;color:#C2412D"
 								>
@@ -1582,11 +1592,11 @@
 						<span style="display:flex;justify-content:space-between;align-items:baseline"
 							><b>Total</b><b style="font-size:26px;letter-spacing:-.02em">{fmt(subtotal)}</b></span
 						>
-						<span style="font-size:13px;color:#56645A"
-							>{tienda.cobros.cuotas} cuotas sin interés de {fmt(
-								subtotal / tienda.cobros.cuotas
-							)}</span
-						>
+						{#if tienda.cobros.cuotas > 1}<span style="font-size:13px;color:#56645A"
+								>{tienda.cobros.cuotas} cuotas sin interés de {fmt(
+									subtotal / tienda.cobros.cuotas
+								)}</span
+							>{/if}
 						{#if tienda.cobros.transferencia > 0}<span
 								style="font-size:13.5px;color:#2F5D50;font-weight:700"
 								>{fmt(subtotal * (1 - tienda.cobros.transferencia / 100))} pagando por transferencia</span
@@ -2351,10 +2361,10 @@
 						>{tienda.categorias.length}</b
 					><span style="font-size:13.5px;color:#56645A">categorías</span>
 				</div>
-				<div style="padding:18px;border-radius:14px;background:#fff">
-					<b style="display:block;font-size:34px;letter-spacing:-.04em">{tienda.cobros.cuotas}</b
-					><span style="font-size:13.5px;color:#56645A">cuotas sin interés</span>
-				</div>
+				{#if tienda.cobros.cuotas > 1}<div style="padding:18px;border-radius:14px;background:#fff">
+						<b style="display:block;font-size:34px;letter-spacing:-.04em">{tienda.cobros.cuotas}</b
+						><span style="font-size:13.5px;color:#56645A">cuotas sin interés</span>
+					</div>{/if}
 				{#if tienda.promedio}<div style="padding:18px;border-radius:14px;background:#fff">
 						<b style="display:block;font-size:34px;letter-spacing:-.04em"
 							>{tienda.promedio.toLocaleString('es-AR')}</b
@@ -2406,8 +2416,10 @@
 				<div style="min-width:0">
 					<div style="font-weight:800;font-size:24px;letter-spacing:-.03em">{tienda.nombre}</div>
 					<p style="margin:8px 0 0;font-size:13.5px;color:#B9C6BB;line-height:1.5">
-						{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}
-							y {tienda.cobros.transferencia}% off por transferencia{/if}, en toda la&nbsp;tienda.
+						{#if tienda.cobros.cuotas > 1}{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}
+								y {tienda.cobros.transferencia}% off por transferencia{/if}, en toda la&nbsp;tienda.{:else if tienda.cobros.transferencia > 0}{tienda
+								.cobros.transferencia}% off por transferencia, en toda la&nbsp;tienda.{:else}Compra
+							protegida, con 10 días para&nbsp;arrepentirte.{/if}
 					</p>
 				</div>
 				{#each foot as f (f.t)}<div

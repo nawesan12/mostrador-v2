@@ -104,7 +104,7 @@ test('medición: IDs en Integraciones, sin consentimiento no carga nada y con é
 	await expect.poll(() => pedidos.gtag).toBe(1);
 	await expect.poll(() => pedidos.fbevents).toBe(1);
 
-	await page.locator('a[href*="/producto/"]').first().click();
+	await page.goto(`/t/${slug}/producto/bombilla-alpaca`);
 	await listo(page);
 	await page.getByRole('button', { name: 'Agregar al carrito' }).click();
 	await expect(page).toHaveURL(/\/carrito$/);
@@ -114,7 +114,7 @@ test('medición: IDs en Integraciones, sin consentimiento no carga nada y con é
 	await page.getByLabel('Teléfono').fill('11 5555-0101');
 	await page.getByLabel('Código postal').fill('1414');
 	await page.getByLabel(/Dirección/).fill('Gorriti 4500');
-	await page.getByRole('radio', { name: /Andreani/ }).click();
+	await page.getByRole('radio', { name: /Correo Argentino/ }).click();
 	await page.getByRole('radio', { name: /Transferencia/ }).click();
 	await page.getByRole('button', { name: /^Pagar/ }).click();
 	await expect(page.getByRole('heading', { name: '¡Gracias, Lucía!' })).toBeVisible();
@@ -191,5 +191,7 @@ test('feed de productos: XML válido con los productos publicados', async ({ pag
 	}
 	// Los productos del feed son los de la tienda online.
 	await page.goto(`/t/${slug}/producto/${f.items[0].id}`);
-	await expect(page.getByRole('button', { name: /Agregar al carrito|Sin stock/ })).toBeVisible();
+	await expect(
+		page.getByRole('button', { name: /Agregar al carrito|Sin stock|^Elegí/ })
+	).toBeVisible();
 });

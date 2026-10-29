@@ -136,17 +136,21 @@
 			bbg: '#2A1C12',
 			bfg: '#F4EADB'
 		},
-		{
-			k: 'Cuotas',
-			t: `${tienda.cobros.cuotas} cuotas sin interés`,
-			d: tienda.cobros.mercadoPago
-				? 'Con tarjeta, a través de Mercado Pago.'
-				: 'En toda la tienda.',
-			bg: '#fff',
-			fg: '#2A1C12',
-			bbg: '#D9452B',
-			bfg: '#F4EADB'
-		},
+		...(tienda.cobros.cuotas > 1
+			? [
+					{
+						k: 'Cuotas',
+						t: `${tienda.cobros.cuotas} cuotas sin interés`,
+						d: tienda.cobros.mercadoPago
+							? 'Con tarjeta, a través de Mercado Pago.'
+							: 'En toda la tienda.',
+						bg: '#fff',
+						fg: '#2A1C12',
+						bbg: '#D9452B',
+						bfg: '#F4EADB'
+					}
+				]
+			: []),
 		...(tienda.cobros.transferencia > 0
 			? [
 					{
@@ -336,7 +340,10 @@
 					{
 						id: 'mercadopago' as const,
 						t: 'Mercado Pago',
-						d: `Dinero en cuenta, débito o crédito en hasta ${tienda.cobros.cuotas} cuotas sin interés`,
+						d:
+							tienda.cobros.cuotas > 1
+								? `Dinero en cuenta, débito o crédito en hasta ${tienda.cobros.cuotas} cuotas sin interés`
+								: 'Dinero en cuenta, débito o crédito',
 						i: I.siMercadopago,
 						c: '#00B1EA'
 					}
@@ -466,7 +473,9 @@
 			<span style="display:flex;align-items:center;gap:7px"
 				>{tienda.envios.gratisDesde
 					? `Envío gratis desde ${fmt(tienda.envios.gratisDesde)}`
-					: `${tienda.cobros.cuotas} cuotas sin interés`}</span
+					: tienda.cobros.cuotas > 1
+						? `${tienda.cobros.cuotas} cuotas sin interés`
+						: 'Compra protegida'}</span
 			>{#if wide && tienda.cobros.transferencia > 0}<span
 					style="display:flex;gap:4px;padding:2px 7px;border-radius:6px;background:rgba(251,241,230,.14)"
 					>{tienda.cobros.transferencia}% off por transferencia</span
@@ -915,9 +924,9 @@
 							{fmt(sel.precio * (1 - tienda.cobros.transferencia / 100))} por transferencia
 						</div>
 					{/if}
-					<div style="margin-top:2px;font-size:13.5px;color:#7A5F4C">
-						{tienda.cobros.cuotas} cuotas sin interés de {fmt(sel.precio / tienda.cobros.cuotas)}
-					</div>
+					{#if tienda.cobros.cuotas > 1}<div style="margin-top:2px;font-size:13.5px;color:#7A5F4C">
+							{tienda.cobros.cuotas} cuotas sin interés de {fmt(sel.precio / tienda.cobros.cuotas)}
+						</div>{/if}
 					{#each sel.opciones as o (o.nombre)}{@const swatch = o.valores.every(
 							(x) => x.color || x.foto
 						)}
@@ -1259,11 +1268,11 @@
 									>{fmt(subtotal * (1 - tienda.cobros.transferencia / 100))} pagando por transferencia</span
 								>
 							{/if}
-							<span style="font-size:13px;color:#7A5F4C"
-								>{tienda.cobros.cuotas} cuotas sin interés de {fmt(
-									subtotal / tienda.cobros.cuotas
-								)}</span
-							>
+							{#if tienda.cobros.cuotas > 1}<span style="font-size:13px;color:#7A5F4C"
+									>{tienda.cobros.cuotas} cuotas sin interés de {fmt(
+										subtotal / tienda.cobros.cuotas
+									)}</span
+								>{/if}
 							<a
 								href="{base}/checkout"
 								style="margin-top:4px;padding:16px;border-radius:999px;background:#D9452B;color:#F4EADB;font:700 15px 'Instrument Sans';text-align:center;text-decoration:none"
@@ -2026,14 +2035,16 @@
 							</div>
 							<div style="font-size:12.5px;color:#7A5F4C;margin-top:2px">productos</div>
 						</div>
-						<div style="padding:14px;border-radius:20px;background:#fff">
-							<div
-								style="font-family:'Schibsted Grotesk',sans-serif;font-weight:800;letter-spacing:-.03em;font-size:clamp(24px,2.8cqw,34px)"
+						{#if tienda.cobros.cuotas > 1}<div
+								style="padding:14px;border-radius:20px;background:#fff"
 							>
-								{tienda.cobros.cuotas}
-							</div>
-							<div style="font-size:12.5px;color:#7A5F4C;margin-top:2px">cuotas sin interés</div>
-						</div>
+								<div
+									style="font-family:'Schibsted Grotesk',sans-serif;font-weight:800;letter-spacing:-.03em;font-size:clamp(24px,2.8cqw,34px)"
+								>
+									{tienda.cobros.cuotas}
+								</div>
+								<div style="font-size:12.5px;color:#7A5F4C;margin-top:2px">cuotas sin interés</div>
+							</div>{/if}
 						{#if tienda.promedio}<div style="padding:14px;border-radius:20px;background:#fff">
 								<div
 									style="font-family:'Schibsted Grotesk',sans-serif;font-weight:800;letter-spacing:-.03em;font-size:clamp(24px,2.8cqw,34px)"
