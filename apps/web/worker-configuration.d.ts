@@ -6,7 +6,7 @@ interface __BaseEnv_Env {
 	ESTADO: D1Database;
 	FILES: R2Bucket;
 	ASSETS: Fetcher;
-	PUBLIC_SITE_URL: "https://mostrador.iamnaw.dev";
+	PUBLIC_SITE_URL: "https://tulocalweb.com.ar";
 	DATA_SOURCE: "sandbox";
 	API_URL: "";
 	INTERNAL_SECRET: string;

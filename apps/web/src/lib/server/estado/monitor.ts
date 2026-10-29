@@ -54,7 +54,7 @@ export async function chequear(
 				const r = await (c.sitio ? pedir.sitio : pedir.externo)(c.url, {
 					method: 'GET',
 					redirect: 'manual',
-					headers: { 'user-agent': 'mostrador-estado/1 (+https://mostrador.iamnaw.dev/estado)' },
+					headers: { 'user-agent': 'mostrador-estado/1 (+https://tulocalweb.com.ar/estado)' },
 					signal: AbortSignal.timeout(10_000)
 				});
 				await r.body?.cancel();

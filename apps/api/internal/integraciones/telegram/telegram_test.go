@@ -77,7 +77,7 @@ func codigoDe(t *testing.T, rec *httptest.ResponseRecorder) string {
 func nuevo(t *testing.T) (api, *pruebadb.Bases) {
 	b := pruebadb.Nueva(t)
 	h := servidor.Nuevo(servidor.Dependencias{App: b.App, ClaveBFF: claveBFF,
-		Cuentas:  &cuentas.Servicio{Pool: b.App, Correo: &correo.Memoria{}, Sitio: "https://mostrador.iamnaw.dev"},
+		Cuentas:  &cuentas.Servicio{Pool: b.App, Correo: &correo.Memoria{}, Sitio: "https://tulocalweb.com.ar"},
 		Telegram: &telegram.Servicio{Pool: b.App}})
 	return api{t, h}, b
 }

@@ -22,7 +22,7 @@ export const POST: RequestHandler = async (event) => {
 	if (!(await golpe(db, `fotos:${tienda}`, 60, 3600))) error(429, 'Subiste muchas fotos seguidas.');
 	const sandbox = usaSandbox() ? (event.locals.sandbox?.id ?? null) : null;
 	const clave = await subirFoto(db, tienda, bytes, sandbox);
-	// La ruta: el navegador le pone su origen (https://mostrador.iamnaw.dev o, en las pruebas,
+	// La ruta: el navegador le pone su origen (https://tulocalweb.com.ar o, en las pruebas,
 	// localhost; en wrangler dev el origen del pedido es el de producción).
 	return json({ ruta: `/f/${clave}` }, { status: 201 });
 };

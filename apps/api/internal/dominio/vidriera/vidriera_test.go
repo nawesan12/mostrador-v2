@@ -56,7 +56,7 @@ func TestTiendaOnline(t *testing.T) {
 
 	// Transferencia: precio del servidor, envío por región, 15 % off y el código público.
 	lunes := time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)
-	r, err := vidriera.Comprar(ctx, b.App, nil, "https://mostrador.iamnaw.dev", "luna", compra(p.ID, 2, "transferencia"), lunes)
+	r, err := vidriera.Comprar(ctx, b.App, nil, "https://tulocalweb.com.ar", "luna", compra(p.ID, 2, "transferencia"), lunes)
 	if err != nil {
 		t.Fatal(err)
 	}

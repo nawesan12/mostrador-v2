@@ -134,7 +134,7 @@ func TestMercadoPagoDePuntaAPunta(t *testing.T) {
 	ahora := time.Now()
 	s := &mercadopago.Servicio{Pool: b.App, Cifra: cif, Cliente: &mercadopago.Cliente{Base: srv.URL},
 		Ahora:  func() time.Time { return ahora },
-		Config: mercadopago.Config{AppID: "123", Secreto: "sec", TokenPlataforma: "APP_USR-plataforma", SecretoWebhook: "whsec", Sitio: "https://mostrador.iamnaw.dev"}}
+		Config: mercadopago.Config{AppID: "123", Secreto: "sec", TokenPlataforma: "APP_USR-plataforma", SecretoWebhook: "whsec", Sitio: "https://tulocalweb.com.ar"}}
 	mux := http.NewServeMux()
 	s.Rutas(mux)
 
@@ -151,7 +151,7 @@ func TestMercadoPagoDePuntaAPunta(t *testing.T) {
 	}
 	q, _ := url.Parse(u)
 	estado := q.Query().Get("state")
-	if q.Query().Get("code_challenge_method") != "S256" || q.Query().Get("platform_id") != "mp" || q.Query().Get("redirect_uri") != "https://mostrador.iamnaw.dev/integraciones/mercadopago/callback" {
+	if q.Query().Get("code_challenge_method") != "S256" || q.Query().Get("platform_id") != "mp" || q.Query().Get("redirect_uri") != "https://tulocalweb.com.ar/integraciones/mercadopago/callback" {
 		t.Fatalf("url de autorización: %s", u)
 	}
 	if err := s.Volver(ctx, sol, ana, "codigo", estado); !errors.Is(err, mercadopago.ErrEstado) {
@@ -318,7 +318,7 @@ func TestSenaDeTurno(t *testing.T) {
 	ahora := time.Now()
 	s := &mercadopago.Servicio{Pool: b.App, Cifra: cif, Cliente: &mercadopago.Cliente{Base: srv.URL},
 		Ahora:  func() time.Time { return ahora },
-		Config: mercadopago.Config{AppID: "123", Secreto: "sec", SecretoWebhook: "whsec", Sitio: "https://mostrador.iamnaw.dev"}}
+		Config: mercadopago.Config{AppID: "123", Secreto: "sec", SecretoWebhook: "whsec", Sitio: "https://tulocalweb.com.ar"}}
 	mux := http.NewServeMux()
 	s.Rutas(mux)
 	u, err := s.Conectar(ctx, luna, ana)
@@ -359,7 +359,7 @@ func TestSenaDeTurno(t *testing.T) {
 	items := pref["items"].([]any)
 	back := pref["back_urls"].(map[string]any)
 	if items[0].(map[string]any)["unit_price"].(float64) != 3600 || pref["expires"] != true ||
-		back["success"] != "https://mostrador.iamnaw.dev/t/luna/turno/"+res.Codigo+"?pago=ok" ||
+		back["success"] != "https://tulocalweb.com.ar/t/luna/turno/"+res.Codigo+"?pago=ok" ||
 		pref["payment_methods"].(map[string]any)["installments"].(float64) != 1 {
 		t.Fatalf("preferencia de la seña: %v", pref)
 	}

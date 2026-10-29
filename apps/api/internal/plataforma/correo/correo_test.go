@@ -20,7 +20,7 @@ func TestResendMandaLoQueCorresponde(t *testing.T) {
 		w.WriteHeader(200)
 	}))
 	defer srv.Close()
-	r := &Resend{Clave: "re_x", De: "Tu Local Web <hola@mostrador.iamnaw.dev>", URL: srv.URL}
+	r := &Resend{Clave: "re_x", De: "Tu Local Web <hola@tulocalweb.com.ar>", URL: srv.URL}
 	if err := r.Enviar(context.Background(), Mensaje{Para: "a@b.co", Asunto: "Hola", HTML: "<b>h</b>", Texto: "h"}); err != nil {
 		t.Fatal(err)
 	}

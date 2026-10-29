@@ -22,7 +22,7 @@ func TestDominiosYDatos(t *testing.T) {
 	b := pruebadb.Nueva(t)
 	luna := pruebadb.CrearTienda(t, b.App, "luna")
 	sol := pruebadb.CrearTienda(t, b.App, "sol")
-	sitio := "https://mostrador.iamnaw.dev"
+	sitio := "https://tulocalweb.com.ar"
 
 	if err := configuracion.ConectarDominio(ctx, b.App, luna, "Luna.com.ar"); err != nil {
 		t.Fatal(err)
@@ -42,7 +42,7 @@ func TestDominiosYDatos(t *testing.T) {
 	if err := configuracion.DominioPrincipal(ctx, b.App, luna, "luna.com.ar", sitio); !errors.Is(err, configuracion.ErrNoSePuede) {
 		t.Fatalf("hizo principal uno sin verificar: %v", err)
 	}
-	configuracion.Resolver = dnsFalso{cname: "tiendas.mostrador.iamnaw.dev.", txt: []string{"mostrador-verificacion=luna"}}
+	configuracion.Resolver = dnsFalso{cname: "tiendas.tulocalweb.com.ar.", txt: []string{"mostrador-verificacion=luna"}}
 	d, _ = configuracion.Dominios(ctx, b.App, luna, sitio)
 	if ds = d["dominios"].([]configuracion.Dominio); ds[1].Estado != "activo" {
 		t.Fatalf("con el DNS bien: %+v", ds)

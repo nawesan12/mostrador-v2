@@ -42,8 +42,8 @@
 		'@context': 'https://schema.org',
 		'@type': 'Organization',
 		name: 'Tu Local Web',
-		url: 'https://mostrador.iamnaw.dev',
-		logo: 'https://mostrador.iamnaw.dev/mark.svg'
+		url: 'https://tulocalweb.com.ar',
+		logo: 'https://tulocalweb.com.ar/mark.svg'
 	}}
 />
 

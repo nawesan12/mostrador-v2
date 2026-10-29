@@ -4,7 +4,7 @@ import type { RequestHandler } from './$types';
 
 /**
  * Vuelta del OAuth de Tiendanube (la URL registrada en la app de socio:
- * https://mostrador.iamnaw.dev/panel/importar/tiendanube/vuelta). Valida el state, canjea el código y
+ * https://tulocalweb.com.ar/panel/importar/tiendanube/vuelta). Valida el state, canjea el código y
  * crea la importación con la credencial; vuelve a Productos, donde el modal muestra el progreso. Un
  * error vuelve con su motivo (el modal lo traduce).
  */

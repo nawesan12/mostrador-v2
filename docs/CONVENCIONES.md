@@ -79,5 +79,5 @@ algo, buscalo en Caja (integraciones, sesiones, rate limit, caché, cripto, fech
 ## Git
 
 - Una rama por PR (`pr-NN-tema`), CI verde y merge a `main`. `main` despliega solo a
-  `mostrador.iamnaw.dev` cuando están los secretos de Cloudflare.
+  `tulocalweb.com.ar` cuando están los secretos de Cloudflare.
 - `CREDENCIALES.md` nunca va al repo (está en `.gitignore`); la plantilla es `CREDENCIALES.example.md`.

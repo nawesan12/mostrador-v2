@@ -57,7 +57,7 @@ func Sembrar(ctx context.Context, admin *pgx.Conn, email string, ahora time.Time
 		Nombre: "Pampa Code", Ciudad: "Rosario",
 		Descripcion:    "Armamos tiendas para marcas del Litoral: integraciones, migraciones y fotos de producto.",
 		Especialidades: []string{"desarrollo", "diseno", "fotografia"},
-		Casos:          []Caso{{"Café Bruma", "https://mostrador.iamnaw.dev/t/cafe-bruma"}, {"Casa Nido", "https://mostrador.iamnaw.dev/t/casa-nido"}},
+		Casos:          []Caso{{"Café Bruma", "https://tulocalweb.com.ar/t/cafe-bruma"}, {"Casa Nido", "https://tulocalweb.com.ar/t/casa-nido"}},
 		Email:          email, Whatsapp: "5493415550123", Web: "https://pampacode.com.ar",
 	})
 	var partner string

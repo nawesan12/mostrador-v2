@@ -4,6 +4,6 @@ INTERNAL_SECRET=
 # Clave AES-256 en base64url (cifra credenciales de integraciones).
 ENCRYPTION_KEY=
 # App de socio de Tiendanube (importar con OAuth). La URL de vuelta de la app:
-# https://mostrador.iamnaw.dev/panel/importar/tiendanube/vuelta
+# https://tulocalweb.com.ar/panel/importar/tiendanube/vuelta
 TIENDANUBE_CLIENT_ID=
 TIENDANUBE_SECRETO=

@@ -53,10 +53,10 @@ func Leer() (Config, error) {
 		BaseMigrador: os.Getenv("MOSTRADOR_BASE_DE_DATOS_MIGRADOR"),
 		BaseAdmin:    os.Getenv("MOSTRADOR_BASE_DE_DATOS_ADMIN"),
 		BaseStaff:    os.Getenv("MOSTRADOR_BASE_DE_DATOS_STAFF"),
-		Sitio:        valor("MOSTRADOR_SITIO", "https://mostrador.iamnaw.dev"),
+		Sitio:        valor("MOSTRADOR_SITIO", "https://tulocalweb.com.ar"),
 		ClaveBFF:     os.Getenv("MOSTRADOR_CLAVE_BFF"),
 		ResendClave:  os.Getenv("MOSTRADOR_RESEND_CLAVE"),
-		CorreoDe:     valor("MOSTRADOR_CORREO_DE", "Tu Local Web <hola@mostrador.iamnaw.dev>"),
+		CorreoDe:     valor("MOSTRADOR_CORREO_DE", "Tu Local Web <hola@tulocalweb.com.ar>"),
 		SMTP:         os.Getenv("MOSTRADOR_SMTP"),
 		CorreoEquipo: os.Getenv("MOSTRADOR_CORREO_EQUIPO"),
 		OAuth: map[string][2]string{

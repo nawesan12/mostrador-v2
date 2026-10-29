@@ -76,9 +76,9 @@ func armar(t *testing.T) *entorno {
 	}
 	t.Cleanup(func() { admin.Close(context.Background()) })
 	e := &entorno{admin: admin, b: b, tok: map[string]string{}, ids: map[string]string{}}
-	e.s = &equipo.Servicio{Staff: b.Staff, App: b.App, Sitio: "https://mostrador.iamnaw.dev"}
+	e.s = &equipo.Servicio{Staff: b.Staff, App: b.App, Sitio: "https://tulocalweb.com.ar"}
 	e.h = servidor.Nuevo(servidor.Dependencias{App: b.App, Equipo: e.s,
-		Cuentas: &cuentas.Servicio{Pool: b.App, Correo: &correo.Memoria{}, Sitio: "https://mostrador.iamnaw.dev"}})
+		Cuentas: &cuentas.Servicio{Pool: b.App, Correo: &correo.Memoria{}, Sitio: "https://tulocalweb.com.ar"}})
 	hash, _ := cuentas.HashClave(clave)
 	for _, rol := range []string{"soporte", "administracion", "duenio"} {
 		var id string

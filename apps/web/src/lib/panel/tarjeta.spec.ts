@@ -17,12 +17,12 @@ describe('tarjeta A6', () => {
 	});
 
 	it('arma el link del QR, o null si falta el dato', () => {
-		const tienda = { url: 'https://mostrador.iamnaw.dev/t/mate-y-co', whatsapp: '11 5555-0101' };
+		const tienda = { url: 'https://tulocalweb.com.ar/t/mate-y-co', whatsapp: '11 5555-0101' };
 		const t = TARJETA_INICIAL;
-		expect(linkQr(t, tienda)).toBe('https://mostrador.iamnaw.dev/t/mate-y-co#resenas');
+		expect(linkQr(t, tienda)).toBe('https://tulocalweb.com.ar/t/mate-y-co#resenas');
 		expect(linkQr({ ...t, qr: 'cupon' }, tienda)).toBeNull();
 		expect(linkQr({ ...t, qr: 'cupon', cupon: 'LUCIA15' }, tienda)).toBe(
-			'https://mostrador.iamnaw.dev/t/mate-y-co/c/LUCIA15'
+			'https://tulocalweb.com.ar/t/mate-y-co/c/LUCIA15'
 		);
 		expect(linkQr({ ...t, qr: 'whatsapp' }, tienda)).toBe('https://wa.me/541155550101');
 		expect(linkQr({ ...t, qr: 'whatsapp' }, { ...tienda, whatsapp: '' })).toBeNull();

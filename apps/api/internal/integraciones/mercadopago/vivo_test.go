@@ -37,7 +37,7 @@ func TestContraMercadoPagoReal(t *testing.T) {
 	_, _ = rand.Read(k)
 	cif, _ := cifrado.Nuevo(base64.StdEncoding.EncodeToString(k))
 	s := &Servicio{Pool: b.App, Cifra: cif, Cliente: &Cliente{},
-		Config: Config{AppID: "app", Secreto: "sec", Sitio: "https://mostrador.iamnaw.dev"}}
+		Config: Config{AppID: "app", Secreto: "sec", Sitio: "https://tulocalweb.com.ar"}}
 	// La conexión como si la tienda hubiera vuelto del OAuth con estos tokens.
 	if err := s.guardarTokens(ctx, tienda, tokens{AccessToken: token, RefreshToken: "sin-uso", ExpiresIn: 180 * 24 * 3600, UserID: usuario}, true); err != nil {
 		t.Fatal(err)

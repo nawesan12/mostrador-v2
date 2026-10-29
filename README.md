@@ -3,7 +3,7 @@
 Plataforma para crear y operar tiendas online en Argentina: landing, onboarding que precarga la
 tienda, panel de administración, plantillas por rubro, Hornero (IA) e integración con Caja.
 
-Demo: https://mostrador.iamnaw.dev
+Demo: https://tulocalweb.com.ar
 
 ## Piezas
 

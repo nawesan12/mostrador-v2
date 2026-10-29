@@ -127,7 +127,7 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bunx tsc -p apps/jobs
 
-  # Deploy a mostrador.iamnaw.dev en cada push a main, sólo si ya están los secretos de Cloudflare.
+  # Deploy a tulocalweb.com.ar en cada push a main, sólo si ya están los secretos de Cloudflare.
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [web, api, jobs-worker, integracion]

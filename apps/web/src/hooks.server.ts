@@ -55,6 +55,12 @@ function secure(res: Response): Response {
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
+	// www.tulocalweb.com.ar es el mismo Worker: se manda al dominio principal, con el mismo camino.
+	if (event.url.hostname.startsWith('www.')) {
+		const u = new URL(event.url);
+		u.hostname = u.hostname.slice(4);
+		return secure(new Response(null, { status: 301, headers: { location: u.href } }));
+	}
 	if (!dev && csrfForbidden(event.request, event.url))
 		return secure(
 			new Response(`Cross-site ${event.request.method} form submissions are forbidden`, {

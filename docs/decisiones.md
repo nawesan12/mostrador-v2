@@ -10,7 +10,7 @@ El navegador sólo habla con SvelteKit (BFF); SvelteKit habla con Go server-to-s
 
 ## 2. Una sola app SvelteKit
 Landing, panel, tiendas y conector MCP comparten despliegue. Las tiendas van por path (`/t/<tienda>`)
-en `mostrador.iamnaw.dev`; con dominio propio, por subdominio, resuelto en el hook `reroute`.
+en `tulocalweb.com.ar`; con dominio propio, por subdominio, resuelto en el hook `reroute`.
 
 ## 3. La impronta de Caja
 Mismo gestor (bun), mismas convenciones y optimizaciones, y el código de Caja se reutiliza cuando
@@ -176,7 +176,7 @@ URL, para que no quede en el historial ni en logs.
 - mostrador.com.ar está registrado por un tercero (vence a mediados de diciembre). La marca sigue
   siendo Mostrador y el dominio será **mostradorapp.com.ar**: los mails públicos (ayuda@,
   legales@, seguridad@…) ya lo usan. Hasta que esté comprado y con DNS, el sitio sigue en
-  mostrador.iamnaw.dev (`PUBLIC_SITE_URL` / `MOSTRADOR_SITIO`).
+  tulocalweb.com.ar (`PUBLIC_SITE_URL` / `MOSTRADOR_SITIO`).
 - Al pasarlo: cambiar esas dos variables, la ruta de `wrangler.jsonc`, y en los portales las vueltas
   de OAuth (`/integraciones/mercadopago/callback`, `/integraciones/mercadolibre/callback`,
   `/ingresar/*/vuelta`) y las notificaciones (`api.mostradorapp.com.ar/v1/webhooks/*`). Mercado

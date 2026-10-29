@@ -21,8 +21,8 @@ test('la portada tiene Open Graph con imagen absoluta y liviana', async ({ page,
 	await page.goto('/');
 	const og = (p: string) => page.locator(`meta[property="og:${p}"]`).getAttribute('content');
 	expect(await og('title')).toBe('Tu Local Web · Vendé en todos lados, pagá menos');
-	expect(await og('url')).toBe('https://mostrador.iamnaw.dev/');
-	expect(await og('image')).toBe('https://mostrador.iamnaw.dev/og/home.jpg');
+	expect(await og('url')).toBe('https://tulocalweb.com.ar/');
+	expect(await og('image')).toBe('https://tulocalweb.com.ar/og/home.jpg');
 	const res = await request.get('/og/home.jpg');
 	expect(res.status()).toBe(200);
 	expect(res.headers()['content-type']).toContain('image/jpeg');

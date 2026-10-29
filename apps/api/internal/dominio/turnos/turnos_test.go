@@ -240,7 +240,7 @@ func TestReservaPublica(t *testing.T) {
 	}
 
 	// Reservar: el precio sale del servidor, sin Mercado Pago queda confirmado y sin seña.
-	res, err := turnos.Reservar(ctx, b.App, nil, "https://mostrador.iamnaw.dev", "luna", reserva(luna.corte.ID, &luna.beto.ID, a(10, 0)), lunes8)
+	res, err := turnos.Reservar(ctx, b.App, nil, "https://tulocalweb.com.ar", "luna", reserva(luna.corte.ID, &luna.beto.ID, a(10, 0)), lunes8)
 	if err != nil || len(res.Codigo) < 16 || res.URL != "" {
 		t.Fatalf("reservar: %+v %v", res, err)
 	}
@@ -444,8 +444,8 @@ func TestReservaConSena(t *testing.T) {
 	if r, _ := turnos.Publico(ctx, b.App, mp, "luna"); r.Sena != 30 {
 		t.Fatalf("con Mercado Pago la seña es %d", r.Sena)
 	}
-	res, err := turnos.Reservar(ctx, b.App, mp, "https://mostrador.iamnaw.dev", "luna", reserva(luna.color.ID, &luna.ana.ID, a(10, 0)), lunes8)
-	if err != nil || !strings.Contains(res.URL, "vuelta=https://mostrador.iamnaw.dev/t/luna/turno/"+res.Codigo) || len(mp.pagados) != 1 {
+	res, err := turnos.Reservar(ctx, b.App, mp, "https://tulocalweb.com.ar", "luna", reserva(luna.color.ID, &luna.ana.ID, a(10, 0)), lunes8)
+	if err != nil || !strings.Contains(res.URL, "vuelta=https://tulocalweb.com.ar/t/luna/turno/"+res.Codigo) || len(mp.pagados) != 1 {
 		t.Fatalf("reservar con seña: %+v %v", res, err)
 	}
 	v, _ := turnos.Ver(ctx, b.App, "luna", res.Codigo, lunes8)

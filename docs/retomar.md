@@ -2,7 +2,7 @@
 
 La sesión del 23/10 armó muchas piezas en paralelo, en ramas separadas. Algunas ya están en `main`; el resto está **subido a GitHub como rama, sin PR** (o con PR abierto) y falta mergearlo. Este documento dice qué hay en cada una, en qué orden mergear, qué choca con qué, y qué falta hacer.
 
-**Producción (mostrador.iamnaw.dev) no tiene nada de esta tanda desplegado.** El último deploy es anterior al #53. Se despliega una sola vez, al final de la tanda (ver "Cómo se trabaja").
+**Producción (tulocalweb.com.ar) no tiene nada de esta tanda desplegado.** El último deploy es anterior al #53. Se despliega una sola vez, al final de la tanda (ver "Cómo se trabaja").
 
 ## 1. Ya en `main`
 
@@ -13,7 +13,7 @@ La sesión del 23/10 armó muchas piezas en paralelo, en ramas separadas. Alguna
 | #52 | Dominio mostradorapp.com.ar en los mails; cerrar la cuenta recarga (arregla el e2e `cuenta-2` intermitente) |
 | #53 | Las 10 plantillas con diseño propio (+ Miga Clásica)                                                        |
 | #54 | MCP ("Manejá Mostrador desde tu IA") en la web, con OAuth 2.1                                               |
-| #55 | Worker sólo en mostrador.iamnaw.dev (sin workers.dev ni previews)                                           |
+| #55 | Worker sólo en tulocalweb.com.ar (sin workers.dev ni previews)                                           |
 | #56 | CodeRabbit configurado (`.coderabbit.yaml`)                                                                 |
 | #47 | Legales y pie con los datos reales de Nahuel; Contacto sin WhatsApp ni oficina inventados                   |
 | #57 | Sección de marca `/marca` (papelería, redes, imprimibles, OG)                                               |

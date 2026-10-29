@@ -70,7 +70,7 @@ func iniciar(t *testing.T, s *cuentas.Servicio, f *proveedorFalso, prov string) 
 		t.Fatal(err)
 	}
 	q, _ := url.Parse(u)
-	if q.Query().Get("redirect_uri") != "https://mostrador.iamnaw.dev/ingresar/"+prov+"/vuelta" || q.Query().Get("code_challenge_method") != "S256" {
+	if q.Query().Get("redirect_uri") != "https://tulocalweb.com.ar/ingresar/"+prov+"/vuelta" || q.Query().Get("code_challenge_method") != "S256" {
 		t.Fatalf("url %s", u)
 	}
 	f.mu.Lock()

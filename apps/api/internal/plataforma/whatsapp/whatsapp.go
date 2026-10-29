@@ -17,7 +17,7 @@ import (
 
 // Mensaje: el link y para qué es (elige la plantilla). El botón de una plantilla de WhatsApp tiene
 // una URL fija con una parte variable al final: la plantilla se da de alta con
-// "https://mostrador.iamnaw.dev/ingresar?{{1}}" y acá va Sufijo ("m=enlace&token=…"). Link es la
+// "https://tulocalweb.com.ar/ingresar?{{1}}" y acá va Sufijo ("m=enlace&token=…"). Link es la
 // dirección completa (log y tests).
 type Mensaje struct {
 	Para   string // E.164 sin "+"

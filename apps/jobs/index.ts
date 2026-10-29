@@ -11,7 +11,7 @@ interface Env {
 	RESEND_API_KEY?: string;
 }
 
-const SITIO = 'https://mostrador.iamnaw.dev';
+const SITIO = 'https://tulocalweb.com.ar';
 
 /** /estado: un chequeo por componente, se guarda y se avisa a los suscriptos si cambió algo. */
 async function monitor(env: Env, ahora: number) {
@@ -23,7 +23,7 @@ async function monitor(env: Env, ahora: number) {
 	const cambios = await registrar(env.ESTADO, resultados, ahora);
 	const avisos = await avisar(env.ESTADO, cambios, {
 		resend: env.RESEND_API_KEY,
-		de: 'Estado de Mostrador <estado@mostrador.iamnaw.dev>',
+		de: 'Estado de Tu Local Web <estado@tulocalweb.com.ar>',
 		sitio: SITIO
 	});
 	console.log('estado', JSON.stringify({ caidos: resultados.filter((r) => !r.ok).map((r) => r.componente), cambios: cambios.length, ...avisos }));

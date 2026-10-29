@@ -6,9 +6,9 @@ completo en `~/Projects/caja/docs/API.md`, sección "Apps (OAuth)". Se usa en el
 ## Credenciales (CREDENCIALES.md §13)
 - `client_id`: `app_mostrador` (se activa cuando Nahuel carga la fila del cliente en el D1 de Caja).
 - `CAJA_CLIENT_SECRET`, `CAJA_PROMO_SECRET`, `CAJA_WEBHOOK_SECRET`: generados del lado de Caja; los pasa Nahuel.
-- Redirects registrados: `https://mostrador.iamnaw.dev/panel/integraciones/caja/callback` y
+- Redirects registrados: `https://tulocalweb.com.ar/panel/integraciones/caja/callback` y
   `http://localhost:5173/panel/integraciones/caja/callback`.
-- Webhook de desconexión (Caja → Mostrador): `https://mostrador.iamnaw.dev/api/webhooks/caja`.
+- Webhook de desconexión (Caja → Mostrador): `https://tulocalweb.com.ar/api/webhooks/caja`.
 
 ## OAuth 2.1 (código + PKCE S256, cliente confidencial)
 - Autorizar: `GET https://caja.iamnaw.dev/oauth/autorizar?response_type=code&client_id=app_mostrador&redirect_uri=…&code_challenge=…&code_challenge_method=S256&state=…&scope=lectura%20movimientos:escribir%20esperados:escribir`.

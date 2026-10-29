@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { csrfForbidden } from './csrf';
 
-const ORIGIN = 'https://mostrador.iamnaw.dev';
+const ORIGIN = 'https://tulocalweb.com.ar';
 const U = (p: string) => new URL(`${ORIGIN}${p}`);
 const req = (method: string, type: string | null, origin: string | null) =>
 	new Request(`${ORIGIN}/x`, {

@@ -36,17 +36,17 @@ function campos(x: string, id: string) {
 
 describe('feed de productos', () => {
 	it('arma RSS 2.0 con el espacio de nombres de Google', () => {
-		const x = feedXml(tienda([producto({})]), 'https://mostrador.iamnaw.dev');
+		const x = feedXml(tienda([producto({})]), 'https://tulocalweb.com.ar');
 		expect(x.startsWith('<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"')).toBe(true);
 		expect(x).toContain('xmlns:g="http://base.google.com/ns/1.0"');
 		expect(x).toContain('<title>Mate &amp; Co</title>');
-		expect(x).toContain('<link>https://mostrador.iamnaw.dev/t/mate-y-co</link>');
+		expect(x).toContain('<link>https://tulocalweb.com.ar/t/mate-y-co</link>');
 		expect(x.match(/<item>/g)).toHaveLength(1);
 		expect(campos(x, 'p1')).toEqual({
 			'g:id': 'p1',
 			'g:title': 'Mate',
 			'g:description': 'Calabaza curada',
-			'g:link': 'https://mostrador.iamnaw.dev/t/mate-y-co/producto/p1',
+			'g:link': 'https://tulocalweb.com.ar/t/mate-y-co/producto/p1',
 			'g:image_link': 'https://cdn.x.com/p.jpg',
 			'g:availability': 'in_stock',
 			'g:price': '12345.00 ARS',

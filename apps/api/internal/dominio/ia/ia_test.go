@@ -55,7 +55,7 @@ func desafio() string {
 func TestIAConectada(t *testing.T) {
 	b := pruebadb.Nueva(t)
 	h := servidor.Nuevo(servidor.Dependencias{App: b.App, IA: &ia.Servicio{Pool: b.App},
-		Cuentas: &cuentas.Servicio{Pool: b.App, Correo: &correo.Memoria{}, Sitio: "https://mostrador.iamnaw.dev"}})
+		Cuentas: &cuentas.Servicio{Pool: b.App, Correo: &correo.Memoria{}, Sitio: "https://tulocalweb.com.ar"}})
 	dueña := registrar(t, h, "lucia@laesquina.com.ar", "La Esquina")
 	otra := registrar(t, h, "ana@otra.com.ar", "Otra Tienda")
 

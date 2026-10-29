@@ -19,7 +19,7 @@ var ctx = context.Background()
 func nuevo(t *testing.T) (*formularios.Servicio, *correo.Memoria, *pruebadb.Bases) {
 	b := pruebadb.Nueva(t)
 	m := &correo.Memoria{}
-	return &formularios.Servicio{Pool: b.App, Correo: m, Sitio: "https://mostrador.iamnaw.dev", Equipo: "equipo@tulocalweb.com.ar"}, m, b
+	return &formularios.Servicio{Pool: b.App, Correo: m, Sitio: "https://tulocalweb.com.ar", Equipo: "equipo@tulocalweb.com.ar"}, m, b
 }
 
 func TestConsultaDeVentas(t *testing.T) {

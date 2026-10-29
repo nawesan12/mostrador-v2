@@ -9,7 +9,10 @@
 		"binding": "ASSETS",
 		"directory": ".svelte-kit/cloudflare"
 	},
-	"routes": [{ "pattern": "mostrador.iamnaw.dev", "custom_domain": true }],
+	"routes": [
+		{ "pattern": "tulocalweb.com.ar", "custom_domain": true },
+		{ "pattern": "www.tulocalweb.com.ar", "custom_domain": true }
+	],
 	"workers_dev": false,
 	"preview_urls": false,
 	"observability": { "enabled": true },
@@ -35,7 +38,7 @@
 	// corre con --local y HORNERO=simulado.
 	"ai": { "binding": "AI", "remote": true },
 	"vars": {
-		"PUBLIC_SITE_URL": "https://mostrador.iamnaw.dev",
+		"PUBLIC_SITE_URL": "https://tulocalweb.com.ar",
 		// sandbox: la demo pública con datos por visitante en D1. api: la API Go del VPS.
 		"DATA_SOURCE": "sandbox",
 		// URL de la API Go cuando DATA_SOURCE=api (VPS). Vacía en la demo.

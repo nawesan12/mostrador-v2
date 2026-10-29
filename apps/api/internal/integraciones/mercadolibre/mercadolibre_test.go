@@ -122,7 +122,7 @@ func TestMercadoLibreDePuntaAPunta(t *testing.T) {
 	_, _ = rand.Read(k)
 	cif, _ := cifrado.Nuevo(base64.StdEncoding.EncodeToString(k))
 	s := &mercadolibre.Servicio{Pool: b.App, Cifra: cif, API: srv.URL, Auth: srv.URL,
-		Config: mercadolibre.Config{AppID: "810", Secreto: "sec", Sitio: "https://mostrador.iamnaw.dev"}}
+		Config: mercadolibre.Config{AppID: "810", Secreto: "sec", Sitio: "https://tulocalweb.com.ar"}}
 	w := &outbox.Worker{Pool: b.Worker, Manejadores: s.Manejadores()}
 	ana := "00000000-0000-0000-0000-0000000000aa"
 
@@ -259,7 +259,7 @@ func TestMercadoLibreConVariantes(t *testing.T) {
 	_, _ = rand.Read(k)
 	cif, _ := cifrado.Nuevo(base64.StdEncoding.EncodeToString(k))
 	s := &mercadolibre.Servicio{Pool: b.App, Cifra: cif, API: srv.URL, Auth: srv.URL,
-		Config: mercadolibre.Config{AppID: "810", Secreto: "sec", Sitio: "https://mostrador.iamnaw.dev"}}
+		Config: mercadolibre.Config{AppID: "810", Secreto: "sec", Sitio: "https://tulocalweb.com.ar"}}
 	w := &outbox.Worker{Pool: b.Worker, Manejadores: s.Manejadores()}
 	ana := "00000000-0000-0000-0000-0000000000aa"
 	u, _ := s.Conectar(ctx, luna, ana)

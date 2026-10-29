@@ -20,7 +20,7 @@ var ctx = context.Background()
 func nuevo(t *testing.T) (*cuentas.Servicio, *correo.Memoria, *pruebadb.Bases) {
 	b := pruebadb.Nueva(t)
 	m := &correo.Memoria{}
-	return &cuentas.Servicio{Pool: b.App, Correo: m, Sitio: "https://mostrador.iamnaw.dev"}, m, b
+	return &cuentas.Servicio{Pool: b.App, Correo: m, Sitio: "https://tulocalweb.com.ar"}, m, b
 }
 
 var cl = cuentas.Cliente{IP: "190.2.3.4", Agente: "Chrome · macOS"}

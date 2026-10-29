@@ -65,7 +65,7 @@ function item(p: ProductoPublico, t: TiendaPublica, base: string): string {
 	return `    <item>\n${lineas.join('\n')}\n    </item>`;
 }
 
-/** origen: https://mostrador.iamnaw.dev (sin barra al final). */
+/** origen: https://tulocalweb.com.ar (sin barra al final). */
 export function feedXml(t: TiendaPublica, origen: string): string {
 	const base = `${origen}/t/${t.slug}`;
 	return [

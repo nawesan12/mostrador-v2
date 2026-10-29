@@ -16,7 +16,7 @@ Permisos del token: Workers Scripts:Edit, Workers Routes:Edit, D1:Edit, R2:Edit,
 - ⬜ `CLOUDFLARE_API_TOKEN=`
 - ⬜ `CLOUDFLARE_ACCOUNT_ID=` (dash → Workers & Pages → panel derecho)
 - ⬜ Confirmar que la zona `iamnaw.dev` está en esta misma cuenta: sí / no
-- ⬜ Turnstile (dash → Turnstile → Add site, dominio `mostrador.iamnaw.dev` + `localhost`)
+- ⬜ Turnstile (dash → Turnstile → Add site, dominio `tulocalweb.com.ar` + `localhost`)
   - `PUBLIC_TURNSTILE_SITE_KEY=`
   - `TURNSTILE_SECRET=`
 - ⬜ Web Analytics (dash → Analytics → Web Analytics → Add site) `PUBLIC_CF_ANALYTICS_TOKEN=`
@@ -30,18 +30,18 @@ Permisos del token: Workers Scripts:Edit, Workers Routes:Edit, D1:Edit, R2:Edit,
 
 ## 3. Resend: mails (PR 5)
 
-Dónde: resend.com → API Keys. Dominio: Domains → Add `mostrador.iamnaw.dev` y cargar los DNS que pida (SPF/DKIM). OJO: sin el MX de Resend en `iamnaw.dev`, para no pisar el Email Routing de Caja.
+Dónde: resend.com → API Keys. Dominio: Domains → Add `tulocalweb.com.ar` y cargar los DNS que pida (SPF/DKIM). OJO: sin el MX de Resend en `iamnaw.dev`, para no pisar el Email Routing de Caja.
 Ojo: la cuenta compartida con Caja tiene tope de 100 mails por día. ¿Usamos la misma o una nueva?
 
 - ⬜ `RESEND_API_KEY=`
-- ⬜ `MAIL_FROM=` (sugerido: `Mostrador <hola@mostrador.iamnaw.dev>`)
+- ⬜ `MAIL_FROM=` (sugerido: `Mostrador <hola@tulocalweb.com.ar>`)
 
 ## 4. Google (PR 5 login, PR 8 onboarding, PR 20 integraciones)
 
 Dónde: console.cloud.google.com → proyecto "Mostrador".
 
 - ⬜ OAuth client (Web), con pantalla de consentimiento en producción. Redirects:
-  `https://mostrador.iamnaw.dev/ingresar/google/vuelta`, `http://localhost:5173/ingresar/google/vuelta`
+  `https://tulocalweb.com.ar/ingresar/google/vuelta`, `http://localhost:5173/ingresar/google/vuelta`
   - `GOOGLE_CLIENT_ID=`
   - `GOOGLE_CLIENT_SECRET=`
 - ⬜ Places API (New) habilitada + API key restringida: `GOOGLE_PLACES_API_KEY=`
@@ -51,7 +51,7 @@ Dónde: console.cloud.google.com → proyecto "Mostrador".
 ## 5. Mercado Pago (PR 5 login, PR 17 abono, PR 20 cobros)
 
 Dónde: mercadopago.com.ar/developers → Tus integraciones → Crear aplicación "Mostrador" (pagos online + suscripciones + OAuth/marketplace).
-Redirects OAuth: ingreso `https://mostrador.iamnaw.dev/ingresar/mercadopago/vuelta` y conexión de cobros `https://mostrador.iamnaw.dev/integraciones/mercadopago/callback` (+ localhost).
+Redirects OAuth: ingreso `https://tulocalweb.com.ar/ingresar/mercadopago/vuelta` y conexión de cobros `https://tulocalweb.com.ar/integraciones/mercadopago/callback` (+ localhost).
 
 - ⬜ `MP_CLIENT_ID=`
 - ⬜ `MP_CLIENT_SECRET=`
@@ -63,7 +63,7 @@ Redirects OAuth: ingreso `https://mostrador.iamnaw.dev/ingresar/mercadopago/vuel
 
 ## 6. Mercado Libre (PR 5 login, PR 20 canal)
 
-Dónde: developers.mercadolibre.com.ar → Mis aplicaciones → Crear. Redirects: ingreso `https://mostrador.iamnaw.dev/ingresar/mercadolibre/vuelta` y canal `https://mostrador.iamnaw.dev/integraciones/mercadolibre/callback`. Scopes: read, write, offline_access. Notificaciones: orders_v2, items, questions, messages.
+Dónde: developers.mercadolibre.com.ar → Mis aplicaciones → Crear. Redirects: ingreso `https://tulocalweb.com.ar/ingresar/mercadolibre/vuelta` y canal `https://tulocalweb.com.ar/integraciones/mercadolibre/callback`. Scopes: read, write, offline_access. Notificaciones: orders_v2, items, questions, messages.
 
 - ⬜ `ML_CLIENT_ID=`
 - ⬜ `ML_CLIENT_SECRET=`
@@ -80,7 +80,7 @@ Dónde: developers.facebook.com → Crear app tipo "Business" → productos What
   - `WHATSAPP_TOKEN=` (System User token permanente)
   - `WHATSAPP_PHONE_NUMBER_ID=`
   - `WHATSAPP_BUSINESS_ACCOUNT_ID=`
-  - Dos plantillas de utilidad aprobadas, en español (es_AR), con un botón de link `https://mostrador.iamnaw.dev/ingresar?{{1}}`: `mostrador_ingreso` ("Tocá para entrar a tu cuenta de Mostrador") y `mostrador_clave` ("Tocá para crear tu contraseña nueva"). Ya no hace falta una de autenticación con código: `WHATSAPP_OTP_TEMPLATE=`
+  - Dos plantillas de utilidad aprobadas, en español (es_AR), con un botón de link `https://tulocalweb.com.ar/ingresar?{{1}}`: `mostrador_ingreso` ("Tocá para entrar a tu cuenta de Mostrador") y `mostrador_clave` ("Tocá para crear tu contraseña nueva"). Ya no hace falta una de autenticación con código: `WHATSAPP_OTP_TEMPLATE=`
 - `WHATSAPP_VERIFY_TOKEN`: lo genero yo.
 - ⬜ Pixel del sitio de Mostrador: `PUBLIC_META_PIXEL_ID=` y `META_CAPI_TOKEN=`
 

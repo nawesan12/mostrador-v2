@@ -53,8 +53,8 @@ export const PERFIL_DEMO: PerfilPartner = {
 		'Armamos tiendas para marcas del Litoral: integraciones, migraciones y fotos de producto.',
 	especialidades: ['desarrollo', 'diseno', 'fotografia'],
 	casos: [
-		{ nombre: 'Café Bruma', url: 'https://mostrador.iamnaw.dev/t/cafe-bruma' },
-		{ nombre: 'Casa Nido', url: 'https://mostrador.iamnaw.dev/t/casa-nido' }
+		{ nombre: 'Café Bruma', url: 'https://tulocalweb.com.ar/t/cafe-bruma' },
+		{ nombre: 'Casa Nido', url: 'https://tulocalweb.com.ar/t/casa-nido' }
 	],
 	email: 'hola@pampacode.com.ar',
 	whatsapp: '5493415550123',
