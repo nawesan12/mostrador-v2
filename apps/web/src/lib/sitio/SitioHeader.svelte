@@ -21,7 +21,7 @@
 <header>
 	<div class="in">
 		<a class="marca" href="/" aria-label="Tu Local Web, inicio"
-			><img src="/wordmark-brown.webp" alt="Tu Local Web" width="141" height="20" /></a
+			><img src="/wordmark-brown.webp" alt="Tu Local Web" width="175" height="20" /></a
 		>
 		<nav aria-label="Secciones">
 			{#each NAV as [href, t] (href)}
@@ -133,9 +133,9 @@
 			flex: 1;
 			height: 44px;
 		}
-		/* "Tu Local Web" es más ancho que el wordmark viejo: así entra con Ingresar y Crear mi tienda. */
+		/* El wordmark es ancho: a esta altura entra en la misma fila que Ingresar y Crear mi tienda. */
 		.marca img {
-			height: 16px;
+			height: 13px;
 		}
 		nav {
 			order: 3;

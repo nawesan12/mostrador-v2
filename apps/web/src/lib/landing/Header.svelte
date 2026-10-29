@@ -86,7 +86,7 @@
 <header class:sombra class:arriba={l.menu}>
 	<div class="fila">
 		<a href={resolve('/')} class="logo" aria-label="Tu Local Web, inicio">
-			<Marca />
+			<Marca alto={32} />
 			<img src="/wordmark-brown.webp" alt="Tu Local Web" />
 		</a>
 		<nav class="nav" aria-label="Secciones">
@@ -182,7 +182,7 @@
 	.logo {
 		display: flex;
 		align-items: center;
-		gap: 10px;
+		gap: 8px;
 		flex: none;
 	}
 	.logo img {

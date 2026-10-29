@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Marca from '#lib/landing/Marca.svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import Icon from '#lib/components/Icon.svelte';
@@ -40,12 +41,7 @@
 	<div class="luz" aria-hidden="true"></div>
 	<header class="top">
 		<a class="marca" href={resolve('/partners/panel')} aria-label="Inicio del panel de partners">
-			<svg viewBox="0 0 100 76" aria-hidden="true"
-				><path
-					fill="#FBF3EA"
-					d="M3 76a3 3 0 0 1-3-3V5a5 5 0 0 1 5-5h90a5 5 0 0 1 5 5v68a3 3 0 0 1-3 3H82a3 3 0 0 1-3-3V21H21v52a3 3 0 0 1-3 3Z"
-				></path></svg
-			>
+			<Marca color="#FBF3EA" alto={22} />
 		</a>
 		<nav class="miga" aria-label="Ubicación">
 			<span class="area">Partners</span><Icon icon={I.phCaretRight} size={12} /><span class="sec"
@@ -146,10 +142,6 @@
 		box-shadow:
 			inset 0 1px 0 rgba(255, 255, 255, 0.3),
 			0 8px 18px -8px rgba(0, 0, 0, 0.5);
-	}
-	.marca svg {
-		width: 20px;
-		height: 15px;
 	}
 	.miga {
 		display: flex;

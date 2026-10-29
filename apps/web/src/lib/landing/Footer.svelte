@@ -57,7 +57,7 @@
 	<div class="cols">
 		<div class="marca">
 			<div class="logo">
-				<Marca alto={18} /><img src="/wordmark-brown.webp" alt="Tu Local Web" />
+				<Marca alto={28} /><img src="/wordmark-brown.webp" alt="Tu Local Web" />
 			</div>
 			<div class="lema">Hecho en Argentina para negocios argentinos.</div>
 		</div>
@@ -105,7 +105,7 @@
 	.logo {
 		display: flex;
 		align-items: center;
-		gap: 10px;
+		gap: 8px;
 	}
 	.logo img {
 		height: 18px;

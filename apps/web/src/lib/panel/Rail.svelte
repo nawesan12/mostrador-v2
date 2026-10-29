@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Marca from '#lib/landing/Marca.svelte';
 	import Icon from '#lib/components/Icon.svelte';
 	import { AREAS, rutaDe, type Area } from './navegacion.ts';
 	import { getShell } from './shell.svelte.ts';
@@ -12,12 +13,7 @@
 <!-- eslint-disable svelte/no-navigation-without-resolve -- rutas del panel armadas con rutaDe -->
 <aside class="rail" aria-label="Áreas">
 	<a class="marca" href="/panel" aria-label="Inicio del panel">
-		<svg viewBox="0 0 100 76" aria-hidden="true"
-			><path
-				fill="#FBF3EA"
-				d="M3 76a3 3 0 0 1-3-3V5a5 5 0 0 1 5-5h90a5 5 0 0 1 5 5v68a3 3 0 0 1-3 3H82a3 3 0 0 1-3-3V21H21v52a3 3 0 0 1-3 3Z"
-			></path></svg
-		>
+		<Marca color="#FBF3EA" alto={24} />
 	</a>
 	{#each areas as a (a.id)}
 		{@const on = a.id === area.id}
@@ -86,10 +82,6 @@
 			inset 0 1px 0 rgba(255, 255, 255, 0.3),
 			0 8px 18px -8px rgba(0, 0, 0, 0.5);
 		margin-bottom: 16px;
-	}
-	.marca svg {
-		width: 22px;
-		height: 17px;
 	}
 	.area {
 		position: relative;

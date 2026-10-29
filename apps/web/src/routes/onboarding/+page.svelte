@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Marca from '#lib/landing/Marca.svelte';
 	import { onMount, tick } from 'svelte';
 	import { enhance } from '$app/forms';
 	import Grano from '#lib/components/Grano.svelte';
@@ -102,13 +103,8 @@
 		<div class="arcos"></div>
 		<div class="luz"></div>
 		<a class="marca" href="/" aria-label="Tu Local Web, inicio">
-			<svg viewBox="0 0 100 76" aria-hidden="true"
-				><path
-					fill="#E8875F"
-					d="M3 76a3 3 0 0 1-3-3V5a5 5 0 0 1 5-5h90a5 5 0 0 1 5 5v68a3 3 0 0 1-3 3H82a3 3 0 0 1-3-3V21H21v52a3 3 0 0 1-3 3Z"
-				></path></svg
-			>
-			<img src="/wordmark-cream.webp" alt="Tu Local Web" width="86" height="18" />
+			<Marca color="#E8875F" alto={24} />
+			<img src="/wordmark-cream.webp" alt="Tu Local Web" width="157" height="18" />
 		</a>
 		<div class="avance">
 			<div class="a-t">Tu cuenta está</div>
@@ -148,12 +144,7 @@
 	<main>
 		<div class="movil">
 			<div class="m-fila">
-				<svg viewBox="0 0 100 76" aria-hidden="true"
-					><path
-						fill="#E8875F"
-						d="M3 76a3 3 0 0 1-3-3V5a5 5 0 0 1 5-5h90a5 5 0 0 1 5 5v68a3 3 0 0 1-3 3H82a3 3 0 0 1-3-3V21H21v52a3 3 0 0 1-3 3Z"
-					></path></svg
-				>
+				<Marca color="#E8875F" alto={22} />
 				<span class="m-paso"
 					><span class="m-n">Paso {paso + 1} de 8</span><span class="m-l">{PASOS[paso]}</span></span
 				>
@@ -274,11 +265,6 @@
 		display: flex;
 		align-items: center;
 		gap: 10px;
-	}
-	.marca svg {
-		width: 24px;
-		height: 18px;
-		display: block;
 	}
 	.marca img {
 		height: 18px;
@@ -564,11 +550,6 @@
 			align-items: center;
 			gap: 10px;
 			padding: 0 14px;
-		}
-		.m-fila svg {
-			width: 22px;
-			height: 17px;
-			flex: none;
 		}
 		.m-paso {
 			flex: 1;

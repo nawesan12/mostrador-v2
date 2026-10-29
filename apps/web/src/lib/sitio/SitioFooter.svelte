@@ -56,7 +56,7 @@
 	<div class="in">
 		<div class="cols">
 			<div class="marca">
-				<img src="/wordmark-brown.webp" alt="Tu Local Web" width="156" height="22" />
+				<img src="/wordmark-brown.webp" alt="Tu Local Web" width="192" height="22" />
 				<p>Todo lo que tienen las otras, por menos plata y más seguro. Hecho en Argentina.</p>
 			</div>
 			{#each COLUMNAS as [titulo, links] (titulo)}
