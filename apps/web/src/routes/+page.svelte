@@ -5,7 +5,7 @@
 	import Seo from '#lib/components/Seo.svelte';
 	import Header from '#lib/landing/Header.svelte';
 	import CtaFinal from '#lib/landing/CtaFinal.svelte';
-	import Footer from '#lib/landing/Footer.svelte';
+	import SitioFooter from '#lib/sitio/SitioFooter.svelte';
 	import Migrar from '#lib/landing/Migrar.svelte';
 	import PlantillaModal from '#lib/landing/PlantillaModal.svelte';
 	import Precios from '#lib/landing/Precios.svelte';
@@ -61,7 +61,7 @@
 		<Migrar />
 		<CtaFinal />
 	</main>
-	<Footer />
+	<SitioFooter cta={false} />
 </div>
 
 <PlantillaModal />

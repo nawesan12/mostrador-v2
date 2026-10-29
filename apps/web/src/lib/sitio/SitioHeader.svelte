@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import Marca from '#lib/landing/Marca.svelte';
 
 	/**
 	 * Header de las páginas públicas (legales, seguridad, contacto, ayuda…), igual en todas las del
@@ -21,7 +22,12 @@
 <header>
 	<div class="in">
 		<a class="marca" href="/" aria-label="Tu Local Web, inicio"
-			><img src="/wordmark-brown.webp" alt="Tu Local Web" width="175" height="20" /></a
+			><Marca alto={28} /><img
+				src="/wordmark-brown.webp"
+				alt="Tu Local Web"
+				width="175"
+				height="20"
+			/></a
 		>
 		<nav aria-label="Secciones">
 			{#each NAV as [href, t] (href)}
@@ -57,6 +63,7 @@
 	.marca {
 		display: flex;
 		align-items: center;
+		gap: 8px;
 		flex: none;
 	}
 	.marca img {
@@ -132,9 +139,9 @@
 			flex: 1;
 			height: 44px;
 		}
-		/* El wordmark es ancho: a esta altura entra en la misma fila que Ingresar y Crear mi tienda. */
+		/* En el celular el isotipo alcanza: así entran Ingresar y Crear mi tienda. */
 		.marca img {
-			height: 13px;
+			display: none;
 		}
 		nav {
 			order: 3;

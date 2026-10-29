@@ -14,6 +14,15 @@
 	const LOGOS = (INTEG as unknown as [string, string, { icon?: unknown; col?: string }][])
 		.filter(([, cat, m]) => cat !== 'ia' && 'icon' in m)
 		.map(([n, , m]) => ({ n, icon: m.icon as I.IconData, col: m.col }));
+	/** Las que no están en los sets de íconos: el logo oficial (static/marcas), con su proporción. */
+	const MARCAS = [
+		['Mercado Libre', '/marcas/mercadolibre.svg', 2.4],
+		['Tiendanube', '/marcas/tiendanube.svg', 5.94],
+		['Payway', '/marcas/payway.svg', 3.51],
+		['Correo Argentino', '/marcas/correo-argentino.svg', 3.4],
+		['ARCA', '/marcas/arca.webp', 9.83],
+		['Empretienda', '/marcas/empretienda.svg', 7.07]
+	] as const;
 	const IAS = [
 		['Claude', I.siClaude, '#D97757'],
 		['ChatGPT', I.siOpenai, '#10A37F'],
@@ -137,12 +146,14 @@
 						><span class="ok">Conciliado</span>
 					</div>
 					<div class="fila">
-						<span class="f-n"><span class="sig" style:background="#0E1E4A">payway</span>Payway</span
+						<span class="f-n"
+							><img src="/marcas/payway.svg" alt="Payway" height="18" width="63" /></span
 						><span class="ok">Conciliado</span>
 					</div>
 					<div class="fila arca">
 						<span class="f-n"
-							><span class="sig" style:background="#1F3A6E">ARCA</span>Factura B #0004-00812</span
+							><img src="/marcas/arca.webp" alt="ARCA" height="14" width="138" />Factura B
+							#0004-00812</span
 						><span class="emitida">Emitida</span>
 					</div>
 				</div>
@@ -152,6 +163,9 @@
 			<div class="c-fila">
 				<span class="c-t">Se conecta con</span>
 				<span class="c-logos">
+					{#each MARCAS as [n, src, prop] (n)}
+						<img class="c-marca" {src} alt={n} height="20" width={Math.round(20 * prop)} />
+					{/each}
 					{#each LOGOS as l (l.n)}
 						<span class="c-logo" title={l.n}
 							><Icon icon={l.icon} size={22} style={l.col ? `color:${l.col}` : ''} /><span
@@ -542,13 +556,6 @@
 		font-size: 14px;
 		font-weight: 500;
 	}
-	.sig {
-		font-size: 10px;
-		font-weight: 800;
-		padding: 3px 5px;
-		border-radius: 4px;
-		color: #fff;
-	}
 	.ok {
 		font-size: 13px;
 		font-weight: 600;
@@ -610,5 +617,10 @@
 		overflow: hidden;
 		clip-path: inset(50%);
 		white-space: nowrap;
+	}
+	.c-marca {
+		height: 20px;
+		width: auto;
+		display: block;
 	}
 </style>
