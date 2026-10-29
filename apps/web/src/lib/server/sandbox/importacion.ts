@@ -5,21 +5,24 @@
  * antes de guardar, así dos pedidos a la vez no guardan dos veces la misma página. Las escrituras de
  * clientes, pedidos y redirecciones van en un `db.batch` con `json_each` (dos o tres parámetros por
  * consulta, sin importar cuántas filas: el tope de D1 es 100).
+ *
+ * La credencial de la plataforma vieja (el token de Tiendanube) se guarda cifrada con `Cifra` y se
+ * borra al terminar, fallar o cancelar, como en Go. La purga de 24 h se lleva la fila igual.
  */
 import { and, desc, eq, sql } from 'drizzle-orm';
-import { randomToken } from '../crypto.ts';
+import { randomToken, sha256 } from '../crypto.ts';
+import { canjear, urlAutorizar, type AppTN } from '../importar/tiendanube.ts';
 import {
 	ErrorDefinitivo,
 	ETAPAS,
-	FUENTES,
 	MAX_ERRORES,
 	MAX_PASOS,
 	PLATAFORMAS,
 	progresoVacio,
-	type Abrir,
 	type ClienteViejo,
 	type ErrorImportacion,
 	type Etapa,
+	type Fuentes,
 	type Importacion,
 	type ImportacionNueva,
 	type Pagina,
@@ -29,10 +32,17 @@ import {
 	type ProductoViejo,
 	type Progreso
 } from '../importacion/fuente.ts';
+import { credencialTiendanube, FUENTES } from '../importacion/fuentes.ts';
 import { haciaValido, normalizarRuta } from '../importacion/rutas.ts';
 import { errorOpciones } from '#lib/tienda/variantes.ts';
 import type { ProductoEditable } from '../datos/tipos.ts';
-import { clientesSandbox, historialPedidos, importaciones, redirecciones } from './schema.ts';
+import {
+	cambios,
+	clientesSandbox,
+	historialPedidos,
+	importaciones,
+	redirecciones
+} from './schema.ts';
 import { inArray } from './sql.ts';
 import type { DbSandbox } from './sandbox.ts';
 
@@ -52,6 +62,12 @@ function aImportacion(f: Fila): Importacion {
 		terminada: f.terminada === null ? null : new Date(f.terminada).toISOString()
 	};
 }
+
+/** Con qué se cifra la credencial (en el Worker, `encrypt`/`decrypt` de cifrado.ts). */
+export type Cifra = { cifrar(s: string): Promise<string>; descifrar(s: string): Promise<string> };
+
+/** Lo que se puede reemplazar en los tests. */
+export type Opciones = { fuentes?: Fuentes; cifra?: Cifra; ahora?: number };
 
 /** Lo que el paso necesita del resto del sandbox: guardar con la misma función que el panel. */
 export type OpsImportacion = {
@@ -77,9 +93,8 @@ export async function crearImportacion(
 	db: DbSandbox,
 	sb: string,
 	n: ImportacionNueva,
-	fuentes: Partial<Record<Plataforma, Abrir>> = FUENTES,
-	ahora = Date.now()
-): Promise<Importacion | 'invalido' | 'sin-fuente' | 'activa'> {
+	{ fuentes = FUENTES, cifra, ahora = Date.now() }: Opciones = {}
+): Promise<Importacion | 'invalido' | 'sin-fuente' | 'activa' | 'sin-cifrado'> {
 	if (!PLATAFORMAS.includes(n.plataforma)) return 'invalido';
 	if (!fuentes[n.plataforma]) return 'sin-fuente';
 	const url = (n.url ?? '').trim();
@@ -91,15 +106,16 @@ export async function crearImportacion(
 			return 'invalido';
 		}
 	}
-	// La credencial no se guarda en la demo (no hay con qué cifrarla): las fuentes que la piden
-	// sólo andan con la API.
+	if ((n.credencial ?? '').length > 4096) return 'invalido';
+	if (n.credencial && !cifra) return 'sin-cifrado';
 	const fila = {
 		sandboxId: sb,
 		id: randomToken(12),
 		plataforma: n.plataforma,
 		urlOrigen: url,
 		progreso: JSON.stringify(progresoVacio()),
-		creada: ahora
+		creada: ahora,
+		credencial: n.credencial && cifra ? await cifra.cifrar(n.credencial) : null
 	};
 	try {
 		await db.insert(importaciones).values(fila);
@@ -120,7 +136,7 @@ export async function cancelarImportacion(
 ): Promise<Importacion | 'no-existe' | 'terminada'> {
 	const [f] = await db
 		.update(importaciones)
-		.set({ estado: 'cancelada', terminada: ahora })
+		.set({ estado: 'cancelada', terminada: ahora, credencial: null })
 		.where(
 			and(
 				eq(importaciones.sandboxId, sb),
@@ -164,8 +180,7 @@ export async function avanzarImportacion(
 	db: DbSandbox,
 	sb: string,
 	ops: OpsImportacion,
-	fuentes: Partial<Record<Plataforma, Abrir>> = FUENTES,
-	ahora = Date.now()
+	{ fuentes = FUENTES, cifra, ahora = Date.now() }: Opciones = {}
 ): Promise<Importacion | null> {
 	const [f] = await db
 		.select()
@@ -181,7 +196,12 @@ export async function avanzarImportacion(
 		].slice(-MAX_ERRORES);
 		await db
 			.update(importaciones)
-			.set({ estado: 'fallida', errores: JSON.stringify(errores), terminada: ahora })
+			.set({
+				estado: 'fallida',
+				errores: JSON.stringify(errores),
+				terminada: ahora,
+				credencial: null
+			})
 			.where(
 				and(
 					eq(importaciones.sandboxId, sb),
@@ -195,9 +215,23 @@ export async function avanzarImportacion(
 		return fallar('La tienda de origen no terminaba de mandar datos: frenamos la importación.');
 	const abrir = fuentes[f.plataforma as Plataforma];
 	if (!abrir) return fallar('Todavía no podemos importar desde esa plataforma.');
+	let credencial: string | null = null;
+	if (f.credencial) {
+		try {
+			if (!cifra) throw new Error('sin cifra');
+			credencial = await cifra.descifrar(f.credencial);
+		} catch {
+			return fallar('No pudimos leer la credencial guardada. Empezá la importación de nuevo.');
+		}
+	}
 	let pag: Pagina;
 	try {
-		const fuente = await abrir({ plataforma: f.plataforma as Plataforma, url: f.urlOrigen });
+		const fuente = await abrir({
+			plataforma: f.plataforma as Plataforma,
+			url: f.urlOrigen,
+			tiendaId: sb,
+			credencial
+		});
 		pag = await fuente.pagina(etapa, f.cursor === null ? null : JSON.parse(f.cursor));
 	} catch (e) {
 		const m = e instanceof ErrorDefinitivo || e instanceof Error ? e.message : '';
@@ -247,6 +281,8 @@ export async function avanzarImportacion(
 				: {
 						estado: sql`case when ${importaciones.estado} = 'corriendo' then 'lista' else ${importaciones.estado} end`,
 						cursor: null,
+						// Terminó: la credencial se borra.
+						credencial: null,
 						terminada: sql`coalesce(${importaciones.terminada}, ${ahora})`
 					})
 		})
@@ -566,6 +602,74 @@ async function pedidos(
 			${c('nombre')}, ${c('total')}, ${c('items')}, ${c('estado')}
 		from json_each(${JSON.stringify(filas)}) where true
 		on conflict (sandbox_id, plataforma, externo) do nothing`);
+}
+
+// ---------------------------------------------------------------- OAuth de Tiendanube
+
+/**
+ * En la demo también va el OAuth real: el visitante conecta su tienda de Tiendanube y se importa a su
+ * sandbox. El state es de un solo uso y dura 10 minutos; se guarda sólo su hash en `cambios`
+ * (`tn-estado`), atado al sandbox, como los códigos de Telegram. El canje lo hace el Worker con la
+ * app de socio y el token entra cifrado en la importación.
+ */
+const ESTADO_TN = 'tn-estado';
+const VIGENCIA_ESTADO = 10 * 60_000;
+
+/** La URL de autorización con un state nuevo guardado. */
+export async function conectarTiendanube(
+	db: DbSandbox,
+	sb: string,
+	app: AppTN,
+	ahora = Date.now()
+) {
+	const estado = randomToken(24);
+	await db.insert(cambios).values({
+		sandboxId: sb,
+		entidad: ESTADO_TN,
+		clave: await sha256(estado),
+		datos: JSON.stringify({ vence: ahora + VIGENCIA_ESTADO }),
+		actualizadoEn: ahora
+	});
+	return urlAutorizar(app, estado);
+}
+
+/**
+ * La vuelta: consume el state (un DELETE … RETURNING: dos vueltas a la vez no lo usan dos veces),
+ * canjea el código y crea la importación con la credencial cifrada.
+ */
+export async function volverTiendanube(
+	db: DbSandbox,
+	sb: string,
+	app: AppTN,
+	codigo: string,
+	estado: string,
+	o: Opciones = {}
+): Promise<
+	Importacion | 'estado' | 'canje' | 'invalido' | 'sin-fuente' | 'activa' | 'sin-cifrado'
+> {
+	const ahora = o.ahora ?? Date.now();
+	if (!o.cifra) return 'sin-cifrado';
+	if (!codigo || !estado || codigo.length > 512 || estado.length > 512) return 'estado';
+	const [f] = await db
+		.delete(cambios)
+		.where(
+			and(
+				eq(cambios.sandboxId, sb),
+				eq(cambios.entidad, ESTADO_TN),
+				eq(cambios.clave, await sha256(estado))
+			)
+		)
+		.returning({ datos: cambios.datos });
+	const vence = (JSON.parse(f?.datos ?? 'null') as { vence?: number } | null)?.vence ?? 0;
+	if (vence < ahora) return 'estado';
+	const tk = await canjear(app, codigo);
+	if (!tk) return 'canje';
+	return crearImportacion(
+		db,
+		sb,
+		{ plataforma: 'tiendanube', credencial: credencialTiendanube(tk.acceso, tk.tiendaId) },
+		{ ...o, ahora }
+	);
 }
 
 // ---------------------------------------------------------------- Lectura (clientes y tienda)

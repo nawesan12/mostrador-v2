@@ -494,6 +494,21 @@ URL, para que no quede en el historial ni en logs.
 - **Demo**: mismas tablas en D1 con `sandbox_id` y `ON DELETE CASCADE` (la purga del cron se las lleva
   con el sandbox). Sin outbox, el navegador pide "avanzar" (`POST /panel/importaciones`) y cada pedido
   hace un paso; `pasos` hace de candado con un UPDATE condicional. Un error de la fuente la deja
-  fallida (no hay reintentos con espera). La credencial no se guarda en la demo.
+  fallida (no hay reintentos con espera). La credencial va cifrada con `ENCRYPTION_KEY` (sandbox
+  0008, `importaciones.credencial`) y se borra al terminar, fallar o cancelar, como en Go.
+- **Tiendanube con OAuth real, también en la demo** (migración 00042): `GET /panel/importar/tiendanube`
+  arma un state de un solo uso (10 min, sólo su hash: `importacion_estados` en Go, `cambios`
+  `tn-estado` en el sandbox) y manda a autorizar la app de socio; la vuelta
+  (`/panel/importar/tiendanube/vuelta`, la URL registrada en la app) consume el state, canjea el código
+  y crea la importación con `{token, tienda}` cifrado. Con la API, la web sólo le pasa código y state
+  a Go (`POST /v1/panel/importaciones/tiendanube/vuelta`): el token nunca pasa por el Worker. En la
+  demo canjea el Worker con `TIENDANUBE_CLIENT_ID` y `TIENDANUBE_SECRETO`. Sin la app configurada,
+  el botón dice que no está disponible.
+- **Fuentes de la demo** (`importacion/fuentes.ts`): Tiendanube, Shopify y WooCommerce, a la medida de
+  un pedido del Worker: productos de a 5 (`POR_PAGINA`, cada uno se guarda como en el editor),
+  clientes y pedidos de a 50 (un `json_each` por página), una página a la red por paso. Topes de la
+  demo: 500 productos y 1000 clientes y pedidos. Un 429 de Tiendanube espera hasta 3 s y reintenta dos
+  veces; si sigue, el paso devuelve el mismo cursor y el próximo lo reintenta. El e2e usa un
+  Tiendanube falso en localhost (`TIENDANUBE_LOCAL`, sólo se acepta `http://localhost|127.0.0.1`).
 - Las fuentes reales se registran en `importacion.Fuentes()` (Go) y `FUENTES` (TS); mientras falte la
   de una plataforma, crear responde 409 `sin_fuente`.

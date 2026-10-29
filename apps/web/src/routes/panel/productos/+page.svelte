@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
+	import { invalidateAll, replaceState } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import Icon from '#lib/components/Icon.svelte';
 	import Modal from '#lib/components/Modal.svelte';
@@ -14,6 +15,7 @@
 	import type { components } from '@mostrador/contrato/esquema';
 
 	type Producto = components['schemas']['Producto'];
+	type Importacion = components['schemas']['Importacion'];
 
 	/**
 	 * Productos: la lista de PanelListas más lo de PanelCatalogo (cargar con foto, importar Excel y
@@ -122,7 +124,90 @@
 		resumen = null;
 		errorImp = '';
 		importando = true;
+		void leerCola();
 	}
+
+	// Tiendanube va por OAuth y por la cola de importación (productos, clientes y pedidos): el modal
+	// muestra cómo va la importación actual. En la demo cada "avanzar" hace un paso; con la API avanza
+	// sola y "avanzar" sólo lee, así que si nada cambió se espera un poco antes de volver a preguntar.
+	let cola = $state<Importacion | null>(null);
+	let tiendanube = $state<boolean | null>(null);
+	let avisoTN = $state('');
+	const activa = (i: Importacion | null) => i?.estado === 'pendiente' || i?.estado === 'corriendo';
+	const AVISOS: Record<string, string> = {
+		'no-disponible': 'La conexión con Tiendanube todavía no está disponible.',
+		cancelada: 'No se conectó la tienda: Tiendanube no dio el permiso.',
+		estado: 'La conexión venció. Probá de nuevo.',
+		canje: 'Tiendanube no aceptó la conexión. Probá de nuevo.',
+		activa: 'Ya hay una importación en curso: esperá que termine.',
+		'sin-cifrado': 'No podemos guardar la clave de tu tienda. Probá más tarde.',
+		'sin-tiendanube': 'La conexión con Tiendanube todavía no está disponible.'
+	};
+	async function leerCola() {
+		const r = await fetch('/panel/importaciones').catch(() => null);
+		if (!r?.ok) return;
+		const d = (await r.json()) as { importacion: Importacion | null; tiendanube: boolean };
+		tiendanube = d.tiendanube;
+		// Sólo se muestra la de Tiendanube (las de link van lote por lote, sin la cola).
+		if (d.importacion?.plataforma === 'tiendanube' && (activa(d.importacion) || cola)) {
+			cola = d.importacion;
+			if (activa(cola)) void seguir();
+		}
+	}
+	let siguiendo = false;
+	async function seguir() {
+		if (siguiendo) return;
+		siguiendo = true;
+		try {
+			while (importando && activa(cola)) {
+				const antes = JSON.stringify(cola);
+				const r = await post('/panel/importaciones', { accion: 'avanzar' }).catch(() => null);
+				if (!r?.ok) break;
+				cola = (await r.json()) as Importacion | null;
+				if (JSON.stringify(cola) === antes) await new Promise((ok) => setTimeout(ok, 1500));
+			}
+		} finally {
+			siguiendo = false;
+		}
+		if (cola && !activa(cola)) await invalidateAll();
+	}
+	async function cancelarCola() {
+		if (!cola) return;
+		const r = await post('/panel/importaciones', { accion: 'cancelar', id: cola.id });
+		if (r.ok) cola = (await r.json()) as Importacion;
+	}
+	function cerrarCola() {
+		cola = null;
+		importando = false;
+	}
+	// La vuelta del OAuth trae ?tiendanube=importando (o el motivo del error): se abre el modal.
+	$effect(() => {
+		const tn = page.url.searchParams.get('tiendanube');
+		if (!tn) return;
+		replaceState(resolve('/panel/productos'), {});
+		resumen = null;
+		errorImp = '';
+		avisoTN = tn === 'importando' ? '' : (AVISOS[tn] ?? 'No pudimos conectar tu tienda.');
+		importando = true;
+		if (tn === 'importando') cola = { estado: 'pendiente' } as Importacion;
+		void leerCola();
+	});
+	const ETAPAS_COLA = [
+		['productos', 'Productos'],
+		['clientes', 'Clientes'],
+		['pedidos', 'Pedidos']
+	] as const;
+	/** Cuánto va: por etapa, porque Tiendanube no dice el total hasta leer cada una. */
+	const avanceCola = $derived(
+		!cola || !cola.etapa
+			? 4
+			: cola.estado === 'lista'
+				? 100
+				: Math.max(
+						4,
+						(['productos', 'clientes', 'pedidos', 'redirecciones'].indexOf(cola.etapa) + 0.5) * 25
+					)
+	);
 	async function importarTienda() {
 		errorImp = '';
 		avance = { hechas: 0, total: null };
@@ -257,7 +342,67 @@
 
 <Modal bind:open={importando} titulo="Importar tienda" ancho={460} padding={24}>
 	<span class="m-ico"><Icon icon={I.phStorefrontFill} size={26} style="color:#2E2A6B" /></span>
-	{#if resumen}
+	{#if cola}
+		<div class="m-t" role="status">
+			{cola.estado === 'lista'
+				? 'Tu tienda de Tiendanube ya está\u00a0acá'
+				: cola.estado === 'fallida'
+					? 'La importación se\u00a0cortó'
+					: cola.estado === 'cancelada'
+						? 'Frenaste la\u00a0importación'
+						: 'Importando desde\u00a0Tiendanube'}
+		</div>
+		<div class="m-d">
+			{activa(cola)
+				? 'Dejá esta ventana abierta mientras traemos\u00a0todo.'
+				: cola.estado === 'lista'
+					? 'Revisá precios y stock antes de\u00a0vender.'
+					: 'Lo que alcanzó a entrar ya está en tu\u00a0tienda.'}
+		</div>
+		<div
+			class="m-barra"
+			role="progressbar"
+			aria-label="Avance de la importación"
+			aria-valuenow={avanceCola}
+			aria-valuemax={100}
+		>
+			<span style="width:{avanceCola}%"></span>
+		</div>
+		<ul class="m-etapas">
+			{#each ETAPAS_COLA as [k, nombre] (k)}
+				<li
+					class="chip-estado"
+					style:--chip-bg={cola.etapa === k && activa(cola) ? 'rgba(210,88,47,.13)' : 'var(--chip)'}
+					style:--chip-fg={cola.etapa === k && activa(cola) ? '#C24E25' : 'var(--mu)'}
+				>
+					{nombre}
+					{cola.progreso?.[k] ?? 0}
+				</li>
+			{/each}
+		</ul>
+		{#if cola.progreso?.repetidos || cola.progreso?.recortados}
+			<div class="m-d">
+				{[
+					cola.progreso.repetidos && `${cola.progreso.repetidos} ya estaban`,
+					cola.progreso.recortados && `${cola.progreso.recortados} recortados`
+				]
+					.filter(Boolean)
+					.join(' · ')}
+			</div>
+		{/if}
+		{#if cola.errores?.length}
+			<ul class="m-notas m-err" role="alert">
+				{#each cola.errores.slice(-3) as e, i (i)}<li>{e.detalle}</li>{/each}
+			</ul>
+		{/if}
+		<div class="m-acc">
+			{#if activa(cola)}
+				<button type="button" class="btn btn-secondary" onclick={cancelarCola}>Frenar</button>
+			{:else}
+				<button type="button" class="btn btn-dark" onclick={cerrarCola}>Listo</button>
+			{/if}
+		</div>
+	{:else if resumen}
 		<div class="m-t" role="status">
 			{resumen.creados}
 			{resumen.creados === 1 ? 'producto importado' : 'productos importados'} de&nbsp;{NOMBRE[
@@ -298,7 +443,20 @@
 				<span style="width:{avance.total ? (avance.hechas / avance.total) * 100 : 4}%"></span>
 			</div>
 		{:else}
-			<div class="m-c">Plataforma</div>
+			{#if tiendanube === false}
+				<button type="button" class="btn btn-secondary btn-block m-tn" disabled
+					>Tiendanube no está disponible</button
+				>
+			{:else}
+				<a
+					class="btn btn-secondary btn-block m-tn"
+					href={resolve('/panel/importar/tiendanube')}
+					data-sveltekit-reload>Conectar Tiendanube</a
+				>
+			{/if}
+			{#if avisoTN}<div class="m-err" role="alert">{avisoTN}</div>{/if}
+			<div class="m-d m-tn-d">Con Tiendanube traemos también tus clientes y&nbsp;pedidos.</div>
+			<div class="m-c">O pegá el link de otra plataforma</div>
 			<div class="m-seg">
 				<Segmentado opciones={FUENTES} bind:value={fuente} label="Plataforma de tu tienda" />
 			</div>
@@ -545,6 +703,20 @@
 	}
 	.m-seg {
 		margin-top: 6px;
+	}
+	.m-tn {
+		margin-top: 16px;
+	}
+	.m-tn-d {
+		font-size: 13px;
+	}
+	.m-etapas {
+		margin: 12px 0 0;
+		padding: 0;
+		list-style: none;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
 	}
 	.m-seg :global(.seg) {
 		display: flex;

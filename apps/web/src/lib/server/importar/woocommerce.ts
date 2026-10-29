@@ -40,6 +40,7 @@ export type ProductoWoo = {
 	variations?: { id: number; attributes?: { name?: string; value?: string }[] }[];
 	is_in_stock?: boolean;
 	low_stock_remaining?: number | null;
+	permalink?: string;
 };
 
 const API = '/wp-json/wc/store/v1/products';
@@ -116,7 +117,15 @@ export function deWoo(p: ProductoWoo, variaciones: ProductoWoo[] = []): Importad
 		opciones,
 		variantes
 	};
-	return ajustar(crudo);
+	const i = ajustar(crudo);
+	let url = '';
+	try {
+		const path = new URL(p.permalink ?? '').pathname;
+		if (path !== '/') url = path;
+	} catch {
+		// Sin permalink no hay redirección.
+	}
+	return i && { ...i, externo: String(p.id), url };
 }
 
 /** Una página de productos ya leída, con las variaciones de sus productos variables. */

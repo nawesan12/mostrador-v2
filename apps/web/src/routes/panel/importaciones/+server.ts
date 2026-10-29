@@ -5,12 +5,18 @@ import { PLATAFORMAS } from '#lib/server/importacion/fuente.ts';
 import type { RequestHandler } from './$types';
 
 /**
- * La importación desde otra plataforma. GET: cómo va. POST: empezar, avanzar o cancelar. En la demo
- * no hay outbox: cada "avanzar" hace un paso (el navegador lo pide hasta que termina); con la API,
- * avanza sola y "avanzar" sólo lee cómo va.
+ * La importación desde otra plataforma. GET: cómo va y si se puede conectar Tiendanube (para el botón
+ * del modal). POST: empezar, avanzar o cancelar. En la demo no hay outbox: cada "avanzar" hace un paso
+ * (el navegador lo pide hasta que termina); con la API, avanza sola y "avanzar" sólo lee cómo va.
  */
-export const GET: RequestHandler = async ({ locals }) =>
-	json(await datosDe(locals).importacionActual(), { headers: { 'cache-control': 'no-store' } });
+export const GET: RequestHandler = async ({ locals }) => {
+	const datos = datosDe(locals);
+	const [importacion, tiendanube] = await Promise.all([
+		datos.importacionActual(),
+		datos.tiendanubeDisponible()
+	]);
+	return json({ importacion, tiendanube }, { headers: { 'cache-control': 'no-store' } });
+};
 
 const Pedido = v.variant('accion', [
 	v.object({
@@ -28,7 +34,8 @@ const TEXTOS = {
 	'sin-fuente': [409, 'Todavía no podemos importar desde esa plataforma.'],
 	activa: [409, 'Ya hay una importación en curso: esperá que termine o cancelala.'],
 	'no-existe': [404, 'Esa importación no existe.'],
-	terminada: [409, 'Esa importación ya terminó.']
+	terminada: [409, 'Esa importación ya terminó.'],
+	'sin-cifrado': [409, 'No podemos guardar la clave de tu tienda en este momento. Probá más tarde.']
 } as const;
 
 export const POST: RequestHandler = async ({ locals, request }) => {

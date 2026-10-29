@@ -21,6 +21,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/telegram"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/tiendanube"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/cifrado"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/config"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
@@ -102,7 +103,7 @@ func correr() error {
 			Facturacion: facturacionDe(app, cfg.ClaveCifrado),
 			Telegram:    &telegram.Servicio{Pool: app},
 			Equipo:      eq,
-			Importacion: importacionDe(app, cfg.ClaveCifrado),
+			Importacion: importacionDe(app, cfg.ClaveCifrado, cfg.OAuth["tiendanube"]),
 		}),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
@@ -141,9 +142,11 @@ func facturacionDe(app *db.Pool, claveCifrado string) *facturacion.Servicio {
 }
 
 // importacionDe arma la importación con las fuentes que hay. Sin clave de cifrado se puede importar
-// igual desde lo que no pide credencial (una tienda pública, un CSV).
-func importacionDe(app *db.Pool, claveCifrado string) *importacion.Servicio {
-	s := &importacion.Servicio{Pool: app, Fuentes: importacion.Fuentes(importacion.Dependencias{})}
+// igual desde lo que no pide credencial (una tienda pública, un CSV); Tiendanube, no (su token se
+// guarda cifrado). tn son el id y el secreto de la app de socio de Tiendanube.
+func importacionDe(app *db.Pool, claveCifrado string, tn [2]string) *importacion.Servicio {
+	s := &importacion.Servicio{Pool: app, Fuentes: importacion.Fuentes(importacion.Dependencias{}),
+		Tiendanube: tiendanube.App{ID: tn[0], Secreto: tn[1]}}
 	if claveCifrado != "" {
 		if c, err := cifrado.Nuevo(claveCifrado); err == nil {
 			s.Cifra = c

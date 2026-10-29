@@ -7,6 +7,10 @@ import type { components } from '@mostrador/contrato/esquema';
 import type { AjusteIntegracion, EstadoIntegraciones } from '#lib/panel/integraciones.ts';
 import type { Importacion, ImportacionNueva, PedidoHistorial } from '../importacion/fuente.ts';
 
+/** Por qué no se pudo volver de Tiendanube (el panel lo traduce). */
+export type ErrorVueltaTN =
+	'estado' | 'canje' | 'invalido' | 'sin-fuente' | 'activa' | 'sin-cifrado' | 'sin-tiendanube';
+
 export type Rubro = components['schemas']['Rubro'];
 export type Tienda = components['schemas']['Tienda'];
 export type Plan = components['schemas']['Plan'];
@@ -285,7 +289,13 @@ export interface Datos {
 	/** Empieza a importar desde otra plataforma (una sola activa). */
 	crearImportacion(
 		n: ImportacionNueva
-	): Promise<Importacion | 'invalido' | 'sin-fuente' | 'activa'>;
+	): Promise<Importacion | 'invalido' | 'sin-fuente' | 'activa' | 'sin-cifrado'>;
+	/** Si se puede conectar una tienda de Tiendanube (la app de socio está configurada). */
+	tiendanubeDisponible(): Promise<boolean>;
+	/** Adónde mandar a la dueña para autorizar la app (state de un solo uso); null: no disponible. */
+	conectarTiendanube(): Promise<string | null>;
+	/** La vuelta del OAuth: canjea el código y crea la importación con la credencial. */
+	volverTiendanube(codigo: string, estado: string): Promise<Importacion | ErrorVueltaTN>;
 	cancelarImportacion(id: string): Promise<Importacion | 'no-existe' | 'terminada'>;
 	/**
 	 * En la demo hace un paso (no hay outbox: avanza por pedidos del navegador); con la API sólo

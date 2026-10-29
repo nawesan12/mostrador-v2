@@ -187,7 +187,9 @@ export const importaciones = sqliteTable(
 		progreso: text('progreso').notNull(),
 		errores: text('errores').notNull().default('[]'),
 		creada: integer('creada').notNull(),
-		terminada: integer('terminada')
+		terminada: integer('terminada'),
+		/** El token de la plataforma vieja, cifrado (iv.ciphertext). Se borra al terminar. */
+		credencial: text('credencial')
 	},
 	(t) => [
 		primaryKey({ columns: [t.sandboxId, t.id] }),

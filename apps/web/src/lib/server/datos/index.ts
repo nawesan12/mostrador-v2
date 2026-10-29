@@ -5,6 +5,9 @@
 import { env } from 'cloudflare:workers';
 import { redirect, type RequestEvent } from '@sveltejs/kit';
 import { CuentasApi } from '../auth/cuentas.ts';
+import { decrypt, encrypt } from '../cifrado.ts';
+import { fuentes } from '../importacion/fuentes.ts';
+import { localDe } from '../importar/tiendanube.ts';
 import { DatosApi } from './api.ts';
 import { FormulariosApi } from '../formularios.ts';
 import { VidrieraApi } from '../tienda/vidriera.ts';
@@ -21,7 +24,24 @@ export function datosDe(locals: App.Locals): Datos {
 	}
 	// Sin sandbox (cookie vencida o primera visita) se elige rubro de nuevo.
 	if (!locals.sandbox) redirect(303, '/demo');
-	return new DatosSandbox(dbSandbox(env.SANDBOX), locals.sandbox);
+	return new DatosSandbox(dbSandbox(env.SANDBOX), locals.sandbox, extrasSandbox());
+}
+
+/**
+ * Lo que la demo toma del Worker: con qué cifrar credenciales (ENCRYPTION_KEY) y la app de socio de
+ * Tiendanube (TIENDANUBE_CLIENT_ID y TIENDANUBE_SECRETO, secretos de wrangler). Sin la app, el botón
+ * de Tiendanube dice que no está disponible.
+ */
+function extrasSandbox() {
+	const id = String(env.TIENDANUBE_CLIENT_ID ?? '');
+	const secreto = String(env.TIENDANUBE_SECRETO ?? '');
+	// Sólo en las pruebas de punta a punta: un Tiendanube falso en localhost.
+	const local = localDe(env.TIENDANUBE_LOCAL);
+	return {
+		cifra: env.ENCRYPTION_KEY ? { cifrar: encrypt, descifrar: decrypt } : undefined,
+		tiendanube: id && secreto ? { id, secreto, local } : null,
+		fuentes: local ? fuentes({ tiendanubeLocal: local }) : undefined
+	};
 }
 
 type Evento = Pick<RequestEvent, 'request' | 'getClientAddress'>;

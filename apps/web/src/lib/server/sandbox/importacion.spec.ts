@@ -4,13 +4,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { d1Local } from './d1-local.ts';
 import { crear, DatosSandbox, dbSandbox, purgar, VIDA_MS } from './sandbox.ts';
 import { redireccionDe } from './importacion.ts';
-import {
-	ErrorDefinitivo,
-	FUENTES,
-	type Etapa,
-	type Fuente,
-	type Pagina
-} from '../importacion/fuente.ts';
+import { ErrorDefinitivo, type Etapa, type Fuente, type Pagina } from '../importacion/fuente.ts';
+import { FUENTES } from '../importacion/fuentes.ts';
 import type { RegCliente } from './listas.ts';
 import type { Demo } from './demo.ts';
 
@@ -21,10 +16,11 @@ const migraciones = readdirSync(dir)
 	.map((f) => readFileSync(join(dir, f), 'utf8'));
 
 let d1: ReturnType<typeof d1Local> | undefined;
+const tiendanubeReal = FUENTES.tiendanube;
 afterEach(() => {
 	d1?.cerrar();
 	d1 = undefined;
-	delete FUENTES.tiendanube;
+	FUENTES.tiendanube = tiendanubeReal;
 });
 
 const DIA = 86_400_000;
@@ -144,7 +140,7 @@ const FUENTE = () =>
 describe('importación en la demo', () => {
 	it('avanza de a un paso por pedido, sin duplicar, y une los clientes por email', async () => {
 		const { db, sb, datos } = await nueva();
-		expect(await datos.crearImportacion({ plataforma: 'shopify' })).toBe('sin-fuente');
+		expect(await datos.crearImportacion({ plataforma: 'mercadolibre' })).toBe('sin-fuente');
 		FUENTES.tiendanube = () => FUENTE();
 		expect(await datos.crearImportacion({ plataforma: 'tiendanube', url: 'javascript:x' })).toBe(
 			'invalido'

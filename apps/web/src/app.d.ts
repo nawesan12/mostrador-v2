@@ -37,6 +37,11 @@ declare global {
 			AI?: Ai;
 			/** workers-ai en producción; simulado en desarrollo y pruebas (no llama al modelo). */
 			HORNERO?: 'workers-ai' | 'simulado';
+			/** App de socio de Tiendanube (importar con OAuth en la demo). Secretos de wrangler. */
+			TIENDANUBE_CLIENT_ID?: string;
+			TIENDANUBE_SECRETO?: string;
+			/** Sólo en el preview de las pruebas: un Tiendanube falso (http://127.0.0.1:puerto). */
+			TIENDANUBE_LOCAL?: string;
 			/** Bot de Telegram de la plataforma (@mostradorhornero_bot). Secreto. */
 			TELEGRAM_BOT_TOKEN?: string;
 			/** Lo manda Telegram en X-Telegram-Bot-Api-Secret-Token. Secreto (lo generamos nosotros). */

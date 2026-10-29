@@ -16,6 +16,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/tiendanube"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/cifrado"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/outbox"
 )
@@ -55,6 +56,8 @@ type Servicio struct {
 	Pool    tx
 	Cifra   *cifrado.Cifrador
 	Fuentes map[string]Abrir
+	// Tiendanube es la app de socio (MOSTRADOR_TN_CLIENT_ID y MOSTRADOR_TN_SECRETO) para el OAuth.
+	Tiendanube tiendanube.App
 }
 
 // Progreso: lo guardado hasta ahora. Repetidos: lo que ya estaba (o la fuente mandó dos veces);

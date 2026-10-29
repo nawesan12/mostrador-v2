@@ -31,6 +31,14 @@ func escribirError(w http.ResponseWriter, err error) {
 		problema.Escribir(w, problema.Conflicto("terminada", "Esa importación ya terminó."))
 	case errors.Is(err, ErrSinCifrado):
 		problema.Escribir(w, problema.Conflicto("sin_cifrado", "No podemos guardar la clave de tu tienda en este momento. Probá más tarde."))
+	case errors.Is(err, ErrTiendanubeApagado):
+		problema.Escribir(w, problema.Conflicto("sin_tiendanube", "La conexión con Tiendanube todavía no está disponible."))
+	case errors.Is(err, ErrEstado):
+		problema.Escribir(w, problema.Invalido("La conexión con Tiendanube venció. Probá de nuevo."))
+	case errors.Is(err, ErrCanje):
+		slog.Warn("importacion: canje de Tiendanube", "error", err)
+		problema.Escribir(w, &problema.Problema{Estado: http.StatusBadGateway, Codigo: "tiendanube",
+			Titulo: "Tiendanube no respondió", Detalle: "No pudimos conectar tu tienda. Probá de nuevo."})
 	case errors.Is(err, ErrNoExiste):
 		problema.Escribir(w, problema.NoEncontrado("Esa importación no existe."))
 	default:
@@ -75,6 +83,32 @@ func (s *Servicio) Rutas(mux *http.ServeMux) {
 			return
 		}
 		escribir(w, http.StatusOK, imp)
+	}))
+	// Tiendanube: si se puede conectar, adónde mandar a la dueña y la vuelta del OAuth (la web pasa el
+	// código y el state; el token se canjea y se guarda acá, cifrado, y nunca vuelve).
+	mux.HandleFunc("GET /v1/panel/importaciones/tiendanube", panel(func(w http.ResponseWriter, r *http.Request, d cuentas.Datos) {
+		escribir(w, http.StatusOK, map[string]bool{"disponible": s.TiendanubeDisponible()})
+	}))
+	mux.HandleFunc("POST /v1/panel/importaciones/tiendanube/conectar", panel(func(w http.ResponseWriter, r *http.Request, d cuentas.Datos) {
+		u, err := s.ConectarTiendanube(r.Context(), d.TiendaID, d.Rol, d.Usuario.ID)
+		if err != nil {
+			escribirError(w, err)
+			return
+		}
+		escribir(w, http.StatusOK, map[string]string{"url": u})
+	}))
+	mux.HandleFunc("POST /v1/panel/importaciones/tiendanube/vuelta", panel(func(w http.ResponseWriter, r *http.Request, d cuentas.Datos) {
+		var b struct{ Codigo, Estado string }
+		if json.NewDecoder(http.MaxBytesReader(w, r.Body, 4<<10)).Decode(&b) != nil {
+			escribirError(w, ErrInvalido)
+			return
+		}
+		imp, err := s.VolverTiendanube(r.Context(), d.TiendaID, d.Rol, d.Usuario.ID, b.Codigo, b.Estado)
+		if err != nil {
+			escribirError(w, err)
+			return
+		}
+		escribir(w, http.StatusCreated, imp)
 	}))
 	mux.HandleFunc("POST /v1/panel/importaciones/{id}/cancelar", panel(func(w http.ResponseWriter, r *http.Request, d cuentas.Datos) {
 		imp, err := s.Cancelar(r.Context(), d.TiendaID, d.Rol, r.PathValue("id"))

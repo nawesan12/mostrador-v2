@@ -2297,6 +2297,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/importaciones/tiendanube": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Si este servidor puede conectar una tienda de Tiendanube (tiene la app de socio y con qué cifrar el token). */
+        get: operations["tiendanubeDisponible"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/importaciones/tiendanube/conectar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** La URL de autorización de la app de Tiendanube (dueña o admin), con un state de un solo uso de 10 minutos. */
+        post: operations["conectarTiendanube"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/importaciones/tiendanube/vuelta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** La vuelta del OAuth: consume el state, canjea el código por el token (que se guarda cifrado y nunca vuelve) y crea la importación. */
+        post: operations["volverTiendanube"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/importaciones/{id}/cancelar": {
         parameters: {
             query?: never;
@@ -8770,6 +8821,114 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["Problema"];
+        };
+    };
+    tiendanubeDisponible: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Disponibilidad */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        disponible: boolean;
+                    };
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    conectarTiendanube: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Adónde mandar a la persona */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UrlExterna"];
+                };
+            };
+            403: components["responses"]["Problema"];
+            /** @description sin_tiendanube: el servidor no tiene la app configurada */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problema"];
+                };
+            };
+        };
+    };
+    volverTiendanube: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    codigo: string;
+                    estado: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Importación creada */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Importacion"];
+                };
+            };
+            /** @description El state no existe, venció o ya se usó */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problema"];
+                };
+            };
+            403: components["responses"]["Problema"];
+            /** @description sin_tiendanube, importacion_activa o sin_cifrado */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problema"];
+                };
+            };
+            /** @description tiendanube: no aceptó el código */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problema"];
+                };
+            };
         };
     };
     cancelarImportacion: {

@@ -2342,6 +2342,57 @@ paths:
               schema: { $ref: '#/components/schemas/Importacion' }
         '204': { description: Nunca se importó nada }
         '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/importaciones/tiendanube:
+    get:
+      operationId: tiendanubeDisponible
+      summary: Si este servidor puede conectar una tienda de Tiendanube (tiene la app de socio y con qué cifrar el token).
+      responses:
+        '200':
+          description: Disponibilidad
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [disponible]
+                properties:
+                  disponible: { type: boolean }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/importaciones/tiendanube/conectar:
+    post:
+      operationId: conectarTiendanube
+      summary: La URL de autorización de la app de Tiendanube (dueña o admin), con un state de un solo uso de 10 minutos.
+      responses:
+        '200':
+          description: Adónde mandar a la persona
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UrlExterna' }
+        '403': { $ref: '#/components/responses/Problema' }
+        '409': { description: 'sin_tiendanube: el servidor no tiene la app configurada', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problema' } } } }
+  /v1/panel/importaciones/tiendanube/vuelta:
+    post:
+      operationId: volverTiendanube
+      summary: 'La vuelta del OAuth: consume el state, canjea el código por el token (que se guarda cifrado y nunca vuelve) y crea la importación.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [codigo, estado]
+              properties:
+                codigo: { type: string, maxLength: 512 }
+                estado: { type: string, maxLength: 512 }
+      responses:
+        '201':
+          description: Importación creada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Importacion' }
+        '400': { description: 'El state no existe, venció o ya se usó', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problema' } } } }
+        '403': { $ref: '#/components/responses/Problema' }
+        '409': { description: 'sin_tiendanube, importacion_activa o sin_cifrado', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problema' } } } }
+        '502': { description: 'tiendanube: no aceptó el código', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problema' } } } }
   /v1/panel/importaciones/{id}/cancelar:
     post:
       operationId: cancelarImportacion

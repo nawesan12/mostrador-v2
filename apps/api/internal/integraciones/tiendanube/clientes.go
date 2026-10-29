@@ -127,6 +127,8 @@ func PedidoDe(p PedidoTN) (Pedido, bool) {
 		ClienteNombre: corto(valor(p.ContactName), 80),
 		Total:         pesos(p.Total),
 		Estado:        p.Status,
+		// Sin productos, una lista vacía (no null): la web lo compara igual.
+		Items: []Item{},
 	}
 	if c := p.Customer; c != nil {
 		if r.ClienteEmail == "" {

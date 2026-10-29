@@ -71,14 +71,17 @@ export interface Fuente {
 	pagina(etapa: Etapa, cursor: unknown): Promise<Pagina>;
 }
 
-export type Origen = { plataforma: Plataforma; url: string };
+/** De dónde se importa, como `Origen` en Go. La credencial llega descifrada (null si no hay). */
+export type Origen = {
+	plataforma: Plataforma;
+	url: string;
+	/** La tienda de Mostrador (en la demo, el sandbox). */
+	tiendaId: string;
+	credencial: string | null;
+};
 export type Abrir = (o: Origen) => Fuente | Promise<Fuente>;
-
-/**
- * Las fuentes que hay, por plataforma. Cada plataforma se suma acá cuando esté; mientras falte,
- * crear una importación desde ella responde 'sin-fuente'.
- */
-export const FUENTES: Partial<Record<Plataforma, Abrir>> = {};
+/** Las fuentes que hay, por plataforma: están en `./fuentes.ts` (`FUENTES`). */
+export type Fuentes = Partial<Record<Plataforma, Abrir>>;
 
 export const progresoVacio = (): Progreso => ({
 	productos: 0,

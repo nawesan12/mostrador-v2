@@ -180,7 +180,14 @@ export type Crudo = {
 };
 
 /** Un producto listo para guardar, con lo que hay que avisar. */
-export type Importado = { producto: ProductoEditable; recortado: boolean; estimado: boolean };
+export type Importado = {
+	producto: ProductoEditable;
+	recortado: boolean;
+	estimado: boolean;
+	/** El id en la plataforma vieja y el path de su ficha allá (para la redirección 301 de la cola). */
+	externo?: string;
+	url?: string;
+};
 
 /** Lo que devuelven los parsers por página (y lo que comparan los casos compartidos con Go). */
 export type Resultado = {

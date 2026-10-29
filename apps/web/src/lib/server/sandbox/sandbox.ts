@@ -138,10 +138,15 @@ import {
 	aHistorial,
 	avanzarImportacion,
 	cancelarImportacion,
+	conectarTiendanube,
 	crearImportacion,
 	importacionActual,
-	importadosDe
+	importadosDe,
+	volverTiendanube,
+	type Cifra
 } from './importacion.ts';
+import type { AppTN } from '../importar/tiendanube.ts';
+import type { Fuentes } from '../importacion/fuente.ts';
 import type { ImportacionNueva, PedidoHistorial } from '../importacion/fuente.ts';
 import { cuitValido, limpiarCuit } from '#lib/panel/cuit.ts';
 import {
@@ -477,7 +482,9 @@ function medicionDe(c: Map<string, unknown>): Medicion {
 export class DatosSandbox implements Datos {
 	constructor(
 		private db: DbSandbox,
-		private sb: Sandbox
+		private sb: Sandbox,
+		/** Lo que viene del Worker: con qué cifrar credenciales y la app de Tiendanube (si está). */
+		private ext: { cifra?: Cifra; tiendanube?: AppTN | null; fuentes?: Fuentes } = {}
 	) {}
 
 	async rubros() {
@@ -666,18 +673,40 @@ export class DatosSandbox implements Datos {
 		return importacionActual(this.db, this.sb.id);
 	}
 	crearImportacion(n: ImportacionNueva) {
-		return crearImportacion(this.db, this.sb.id, n);
+		return crearImportacion(this.db, this.sb.id, n, this.opcionesImp());
+	}
+	/** El OAuth real también en la demo: hace falta la app de socio y con qué cifrar el token. */
+	async tiendanubeDisponible() {
+		return !!(this.ext.tiendanube && this.ext.cifra);
+	}
+	async conectarTiendanube() {
+		const app = this.ext.tiendanube;
+		if (!app || !this.ext.cifra) return null;
+		return conectarTiendanube(this.db, this.sb.id, app);
+	}
+	async volverTiendanube(codigo: string, estado: string) {
+		const app = this.ext.tiendanube;
+		if (!app) return 'sin-tiendanube' as const;
+		return volverTiendanube(this.db, this.sb.id, app, codigo, estado, this.opcionesImp());
 	}
 	cancelarImportacion(id: string) {
 		return cancelarImportacion(this.db, this.sb.id, id);
 	}
 	/** Sin outbox: un paso por pedido del navegador, con la misma función que el editor de productos. */
 	avanzarImportacion() {
-		return avanzarImportacion(this.db, this.sb.id, {
-			guardarProducto: (p) => this.guardarProducto(null, p),
-			skus: async () =>
-				new Set((await this.regProductos()).map((p) => p.sku.trim()).filter(Boolean))
-		});
+		return avanzarImportacion(
+			this.db,
+			this.sb.id,
+			{
+				guardarProducto: (p) => this.guardarProducto(null, p),
+				skus: async () =>
+					new Set((await this.regProductos()).map((p) => p.sku.trim()).filter(Boolean))
+			},
+			this.opcionesImp()
+		);
+	}
+	private opcionesImp() {
+		return { cifra: this.ext.cifra, fuentes: this.ext.fuentes };
 	}
 	/** Los pedidos importados de un cliente de la lista, del más nuevo al más viejo. */
 	async historialCliente(id: string): Promise<PedidoHistorial[]> {

@@ -83,6 +83,7 @@ import type {
 	Tienda
 } from './tipos.ts';
 import type { Importacion, ImportacionNueva, PedidoHistorial } from '../importacion/fuente.ts';
+import type { ErrorVueltaTN } from './tipos.ts';
 
 /** Un producto de una API sin galería ni variantes todavía se ve como uno sin opciones. */
 function conVariantes(p: Producto): Producto {
@@ -303,7 +304,33 @@ export class DatosApi implements Datos {
 		const p = (await r.json().catch(() => null)) as { code?: string } | null;
 		if (p?.code === 'importacion_activa') return 'activa';
 		if (p?.code === 'sin_fuente') return 'sin-fuente';
+		if (p?.code === 'sin_cifrado') return 'sin-cifrado';
 		error(r.status, 'No pudimos empezar la importación.');
+	}
+	async tiendanubeDisponible() {
+		const r = await this.pedir<{ disponible: boolean }>('/v1/panel/importaciones/tiendanube');
+		return !!r?.disponible;
+	}
+	async conectarTiendanube() {
+		const r = await this.intentar('/v1/panel/importaciones/tiendanube/conectar', 'POST', {});
+		if (!r.ok) return null;
+		return ((await r.json()) as { url: string }).url;
+	}
+	/** Go consume el state, canjea el código y crea la importación: el token no pasa por acá. */
+	async volverTiendanube(codigo: string, estado: string): Promise<Importacion | ErrorVueltaTN> {
+		const r = await this.intentar(
+			'/v1/panel/importaciones/tiendanube/vuelta',
+			'POST',
+			{ codigo, estado },
+			[400, 409, 502]
+		);
+		if (r.ok) return (await r.json()) as Importacion;
+		if (r.status === 400) return 'estado';
+		if (r.status === 502) return 'canje';
+		const p = (await r.json().catch(() => null)) as { code?: string } | null;
+		if (p?.code === 'importacion_activa') return 'activa';
+		if (p?.code === 'sin_cifrado') return 'sin-cifrado';
+		return 'sin-tiendanube';
 	}
 	async cancelarImportacion(id: string) {
 		const r = await this.intentar(

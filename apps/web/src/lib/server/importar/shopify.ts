@@ -77,7 +77,9 @@ export function deShopify(p: ProductoShopify): Importado | null {
 				}))
 			: []
 	};
-	return ajustar(crudo);
+	const i = ajustar(crudo);
+	const h = (p.handle ?? '').replace(/^[/ ]+|[/ ]+$/g, '');
+	return i && { ...i, externo: String(p.id), url: h ? `/products/${h}` : '' };
 }
 
 /** Una página de `/products.json` ya leída. */

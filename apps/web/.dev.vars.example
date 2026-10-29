@@ -1,0 +1,9 @@
+# Copiá este archivo a .dev.vars para levantar la app en local (wrangler --local). En producción van
+# como secretos del Worker (`wrangler secret put NOMBRE`), nunca en wrangler.jsonc.
+INTERNAL_SECRET=
+# Clave AES-256 en base64url (cifra credenciales de integraciones).
+ENCRYPTION_KEY=
+# App de socio de Tiendanube (importar con OAuth). La URL de vuelta de la app:
+# https://mostrador.iamnaw.dev/panel/importar/tiendanube/vuelta
+TIENDANUBE_CLIENT_ID=
+TIENDANUBE_SECRETO=
