@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
-	import { resolve } from '$app/paths';
 	import Icon from '#lib/components/Icon.svelte';
 	import Seo from '#lib/components/Seo.svelte';
 	import * as I from '#lib/icons.ts';
@@ -31,10 +30,6 @@
 	] as const);
 	const maxEntra = $derived(Math.max(1, ...data.flujo.map((f) => f.entra)));
 	const maxSale = $derived(Math.max(1, ...data.flujo.map((f) => f.sale)));
-	const hace = (iso: string) => {
-		const min = Math.max(1, Math.round((Date.now() - Date.parse(iso)) / 60_000));
-		return min < 60 ? `hace ${min} min` : `hace ${Math.round(min / 60)} h`;
-	};
 	function icono(m: M) {
 		if (m.tipo === 'gasto')
 			return {
