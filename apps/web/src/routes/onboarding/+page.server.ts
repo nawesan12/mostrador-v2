@@ -101,7 +101,9 @@ async function arrancarImportacion(
 	const res = await datosDe(event.locals)
 		.crearImportacion({ plataforma: d.fuente, url: d.origen })
 		.catch(() => null);
-	return res && typeof res !== 'string' ? '/panel/productos?importando=1' : '/panel/productos?importar=1';
+	return res && typeof res !== 'string'
+		? '/panel/productos?importando=1'
+		: '/panel/productos?importar=1';
 }
 
 export const actions: Actions = {
