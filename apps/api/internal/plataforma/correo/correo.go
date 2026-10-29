@@ -1,12 +1,15 @@
 // Package correo manda mails transaccionales (recuperar contraseña, avisos). Tres implementaciones:
-// Resend en producción, SMTP contra Mailpit en desarrollo y Memoria en los tests.
+// Resend, SMTP (Mailpit en desarrollo, o el servidor de correo propio con usuario y TLS) y Memoria
+// en los tests.
 package correo
 
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"net/smtp"
 	"strings"
@@ -60,8 +63,18 @@ func (r *Resend) Enviar(ctx context.Context, m Mensaje) error {
 	return nil
 }
 
-// SMTP sin autenticación: para Mailpit en desarrollo (infra/compose.dev.yml).
-type SMTP struct{ Direccion, De string }
+// SMTP manda por un servidor SMTP. Sin Usuario, sin autenticación: Mailpit en desarrollo
+// (infra/compose.dev.yml). Con Usuario y Clave, el servidor de correo propio: en el puerto 465 con
+// TLS desde el arranque (submissions) y en los demás con STARTTLS.
+type SMTP struct{ Direccion, De, Usuario, Clave string }
+
+// Elegir arma el correo según la configuración: Resend si hay clave; si no, SMTP.
+func Elegir(resendClave, smtpDireccion, usuario, clave, de string) Correo {
+	if resendClave != "" {
+		return &Resend{Clave: resendClave, De: de}
+	}
+	return &SMTP{Direccion: smtpDireccion, De: de, Usuario: usuario, Clave: clave}
+}
 
 func (s *SMTP) Enviar(_ context.Context, m Mensaje) error {
 	// Para y Asunto van en los encabezados: un salto de línea metería encabezados ajenos.
@@ -74,7 +87,62 @@ func (s *SMTP) Enviar(_ context.Context, m Mensaje) error {
 	fmt.Fprintf(&b, "Content-Type: multipart/alternative; boundary=%s\r\n\r\n", frontera)
 	fmt.Fprintf(&b, "--%s\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n%s\r\n", frontera, m.Texto)
 	fmt.Fprintf(&b, "--%s\r\nContent-Type: text/html; charset=utf-8\r\n\r\n%s\r\n--%s--\r\n", frontera, m.HTML, frontera)
-	return smtp.SendMail(s.Direccion, nil, direccionDe(s.De), []string{m.Para}, []byte(b.String()))
+	if s.Usuario == "" {
+		return smtp.SendMail(s.Direccion, nil, direccionDe(s.De), []string{m.Para}, []byte(b.String()))
+	}
+	return s.conUsuario(m.Para, []byte(b.String()))
+}
+
+// conUsuario manda autenticado y siempre cifrado: nunca manda la clave en claro.
+func (s *SMTP) conUsuario(para string, cuerpo []byte) error {
+	host, puerto, err := net.SplitHostPort(s.Direccion)
+	if err != nil {
+		return fmt.Errorf("correo: dirección SMTP inválida: %w", err)
+	}
+	cfg := &tls.Config{ServerName: host, MinVersion: tls.VersionTLS12}
+	d := &net.Dialer{Timeout: 20 * time.Second}
+	var c *smtp.Client
+	if puerto == "465" {
+		con, err := tls.DialWithDialer(d, "tcp", s.Direccion, cfg)
+		if err != nil {
+			return err
+		}
+		if c, err = smtp.NewClient(con, host); err != nil {
+			return err
+		}
+	} else {
+		con, err := d.Dial("tcp", s.Direccion)
+		if err != nil {
+			return err
+		}
+		if c, err = smtp.NewClient(con, host); err != nil {
+			return err
+		}
+		if err := c.StartTLS(cfg); err != nil {
+			return fmt.Errorf("correo: el servidor no acepta STARTTLS: %w", err)
+		}
+	}
+	defer c.Close()
+	if err := c.Auth(smtp.PlainAuth("", s.Usuario, s.Clave, host)); err != nil {
+		return err
+	}
+	if err := c.Mail(direccionDe(s.De)); err != nil {
+		return err
+	}
+	if err := c.Rcpt(para); err != nil {
+		return err
+	}
+	w, err := c.Data()
+	if err != nil {
+		return err
+	}
+	if _, err := w.Write(cuerpo); err != nil {
+		return err
+	}
+	if err := w.Close(); err != nil {
+		return err
+	}
+	return c.Quit()
 }
 
 func direccionDe(de string) string {

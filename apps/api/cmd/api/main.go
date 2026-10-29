@@ -45,17 +45,17 @@ func correr() error {
 	if err := cfg.Exigir("BaseApp"); err != nil {
 		return err
 	}
-	// Fuera de desarrollo los mails salen por Resend y hace falta la clave del BFF: si faltan, la API
-	// no arranca (mejor que arrancar y no mandar los links de recuperación).
+	// Fuera de desarrollo hace falta un correo de verdad (Resend o el servidor propio) y la clave del
+	// BFF: si faltan, la API no arranca (mejor que arrancar y no mandar los links de recuperación).
 	if !cfg.Desarrollo() {
-		if err := cfg.Exigir("ResendClave", "ClaveBFF"); err != nil {
+		if err := cfg.Exigir("ClaveBFF"); err != nil {
+			return err
+		}
+		if err := cfg.ExigirCorreo(); err != nil {
 			return err
 		}
 	}
-	var mails correo.Correo = &correo.SMTP{Direccion: cfg.SMTP, De: cfg.CorreoDe}
-	if cfg.ResendClave != "" {
-		mails = &correo.Resend{Clave: cfg.ResendClave, De: cfg.CorreoDe}
-	}
+	mails := correo.Elegir(cfg.ResendClave, cfg.SMTP, cfg.SMTPUsuario, cfg.SMTPClave, cfg.CorreoDe)
 	// WhatsApp de la plataforma: con credenciales, Cloud API; en desarrollo, al log; si no, apagado.
 	var wa whatsapp.Mensajero
 	switch {

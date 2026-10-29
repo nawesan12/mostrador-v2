@@ -20,8 +20,8 @@ type Config struct {
 	Sitio string
 	// Clave que comparte con el BFF (SvelteKit): habilita creerle X-Cliente-IP.
 	ClaveBFF string
-	// Correo: Resend en producción; en desarrollo, SMTP de Mailpit.
-	ResendClave, CorreoDe, SMTP string
+	// Correo: Resend, o un SMTP con usuario (el servidor propio); en desarrollo, SMTP de Mailpit.
+	ResendClave, CorreoDe, SMTP, SMTPUsuario, SMTPClave string
 	// Bandeja del equipo: le llegan las consultas de ventas, las postulaciones de partners y los
 	// arrepentimientos. Vacía: no se avisa (los pedidos quedan igual en la base).
 	CorreoEquipo string
@@ -58,6 +58,8 @@ func Leer() (Config, error) {
 		ResendClave:  os.Getenv("MOSTRADOR_RESEND_CLAVE"),
 		CorreoDe:     valor("MOSTRADOR_CORREO_DE", "Tu Local Web <hola@tulocalweb.com.ar>"),
 		SMTP:         os.Getenv("MOSTRADOR_SMTP"),
+		SMTPUsuario:  os.Getenv("MOSTRADOR_SMTP_USUARIO"),
+		SMTPClave:    os.Getenv("MOSTRADOR_SMTP_CLAVE"),
 		CorreoEquipo: os.Getenv("MOSTRADOR_CORREO_EQUIPO"),
 		OAuth: map[string][2]string{
 			"google":       {os.Getenv("MOSTRADOR_GOOGLE_CLIENT_ID"), os.Getenv("MOSTRADOR_GOOGLE_SECRETO")},
@@ -90,6 +92,15 @@ func Leer() (Config, error) {
 		c.Sitio = conDefecto(os.Getenv("MOSTRADOR_SITIO"), "http://localhost:5173")
 	}
 	return c, nil
+}
+
+// ExigirCorreo falla si no hay por dónde mandar mails de verdad: Resend, o un SMTP con usuario y
+// clave (nunca el Mailpit de desarrollo).
+func (c Config) ExigirCorreo() error {
+	if c.ResendClave != "" || (c.SMTP != "" && c.SMTPUsuario != "" && c.SMTPClave != "") {
+		return nil
+	}
+	return fmt.Errorf("falta configurar el correo: MOSTRADOR_RESEND_CLAVE, o MOSTRADOR_SMTP con MOSTRADOR_SMTP_USUARIO y MOSTRADOR_SMTP_CLAVE")
 }
 
 // Exigir falla si falta alguna de las variables pedidas (por nombre de campo).

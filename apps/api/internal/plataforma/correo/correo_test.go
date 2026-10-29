@@ -46,3 +46,13 @@ func TestDireccionDe(t *testing.T) {
 		t.Fatal(got)
 	}
 }
+
+func TestElegir(t *testing.T) {
+	if _, ok := Elegir("re_x", "mail:465", "u", "c", "De <a@b.c>").(*Resend); !ok {
+		t.Fatal("con clave de Resend tiene que usar Resend")
+	}
+	s, ok := Elegir("", "mail.tulocalweb.com.ar:465", "u", "c", "De <a@b.c>").(*SMTP)
+	if !ok || s.Usuario != "u" || s.Clave != "c" {
+		t.Fatalf("sin Resend tiene que usar SMTP con usuario: %+v", s)
+	}
+}

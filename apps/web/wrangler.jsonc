@@ -1,6 +1,10 @@
 {
 	"$schema": "./node_modules/wrangler/config-schema.json",
-	"name": "mostrador",
+	// Dos despliegues de la misma app. Esta configuración (la de arriba) es la demo pública con sandbox
+	// en D1, en demo.tulocalweb.com.ar, y la que usan el desarrollo y los e2e: `wrangler deploy`.
+	// Producción (tulocalweb.com.ar, la API Go del VPS) es el entorno `produccion`, que conserva el
+	// Worker "mostrador" con sus secretos: `wrangler deploy --env produccion`.
+	"name": "mostrador-demo",
 	"account_id": "ce736d18d9f37624e453e7b3f9aa96a2",
 	"compatibility_date": "2026-10-18",
 	"compatibility_flags": ["nodejs_als", "nodejs_compat"],
@@ -9,10 +13,7 @@
 		"binding": "ASSETS",
 		"directory": ".svelte-kit/cloudflare"
 	},
-	"routes": [
-		{ "pattern": "tulocalweb.com.ar", "custom_domain": true },
-		{ "pattern": "www.tulocalweb.com.ar", "custom_domain": true }
-	],
+	"routes": [{ "pattern": "demo.tulocalweb.com.ar", "custom_domain": true }],
 	"workers_dev": false,
 	"preview_urls": false,
 	"observability": { "enabled": true },
@@ -38,12 +39,44 @@
 	// corre con --local y HORNERO=simulado.
 	"ai": { "binding": "AI", "remote": true },
 	"vars": {
-		"PUBLIC_SITE_URL": "https://tulocalweb.com.ar",
+		"PUBLIC_SITE_URL": "https://demo.tulocalweb.com.ar",
 		// sandbox: la demo pública con datos por visitante en D1. api: la API Go del VPS.
 		"DATA_SOURCE": "sandbox",
 		// URL de la API Go cuando DATA_SOURCE=api (VPS). Vacía en la demo.
 		"API_URL": "",
 		// Hornero: workers-ai (el modelo) o simulado (respuestas armadas, sin llamar al modelo).
 		"HORNERO": "workers-ai"
+	},
+	"env": {
+		"produccion": {
+			"name": "mostrador",
+			"routes": [
+				{ "pattern": "tulocalweb.com.ar", "custom_domain": true },
+				{ "pattern": "www.tulocalweb.com.ar", "custom_domain": true }
+			],
+			// Los bindings no se heredan entre entornos: son los mismos recursos que la demo.
+			"d1_databases": [
+				{
+					"binding": "SANDBOX",
+					"database_name": "mostrador-sandbox",
+					"database_id": "9efb42e6-6750-4f05-9a89-00731e798113",
+					"migrations_dir": "migraciones-sandbox"
+				},
+				{
+					"binding": "ESTADO",
+					"database_name": "mostrador-estado",
+					"database_id": "4d1f0082-f683-4f1c-83f5-cdbbdc0b97d2",
+					"migrations_dir": "migraciones-estado"
+				}
+			],
+			"r2_buckets": [{ "binding": "FILES", "bucket_name": "mostrador-files" }],
+			"ai": { "binding": "AI", "remote": true },
+			"vars": {
+				"PUBLIC_SITE_URL": "https://tulocalweb.com.ar",
+				"DATA_SOURCE": "api",
+				"API_URL": "https://api.tulocalweb.com.ar",
+				"HORNERO": "workers-ai"
+			}
+		}
 	}
 }

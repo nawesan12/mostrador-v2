@@ -61,6 +61,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 		u.hostname = u.hostname.slice(4);
 		return secure(new Response(null, { status: 301, headers: { location: u.href } }));
 	}
+	// La demo (demo.tulocalweb.com.ar) no se indexa: el sitio que cuenta para Google es el de producción.
+	const demo = event.url.hostname.startsWith('demo.');
 	if (!dev && csrfForbidden(event.request, event.url))
 		return secure(
 			new Response(`Cross-site ${event.request.method} form submissions are forbidden`, {
@@ -88,6 +90,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		event.locals.sandbox = await leer(dbSandbox(env.SANDBOX), event.cookies.get(COOKIE));
 	}
 	let res = secure(await resolve(event));
+	if (demo) res.headers.set('X-Robots-Tag', 'noindex');
 	// Un link de la tienda vieja (importada): si el path de la tienda no existe y había una dirección
 	// guardada, 301 a la nueva. Sólo ante un 404, así las páginas que existen no consultan nada.
 	if (
