@@ -121,9 +121,6 @@
 						<span>¿Qué vendí más ayer?</span><span>Armá una promo de fin de mes</span>
 					</div>
 				</div>
-				<div class="ia-ave" use:anim={{ t: 'float', dur: 3800 }}>
-					<img src="/hornero/hablando.webp" alt="Tincho" />
-				</div>
 			</div>
 
 			<div class="caja fact" use:anim={{ t: 'reveal', delay: 100 }} use:spot>
@@ -500,24 +497,6 @@
 		border-radius: 999px;
 		background: rgba(255, 255, 255, 0.16);
 		border: 1px solid rgba(255, 255, 255, 0.3);
-	}
-	.ia-ave {
-		position: relative;
-		flex: 0 0 190px;
-		height: 190px;
-		border-radius: 50%;
-		overflow: hidden;
-		padding: 14px;
-		background: #fbf7f2;
-		box-shadow:
-			0 0 0 8px rgba(255, 255, 255, 0.18),
-			0 30px 50px -20px rgba(42, 20, 12, 0.6);
-	}
-	.ia-ave img {
-		display: block;
-		width: 100%;
-		height: 100%;
-		object-fit: contain;
 	}
 	.fact {
 		flex: 1 1 340px;

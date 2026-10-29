@@ -55,7 +55,6 @@
 			aria-expanded={l.widgetOpen}
 			onclick={() => (l.widgetOpen = !l.widgetOpen)}
 		>
-			<span class="pulso" use:anim={{ t: 'pulse', dur: 2600 }}></span>
 			<span class="foto"><img src="/hornero/avatar.webp" alt="" /></span>
 		</button>
 	</div>
@@ -128,12 +127,6 @@
 		border: 0;
 		padding: 0;
 		background: transparent;
-	}
-	.pulso {
-		position: absolute;
-		inset: 0;
-		border-radius: 50%;
-		border: 2px solid #d2582f;
 	}
 	.foto {
 		position: absolute;

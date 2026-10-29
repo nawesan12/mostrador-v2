@@ -147,17 +147,14 @@ test('producto dice con qué se conecta y desde qué IA se maneja', async ({ pag
 	await expect(sec.getByText('ChatGPT')).toBeVisible();
 });
 
-test('precios: la calculadora y el ciclo anual cambian los montos', async ({ page }) => {
+test('precios: el ciclo anual cambia los montos', async ({ page }) => {
 	await page.goto('/');
 	await listo(page);
 	const sec = page.locator('section#precios');
-	await sec.getByLabel('Vendo por mes').fill('1000000');
-	await expect(sec.getByText('Plan Emprende · 0% de comisión de Tu Local Web')).toBeVisible();
-	await sec.getByLabel('Vendo por mes').fill('20000000');
-	await expect(sec.getByText('Plan Negocio · 0% de comisión de Tu Local Web')).toBeVisible();
+	await expect(sec.getByText('$ 149.900').first()).toBeVisible();
 	await sec.getByRole('button', { name: /Anual/ }).click();
-	await expect(sec.getByText('$ 37.425').first()).toBeVisible();
-	await expect(sec.getByText('$ 449.100 por año')).toBeVisible();
+	await expect(sec.getByText('$ 112.425').first()).toBeVisible();
+	await expect(sec.getByText('$ 1.349.100 por año')).toBeVisible();
 });
 
 test('el widget de Tincho arranca cerrado, se abre y se minimiza', async ({ page }) => {

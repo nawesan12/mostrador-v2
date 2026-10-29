@@ -3,20 +3,14 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import { anim } from '#lib/anim.ts';
 	import * as I from '#lib/icons.ts';
-	import Marca from './Marca.svelte';
-	import { CMP, LPLANS } from './datos.ts';
+	import { LPLANS } from './datos.ts';
 	import { fmt } from './formato.ts';
 
-	/** Precios de la landing (handoff: #precios y #planes): calculadora, planes y comparativa. */
+	/** Precios de la landing (handoff: #precios y #planes): los planes. */
 	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Mostrador.dc.html).
 	const registro = resolve('/onboarding');
 
-	let ventas = $state(6_000_000);
 	let anual = $state(false);
-	// Tramo según lo que vende por mes (handoff): contra Esencial, Impulso o Escala de Tiendanube.
-	const tramo = $derived(ventas < 1_500_000 ? 0 : ventas < 8_000_000 ? 1 : 2);
-	const mostrador = $derived([19_900, 49_900, 149_900][tramo]);
-	const otro = $derived([27_999, 79_999, 244_999][tramo]);
 
 	const planes = $derived(
 		LPLANS.map(([n, d, p, f, cta, hi]) => {
@@ -35,77 +29,16 @@
 	);
 </script>
 
-{#snippet valor(t: string)}
-	{@const [a, b] = t.split(' · ')}
-	<span class="val"
-		>{a}{#if b}<span class="sep"> · </span><span class="pr">{b}</span>{/if}</span
-	>
-{/snippet}
-
 <section id="precios">
 	<div class="curvas"></div>
 	<div class="luz"></div>
-	<div class="calc-zona">
-		<div class="calc-txt" use:anim={'reveal'}>
-			<div class="etiq"><span></span>Precio</div>
-			<h2>Cuanto más vendés, más ahorrás.</h2>
-			<p>
-				Cada plan de Tu Local Web cuesta menos que su equivalente en Tiendanube, y trae Tincho,
-				factura de ARCA y punto de venta incluidos.
-			</p>
-			<div class="slider">
-				<div class="s-cab">
-					<label for="ventas">Vendo por mes</label><span class="s-v">{fmt(ventas)}</span>
-				</div>
-				<input
-					id="ventas"
-					type="range"
-					min="500000"
-					max="30000000"
-					step="100000"
-					bind:value={ventas}
-				/>
-				<div class="s-pie"><span>$ 500 mil</span><span>$ 30 millones</span></div>
-			</div>
-		</div>
-		<div class="calc" use:anim={{ t: 'reveal', delay: 120 }}>
-			<div class="filas">
-				<div>
-					<div class="f-cab">
-						<span class="f-n"><Marca alto={14} />Tu Local Web</span><span class="f-v"
-							>{fmt(mostrador)} / mes</span
-						>
-					</div>
-					<div class="barra">
-						<div class="nuestra" style:width="{((mostrador / otro) * 100).toFixed(1)}%"></div>
-					</div>
-					<div class="f-pie">
-						Plan {['Emprende', 'Pro', 'Negocio'][tramo]} · 0% de comisión de Tu Local Web
-					</div>
-				</div>
-				<div>
-					<div class="f-cab">
-						<span class="f-o">Tiendanube</span><span class="f-o b">{fmt(otro)} / mes</span>
-					</div>
-					<div class="barra"><div class="ellos"></div></div>
-					<div class="f-pie">
-						Plan {['Esencial', 'Impulso', 'Escala'][tramo]} · precio publicado
-					</div>
-				</div>
-			</div>
-			<div class="ahorro">
-				<div>
-					<div class="a-l">Ahorrás por año</div>
-					<div class="a-v">{fmt(Math.max(0, (otro - mostrador) * 12))}</div>
-				</div>
-				<a href="#planes">Ver planes</a>
-			</div>
-		</div>
-	</div>
 
 	<div id="planes" class="planes-zona">
 		<div class="p-cab" use:anim={'reveal'}>
-			<h3>Más barato en cada escalón. Y con más cosas adentro.</h3>
+			<div>
+				<div class="etiq"><span></span>Precios</div>
+				<h2>Más barato en cada escalón. Y con más cosas adentro.</h2>
+			</div>
 			<div class="ciclo" role="group" aria-label="Ciclo de facturación">
 				<button type="button" aria-pressed={!anual} onclick={() => (anual = false)}>Mensual</button>
 				<button type="button" aria-pressed={anual} onclick={() => (anual = true)}
@@ -134,11 +67,6 @@
 				</div>
 			{/each}
 		</div>
-		<p class="nota" use:anim={'reveal'}>
-			Las respuestas que Tincho contesta solo (horarios, envíos, stock) no cuentan como IA. Si te
-			quedás corto, 2.000 más por $&nbsp;4.900. Los mensajes de WhatsApp los cobra Meta a su costo y
-			los primeros 1.000 de cada mes son&nbsp;gratis.
-		</p>
 		<div class="empresa" use:anim={'reveal'}>
 			<Icon icon={I.phBuildingsFill} size={24} style="color:#F5B796" />
 			<div class="e-txt">
@@ -149,42 +77,6 @@
 			</div>
 			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- /contacto llega con las páginas públicas -->
 			<a href="/contacto">Hablar con ventas</a>
-		</div>
-		<details class="comparar" use:anim={'reveal'}>
-			<summary
-				>Comparar plan por plan con Tiendanube<Icon icon={I.phCaretDownBold} size={14} /></summary
-			>
-			<div class="tabla">
-				<div class="t-fila cab">
-					<span class="t-col">Plan por plan</span><span class="t-m"
-						><img src="/mark.svg" alt="" width="18" />Tu Local Web</span
-					><span class="t-col">Tiendanube</span>
-				</div>
-				{#each CMP as [t, m, o, mOk, oOk] (t)}
-					<div class="t-fila">
-						<span class="t-t">{t}</span>
-						<span class="t-m"
-							><Icon
-								icon={mOk ? I.phCheckCircleFill : I.phMinusCircle}
-								size={16}
-								style="color:{mOk ? '#7FD3A6' : '#B8A293'};flex:none"
-							/>{@render valor(m)}</span
-						>
-						<span class="t-o"
-							><Icon
-								icon={oOk === 1 ? I.phCheckCircleFill : oOk === 2 ? I.phClock : I.phMinusCircle}
-								size={16}
-								style="color:{oOk === 1 ? '#D9C8BA' : oOk === 2 ? '#E3A93B' : '#8F7B6C'};flex:none"
-							/>{@render valor(o)}</span
-						>
-					</div>
-				{/each}
-			</div>
-		</details>
-		<div class="legal">
-			Precios mensuales con IVA. Tiendanube según tiendanube.com/site/tienda-gratis, octubre de
-			2026; “No figura en el plan” significa que no aparece entre las funciones que publica para ese
-			plan. Verificá precios vigentes antes de publicar.
 		</div>
 	</div>
 </section>
@@ -202,53 +94,10 @@
 		inset: 0;
 		background: url('/textura/curvas-oscuras.svg') center / cover no-repeat;
 	}
-	.nota {
-		margin: 18px auto 0;
-		max-width: 760px;
-		text-align: center;
-		font-size: 13.5px;
-		line-height: 1.55;
-		color: #d9c8ba;
-		text-wrap: pretty;
-	}
-	.comparar {
-		margin-top: 28px;
-	}
-	.comparar summary {
-		list-style: none;
-		cursor: pointer;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		gap: 8px;
-		padding: 14px;
-		font-size: 14.5px;
-		font-weight: 600;
-		color: #f5b796;
-	}
-	.comparar summary::-webkit-details-marker {
-		display: none;
-	}
-	.comparar[open] summary :global(svg) {
-		transform: rotate(180deg);
-	}
 	.luz {
 		position: absolute;
 		inset: 0;
 		background: radial-gradient(700px 500px at 100% 0%, rgba(210, 88, 47, 0.3), transparent 70%);
-	}
-	.calc-zona {
-		position: relative;
-		max-width: 1240px;
-		margin: 0 auto;
-		padding: 120px var(--lado);
-		display: flex;
-		gap: 56px;
-		flex-wrap: wrap;
-		align-items: center;
-	}
-	.calc-txt {
-		flex: 1 1 420px;
 	}
 	.etiq {
 		display: flex;
@@ -272,131 +121,6 @@
 		font-weight: 600;
 		text-wrap: balance;
 	}
-	.calc-txt > p {
-		margin: 20px 0 0;
-		font-size: 17px;
-		line-height: 1.55;
-		color: #d9c8ba;
-		max-width: 440px;
-	}
-	.slider {
-		margin-top: 40px;
-		padding: 22px;
-		border-radius: 20px;
-		background: rgba(251, 247, 242, 0.06);
-		border: 1px solid rgba(251, 247, 242, 0.12);
-	}
-	.s-cab {
-		display: flex;
-		justify-content: space-between;
-		align-items: baseline;
-	}
-	.s-cab label {
-		font-size: 14px;
-		color: #d9c8ba;
-	}
-	.s-v {
-		font-size: 28px;
-		font-weight: 600;
-		letter-spacing: -0.03em;
-	}
-	.slider input {
-		width: 100%;
-		margin-top: 14px;
-	}
-	.s-pie {
-		display: flex;
-		justify-content: space-between;
-		font-size: 12px;
-		color: #b8a293;
-		margin-top: 6px;
-	}
-	.calc {
-		flex: 1 1 440px;
-		border-radius: 26px;
-		background: #fbf7f2;
-		color: #2a140c;
-		padding: 32px;
-		box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.6);
-	}
-	.filas {
-		display: flex;
-		flex-direction: column;
-		gap: 22px;
-	}
-	.f-cab {
-		display: flex;
-		justify-content: space-between;
-		font-size: 15px;
-	}
-	.f-n {
-		font-weight: 600;
-		display: flex;
-		align-items: center;
-		gap: 8px;
-	}
-	.f-v {
-		font-weight: 600;
-	}
-	.f-o {
-		color: #5c4536;
-	}
-	.f-o.b {
-		font-weight: 600;
-	}
-	.barra {
-		margin-top: 10px;
-		height: 14px;
-		border-radius: 8px;
-		background: #efe6da;
-		overflow: hidden;
-	}
-	.nuestra {
-		height: 100%;
-		border-radius: 8px;
-		background: linear-gradient(90deg, #d2582f, #e8875f);
-		transition: width 0.5s cubic-bezier(0.2, 0.7, 0.1, 1);
-	}
-	.ellos {
-		height: 100%;
-		width: 100%;
-		border-radius: 8px;
-		background: repeating-linear-gradient(135deg, #c9b6a6 0 6px, #bca796 6px 12px);
-	}
-	.f-pie {
-		margin-top: 6px;
-		font-size: 13px;
-		color: #7a6252;
-	}
-	.ahorro {
-		margin-top: 28px;
-		padding-top: 24px;
-		border-top: 1px dashed rgba(58, 29, 18, 0.2);
-		display: flex;
-		justify-content: space-between;
-		align-items: end;
-		gap: 16px;
-		flex-wrap: wrap;
-	}
-	.a-l {
-		font-size: 14px;
-		color: #7a6252;
-	}
-	.a-v {
-		font-size: 46px;
-		font-weight: 600;
-		letter-spacing: -0.045em;
-		color: #b0441d;
-		margin-top: 2px;
-	}
-	.ahorro a {
-		color: #fff;
-		background: #2a140c;
-		font-weight: 600;
-		font-size: 15px;
-		padding: 13px 20px;
-		border-radius: 999px;
-	}
 	.planes-zona {
 		position: relative;
 		max-width: 1240px;
@@ -411,7 +135,7 @@
 		gap: 18px;
 		flex-wrap: wrap;
 	}
-	h3 {
+	h2 {
 		margin: 0;
 		font-size: clamp(30px, 3.6vw, 46px);
 		line-height: 1.02;
@@ -540,19 +264,15 @@
 		color: #fff;
 	}
 	.empresa {
-		display: flex;
-		gap: 12px;
-		padding: 16px 18px;
-		border-radius: 22px;
-		background: rgba(251, 247, 242, 0.05);
-		border: 1px solid rgba(251, 247, 242, 0.12);
-	}
-	.empresa {
 		margin-top: 12px;
+		display: flex;
 		align-items: center;
 		gap: 14px;
 		flex-wrap: wrap;
 		padding: 16px 20px;
+		border-radius: 22px;
+		background: rgba(251, 247, 242, 0.05);
+		border: 1px solid rgba(251, 247, 242, 0.12);
 	}
 	.e-txt {
 		flex: 1;
@@ -572,93 +292,5 @@
 		color: #2a140c;
 		font-size: 14px;
 		font-weight: 600;
-	}
-	.tabla {
-		margin-top: 8px;
-		border-radius: 26px;
-		background: rgba(251, 247, 242, 0.04);
-		border: 1px solid rgba(251, 247, 242, 0.12);
-		overflow: hidden;
-	}
-	.t-fila {
-		display: grid;
-		grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
-		gap: 12px;
-		padding: 13px 20px;
-		border-top: 1px solid rgba(251, 247, 242, 0.07);
-		font-size: 14px;
-		align-items: center;
-	}
-	.t-fila.cab {
-		padding: 16px 20px;
-		border-top: 0;
-		border-bottom: 1px solid rgba(251, 247, 242, 0.12);
-		font-weight: 600;
-	}
-	.t-col {
-		color: #d9c8ba;
-	}
-	.t-t {
-		color: #f4eae0;
-	}
-	.t-m {
-		display: flex;
-		align-items: center;
-		gap: 7px;
-		font-weight: 600;
-		min-width: 0;
-	}
-	.cab .t-m {
-		gap: 8px;
-	}
-	.t-o {
-		display: flex;
-		align-items: center;
-		gap: 7px;
-		color: #d9c8ba;
-		min-width: 0;
-	}
-	.legal {
-		margin-top: 10px;
-		font-size: 12.5px;
-		color: #b8a293;
-	}
-	/* En mobile, tres columnas no entran: el concepto va arriba y abajo Tu Local Web contra Tiendanube. */
-	@media (max-width: 640px) {
-		.t-fila {
-			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-			gap: 6px 12px;
-			padding: 14px 16px;
-		}
-		.t-fila .t-t {
-			grid-column: 1 / -1;
-			font-size: 13px;
-			color: #d9c8ba;
-		}
-		.t-fila.cab {
-			padding: 14px 16px;
-		}
-		.t-fila.cab > .t-col:first-child {
-			display: none;
-		}
-		.t-m,
-		.t-o {
-			align-items: flex-start;
-			font-size: 14px;
-			line-height: 1.35;
-		}
-		.sep {
-			display: none;
-		}
-		.pr {
-			display: block;
-			font-weight: 500;
-			opacity: 0.8;
-			white-space: nowrap;
-		}
-		.t-m :global(svg),
-		.t-o :global(svg) {
-			margin-top: 1px;
-		}
 	}
 </style>
