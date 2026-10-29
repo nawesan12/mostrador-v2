@@ -13,9 +13,8 @@ test('botón de arrepentimiento de la tienda: código de trámite y devolución 
 	const slug = (await page.locator('.t-d').first().textContent())!.split('/t/')[1].trim();
 
 	// Una compra en la tienda.
-	await page.goto(`/t/${slug}/catalogo`);
-	await listo(page);
-	await page.locator('a[href*="/producto/"]').first().click();
+	// Un producto sin presentaciones, para que "Agregar al carrito" esté a mano (como en carritos).
+	await page.goto(`/t/${slug}/producto/bombilla-alpaca`);
 	await listo(page);
 	await page.getByRole('button', { name: 'Agregar al carrito' }).click();
 	await page.getByRole('link', { name: 'Finalizar compra' }).click();
