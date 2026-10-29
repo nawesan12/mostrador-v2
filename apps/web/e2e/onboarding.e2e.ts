@@ -17,7 +17,7 @@ test('el onboarding se recorre entero y termina en el panel con la demo armada',
 	await page.goto('/onboarding');
 	await listo(page);
 	expect(await sinDesborde(page)).toBeLessThanOrEqual(0);
-	await expect(page.locator('h1').first()).toHaveText('Abrí tu local web. No arrancás de cero.');
+	await expect(page.locator('h1').first()).toHaveText('Abrí Tu Local Web. No arrancás de cero.');
 
 	// 1 → 2: en la demo, cualquier botón de cuenta sigue.
 	await page.getByRole('button', { name: /Continuar con Mercado Pago/ }).click();

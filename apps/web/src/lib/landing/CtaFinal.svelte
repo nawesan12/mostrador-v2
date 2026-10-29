@@ -5,7 +5,7 @@
 	import { phArrowRightBold } from '#lib/icons.ts';
 	import { unsplash } from './formato.ts';
 
-	/** "Abrí tu local web hoy." — CTA final de la landing. */
+	/** "Abrí Tu Local Web hoy." — CTA final de la landing. */
 	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Mostrador.dc.html).
 	const registro = resolve('/onboarding');
 </script>
@@ -20,7 +20,7 @@
 		/>
 		<div class="sombra"></div>
 		<div class="txt">
-			<h2 use:anim={'reveal'}>Abrí tu local web hoy.</h2>
+			<h2 use:anim={'reveal'}>Abrí Tu Local Web hoy.</h2>
 			<p use:anim={'reveal'}>
 				14 días gratis, sin tarjeta. Si venís de otra plataforma, la migración corre por nuestra
 				cuenta.

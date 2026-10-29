@@ -5,8 +5,8 @@
  */
 export function conMarca(s: string): string {
 	return s
-		.replace(/Abrí tu mostrador/g, 'Abrí tu local web')
-		.replace(/armando tu mostrador/g, 'armando tu local web')
+		.replace(/Abrí tu mostrador/g, 'Abrí Tu Local Web')
+		.replace(/armando tu mostrador/g, 'armando Tu Local Web')
 		.replace(/alt="mostrador"/g, 'alt="Tu Local Web"')
 		.replace(/mostradorapp\.com\.ar/g, 'tulocalweb.com.ar')
 		.replace(

@@ -133,7 +133,7 @@
 			flex: 1;
 			height: 44px;
 		}
-		/* "tu local web" es más ancho que el wordmark viejo: así entra con Ingresar y Crear mi tienda. */
+		/* "Tu Local Web" es más ancho que el wordmark viejo: así entra con Ingresar y Crear mi tienda. */
 		.marca img {
 			height: 16px;
 		}

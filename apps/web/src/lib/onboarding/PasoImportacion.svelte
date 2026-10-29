@@ -37,7 +37,7 @@
 			rotulo="Importación"
 			titulo={o.importacionLista
 				? 'Listo. Tu negocio ya está adentro.'
-				: 'Estamos armando tu local web.'}
+				: 'Estamos armando Tu Local Web.'}
 		/>
 		<div class="progreso">
 			<div class="p-cab">
