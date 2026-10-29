@@ -125,7 +125,8 @@
 		position: relative;
 		max-width: 1240px;
 		margin: 0 auto;
-		padding: 0 var(--lado) 120px;
+		/* Arriba también: antes lo daba la calculadora, que ya no está. */
+		padding: clamp(72px, 9vw, 120px) var(--lado) clamp(80px, 9vw, 120px);
 		scroll-margin-top: 80px;
 	}
 	.p-cab {
