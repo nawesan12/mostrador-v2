@@ -121,7 +121,6 @@
 	</div>
 
 	<div class="inflacion" use:anim={{ t: 'rise', delay: 120 }}>
-		<div class="arcos"></div>
 		<div class="i-cuerpo">
 			<div class="i-izq">
 				<div class="i-t">Actualizar precios por inflación</div>
@@ -261,11 +260,6 @@
 		color: #fbf7f2;
 		position: relative;
 		overflow: hidden;
-	}
-	.arcos {
-		position: absolute;
-		inset: 0;
-		background-image: url('/textura/arch-pattern-light.svg');
 	}
 	.i-cuerpo {
 		position: relative;

@@ -43,7 +43,7 @@ test('el CTA lleva al registro', async ({ page }) => {
 	await expect(page).toHaveURL(/\/onboarding$/);
 });
 
-test('el chat de Hornero avanza solo y los controles se pueden tocar', async ({ page }) => {
+test('el chat de Hornero avanza solo', async ({ page }) => {
 	await page.goto('/');
 	await listo(page);
 	const seccion = page.locator('section#hornero');
@@ -51,10 +51,6 @@ test('el chat de Hornero avanza solo y los controles se pueden tocar', async ({ 
 	await expect(seccion.getByText('Hola! ¿Tienen el termo de 1 L en negro?')).toBeVisible({
 		timeout: 5000
 	});
-	const ctl = seccion.getByRole('switch', { name: 'Pedir mi aprobación para descuentos' });
-	await expect(ctl).toHaveAttribute('aria-checked', 'true');
-	await ctl.click();
-	await expect(ctl).toHaveAttribute('aria-checked', 'false');
 });
 
 test('las tres etapas usan los precios de los planes', async ({ page }) => {
@@ -125,7 +121,7 @@ test('el modal de plantillas recorre, elige y lleva al registro con la plantilla
 }) => {
 	await page.goto('/');
 	await listo(page);
-	await page.getByRole('button', { name: /Ver las \d+ plantillas/ }).click();
+	await page.getByRole('button', { name: 'Ver plantillas' }).click();
 	const modal = page.getByRole('dialog');
 	await expect(modal).toBeVisible();
 	await expect(modal.getByText('Plantilla Ceibo')).toBeAttached();
@@ -133,7 +129,7 @@ test('el modal de plantillas recorre, elige y lleva al registro con la plantilla
 	await expect(modal.getByText('Plantilla Ceibo')).not.toBeAttached();
 	await page.keyboard.press('Escape');
 	await expect(modal).toBeHidden();
-	await page.getByRole('button', { name: /Ver las \d+ plantillas/ }).click();
+	await page.getByRole('button', { name: 'Ver plantillas' }).click();
 	await page
 		.getByRole('dialog')
 		.getByRole('link', { name: /Usar esta plantilla/ })
@@ -147,7 +143,7 @@ test('integraciones filtra por categoría', async ({ page }) => {
 	await listo(page);
 	const sec = page.locator('section#integraciones');
 	const tarjetas = sec.locator('.integ');
-	await expect(tarjetas).toHaveCount(27);
+	await expect(tarjetas).toHaveCount(26);
 	await sec.getByRole('button', { name: /^Envíos/ }).click();
 	await expect(tarjetas).toHaveCount(1);
 	await expect(sec.locator('.n', { hasText: 'Correo Argentino' })).toBeVisible();
@@ -179,19 +175,18 @@ test('el conector de IA confirma los cambios', async ({ page }) => {
 	await expect(sec.getByRole('button', { name: 'Hecho' })).toBeVisible();
 });
 
-test('el widget de Hornero aparece, se minimiza y vuelve', async ({ page, isMobile }) => {
+test('el widget de Hornero arranca cerrado, se abre y se minimiza', async ({ page }) => {
 	await page.goto('/');
 	await listo(page);
-	if (isMobile) {
-		// En el celular arranca minimizado para no tapar la pantalla.
-		await expect(page.getByText('¿Te ayudo?')).toBeVisible({ timeout: 6000 });
-		await page.getByRole('button', { name: 'Hornero', exact: true }).click();
-	}
-	await expect(page.getByText('¡Hola! Soy Hornero')).toBeVisible({ timeout: 6000 });
-	await page.getByRole('button', { name: 'Minimizar' }).click();
-	await expect(page.getByText('¿Te ayudo?')).toBeVisible();
-	await page.getByRole('button', { name: 'Hornero', exact: true }).click();
+	const avatar = page.getByRole('button', { name: 'Hornero', exact: true });
+	await expect(avatar).toBeVisible({ timeout: 6000 });
+	// Sin popup al entrar: el globo aparece recién al tocar el avatar.
+	await expect(page.getByText('¡Hola! Soy Hornero')).toBeHidden();
+	await avatar.click();
 	await expect(page.getByText('¡Hola! Soy Hornero')).toBeVisible();
+	await page.getByRole('button', { name: 'Minimizar' }).click();
+	await expect(page.getByText('¡Hola! Soy Hornero')).toBeHidden();
+	await expect(avatar).toBeVisible();
 });
 
 test('el footer tiene el botón de arrepentimiento', async ({ page }) => {

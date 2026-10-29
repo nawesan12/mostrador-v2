@@ -36,7 +36,7 @@ export const PERMISOS = [
 	{
 		id: 'finanzas',
 		titulo: 'Ver finanzas',
-		detalle: 'Saldo, liquidaciones y Caja',
+		detalle: 'Saldo y liquidaciones',
 		def: [1, 1, 0, 0]
 	},
 	{

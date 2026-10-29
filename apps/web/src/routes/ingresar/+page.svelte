@@ -556,7 +556,7 @@
 		min-height: min(100vh, 900px);
 		position: relative;
 		overflow: hidden;
-		background: #2a140c url('/textura/arch-pattern-dark.svg');
+		background: #2a140c;
 		color: #fbf7f2;
 		display: flex;
 		flex-direction: column;

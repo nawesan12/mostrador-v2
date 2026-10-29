@@ -27,7 +27,6 @@
 </script>
 
 <div class="meta" use:anim={{ t: 'rise', delay: 120 }}>
-	<div class="arcos"></div>
 	<div class="luz"></div>
 	<div class="cab">
 		<span class="t">Meta de {mes}</span>
@@ -137,11 +136,6 @@
 		display: flex;
 		flex-direction: column;
 		box-shadow: var(--shd);
-	}
-	.arcos {
-		position: absolute;
-		inset: 0;
-		background-image: url('/textura/arch-pattern-light.svg');
 	}
 	.luz {
 		position: absolute;

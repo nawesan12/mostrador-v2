@@ -84,49 +84,8 @@
 		>
 	</div>
 
-	<div class="caja" use:anim={{ t: 'rise', delay: 45 }}>
-		<img src="/caja/05-exito.webp" alt="Caja" width="52" height="52" />
-		{#if data.caja}
-			<div class="cj-txt">
-				<div class="cj-t">
-					Conectado con Caja<span class="sync"
-						><span></span>Sincronizado {hace(data.caja.sincronizado)}</span
-					>
-				</div>
-				<div class="cj-d">
-					{data.caja.ventas} ventas, {data.caja.liquidaciones} liquidaciones y {data.caja.gastos} gastos
-					de este mes ya están en tu actividad de negocio.
-				</div>
-			</div>
-			<div class="cj-meta">
-				<div class="m-t"><span>{data.caja.meta}</span><b>{data.caja.metaPct}%</b></div>
-				<div class="m-b"><div style:width="{data.caja.metaPct}%"></div></div>
-				<div class="m-d">
-					{data.caja.falta
-						? `Te faltan ${millones(data.caja.falta)} para la meta`
-						: '¡Llegaste a la meta!'}
-				</div>
-			</div>
-			<a class="cj-btn" href="https://caja.iamnaw.dev" target="_blank" rel="noopener"
-				>Abrir en Caja<Icon icon={I.phArrowUpRightBold} size={13} /></a
-			>
-		{:else}
-			<div class="cj-txt">
-				<div class="cj-t">Conectá Caja</div>
-				<div class="cj-d">
-					Tus ventas, liquidaciones y gastos pasan solos a tu actividad de negocio, con el
-					monotributo al día.
-				</div>
-			</div>
-			<a class="cj-btn" href={resolve('/panel/[seccion]', { seccion: 'integraciones' })}
-				>Conectar<Icon icon={I.phArrowRightBold} size={13} /></a
-			>
-		{/if}
-	</div>
-
 	<div class="kpis" use:anim={{ t: 'rise', delay: 90 }}>
 		<div class="disponible">
-			<div class="arcos"></div>
 			<div class="d-in">
 				<div class="d-t">Disponible hoy</div>
 				<div class="d-v">{pesos(data.disponible)}</div>
@@ -237,98 +196,6 @@
 			inset 0 1px 0 rgba(255, 255, 255, 0.3),
 			0 10px 24px -10px rgba(210, 88, 47, 0.8);
 	}
-	.caja {
-		display: flex;
-		align-items: center;
-		gap: 16px;
-		flex-wrap: wrap;
-		padding: 16px 18px;
-		border-radius: 22px;
-		background: #131211;
-		color: #f4eee6;
-		box-shadow: var(--shd);
-	}
-	.caja img {
-		object-fit: contain;
-		flex: none;
-	}
-	.cj-txt {
-		flex: 1 1 260px;
-		min-width: 0;
-	}
-	.cj-t {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		flex-wrap: wrap;
-		font-size: 15px;
-		font-weight: 600;
-	}
-	.sync {
-		display: flex;
-		align-items: center;
-		gap: 5px;
-		font-size: 11.5px;
-		font-weight: 600;
-		padding: 3px 8px;
-		border-radius: 999px;
-		background: rgba(127, 211, 166, 0.14);
-		color: #7fd3a6;
-	}
-	.sync span {
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		background: #7fd3a6;
-	}
-	.cj-d {
-		font-size: 13px;
-		color: #a99e94;
-		margin-top: 3px;
-		text-wrap: pretty;
-	}
-	.cj-meta {
-		flex: 0 1 210px;
-		min-width: 170px;
-	}
-	.m-t {
-		display: flex;
-		justify-content: space-between;
-		font-size: 12px;
-		color: #a99e94;
-	}
-	.m-t b {
-		color: #f4eee6;
-	}
-	.m-b {
-		margin-top: 5px;
-		height: 6px;
-		border-radius: 3px;
-		background: #2b2724;
-		overflow: hidden;
-	}
-	.m-b div {
-		height: 100%;
-		background: #e8875f;
-	}
-	.m-d {
-		font-size: 11.5px;
-		color: #8a7f76;
-		margin-top: 4px;
-	}
-	.cj-btn {
-		display: flex;
-		align-items: center;
-		gap: 7px;
-		padding: 10px 16px;
-		border-radius: 999px;
-		background: #f4eee6;
-		color: #131211;
-		font-weight: 600;
-		font-size: 13.5px;
-		text-decoration: none;
-		white-space: nowrap;
-	}
 	.kpis {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -341,11 +208,6 @@
 		border-radius: 22px;
 		background: #2a140c;
 		color: #fbf7f2;
-	}
-	.arcos {
-		position: absolute;
-		inset: 0;
-		background-image: url('/textura/arch-pattern-light.svg');
 	}
 	.d-in {
 		position: relative;

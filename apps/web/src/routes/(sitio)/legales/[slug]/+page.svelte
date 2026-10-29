@@ -251,7 +251,7 @@
 		padding: 0 clamp(16px, 3vw, 28px);
 	}
 	.hero {
-		background: #f4ece2 url('/textura/arch-pattern-light.svg');
+		background: #f4ece2;
 		border-bottom: 1px solid rgba(58, 29, 18, 0.08);
 	}
 	.hero-in {

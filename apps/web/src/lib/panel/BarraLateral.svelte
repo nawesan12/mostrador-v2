@@ -171,7 +171,6 @@
 	<div class="abajo">
 		{#if resumen.prueba.diasRestantes > 0}
 			<div class="prueba">
-				<div class="arcos"></div>
 				<div class="p-in">
 					<div class="p-plan">Plan {resumen.prueba.plan} · prueba</div>
 					<div class="p-dias">{restan}</div>
@@ -380,11 +379,6 @@
 		background: linear-gradient(140deg, #d2582f, #b9481f);
 		color: #fff;
 		box-shadow: 0 14px 30px -14px rgba(210, 88, 47, 0.6);
-	}
-	.arcos {
-		position: absolute;
-		inset: 0;
-		background-image: url('/textura/arch-pattern-light.svg');
 	}
 	.p-in {
 		position: relative;

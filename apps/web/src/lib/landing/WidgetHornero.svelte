@@ -7,8 +7,8 @@
 	import { getLanding } from './estado.svelte.ts';
 
 	/**
-	 * Widget flotante de Hornero (handoff): aparece a los 2,6 s; al minimizarlo no desaparece, queda el
-	 * avatar con "¿Te ayudo?" y un aviso. No se muestra con el menú mobile abierto (taparía los links)
+	 * Widget flotante de Hornero (handoff): a los 2,6 s aparece el avatar, cerrado; el globo se abre
+	 * al tocarlo y al minimizarlo vuelve a quedar el avatar. No se muestra con el menú mobile abierto (taparía los links)
 	 * ni mientras el banner de cookies está a la vista.
 	 */
 	const l = getLanding();
@@ -46,8 +46,6 @@
 					<a href={registro}>Crear cuenta</a>
 				</div>
 			</div>
-		{:else}
-			<div class="ayudo" use:entra>¿Te ayudo?</div>
 		{/if}
 		<button
 			type="button"
@@ -59,7 +57,6 @@
 		>
 			<span class="pulso" use:anim={{ t: 'pulse', dur: 2600 }}></span>
 			<span class="foto"><img src="/hornero/avatar.webp" alt="" /></span>
-			{#if !l.widgetOpen}<span class="aviso">1</span>{/if}
 		</button>
 	</div>
 {/if}
@@ -123,18 +120,6 @@
 		color: #fff;
 		background: #d2582f;
 	}
-	.ayudo {
-		padding: 10px 14px;
-		border-radius: 999px;
-		background: #fff;
-		box-shadow:
-			0 18px 40px -16px rgba(58, 29, 18, 0.45),
-			0 0 0 1px rgba(58, 29, 18, 0.06);
-		font-size: 13px;
-		font-weight: 600;
-		white-space: nowrap;
-		transform-origin: right center;
-	}
 	.avatar {
 		position: relative;
 		width: 64px;
@@ -165,21 +150,5 @@
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-	}
-	.aviso {
-		position: absolute;
-		top: 0;
-		right: 0;
-		min-width: 20px;
-		height: 20px;
-		padding: 0 5px;
-		border-radius: 999px;
-		background: #2f8f63;
-		color: #fff;
-		font-size: 11px;
-		font-weight: 700;
-		display: grid;
-		place-items: center;
-		box-shadow: 0 0 0 2px #fbf7f2;
 	}
 </style>

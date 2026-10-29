@@ -254,7 +254,7 @@
 	.wa {
 		padding: 14px;
 		border-radius: 18px;
-		background: #efe7dc url('/textura/arch-pattern-dark.svg');
+		background: #efe7dc;
 	}
 	.wa-t {
 		font-size: 12px;

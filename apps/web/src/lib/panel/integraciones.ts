@@ -154,19 +154,6 @@ export const INTEGRACIONES: Integracion[] = [
 		demo: true
 	},
 	{
-		id: 'caja',
-		nombre: 'Caja',
-		detalle: 'Tu plata, ordenada',
-		categoria: 'gestion',
-		marca: 'caja',
-		hace: [
-			'Ventas, liquidaciones y gastos pasan solos a Caja',
-			'El monotributo y la ganancia del mes, al día'
-		],
-		opciones: [],
-		demo: true
-	},
-	{
 		id: 'ga',
 		nombre: 'Google Analytics',
 		detalle: 'Métricas',

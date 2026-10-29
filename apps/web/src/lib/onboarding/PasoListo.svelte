@@ -1,11 +1,11 @@
 <script lang="ts">
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
-	import { BENEFICIOS_CAJA, QR, RESUMEN } from './datos.ts';
+	import { QR, RESUMEN } from './datos.ts';
 	import { getOnboarding } from './estado.svelte.ts';
 
 	/**
-	 * Paso 8, ¡Listo!: confeti, lo que quedó armado, lo que falta, Caja, el QR y el equipo. "Ir a mi
+	 * Paso 8, ¡Listo!: confeti, lo que quedó armado, lo que falta, el QR y el equipo. "Ir a mi
 	 * panel" manda las elecciones al servidor (form del padre) y entra al panel.
 	 */
 	let { terminar }: { terminar: () => void } = $props();
@@ -94,43 +94,6 @@
 			>
 			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- ancla de la landing -->
 			<a class="f-link" href="/#planes">Ver planes</a>
-		</div>
-	</div>
-	<div class="caja">
-		<div class="cj-cab">
-			<img src="/caja/05-exito.webp" alt="Caja" width="56" height="56" />
-			<div class="cj-txt">
-				<div class="cj-t">
-					{o.e.caja
-						? 'Caja ya está ordenando tu plata'
-						: 'Tu negocio vende. Caja te dice cuánto ganás.'}
-				</div>
-				<div class="cj-d">
-					{o.e.caja
-						? 'Conectado · 3 meses de Pro Max activos · las ventas de hoy ya están ahí'
-						: 'Con tu cuenta de Tu Local Web tenés 3 meses de Caja Pro Max gratis'}
-				</div>
-			</div>
-			{#if o.e.caja}
-				<a class="cj-btn" href="https://caja.iamnaw.dev" target="_blank" rel="noopener"
-					>Abrir Caja<Icon icon={I.phArrowUpRightBold} size={13} /></a
-				>
-			{:else}
-				<button type="button" class="cj-btn" onclick={() => ((o.e.caja = true), o.guardar())}
-					><Icon icon={I.phPlugFill} size={14} />Conectar Caja</button
-				>
-			{/if}
-		</div>
-		<div class="cj-ben">
-			{#each BENEFICIOS_CAJA as [ico, t, d] (t)}
-				<div>
-					<Icon icon={ico} size={20} style="color:#E8875F;flex:none;margin-top:1px" />
-					<div>
-						<div class="b-t">{t}</div>
-						<div class="b-d">{d}</div>
-					</div>
-				</div>
-			{/each}
 		</div>
 	</div>
 	<div class="dos">
@@ -325,74 +288,6 @@
 		background: none;
 		border: 0;
 		padding: 0;
-	}
-	.caja {
-		margin-top: 14px;
-		padding: 20px;
-		border-radius: 24px;
-		background: #131211;
-		color: #f4eee6;
-		text-align: left;
-	}
-	.cj-cab {
-		display: flex;
-		align-items: center;
-		gap: 14px;
-		flex-wrap: wrap;
-	}
-	.cj-cab img {
-		object-fit: contain;
-		flex: none;
-	}
-	.cj-txt {
-		flex: 1 1 260px;
-		min-width: 0;
-	}
-	.cj-t {
-		font-size: 17px;
-		font-weight: 600;
-	}
-	.cj-d {
-		font-size: 13px;
-		color: #a99e94;
-		margin-top: 2px;
-	}
-	.cj-btn {
-		flex: none;
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		padding: 10px 16px;
-		border-radius: 999px;
-		border: 0;
-		background: #f4eee6;
-		color: #131211;
-		font-size: 13.5px;
-		font-weight: 600;
-		white-space: nowrap;
-	}
-	.cj-ben {
-		margin-top: 16px;
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-		gap: 10px;
-	}
-	.cj-ben > div {
-		display: flex;
-		gap: 10px;
-		padding: 12px;
-		border-radius: 16px;
-		background: #1f1c1a;
-	}
-	.b-t {
-		font-size: 14px;
-		font-weight: 600;
-	}
-	.b-d {
-		font-size: 12.5px;
-		color: #9c9188;
-		margin-top: 2px;
-		line-height: 1.4;
 	}
 	.dos {
 		margin-top: 14px;

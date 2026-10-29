@@ -6,7 +6,7 @@
 	import { getOnboarding } from './estado.svelte.ts';
 	import Logo from './Logo.svelte';
 
-	/** Paso 3, Canales: conectar lo que ya se usa, y la invitación a Caja. */
+	/** Paso 3, Canales: conectar lo que ya se usa. */
 	const o = getOnboarding();
 </script>
 
@@ -43,26 +43,6 @@
 </div>
 <div class="resumen">
 	{o.conectadas} de {CONEXIONES.length} conectadas. Podés sumar más después desde Integraciones.
-</div>
-<div class="caja">
-	<img src="/caja/01-saludo.webp" alt="Caja" width="64" height="64" />
-	<div class="cj-txt">
-		<div class="cj-t">
-			<b>Sumá Caja y sabé cuánto ganás de verdad</b><span>3 MESES DE PRO MAX GRATIS</span>
-		</div>
-		<div class="cj-d">
-			Tus ventas, cobros, comisiones y facturas pasan solos a Caja, separados de tus gastos
-			personales. Con el monotributo y el dólar del día ya calculados.
-		</div>
-	</div>
-	<button
-		type="button"
-		class:conectada={o.e.caja}
-		onclick={() => ((o.e.caja = !o.e.caja), o.guardar())}
-		><Icon icon={o.e.caja ? I.phCheckCircleFill : I.phPlugFill} size={15} />{o.e.caja
-			? 'Caja conectada'
-			: 'Conectar Caja'}</button
-	>
 </div>
 
 <style>
@@ -180,67 +160,5 @@
 		margin-top: 14px;
 		font-size: 13px;
 		color: #7a6252;
-	}
-	.caja {
-		margin-top: 16px;
-		display: flex;
-		align-items: center;
-		gap: 18px;
-		flex-wrap: wrap;
-		padding: 18px 20px;
-		border-radius: 24px;
-		background: #131211;
-		color: #f4eee6;
-	}
-	.caja img {
-		object-fit: contain;
-		flex: none;
-	}
-	.cj-txt {
-		flex: 1 1 300px;
-		min-width: 0;
-	}
-	.cj-t {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		flex-wrap: wrap;
-	}
-	.cj-t b {
-		font-size: 16px;
-	}
-	.cj-t span {
-		font-size: 11px;
-		font-weight: 700;
-		padding: 3px 8px;
-		border-radius: 999px;
-		background: #e8875f;
-		color: #131211;
-		letter-spacing: 0.02em;
-	}
-	.cj-d {
-		font-size: 13.5px;
-		color: #bdb2a8;
-		margin-top: 4px;
-		line-height: 1.45;
-	}
-	.caja button {
-		flex: none;
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		padding: 11px 18px;
-		border-radius: 999px;
-		border: 0;
-		background: #f4eee6;
-		color: #131211;
-		font-size: 14px;
-		font-weight: 600;
-		white-space: nowrap;
-		transition: background 0.25s;
-	}
-	.caja button.conectada {
-		background: #2f8f63;
-		color: #fff;
 	}
 </style>

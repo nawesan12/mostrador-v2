@@ -64,7 +64,7 @@
 		height: 100vh;
 		height: 100dvh;
 		z-index: 76;
-		background: #2a140c url('/textura/arch-pattern-light.svg');
+		background: #2a140c;
 		display: flex;
 		flex-direction: column;
 		align-items: center;

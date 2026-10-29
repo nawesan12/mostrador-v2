@@ -85,7 +85,6 @@
 
 <div class="pagina">
 	<div class="banda" use:anim={{ t: 'rise' }}>
-		<div class="arcos"></div>
 		<div class="anillo">
 			<svg viewBox="0 0 120 120" aria-hidden="true"
 				><circle cx="60" cy="60" r="52" class="fondo-a"></circle><circle
@@ -157,11 +156,6 @@
 	}
 	.banda > :not(.arcos) {
 		position: relative;
-	}
-	.arcos {
-		position: absolute;
-		inset: 0;
-		background-image: url('/textura/arch-pattern-light.svg');
 	}
 	.anillo {
 		width: 96px;

@@ -74,7 +74,6 @@
 
 <div class="pagina">
 	<div class="hero" use:anim={{ t: 'rise' }}>
-		<div class="arcos"></div>
 		<div class="h-txt">
 			<h1>¿En qué te ayudo?</h1>
 			<form
@@ -148,11 +147,6 @@
 		align-items: center;
 		gap: 20px;
 		flex-wrap: wrap;
-	}
-	.arcos {
-		position: absolute;
-		inset: 0;
-		background-image: url('/textura/arch-pattern-light.svg');
 	}
 	.h-txt {
 		position: relative;

@@ -94,7 +94,6 @@
 			</div>
 
 			<div id="asistente" class="caja ia" use:anim={'reveal'}>
-				<div class="ia-arcos"></div>
 				<div class="ia-txt">
 					<div class="sello">
 						<Icon icon={I.phSparkleFill} size={20} /><span class="s-n blanco">Asistente con IA</span
@@ -433,11 +432,6 @@
 		gap: 28px;
 		flex-wrap: wrap;
 		align-items: center;
-	}
-	.ia-arcos {
-		position: absolute;
-		inset: 0;
-		background-image: url('/textura/arch-pattern-light.svg');
 	}
 	.ia-txt {
 		position: relative;

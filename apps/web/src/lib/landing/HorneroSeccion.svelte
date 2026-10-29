@@ -6,80 +6,18 @@
 	import { getLanding } from './estado.svelte.ts';
 	import { cara, unsplash } from './formato.ts';
 
-	/** Sección "Conocé a Hornero" del handoff: chat demo animado, capacidades y control. */
+	/** Sección "Conocé a Hornero": el título, lo que hace en cuatro renglones y el chat demo animado. */
 	const l = getLanding();
-	const ARCO =
-		'M3 76a3 3 0 0 1-3-3V5a5 5 0 0 1 5-5h90a5 5 0 0 1 5 5v68a3 3 0 0 1-3 3H82a3 3 0 0 1-3-3V21H21v52a3 3 0 0 1-3 3Z';
-
 	const visibles = $derived(CHAT.slice(0, Math.min(l.chat, CHAT.length)));
 	const siguiente = $derived(CHAT[l.chat]);
 	const escribiendo = $derived(!!siguiente && ['h', 'prod', 'pay'].includes(siguiente.k));
 
-	let ctl = $state({ aprob: true, horario: true, derivar: true });
-	const CONTROLES = [
-		['aprob', 'Pedir mi aprobación para descuentos'],
-		['horario', 'Atender fuera del horario del local'],
-		['derivar', 'Pasarme el chat si el cliente se enoja']
-	] as const;
-
 	const CAPACIDADES = [
-		[
-			I.phChatsCircleFill,
-			'Atiende y cierra ventas',
-			'Responde dudas, recomienda productos, calcula el envío y manda el link de pago.'
-		],
-		[
-			I.phShoppingCartSimpleFill,
-			'Recupera lo que se escapa',
-			'Carritos abandonados, pagos rechazados y clientes que no vuelven hace meses.'
-		],
-		[
-			I.phCameraFill,
-			'Carga productos con una foto',
-			'Saca nombre, descripción, categoría y precio sugerido. Vos solo confirmás.'
-		],
-		[
-			I.phLightbulbFilamentFill,
-			'Te dice qué hacer hoy',
-			'Qué reponer, qué promocionar y qué precio revisar, con tus números reales.'
-		]
+		[I.phChatsCircleFill, 'Responde y cierra ventas'],
+		[I.phShoppingCartSimpleFill, 'Recupera carritos abandonados'],
+		[I.phCameraFill, 'Carga productos con una foto'],
+		[I.phLightbulbFilamentFill, 'Te dice qué hacer hoy']
 	] as const;
-
-	const METRICAS = [
-		{
-			ico: I.phLightningFill,
-			bg: 'rgba(47,143,99,.13)',
-			col: '#2F8F63',
-			b: '8 segundos',
-			s: 'tiempo de respuesta',
-			pos: 'left:0;top:60px',
-			dur: 3600,
-			delay: 300,
-			px: '-0.22'
-		},
-		{
-			ico: I.phShoppingCartSimpleFill,
-			bg: 'rgba(210,88,47,.12)',
-			col: '#C24E25',
-			b: '$ 384.600',
-			s: 'en carritos recuperados',
-			pos: 'right:0;top:120px',
-			dur: 4400,
-			delay: 900,
-			px: '-0.15'
-		},
-		{
-			ico: I.phCameraFill,
-			bg: 'rgba(227,169,59,.2)',
-			col: '#9A6A10',
-			b: '24 productos',
-			s: 'cargados desde fotos',
-			pos: 'left:30px;bottom:50px',
-			dur: 3900,
-			delay: 500,
-			px: '-0.3'
-		}
-	];
 
 	/** Cada mensaje nuevo entra como en el handoff (translateY 12px, scale .97, 420 ms). */
 	function entra(el: HTMLElement) {
@@ -94,53 +32,21 @@
 </script>
 
 <section id="hornero">
-	<div class="arcos"></div>
 	<div class="in">
-		<div class="cab" use:anim={'reveal'}>
-			<div class="sello">
-				<Icon icon={I.phSparkleFill} size={15} />Asistente con IA · exclusivo de Tu Local Web
-			</div>
-			<h2>Conocé a Hornero. Atiende, vende y te avisa — las 24 horas.</h2>
-			<p>
-				Arma el negocio como el hornero arma su nido: sin descanso. Contesta por WhatsApp, Instagram
-				y Telegram con tu catálogo, tus precios y tu stock reales — y te consulta antes de hacer
-				algo importante.
-			</p>
-		</div>
-
 		<div class="dos">
-			<div class="escena" use:anim={'reveal'}>
-				<svg class="arco" data-px="0.1" viewBox="0 0 100 76" aria-hidden="true"
-					><path fill="#fff" d={ARCO}></path></svg
-				>
-				<div class="ave" data-px="-0.08" use:anim={{ t: 'float', dur: 4200 }}>
-					<div class="ave-in"><img src="/hornero/saludo.webp" alt="Hornero" /></div>
-				</div>
-				{#each METRICAS as m, i (m.b)}
-					<div
-						class="metrica m{i}"
-						style={m.pos}
-						data-px={m.px}
-						use:anim={{ t: 'float', dur: m.dur, delay: m.delay }}
-					>
-						<span class="m-ico" style:background={m.bg} style:color={m.col}
-							><Icon icon={m.ico} size={17} /></span
-						>
-						<span class="m-txt"><b>{m.b}</b><br /><span>{m.s}</span></span>
-					</div>
-				{/each}
-				<div
-					class="metrica canales"
-					data-px="-0.12"
-					use:anim={{ t: 'float', dur: 4700, delay: 200 }}
-				>
-					<Icon icon={I.logosWhatsappIcon} size={20} /><Icon
-						icon={I.logosInstagramIcon}
-						size={18}
-					/><Icon icon={I.logosTelegram} size={18} /><span>Atiende en todos tus canales</span>
-				</div>
+			<div class="cab" use:anim={'reveal'}>
+				<div class="sello"><Icon icon={I.phSparkleFill} size={15} />Asistente con IA</div>
+				<h2>Conocé a Hornero. Atiende y vende las 24&nbsp;horas.</h2>
+				<p>
+					Contesta en WhatsApp, Instagram y Telegram con tus precios y tu stock reales. Lo
+					importante te lo&nbsp;consulta.
+				</p>
+				<ul class="hace">
+					{#each CAPACIDADES as [ico, t] (t)}
+						<li><span class="h-ico"><Icon icon={ico} size={18} /></span>{t}</li>
+					{/each}
+				</ul>
 			</div>
-
 			<div class="chat" use:anim={{ t: 'reveal', delay: 120 }}>
 				<div class="chat-cab">
 					<img src={cara('1531058240690-006c446962d8')} alt="" />
@@ -207,39 +113,6 @@
 				</div>
 			</div>
 		</div>
-
-		<div class="capacidades">
-			{#each CAPACIDADES as [ico, t, d], i (t)}
-				<div class="cap" use:anim={{ t: 'reveal', delay: i * 60 }}>
-					<span class="cap-ico"><Icon icon={ico} size={22} /></span>
-					<div class="cap-t">{t}</div>
-					<div class="cap-d">{d}</div>
-				</div>
-			{/each}
-		</div>
-
-		<div class="control" use:anim={'reveal'}>
-			<div class="ctl-txt">
-				<div class="ctl-t">Vos tenés el control</div>
-				<div class="ctl-d">
-					Hornero nunca inventa precios ni promete lo que no tenés. Elegí hasta dónde llega.
-				</div>
-			</div>
-			<div class="ctl-grilla">
-				{#each CONTROLES as [k, t] (k)}
-					<button
-						type="button"
-						class="ctl"
-						role="switch"
-						aria-checked={ctl[k]}
-						onclick={() => (ctl[k] = !ctl[k])}
-					>
-						<span class="ctl-n">{t}</span>
-						<span class="tg" class:on={ctl[k]}><span></span></span>
-					</button>
-				{/each}
-			</div>
-		</div>
 	</div>
 </section>
 
@@ -250,22 +123,40 @@
 		background: linear-gradient(180deg, #fbf7f2 0%, #fceadf 45%, #f7d9c6 100%);
 		border-bottom: 1px solid rgba(58, 29, 18, 0.08);
 	}
-	.arcos {
-		position: absolute;
-		inset: 0;
-		background-image: url('/textura/arch-pattern-accent.svg');
-		mask-image: radial-gradient(ellipse 60% 70% at 25% 55%, #000, transparent 75%);
-	}
 	.in {
 		position: relative;
 		max-width: 1240px;
 		margin: 0 auto;
-		padding: 120px var(--lado) 110px;
+		padding: 96px var(--lado);
 	}
 	.cab {
-		text-align: center;
-		max-width: 860px;
-		margin: 0 auto;
+		flex: 1 1 380px;
+		max-width: 520px;
+	}
+	.hace {
+		margin: 26px 0 0;
+		padding: 0;
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+	.hace li {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		font-size: 16px;
+		font-weight: 600;
+	}
+	.h-ico {
+		width: 34px;
+		height: 34px;
+		flex: none;
+		border-radius: 11px;
+		display: grid;
+		place-items: center;
+		background: rgba(210, 88, 47, 0.12);
+		color: #c24e25;
 	}
 	.sello {
 		display: inline-flex;
@@ -281,100 +172,29 @@
 	}
 	h2 {
 		text-wrap: balance;
-		margin: 22px 0 0;
-		font-size: clamp(40px, 5.6vw, 76px);
+		margin: 18px 0 0;
+		font-size: clamp(36px, 4.4vw, 58px);
 		line-height: 0.98;
 		letter-spacing: -0.045em;
 		font-weight: 600;
 	}
 	.cab p {
 		text-wrap: pretty;
-		margin: 22px auto 0;
+		margin: 18px 0 0;
 		font-size: 19px;
 		line-height: 1.55;
 		color: #5c4536;
 		max-width: 640px;
 	}
 	.dos {
-		margin-top: 64px;
 		display: flex;
-		gap: 48px;
+		gap: 48px 64px;
 		flex-wrap: wrap;
 		align-items: center;
 	}
-	.escena {
-		flex: 1 1 420px;
-		position: relative;
-		min-height: 520px;
-		display: grid;
-		place-items: center;
-	}
-	.arco {
-		position: absolute;
-		width: 92%;
-		max-width: 520px;
-		opacity: 0.9;
-	}
-	.ave {
-		position: relative;
-		width: 360px;
-		height: 360px;
-		border-radius: 50%;
-		background: radial-gradient(circle at 50% 40%, #fff8f2, #f6e2d3);
-		box-shadow:
-			0 0 0 14px rgba(255, 255, 255, 0.55),
-			0 50px 90px -30px rgba(194, 78, 37, 0.55);
-	}
-	.ave-in {
-		position: absolute;
-		inset: 0;
-		border-radius: 50%;
-		overflow: hidden;
-	}
-	.ave-in img {
-		display: block;
-		width: 100%;
-		height: 100%;
-		object-fit: contain;
-	}
-	.metrica {
-		position: absolute;
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		padding: 10px 14px;
-		border-radius: 16px;
-		background: #fff;
-		box-shadow: 0 18px 40px -18px rgba(58, 29, 18, 0.45);
-	}
-	.m-ico {
-		width: 32px;
-		height: 32px;
-		border-radius: 10px;
-		display: grid;
-		place-items: center;
-	}
-	.m-txt {
-		font-size: 13.5px;
-		line-height: 1.25;
-	}
-	.m-txt span {
-		color: #7a6252;
-	}
-	.canales {
-		right: 20px;
-		bottom: 20px;
-		background: #2a140c;
-		color: #fff;
-		box-shadow: 0 18px 40px -18px rgba(42, 20, 12, 0.7);
-	}
-	.canales span {
-		font-size: 13.5px;
-		font-weight: 600;
-	}
 	.chat {
-		flex: 1 1 460px;
-		max-width: 560px;
+		flex: 1 1 420px;
+		max-width: 540px;
 		margin: 0 auto;
 		border-radius: 28px;
 		background: #fff;
@@ -445,7 +265,7 @@
 		justify-content: flex-end;
 		gap: 8px;
 		overflow: hidden;
-		background: #f4ece2 url('/textura/arch-pattern-dark.svg');
+		background: #f4ece2;
 	}
 	.m-c {
 		align-self: flex-start;
@@ -592,153 +412,11 @@
 		color: #fff;
 		white-space: nowrap;
 	}
-	.capacidades {
-		margin-top: 72px;
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-		gap: 14px;
-	}
-	.cap {
-		padding: 24px;
-		border-radius: 22px;
-		background: rgba(255, 255, 255, 0.75);
-		backdrop-filter: blur(8px);
-		box-shadow: 0 1px 2px rgba(58, 29, 18, 0.05);
-	}
-	.cap-ico {
-		width: 44px;
-		height: 44px;
-		border-radius: 13px;
-		background: #b0441d;
-		color: #fff;
-		display: grid;
-		place-items: center;
-	}
-	.cap-t {
-		margin-top: 16px;
-		font-size: 17px;
-		font-weight: 600;
-	}
-	.cap-d {
-		margin-top: 6px;
-		font-size: 14.5px;
-		line-height: 1.5;
-		color: #5c4536;
-	}
-	.control {
-		margin-top: 14px;
-		padding: 26px 28px;
-		border-radius: 24px;
-		background: #2a140c;
-		color: #fbf7f2;
-		display: flex;
-		gap: 32px;
-		flex-wrap: wrap;
-		align-items: center;
-		box-shadow: 0 30px 60px -30px rgba(42, 20, 12, 0.6);
-	}
-	.ctl-txt {
-		flex: 1 1 280px;
-	}
-	.ctl-t {
-		font-size: 22px;
-		font-weight: 600;
-		letter-spacing: -0.02em;
-	}
-	.ctl-d {
-		margin-top: 6px;
-		font-size: 15px;
-		line-height: 1.5;
-		color: #d9c8ba;
-	}
-	.ctl-grilla {
-		flex: 2 1 520px;
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-		gap: 10px;
-	}
-	.ctl {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		padding: 14px;
-		border-radius: 16px;
-		border: 1px solid rgba(251, 247, 242, 0.14);
-		background: rgba(251, 247, 242, 0.05);
-		color: #fbf7f2;
-		text-align: left;
-	}
-	.ctl-n {
-		flex: 1;
-		font-size: 14px;
-		font-weight: 500;
-		line-height: 1.35;
-	}
-	.tg {
-		position: relative;
-		width: 42px;
-		height: 24px;
-		flex: none;
-		border-radius: 999px;
-		background: #d9cbbe;
-		transition: background 0.25s;
-	}
-	.tg.on {
-		background: #d2582f;
-	}
-	.tg span {
-		position: absolute;
-		top: 2px;
-		left: 2px;
-		width: 20px;
-		height: 20px;
-		border-radius: 50%;
-		background: #fff;
-		transition: left 0.25s cubic-bezier(0.2, 0.7, 0.1, 1);
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-	}
-	.tg.on span {
-		left: 20px;
-	}
 	/* Celular: la escena se compacta para que las métricas no se salgan, y la cabecera del chat
 	   pasa el "Hornero atendiendo" abajo en vez de estrujar el nombre. */
 	@media (max-width: 640px) {
 		.dos {
-			margin-top: 40px;
-			gap: 28px;
-		}
-		.escena {
-			flex-basis: 100%;
-			min-height: 380px;
-		}
-		.ave {
-			width: 250px;
-			height: 250px;
-			box-shadow:
-				0 0 0 10px rgba(255, 255, 255, 0.55),
-				0 40px 70px -30px rgba(194, 78, 37, 0.55);
-		}
-		.metrica {
-			padding: 8px 11px;
-			gap: 8px;
-			font-size: 12.5px;
-		}
-		.m0 {
-			top: 10px !important;
-		}
-		.m1 {
-			top: 110px !important;
-		}
-		.m2 {
-			left: 0 !important;
-			bottom: 64px !important;
-		}
-		.canales {
-			right: 0;
-			bottom: 0;
-		}
-		.canales span {
-			font-size: 12.5px;
+			gap: 32px;
 		}
 		.chat-cab {
 			flex-wrap: wrap;

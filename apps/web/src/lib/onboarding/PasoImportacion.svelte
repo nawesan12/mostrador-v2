@@ -94,7 +94,6 @@
 		{/if}
 	</div>
 	<div class="hornero">
-		<div class="arcos"></div>
 		<div class="h-cab">
 			<span class="h-av"><img src="/hornero/caja.webp" alt="Hornero" width="52" height="52" /></span
 			>
@@ -285,11 +284,6 @@
 		position: relative;
 		overflow: hidden;
 		box-shadow: 0 24px 50px -24px rgba(42, 20, 12, 0.6);
-	}
-	.arcos {
-		position: absolute;
-		inset: 0;
-		background-image: url('/textura/arch-pattern-light.svg');
 	}
 	.h-cab {
 		position: relative;

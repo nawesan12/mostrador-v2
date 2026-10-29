@@ -216,7 +216,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
-		background: #f4ece2 url('/textura/arch-pattern-dark.svg');
+		background: #f4ece2;
 		min-height: 260px;
 		justify-content: flex-end;
 	}

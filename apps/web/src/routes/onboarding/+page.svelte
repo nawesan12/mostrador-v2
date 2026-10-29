@@ -52,7 +52,6 @@
 				secciones: o.e.secciones,
 				config: o.e.config,
 				tono: o.e.tono,
-				caja: o.e.caja,
 				equipo: o.e.equipo
 			}
 		})
@@ -100,7 +99,6 @@
 <div class="ob">
 	<Grano />
 	<aside>
-		<div class="arcos"></div>
 		<div class="luz"></div>
 		<a class="marca" href="/" aria-label="Tu Local Web, inicio">
 			<Marca color="#E8875F" alto={24} />
@@ -249,11 +247,6 @@
 		flex-direction: column;
 		padding: 28px 24px;
 		overflow: hidden;
-	}
-	.arcos {
-		position: absolute;
-		inset: 0;
-		background-image: url('/textura/arch-pattern-light.svg');
 	}
 	.luz {
 		position: absolute;

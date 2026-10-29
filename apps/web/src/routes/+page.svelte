@@ -5,7 +5,6 @@
 	import Seo from '#lib/components/Seo.svelte';
 	import Header from '#lib/landing/Header.svelte';
 	import Etapas from '#lib/landing/Etapas.svelte';
-	import Caja from '#lib/landing/Caja.svelte';
 	import ConectorIA from '#lib/landing/ConectorIA.svelte';
 	import CtaFinal from '#lib/landing/CtaFinal.svelte';
 	import Footer from '#lib/landing/Footer.svelte';
@@ -13,7 +12,6 @@
 	import Integraciones from '#lib/landing/Integraciones.svelte';
 	import Migrar from '#lib/landing/Migrar.svelte';
 	import PlantillaModal from '#lib/landing/PlantillaModal.svelte';
-	import Plantillas from '#lib/landing/Plantillas.svelte';
 	import Precios from '#lib/landing/Precios.svelte';
 	import Producto from '#lib/landing/Producto.svelte';
 	import Seguridad from '#lib/landing/Seguridad.svelte';
@@ -29,7 +27,16 @@
 	const l = setLanding(new Landing());
 	onMount(() => {
 		l.iniciar(CHAT.length);
-		return () => l.detener();
+		// La sección de plantillas ya no está: #plantillas (menú, footer, panel) abre la galería.
+		const plantillas = () => {
+			if (location.hash === '#plantillas') l.tplI = 0;
+		};
+		plantillas();
+		addEventListener('hashchange', plantillas);
+		return () => {
+			l.detener();
+			removeEventListener('hashchange', plantillas);
+		};
 	});
 </script>
 
@@ -57,10 +64,8 @@
 		<Marquesina />
 		<HorneroSeccion />
 		<Etapas />
-		<Plantillas />
 		<Producto />
 		<ConectorIA />
-		<Caja />
 		<Integraciones />
 		<Precios />
 		<Historias />

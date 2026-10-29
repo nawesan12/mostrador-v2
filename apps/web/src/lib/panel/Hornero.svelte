@@ -139,7 +139,6 @@
 		<Dialog.Overlay class="ho-fondo" />
 		<Dialog.Content class="ho-panel" aria-describedby={undefined}>
 			<div class="cab">
-				<div class="arcos"></div>
 				<div class="cab-in">
 					<div class="av"><img src="/hornero/avatar.webp" alt="" /></div>
 					<div class="quien">
@@ -290,11 +289,6 @@
 		background: linear-gradient(140deg, #d2582f, #b9481f);
 		color: #fff;
 		overflow: hidden;
-	}
-	.arcos {
-		position: absolute;
-		inset: 0;
-		background-image: url('/textura/arch-pattern-light.svg');
 	}
 	.cab-in {
 		position: relative;

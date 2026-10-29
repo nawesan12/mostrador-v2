@@ -89,7 +89,9 @@ const SIN_INTEGRACION = [
 	'Mailchimp',
 	'Zapier',
 	'Colppy',
-	'Xubio'
+	'Xubio',
+	// Las finanzas quedan dentro de la app.
+	'Caja'
 ];
 out.INTEG = [
 	...(out.INTEG as unknown[][]).filter((i) => !SIN_INTEGRACION.includes(i[0] as string)),

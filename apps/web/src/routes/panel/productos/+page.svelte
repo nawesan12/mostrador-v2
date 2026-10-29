@@ -410,7 +410,6 @@
 	{/snippet}
 	{#snippet antes()}
 		<div class="foto">
-			<div class="arcos"></div>
 			<img src="/hornero/foto.webp" alt="" width="64" height="64" />
 			<div class="f-txt">
 				<div class="f-t">Cargá productos con una foto</div>
@@ -482,11 +481,6 @@
 		background: linear-gradient(120deg, #2a140c, #4a2416);
 		color: #fbf7f2;
 		flex-wrap: wrap;
-	}
-	.arcos {
-		position: absolute;
-		inset: 0;
-		background-image: url('/textura/arch-pattern-light.svg');
 	}
 	.foto img {
 		position: relative;

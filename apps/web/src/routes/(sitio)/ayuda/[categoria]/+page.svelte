@@ -64,7 +64,7 @@
 		padding: 0 clamp(16px, 3vw, 28px);
 	}
 	.hero {
-		background: #f4ece2 url('/textura/arch-pattern-light.svg');
+		background: #f4ece2;
 		padding: 24px 0 clamp(32px, 5vw, 56px);
 	}
 	.volver {

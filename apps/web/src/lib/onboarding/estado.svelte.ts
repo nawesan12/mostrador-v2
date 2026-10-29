@@ -21,7 +21,6 @@ export type Elecciones = {
 	conflicto: string | null;
 	config: Record<string, boolean>;
 	tono: Tono;
-	caja: boolean;
 	equipo: { email: string; rol: string }[];
 };
 
@@ -46,7 +45,6 @@ export const INICIAL: Elecciones = {
 		pol: true
 	},
 	tono: 'cercano',
-	caja: false,
 	equipo: [{ email: 'valeria@laesquina.com.ar', rol: 'Dueña' }]
 };
 

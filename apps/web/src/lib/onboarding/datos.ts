@@ -353,28 +353,6 @@ export const RESUMEN = [
 	['5', 'canales conectados'],
 	['0', 'cosas cargadas a mano']
 ] as const;
-export const BENEFICIOS_CAJA = [
-	[
-		I.phArrowsLeftRightBold,
-		'Todo entra solo',
-		'Ventas, liquidaciones, comisiones y envíos, sin cargar nada.'
-	],
-	[
-		I.phReceiptBold,
-		'Monotributo al día',
-		'Lo que facturás suma al tope y te avisa antes de recategorizar.'
-	],
-	[
-		I.phCurrencyDollarBold,
-		'Ganancia real',
-		'En pesos de hoy por inflación o al dólar MEP de cada venta.'
-	],
-	[
-		I.phUserSwitchBold,
-		'Lo tuyo, aparte',
-		'Los retiros personales no se mezclan con los gastos del negocio.'
-	]
-] as const;
 
 /** El QR de muestra del paso final (7×7, el patrón del handoff). */
 export const QR = Array.from({ length: 49 }, (_, i) => {

@@ -32,9 +32,7 @@
 		{#each lista as [n, , m, d] (n)}
 			<div class="integ">
 				<div class="logo">
-					{#if 'img' in m}
-						<img src={m.img} alt="" width="40" height="40" />
-					{:else if 'icon' in m}
+					{#if 'icon' in m}
 						<Icon icon={m.icon} size={36} style={'col' in m ? `color:${m.col}` : ''} />
 					{:else if 'w' in m}
 						<span
@@ -155,9 +153,6 @@
 		display: flex;
 		align-items: center;
 	}
-	.logo img {
-		object-fit: contain;
-	}
 	.palabra {
 		height: 36px;
 		padding: 0 10px;
@@ -200,10 +195,6 @@
 		.logo {
 			height: 32px;
 			justify-content: center;
-		}
-		.logo img {
-			width: 30px;
-			height: 30px;
 		}
 		.logo :global(svg) {
 			width: 28px;

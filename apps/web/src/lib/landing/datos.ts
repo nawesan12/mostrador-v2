@@ -220,14 +220,6 @@ export const INTEG = [
 		'Automatizaciones'
 	],
 	[
-		'Caja',
-		'ia',
-		{
-			img: '/caja/01-saludo.webp'
-		},
-		'Finanzas y monotributo'
-	],
-	[
 		'Claude',
 		'ia',
 		{

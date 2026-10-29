@@ -448,7 +448,6 @@
 		display: flex;
 		flex-direction: column;
 		justify-content: flex-end;
-		background-image: url('/textura/arch-pattern-dark.svg');
 	}
 	.burbuja {
 		align-self: flex-start;

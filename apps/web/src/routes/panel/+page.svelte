@@ -572,7 +572,6 @@
 	</div>
 
 	<div class="hornero-card" use:anim={{ t: 'rise' }}>
-		<div class="arcos"></div>
 		<div class="h-cab">
 			<div class="h-av"><img src="/hornero/avatar.webp" alt="Hornero" /></div>
 			<div>
@@ -1633,11 +1632,6 @@
 		flex-direction: column;
 		gap: 14px;
 		box-shadow: 0 20px 40px -20px rgba(210, 88, 47, 0.6);
-	}
-	.arcos {
-		position: absolute;
-		inset: 0;
-		background-image: url('/textura/arch-pattern-light.svg');
 	}
 	.h-cab {
 		position: relative;

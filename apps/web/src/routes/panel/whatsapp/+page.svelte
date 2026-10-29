@@ -659,7 +659,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
-		background: var(--sf3) url('/textura/arch-pattern-dark.svg');
+		background: var(--sf3);
 	}
 	.dia {
 		align-self: center;

@@ -132,7 +132,6 @@
 				{/each}
 			</div>
 			<a href="#hornero" class="hornero" onclick={() => (l.menu = false)} use:entrar={MENU.length}>
-				<span class="arcos"></span>
 				<img src="/hornero/saludo.webp" alt="" />
 				<span class="h-txt"
 					><span class="t">Conocé a Hornero</span><span class="d"
@@ -404,11 +403,6 @@
 	}
 	.hornero:hover {
 		color: #fff;
-	}
-	.arcos {
-		position: absolute;
-		inset: 0;
-		background-image: url('/textura/arch-pattern-light.svg');
 	}
 	.hornero img {
 		position: relative;

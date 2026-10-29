@@ -43,7 +43,7 @@
 {/snippet}
 
 <section id="precios">
-	<div class="arcos"></div>
+	<div class="curvas"></div>
 	<div class="luz"></div>
 	<div class="calc-zona">
 		<div class="calc-txt" use:anim={'reveal'}>
@@ -134,29 +134,11 @@
 				</div>
 			{/each}
 		</div>
-		<div class="notas" use:anim={'reveal'}>
-			<div class="nota">
-				<img src="/hornero/avatar.webp" alt="" width="40" height="40" />
-				<div>
-					<b>¿Qué cuenta como respuesta con IA?</b>
-					<div>
-						Solo cuando Hornero redacta algo nuevo. Horarios, costo de envío, stock y estado del
-						pedido se responden solos, sin IA y sin límite, en todos los planes.
-					</div>
-				</div>
-			</div>
-			<div class="nota">
-				<Icon icon={I.phStackPlusFill} size={26} style="color:#F5B796;flex:none" />
-				<div>
-					<b>¿Necesitás más?</b>
-					<div>
-						2.000 respuestas con IA extra por $ 4.900, cuando quieras. Los mensajes de WhatsApp los
-						cobra Meta a su costo, sin recargo: los primeros 1.000 de atención de cada mes son
-						gratis. Te avisamos al llegar&nbsp;al&nbsp;80&nbsp;%.
-					</div>
-				</div>
-			</div>
-		</div>
+		<p class="nota" use:anim={'reveal'}>
+			Las respuestas que Hornero contesta solo (horarios, envíos, stock) no cuentan como IA. Si te
+			quedás corto, 2.000 más por $&nbsp;4.900. Los mensajes de WhatsApp los cobra Meta a su costo y
+			los primeros 1.000 de cada mes son&nbsp;gratis.
+		</p>
 		<div class="empresa" use:anim={'reveal'}>
 			<Icon icon={I.phBuildingsFill} size={24} style="color:#F5B796" />
 			<div class="e-txt">
@@ -168,32 +150,37 @@
 			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- /contacto llega con las páginas públicas -->
 			<a href="/contacto">Hablar con ventas</a>
 		</div>
-		<div class="tabla" use:anim={'reveal'}>
-			<div class="t-fila cab">
-				<span class="t-col">Plan por plan</span><span class="t-m"
-					><img src="/mark.svg" alt="" width="18" />Tu Local Web</span
-				><span class="t-col">Tiendanube</span>
-			</div>
-			{#each CMP as [t, m, o, mOk, oOk] (t)}
-				<div class="t-fila">
-					<span class="t-t">{t}</span>
-					<span class="t-m"
-						><Icon
-							icon={mOk ? I.phCheckCircleFill : I.phMinusCircle}
-							size={16}
-							style="color:{mOk ? '#7FD3A6' : '#B8A293'};flex:none"
-						/>{@render valor(m)}</span
-					>
-					<span class="t-o"
-						><Icon
-							icon={oOk === 1 ? I.phCheckCircleFill : oOk === 2 ? I.phClock : I.phMinusCircle}
-							size={16}
-							style="color:{oOk === 1 ? '#D9C8BA' : oOk === 2 ? '#E3A93B' : '#8F7B6C'};flex:none"
-						/>{@render valor(o)}</span
-					>
+		<details class="comparar" use:anim={'reveal'}>
+			<summary
+				>Comparar plan por plan con Tiendanube<Icon icon={I.phCaretDownBold} size={14} /></summary
+			>
+			<div class="tabla">
+				<div class="t-fila cab">
+					<span class="t-col">Plan por plan</span><span class="t-m"
+						><img src="/mark.svg" alt="" width="18" />Tu Local Web</span
+					><span class="t-col">Tiendanube</span>
 				</div>
-			{/each}
-		</div>
+				{#each CMP as [t, m, o, mOk, oOk] (t)}
+					<div class="t-fila">
+						<span class="t-t">{t}</span>
+						<span class="t-m"
+							><Icon
+								icon={mOk ? I.phCheckCircleFill : I.phMinusCircle}
+								size={16}
+								style="color:{mOk ? '#7FD3A6' : '#B8A293'};flex:none"
+							/>{@render valor(m)}</span
+						>
+						<span class="t-o"
+							><Icon
+								icon={oOk === 1 ? I.phCheckCircleFill : oOk === 2 ? I.phClock : I.phMinusCircle}
+								size={16}
+								style="color:{oOk === 1 ? '#D9C8BA' : oOk === 2 ? '#E3A93B' : '#8F7B6C'};flex:none"
+							/>{@render valor(o)}</span
+						>
+					</div>
+				{/each}
+			</div>
+		</details>
 		<div class="legal">
 			Precios mensuales con IVA. Tiendanube según tiendanube.com/site/tienda-gratis, octubre de
 			2026; “No figura en el plan” significa que no aparece entre las funciones que publica para ese
@@ -209,10 +196,41 @@
 		position: relative;
 		overflow: hidden;
 	}
-	.arcos {
+	/* Las curvas del manual de marca, marrón sobre marrón. */
+	.curvas {
 		position: absolute;
 		inset: 0;
-		background-image: url('/textura/arch-pattern-light.svg');
+		background: url('/textura/curvas-oscuras.svg') center / cover no-repeat;
+	}
+	.nota {
+		margin: 18px auto 0;
+		max-width: 760px;
+		text-align: center;
+		font-size: 13.5px;
+		line-height: 1.55;
+		color: #d9c8ba;
+		text-wrap: pretty;
+	}
+	.comparar {
+		margin-top: 28px;
+	}
+	.comparar summary {
+		list-style: none;
+		cursor: pointer;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 8px;
+		padding: 14px;
+		font-size: 14.5px;
+		font-weight: 600;
+		color: #f5b796;
+	}
+	.comparar summary::-webkit-details-marker {
+		display: none;
+	}
+	.comparar[open] summary :global(svg) {
+		transform: rotate(180deg);
 	}
 	.luz {
 		position: absolute;
@@ -521,13 +539,6 @@
 	.pl-cta:hover {
 		color: #fff;
 	}
-	.notas {
-		margin-top: 12px;
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-		gap: 12px;
-	}
-	.nota,
 	.empresa {
 		display: flex;
 		gap: 12px;
@@ -535,23 +546,6 @@
 		border-radius: 22px;
 		background: rgba(251, 247, 242, 0.05);
 		border: 1px solid rgba(251, 247, 242, 0.12);
-	}
-	.nota img {
-		border-radius: 50%;
-		object-fit: cover;
-		flex: none;
-		background: #fcede5;
-	}
-	.nota b {
-		display: block;
-		font-size: 15px;
-		text-wrap: balance;
-	}
-	.nota div div {
-		font-size: 13.5px;
-		line-height: 1.5;
-		color: #d9c8ba;
-		margin-top: 3px;
 	}
 	.empresa {
 		margin-top: 12px;
@@ -580,7 +574,7 @@
 		font-weight: 600;
 	}
 	.tabla {
-		margin-top: 44px;
+		margin-top: 8px;
 		border-radius: 26px;
 		background: rgba(251, 247, 242, 0.04);
 		border: 1px solid rgba(251, 247, 242, 0.12);

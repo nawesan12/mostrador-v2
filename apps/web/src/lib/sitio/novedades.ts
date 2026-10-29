@@ -13,13 +13,6 @@ export const NOVEDADES: [string, Novedad[]][] = [
 		'Octubre 2026',
 		[
 			{
-				tipo: 'nuevo',
-				titulo: 'Integración con Caja',
-				foto: '1554224155-6726b3ff858f',
-				texto:
-					'Cada venta, liquidación y factura pasa sola a Caja, separada de tus gastos personales. Ves tu ganancia real en pesos o en dólares.'
-			},
-			{
 				tipo: 'mejora',
 				titulo: 'Pedidos 3 veces más rápidos',
 				texto:

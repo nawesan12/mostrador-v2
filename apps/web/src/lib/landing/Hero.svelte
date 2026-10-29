@@ -3,6 +3,7 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import { anim } from '#lib/anim.ts';
 	import * as I from '#lib/icons.ts';
+	import { getLanding } from './estado.svelte.ts';
 	import { unsplash } from './formato.ts';
 
 	/*
@@ -13,6 +14,7 @@
 	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Mostrador.dc.html).
 	const registro = resolve('/onboarding');
 	const FOTO = '1556741533-6e6a62bd8b49';
+	const l = getLanding();
 </script>
 
 <section class="hero">
@@ -40,8 +42,8 @@
 				<a class="cta-pri" href={registro}
 					>Crear mi tienda gratis <Icon icon={I.phArrowRightBold} size={16} /></a
 				>
-				<a class="cta-sec" href="#plantillas"
-					><Icon icon={I.phSquaresFour} size={17} />Ver plantillas</a
+				<button type="button" class="cta-sec" onclick={() => (l.tplI = 0)}
+					><Icon icon={I.phSquaresFour} size={17} />Ver plantillas</button
 				>
 			</div>
 			<div class="checks" use:anim={{ t: 'fade', delay: 380 }}>
@@ -191,6 +193,8 @@
 		transform: translateY(-1px);
 	}
 	.cta-sec {
+		font: inherit;
+		cursor: pointer;
 		display: flex;
 		align-items: center;
 		gap: 10px;
