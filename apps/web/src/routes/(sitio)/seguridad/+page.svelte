@@ -36,7 +36,7 @@
 		[
 			I.phCreditCardFill,
 			'Pagos certificados PCI',
-			'Los datos de tarjeta nunca pasan por Tu Local Web: los procesan Mercado Pago, Payway y Getnet.'
+			'Los datos de tarjeta nunca pasan por Tu Local Web: los procesan Mercado Pago y Payway.'
 		],
 		[
 			I.phPulseFill,

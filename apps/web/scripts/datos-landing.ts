@@ -81,7 +81,15 @@ const SIN_INTEGRACION = [
 	'Cuenta DNI',
 	'Uber Flash',
 	'Cruz del Sur',
-	'Via Cargo'
+	'Via Cargo',
+	// 29/10: tampoco las que no vamos a conectar por ahora.
+	'Ualá',
+	'Getnet',
+	'Enviopack',
+	'Mailchimp',
+	'Zapier',
+	'Colppy',
+	'Xubio'
 ];
 out.INTEG = [
 	...(out.INTEG as unknown[][]).filter((i) => !SIN_INTEGRACION.includes(i[0] as string)),

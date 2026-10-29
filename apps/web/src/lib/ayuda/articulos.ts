@@ -685,7 +685,7 @@ export const FAQ: [string, string][] = [
 	],
 	[
 		'¿Puedo cobrar en cuotas sin interés?',
-		'Sí. Conectás Mercado Pago, Payway o Getnet y prendés las cuotas que quieras ofrecer desde Cupones › Automáticas.'
+		'Sí. Conectás Mercado Pago o Payway y prendés las cuotas que quieras ofrecer desde Cupones › Automáticas.'
 	],
 	[
 		'¿Tu Local Web cobra comisión por venta?',

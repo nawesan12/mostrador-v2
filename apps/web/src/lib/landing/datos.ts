@@ -131,28 +131,6 @@ export const INTEG = [
 		'Tarjetas y cuotas'
 	],
 	[
-		'Ualá',
-		'cobros',
-		{
-			w: 'ualá',
-			abbr: 'ualá',
-			bg: '#3E6BFD',
-			fg: '#fff'
-		},
-		'Ualá Bis y link de pago'
-	],
-	[
-		'Getnet',
-		'cobros',
-		{
-			w: 'Getnet',
-			abbr: 'getnet',
-			bg: '#EC0000',
-			fg: '#fff'
-		},
-		'Posnet y link de pago'
-	],
-	[
 		'Correo Argentino',
 		'envios',
 		{
@@ -162,17 +140,6 @@ export const INTEG = [
 			fg: '#003DA5'
 		},
 		'Sucursal y domicilio'
-	],
-	[
-		'Enviopack',
-		'envios',
-		{
-			w: 'Enviopack',
-			abbr: 'EP',
-			bg: '#00B6E6',
-			fg: '#fff'
-		},
-		'Cotizador multi transporte'
 	],
 	[
 		'ARCA',
@@ -210,50 +177,12 @@ export const INTEG = [
 		'Píxel y API de conversiones'
 	],
 	[
-		'Mailchimp',
-		'gestion',
-		{
-			icon: I.logosMailchimpFreddie
-		},
-		'Email marketing'
-	],
-	[
-		'Zapier',
-		'gestion',
-		{
-			icon: I.logosZapier
-		},
-		'+6.000 apps'
-	],
-	[
 		'Google Drive',
 		'gestion',
 		{
 			icon: I.logosGoogleDrive
 		},
 		'Exportes automáticos'
-	],
-	[
-		'Colppy',
-		'gestion',
-		{
-			w: 'Colppy',
-			abbr: 'colppy',
-			bg: '#2BB673',
-			fg: '#fff'
-		},
-		'Contabilidad'
-	],
-	[
-		'Xubio',
-		'gestion',
-		{
-			w: 'Xubio',
-			abbr: 'xubio',
-			bg: '#00A3E0',
-			fg: '#fff'
-		},
-		'Contabilidad'
 	],
 	[
 		'Google Sheets',

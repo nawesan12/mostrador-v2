@@ -146,9 +146,9 @@ test('integraciones filtra por categoría', async ({ page }) => {
 	await listo(page);
 	const sec = page.locator('section#integraciones');
 	const tarjetas = sec.locator('.integ');
-	await expect(tarjetas).toHaveCount(34);
+	await expect(tarjetas).toHaveCount(27);
 	await sec.getByRole('button', { name: /^Envíos/ }).click();
-	await expect(tarjetas).toHaveCount(2);
+	await expect(tarjetas).toHaveCount(1);
 	await expect(sec.locator('.n', { hasText: 'Correo Argentino' })).toBeVisible();
 });
 

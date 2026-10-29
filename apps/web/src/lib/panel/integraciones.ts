@@ -140,16 +140,6 @@ export const INTEGRACIONES: Integracion[] = [
 		demo: false
 	},
 	{
-		id: 'uala',
-		nombre: 'Ualá Bis',
-		detalle: 'Cobros y link de pago',
-		categoria: 'cobros',
-		marca: 'uala',
-		hace: ['Cobra con tarjeta y link de pago de Ualá'],
-		opciones: [],
-		demo: false
-	},
-	{
 		id: 'correo',
 		nombre: 'Correo Argentino',
 		detalle: 'Sucursal y domicilio',
@@ -214,17 +204,6 @@ export const INTEGRACIONES: Integracion[] = [
 		],
 		opciones: [],
 		demo: false
-	},
-	{
-		id: 'zap',
-		nombre: 'Zapier',
-		detalle: '+6.000 apps',
-		categoria: 'gestion',
-		marca: 'zap',
-		hace: ['Conectá Tu Local Web con otras apps'],
-		opciones: [],
-		demo: false,
-		pronto: true
 	}
 ];
 
