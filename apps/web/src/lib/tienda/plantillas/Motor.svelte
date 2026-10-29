@@ -653,7 +653,7 @@
 				>{/if}
 			<a
 				href={base}
-				style="text-decoration:none;color:{T.ink};font-family:{T.f};font-weight:{T.fw};font-size:{T.logoSz};letter-spacing:{T.ls};text-transform:{T.tt};line-height:1;white-space:nowrap"
+				style="text-decoration:none;color:{T.ink};font-family:{T.f};font-weight:{T.fw};font-size:{T.logoSz};letter-spacing:{T.ls};text-transform:{T.tt};line-height:1;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis"
 				>{tienda.nombre}</a
 			>
 			{#if wide}<nav style="display:flex;gap:22px;margin-left:18px">
