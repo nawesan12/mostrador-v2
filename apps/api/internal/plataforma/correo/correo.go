@@ -6,9 +6,12 @@ package correo
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"crypto/tls"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"mime"
 	"net"
 	"net/http"
 	"net/smtp"
@@ -83,7 +86,9 @@ func (s *SMTP) Enviar(_ context.Context, m Mensaje) error {
 	}
 	frontera := "mostrador-frontera"
 	var b strings.Builder
-	fmt.Fprintf(&b, "From: %s\r\nTo: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\n", s.De, m.Para, m.Asunto)
+	// El asunto va codificado (RFC 2047): con tildes en crudo, varios clientes lo muestran roto.
+	fmt.Fprintf(&b, "From: %s\r\nTo: %s\r\nSubject: %s\r\nDate: %s\r\nMessage-ID: %s\r\nMIME-Version: 1.0\r\n",
+		de(s.De), m.Para, mime.QEncoding.Encode("utf-8", m.Asunto), time.Now().Format(time.RFC1123Z), idMensaje(s.De))
 	fmt.Fprintf(&b, "Content-Type: multipart/alternative; boundary=%s\r\n\r\n", frontera)
 	fmt.Fprintf(&b, "--%s\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n%s\r\n", frontera, m.Texto)
 	fmt.Fprintf(&b, "--%s\r\nContent-Type: text/html; charset=utf-8\r\n\r\n%s\r\n--%s--\r\n", frontera, m.HTML, frontera)
@@ -143,6 +148,26 @@ func (s *SMTP) conUsuario(para string, cuerpo []byte) error {
 		return err
 	}
 	return c.Quit()
+}
+
+// de codifica el nombre del remitente si tiene caracteres fuera de ASCII ("Tu Local Web <hola@…>").
+func de(remitente string) string {
+	i := strings.LastIndex(remitente, "<")
+	if i <= 0 {
+		return remitente
+	}
+	return mime.QEncoding.Encode("utf-8", strings.TrimSpace(remitente[:i])) + " " + remitente[i:]
+}
+
+// idMensaje arma un Message-ID único con el dominio del remitente (sin él, los filtros de spam restan).
+func idMensaje(remitente string) string {
+	r := make([]byte, 12)
+	_, _ = rand.Read(r)
+	dominio := "localhost"
+	if d := direccionDe(remitente); strings.Contains(d, "@") {
+		dominio = d[strings.LastIndex(d, "@")+1:]
+	}
+	return "<" + hex.EncodeToString(r) + "@" + dominio + ">"
 }
 
 func direccionDe(de string) string {

@@ -56,3 +56,16 @@ func TestElegir(t *testing.T) {
 		t.Fatalf("sin Resend tiene que usar SMTP con usuario: %+v", s)
 	}
 }
+
+func TestEncabezadosCodificados(t *testing.T) {
+	if got := de("Tu Local Web <hola@tulocalweb.com.ar>"); got != "Tu Local Web <hola@tulocalweb.com.ar>" {
+		t.Errorf("un nombre en ASCII queda igual: %q", got)
+	}
+	if got := de("Señora Ñoño <a@b.c>"); !strings.HasPrefix(got, "=?utf-8?q?") || !strings.HasSuffix(got, " <a@b.c>") {
+		t.Errorf("un nombre con tildes va codificado: %q", got)
+	}
+	id := idMensaje("Tu Local Web <hola@tulocalweb.com.ar>")
+	if !strings.HasPrefix(id, "<") || !strings.HasSuffix(id, "@tulocalweb.com.ar>") || id == idMensaje("x <hola@tulocalweb.com.ar>") {
+		t.Errorf("Message-ID único y con el dominio: %q", id)
+	}
+}
