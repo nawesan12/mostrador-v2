@@ -158,7 +158,7 @@
 		transition:
 			box-shadow 0.3s,
 			background 0.3s;
-		background: rgba(251, 247, 242, 0.82);
+		background: rgba(255, 255, 255, 0.86);
 		backdrop-filter: blur(16px) saturate(1.3);
 		border-bottom: 1px solid rgba(58, 29, 18, 0.08);
 	}
@@ -167,7 +167,7 @@
 	}
 	header.sombra {
 		box-shadow: 0 10px 30px -18px rgba(42, 20, 12, 0.35);
-		background: rgba(251, 247, 242, 0.92);
+		background: rgba(255, 255, 255, 0.94);
 	}
 	.fila {
 		max-width: 1240px;
@@ -294,6 +294,26 @@
 			height: 64px;
 			padding: 0 14px;
 		}
+		/* En el celular el isotipo alcanza: así entran Empezar y el menú. */
+		.logo img {
+			display: none;
+		}
+		/* Empezar, el botón inflado naranja: el llamado más notorio de la pantalla. */
+		.cta {
+			min-height: 44px;
+			padding: 12px 20px;
+			font-size: 15px;
+			font-weight: 700;
+			background: linear-gradient(180deg, #ee7a4a 0%, #d2582f 55%, #bc4920 100%);
+			box-shadow:
+				inset 0 2px 0 rgba(255, 255, 255, 0.38),
+				inset 0 -3px 0 rgba(120, 38, 12, 0.35),
+				0 1px 2px rgba(120, 38, 12, 0.3),
+				0 14px 30px -12px rgba(210, 88, 47, 0.85);
+		}
+		.cta:hover {
+			background: linear-gradient(180deg, #ee7a4a 0%, #d2582f 55%, #bc4920 100%);
+		}
 	}
 	@media (max-width: 419px) {
 		.largo {
@@ -326,7 +346,7 @@
 		z-index: 49;
 		max-height: calc(100dvh - 72px);
 		overflow: auto;
-		background: #fbf7f2;
+		background: #fff;
 		border-radius: 0 0 28px 28px;
 		box-shadow: 0 40px 80px -30px rgba(42, 20, 12, 0.55);
 		transform-origin: top center;

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import CtaTienda from './CtaTienda.svelte';
 	import Icon from '#lib/components/Icon.svelte';
 	import { anim } from '#lib/anim.ts';
 	import * as I from '#lib/icons.ts';
@@ -46,6 +47,7 @@
 						<li><span class="h-ico"><Icon icon={ico} size={18} /></span>{t}</li>
 					{/each}
 				</ul>
+				<CtaTienda texto="Probar a Tincho gratis" izquierda />
 			</div>
 			<div class="chat" use:anim={{ t: 'reveal', delay: 120 }}>
 				<div class="chat-cab">
@@ -120,7 +122,7 @@
 	section {
 		position: relative;
 		overflow: hidden;
-		background: linear-gradient(180deg, #fbf7f2 0%, #fceadf 45%, #f7d9c6 100%);
+		background: #fff;
 		border-bottom: 1px solid rgba(58, 29, 18, 0.08);
 	}
 	.in {

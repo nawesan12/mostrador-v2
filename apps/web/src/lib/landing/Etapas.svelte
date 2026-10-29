@@ -1,4 +1,5 @@
 <script lang="ts">
+	import CtaTienda from './CtaTienda.svelte';
 	import Icon from '#lib/components/Icon.svelte';
 	import { anim } from '#lib/anim.ts';
 	import { phArrowRight } from '#lib/icons.ts';
@@ -77,6 +78,7 @@
 			</div>
 		{/each}
 	</div>
+	<CtaTienda />
 </section>
 
 <style>

@@ -18,7 +18,6 @@
 </script>
 
 <section class="hero">
-	<div class="luz"></div>
 	<!-- La forma de la foto, en unidades de su caja: escala con cualquier tamaño. -->
 	<svg class="defs" aria-hidden="true" width="0" height="0">
 		<clipPath id="hero-forma" clipPathUnits="objectBoundingBox">
@@ -39,7 +38,7 @@
 				para el que ya factura millones — sin comisión por venta.
 			</p>
 			<div class="ctas" use:anim={{ t: 'rise', delay: 240 }}>
-				<a class="cta-pri" href={registro}
+				<a class="btn-inflado btn-grande" href={registro}
 					>Crear mi tienda gratis <Icon icon={I.phArrowRightBold} size={16} /></a
 				>
 				<button type="button" class="cta-sec" onclick={() => (l.tplI = 0)}
@@ -79,11 +78,6 @@
 	.hero {
 		position: relative;
 		overflow: hidden;
-	}
-	.luz {
-		position: absolute;
-		inset: 0;
-		background: radial-gradient(900px 600px at 15% 10%, rgba(232, 135, 95, 0.16), transparent 65%);
 	}
 	.defs {
 		position: absolute;
@@ -172,26 +166,6 @@
 		gap: 12px;
 		flex-wrap: wrap;
 	}
-	.cta-pri {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		color: #fff;
-		background: linear-gradient(180deg, #e06a3e, #d2582f 60%, #bf4b22);
-		font-size: 16px;
-		font-weight: 600;
-		padding: 17px 28px;
-		border-radius: 999px;
-		white-space: nowrap;
-		box-shadow:
-			inset 0 1px 0 rgba(255, 255, 255, 0.3),
-			inset 0 -2px 0 rgba(0, 0, 0, 0.12),
-			0 16px 34px -14px rgba(210, 88, 47, 0.75);
-	}
-	.cta-pri:hover {
-		color: #fff;
-		transform: translateY(-1px);
-	}
 	.cta-sec {
 		font: inherit;
 		cursor: pointer;
@@ -248,7 +222,7 @@
 		.bajada {
 			font-size: 17px;
 		}
-		.ctas a {
+		.ctas > * {
 			flex: 1 1 auto;
 			justify-content: center;
 		}

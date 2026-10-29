@@ -1,4 +1,5 @@
 <script lang="ts">
+	import CtaTienda from './CtaTienda.svelte';
 	import Icon from '#lib/components/Icon.svelte';
 	import { anim } from '#lib/anim.ts';
 	import * as I from '#lib/icons.ts';
@@ -139,11 +140,12 @@
 			</div>
 		</div>
 	</div>
+	<CtaTienda />
 </section>
 
 <style>
 	section {
-		background: #f4ece2;
+		background: #f6f5f3;
 		border-top: 1px solid rgba(58, 29, 18, 0.08);
 		border-bottom: 1px solid rgba(58, 29, 18, 0.08);
 	}

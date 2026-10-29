@@ -61,7 +61,7 @@
 
 <style>
 	section {
-		background: #f4ece2;
+		background: #f6f5f3;
 		border-top: 1px solid rgba(58, 29, 18, 0.08);
 	}
 	.in {

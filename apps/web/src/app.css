@@ -223,6 +223,55 @@ html.lenis body {
 	background: linear-gradient(180deg, #d9603a, var(--terracota-oscuro));
 }
 
+/* Botón inflado: el naranja con brillo arriba, sombra adentro abajo y una sombra cálida debajo.
+   Es el llamado principal (crear la tienda); con .btn-grande, más alto y con letra más grande. */
+.btn-inflado {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 9px;
+	min-height: 44px;
+	padding: 12px 22px;
+	border: 0;
+	border-radius: 999px;
+	background: linear-gradient(180deg, #ee7a4a 0%, #d2582f 55%, #bc4920 100%);
+	color: #fff;
+	font: inherit;
+	font-size: 15px;
+	font-weight: 700;
+	line-height: 1.1;
+	letter-spacing: -0.01em;
+	white-space: nowrap;
+	text-decoration: none;
+	cursor: pointer;
+	box-shadow:
+		inset 0 2px 0 rgba(255, 255, 255, 0.38),
+		inset 0 -3px 0 rgba(120, 38, 12, 0.35),
+		0 1px 2px rgba(120, 38, 12, 0.3),
+		0 14px 30px -12px rgba(210, 88, 47, 0.85);
+	transition:
+		transform 0.15s var(--ease),
+		box-shadow 0.2s,
+		filter 0.2s;
+}
+.btn-inflado:hover {
+	color: #fff;
+	filter: brightness(1.04);
+	transform: translateY(-1px);
+}
+.btn-inflado:active {
+	transform: translateY(1px) scale(0.98);
+	box-shadow:
+		inset 0 2px 0 rgba(255, 255, 255, 0.25),
+		inset 0 -1px 0 rgba(120, 38, 12, 0.35),
+		0 6px 16px -10px rgba(210, 88, 47, 0.85);
+}
+.btn-inflado.btn-grande {
+	min-height: 56px;
+	padding: 17px 30px;
+	font-size: 16.5px;
+}
+
 .btn-dark {
 	background: var(--tostado);
 	color: #fff;

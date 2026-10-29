@@ -1,4 +1,5 @@
 <script lang="ts">
+	import CtaTienda from './CtaTienda.svelte';
 	import Icon from '#lib/components/Icon.svelte';
 	import { anim } from '#lib/anim.ts';
 	import { CATS, INTEG } from './datos.ts';
@@ -49,6 +50,7 @@
 			</div>
 		{/each}
 	</div>
+	<CtaTienda />
 </section>
 
 <style>

@@ -53,7 +53,7 @@
 	}}
 />
 
-<Grano />
+<Grano opacidad={0.3} />
 <Lenis />
 
 <div class="landing">
@@ -83,7 +83,7 @@
 	.landing {
 		position: relative;
 		overflow-x: clip;
-		background: #fbf7f2;
+		background: #fff;
 		color: #2a140c;
 	}
 </style>
