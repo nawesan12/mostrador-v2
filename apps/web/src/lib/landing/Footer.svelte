@@ -56,7 +56,7 @@
 <footer>
 	<div class="cols">
 		<div class="marca">
-			<div class="logo"><Marca alto={18} /><img src="/wordmark-brown.webp" alt="mostrador" /></div>
+			<div class="logo"><Marca alto={18} /><img src="/wordmark-brown.webp" alt="Tu Local Web" /></div>
 			<div class="lema">Hecho en Argentina para negocios argentinos.</div>
 		</div>
 		{#each COLUMNAS as [titulo, links] (titulo)}
@@ -68,7 +68,7 @@
 	</div>
 	<div class="barra">
 		<div class="barra-in">
-			<span>© 2026 Mostrador · Nahuel Santillán · <span class="nw">CUIT 20-44859234-1</span></span>
+			<span>© 2026 Tu Local Web · Nahuel Santillán · <span class="nw">CUIT 20-44859234-1</span></span>
 			<span class="legal">
 				<a class="arrep" href="/legales/arrepentimiento"
 					><Icon icon={I.phArrowCounterClockwiseBold} size={13} />Botón de arrepentimiento</a

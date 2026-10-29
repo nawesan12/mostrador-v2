@@ -176,13 +176,13 @@ func (s *Servicio) Decidir(ctx context.Context, m Miembro, id, decision, motivo 
 			return ErrResuelta
 		}
 		nuevo, accion, texto := "aprobada", "partner_aprobar", "Aprobó la postulación de "+p.Agencia
-		asunto := "Ya sos partner de Mostrador"
-		cuerpo := "¡Hola, " + p.Nombre + "!\n\nAprobamos la postulación de " + p.Agencia + " al programa de partners de Mostrador. " +
+		asunto := "Ya sos partner de Tu Local Web"
+		cuerpo := "¡Hola, " + p.Nombre + "!\n\nAprobamos la postulación de " + p.Agencia + " al programa de partners de Tu Local Web. " +
 			"Ingresá con este email en " + s.Sitio + "/partners/panel para ver tu link de referido, tu cupón y los materiales."
 		if decision == "rechazar" {
 			nuevo, accion, texto = "rechazada", "partner_rechazar", "Rechazó la postulación de "+p.Agencia
 			asunto = "Tu postulación al programa de partners"
-			cuerpo = "¡Hola, " + p.Nombre + "!\n\nGracias por postularte al programa de partners de Mostrador. Por ahora no " +
+			cuerpo = "¡Hola, " + p.Nombre + "!\n\nGracias por postularte al programa de partners de Tu Local Web. Por ahora no " +
 				"podemos sumar a " + p.Agencia + ": " + motivo + "\n\nSi algo cambia, podés volver a escribirnos."
 		}
 		if _, err := tx.Exec(ctx, `UPDATE soporte.postulaciones_partner SET estado = $2, motivo = nullif($3, ''),

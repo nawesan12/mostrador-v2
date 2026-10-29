@@ -271,7 +271,7 @@
 		ui.toast({ k: 'info', title: `${i.nombre} desconectada`, desc: 'Podés volver a conectarla' });
 	}
 
-	// Manejá Mostrador desde tu IA: el servidor MCP con OAuth. Cada IA se conecta desde su lado con
+	// Manejá Tu Local Web desde tu IA: el servidor MCP con OAuth. Cada IA se conecta desde su lado con
 	// la dirección del servidor; el permiso se da en /oauth/autorizar y acá se listan y desconectan.
 	let iaAbierta = $state<(typeof IAS)[number] | null>(null);
 	let modalIa = $state(false);
@@ -319,12 +319,12 @@
 	const PASOS: Record<(typeof IAS)[number]['id'], string[]> = {
 		claude: [
 			'En Claude, abrí Configuración\u00a0›\u00a0Conectores.',
-			'Tocá Agregar conector personalizado, ponele Mostrador de nombre y pegá la\u00a0dirección.',
+			'Tocá Agregar conector personalizado, ponele Tu Local Web de nombre y pegá la\u00a0dirección.',
 			'Tocá Conectar: Claude te trae acá para que permitas el\u00a0acceso.'
 		],
 		chatgpt: [
 			'En ChatGPT, abrí Configuración\u00a0› Aplicaciones y conectores\u00a0› Configuración avanzada y prendé el modo\u00a0desarrollador.',
-			'Volvé a Aplicaciones y conectores, tocá Crear, ponele Mostrador de nombre, pegá la dirección y elegí\u00a0OAuth.',
+			'Volvé a Aplicaciones y conectores, tocá Crear, ponele Tu Local Web de nombre, pegá la dirección y elegí\u00a0OAuth.',
 			'Tocá Crear: ChatGPT te trae acá para que permitas el\u00a0acceso.'
 		],
 		mcp: [
@@ -369,7 +369,7 @@
 		<div class="ia-cab">
 			<img src="/hornero/whatsapp.webp" alt="" width="52" height="52" />
 			<div class="ia-txt">
-				<div class="ia-t">Manejá Mostrador desde tu IA<span class="mcp">MCP</span></div>
+				<div class="ia-t">Manejá Tu Local Web desde tu IA<span class="mcp">MCP</span></div>
 				<div class="ia-d">
 					Entrás con tu cuenta de la IA y listo. Preguntale por ventas, stock o pedidos, y pedile
 					que cargue, edite o responda por&nbsp;vos.
@@ -541,7 +541,7 @@
 		{#if mp && data.mp.usuario}
 			<div class="m-cuenta">
 				Cuenta de Mercado Pago <b>#{data.mp.usuario}</b>. La plata de cada venta va directo ahí:
-				Mostrador no cobra&nbsp;comisión.
+				Tu Local Web no cobra&nbsp;comisión.
 			</div>
 		{/if}
 		{#if abierta.id === 'tg'}
@@ -554,7 +554,7 @@
 		{:else if abierta.id === 'ml'}
 			<div class="m-cuenta">
 				Cuenta <b>{data.ml.apodo}</b> · {data.ml.publicaciones}
-				{data.ml.publicaciones === 1 ? 'publicación' : 'publicaciones'} desde Mostrador.
+				{data.ml.publicaciones === 1 ? 'publicación' : 'publicaciones'} desde Tu Local Web.
 				{#if data.ml.preguntas}
 					<a href={resolve('/panel/resenas-y-preguntas')}
 						>{data.ml.preguntas}

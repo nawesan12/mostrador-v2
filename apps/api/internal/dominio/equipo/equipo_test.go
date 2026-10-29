@@ -83,12 +83,12 @@ func armar(t *testing.T) *entorno {
 	for _, rol := range []string{"soporte", "administracion", "duenio"} {
 		var id string
 		if err := admin.QueryRow(ctx, `INSERT INTO equipo.miembros (email, nombre, clave_hash, rol) VALUES ($1, $2, $3, $4) RETURNING id::text`,
-			rol+"@mostradorapp.com.ar", "Persona "+rol, hash, rol).Scan(&id); err != nil {
+			rol+"@tulocalweb.com.ar", "Persona "+rol, hash, rol).Scan(&id); err != nil {
 			t.Fatal(err)
 		}
 		e.ids[rol] = id
 		ses := leer[equipo.SesionNueva](t, pedir(e.h, "POST", "/v1/equipo/ingresar",
-			`{"email":"`+rol+`@mostradorapp.com.ar","clave":"`+clave+`"}`, ""), 200)
+			`{"email":"`+rol+`@tulocalweb.com.ar","clave":"`+clave+`"}`, ""), 200)
 		e.tok[rol] = ses.Token
 	}
 	s := leer[cuentas.Sesion](t, pedir(e.h, "POST", "/v1/auth/registro",
@@ -163,16 +163,16 @@ func TestSesionesSeparadas(t *testing.T) {
 	estado(t, pedir(e.h, "GET", "/v1/panel/cuenta/plan", "", e.tok["duenio"]), 401)
 
 	ses := leer[map[string]any](t, pedir(e.h, "GET", "/v1/equipo/sesion", "", e.tok["soporte"]), 200)
-	if ses["rol"] != "soporte" || len(ses["permisos"].([]any)) != 7 || ses["miembro"].(map[string]any)["email"] != "soporte@mostradorapp.com.ar" {
+	if ses["rol"] != "soporte" || len(ses["permisos"].([]any)) != 7 || ses["miembro"].(map[string]any)["email"] != "soporte@tulocalweb.com.ar" {
 		t.Fatalf("sesión: %v", ses)
 	}
 	// Clave incorrecta y persona dada de baja responden igual.
-	rec := pedir(e.h, "POST", "/v1/equipo/ingresar", `{"email":"soporte@mostradorapp.com.ar","clave":"otra-cosa"}`, "")
+	rec := pedir(e.h, "POST", "/v1/equipo/ingresar", `{"email":"soporte@tulocalweb.com.ar","clave":"otra-cosa"}`, "")
 	if rec.Code != 401 || !strings.Contains(rec.Body.String(), "credenciales_invalidas") {
 		t.Fatalf("clave mala: %d %s", rec.Code, rec.Body)
 	}
 	_, _ = e.admin.Exec(context.Background(), `UPDATE equipo.miembros SET activo = false WHERE id = $1`, e.ids["soporte"])
-	estado(t, pedir(e.h, "POST", "/v1/equipo/ingresar", `{"email":"soporte@mostradorapp.com.ar","clave":"`+clave+`"}`, ""), 401)
+	estado(t, pedir(e.h, "POST", "/v1/equipo/ingresar", `{"email":"soporte@tulocalweb.com.ar","clave":"`+clave+`"}`, ""), 401)
 	// Y su sesión abierta deja de valer.
 	estado(t, pedir(e.h, "GET", "/v1/equipo/sesion", "", e.tok["soporte"]), 401)
 	estado(t, pedir(e.h, "POST", "/v1/equipo/salir", "", e.tok["duenio"]), 204)

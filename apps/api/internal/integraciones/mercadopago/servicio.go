@@ -35,11 +35,11 @@ type tx interface {
 	EnTx(context.Context, func(pgx.Tx) error) error
 }
 
-// Config de la aplicación de Mostrador en Mercado Pago.
+// Config de la aplicación de Tu Local Web en Mercado Pago.
 type Config struct {
 	// OAuth de la aplicación (marketplace).
 	AppID, Secreto string
-	// Token de la cuenta de la plataforma: sólo para el abono de Mostrador.
+	// Token de la cuenta de la plataforma: sólo para el abono de Tu Local Web.
 	TokenPlataforma string
 	// Clave secreta de los webhooks (Tus integraciones › Webhooks).
 	SecretoWebhook string

@@ -418,7 +418,7 @@ type Facturacion struct {
 	Comprobantes []Comprobante `json:"comprobantes"`
 }
 
-// Comprobante de Mostrador a una tienda (ARCA).
+// Comprobante de Tu Local Web a una tienda (ARCA).
 type Comprobante struct {
 	Numero string `json:"numero"`
 	Tienda string `json:"tienda"`

@@ -31,7 +31,7 @@
 </script>
 
 <svelte:head>
-	<title>{actual} · Partners · Mostrador</title>
+	<title>{actual} · Partners · Tu Local Web</title>
 	<meta name="robots" content="noindex" />
 	<meta name="theme-color" content="#f7f1ea" />
 </svelte:head>

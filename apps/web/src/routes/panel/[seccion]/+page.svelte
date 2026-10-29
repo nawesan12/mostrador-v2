@@ -5,5 +5,5 @@
 	let { data } = $props();
 </script>
 
-<Seo title="{data.seccion} · Panel" description="Panel de Mostrador" path="/panel" noindex />
+<Seo title="{data.seccion} · Panel" description="Panel de Tu Local Web" path="/panel" noindex />
 <Pronto seccion={data.seccion} />

@@ -7,21 +7,21 @@
 </script>
 
 <Seo
-	title="Marca · Mostrador"
-	description="Papelería, redes, imprimibles e imágenes para compartir de Mostrador, listas para exportar."
+	title="Marca · Tu Local Web"
+	description="Papelería, redes, imprimibles e imágenes para compartir de Tu Local Web, listas para exportar."
 	path="/marca"
 	noindex
 />
 
 <section class="lienzo">
 	<header style="max-width:1400px">
-		<img src="/wordmark-brown.png" alt="mostrador" style="height:26px;display:block" />
+		<img src="/wordmark-brown.png" alt="Tu Local Web" style="height:26px;display:block" />
 		<h1 style="margin:22px 0 0;font-size:56px;line-height:1;letter-spacing:-.04em;font-weight:600">
 			Marca
 		</h1>
 		<p style="margin:12px 0 0;font-size:18px;color:#6B5244;max-width:680px;text-wrap:pretty">
 			{sinViuda(
-				'Todas las piezas de Mostrador a su medida real. Cada una se baja en PNG; las de imprenta, también en PDF con 3 mm de sangrado.'
+				'Todas las piezas de Tu Local Web a su medida real. Cada una se baja en PNG; las de imprenta, también en PDF con 3 mm de sangrado.'
 			)}
 		</p>
 	</header>

@@ -20,7 +20,7 @@
 </script>
 
 <svelte:head>
-	<title>{es404 ? 'Página no encontrada' : 'Algo salió mal'} · Mostrador</title>
+	<title>{es404 ? 'Página no encontrada' : 'Algo salió mal'} · Tu Local Web</title>
 	<meta name="robots" content="noindex" />
 </svelte:head>
 

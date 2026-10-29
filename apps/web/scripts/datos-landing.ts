@@ -4,6 +4,7 @@
  * competencia y el chat de Hornero. Uso: bun scripts/datos-landing.ts
  */
 import { readFileSync, writeFileSync } from 'node:fs';
+import { conMarca } from './marca.ts';
 import { join } from 'node:path';
 import { runInNewContext } from 'node:vm';
 
@@ -136,7 +137,8 @@ function resolver(v: unknown): unknown {
 	}
 	// La mascota de Caja se sirve desde nuestro static (el README del handoff pide no depender de caja.iamnaw.dev).
 	if (typeof v === 'string' && v.startsWith('https://caja.iamnaw.dev/mascota/'))
-		return v.replace('https://caja.iamnaw.dev/mascota/', '/caja/');
+		// En WebP, que pesa menos (static/caja tiene las dos).
+		return v.replace('https://caja.iamnaw.dev/mascota/', '/caja/').replace(/\.png$/, '.webp');
 	if (typeof v === 'string' && /^(ph|logos|simple-icons):[a-z0-9-]+$/.test(v)) {
 		usados.add(v);
 		return `@@${v}@@`;
@@ -156,7 +158,7 @@ const ts = (
 	) +
 	'\n'
 ).replace(/"@@([^@]+)@@"/g, (_, n: string) => `I.${camel(n)}`);
-writeFileSync(join(import.meta.dirname, '../src/lib/landing/datos.ts'), ts);
+writeFileSync(join(import.meta.dirname, '../src/lib/landing/datos.ts'), conMarca(ts));
 console.log(
 	NOMBRES.map(
 		(n) =>

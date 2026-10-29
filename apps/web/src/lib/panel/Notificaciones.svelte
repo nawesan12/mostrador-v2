@@ -55,7 +55,7 @@
 		<div class="pie">
 			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta del panel armada con rutaDe -->
 			<a href={rutaDe('Notificaciones')} onclick={() => (shell.notificaciones = false)}
-				>Configurar qué me avisa Mostrador</a
+				>Configurar qué me avisa Tu Local Web</a
 			>
 		</div>
 	</div>

@@ -47,7 +47,7 @@ test.describe('/marca', () => {
 		const tarjeta = page.locator('[data-lamina="papeleria-1a-tarjeta-dorso"]');
 		await expect(tarjeta).toContainText('Ana Pérez');
 		await expect(tarjeta).toContainText('Ventas');
-		await expect(tarjeta).toContainText('mostradorapp.com.ar');
+		await expect(tarjeta).toContainText('tulocalweb.com.ar');
 		// Titular, CUIT y domicilio salen de legales.ts: los mismos que el pie del sitio.
 		const factura = page.locator('[data-lamina="papeleria-5a-factura-b-modelo"]');
 		await expect(factura).toContainText('Nahuel Santillán');

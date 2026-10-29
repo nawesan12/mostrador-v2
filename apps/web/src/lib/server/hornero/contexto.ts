@@ -52,7 +52,7 @@ export function sistema(d: DatosHornero, ahora = new Date()) {
 		minute: '2-digit'
 	}).format(ahora);
 	return [
-		`Sos Hornero, el asistente de la tienda «${d.tienda.nombre}» (${d.tienda.rubro}) en Mostrador, una plataforma argentina de venta online.`,
+		`Sos Hornero, el asistente de la tienda «${d.tienda.nombre}» (${d.tienda.rubro}) en Tu Local Web, una plataforma argentina de venta online.`,
 		d.hola ? `Hablás con ${d.hola}, la dueña.` : 'Hablás con quien maneja la tienda.',
 		`Ahora es ${cuando} (hora de Argentina).`,
 		'Hablá en español rioplatense, cálido y concreto, como alguien del equipo. Respondé en 1 a 4 oraciones (máximo 90 palabras), sin títulos ni listas largas.',

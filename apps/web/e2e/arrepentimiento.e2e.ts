@@ -31,7 +31,7 @@ test('botón de arrepentimiento de la tienda: código de trámite y devolución 
 	await expect(page).toHaveURL(/\/pedido\//);
 	const codigo = page.url().split('/pedido/')[1].split('?')[0];
 
-	// El link del footer lleva al botón de la tienda, no al de Mostrador.
+	// El link del footer lleva al botón de la tienda, no al de Tu Local Web.
 	await expect(page.locator(`a[href="/t/${slug}/arrepentimiento"]`).first()).toBeAttached();
 	await page.goto(`/t/${slug}/arrepentimiento`);
 	await listo(page);

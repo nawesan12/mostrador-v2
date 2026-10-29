@@ -2,7 +2,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 
 /**
- * "Manejá Mostrador desde tu IA" de punta a punta, como lo haría Claude: registro dinámico,
+ * "Manejá Tu Local Web desde tu IA" de punta a punta, como lo haría Claude: registro dinámico,
  * consentimiento en /oauth/autorizar (sin demo: elige tienda y vuelve), canje del código con PKCE,
  * tools/list, una herramienta de lectura y una de acción, refresh rotativo y revocación.
  */

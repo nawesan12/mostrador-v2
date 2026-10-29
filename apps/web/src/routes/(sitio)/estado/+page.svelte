@@ -57,7 +57,7 @@
 </script>
 
 <Seo
-	title="Estado del sistema · Mostrador"
+	title="Estado del sistema · Tu Local Web"
 	description="Disponibilidad de las tiendas, el panel, los pagos, WhatsApp, ARCA y Mercado Libre, medida cada hora. Incidentes y avisos."
 	path="/estado"
 />
@@ -65,7 +65,7 @@
 	<link
 		rel="alternate"
 		type="application/rss+xml"
-		title="Estado de Mostrador"
+		title="Estado de Tu Local Web"
 		href="/estado/rss.xml"
 	/>
 </svelte:head>

@@ -346,7 +346,7 @@ export const LPLANS = [
 			'Mercado Pago, transferencia y retiro',
 			'Hornero: 100 respuestas con IA',
 			'Respuestas automáticas sin límite',
-			'1 persona · subdominio de Mostrador'
+			'1 persona · subdominio de Tu Local Web'
 		],
 		'Crear tienda gratis'
 	],
@@ -355,7 +355,7 @@ export const LPLANS = [
 		'Para vender todos los días',
 		19900,
 		[
-			'Dominio propio y sin marca Mostrador',
+			'Dominio propio y sin marca Tu Local Web',
 			'Todos los medios de pago y envío',
 			'Factura de ARCA automática',
 			'Hornero: 1.000 respuestas con IA',

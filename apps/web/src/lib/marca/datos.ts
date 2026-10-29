@@ -10,7 +10,7 @@ import { PLANES, precioAnual } from '#lib/panel/planes.ts';
 
 export { fmt };
 
-export const DOMINIO = 'mostradorapp.com.ar';
+export const DOMINIO = 'tulocalweb.com.ar';
 export const SITIO = `https://${DOMINIO}`;
 export const MAIL = {
 	hola: `hola@${DOMINIO}`,
@@ -146,7 +146,7 @@ export function vcard(p: { nombre: string; cargo: string; telefono: string; mail
 		'BEGIN:VCARD',
 		'VERSION:3.0',
 		`FN:${esc(p.nombre)}`,
-		'ORG:Mostrador',
+		'ORG:Tu Local Web',
 		`TITLE:${esc(p.cargo)}`,
 		`TEL;TYPE=CELL:${esc(p.telefono)}`,
 		`EMAIL:${esc(p.mail)}`,

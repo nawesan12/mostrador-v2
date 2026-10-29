@@ -14,7 +14,7 @@
 
 <div class="marca">
 	<nav aria-label="Marca">
-		<a class="volver" href={resolve('/')}><Icon icon={phArrowLeftBold} size={15} />Mostrador</a>
+		<a class="volver" href={resolve('/')}><Icon icon={phArrowLeftBold} size={15} />Tu Local Web</a>
 		<div class="tabs">
 			<a href={resolve('/marca')} aria-current={page.url.pathname === '/marca' ? 'page' : undefined}
 				>Marca</a

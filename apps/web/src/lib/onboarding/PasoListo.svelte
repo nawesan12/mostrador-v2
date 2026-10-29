@@ -108,7 +108,7 @@
 				<div class="cj-d">
 					{o.e.caja
 						? 'Conectado · 3 meses de Pro Max activos · las ventas de hoy ya están ahí'
-						: 'Con tu cuenta de Mostrador tenés 3 meses de Caja Pro Max gratis'}
+						: 'Con tu cuenta de Tu Local Web tenés 3 meses de Caja Pro Max gratis'}
 				</div>
 			</div>
 			{#if o.e.caja}

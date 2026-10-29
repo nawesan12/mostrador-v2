@@ -3,7 +3,7 @@
 	import { anim } from '#lib/anim.ts';
 	import * as I from '#lib/icons.ts';
 
-	/** "Mostrador vende. Caja ordena la plata." — la integración con Caja (handoff: #caja). */
+	/** "Tu Local Web vende. Caja ordena la plata." — la integración con Caja (handoff: #caja). */
 	const BENEFICIOS = [
 		[
 			I.phArrowsLeftRightBold,
@@ -13,7 +13,7 @@
 		[
 			I.phReceiptBold,
 			'Monotributo al día',
-			'Lo que facturás en Mostrador suma al tope de tu categoría.'
+			'Lo que facturás en Tu Local Web suma al tope de tu categoría.'
 		],
 		[
 			I.phCurrencyDollarBold,
@@ -66,7 +66,7 @@
 	<div class="bloque" use:anim={'reveal'}>
 		<div class="txt">
 			<div class="duo">
-				<img src="/mark.svg" alt="Mostrador" width="30" height="30" /><span class="mas">+</span><img
+				<img src="/mark.svg" alt="Tu Local Web" width="30" height="30" /><span class="mas">+</span><img
 					src="/caja/01-saludo.webp"
 					alt="Caja"
 					width="40"
@@ -74,7 +74,7 @@
 					class="masc"
 				/><span class="nuevo">Nuevo · Integración con Caja</span>
 			</div>
-			<h2>Mostrador vende. Caja ordena la plata.</h2>
+			<h2>Tu Local Web vende. Caja ordena la plata.</h2>
 			<p class="bajada">
 				Cada venta, liquidación, comisión, envío y factura pasa sola a Caja, separada de tus gastos
 				personales. Sabés cuánto ganaste de verdad, en pesos de hoy o en dólares.
@@ -104,7 +104,7 @@
 					tu plata y carga movimientos por vos.
 				</div>
 				<div class="ia-chat">
-					<div class="yo">¿Cuánto me quedó limpio de Mostrador este mes, en dólares?</div>
+					<div class="yo">¿Cuánto me quedó limpio de Tu Local Web este mes, en dólares?</div>
 					<div class="caja-r">
 						<span class="via">Caja · vía conector</span>US$ 4.412 al MEP. Vendiste $ 9,1 M y se
 						fueron $ 2,3 M en comisiones, envíos y campañas.
@@ -115,12 +115,12 @@
 				<a href="https://caja.iamnaw.dev" target="_blank" rel="noopener"
 					>Conocé Caja<Icon icon={I.phArrowUpRightBold} size={14} /></a
 				>
-				<span>3 meses de Caja Pro Max con cualquier plan de Mostrador</span>
+				<span>3 meses de Caja Pro Max con cualquier plan de Tu Local Web</span>
 			</div>
 		</div>
 		<div class="flujo">
 			<div class="col">
-				<div class="col-t">En Mostrador</div>
+				<div class="col-t">En Tu Local Web</div>
 				{#each MOVIMIENTOS as m (m.t)}
 					<div class="mov">
 						<Icon icon={m.ico} size={18} style={m.col ? `color:${m.col}` : ''} />

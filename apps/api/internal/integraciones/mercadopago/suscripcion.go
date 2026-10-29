@@ -11,8 +11,8 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// El abono de Mostrador: suscripción sin plan, en estado pending (la guía de Subscriptions). El
-// precio sale de este catálogo del servidor; el navegador sólo elige plan y ciclo. Mostrador nunca ve
+// El abono de Tu Local Web: suscripción sin plan, en estado pending (la guía de Subscriptions). El
+// precio sale de este catálogo del servidor; el navegador sólo elige plan y ciclo. Tu Local Web nunca ve
 // la tarjeta: la persona la carga en Mercado Pago (init_point).
 
 // Precios por mes, en pesos (lib/panel/planes.ts). El anual es 25 % menos, cobrado una vez por año.
@@ -81,7 +81,7 @@ func (s *Servicio) Suscribir(ctx context.Context, tiendaID, usuarioID, plan, cic
 	}
 	var p preapproval
 	if err := s.cliente().JSON(ctx, http.MethodPost, "/preapproval", s.Config.TokenPlataforma, "", map[string]any{
-		"reason":             "Mostrador " + nombres[plan] + " (" + nombreCiclo + ")",
+		"reason":             "Tu Local Web " + nombres[plan] + " (" + nombreCiclo + ")",
 		"external_reference": tiendaID,
 		"payer_email":        email,
 		"auto_recurring":     recurrencia,
@@ -114,7 +114,7 @@ func (s *Servicio) ConciliarSuscripcion(ctx context.Context, id string) error {
 		return err
 	}
 	if !esUUID.MatchString(p.ExternalReference) {
-		return nil // no la creó Mostrador
+		return nil // no la creó Tu Local Web
 	}
 	tiendaID := p.ExternalReference
 	var otras []string

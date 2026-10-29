@@ -15,7 +15,7 @@ export const LIMITES = {
 	archivo: 1024 * 1024,
 	/** Por dueño: la tienda (o el visitante de la demo). */
 	porDuenio: 15 * 1024 * 1024,
-	/** Mostrador entero. */
+	/** Tu Local Web entero. */
 	total: 1024 * 1024 * 1024
 };
 

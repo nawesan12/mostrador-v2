@@ -24,17 +24,17 @@
 		{
 			id: 'whatsapp',
 			t: 'Para WhatsApp',
-			v: `¡Hola! Te recomiendo Mostrador para vender online: tienda, Mercado Pago, envíos y factura en un solo lugar. Probalo ${PRUEBA_DIAS} días gratis desde acá: ${link}`
+			v: `¡Hola! Te recomiendo Tu Local Web para vender online: tienda, Mercado Pago, envíos y factura en un solo lugar. Probalo ${PRUEBA_DIAS} días gratis desde acá: ${link}`
 		},
 		{
 			id: 'instagram',
 			t: 'Para Instagram',
-			v: `Armamos tiendas con Mostrador: catálogo, cobros con Mercado Pago y envíos, todo desde el celular. ${PRUEBA_DIAS} días gratis con nuestro link: ${link}`
+			v: `Armamos tiendas con Tu Local Web: catálogo, cobros con Mercado Pago y envíos, todo desde el celular. ${PRUEBA_DIAS} días gratis con nuestro link: ${link}`
 		},
 		{
 			id: 'mail',
 			t: 'Para un mail a clientes',
-			v: `Para tu tienda online usamos Mostrador. Creá tu cuenta con este link y nosotros cargamos todo: ${link}. Si te lo piden, el cupón es ${p.partner.cupon}.`
+			v: `Para tu tienda online usamos Tu Local Web. Creá tu cuenta con este link y nosotros cargamos todo: ${link}. Si te lo piden, el cupón es ${p.partner.cupon}.`
 		}
 	]);
 	async function copiar(texto: string, que: string) {

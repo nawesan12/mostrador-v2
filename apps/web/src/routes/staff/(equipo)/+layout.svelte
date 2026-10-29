@@ -7,7 +7,7 @@
 	import { nombreRol, ROLES, seccionesDe, type Rol } from '#lib/staff/permisos.ts';
 
 	/**
-	 * Backoffice del equipo de Mostrador (/staff). El handoff no lo diseña: se arma con las piezas del
+	 * Backoffice del equipo de Tu Local Web (/staff). El handoff no lo diseña: se arma con las piezas del
 	 * panel (navegación, tarjetas, KPIs, listas). La barra oscura de arriba deja claro que es interno.
 	 */
 	let { data, children } = $props();

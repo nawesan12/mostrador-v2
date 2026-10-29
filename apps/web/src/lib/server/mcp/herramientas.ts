@@ -1,5 +1,5 @@
 /**
- * Servidor MCP de Mostrador (transporte Streamable HTTP, sin estado), como el de Caja: las
+ * Servidor MCP de Tu Local Web (transporte Streamable HTTP, sin estado), como el de Caja: las
  * herramientas trabajan sobre `Datos` (la misma interfaz que usa el panel), así que sirven igual
  * para la demo y, cuando llegue, para la API Go. No inventan datos: todo sale de métodos que ya
  * existen. Los montos van en pesos enteros, como en el panel.
@@ -16,9 +16,9 @@ import type {
 import type { Permiso } from './oauth.ts';
 
 export const PROTOCOL_VERSIONS = ['2025-11-25', '2025-06-18', '2025-03-26', '2024-11-05'];
-export const SERVER_INFO = { name: 'mostrador', title: 'Mostrador', version: '1.0.0' };
+export const SERVER_INFO = { name: 'mostrador', title: 'Tu Local Web', version: '1.0.0' };
 export const INSTRUCTIONS = [
-	'Mostrador es la plataforma de una tienda online argentina: ventas, pedidos, productos, clientes y cobros.',
+	'Tu Local Web es la plataforma de una tienda online argentina: ventas, pedidos, productos, clientes y cobros.',
 	'Los montos son pesos argentinos enteros (12500 = $ 12.500), sin centavos.',
 	'Las fechas son de Argentina (UTC−3); "hoy" es el día de Argentina.',
 	'Un pedido sólo avanza una etapa por vez (Sin pagar → Para preparar → Listo para despachar → En camino → Entregado), vuelve una o se cancela.',
@@ -35,7 +35,7 @@ const ESTADOS: EstadoPedido[] = [
 	'Cancelado'
 ];
 
-/** Permisos del panel (Integraciones › Manejá Mostrador desde tu IA) que pide cada acción. */
+/** Permisos del panel (Integraciones › Manejá Tu Local Web desde tu IA) que pide cada acción. */
 type PermisoPanel = 'escribir' | 'plata';
 const PERMISO_PANEL: Record<PermisoPanel, string> = {
 	escribir: 'Cargar y editar productos',
@@ -331,14 +331,14 @@ export async function llamar(c: Contexto, nombre: string, args: Args): Promise<R
 	if (!h) return conError(`No existe la herramienta "${nombre}".`);
 	if (h.accion && !c.permisos.includes('acciones'))
 		return conError(
-			'Esta conexión es de sólo lectura. Para hacer cambios, desconectala en Mostrador › Integraciones y volvé a conectarla permitiendo acciones.'
+			'Esta conexión es de sólo lectura. Para hacer cambios, desconectala en Tu Local Web › Integraciones y volvé a conectarla permitiendo acciones.'
 		);
 	try {
 		if (h.panel) {
 			const permisosIa = c.permisosPanel ?? (await c.datos.integraciones()).permisosIa;
 			if (!permisosIa[h.panel])
 				falla(
-					`En Mostrador › Integraciones está apagado "${PERMISO_PANEL[h.panel]}". Prendelo para que la IA pueda hacer esto.`
+					`En Tu Local Web › Integraciones está apagado "${PERMISO_PANEL[h.panel]}". Prendelo para que la IA pueda hacer esto.`
 				);
 		}
 		const data = await MANEJADORES[nombre](c, args ?? {});

@@ -11,7 +11,7 @@
 
 	/*
 	 * El handoff no tiene una pantalla de "entrar a la demo": se arma con la galería de plantillas del
-	 * onboarding (design/Onboarding Mostrador.dc.html, `gallery`), tal cual, como página.
+	 * onboarding (design/Onboarding Tu Local Web.dc.html, `gallery`), tal cual, como página.
 	 */
 	let { data, form } = $props();
 	// Viene del consentimiento de una IA: después de elegir, vuelve ahí.
@@ -36,7 +36,7 @@
 </script>
 
 <Seo
-	title="Probá Mostrador · Elegí una tienda"
+	title="Probá Tu Local Web · Elegí una tienda"
 	description="Elegí una tienda de ejemplo y recorré el panel completo con sus productos, pedidos y clientes."
 	path="/demo"
 	image="plantillas"
@@ -47,7 +47,7 @@
 <main class="gal">
 	<div class="cab">
 		<div class="tit">
-			<h1>Probá Mostrador</h1>
+			<h1>Probá Tu Local Web</h1>
 			<p>Elegí una tienda de ejemplo. La demo es tuya por 24 horas.</p>
 		</div>
 		<label class="buscar">

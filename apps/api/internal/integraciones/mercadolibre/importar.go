@@ -134,7 +134,7 @@ func (s *Servicio) LeerPublicaciones(ctx context.Context, tiendaID, scroll strin
 	return p, nil
 }
 
-// Crudo pasa una publicación a lo que guarda Mostrador, antes de los topes (importar.Ajustar). Las
+// Crudo pasa una publicación a lo que guarda Tu Local Web, antes de los topes (importar.Ajustar). Las
 // variaciones son las combinaciones de atributos (Color, Talle) con su precio, stock y foto.
 func (it ItemML) Crudo() importar.Crudo {
 	fotos := map[string]string{}

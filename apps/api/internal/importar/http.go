@@ -22,7 +22,7 @@ import (
 var ErrNoPublica = errors.New("importar: la dirección no es pública")
 
 // userAgent es en ASCII: algunas tiendas cortan los pedidos con otro.
-const userAgent = "Mostrador (importacion de la tienda de la duena; soporte@mostradorapp.com.ar)"
+const userAgent = "Tu Local Web (importacion de la tienda de la duena; soporte@tulocalweb.com.ar)"
 
 // TamanioMax es lo más que se lee de una respuesta.
 const TamanioMax = 8 << 20

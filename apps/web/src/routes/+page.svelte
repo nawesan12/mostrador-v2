@@ -25,7 +25,7 @@
 	import { CHAT } from '#lib/landing/datos.ts';
 	import { Landing, setLanding } from '#lib/landing/estado.svelte.ts';
 
-	/* Landing de Mostrador: recreación de la vista "Landing" de design/Mostrador v4.dc.html. */
+	/* Landing de Tu Local Web: recreación de la vista "Landing" de design/Mostrador v4.dc.html. */
 	const l = setLanding(new Landing());
 	onMount(() => {
 		l.iniciar(CHAT.length);
@@ -34,14 +34,14 @@
 </script>
 
 <Seo
-	title="Mostrador · Vendé en todos lados, pagá menos"
+	title="Tu Local Web · Vendé en todos lados, pagá menos"
 	description="Tienda online, WhatsApp, Mercado Libre, local y factura de ARCA en un solo panel. Más barato que Tiendanube en cada plan."
 	path="/"
 	image="home"
 	jsonLd={{
 		'@context': 'https://schema.org',
 		'@type': 'Organization',
-		name: 'Mostrador',
+		name: 'Tu Local Web',
 		url: 'https://mostrador.iamnaw.dev',
 		logo: 'https://mostrador.iamnaw.dev/mark.svg'
 	}}

@@ -54,7 +54,7 @@
 		img.src = qr;
 	}
 	const wa = $derived(
-		`https://wa.me/?text=${encodeURIComponent(`Armá tu tienda online en Mostrador, 14 días gratis: ${link}`)}`
+		`https://wa.me/?text=${encodeURIComponent(`Armá tu tienda online en Tu Local Web, 14 días gratis: ${link}`)}`
 	);
 </script>
 

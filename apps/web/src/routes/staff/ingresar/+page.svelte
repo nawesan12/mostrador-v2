@@ -7,7 +7,7 @@
 	let enviando = $state(false);
 </script>
 
-<Seo title="Equipo · Mostrador" description="Ingreso del equipo" path="/staff/ingresar" noindex />
+<Seo title="Equipo · Tu Local Web" description="Ingreso del equipo" path="/staff/ingresar" noindex />
 
 <main class="pagina">
 	<form
@@ -23,7 +23,7 @@
 	>
 		<span class="marca"><img src="/mark.svg" alt="" width="22" height="22" />Equipo</span>
 		<h1>Ingresar al backoffice</h1>
-		<p class="sub">Sólo para el equipo de Mostrador.</p>
+		<p class="sub">Sólo para el equipo de Tu Local Web.</p>
 		<label class="campo"
 			>Email<input
 				name="email"

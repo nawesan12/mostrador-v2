@@ -332,7 +332,7 @@
 			Descargá tu pedido de certificado y subilo en ARCA. Lleva tu CUIT y tu razón social; la clave
 			{demo
 				? 'se generó en tu navegador y no se guarda.'
-				: 'queda guardada y cifrada en Mostrador.'}
+				: 'queda guardada y cifrada en Tu Local Web.'}
 		</div>
 		<button type="button" class="b-pri descargar" onclick={descargar}
 			><Icon icon={I.phDownloadSimpleBold} size={17} />Descargar pedido (.csr)</button

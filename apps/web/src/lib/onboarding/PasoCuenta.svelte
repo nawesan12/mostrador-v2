@@ -14,7 +14,7 @@
 
 <div class="dos">
 	<div class="izq">
-		<Etiqueta rotulo="Crear cuenta" titulo="Abrí tu mostrador. No arrancás de cero." grande />
+		<Etiqueta rotulo="Crear cuenta" titulo="Abrí tu local web. No arrancás de cero." grande />
 		<p class="bajada">
 			Entrá con la cuenta que ya usás y traemos tus datos desde ahí: nombre, CUIT, clientes y
 			ventas.

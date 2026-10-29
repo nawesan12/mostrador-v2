@@ -1,4 +1,4 @@
-/** Los planes de Mostrador (PanelCuenta.dc.html): los mismos precios que la landing. */
+/** Los planes de Tu Local Web (PanelCuenta.dc.html): los mismos precios que la landing. */
 export const PLANES = [
 	{
 		id: 'gratis',

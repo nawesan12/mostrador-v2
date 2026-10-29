@@ -1,4 +1,4 @@
-// Package ia: "Manejá Mostrador desde tu IA". OAuth 2.1 para los conectores MCP (registro dinámico,
+// Package ia: "Manejá Tu Local Web desde tu IA". OAuth 2.1 para los conectores MCP (registro dinámico,
 // PKCE S256, código de un solo uso, acceso de 1 h y refresco que rota). El token de acceso entra a la
 // API como una sesión más (cuentas.Autenticar), pero sólo a las rutas que usan las herramientas del
 // MCP y, si la conexión es de lectura, sólo con GET (Guardia).

@@ -31,7 +31,7 @@ func Rutas(mux *http.ServeMux, pool *db.Pool, claveBFF string, ahora func() time
 	}
 	delBFF := func(w http.ResponseWriter, r *http.Request) bool {
 		if claveBFF == "" || subtle.ConstantTimeCompare([]byte(r.Header.Get("X-Mostrador-BFF")), []byte(claveBFF)) != 1 {
-			problema.Escribir(w, problema.SinPermiso("Sólo el equipo de Mostrador."))
+			problema.Escribir(w, problema.SinPermiso("Sólo el equipo de Tu Local Web."))
 			return false
 		}
 		return true

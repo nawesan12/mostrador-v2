@@ -222,6 +222,6 @@ func (s *Servicio) mail(p pedido, aviso string) (correo.Mensaje, bool) {
 	if contacto != "" {
 		fmt.Fprintf(&b, `<p style="margin:18px 0 0;font-size:13.5px;color:#7A6252">%s</p>`, html.EscapeString(contacto))
 	}
-	b.WriteString(`<p style="margin:28px 0 0;font-size:12px;color:#9C8676">Tienda creada con Mostrador.</p></div></body></html>`)
+	b.WriteString(`<p style="margin:28px 0 0;font-size:12px;color:#9C8676">Tienda creada con Tu Local Web.</p></div></body></html>`)
 	return correo.Mensaje{Para: p.email, Asunto: asunto, Texto: texto, HTML: b.String()}, true
 }

@@ -20,8 +20,8 @@
 <!-- eslint-disable svelte/no-navigation-without-resolve -- anclas de la landing y páginas públicas -->
 <header>
 	<div class="in">
-		<a class="marca" href="/" aria-label="Mostrador, inicio"
-			><img src="/wordmark-brown.webp" alt="mostrador" width="94" height="20" /></a
+		<a class="marca" href="/" aria-label="Tu Local Web, inicio"
+			><img src="/wordmark-brown.webp" alt="Tu Local Web" width="141" height="20" /></a
 		>
 		<nav aria-label="Secciones">
 			{#each NAV as [href, t] (href)}

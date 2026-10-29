@@ -1,9 +1,9 @@
 // Package mercadolibre: Mercado Libre como canal de venta de la tienda.
 //
-//   - Cada tienda conecta su cuenta por OAuth (PKCE, state de un solo uso) y Mostrador usa su token,
+//   - Cada tienda conecta su cuenta por OAuth (PKCE, state de un solo uso) y Tu Local Web usa su token,
 //     guardado cifrado. El access token dura 6 horas y el refresh token se usa una sola vez: se
 //     reemplazan los dos juntos.
-//   - Publicar: el producto de Mostrador pasa a una publicación (categoría sugerida por el título,
+//   - Publicar: el producto de Tu Local Web pasa a una publicación (categoría sugerida por el título,
 //     precio con el recargo de la tienda, stock, fotos y descripción).
 //   - Stock y precio: un trigger encola ml.sincronizar cuando cambian; el worker lo manda.
 //   - Avisos (orders_v2, questions, items): sin firma, así que se verifica la aplicación y se trae el
@@ -58,7 +58,7 @@ type tx interface {
 	EnTx(context.Context, func(pgx.Tx) error) error
 }
 
-// Config de la aplicación de Mostrador en Mercado Libre.
+// Config de la aplicación de Tu Local Web en Mercado Libre.
 type Config struct {
 	AppID, Secreto string
 	// Sitio público (la vuelta del OAuth).

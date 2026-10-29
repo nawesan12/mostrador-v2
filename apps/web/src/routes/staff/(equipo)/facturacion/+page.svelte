@@ -3,7 +3,7 @@
 	import Seo from '#lib/components/Seo.svelte';
 	import { ESTADOS_TIENDA, centavos, fechaCorta, nombrePlan } from '#lib/staff/estado.ts';
 
-	/** Facturación: lo que cobra Mostrador a las tiendas. */
+	/** Facturación: lo que cobra Tu Local Web a las tiendas. */
 	let { data } = $props();
 	const k = $derived(data.facturacion.kpis);
 	const KPIS = $derived([
@@ -23,7 +23,7 @@
 
 <Seo
 	title="Facturación · Equipo"
-	description="Facturación de Mostrador"
+	description="Facturación de Tu Local Web"
 	path="/staff/facturacion"
 	noindex
 />

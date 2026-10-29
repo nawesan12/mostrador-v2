@@ -10,7 +10,7 @@
 	const config = configTiendas();
 </script>
 
-<Seo title="Tiendas · Equipo" description="Tiendas de Mostrador" path="/staff/tiendas" noindex />
+<Seo title="Tiendas · Equipo" description="Tiendas de Tu Local Web" path="/staff/tiendas" noindex />
 
 <MotorLista
 	{config}

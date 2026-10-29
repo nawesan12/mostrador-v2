@@ -131,7 +131,7 @@
 	const QUIEN = {
 		persona: 'La tienda',
 		hornero: 'Hornero',
-		sistema: 'Mostrador',
+		sistema: 'Tu Local Web',
 		staff: 'Equipo',
 		integracion: 'Integración'
 	} as const;

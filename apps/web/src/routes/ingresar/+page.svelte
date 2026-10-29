@@ -105,7 +105,7 @@
 </script>
 
 <Seo
-	title="Ingresar · Mostrador"
+	title="Ingresar · Tu Local Web"
 	description="Entrá a tu panel o creá tu tienda gratis."
 	path="/ingresar"
 	image="home"
@@ -114,7 +114,7 @@
 <div class="pag">
 	<div class="der">
 		<div class="arriba">
-			<a href={resolve('/')}><img src="/wordmark-brown.webp" alt="mostrador" class="marca" /></a>
+			<a href={resolve('/')}><img src="/wordmark-brown.webp" alt="Tu Local Web" class="marca" /></a>
 			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- /ayuda llega con las páginas públicas -->
 			<a class="ayuda" href="/ayuda"><Icon icon={phQuestion} size={16} />Ayuda</a>
 		</div>
@@ -492,7 +492,7 @@
 		</div>
 
 		<div class="legal">
-			<span>© 2026 Mostrador</span>
+			<span>© 2026 Tu Local Web</span>
 			<!-- eslint-disable svelte/no-navigation-without-resolve -- /legales y /estado llegan con las páginas públicas -->
 			<a href="/legales/terminos">Términos</a>
 			<a href="/legales/privacidad">Privacidad</a>

@@ -58,7 +58,7 @@ func TestLeerPaginaYReintento(t *testing.T) {
 	var srv *httptest.Server
 	srv = conServidor(t, func(w http.ResponseWriter, r *http.Request) {
 		pedidos++
-		if r.Header.Get("Authorization") != "Bearer tok" || !strings.HasPrefix(r.Header.Get("User-Agent"), "Mostrador") {
+		if r.Header.Get("Authorization") != "Bearer tok" || !strings.HasPrefix(r.Header.Get("User-Agent"), "Tu Local Web") {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}

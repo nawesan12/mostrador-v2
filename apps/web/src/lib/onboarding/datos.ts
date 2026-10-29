@@ -1,5 +1,5 @@
 /**
- * Datos del onboarding (design/Onboarding Mostrador.dc.html). En la demo el recorrido usa el negocio
+ * Datos del onboarding (design/Onboarding Tu Local Web.dc.html). En la demo el recorrido usa el negocio
  * de ejemplo del handoff (Café La Esquina); con la API, los pasos que dependen de una integración
  * muestran lo que esa integración trae cuando está conectada.
  */

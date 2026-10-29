@@ -80,10 +80,10 @@ func mailPostulacionRecibida(p Postulacion) correo.Mensaje {
 	return correo.Mensaje{
 		Para:   p.Email,
 		Asunto: "Te postulaste al programa de partners",
-		Texto: fmt.Sprintf("Hola, %s.\n\nRecibimos la postulación de %s al programa de partners de Mostrador."+
+		Texto: fmt.Sprintf("Hola, %s.\n\nRecibimos la postulación de %s al programa de partners de Tu Local Web."+
 			" El acceso al panel de partners te llega a este email.\n\nMostrador", p.Nombre, p.Agencia),
 		HTML: plantilla("¡Bienvenido al programa!",
-			fmt.Sprintf("Hola, %s. Recibimos la postulación de <b style=\"color:#2A140C\">%s</b> al programa de partners de Mostrador.", n, html.EscapeString(p.Agencia)),
+			fmt.Sprintf("Hola, %s. Recibimos la postulación de <b style=\"color:#2A140C\">%s</b> al programa de partners de Tu Local Web.", n, html.EscapeString(p.Agencia)),
 			"El acceso al panel de partners te llega a este email. Revisá también la carpeta de spam."),
 	}
 }
@@ -107,11 +107,11 @@ func mailSuscripcion(para, linkBaja string) correo.Mensaje {
 	l := html.EscapeString(linkBaja)
 	return correo.Mensaje{
 		Para:   para,
-		Asunto: "Te sumaste a las novedades de Mostrador",
-		Texto: "Listo: una vez por mes te mandamos un resumen de lo nuevo en Mostrador. Nada más.\n\n" +
+		Asunto: "Te sumaste a las novedades de Tu Local Web",
+		Texto: "Listo: una vez por mes te mandamos un resumen de lo nuevo en Tu Local Web. Nada más.\n\n" +
 			"Si no fuiste vos o no lo querés más, date de baja acá: " + linkBaja + "\n\nMostrador",
 		HTML: plantilla("Te sumaste a las novedades",
-			"Una vez por mes te mandamos un resumen de lo nuevo en Mostrador. Nada más.",
+			"Una vez por mes te mandamos un resumen de lo nuevo en Tu Local Web. Nada más.",
 			fmt.Sprintf(`<span style="font-size:13.5px;color:#7A6252">Si no fuiste vos o no lo querés más, <a href="%s" style="color:#C24E25">date de baja</a>.</span>`, l)),
 	}
 }

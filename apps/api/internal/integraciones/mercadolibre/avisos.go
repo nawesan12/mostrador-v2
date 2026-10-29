@@ -160,7 +160,7 @@ func (s *Servicio) traerPedido(ctx context.Context, tiendaID, token, recurso str
 				tiendaID, it.Item.ID, strconv.FormatInt(it.Item.VariationID, 10)).Scan(&producto, &variante)
 		})
 		if errors.Is(err, pgx.ErrNoRows) {
-			continue // una publicación que no salió de Mostrador
+			continue // una publicación que no salió de Tu Local Web
 		}
 		if err != nil {
 			return s.liberar(ctx, tiendaID, o.ID, err)
@@ -178,12 +178,12 @@ func (s *Servicio) traerPedido(ctx context.Context, tiendaID, token, recurso str
 	numero, _, err := pedidos.CrearDesdeProductos(ctx, s.Pool, tiendaID, n)
 	if errors.Is(err, pedidos.ErrSinStock) {
 		// Se vendió en Mercado Libre algo que acá ya no estaba: queda anotado para que la tienda lo vea.
-		s.log().Warn("mercadolibre: venta sin stock en Mostrador", "tienda", tiendaID, "orden", o.ID)
+		s.log().Warn("mercadolibre: venta sin stock en Tu Local Web", "tienda", tiendaID, "orden", o.ID)
 		return nil
 	}
 	if errors.Is(err, pedidos.ErrSinVariante) || errors.Is(err, pedidos.ErrVariante) {
 		// Una variación que no corresponde a ninguna variante a la venta: reintentar no lo arregla.
-		s.log().Warn("mercadolibre: venta de una variación sin variante en Mostrador", "tienda", tiendaID, "orden", o.ID)
+		s.log().Warn("mercadolibre: venta de una variación sin variante en Tu Local Web", "tienda", tiendaID, "orden", o.ID)
 		return nil
 	}
 	if err != nil {

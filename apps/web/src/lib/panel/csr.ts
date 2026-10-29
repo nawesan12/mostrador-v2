@@ -3,7 +3,7 @@
  * (`arca.PedidoCertificado`): C=AR, O=razón social, CN=alias, serialNumber="CUIT <cuit>", clave RSA
  * de 2048 bits y firma SHA-256.
  *
- * Con la cuenta real lo genera Go y la clave queda cifrada en Mostrador. En la demo lo genera el
+ * Con la cuenta real lo genera Go y la clave queda cifrada en Tu Local Web. En la demo lo genera el
  * navegador del visitante (Workers Free tiene 10 ms de CPU por pedido y una clave RSA tarda de 20 a
  * 100 ms): el pedido es real y válido, pero la clave no se guarda en ningún lado.
  */

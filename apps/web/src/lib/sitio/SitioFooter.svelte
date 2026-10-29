@@ -56,7 +56,7 @@
 	<div class="in">
 		<div class="cols">
 			<div class="marca">
-				<img src="/wordmark-brown.webp" alt="mostrador" width="104" height="22" />
+				<img src="/wordmark-brown.webp" alt="Tu Local Web" width="156" height="22" />
 				<p>Todo lo que tienen las otras, por menos plata y más seguro. Hecho en Argentina.</p>
 			</div>
 			{#each COLUMNAS as [titulo, links] (titulo)}
@@ -68,7 +68,7 @@
 		</div>
 		<div class="barra">
 			<span
-				>© 2026 Mostrador · Nahuel Santillán · <span class="nw">CUIT 20-44859234-1</span> ·
+				>© 2026 Tu Local Web · Nahuel Santillán · <span class="nw">CUIT 20-44859234-1</span> ·
 				<span class="nw">Mar del Plata</span></span
 			>
 			<span class="legal">

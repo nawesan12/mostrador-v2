@@ -279,8 +279,8 @@ func encolarCorreo(ctx context.Context, tx pgx.Tx, para, asunto, texto string) e
 	cuerpo := strings.ReplaceAll(html.EscapeString(texto), "\n", "<br>")
 	h := `<!doctype html><html><body style="margin:0;padding:24px;background:#FBF7F2;font-family:system-ui,sans-serif;color:#2A140C">` +
 		`<p style="font-size:15.5px;line-height:1.55;margin:0">` + cuerpo + `</p>` +
-		`<p style="margin:22px 0 0;font-size:13px;color:#7E6656">El equipo de Mostrador</p></body></html>`
+		`<p style="margin:22px 0 0;font-size:13px;color:#7E6656">El equipo de Tu Local Web</p></body></html>`
 	_, err := tx.Exec(ctx, `INSERT INTO outbox (tienda_id, tipo, datos) VALUES (NULL, 'equipo.correo', $1)`,
-		map[string]string{"para": para, "asunto": asunto, "texto": texto + "\n\n— El equipo de Mostrador", "html": h})
+		map[string]string{"para": para, "asunto": asunto, "texto": texto + "\n\n— El equipo de Tu Local Web", "html": h})
 	return err
 }

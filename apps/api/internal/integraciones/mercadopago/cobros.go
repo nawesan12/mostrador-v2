@@ -287,7 +287,7 @@ func (s *Servicio) aplicar(ctx context.Context, tiendaID, ref string, pagoID int
 		err := t.QueryRow(ctx, `SELECT tipo, objetivo, monto, estado FROM mp_cobros WHERE referencia = $1 FOR UPDATE`, ref).
 			Scan(&tipo, &objetivo, &esperado, &previo)
 		if errors.Is(err, pgx.ErrNoRows) {
-			// Un pago de la cuenta que no salió de Mostrador: no es nuestro.
+			// Un pago de la cuenta que no salió de Tu Local Web: no es nuestro.
 			return nil
 		}
 		if err != nil {

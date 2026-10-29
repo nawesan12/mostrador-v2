@@ -11,7 +11,7 @@ import { COOKIE, crear, DatosSandbox, dbSandbox, VIDA_MS } from '#lib/server/san
 import type { Actions, PageServerLoad } from './$types';
 
 /**
- * El onboarding (design/Onboarding Mostrador.dc.html) es el registro. En la demo no hay cuentas: se
+ * El onboarding (design/Onboarding Tu Local Web.dc.html) es el registro. En la demo no hay cuentas: se
  * recorre con el negocio de ejemplo y al terminar se crea el sandbox con la plantilla elegida. Con
  * la API, el paso 1 crea la cuenta (en /ingresar) y cada paso se guarda en la tienda.
  */

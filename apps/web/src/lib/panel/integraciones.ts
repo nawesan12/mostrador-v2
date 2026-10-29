@@ -221,14 +221,14 @@ export const INTEGRACIONES: Integracion[] = [
 		detalle: '+6.000 apps',
 		categoria: 'gestion',
 		marca: 'zap',
-		hace: ['Conectá Mostrador con otras apps'],
+		hace: ['Conectá Tu Local Web con otras apps'],
 		opciones: [],
 		demo: false,
 		pronto: true
 	}
 ];
 
-/** "Manejá Mostrador desde tu IA" (aiProv del handoff). */
+/** "Manejá Tu Local Web desde tu IA" (aiProv del handoff). */
 export const IAS = [
 	{ id: 'claude', nombre: 'Claude', icon: I.siClaude, col: '#D97757' },
 	{ id: 'chatgpt', nombre: 'ChatGPT', icon: I.siOpenai, col: '#10A37F' },

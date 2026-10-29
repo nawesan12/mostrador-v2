@@ -8,7 +8,7 @@
 </script>
 
 <svelte:head>
-	<title>Darte de baja de las novedades · Mostrador</title>
+	<title>Darte de baja de las novedades · Tu Local Web</title>
 	<meta name="robots" content="noindex" />
 </svelte:head>
 
@@ -27,7 +27,7 @@
 			<a class="sec" href="/novedades">Ver las novedades</a>
 		{:else}
 			<h1>¿Te damos de baja?</h1>
-			<p>Dejás de recibir el resumen mensual de novedades de Mostrador.</p>
+			<p>Dejás de recibir el resumen mensual de novedades de Tu Local Web.</p>
 			{#if form && 'error' in form}<div class="err" role="alert">{form.error}</div>{/if}
 			<form method="POST" use:enhance>
 				<input type="hidden" name="token" value={data.token} />

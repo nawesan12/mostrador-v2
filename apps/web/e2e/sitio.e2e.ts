@@ -24,7 +24,7 @@ test('las preguntas de seguridad se abren de a una', async ({ page }) => {
 	await page.goto('/seguridad');
 	await listo(page);
 	const primera = page.getByRole('button', {
-		name: '¿Qué pasa si se cae Mostrador en pleno Hot Sale?'
+		name: '¿Qué pasa si se cae Tu Local Web en pleno Hot Sale?'
 	});
 	const segunda = page.getByRole('button', { name: '¿Pueden ver los datos de mis clientes?' });
 	await expect(primera).toHaveAttribute('aria-expanded', 'true');

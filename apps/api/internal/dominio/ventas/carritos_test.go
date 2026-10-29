@@ -27,7 +27,7 @@ func TestCarritosAbandonados(t *testing.T) {
 	}
 	sol := pruebadb.CrearTienda(t, b.App, "sol")
 	mails := &correo.Memoria{}
-	w := &outbox.Worker{Pool: b.Worker, Manejadores: (&ventas.MailsCarritos{Pool: b.App, Correo: mails, Sitio: "https://mostradorapp.com.ar"}).Manejadores()}
+	w := &outbox.Worker{Pool: b.Worker, Manejadores: (&ventas.MailsCarritos{Pool: b.App, Correo: mails, Sitio: "https://tulocalweb.com.ar"}).Manejadores()}
 	stock := 10
 	p, err := listas.Guardar(ctx, b.App, luna, "", listas.Editable{Nombre: "Mate", Precio: 10000, Stock: &stock})
 	if err != nil {

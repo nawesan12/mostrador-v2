@@ -5,6 +5,7 @@
  * Uso: bun scripts/legales.ts
  */
 import { readFileSync, writeFileSync } from 'node:fs';
+import { conMarca } from './marca.ts';
 import { join } from 'node:path';
 
 const __dirname = import.meta.dirname;
@@ -203,7 +204,7 @@ export type Legal = {
 
 export const LEGALES: Legal[] = ${JSON.stringify(datos, null, '\t').replace(/"icono": "(\w+)"/g, '"icono": $1')};
 `;
-writeFileSync(join(__dirname, '../src/lib/legales.ts'), salida);
+writeFileSync(join(__dirname, '../src/lib/legales.ts'), conMarca(salida));
 console.log(
 	datos
 		.map(

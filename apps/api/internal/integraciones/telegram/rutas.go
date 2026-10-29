@@ -94,7 +94,7 @@ func (s *Servicio) Rutas(mux *http.ServeMux, claveBFF string) {
 	bff := func(h func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			if !cuentas.EsBFF(r, claveBFF) {
-				problema.Escribir(w, problema.SinPermiso("Sólo el BFF de Mostrador puede llamar a esta ruta."))
+				problema.Escribir(w, problema.SinPermiso("Sólo el BFF de Tu Local Web puede llamar a esta ruta."))
 				return
 			}
 			h(w, r)

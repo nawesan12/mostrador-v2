@@ -27,7 +27,7 @@
 	} from '#lib/marca/datos.ts';
 	import { crearFamilia } from '#lib/marca/familia.svelte.ts';
 
-	/** Papelería (design/Papeleria Mostrador.dc.html): medidas reales en mm, imprenta con sangrado. */
+	/** Papelería (design/Papeleria Tu Local Web.dc.html): medidas reales en mm, imprenta con sangrado. */
 	const fam = crearFamilia('papeleria');
 
 	let persona = $state({ ...PERSONA_INICIAL });
@@ -62,7 +62,7 @@
 </script>
 
 <Seo
-	title="Papelería · Marca · Mostrador"
+	title="Papelería · Marca · Tu Local Web"
 	description="Tarjetas, hoja membretada, sobre, firmas de email, factura y remito modelo, carpeta, credenciales y stickers."
 	path="/marca/papeleria"
 	noindex
@@ -71,7 +71,7 @@
 <section class="lienzo" bind:contentRect={fam.rect}>
 	<header class="lienzo-cab">
 		<div style="flex:1;min-width:min(100%,300px)">
-			<img src="/wordmark-brown.png" alt="mostrador" style="height:26px;display:block" />
+			<img src="/wordmark-brown.png" alt="Tu Local Web" style="height:26px;display:block" />
 			<h1
 				style="margin:22px 0 0;font-size:56px;line-height:1;letter-spacing:-.04em;font-weight:600"
 			>
@@ -137,7 +137,7 @@
 							>
 								<img src="/mark.svg" alt="" style="width:16mm;filter:brightness(0) invert(1)" /><img
 									src="/wordmark-cream.png"
-									alt="mostrador"
+									alt="Tu Local Web"
 									style="height:4mm"
 								/>
 							</div>
@@ -178,7 +178,7 @@
 										icon={I.phGlobeSimpleBold}
 										size={9}
 										style="color:#D2582F"
-									/>mostradorapp.com.ar</span
+									/>tulocalweb.com.ar</span
 								>
 							</div>
 							<div
@@ -206,7 +206,7 @@
 							></div>
 							<img
 								src="/wordmark-cream.png"
-								alt="mostrador"
+								alt="Tu Local Web"
 								style="height:3.6mm;position:relative"
 							/>
 							<div
@@ -285,7 +285,7 @@
 						style="width:210mm;height:297mm;background:#fff;position:relative;padding:20mm 22mm 18mm;display:flex;flex-direction:column;box-shadow:0 30px 60px -30px rgba(42,20,12,.45)"
 					>
 						<div style="display:flex;justify-content:space-between;align-items:center">
-							<img src="/wordmark-brown.png" alt="mostrador" style="height:7mm" />
+							<img src="/wordmark-brown.png" alt="Tu Local Web" style="height:7mm" />
 							<div style="text-align:right;font-size:10px;line-height:1.5;color:#7A6252">
 								{EMPRESA.ciudad}<br />{EMPRESA.region}
 							</div>
@@ -322,7 +322,7 @@
 						>
 							<span>{EMPRESA.titular} · CUIT {EMPRESA.cuit} · IVA Responsable Inscripto</span><span
 								style="display:flex;align-items:center;gap:6px;white-space:nowrap"
-								><img src="/mark.svg" alt="" style="width:5mm" />mostradorapp.com.ar</span
+								><img src="/mark.svg" alt="" style="width:5mm" />tulocalweb.com.ar</span
 							>
 						</div>
 						<div style="position:absolute;left:0;top:0;bottom:0;width:4mm;background:#D2582F"></div>
@@ -364,7 +364,7 @@
 								aria-label="Título de la propuesta"
 								style="margin-top:8mm;font-size:22px;line-height:1.15;letter-spacing:-.03em;font-weight:600;max-width:120mm"
 							>
-								Tu tienda en Mostrador, con todo lo que ya&nbsp;usás.
+								Tu tienda en Tu Local Web, con todo lo que ya&nbsp;usás.
 							</div>
 							<div
 								contenteditable="true"
@@ -441,7 +441,7 @@
 						<div
 							style="position:absolute;left:50%;bottom:16mm;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:2mm;color:#FBF7F2"
 						>
-							<img src="/wordmark-cream.png" alt="mostrador" style="height:6mm" /><span
+							<img src="/wordmark-cream.png" alt="Tu Local Web" style="height:6mm" /><span
 								style="font-size:10px;opacity:.9">Para los que venden en serio.</span
 							>
 						</div>
@@ -483,7 +483,7 @@
 								>{/if}
 							<div style="flex:1;border-left:2px solid #D2582F;padding-left:16px">
 								<div style="font-size:16px;font-weight:600">{persona.nombre}</div>
-								<div style="font-size:13px;color:#7A6252">{persona.cargo} · Mostrador</div>
+								<div style="font-size:13px;color:#7A6252">{persona.cargo} · Tu Local Web</div>
 								<div
 									style="margin-top:6px;font-size:12.5px;color:#2A140C;display:flex;gap:12px;flex-wrap:wrap"
 								>
@@ -530,7 +530,7 @@
 						<div style="display:flex;align-items:center;gap:12px">
 							<img src="/mark.svg" alt="" style="width:26px" />
 							<div style="font-size:13.5px;line-height:1.45">
-								<b>Equipo de Soporte</b> · Mostrador<br /><span style="color:#7A6252"
+								<b>Equipo de Soporte</b> · Tu Local Web<br /><span style="color:#7A6252"
 									>De lunes a sábado de 8 a 22 h · {MAIL.ayuda}</span
 								>
 							</div>
@@ -567,7 +567,7 @@
 						style="padding:4px 10px;border-radius:999px;background:#2A140C;color:#fff;font-size:12px;font-weight:700;text-decoration:none"
 						>5a</a
 					><span style="font-size:14px;color:#6B5244"
-						>Factura B · la que emite Mostrador a sus clientes</span
+						>Factura B · la que emite Tu Local Web a sus clientes</span
 					><span
 						style="padding:4px 10px;border-radius:999px;background:#FCEDE5;color:#C24E25;font-size:12px;font-weight:700"
 						>Modelo</span
@@ -587,7 +587,7 @@
 							style="display:grid;grid-template-columns:1fr auto 1fr;border:1px solid #2A140C;border-radius:2mm"
 						>
 							<div style="padding:5mm">
-								<img src="/wordmark-brown.png" alt="mostrador" style="height:6mm" />
+								<img src="/wordmark-brown.png" alt="Tu Local Web" style="height:6mm" />
 								<div style="margin-top:3mm;line-height:1.55;color:#4A3428">
 									{EMPRESA.titular}<br />{EMPRESA.domicilio}<br />IVA Responsable Inscripto
 								</div>
@@ -742,7 +742,7 @@
 						<div
 							style="display:grid;grid-template-columns:24mm 1fr 20mm;padding:3mm 0;border-bottom:1px solid #EADFD4"
 						>
-							<span>KIT-POS-01</span><span>Kit punto de venta Mostrador (lector QR + soporte)</span
+							<span>KIT-POS-01</span><span>Kit punto de venta Tu Local Web (lector QR + soporte)</span
 							><span style="text-align:right">1</span>
 						</div>
 						<div
@@ -872,7 +872,7 @@
 							</div>
 							<img
 								src="/wordmark-cream.png"
-								alt="mostrador"
+								alt="Tu Local Web"
 								style="position:relative;height:11mm;margin-top:14mm"
 							/>
 							<div style="position:relative;margin-top:4mm;font-size:14px;color:#FBF7F2">
@@ -982,7 +982,7 @@
 						<div
 							style="margin-top:auto;width:100%;display:flex;justify-content:space-between;align-items:center"
 						>
-							<img src="/wordmark-brown.png" alt="mostrador" style="height:3mm" /><span
+							<img src="/wordmark-brown.png" alt="Tu Local Web" style="height:3mm" /><span
 								style="font-size:7px;color:#9C8676">ID 0042</span
 							>
 						</div>
@@ -1006,7 +1006,7 @@
 						></div>
 						<img
 							src="/wordmark-cream.png"
-							alt="mostrador"
+							alt="Tu Local Web"
 							style="height:3.2mm;align-self:flex-start"
 						/>
 						<div
@@ -1074,7 +1074,7 @@
 				<div
 					style="padding:4mm 6mm;border-radius:999px;background:#2A140C;color:#FBF7F2;font-size:14px;font-weight:600;white-space:nowrap;box-shadow:0 0 0 1.6mm #fff,0 0 0 2mm #E7DED3"
 				>
-					Hecho con <span style="color:#E8875F">Mostrador</span>
+					Hecho con <span style="color:#E8875F">Tu Local Web</span>
 				</div>
 				<div
 					style="width:36mm;height:36mm;border-radius:50%;background:#2F8F63;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1mm;box-shadow:0 0 0 1.6mm #fff,0 0 0 2mm #E7DED3"

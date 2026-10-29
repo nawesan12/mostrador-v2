@@ -1,10 +1,10 @@
-// Package tiendanube: importar una tienda de Tiendanube a Mostrador con su API oficial.
+// Package tiendanube: importar una tienda de Tiendanube a Tu Local Web con su API oficial.
 //
-//   - La tienda autoriza la app de socio de Mostrador (OAuth sin PKCE; el state es de un solo uso y
+//   - La tienda autoriza la app de socio de Tu Local Web (OAuth sin PKCE; el state es de un solo uso y
 //     lo guarda quien llama). El token no vence: sirve hasta que desinstalan la app o piden otro.
 //   - Se lee de a páginas de 200 (productos, clientes y pedidos), siguiendo el header Link, con el
 //     límite de la API: un balde de 40 pedidos que se vacía a 2 por segundo, por tienda.
-//   - convertir.go y clientes.go pasan cada recurso a lo que guarda Mostrador; el caso compartido con
+//   - convertir.go y clientes.go pasan cada recurso a lo que guarda Tu Local Web; el caso compartido con
 //     la web está en packages/contrato/casos/importar/tiendanube.json.
 package tiendanube
 
@@ -38,7 +38,7 @@ var (
 	base       = "https://api.tiendanube.com/" + version
 	autorizar  = "https://www.tiendanube.com/apps/%s/authorize"
 	urlToken   = "https://www.tiendanube.com/apps/authorize/token"
-	userAgent  = "Mostrador (soporte@mostradorapp.com.ar)"
+	userAgent  = "Tu Local Web (soporte@tulocalweb.com.ar)"
 	esperaMax  = 30 * time.Second
 	tamanioMax = int64(20 << 20)
 )

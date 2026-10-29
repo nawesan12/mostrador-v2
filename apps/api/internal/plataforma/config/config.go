@@ -56,7 +56,7 @@ func Leer() (Config, error) {
 		Sitio:        valor("MOSTRADOR_SITIO", "https://mostrador.iamnaw.dev"),
 		ClaveBFF:     os.Getenv("MOSTRADOR_CLAVE_BFF"),
 		ResendClave:  os.Getenv("MOSTRADOR_RESEND_CLAVE"),
-		CorreoDe:     valor("MOSTRADOR_CORREO_DE", "Mostrador <hola@mostrador.iamnaw.dev>"),
+		CorreoDe:     valor("MOSTRADOR_CORREO_DE", "Tu Local Web <hola@mostrador.iamnaw.dev>"),
 		SMTP:         os.Getenv("MOSTRADOR_SMTP"),
 		CorreoEquipo: os.Getenv("MOSTRADOR_CORREO_EQUIPO"),
 		OAuth: map[string][2]string{

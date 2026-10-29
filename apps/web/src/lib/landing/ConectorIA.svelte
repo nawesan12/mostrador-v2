@@ -3,7 +3,7 @@
 	import { anim } from '#lib/anim.ts';
 	import * as I from '#lib/icons.ts';
 
-	/** "Tu negocio, desde la IA que ya usás." — conector MCP de Mostrador (handoff: #ia). */
+	/** "Tu negocio, desde la IA que ya usás." — conector MCP de Tu Local Web (handoff: #ia). */
 	const PROVEEDORES = [
 		['claude', 'Claude', I.siClaude, '#D97757'],
 		['chatgpt', 'ChatGPT', I.siOpenai, '#10A37F'],
@@ -20,7 +20,7 @@
 			<div class="etiq"><span></span>Conector de IA</div>
 			<h2>Tu negocio, desde la IA que ya usás.</h2>
 			<p class="bajada">
-				Conectá Mostrador a Claude, ChatGPT o cualquier IA compatible con MCP. Entrás con tu cuenta,
+				Conectá Tu Local Web a Claude, ChatGPT o cualquier IA compatible con MCP. Entrás con tu cuenta,
 				elegís qué puede hacer y le hablás como a un empleado más.
 			</p>
 			<div class="provs" role="group" aria-label="Elegí tu IA">
@@ -54,7 +54,7 @@
 			<div class="cab">
 				<Icon icon={actual[2]} size={18} style="color:{actual[3]}" /><b>{actual[1]}</b><span
 					class="esp"
-				></span><span class="conectado"><span></span>Mostrador conectado</span>
+				></span><span class="conectado"><span></span>Tu Local Web conectado</span>
 			</div>
 			<div class="yo">¿Qué se vendió hoy y qué me falta reponer?</div>
 			<div class="tool">
@@ -66,7 +66,7 @@
 			</div>
 			<div class="yo">Subile 8% al termo y pedile 20 a Cerámica Sur.</div>
 			<div class="confirmar">
-				<div class="c-t">Confirmá estos cambios en Mostrador</div>
+				<div class="c-t">Confirmá estos cambios en Tu Local Web</div>
 				<div class="c-filas">
 					<span><span>Termo 1 L negro</span><b>$ 42.900 → $ 46.300</b></span>
 					<span><span>Pedido a Cerámica Sur</span><b>20 u. por WhatsApp</b></span>

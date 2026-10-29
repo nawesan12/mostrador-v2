@@ -70,7 +70,7 @@
 		['Conectás o subís tus datos', '5 minutos'],
 		['Revisás la tienda nueva', 'Con tu misma estructura y diseño parecido'],
 		['Cambiamos el dominio', 'Sin cortes y con redirecciones 301'],
-		['Vendés desde Mostrador', 'Tu equipo te acompaña la primera semana']
+		['Vendés desde Tu Local Web', 'Tu equipo te acompaña la primera semana']
 	] as const;
 	const VENTAJAS = [
 		[
@@ -141,7 +141,7 @@
 </script>
 
 <Seo
-	title="Migrar a Mostrador · Mostrador"
+	title="Migrar a Tu Local Web · Tu Local Web"
 	description="Te mudamos gratis desde Tiendanube, Empretienda o Mercado Libre: productos, clientes, pedidos y tu posicionamiento en Google."
 	path="/migrar"
 	image="migrar"
@@ -153,7 +153,7 @@
 			<div class="cab">
 				<div class="cab-txt">
 					<Etiqueta texto="Migración gratis" />
-					<h1>Mudate a Mostrador en un día.</h1>
+					<h1>Mudate a Tu Local Web en un día.</h1>
 					<p>
 						Traemos tus productos, clientes y pedidos, y cuidamos tu posicionamiento en Google. No
 						perdés ni una venta en el camino.

@@ -10,7 +10,7 @@
 		description,
 		path,
 		image = 'general',
-		imageAlt = 'Mostrador: tu tienda online, WhatsApp, Mercado Libre y el local en un solo panel.',
+		imageAlt = 'Tu Local Web: tu tienda online, WhatsApp, Mercado Libre y el local en un solo panel.',
 		noindex = false,
 		jsonLd
 	}: {
@@ -53,7 +53,7 @@
 			href={url}
 		/>{/if}
 	<meta property="og:type" content="website" />
-	<meta property="og:site_name" content="Mostrador" />
+	<meta property="og:site_name" content="Tu Local Web" />
 	<meta property="og:locale" content="es_AR" />
 	<meta property="og:url" content={url} />
 	<meta property="og:title" content={title} />

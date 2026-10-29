@@ -120,7 +120,7 @@ type Update = {
 };
 
 const AYUDA =
-	'Soy Hornero, de Mostrador. Preguntame lo que quieras de tu tienda: "¿qué se vendió hoy?", "¿qué tengo para preparar?", "¿qué me falta?". Y te aviso cada venta.';
+	'Soy Hornero, de Tu Local Web. Preguntame lo que quieras de tu tienda: "¿qué se vendió hoy?", "¿qué tengo para preparar?", "¿qué me falta?". Y te aviso cada venta.';
 
 const SIN_VINCULO =
 	'Todavía no sé de qué tienda sos. Vinculá este chat desde el panel: Integraciones › Telegram › Vincular.';

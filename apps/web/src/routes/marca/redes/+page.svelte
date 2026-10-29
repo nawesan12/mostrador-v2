@@ -7,13 +7,13 @@
 	import { DESDE, PRUEBA_DIAS, VS_PRO, anioHotSale, fmt } from '#lib/marca/datos.ts';
 	import { crearFamilia } from '#lib/marca/familia.svelte.ts';
 
-	/** Redes (design/Redes Mostrador.dc.html): cada pieza a su medida en px, mostrada al 30–50 %. */
+	/** Redes (design/Redes Tu Local Web.dc.html): cada pieza a su medida en px, mostrada al 30–50 %. */
 	const fam = crearFamilia('redes');
 	const ANIO_HOT_SALE = anioHotSale();
 </script>
 
 <Seo
-	title="Redes · Marca · Mostrador"
+	title="Redes · Marca · Tu Local Web"
 	description="Avatares, tapas de destacadas, portadas, anuncios para Meta y miniaturas de YouTube."
 	path="/marca/redes"
 	noindex
@@ -22,7 +22,7 @@
 <section class="lienzo" bind:contentRect={fam.rect}>
 	<header class="lienzo-cab">
 		<div style="flex:1;min-width:min(100%,300px)">
-			<img src="/wordmark-brown.png" alt="mostrador" style="height:26px;display:block" />
+			<img src="/wordmark-brown.png" alt="Tu Local Web" style="height:26px;display:block" />
 			<h1
 				style="margin:22px 0 0;font-size:56px;line-height:1;letter-spacing:-.04em;font-weight:600"
 			>
@@ -330,7 +330,7 @@
 					><div
 						style="width:1080px;height:1350px;background:#FBF7F2;position:relative;overflow:hidden;padding:90px"
 					>
-						<img src="/wordmark-brown.png" alt="mostrador" style="height:46px" />
+						<img src="/wordmark-brown.png" alt="Tu Local Web" style="height:46px" />
 						<div
 							style="margin-top:70px;font-size:112px;line-height:.95;letter-spacing:-.045em;font-weight:600"
 						>
@@ -399,7 +399,7 @@
 						/>
 						<img
 							src="/wordmark-cream.png"
-							alt="mostrador"
+							alt="Tu Local Web"
 							style="position:absolute;left:90px;bottom:96px;height:46px"
 						/>
 					</div></Lamina
@@ -443,7 +443,7 @@
 							>
 								<img src="/mark.svg" alt="" style="width:60px" /><span
 									style="flex:1;font-size:40px;font-weight:600"
-									>Mostrador · {VS_PRO.plan.nombre}</span
+									>Tu Local Web · {VS_PRO.plan.nombre}</span
 								><span style="font-size:64px;font-weight:600;color:#E8875F"
 									>{fmt(VS_PRO.plan.precio)}</span
 								>
@@ -507,7 +507,7 @@
 						/>
 						<img
 							src="/wordmark-cream.png"
-							alt="mostrador"
+							alt="Tu Local Web"
 							style="position:absolute;left:90px;bottom:96px;height:46px"
 						/>
 					</div></Lamina
@@ -599,7 +599,7 @@
 						<div
 							style="margin-top:60px;font-size:104px;line-height:.95;letter-spacing:-.045em;font-weight:600"
 						>
-							Mostrador vende.<br /><span style="color:#E8875F">Caja ordena la plata.</span>
+							Tu Local Web vende.<br /><span style="color:#E8875F">Caja ordena la plata.</span>
 						</div>
 						<div
 							style="margin-top:60px;padding:46px;border-radius:40px;background:#F4EEE6;color:#131211;max-width:700px"
@@ -644,7 +644,7 @@
 								</div>
 							</div>
 							<div style="padding:40px;border-radius:36px;background:#D2582F;color:#fff">
-								<div style="font-size:32px;font-weight:700;opacity:.85">Con Mostrador</div>
+								<div style="font-size:32px;font-weight:700;opacity:.85">Con Tu Local Web</div>
 								<div style="margin-top:20px;font-size:38px;line-height:1.3">
 									Pegás el link de tu tienda. En un día está todo. Tu dominio, también.
 								</div>
@@ -662,7 +662,7 @@
 						/>
 						<img
 							src="/wordmark-brown.png"
-							alt="mostrador"
+							alt="Tu Local Web"
 							style="position:absolute;left:90px;bottom:96px;height:46px"
 						/>
 					</div></Lamina
@@ -847,7 +847,7 @@
 							style="position:absolute;right:-60px;top:-60px;width:520px;height:600px;border-radius:260px 260px 0 0;background:#2F6B4A"
 						></div>
 						<div style="position:relative;font-size:40px;font-weight:700;color:#2F6B4A">
-							Navidad en Mostrador
+							Navidad en Tu Local Web
 						</div>
 						<div
 							style="position:relative;margin-top:30px;font-size:110px;line-height:.92;letter-spacing:-.05em;font-weight:600;max-width:700px"

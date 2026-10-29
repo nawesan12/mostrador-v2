@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 test('sin demo, el panel manda a elegir rubro', async ({ page }) => {
 	await page.goto('/panel');
 	await expect(page).toHaveURL(/\/demo$/);
-	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Probá Mostrador');
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Probá Tu Local Web');
 	await expect(page.getByRole('button', { name: /^Mostaza/ })).toBeVisible();
 	const desborde = await page.evaluate(
 		() => document.documentElement.scrollWidth - document.documentElement.clientWidth

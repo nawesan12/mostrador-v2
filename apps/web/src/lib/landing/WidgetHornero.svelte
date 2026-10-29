@@ -12,7 +12,7 @@
 	 * ni mientras el banner de cookies está a la vista.
 	 */
 	const l = getLanding();
-	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Mostrador.dc.html).
+	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Tu Local Web.dc.html).
 	const registro = resolve('/onboarding');
 
 	function entra(el: HTMLElement) {

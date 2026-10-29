@@ -16,7 +16,7 @@ import (
 )
 
 // Las fuentes reales, una por plataforma. Cada una lee una página por paso, en la etapa que le
-// toca, y la pasa a lo que guarda Mostrador; las etapas que la plataforma no tiene terminan enseguida.
+// toca, y la pasa a lo que guarda Tu Local Web; las etapas que la plataforma no tiene terminan enseguida.
 
 // Dependencias: lo que las fuentes necesitan del servidor.
 type Dependencias struct {

@@ -33,7 +33,7 @@ func (s *Servicio) Rutas(mux *http.ServeMux, ip func(*http.Request) string) {
 		case errors.Is(err, ErrDemasiadosPedidos):
 			w.Header().Set("Retry-After", "3600")
 			problema.Escribir(w, &problema.Problema{Estado: http.StatusTooManyRequests, Codigo: "demasiados_pedidos",
-				Titulo: "Esperá un rato", Detalle: "Recibimos varios pedidos seguidos. Probá de nuevo en una hora o escribinos a legales@mostradorapp.com.ar."})
+				Titulo: "Esperá un rato", Detalle: "Recibimos varios pedidos seguidos. Probá de nuevo en una hora o escribinos a legales@tulocalweb.com.ar."})
 		default:
 			slog.Error("arrepentimiento", "error", err)
 			problema.Escribir(w, problema.Interno())

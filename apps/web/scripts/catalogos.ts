@@ -6,6 +6,7 @@
  * Uso: bun scripts/catalogos.ts
  */
 import { readFileSync, writeFileSync } from 'node:fs';
+import { conMarca } from './marca.ts';
 import { join } from 'node:path';
 import { runInNewContext } from 'node:vm';
 
@@ -379,7 +380,7 @@ export const CATALOGOS: Catalogo[] = ${JSON.stringify(catalogos, null, '\t')};
 
 export const catalogoDe = (plantilla: string) => CATALOGOS.find((c) => c.plantilla === plantilla);
 `;
-writeFileSync(join(import.meta.dirname, '../src/lib/catalogos.ts'), salida);
+writeFileSync(join(import.meta.dirname, '../src/lib/catalogos.ts'), conMarca(salida));
 console.log(
 	catalogos.map((c) => `${c.plantilla}: ${c.tienda} · ${c.productos.length} productos`).join('\n')
 );

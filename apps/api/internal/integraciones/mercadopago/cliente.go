@@ -4,8 +4,8 @@
 //
 //   - Cada tienda conecta su cuenta por OAuth y cobra con su propio token (cifrado en la base). Nunca
 //     se cae al token de la plataforma: sin conexión, no hay cobro.
-//   - Mostrador no cobra comisión: marketplace_fee no se manda.
-//   - El abono de Mostrador es una suscripción (preapproval) con el token de la plataforma.
+//   - Tu Local Web no cobra comisión: marketplace_fee no se manda.
+//   - El abono de Tu Local Web es una suscripción (preapproval) con el token de la plataforma.
 package mercadopago
 
 import (
@@ -99,5 +99,5 @@ func (c *Cliente) hacer(req *http.Request, salida any) error {
 	return json.Unmarshal(b, salida)
 }
 
-// monto: los montos de Mostrador son pesos enteros; la Orders API los pide como texto con dos decimales.
+// monto: los montos de Tu Local Web son pesos enteros; la Orders API los pide como texto con dos decimales.
 func monto(pesos int64) string { return fmt.Sprintf("%d.00", pesos) }

@@ -23,7 +23,7 @@
 </script>
 
 <Seo
-	title="Conectar una IA · Mostrador"
+	title="Conectar una IA · Tu Local Web"
 	description="Permití que tu IA consulte y maneje tu tienda."
 	path="/oauth/autorizar"
 	noindex
@@ -32,7 +32,7 @@
 <div class="pag">
 	<div class="der">
 		<div class="arriba">
-			<a href={resolve('/')}><img src="/wordmark-brown.webp" alt="mostrador" class="marca" /></a>
+			<a href={resolve('/')}><img src="/wordmark-brown.webp" alt="Tu Local Web" class="marca" /></a>
 			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- página pública del centro de ayuda -->
 			<a class="ayuda" href="/ayuda"><Icon icon={phQuestion} size={16} />Ayuda</a>
 		</div>
@@ -42,7 +42,7 @@
 				<form method="POST" class="col">
 					<img src="/hornero/seguridad.webp" alt="" class="ave-chica" />
 					<div>
-						<h1>¿Conectar {data.ia.nombre} con tu&nbsp;Mostrador?</h1>
+						<h1>¿Conectar {data.ia.nombre} con tu&nbsp;Tu Local Web?</h1>
 						<p class="bajada">
 							Va a poder trabajar con los datos de
 							<b>{data.tienda ?? 'tu tienda'}</b>. Después vuelve a&nbsp;{data.ia.host}.
@@ -92,7 +92,7 @@
 		</div>
 
 		<div class="legal">
-			<span>© 2026 Mostrador</span>
+			<span>© 2026 Tu Local Web</span>
 			<!-- eslint-disable svelte/no-navigation-without-resolve -- páginas públicas -->
 			<a href="/legales/terminos">Términos</a>
 			<a href="/legales/privacidad">Privacidad</a>
@@ -118,7 +118,7 @@
 </div>
 
 <style>
-	/* Las reglas salen de src/routes/ingresar/+page.svelte (handoff Mostrador Ingresar). */
+	/* Las reglas salen de src/routes/ingresar/+page.svelte (handoff Tu Local Web Ingresar). */
 	.pag {
 		min-height: 100vh;
 		display: flex;

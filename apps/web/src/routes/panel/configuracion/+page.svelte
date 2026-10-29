@@ -114,7 +114,7 @@
 		['stock', 'Stock bajo', 'Cuando quede menos de 1 semana'],
 		['diario', 'Resumen diario por WhatsApp', 'Todos los días a las 21 h'],
 		['ideas', 'Ideas de Hornero', 'Máximo 3 por día'],
-		['novedades', 'Novedades de Mostrador', 'Una vez por mes']
+		['novedades', 'Novedades de Tu Local Web', 'Una vez por mes']
 	] as const;
 	async function opcion(grupo: 'seguridad' | 'avisos', clave: string, activo: boolean) {
 		if (await pedir(`/panel/configuracion/${grupo}/${clave}`, 'PUT', { activo }))

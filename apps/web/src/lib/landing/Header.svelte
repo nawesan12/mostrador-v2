@@ -62,7 +62,7 @@
 		['#seguridad', I.phShieldCheckFill, 'Seguridad', 'Copias, permisos y 2FA', '#F1E9DF', '#6B5244']
 	] as const;
 
-	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Mostrador.dc.html).
+	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Tu Local Web.dc.html).
 	const registro = resolve('/onboarding');
 	const sombra = $derived(scrolled || l.menu);
 
@@ -85,9 +85,9 @@
 
 <header class:sombra class:arriba={l.menu}>
 	<div class="fila">
-		<a href={resolve('/')} class="logo" aria-label="Mostrador, inicio">
+		<a href={resolve('/')} class="logo" aria-label="Tu Local Web, inicio">
 			<Marca />
-			<img src="/wordmark-brown.webp" alt="mostrador" />
+			<img src="/wordmark-brown.webp" alt="Tu Local Web" />
 		</a>
 		<nav class="nav" aria-label="Secciones">
 			{#each NAV as [h, t] (h)}

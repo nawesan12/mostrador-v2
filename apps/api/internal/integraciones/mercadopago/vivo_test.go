@@ -44,7 +44,7 @@ func TestContraMercadoPagoReal(t *testing.T) {
 	}
 
 	// Link de pago → preferencia de Checkout Pro.
-	cod, _ := links.Crear(ctx, b.App, tienda, links.Nuevo{Monto: 1500, Concepto: "Prueba de Mostrador"})
+	cod, _ := links.Crear(ctx, b.App, tienda, links.Nuevo{Monto: 1500, Concepto: "Prueba de Tu Local Web"})
 	u, err := s.PagarLink(ctx, tienda, cod)
 	if err != nil {
 		t.Fatalf("preferencia: %s", detalle(err))

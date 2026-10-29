@@ -37,7 +37,7 @@
 
 <!-- eslint-disable svelte/no-navigation-without-resolve, svelte/no-at-html-tags -- links a rutas públicas fijas y anclas; el HTML es el texto de los legales del handoff, que scripts/legales.ts deja sólo con <b> y <a> -->
 <Seo
-	title="{legal.titulo} · Mostrador"
+	title="{legal.titulo} · Tu Local Web"
 	description={legal.descripcion}
 	path="/legales/{legal.slug}"
 />

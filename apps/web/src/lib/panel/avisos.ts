@@ -34,8 +34,8 @@ export const AVISOS: readonly { grupo: string; filas: readonly Fila[] }[] = [
 		grupo: 'Cuenta y seguridad',
 		filas: [
 			{ id: 'sesion', t: 'Inicio de sesión nuevo', d: 'Desde otro dispositivo', def: [1, 1, 1, 0] },
-			{ id: 'cobro', t: 'Cobro del plan', d: 'Factura de Mostrador', def: [0, 0, 1, 0] },
-			{ id: 'novedades', t: 'Novedades de Mostrador', d: 'Una vez por mes', def: [0, 0, 1, 0] }
+			{ id: 'cobro', t: 'Cobro del plan', d: 'Factura de Tu Local Web', def: [0, 0, 1, 0] },
+			{ id: 'novedades', t: 'Novedades de Tu Local Web', d: 'Una vez por mes', def: [0, 0, 1, 0] }
 		]
 	}
 ];

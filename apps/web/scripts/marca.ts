@@ -1,0 +1,13 @@
+/**
+ * La marca es "Tu Local Web" (tulocalweb.com.ar, desde el 28/10/2026). El handoff de design/ sigue
+ * diciendo "Mostrador": los scripts que generan código desde él pasan su salida por acá. Los nombres
+ * de archivo del handoff (design/Mostrador v4.dc.html) no se tocan.
+ */
+export function conMarca(s: string): string {
+	return s
+		.replace(/Abrí tu mostrador/g, 'Abrí tu local web')
+		.replace(/armando tu mostrador/g, 'armando tu local web')
+		.replace(/alt="mostrador"/g, 'alt="Tu Local Web"')
+		.replace(/mostradorapp\.com\.ar/g, 'tulocalweb.com.ar')
+		.replace(/(?<![A-Za-z_@/.-])Mostrador(?![A-Za-z_0-9])/g, 'Tu Local Web');
+}

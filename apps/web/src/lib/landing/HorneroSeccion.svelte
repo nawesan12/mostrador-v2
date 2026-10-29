@@ -98,7 +98,7 @@
 	<div class="in">
 		<div class="cab" use:anim={'reveal'}>
 			<div class="sello">
-				<Icon icon={I.phSparkleFill} size={15} />Asistente con IA · exclusivo de Mostrador
+				<Icon icon={I.phSparkleFill} size={15} />Asistente con IA · exclusivo de Tu Local Web
 			</div>
 			<h2>Conocé a Hornero. Atiende, vende y te avisa — las 24 horas.</h2>
 			<p>

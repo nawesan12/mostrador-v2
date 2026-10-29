@@ -167,7 +167,7 @@ func TestMercadoLibreDePuntaAPunta(t *testing.T) {
 		t.Fatal("publicó dos veces")
 	}
 
-	// Un cambio de stock en Mostrador se encola solo (trigger) y el worker lo manda.
+	// Un cambio de stock en Tu Local Web se encola solo (trigger) y el worker lo manda.
 	cero := 0
 	if _, err := listas.Guardar(ctx, b.App, luna, p.ID, listas.Editable{Nombre: p.Nombre, Precio: 40000, Stock: &cero}); err != nil {
 		t.Fatal(err)

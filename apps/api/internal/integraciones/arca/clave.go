@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-// La tienda no maneja claves: Mostrador genera la clave privada (queda cifrada en la base y nunca
+// La tienda no maneja claves: Tu Local Web genera la clave privada (queda cifrada en la base y nunca
 // sale), arma el pedido de certificado (CSR) para que la tienda lo suba en ARCA ("Administración de
 // certificados digitales", o WSASS en homologación), y después la tienda pega el certificado que
 // ARCA le devuelve.

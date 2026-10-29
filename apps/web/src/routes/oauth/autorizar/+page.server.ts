@@ -29,7 +29,7 @@ async function validar(url: URL) {
 		? await cliente(dbSandbox(env.SANDBOX), p.clienteId)
 		: await clienteApi(p.clienteId);
 	if (!c) error(400, 'Esa IA no está registrada. Volvé a conectar desde la IA.');
-	if ('fallo' in c) error(503, 'Mostrador no puede responder ahora. Probá en un rato.');
+	if ('fallo' in c) error(503, 'Tu Local Web no puede responder ahora. Probá en un rato.');
 	if (!c.redirecciones.includes(p.redireccion)) error(400, 'La dirección de vuelta no coincide.');
 	if (p.metodo !== 'S256' || !/^[A-Za-z0-9_-]{43,128}$/.test(p.desafio))
 		error(400, 'La IA tiene que usar PKCE (S256).');
@@ -42,7 +42,7 @@ const vuelta = (redireccion: string, params: Record<string, string | null>) => {
 	return u.toString();
 };
 
-/** Con la API real se entra con la cuenta de Mostrador (y vuelve acá). */
+/** Con la API real se entra con la cuenta de Tu Local Web (y vuelve acá). */
 const ingresar = (url: URL) =>
 	redirect(303, `/ingresar?volver=${encodeURIComponent(url.pathname + url.search)}`);
 

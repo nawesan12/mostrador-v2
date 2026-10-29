@@ -8,7 +8,7 @@
 </script>
 
 <svelte:head>
-	<title>Dejar de recibir avisos del estado · Mostrador</title>
+	<title>Dejar de recibir avisos del estado · Tu Local Web</title>
 	<meta name="robots" content="noindex" />
 </svelte:head>
 

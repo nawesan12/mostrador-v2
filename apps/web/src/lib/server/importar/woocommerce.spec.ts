@@ -9,7 +9,7 @@ const productos = casos.productos as ProductoWoo[];
 const variaciones = casos.variaciones as ProductoWoo[];
 
 describe('importar: WooCommerce (mismos casos que Go)', () => {
-	it('Store API → productos de Mostrador, con las variaciones', () => {
+	it('Store API → productos de Tu Local Web, con las variaciones', () => {
 		expect(resultadoWoo({ productos, variaciones })).toEqual(esperado);
 	});
 

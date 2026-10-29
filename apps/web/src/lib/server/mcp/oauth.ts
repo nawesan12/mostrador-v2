@@ -25,7 +25,7 @@ export const PREFIJO_ACCESO = 'mostrador_mcp_';
 export const PREFIJO_REFRESH = 'mostrador_rt_';
 
 export const NO_DISPONIBLE =
-	'Conectar una IA a tu cuenta real de Mostrador todavía no está disponible. Por ahora funciona con la demo.';
+	'Conectar una IA a tu cuenta real de Tu Local Web todavía no está disponible. Por ahora funciona con la demo.';
 
 export const metadatosServidor = (base: string) => ({
 	issuer: base,
@@ -307,7 +307,7 @@ export async function autenticar(
 	return { ...fila, permisos: fila.permisos.split(' ') as Permiso[] };
 }
 
-/** Las conexiones activas de un sandbox (Integraciones › Manejá Mostrador desde tu IA). */
+/** Las conexiones activas de un sandbox (Integraciones › Manejá Tu Local Web desde tu IA). */
 export async function conexionesDe(db: DbSandbox, sandboxId: string, ahora = Date.now()) {
 	return db
 		.select({

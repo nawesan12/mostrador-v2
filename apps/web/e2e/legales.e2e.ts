@@ -24,7 +24,7 @@ for (const [slug, titulo] of PAGINAS) {
 		const res = await page.goto(`/legales/${slug}`);
 		expect(res?.status()).toBe(200);
 		await expect(page.locator('h1')).toHaveText(titulo);
-		await expect(page).toHaveTitle(`${titulo} · Mostrador`);
+		await expect(page).toHaveTitle(`${titulo} · Tu Local Web`);
 		expect(await sinDesborde(page)).toBeLessThanOrEqual(0);
 	});
 }

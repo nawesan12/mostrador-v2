@@ -77,7 +77,7 @@ type ItemViejo struct {
 }
 
 // URLVieja: una dirección de la tienda vieja que no es de un producto (categorías, páginas) y
-// adónde va en Mostrador (path relativo a la tienda).
+// adónde va en Tu Local Web (path relativo a la tienda).
 type URLVieja struct {
 	Desde, Hacia string
 }

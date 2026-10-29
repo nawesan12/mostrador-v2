@@ -1,5 +1,5 @@
 // Package importar lee catálogos de otras plataformas (Shopify, WooCommerce) y los convierte en
-// productos de Mostrador, ajustados a sus topes. Sólo los parsers: la cola que lee las tiendas y los
+// productos de Tu Local Web, ajustados a sus topes. Sólo los parsers: la cola que lee las tiendas y los
 // endpoints vienen después.
 //
 // Es el gemelo de apps/web/src/lib/server/importar/: los dos pasan los mismos casos de
@@ -255,7 +255,7 @@ func Pesos(valor string, decimales int) (int64, bool) {
 
 var sinTildes = transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
 
-// Normal: sin mayúsculas ni tildes, como compara Mostrador opciones y valores repetidos.
+// Normal: sin mayúsculas ni tildes, como compara Tu Local Web opciones y valores repetidos.
 func Normal(s string) string {
 	t, _, err := transform.String(sinTildes, s)
 	if err != nil {
@@ -280,7 +280,7 @@ func cortar(s string, n int) string {
 
 func entre(n, lo, hi int) int { return max(lo, min(hi, n)) }
 
-// Ajustar deja un producto dentro de los topes de Mostrador. Lo que no entra se recorta y se marca:
+// Ajustar deja un producto dentro de los topes de Tu Local Web. Lo que no entra se recorta y se marca:
 // nombre y textos se cortan; fotos (sólo https), opciones y valores se limitan; si las
 // combinaciones pasan de 100, se sacan valores de la opción más larga. Las variantes que quedan sin
 // valor se descartan. ok es false si el nombre no llega a 2 letras.

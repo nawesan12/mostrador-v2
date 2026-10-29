@@ -1,4 +1,4 @@
-// Package arrepentimiento es el botón de arrepentimiento de los planes de Mostrador (Res. 424/2020):
+// Package arrepentimiento es el botón de arrepentimiento de los planes de Tu Local Web (Res. 424/2020):
 // cualquiera, sin iniciar sesión, pide revocar una contratación hecha a distancia dentro de los 10
 // días corridos. Se registra con un código de trámite y se confirma por mail; el backoffice lo procesa.
 package arrepentimiento

@@ -39,7 +39,7 @@ const sinToken = (url: URL) =>
 		errorRpc(
 			null,
 			-32001,
-			'Token inválido, vencido o revocado. Volvé a conectar Mostrador desde tu IA.'
+			'Token inválido, vencido o revocado. Volvé a conectar Tu Local Web desde tu IA.'
 		),
 		401,
 		{
@@ -58,7 +58,7 @@ async function conexion(request: Request, url: URL) {
 		if ('fallo' in cx)
 			// El token puede estar bien: no pedir que vuelva a conectar, sólo que reintente.
 			return json(
-				errorRpc(null, -32000, 'Mostrador no puede responder ahora. Probá en un rato.'),
+				errorRpc(null, -32000, 'Tu Local Web no puede responder ahora. Probá en un rato.'),
 				cx.fallo === 429 ? 429 : 503,
 				{ 'Retry-After': cx.fallo === 429 ? '60' : '30' }
 			);

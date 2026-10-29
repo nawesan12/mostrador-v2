@@ -51,5 +51,5 @@ test('/estado/rss.xml es un RSS válido', async ({ request }) => {
 	const res = await request.get('/estado/rss.xml');
 	expect(res.status()).toBe(200);
 	expect(res.headers()['content-type']).toContain('application/rss+xml');
-	expect(await res.text()).toContain('<title>Estado de Mostrador</title>');
+	expect(await res.text()).toContain('<title>Estado de Tu Local Web</title>');
 });

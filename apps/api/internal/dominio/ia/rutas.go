@@ -254,7 +254,7 @@ func (s *Servicio) Guardia(next http.Handler) http.Handler {
 				return
 			}
 			if !p.Permisos[permiso] {
-				problema.Escribir(w, problema.SinPermiso("En Mostrador › Integraciones está apagado este permiso para las IA."))
+				problema.Escribir(w, problema.SinPermiso("En Tu Local Web › Integraciones está apagado este permiso para las IA."))
 				return
 			}
 		}

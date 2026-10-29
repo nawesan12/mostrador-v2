@@ -147,7 +147,7 @@ export function finanzasDemo(
 		{
 			id: 'plan',
 			tipo: 'gasto',
-			titulo: 'Plan Pro · Mostrador',
+			titulo: 'Plan Pro · Tu Local Web',
 			detalle: `${fecha(fin)} · cuando termina la prueba`,
 			monto: -PLAN_PRO,
 			en: fin

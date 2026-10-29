@@ -59,7 +59,7 @@
 </script>
 
 <Seo
-	title="Sobre nosotros · Mostrador"
+	title="Sobre nosotros · Tu Local Web"
 	description="Hacemos que vender sea más barato y más simple para el que empieza. Nuestra historia, lo que nos importa y el equipo."
 	path="/nosotros"
 />
@@ -77,7 +77,7 @@
 			<div class="chica"><img src={foto('1556761175-5973dc0f32e7', 'w=700')} alt="" /></div>
 			<div class="cifra">
 				<div class="c-v">40.000+</div>
-				<div class="c-t">tiendas que venden con Mostrador</div>
+				<div class="c-t">tiendas que venden con Tu Local Web</div>
 			</div>
 		</div>
 	</div>
@@ -90,7 +90,7 @@
 				<Titulo etiqueta="Nuestra historia" titulo="Nació de un problema propio" />
 				<p class="h-txt">
 					Vendíamos yerba por internet y cada mes pagábamos más en comisiones, apps y planes que en
-					envíos. Armamos Mostrador para que cualquier emprendedor tenga todo lo que necesita, en un
+					envíos. Armamos Tu Local Web para que cualquier emprendedor tenga todo lo que necesita, en un
 					solo lugar y por un precio justo.
 				</p>
 			</div>
@@ -126,7 +126,7 @@
 
 <section class="bloque">
 	<div class="ancho">
-		<Titulo etiqueta="El equipo" titulo="Algunas de las caras de Mostrador" />
+		<Titulo etiqueta="El equipo" titulo="Algunas de las caras de Tu Local Web" />
 		<div class="equipo">
 			{#each EQUIPO as [id, n, r] (n)}
 				<div>

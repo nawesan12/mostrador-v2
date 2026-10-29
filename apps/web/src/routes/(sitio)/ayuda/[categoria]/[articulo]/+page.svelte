@@ -15,7 +15,7 @@
 </script>
 
 <Seo
-	title="{a.titulo} · Ayuda · Mostrador"
+	title="{a.titulo} · Ayuda · Tu Local Web"
 	description={a.resumen}
 	path="/ayuda/{a.categoria}/{a.slug}"
 />

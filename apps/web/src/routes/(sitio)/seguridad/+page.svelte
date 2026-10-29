@@ -36,7 +36,7 @@
 		[
 			I.phCreditCardFill,
 			'Pagos certificados PCI',
-			'Los datos de tarjeta nunca pasan por Mostrador: los procesan Mercado Pago, Payway y Getnet.'
+			'Los datos de tarjeta nunca pasan por Tu Local Web: los procesan Mercado Pago, Payway y Getnet.'
 		],
 		[
 			I.phPulseFill,
@@ -59,7 +59,7 @@
 	] as const;
 	const FAQ = [
 		[
-			'¿Qué pasa si se cae Mostrador en pleno Hot Sale?',
+			'¿Qué pasa si se cae Tu Local Web en pleno Hot Sale?',
 			'Tenemos servidores en dos zonas distintas y escalamos solos con el tráfico. Si aun así hay una caída, lo ves en Estado del sistema y te acreditamos parte del plan según la política de Reembolsos.'
 		],
 		[
@@ -78,7 +78,7 @@
 </script>
 
 <Seo
-	title="Seguridad · Mostrador"
+	title="Seguridad · Tu Local Web"
 	description="Cifrado, verificación en dos pasos, copias diarias y antifraude incluidos en todos los planes."
 	path="/seguridad"
 	image="seguridad"
@@ -91,7 +91,7 @@
 				<Etiqueta texto="Seguridad" color="#F0A58A" />
 				<h1>Tu negocio no se cae. Y nada se pierde.</h1>
 				<p>
-					Lo que en otras plataformas es opcional o cuesta extra, en Mostrador viene activado desde
+					Lo que en otras plataformas es opcional o cuesta extra, en Tu Local Web viene activado desde
 					el primer día.
 				</p>
 				<div class="datos">
@@ -124,11 +124,11 @@
 <section class="bloque beige">
 	<div class="ancho">
 		<Titulo etiqueta="Comparado" titulo="Lo que otras cobran aparte" />
-		<div class="tabla" role="table" aria-label="Seguridad: Mostrador contra otras plataformas">
+		<div class="tabla" role="table" aria-label="Seguridad: Tu Local Web contra otras plataformas">
 			<div class="fila cab" role="row">
 				<span role="columnheader">Función</span>
 				<span role="columnheader" class="t-m"
-					><img src="/mark.svg" alt="" width="16" />Mostrador</span
+					><img src="/mark.svg" alt="" width="16" />Tu Local Web</span
 				>
 				<span role="columnheader" class="t-o">Otras plataformas</span>
 			</div>
@@ -167,7 +167,7 @@
 			<div class="tarjeta oscura">
 				<Etiqueta texto="Reportá una vulnerabilidad" color="#F0A58A" />
 				<p>
-					Si encontrás un problema de seguridad, escribinos a <b>seguridad@mostradorapp.com.ar</b>.
+					Si encontrás un problema de seguridad, escribinos a <b>seguridad@tulocalweb.com.ar</b>.
 					Respondemos en 24 horas, no tomamos acciones legales contra investigaciones de buena fe y
 					reconocemos los hallazgos válidos con recompensas de hasta USD 2.000.
 				</p>

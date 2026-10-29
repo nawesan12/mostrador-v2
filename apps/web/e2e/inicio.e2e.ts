@@ -20,7 +20,7 @@ test('la portada carga con los encabezados de seguridad y sin desborde', async (
 test('la portada tiene Open Graph con imagen absoluta y liviana', async ({ page, request }) => {
 	await page.goto('/');
 	const og = (p: string) => page.locator(`meta[property="og:${p}"]`).getAttribute('content');
-	expect(await og('title')).toBe('Mostrador · Vendé en todos lados, pagá menos');
+	expect(await og('title')).toBe('Tu Local Web · Vendé en todos lados, pagá menos');
 	expect(await og('url')).toBe('https://mostrador.iamnaw.dev/');
 	expect(await og('image')).toBe('https://mostrador.iamnaw.dev/og/home.jpg');
 	const res = await request.get('/og/home.jpg');
@@ -157,9 +157,9 @@ test('precios: la calculadora y el ciclo anual cambian los montos', async ({ pag
 	await listo(page);
 	const sec = page.locator('section#precios');
 	await sec.getByLabel('Vendo por mes').fill('1000000');
-	await expect(sec.getByText('Plan Emprende · 0% de comisión de Mostrador')).toBeVisible();
+	await expect(sec.getByText('Plan Emprende · 0% de comisión de Tu Local Web')).toBeVisible();
 	await sec.getByLabel('Vendo por mes').fill('20000000');
-	await expect(sec.getByText('Plan Negocio · 0% de comisión de Mostrador')).toBeVisible();
+	await expect(sec.getByText('Plan Negocio · 0% de comisión de Tu Local Web')).toBeVisible();
 	await sec.getByRole('button', { name: /Anual/ }).click();
 	await expect(sec.getByText('$ 37.425').first()).toBeVisible();
 	await expect(sec.getByText('$ 449.100 por año')).toBeVisible();

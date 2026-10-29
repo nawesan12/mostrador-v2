@@ -43,7 +43,7 @@
 				<b>Usamos cookies</b>
 				<p>
 					Las necesarias hacen funcionar el sitio. Con tu permiso sumamos analíticas y de marketing
-					para mejorar Mostrador. <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- /legales llega con las páginas públicas -->
+					para mejorar Tu Local Web. <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- /legales llega con las páginas públicas -->
 					<a href="/legales/cookies">Ver política</a>
 				</p>
 			</div>

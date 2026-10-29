@@ -4,6 +4,7 @@
  * Uso: bun scripts/plantillas.ts
  */
 import { readFileSync, writeFileSync } from 'node:fs';
+import { conMarca } from './marca.ts';
 import { join } from 'node:path';
 import { runInNewContext } from 'node:vm';
 
@@ -106,5 +107,5 @@ export function sobreAcento(hex: string) {
 	return lum > 0.62 ? '#141414' : '#FFFFFF';
 }
 `;
-writeFileSync(join(__dirname, '../src/lib/plantillas.ts'), ts);
+writeFileSync(join(__dirname, '../src/lib/plantillas.ts'), conMarca(ts));
 console.log(filas.length + ' plantillas');

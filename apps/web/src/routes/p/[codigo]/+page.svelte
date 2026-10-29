@@ -108,7 +108,7 @@
 			</div>
 		{/if}
 	</div>
-	<a class="marca" href={resolve('/')}>Cobrá así con <b>Mostrador</b></a>
+	<a class="marca" href={resolve('/')}>Cobrá así con <b>Tu Local Web</b></a>
 </main>
 
 <style>

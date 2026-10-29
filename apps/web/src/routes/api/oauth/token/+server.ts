@@ -17,7 +17,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json(
 				{
 					error: out.fallo === 429 ? 'slow_down' : 'temporarily_unavailable',
-					error_description: 'Mostrador no puede responder ahora. Probá en un rato.'
+					error_description: 'Tu Local Web no puede responder ahora. Probá en un rato.'
 				},
 				out.fallo === 429 ? 429 : 503,
 				{ 'Retry-After': out.fallo === 429 ? '60' : '30' }

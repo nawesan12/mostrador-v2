@@ -29,8 +29,8 @@
 </script>
 
 <Seo
-	title="Novedades · Mostrador"
-	description="Cada semana mejoramos Mostrador con lo que nos piden las tiendas: lo nuevo, las mejoras y los arreglos."
+	title="Novedades · Tu Local Web"
+	description="Cada semana mejoramos Tu Local Web con lo que nos piden las tiendas: lo nuevo, las mejoras y los arreglos."
 	path="/novedades"
 />
 
@@ -39,7 +39,7 @@
 		<aside>
 			<Etiqueta texto="Novedades" />
 			<h1>Qué hay de nuevo</h1>
-			<p class="bajada">Cada semana mejoramos Mostrador con lo que nos piden las tiendas.</p>
+			<p class="bajada">Cada semana mejoramos Tu Local Web con lo que nos piden las tiendas.</p>
 			<div class="filtros" role="group" aria-label="Filtrar por tipo">
 				<button type="button" aria-pressed={filtro === null} onclick={() => (filtro = null)}
 					>Todo</button

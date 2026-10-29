@@ -1,4 +1,4 @@
-// Package equipo: el backoffice del equipo de Mostrador (/staff). Las personas del equipo tienen
+// Package equipo: el backoffice del equipo de Tu Local Web (/staff). Las personas del equipo tienen
 // cuentas y sesiones propias (esquema equipo), separadas de las de las tiendas. La API lee todas las
 // tiendas con el rol mostrador_staff (sólo lectura, por la política staff_lee de cada tabla) y lo que
 // cambia en una tienda pasa por equipo.accion_tienda, que chequea el permiso y audita en la misma
@@ -55,7 +55,7 @@ type PostulacionAprobada struct {
 
 // Aprobador da de alta al partner de una postulación aprobada. Lo implementa el paquete partners
 // (rama pr-74): partners.Aprobar(ctx, app, partners.Aprobacion{Email, Nombre: Agencia}). Si falla
-// (por ejemplo, partners.ErrSinCuenta: el email todavía no tiene cuenta en Mostrador), la
+// (por ejemplo, partners.ErrSinCuenta: el email todavía no tiene cuenta en Tu Local Web), la
 // postulación sigue nueva y el equipo ve el error.
 type Aprobador func(ctx context.Context, p PostulacionAprobada) error
 

@@ -189,7 +189,7 @@
 				{#if perfil.descripcion}<div class="p-txt">{perfil.descripcion}</div>{/if}
 				<div class="p-val">
 					<Icon icon={I.phStorefrontFill} size={14} style="color:#b0441d" /><b>{activas}</b><span
-						>tiendas activas con Mostrador</span
+						>tiendas activas con Tu Local Web</span
 					>
 				</div>
 				{#if perfil.casos.some((c) => c.nombre)}

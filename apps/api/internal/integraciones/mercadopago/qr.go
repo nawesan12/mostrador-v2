@@ -59,7 +59,7 @@ func (s *Servicio) CrearCaja(ctx context.Context, tiendaID string, u Ubicacion) 
 	}, &suc); err != nil {
 		return err
 	}
-	// La caja en modo atendido (pdv): las órdenes las crea Mostrador.
+	// La caja en modo atendido (pdv): las órdenes las crea Tu Local Web.
 	if err := s.cliente().JSON(ctx, http.MethodPost, "/v2/pos", token, "caja:"+externo, map[string]any{
 		"name": "Caja 1", "store_id": suc.ID.String(), "external_id": externo + "C1",
 		"config": map[string]any{"qr": map[string]any{"operating_mode": "pdv"}},

@@ -141,7 +141,7 @@
 					>Asunto<input
 						name="asunto"
 						maxlength="140"
-						value="Re: {c.asunto || 'tu consulta en Mostrador'}"
+						value="Re: {c.asunto || 'tu consulta en Tu Local Web'}"
 					/></label
 				>
 				<label class="campo"

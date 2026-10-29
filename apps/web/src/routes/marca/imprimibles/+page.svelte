@@ -22,7 +22,7 @@
 	import { crearFamilia } from '#lib/marca/familia.svelte.ts';
 	import { PLANTILLAS } from '#lib/plantillas.ts';
 
-	/** Imprimibles (design/Imprimibles Mostrador.dc.html): A6 a A3 en mm; roll-up y backing a escala. */
+	/** Imprimibles (design/Imprimibles Tu Local Web.dc.html): A6 a A3 en mm; roll-up y backing a escala. */
 	const fam = crearFamilia('imprimibles');
 	// Con ?ref= (Materiales del panel de partners) los QR llevan al link del partner.
 	const QR = $derived(qrCon(page.url.searchParams.get('ref')));
@@ -42,7 +42,7 @@
 </script>
 
 <Seo
-	title="Imprimibles · Marca · Mostrador"
+	title="Imprimibles · Marca · Tu Local Web"
 	description="Flyers, afiche, tríptico, one-pager, roll-up, backing de stand y tarjeta para paquetes."
 	path="/marca/imprimibles"
 	noindex
@@ -51,7 +51,7 @@
 <section class="lienzo" bind:contentRect={fam.rect}>
 	<header class="lienzo-cab">
 		<div style="flex:1;min-width:min(100%,300px)">
-			<img src="/wordmark-brown.png" alt="mostrador" style="height:26px;display:block" />
+			<img src="/wordmark-brown.png" alt="Tu Local Web" style="height:26px;display:block" />
 			<h1
 				style="margin:22px 0 0;font-size:56px;line-height:1;letter-spacing:-.04em;font-weight:600"
 			>
@@ -86,7 +86,7 @@
 					>
 						<img
 							src="/wordmark-brown.png"
-							alt="mostrador"
+							alt="Tu Local Web"
 							style="height:6mm;align-self:flex-start"
 						/>
 						<div
@@ -229,7 +229,7 @@
 				<div
 					style="position:relative;display:flex;justify-content:space-between;align-items:center"
 				>
-					<img src="/wordmark-cream.png" alt="mostrador" style="height:11mm" /><span
+					<img src="/wordmark-cream.png" alt="Tu Local Web" style="height:11mm" /><span
 						style="font-size:20px;font-weight:600;color:#E8875F"
 						>{evento.ciudad} · {evento.fecha}</span
 					>
@@ -325,7 +325,7 @@
 					></div>
 					<img
 						src="/wordmark-cream.png"
-						alt="mostrador"
+						alt="Tu Local Web"
 						style="position:relative;height:5.5mm;align-self:flex-start"
 					/>
 					<div
@@ -496,7 +496,7 @@
 					<div
 						style="position:relative;display:flex;justify-content:space-between;align-items:center"
 					>
-						<img src="/wordmark-cream.png" alt="mostrador" style="height:6mm" /><span
+						<img src="/wordmark-cream.png" alt="Tu Local Web" style="height:6mm" /><span
 							style="font-size:10px;color:#BDB2A8">Propuesta para tiendas · 2026</span
 						>
 					</div>
@@ -623,7 +623,7 @@
 					><div
 						style="width:170mm;height:400mm;background:#FBF7F2;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;padding:16mm 12mm;text-align:center;box-shadow:0 30px 60px -30px rgba(42,20,12,.5)"
 					>
-						<img src="/wordmark-brown.png" alt="mostrador" style="height:9mm" />
+						<img src="/wordmark-brown.png" alt="Tu Local Web" style="height:9mm" />
 						<div
 							style="margin-top:14mm;font-size:46px;line-height:.92;letter-spacing:-.05em;font-weight:600"
 						>
@@ -699,7 +699,7 @@
 							style="position:absolute;inset:0;background:url(/textura/grain.png);opacity:.22;mix-blend-mode:multiply"
 						></div>
 						<div style="position:absolute;left:18mm;top:22mm;width:150mm">
-							<img src="/wordmark-cream.png" alt="mostrador" style="height:10mm" />
+							<img src="/wordmark-cream.png" alt="Tu Local Web" style="height:10mm" />
 							<div
 								style="margin-top:12mm;font-size:62px;line-height:.9;letter-spacing:-.05em;font-weight:600"
 							>
@@ -827,7 +827,7 @@
 							>
 								<span>cafebruma.com.ar · @cafebruma</span><span
 									style="display:flex;align-items:center;gap:4px"
-									><img src="/mark.svg" alt="" style="width:3.5mm" />Hecho con Mostrador</span
+									><img src="/mark.svg" alt="" style="width:3.5mm" />Hecho con Tu Local Web</span
 								>
 							</div>
 						</div></Lamina
@@ -841,7 +841,7 @@
 						style="padding:4px 10px;border-radius:999px;background:#2A140C;color:#fff;font-size:12px;font-weight:700;text-decoration:none"
 						>7b</a
 					><span style="font-size:14px;color:#6B5244"
-						>Mostrador · para que el comprador también arme su&nbsp;tienda</span
+						>Tu Local Web · para que el comprador también arme su&nbsp;tienda</span
 					>
 				</div>
 				<div style="display:flex;gap:20px;flex-wrap:wrap">
@@ -859,7 +859,7 @@
 							<div
 								style="position:relative;font-size:28px;line-height:.95;letter-spacing:-.04em;font-weight:600"
 							>
-								Este paquete salió de una tienda Mostrador.
+								Este paquete salió de una tienda Tu Local Web.
 							</div>
 							<img
 								src="/hornero/caja.png"
@@ -867,7 +867,7 @@
 								style="position:relative;width:62mm;height:62mm;object-fit:contain;align-self:center;margin-top:auto"
 							/><img
 								src="/wordmark-cream.png"
-								alt="mostrador"
+								alt="Tu Local Web"
 								style="position:relative;height:5mm;align-self:center;margin-top:4mm"
 							/>
 						</div></Lamina

@@ -39,8 +39,8 @@
 	const link = $derived(linkDe(p.partner.codigo));
 	const mailValido = $derived(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()));
 	const mailto = $derived(
-		`mailto:${encodeURIComponent(email.trim())}?subject=${encodeURIComponent('Tu tienda en Mostrador')}&body=${encodeURIComponent(
-			`¡Hola! Te armo la tienda en Mostrador. Creá tu cuenta desde este link (14 días gratis, sin tarjeta) y sumame a tu equipo para que pueda cargar todo:\n\n${link}\n\nEl cupón ${p.partner.cupon} queda guardado en tu cuenta.`
+		`mailto:${encodeURIComponent(email.trim())}?subject=${encodeURIComponent('Tu tienda en Tu Local Web')}&body=${encodeURIComponent(
+			`¡Hola! Te armo la tienda en Tu Local Web. Creá tu cuenta desde este link (14 días gratis, sin tarjeta) y sumame a tu equipo para que pueda cargar todo:\n\n${link}\n\nEl cupón ${p.partner.cupon} queda guardado en tu cuenta.`
 		)}`
 	);
 </script>

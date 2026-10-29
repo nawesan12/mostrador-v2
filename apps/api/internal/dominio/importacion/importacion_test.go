@@ -143,7 +143,7 @@ func TestImportacionCompletaPorElOutbox(t *testing.T) {
 	if _, err := s.Crear(ctx, luna, "duenio", importacion.Nueva{Plataforma: "tiendanube", URL: "javascript:alert(1)"}); !errors.Is(err, importacion.ErrInvalido) {
 		t.Fatalf("url: %v", err)
 	}
-	// Un cliente que ya compró en Mostrador con el mismo email (en otra caja).
+	// Un cliente que ya compró en Tu Local Web con el mismo email (en otra caja).
 	email := "lucia@example.com"
 	if _, err := pedidos.Crear(ctx, b.App, luna, pedidos.Nuevo{Comprador: pedidos.Comprador{Nombre: "Lucía Fernández", Email: &email},
 		Canal: "pos", Pago: "efectivo", Envio: "retiro", Ciudad: "Rosario", Estado: "Entregado",
@@ -243,7 +243,7 @@ func TestImportacionCompletaPorElOutbox(t *testing.T) {
 	if err != nil || len(h) != 1 || h[0].Plataforma != "tiendanube" || h[0].Numero != "#101" || h[0].Total != 50000 {
 		t.Fatalf("historial: %+v %v", h, err)
 	}
-	// El historial no es un pedido de Mostrador: no aparece en Pedidos ni toca el stock.
+	// El historial no es un pedido de Tu Local Web: no aparece en Pedidos ni toca el stock.
 	l, err := pedidos.Listar(ctx, b.App, luna, pedidos.Filtros{}, time.Now())
 	if err != nil || l.Total != 1 {
 		t.Fatalf("pedidos: %+v %v", l.Total, err)

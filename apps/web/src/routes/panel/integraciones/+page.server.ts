@@ -44,7 +44,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	]);
 	// Telegram (Hornero para la dueña) está conectado si hay un chat vinculado.
 	estado.conectadas.tg = !!tg;
-	// Manejá Mostrador desde tu IA: las conexiones reales por OAuth (servidor MCP).
+	// Manejá Tu Local Web desde tu IA: las conexiones reales por OAuth (servidor MCP).
 	const ias = conexiones.map((c) => ({
 		id: c.id,
 		nombre: c.nombre,

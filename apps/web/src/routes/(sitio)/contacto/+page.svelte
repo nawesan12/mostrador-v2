@@ -28,7 +28,7 @@
 	};
 
 	const CANALES = [
-		[I.phEnvelopeSimpleFill, 'Email', 'ayuda@mostradorapp.com.ar', 'Respuesta en menos de 24 h'],
+		[I.phEnvelopeSimpleFill, 'Email', 'ayuda@tulocalweb.com.ar', 'Respuesta en menos de 24 h'],
 		[I.phChatsCircleFill, 'Chat del panel', 'Hablá con Hornero desde tu panel', 'Disponible 24/7']
 	] as const;
 	const CARAS = [
@@ -39,7 +39,7 @@
 </script>
 
 <Seo
-	title="Contacto y ventas · Mostrador"
+	title="Contacto y ventas · Tu Local Web"
 	description="Hablemos de tu negocio: plan a medida y migración gratis si facturás más de $ 20 millones por mes, tenés sucursales o venís de otra plataforma."
 	path="/contacto"
 />

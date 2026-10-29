@@ -20,7 +20,7 @@ export const load: LayoutServerLoad = async ({ locals, cookies }) => {
 		// La foto de la tienda: la portada de su plantilla.
 		fotoTienda: plantilla(tienda.plantilla)?.img ?? null,
 		demo: usaSandbox(),
-		// Alguien del equipo de Mostrador viendo la tienda en sólo lectura (aviso fijo).
+		// Alguien del equipo de Tu Local Web viendo la tienda en sólo lectura (aviso fijo).
 		mirada: locals.mirada,
 		// La sección Turnos: con turnos activos o si la tienda es de servicios.
 		turnos: !!ajustes?.activo || tienda.rubro === 'servicios',

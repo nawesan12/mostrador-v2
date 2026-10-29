@@ -345,7 +345,7 @@ export const ARTICULOS: Articulo[] = [
 		cuerpo: [
 			{
 				t: 'p',
-				x: 'En Integraciones › Mercado Pago tocás Conectar e iniciás sesión con tu cuenta. Las ventas se acreditan en tu Mercado Pago, sin pasar por Mostrador.'
+				x: 'En Integraciones › Mercado Pago tocás Conectar e iniciás sesión con tu cuenta. Las ventas se acreditan en tu Mercado Pago, sin pasar por Tu Local Web.'
 			},
 			{
 				t: 'pasos',
@@ -357,7 +357,7 @@ export const ARTICULOS: Articulo[] = [
 			},
 			{
 				t: 'nota',
-				x: 'Mostrador no cobra comisión por venta en ningún plan. Lo que pagás de cuotas o acreditación lo cobra Mercado Pago según tu cuenta.'
+				x: 'Tu Local Web no cobra comisión por venta en ningún plan. Lo que pagás de cuotas o acreditación lo cobra Mercado Pago según tu cuenta.'
 			}
 		],
 		claves: 'mercado pago cuotas tarjeta cobrar acreditacion'
@@ -578,7 +578,7 @@ export const ARTICULOS: Articulo[] = [
 					'Cuando se propagan (de minutos a unas horas), la tienda queda en tu dominio con certificado SSL.'
 				]
 			},
-			{ t: 'nota', x: 'Mientras tanto, tu tienda sigue funcionando en la dirección de Mostrador.' }
+			{ t: 'nota', x: 'Mientras tanto, tu tienda sigue funcionando en la dirección de Tu Local Web.' }
 		],
 		claves: 'dominio com.ar dns nic ssl'
 	},
@@ -685,11 +685,11 @@ export const FAQ: [string, string][] = [
 		'Sí. Conectás Mercado Pago, Payway o Getnet y prendés las cuotas que quieras ofrecer desde Cupones › Automáticas.'
 	],
 	[
-		'¿Mostrador cobra comisión por venta?',
+		'¿Tu Local Web cobra comisión por venta?',
 		'No, en ningún plan. Pagás el abono del plan y nada más; las comisiones de cada medio de pago las cobra ese medio.'
 	],
 	[
 		'¿Cómo hago la factura electrónica?',
-		'Subís tu certificado de ARCA una vez y Mostrador emite la factura A, B o C sola en cada venta.'
+		'Subís tu certificado de ARCA una vez y Tu Local Web emite la factura A, B o C sola en cada venta.'
 	]
 ];

@@ -14,7 +14,7 @@ func mailRecuperar(para, nombre, link string) correo.Mensaje {
 	l := html.EscapeString(link)
 	return correo.Mensaje{
 		Para:   para,
-		Asunto: "Creá tu nueva contraseña de Mostrador",
+		Asunto: "Creá tu nueva contraseña de Tu Local Web",
 		Texto: fmt.Sprintf("Hola, %s.\n\nPara crear una contraseña nueva entrá a este link (vence en 30 minutos):\n%s\n\n"+
 			"Si no fuiste vos, ignorá este mail: tu contraseña sigue siendo la misma.\n\nMostrador", nombre, link),
 		HTML: fmt.Sprintf(`<!doctype html><html lang="es-AR"><body style="margin:0;background:#FBF7F2;font-family:'Instrument Sans',Helvetica,Arial,sans-serif;color:#2A140C">

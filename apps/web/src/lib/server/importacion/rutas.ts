@@ -35,7 +35,7 @@ export function normalizarRuta(entrada: string): string {
 	return s;
 }
 
-/** Un path de la tienda en Mostrador: nunca "//…" ni "/\…" (el navegador los lee como otro dominio). */
+/** Un path de la tienda en Tu Local Web: nunca "//…" ni "/\…" (el navegador los lee como otro dominio). */
 export function haciaValido(s: string): boolean {
 	if (!s.startsWith('/') || s.length > MAX_RUTA) return false;
 	if (s.length > 1 && (s[1] === '/' || s[1] === '\\')) return false;

@@ -30,7 +30,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/outbox"
 )
 
-// mpFalso imita lo que usa Mostrador de api.mercadopago.com.
+// mpFalso imita lo que usa Tu Local Web de api.mercadopago.com.
 type mpFalso struct {
 	mu        sync.Mutex
 	pedidos   []string // "MÉTODO ruta token"

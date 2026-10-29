@@ -40,7 +40,7 @@ export const LEGALES: Legal[] = [
 		titulo: 'Términos y condiciones',
 		corto: 'Términos y condiciones',
 		miga: 'Términos',
-		descripcion: 'Legales de Mostrador, claros y sin letra chica.',
+		descripcion: 'Legales de Tu Local Web, claros y sin letra chica.',
 		chips: ['Vigente desde el 1 de octubre de 2026', 'Versión 3.2', '3 min de lectura'],
 		ilustracion: 'portapapeles',
 		indice: [
@@ -72,7 +72,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Quiénes somos',
 				cuerpo: [
 					{
-						p: 'Nahuel Santillán, CUIT 20-44859234-1 (“Mostrador”), ofrece una plataforma para crear y administrar tiendas online, vender por WhatsApp y redes, cobrar en el local y facturar. Al crear una cuenta aceptás estos términos en nombre propio o de la empresa que representás.'
+						p: 'Nahuel Santillán, CUIT 20-44859234-1 (“Tu Local Web”), ofrece una plataforma para crear y administrar tiendas online, vender por WhatsApp y redes, cobrar en el local y facturar. Al crear una cuenta aceptás estos términos en nombre propio o de la empresa que representás.'
 					}
 				]
 			},
@@ -88,7 +88,7 @@ export const LEGALES: Legal[] = [
 					{
 						ul: [
 							'Una cuenta puede tener varias personas con distintos permisos.',
-							'Si detectás un acceso que no reconocés, avisanos a seguridad@mostradorapp.com.ar.'
+							'Si detectás un acceso que no reconocés, avisanos a seguridad@tulocalweb.com.ar.'
 						]
 					}
 				]
@@ -111,7 +111,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Prueba gratis y cancelación',
 				cuerpo: [
 					{
-						p: 'Los primeros 14 días son gratis y no pedimos tarjeta. Podés cancelar cuando quieras desde Configuración › Plan. Seguís usando Mostrador hasta el final del período que ya pagaste y no se te cobra de nuevo.'
+						p: 'Los primeros 14 días son gratis y no pedimos tarjeta. Podés cancelar cuando quieras desde Configuración › Plan. Seguís usando Tu Local Web hasta el final del período que ya pagaste y no se te cobra de nuevo.'
 					}
 				]
 			},
@@ -133,7 +133,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Cobros y medios de pago',
 				cuerpo: [
 					{
-						p: 'Los pagos de tus ventas los procesan proveedores como Mercado Pago, Payway, MODO o tu banco. Mostrador no es una entidad financiera, no recibe ni retiene tu dinero: cada proveedor te liquida según sus propias condiciones.'
+						p: 'Los pagos de tus ventas los procesan proveedores como Mercado Pago, Payway, MODO o tu banco. Tu Local Web no es una entidad financiera, no recibe ni retiene tu dinero: cada proveedor te liquida según sus propias condiciones.'
 					}
 				]
 			},
@@ -155,7 +155,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Asistente con inteligencia artificial',
 				cuerpo: [
 					{
-						p: 'Hornero, el asistente de Mostrador, puede redactar respuestas, descripciones y sugerencias. Puede equivocarse: revisá lo importante antes de enviarlo. No usamos tus datos ni los de tus clientes para entrenar modelos de terceros.'
+						p: 'Hornero, el asistente de Tu Local Web, puede redactar respuestas, descripciones y sugerencias. Puede equivocarse: revisá lo importante antes de enviarlo. No usamos tus datos ni los de tus clientes para entrenar modelos de terceros.'
 					}
 				]
 			},
@@ -177,7 +177,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Responsabilidad',
 				cuerpo: [
 					{
-						p: 'Hacemos lo posible para que Mostrador funcione bien, pero no respondemos por pérdidas indirectas ni por fallas de servicios de terceros. Nuestra responsabilidad máxima es el total que nos pagaste en los últimos 12 meses, sin perjuicio de los derechos que te reconoce la ley.'
+						p: 'Hacemos lo posible para que Tu Local Web funcione bien, pero no respondemos por pérdidas indirectas ni por fallas de servicios de terceros. Nuestra responsabilidad máxima es el total que nos pagaste en los últimos 12 meses, sin perjuicio de los derechos que te reconoce la ley.'
 					}
 				]
 			},
@@ -195,7 +195,7 @@ export const LEGALES: Legal[] = [
 		],
 		cierre: {
 			titulo: '¿Te quedó alguna duda?',
-			texto: 'Escribinos a legales@mostradorapp.com.ar y te respondemos en 48 horas hábiles.'
+			texto: 'Escribinos a legales@tulocalweb.com.ar y te respondemos en 48 horas hábiles.'
 		}
 	},
 	{
@@ -203,7 +203,7 @@ export const LEGALES: Legal[] = [
 		titulo: 'Política de privacidad',
 		corto: 'Política de privacidad',
 		miga: 'Privacidad',
-		descripcion: 'Legales de Mostrador, claros y sin letra chica.',
+		descripcion: 'Legales de Tu Local Web, claros y sin letra chica.',
 		chips: ['Vigente desde el 1 de octubre de 2026', 'Versión 2.4', '2 min de lectura'],
 		ilustracion: 'portapapeles',
 		indice: [
@@ -234,7 +234,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Responsable',
 				cuerpo: [
 					{
-						p: 'Nahuel Santillán, CUIT 20-44859234-1, con domicilio en Mar del Plata, provincia de Buenos Aires, es responsable de la base de datos de usuarios de Mostrador.'
+						p: 'Nahuel Santillán, CUIT 20-44859234-1, con domicilio en Mar del Plata, provincia de Buenos Aires, es responsable de la base de datos de usuarios de Tu Local Web.'
 					}
 				]
 			},
@@ -251,7 +251,7 @@ export const LEGALES: Legal[] = [
 						ul: [
 							'De tu cuenta: nombre, email, teléfono, CUIT y datos de facturación.',
 							'De uso: páginas del panel que visitás, dispositivo y dirección IP, para seguridad y para mejorar el producto.',
-							'De tus clientes: los que vos cargás o recibís en tus ventas. Ahí sos el responsable y Mostrador actúa como encargado (ver Tratamiento de datos).'
+							'De tus clientes: los que vos cargás o recibís en tus ventas. Ahí sos el responsable y Tu Local Web actúa como encargado (ver Tratamiento de datos).'
 						]
 					}
 				]
@@ -296,7 +296,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Tus derechos',
 				cuerpo: [
 					{
-						p: 'Podés acceder a tus datos, rectificarlos, actualizarlos o pedir que los borremos escribiendo a privacidad@mostradorapp.com.ar o desde Configuración › Mis datos. El acceso es gratuito en intervalos de seis meses.'
+						p: 'Podés acceder a tus datos, rectificarlos, actualizarlos o pedir que los borremos escribiendo a privacidad@tulocalweb.com.ar o desde Configuración › Mis datos. El acceso es gratuito en intervalos de seis meses.'
 					},
 					{
 						p: 'LA AGENCIA DE ACCESO A LA INFORMACIÓN PÚBLICA, en su carácter de Órgano de Control de la Ley N° 25.326, tiene la atribución de atender las denuncias y reclamos que interpongan quienes resulten afectados en sus derechos por incumplimiento de las normas vigentes en materia de protección de datos personales.'
@@ -350,7 +350,7 @@ export const LEGALES: Legal[] = [
 		],
 		cierre: {
 			titulo: '¿Te quedó alguna duda?',
-			texto: 'Escribinos a legales@mostradorapp.com.ar y te respondemos en 48 horas hábiles.'
+			texto: 'Escribinos a legales@tulocalweb.com.ar y te respondemos en 48 horas hábiles.'
 		}
 	},
 	{
@@ -358,7 +358,7 @@ export const LEGALES: Legal[] = [
 		titulo: 'Política de cookies',
 		corto: 'Política de cookies',
 		miga: 'Cookies',
-		descripcion: 'Legales de Mostrador, claros y sin letra chica.',
+		descripcion: 'Legales de Tu Local Web, claros y sin letra chica.',
 		chips: ['Vigente desde el 1 de octubre de 2026', 'Versión 1.3', '2 min de lectura'],
 		ilustracion: 'portapapeles',
 		indice: [
@@ -383,7 +383,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Qué son las cookies',
 				cuerpo: [
 					{
-						p: 'Son pequeños archivos que el navegador guarda cuando visitás un sitio. Sirven para recordar tu sesión, tus preferencias y, si lo permitís, para medir cómo se usa Mostrador.'
+						p: 'Son pequeños archivos que el navegador guarda cuando visitás un sitio. Sirven para recordar tu sesión, tus preferencias y, si lo permitís, para medir cómo se usa Tu Local Web.'
 					}
 				]
 			},
@@ -473,14 +473,14 @@ export const LEGALES: Legal[] = [
 				titulo: 'Cookies en las tiendas',
 				cuerpo: [
 					{
-						p: 'Cada tienda creada con Mostrador puede sumar sus propios píxeles (por ejemplo, de Meta o Google) para medir sus campañas. En ese caso el responsable es el comercio. Mostrador incluye en todas las tiendas un aviso de cookies configurable para que cumplan la normativa.'
+						p: 'Cada tienda creada con Tu Local Web puede sumar sus propios píxeles (por ejemplo, de Meta o Google) para medir sus campañas. En ese caso el responsable es el comercio. Tu Local Web incluye en todas las tiendas un aviso de cookies configurable para que cumplan la normativa.'
 					}
 				]
 			}
 		],
 		cierre: {
 			titulo: '¿Te quedó alguna duda?',
-			texto: 'Escribinos a legales@mostradorapp.com.ar y te respondemos en 48 horas hábiles.'
+			texto: 'Escribinos a legales@tulocalweb.com.ar y te respondemos en 48 horas hábiles.'
 		}
 	},
 	{
@@ -488,14 +488,14 @@ export const LEGALES: Legal[] = [
 		titulo: 'Botón de arrepentimiento',
 		corto: 'Botón de arrepentimiento',
 		miga: 'Arrepentimiento',
-		descripcion: 'Legales de Mostrador, claros y sin letra chica.',
+		descripcion: 'Legales de Tu Local Web, claros y sin letra chica.',
 		chips: ['Vigente desde el 1 de octubre de 2026', 'Versión 1.1', '2 min de lectura'],
 		ilustracion: 'portapapeles',
 		indice: [
 			['s1', '1. Qué es'],
 			['s2', '2. Plazo'],
 			['s3', '3. Cómo sigue'],
-			['s4', '4. Si compraste en una tienda hecha con Mostrador']
+			['s4', '4. Si compraste en una tienda hecha con Tu Local Web']
 		],
 		bloques: [
 			{
@@ -527,7 +527,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Plazo',
 				cuerpo: [
 					{
-						p: 'Podés usarlo dentro de los 10 días corridos desde que contrataste un plan pago de Mostrador o desde que se activó, lo que ocurra último.'
+						p: 'Podés usarlo dentro de los 10 días corridos desde que contrataste un plan pago de Tu Local Web o desde que se activó, lo que ocurra último.'
 					}
 				]
 			},
@@ -546,7 +546,7 @@ export const LEGALES: Legal[] = [
 				t: 'seccion',
 				id: 's4',
 				n: '04',
-				titulo: 'Si compraste en una tienda hecha con Mostrador',
+				titulo: 'Si compraste en una tienda hecha con Tu Local Web',
 				cuerpo: [
 					{
 						p: 'El vendedor es esa tienda. Cada tienda tiene su propio botón de arrepentimiento en el pie de página, y es el comercio quien procesa la devolución. Si no te responde en 10 días, escribinos y te ayudamos a resolverlo.'
@@ -556,7 +556,7 @@ export const LEGALES: Legal[] = [
 		],
 		cierre: {
 			titulo: '¿Te quedó alguna duda?',
-			texto: 'Escribinos a legales@mostradorapp.com.ar y te respondemos en 48 horas hábiles.'
+			texto: 'Escribinos a legales@tulocalweb.com.ar y te respondemos en 48 horas hábiles.'
 		}
 	},
 	{
@@ -564,14 +564,14 @@ export const LEGALES: Legal[] = [
 		titulo: 'Defensa de las y los consumidores',
 		corto: 'Defensa del consumidor',
 		miga: 'Consumidor',
-		descripcion: 'Legales de Mostrador, claros y sin letra chica.',
+		descripcion: 'Legales de Tu Local Web, claros y sin letra chica.',
 		chips: ['Vigente desde el 1 de octubre de 2026', 'Versión 1.0', '2 min de lectura'],
 		ilustracion: 'portapapeles',
 		indice: [
 			['s1', '1. Atención al cliente'],
 			['s2', '2. Si no estás conforme con la respuesta'],
 			['s3', '3. Datos del proveedor'],
-			['s4', '4. Compras en tiendas creadas con Mostrador']
+			['s4', '4. Compras en tiendas creadas con Tu Local Web']
 		],
 		bloques: [
 			{
@@ -579,7 +579,7 @@ export const LEGALES: Legal[] = [
 				items: [
 					'Respondemos todos los reclamos en menos de 48 horas hábiles.',
 					'Si no quedás conforme, podés ir a la Ventanilla Única Federal o a Defensa del Consumidor de tu ciudad.',
-					'Si el problema es con una tienda hecha con Mostrador, mediamos con el comercio.'
+					'Si el problema es con una tienda hecha con Tu Local Web, mediamos con el comercio.'
 				]
 			},
 			{
@@ -589,7 +589,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Atención al cliente',
 				cuerpo: [
 					{
-						p: 'Podés escribirnos por email a ayuda@mostradorapp.com.ar o desde el chat del panel, de lunes a sábado de 8 a 22 h. Te respondemos en menos de 48 horas hábiles y te damos un número de reclamo.'
+						p: 'Podés escribirnos por email a ayuda@tulocalweb.com.ar o desde el chat del panel, de lunes a sábado de 8 a 22 h. Te respondemos en menos de 48 horas hábiles y te damos un número de reclamo.'
 					}
 				]
 			},
@@ -622,7 +622,7 @@ export const LEGALES: Legal[] = [
 					{
 						href: '/contacto',
 						icono: phChatsCircleFill,
-						titulo: 'Atención Mostrador',
+						titulo: 'Atención Tu Local Web',
 						texto: 'Respuesta en menos de 48 h hábiles'
 					}
 				]
@@ -634,7 +634,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Datos del proveedor',
 				cuerpo: [
 					{
-						p: 'Nahuel Santillán · CUIT 20-44859234-1 · Mar del Plata, provincia de Buenos Aires · legales@mostradorapp.com.ar.'
+						p: 'Nahuel Santillán · CUIT 20-44859234-1 · Mar del Plata, provincia de Buenos Aires · legales@tulocalweb.com.ar.'
 					}
 				]
 			},
@@ -642,17 +642,17 @@ export const LEGALES: Legal[] = [
 				t: 'seccion',
 				id: 's4',
 				n: '04',
-				titulo: 'Compras en tiendas creadas con Mostrador',
+				titulo: 'Compras en tiendas creadas con Tu Local Web',
 				cuerpo: [
 					{
-						p: 'Cuando comprás en una tienda que usa Mostrador, el vendedor responsable es ese comercio y sus datos figuran en el pie de su tienda. Si no te responde, escribinos con el número de pedido: intervenimos y, si corresponde, suspendemos la tienda.'
+						p: 'Cuando comprás en una tienda que usa Tu Local Web, el vendedor responsable es ese comercio y sus datos figuran en el pie de su tienda. Si no te responde, escribinos con el número de pedido: intervenimos y, si corresponde, suspendemos la tienda.'
 					}
 				]
 			}
 		],
 		cierre: {
 			titulo: '¿Te quedó alguna duda?',
-			texto: 'Escribinos a legales@mostradorapp.com.ar y te respondemos en 48 horas hábiles.'
+			texto: 'Escribinos a legales@tulocalweb.com.ar y te respondemos en 48 horas hábiles.'
 		}
 	},
 	{
@@ -660,7 +660,7 @@ export const LEGALES: Legal[] = [
 		titulo: 'Acuerdo de tratamiento de datos',
 		corto: 'Tratamiento de datos (para tiendas)',
 		miga: 'Tratamiento de datos',
-		descripcion: 'Legales de Mostrador, claros y sin letra chica.',
+		descripcion: 'Legales de Tu Local Web, claros y sin letra chica.',
 		chips: ['Vigente desde el 1 de octubre de 2026', 'Versión 1.2', '2 min de lectura'],
 		ilustracion: 'portapapeles',
 		indice: [
@@ -678,7 +678,7 @@ export const LEGALES: Legal[] = [
 			{
 				t: 'resumen',
 				items: [
-					'Tus clientes son tuyos: vos sos el responsable de sus datos y Mostrador solo los trata para prestarte el servicio.',
+					'Tus clientes son tuyos: vos sos el responsable de sus datos y Tu Local Web solo los trata para prestarte el servicio.',
 					'Te avisamos en menos de 48 horas si hay un incidente de seguridad que los afecte.',
 					'Cuando cerrás tu cuenta te los devolvemos y los borramos en 90 días.'
 				]
@@ -690,7 +690,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Roles',
 				cuerpo: [
 					{
-						p: 'En este acuerdo, el comercio que usa Mostrador es el responsable de los datos de sus compradores y Mostrador es el encargado del tratamiento, en los términos del artículo 25 de la Ley 25.326.'
+						p: 'En este acuerdo, el comercio que usa Tu Local Web es el responsable de los datos de sus compradores y Tu Local Web es el encargado del tratamiento, en los términos del artículo 25 de la Ley 25.326.'
 					}
 				]
 			},
@@ -701,7 +701,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Qué datos tratamos',
 				cuerpo: [
 					{
-						p: 'Nombre, documento, email, teléfono, dirección de entrega, historial de compras y mensajes de tus clientes, en la medida en que vos los recibas o cargues en Mostrador.'
+						p: 'Nombre, documento, email, teléfono, dirección de entrega, historial de compras y mensajes de tus clientes, en la medida en que vos los recibas o cargues en Tu Local Web.'
 					}
 				]
 			},
@@ -723,7 +723,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Confidencialidad',
 				cuerpo: [
 					{
-						p: 'Todas las personas de Mostrador con acceso a datos firmaron un compromiso de confidencialidad y reciben capacitación periódica.'
+						p: 'Todas las personas de Tu Local Web con acceso a datos firmaron un compromiso de confidencialidad y reciben capacitación periódica.'
 					}
 				]
 			},
@@ -739,7 +739,7 @@ export const LEGALES: Legal[] = [
 					{
 						ul: [
 							'Cifrado TLS en tránsito y AES-256 en reposo.',
-							'Verificación en dos pasos obligatoria para el equipo de Mostrador.',
+							'Verificación en dos pasos obligatoria para el equipo de Tu Local Web.',
 							'Copias de seguridad diarias con retención de 30 días.',
 							'Registro de accesos y revisión trimestral de permisos.'
 						]
@@ -793,7 +793,7 @@ export const LEGALES: Legal[] = [
 		],
 		cierre: {
 			titulo: '¿Te quedó alguna duda?',
-			texto: 'Escribinos a legales@mostradorapp.com.ar y te respondemos en 48 horas hábiles.'
+			texto: 'Escribinos a legales@tulocalweb.com.ar y te respondemos en 48 horas hábiles.'
 		}
 	},
 	{
@@ -801,7 +801,7 @@ export const LEGALES: Legal[] = [
 		titulo: 'Uso aceptable y productos prohibidos',
 		corto: 'Uso aceptable',
 		miga: 'Uso aceptable',
-		descripcion: 'Legales de Mostrador, claros y sin letra chica.',
+		descripcion: 'Legales de Tu Local Web, claros y sin letra chica.',
 		chips: ['Vigente desde el 1 de octubre de 2026', 'Versión 2.0', '2 min de lectura'],
 		ilustracion: 'portapapeles',
 		indice: [
@@ -828,7 +828,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Principio general',
 				cuerpo: [
 					{
-						p: 'Mostrador es para negocios legales y honestos. No podés usarlo para vender productos ilegales, engañar a compradores ni dañar a otros usuarios o a la plataforma.'
+						p: 'Tu Local Web es para negocios legales y honestos. No podés usarlo para vender productos ilegales, engañar a compradores ni dañar a otros usuarios o a la plataforma.'
 					}
 				]
 			},
@@ -911,14 +911,14 @@ export const LEGALES: Legal[] = [
 				titulo: 'Denunciar una tienda',
 				cuerpo: [
 					{
-						p: 'Si ves una tienda que incumple estas reglas, escribinos a abuso@mostradorapp.com.ar con el link. Revisamos todas las denuncias en menos de 72 horas.'
+						p: 'Si ves una tienda que incumple estas reglas, escribinos a abuso@tulocalweb.com.ar con el link. Revisamos todas las denuncias en menos de 72 horas.'
 					}
 				]
 			}
 		],
 		cierre: {
 			titulo: '¿Te quedó alguna duda?',
-			texto: 'Escribinos a legales@mostradorapp.com.ar y te respondemos en 48 horas hábiles.'
+			texto: 'Escribinos a legales@tulocalweb.com.ar y te respondemos en 48 horas hábiles.'
 		}
 	},
 	{
@@ -926,7 +926,7 @@ export const LEGALES: Legal[] = [
 		titulo: 'Política de reembolsos de planes',
 		corto: 'Reembolsos de planes',
 		miga: 'Reembolsos',
-		descripcion: 'Legales de Mostrador, claros y sin letra chica.',
+		descripcion: 'Legales de Tu Local Web, claros y sin letra chica.',
 		chips: ['Vigente desde el 1 de octubre de 2026', 'Versión 1.4', '2 min de lectura'],
 		ilustracion: 'portapapeles',
 		indice: [
@@ -975,7 +975,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Planes mensuales',
 				cuerpo: [
 					{
-						p: 'No devolvemos meses parciales. Si cancelás, seguís usando Mostrador hasta el final del mes ya pagado y no se te vuelve a cobrar.'
+						p: 'No devolvemos meses parciales. Si cancelás, seguís usando Tu Local Web hasta el final del mes ya pagado y no se te vuelve a cobrar.'
 					}
 				]
 			},
@@ -1031,14 +1031,14 @@ export const LEGALES: Legal[] = [
 				titulo: 'Cómo pedirlo',
 				cuerpo: [
 					{
-						p: 'Desde Configuración › Plan › Pedir reembolso, o escribiendo a facturacion@mostradorapp.com.ar. Lo procesamos en un máximo de 10 días hábiles y lo devolvemos por el mismo medio de pago.'
+						p: 'Desde Configuración › Plan › Pedir reembolso, o escribiendo a facturacion@tulocalweb.com.ar. Lo procesamos en un máximo de 10 días hábiles y lo devolvemos por el mismo medio de pago.'
 					}
 				]
 			}
 		],
 		cierre: {
 			titulo: '¿Te quedó alguna duda?',
-			texto: 'Escribinos a legales@mostradorapp.com.ar y te respondemos en 48 horas hábiles.'
+			texto: 'Escribinos a legales@tulocalweb.com.ar y te respondemos en 48 horas hábiles.'
 		}
 	}
 ];

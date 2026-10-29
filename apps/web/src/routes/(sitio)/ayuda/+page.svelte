@@ -43,7 +43,7 @@
 </script>
 
 <Seo
-	title="Centro de ayuda · Mostrador"
+	title="Centro de ayuda · Tu Local Web"
 	description="Guías, preguntas frecuentes y Hornero para resolver todo al instante."
 	path="/ayuda"
 />

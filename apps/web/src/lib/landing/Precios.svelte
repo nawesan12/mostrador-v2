@@ -8,7 +8,7 @@
 	import { fmt } from './formato.ts';
 
 	/** Precios de la landing (handoff: #precios y #planes): calculadora, planes y comparativa. */
-	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Mostrador.dc.html).
+	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Tu Local Web.dc.html).
 	const registro = resolve('/onboarding');
 
 	let ventas = $state(6_000_000);
@@ -50,7 +50,7 @@
 			<div class="etiq"><span></span>Precio</div>
 			<h2>Cuanto más vendés, más ahorrás.</h2>
 			<p>
-				Cada plan de Mostrador cuesta menos que su equivalente en Tiendanube, y trae Hornero,
+				Cada plan de Tu Local Web cuesta menos que su equivalente en Tiendanube, y trae Hornero,
 				factura de ARCA y punto de venta incluidos.
 			</p>
 			<div class="slider">
@@ -72,7 +72,7 @@
 			<div class="filas">
 				<div>
 					<div class="f-cab">
-						<span class="f-n"><Marca alto={14} />Mostrador</span><span class="f-v"
+						<span class="f-n"><Marca alto={14} />Tu Local Web</span><span class="f-v"
 							>{fmt(mostrador)} / mes</span
 						>
 					</div>
@@ -80,7 +80,7 @@
 						<div class="nuestra" style:width="{((mostrador / otro) * 100).toFixed(1)}%"></div>
 					</div>
 					<div class="f-pie">
-						Plan {['Emprende', 'Pro', 'Negocio'][tramo]} · 0% de comisión de Mostrador
+						Plan {['Emprende', 'Pro', 'Negocio'][tramo]} · 0% de comisión de Tu Local Web
 					</div>
 				</div>
 				<div>
@@ -171,7 +171,7 @@
 		<div class="tabla" use:anim={'reveal'}>
 			<div class="t-fila cab">
 				<span class="t-col">Plan por plan</span><span class="t-m"
-					><img src="/mark.svg" alt="" width="18" />Mostrador</span
+					><img src="/mark.svg" alt="" width="18" />Tu Local Web</span
 				><span class="t-col">Tiendanube</span>
 			</div>
 			{#each CMP as [t, m, o, mOk, oOk] (t)}
@@ -629,7 +629,7 @@
 		font-size: 12.5px;
 		color: #b8a293;
 	}
-	/* En mobile, tres columnas no entran: el concepto va arriba y abajo Mostrador contra Tiendanube. */
+	/* En mobile, tres columnas no entran: el concepto va arriba y abajo Tu Local Web contra Tiendanube. */
 	@media (max-width: 640px) {
 		.t-fila {
 			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

@@ -5,12 +5,12 @@
 	import { VERSUS, fmt } from '#lib/marca/datos.ts';
 	import { crearFamilia } from '#lib/marca/familia.svelte.ts';
 
-	/** Las 9 imágenes OG (design/OG Mostrador.dc.html), 1200 × 630. */
+	/** Las 9 imágenes OG (design/OG Tu Local Web.dc.html), 1200 × 630. */
 	const fam = crearFamilia('og');
 </script>
 
 <Seo
-	title="Imágenes para compartir · Marca · Mostrador"
+	title="Imágenes para compartir · Marca · Tu Local Web"
 	description="Las imágenes de 1200 × 630 que se ven al compartir el sitio."
 	path="/marca/og"
 	noindex
@@ -293,7 +293,7 @@
 						<div
 							style="margin-top:auto;font-size:82px;line-height:.92;letter-spacing:-.055em;font-weight:600"
 						>
-							Mudate a Mostrador <span style="color:#D2582F">en un día.</span>
+							Mudate a Tu Local Web <span style="color:#D2582F">en un día.</span>
 						</div>
 						<div style="margin-top:20px;font-size:23px;line-height:1.4;color:#5C4536">
 							Productos, clientes y pedidos. Sin perder Google. Gratis.
@@ -542,7 +542,7 @@
 		<div id="1h" style="display:flex;flex-direction:column;gap:10px">
 			<span
 				style="align-self:flex-start;padding:4px 10px;border-radius:999px;background:#2A140C;color:#fff;font-size:13px;font-weight:700"
-				>1h · Mostrador + Caja</span
+				>1h · Tu Local Web + Caja</span
 			>
 			<Lamina nombre="og-caja" ancho={1200} alto={630}
 				><div
@@ -570,7 +570,7 @@
 						<div
 							style="margin-top:auto;font-size:80px;line-height:.93;letter-spacing:-.055em;font-weight:600"
 						>
-							Mostrador vende. <span style="color:#E8875F">Caja ordena la plata.</span>
+							Tu Local Web vende. <span style="color:#E8875F">Caja ordena la plata.</span>
 						</div>
 						<div style="margin-top:18px;font-size:22px;line-height:1.4;color:#BDB2A8">
 							Cada venta, comisión y factura pasa sola a tus finanzas.

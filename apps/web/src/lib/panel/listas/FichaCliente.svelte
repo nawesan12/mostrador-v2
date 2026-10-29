@@ -47,7 +47,7 @@
 	];
 	const mesDe = (k: number) => MESES[(new Date().getMonth() - (11 - k) + 24) % 12];
 
-	/** Pedidos importados de la tienda anterior (no son pedidos de Mostrador: sólo se muestran). */
+	/** Pedidos importados de la tienda anterior (no son pedidos de Tu Local Web: sólo se muestran). */
 	type Viejo = { id: string; plataforma: string; numero: string; fecha: string; total: number };
 	const PLATAFORMA: Record<string, string> = {
 		tiendanube: 'Tiendanube',

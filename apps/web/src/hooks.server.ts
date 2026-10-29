@@ -35,7 +35,7 @@ const CSP_TIENDA = [
 /**
  * Encabezados de seguridad en todas las respuestas (también las tempranas, como el rechazo por CSRF).
  * Nadie puede meter el panel en un iframe, el navegador no adivina tipos y siempre se usa HTTPS.
- * El iframe "Panel de Mostrador en el celular" de la landing es del mismo origen: SAMEORIGIN.
+ * El iframe "Panel de Tu Local Web en el celular" de la landing es del mismo origen: SAMEORIGIN.
  */
 function secure(res: Response): Response {
 	const set = (r: Response) => {

@@ -182,7 +182,7 @@
 		});
 	}
 	const CONSECUENCIAS = $derived([
-		[I.phCalendarCheck, `Seguís usando Mostrador hasta el ${fecha(data.proximoCobro)}`, '#2F8F63'],
+		[I.phCalendarCheck, `Seguís usando Tu Local Web hasta el ${fecha(data.proximoCobro)}`, '#2F8F63'],
 		[I.phStorefront, 'Después la tienda queda offline, pero no se borra', 'var(--mu)'],
 		[I.phDatabase, 'Guardamos todo 90 días por si volvés', 'var(--mu)'],
 		[I.phXCircle, 'No te volvemos a cobrar', '#2F8F63']
@@ -191,7 +191,7 @@
 
 <Seo
 	title="Plan y facturación · Panel"
-	description="Tu plan de Mostrador"
+	description="Tu plan de Tu Local Web"
 	path="/panel/plan-y-facturacion"
 	noindex
 />
@@ -311,7 +311,7 @@
 	</div>
 
 	<div class="tarjeta facturas" use:anim={{ t: 'rise', delay: 150 }}>
-		<div class="f-cab"><span>Tus facturas de Mostrador</span></div>
+		<div class="f-cab"><span>Tus facturas de Tu Local Web</span></div>
 		{#each data.facturas as f (f.numero)}
 			<div class="factura">
 				<span class="f-ico"><Icon icon={I.phReceipt} size={16} /></span>

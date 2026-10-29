@@ -5,7 +5,7 @@ import { fetchFalso as falso } from './fetch-falso.ts';
 import { descubrirShopify, leerPaginaShopify, resultadoShopify } from './shopify.ts';
 
 describe('importar: Shopify (mismos casos que Go)', () => {
-	it('products.json → productos de Mostrador', () => {
+	it('products.json → productos de Tu Local Web', () => {
 		expect(resultadoShopify(casos)).toEqual(esperado);
 	});
 

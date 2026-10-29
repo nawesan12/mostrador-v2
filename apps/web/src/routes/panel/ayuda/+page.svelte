@@ -70,7 +70,7 @@
 	);
 </script>
 
-<Seo title="Ayuda · Panel" description="Ayuda de Mostrador" path="/panel/ayuda" noindex />
+<Seo title="Ayuda · Panel" description="Ayuda de Tu Local Web" path="/panel/ayuda" noindex />
 
 <div class="pagina">
 	<div class="hero" use:anim={{ t: 'rise' }}>

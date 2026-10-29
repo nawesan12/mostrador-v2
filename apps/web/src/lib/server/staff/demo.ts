@@ -40,15 +40,15 @@ function azar(semilla: number) {
 }
 
 export const MIEMBROS_DEMO: { id: string; nombre: string; email: string; rol: Rol }[] = [
-	{ id: 'm-lucia', nombre: 'Lucía Ferreyra', email: 'lucia@mostradorapp.com.ar', rol: 'duenio' },
+	{ id: 'm-lucia', nombre: 'Lucía Ferreyra', email: 'lucia@tulocalweb.com.ar', rol: 'duenio' },
 	{
 		id: 'm-tomas',
 		nombre: 'Tomás Ibarra',
-		email: 'tomas@mostradorapp.com.ar',
+		email: 'tomas@tulocalweb.com.ar',
 		rol: 'administracion'
 	},
-	{ id: 'm-camila', nombre: 'Camila Ríos', email: 'camila@mostradorapp.com.ar', rol: 'soporte' },
-	{ id: 'm-joaquin', nombre: 'Joaquín Paz', email: 'joaquin@mostradorapp.com.ar', rol: 'soporte' }
+	{ id: 'm-camila', nombre: 'Camila Ríos', email: 'camila@tulocalweb.com.ar', rol: 'soporte' },
+	{ id: 'm-joaquin', nombre: 'Joaquín Paz', email: 'joaquin@tulocalweb.com.ar', rol: 'soporte' }
 ];
 
 const PRIMERO = [
@@ -376,7 +376,7 @@ function consultasDemo(ahora: number): (T.ConsultaDetalle & { documento?: string
 			'pablo.duarte@outlook.com',
 			75,
 			'resuelta',
-			'¿Se puede usar Mostrador sólo para el local, sin tienda online?',
+			'¿Se puede usar Tu Local Web sólo para el local, sin tienda online?',
 			{ facturacion: 'empiezo' },
 			'm-joaquin'
 		),

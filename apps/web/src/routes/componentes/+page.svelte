@@ -132,7 +132,7 @@
 </script>
 
 <svelte:head>
-	<title>Componentes · Mostrador</title>
+	<title>Componentes · Tu Local Web</title>
 	<meta name="robots" content="noindex" />
 </svelte:head>
 
@@ -142,7 +142,7 @@
 	<div class="etiqueta">Sistema de componentes</div>
 	<h1>Avisos, modales y hojas</h1>
 	<p class="bajada">
-		Cómo habla Mostrador cuando pasa algo. Todo se puede probar en vivo dentro del panel.
+		Cómo habla Tu Local Web cuando pasa algo. Todo se puede probar en vivo dentro del panel.
 	</p>
 
 	<div class="probar">

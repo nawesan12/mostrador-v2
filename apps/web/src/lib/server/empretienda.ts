@@ -16,7 +16,7 @@ import {
 	type Resultado
 } from './importar/comun.ts';
 
-/** Stock "ilimitado" de Empretienda: en Mostrador queda con este número y se ajusta a mano. */
+/** Stock "ilimitado" de Empretienda: en Tu Local Web queda con este número y se ajusta a mano. */
 export const STOCK_ILIMITADO = 999;
 
 /** Acepta "mitienda", "mitienda.empretienda.com.ar" o el link completo; devuelve el origen https. */
@@ -96,7 +96,7 @@ export function fichaDeHtml(html: string, url: string): FichaEmpretienda | null 
 }
 
 /**
- * Una ficha → producto de Mostrador, con sus variantes reales: cada stock es una combinación, con su
+ * Una ficha → producto de Tu Local Web, con sus variantes reales: cada stock es una combinación, con su
  * precio (el de oferta si la tiene), su stock (ilimitado → STOCK_ILIMITADO) y su foto (`s_imagen`).
  * Gemelo en Go: `importar.DeEmpretienda`.
  */
@@ -169,7 +169,7 @@ export function resultadoEmpretienda(fichas: FichaEmpretienda[]): Resultado {
 	);
 }
 
-/** Una ficha de Empretienda → producto de Mostrador. Null si la página no es una ficha. */
+/** Una ficha de Empretienda → producto de Tu Local Web. Null si la página no es una ficha. */
 export function productoDeFicha(html: string, url: string): ProductoEditable | null {
 	const f = fichaDeHtml(html, url);
 	return (f && deEmpretienda(f)?.producto) ?? null;

@@ -24,7 +24,7 @@ func TestMailsAQuienCompra(t *testing.T) {
 	b := pruebadb.Nueva(t)
 	luna := pruebadb.CrearTienda(t, b.App, "luna")
 	mails := &correo.Memoria{}
-	av := &avisos.Servicio{Pool: b.App, Correo: mails, Sitio: "https://mostradorapp.com.ar"}
+	av := &avisos.Servicio{Pool: b.App, Correo: mails, Sitio: "https://tulocalweb.com.ar"}
 	w := &outbox.Worker{Pool: b.Worker, Manejadores: av.Manejadores()}
 	stock := 5
 	p, err := listas.Guardar(ctx, b.App, luna, "", listas.Editable{Nombre: "Mate", Precio: 10000, Stock: &stock})

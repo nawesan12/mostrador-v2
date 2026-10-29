@@ -25,7 +25,7 @@ type Feeds struct {
 }
 
 // Medicion es components/schemas/Medicion: GA4, el píxel de Meta y los feeds, con las cuentas de
-// la tienda (Mostrador no pone credenciales propias).
+// la tienda (Tu Local Web no pone credenciales propias).
 type Medicion struct {
 	GA4   *string `json:"ga4"`
 	Pixel *string `json:"pixel"`

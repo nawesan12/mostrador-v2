@@ -79,8 +79,8 @@
 </script>
 
 <Seo
-	title="Programa de partners · Mostrador"
-	description="Para agencias, diseñadores, desarrolladores y contadores: recomendás Mostrador y cobrás hasta 30 % del plan cada mes."
+	title="Programa de partners · Tu Local Web"
+	description="Para agencias, diseñadores, desarrolladores y contadores: recomendás Tu Local Web y cobrás hasta 30 % del plan cada mes."
 	path="/partners"
 	image="partners"
 />
@@ -92,7 +92,7 @@
 				<Etiqueta texto="Programa de partners" color="#F0A58A" />
 				<h1>Armás tiendas. Ganás cada mes.</h1>
 				<p>
-					Para agencias, diseñadores, desarrolladores y contadores. Recomendás Mostrador a tus
+					Para agencias, diseñadores, desarrolladores y contadores. Recomendás Tu Local Web a tus
 					clientes y cobrás una parte del plan mientras sigan activos.
 				</p>
 				<div class="ctas">

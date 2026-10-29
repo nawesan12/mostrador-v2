@@ -24,7 +24,7 @@ describe('datos de las piezas de marca', () => {
 		expect(qrCon(null)).toBe(QR);
 		expect(qrCon('<x>')).toBe(QR);
 		const q = qrCon('pampa-code');
-		expect(q.flyer).toBe('https://mostradorapp.com.ar/empezar?utm_source=flyer&ref=pampa-code');
+		expect(q.flyer).toBe('https://tulocalweb.com.ar/empezar?utm_source=flyer&ref=pampa-code');
 		expect(q.paquete).toBe(QR.paquete);
 	});
 });

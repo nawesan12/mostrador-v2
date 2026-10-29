@@ -45,7 +45,7 @@ type Comprobante struct {
 	DocNro       int64
 	CondReceptor int
 	Fecha        time.Time
-	// Total en pesos (los precios de Mostrador son enteros); se manda con dos decimales.
+	// Total en pesos (los precios de Tu Local Web son enteros); se manda con dos decimales.
 	Total int64
 	// Para notas de crédito: el comprobante que corrige.
 	Asociado *Asociado

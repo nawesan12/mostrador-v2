@@ -47,7 +47,7 @@ func NormalizarRuta(s string) string {
 	return s
 }
 
-// HaciaValido: un path de la tienda en Mostrador ("/", "/producto/<id>", "/catalogo"). Nunca "//…"
+// HaciaValido: un path de la tienda en Tu Local Web ("/", "/producto/<id>", "/catalogo"). Nunca "//…"
 // ni "/\…", que el navegador leería como otro dominio, ni algo que no empiece con "/".
 func HaciaValido(s string) bool {
 	if !strings.HasPrefix(s, "/") || len(s) > MaxRuta {

@@ -64,6 +64,6 @@ func mailRespuesta(sitio, nombre, email, pregunta, respuesta, producto, producto
 	if link != "" {
 		fmt.Fprintf(&b, `<p style="margin:22px 0 0"><a href="%s" style="display:inline-block;padding:12px 18px;border-radius:999px;background:#2A140C;color:#fff;text-decoration:none;font-weight:600">Ver el producto</a></p>`, html.EscapeString(link))
 	}
-	b.WriteString(`<p style="margin:28px 0 0;font-size:12px;color:#9C8676">Tienda creada con Mostrador.</p></div></body></html>`)
+	b.WriteString(`<p style="margin:28px 0 0;font-size:12px;color:#9C8676">Tienda creada con Tu Local Web.</p></div></body></html>`)
 	return correo.Mensaje{Para: email, Asunto: asunto, Texto: texto, HTML: b.String()}
 }

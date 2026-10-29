@@ -13,8 +13,8 @@
 </script>
 
 <Seo
-	title="{c.nombre} · Centro de ayuda · Mostrador"
-	description="Guías de {c.nombre.toLowerCase()} en Mostrador."
+	title="{c.nombre} · Centro de ayuda · Tu Local Web"
+	description="Guías de {c.nombre.toLowerCase()} en Tu Local Web."
 	path="/ayuda/{c.slug}"
 />
 
