@@ -12,10 +12,10 @@
 	const NAV = [
 		['#producto', 'Producto'],
 		['#plantillas', 'Plantillas'],
-		['#integraciones', 'Integraciones'],
+		['#hornero', 'Tincho'],
 		['#precios', 'Precios'],
-		['#clientes', 'Clientes'],
-		['#seguridad', 'Seguridad']
+		['#migrar', 'Migrar'],
+		['/seguridad', 'Seguridad']
 	] as const;
 	const MENU = [
 		[
@@ -43,14 +43,6 @@
 			'#9A6A10'
 		],
 		[
-			'#integraciones',
-			I.phPlugsConnectedFill,
-			'Integraciones',
-			'Mercado Pago, ML, ARCA y más',
-			'#E6F7FD',
-			'#0B8DB8'
-		],
-		[
 			'#precios',
 			I.phTagFill,
 			'Precios',
@@ -58,8 +50,15 @@
 			'rgba(47,143,99,.13)',
 			'#2F8F63'
 		],
-		['#clientes', I.phHeartFill, 'Clientes', 'Historias reales', '#FCEEF3', '#C2416A'],
-		['#seguridad', I.phShieldCheckFill, 'Seguridad', 'Copias, permisos y 2FA', '#F1E9DF', '#6B5244']
+		[
+			'#migrar',
+			I.phPlugsConnectedFill,
+			'Migrar',
+			'Traé tu tienda de otra plataforma',
+			'#E6F7FD',
+			'#0B8DB8'
+		],
+		['/seguridad', I.phShieldCheckFill, 'Seguridad', 'Copias, permisos y 2FA', '#F1E9DF', '#6B5244']
 	] as const;
 
 	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Mostrador.dc.html).

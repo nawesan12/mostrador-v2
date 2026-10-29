@@ -4,17 +4,12 @@
 	import Grano from '#lib/components/Grano.svelte';
 	import Seo from '#lib/components/Seo.svelte';
 	import Header from '#lib/landing/Header.svelte';
-	import Etapas from '#lib/landing/Etapas.svelte';
-	import ConectorIA from '#lib/landing/ConectorIA.svelte';
 	import CtaFinal from '#lib/landing/CtaFinal.svelte';
 	import Footer from '#lib/landing/Footer.svelte';
-	import Historias from '#lib/landing/Historias.svelte';
-	import Integraciones from '#lib/landing/Integraciones.svelte';
 	import Migrar from '#lib/landing/Migrar.svelte';
 	import PlantillaModal from '#lib/landing/PlantillaModal.svelte';
 	import Precios from '#lib/landing/Precios.svelte';
 	import Producto from '#lib/landing/Producto.svelte';
-	import Seguridad from '#lib/landing/Seguridad.svelte';
 	import WidgetHornero from '#lib/landing/WidgetHornero.svelte';
 	import Hero from '#lib/landing/Hero.svelte';
 	import HorneroSeccion from '#lib/landing/HorneroSeccion.svelte';
@@ -61,13 +56,8 @@
 	<main>
 		<Hero />
 		<HorneroSeccion />
-		<Etapas />
 		<Producto />
-		<ConectorIA />
-		<Integraciones />
 		<Precios />
-		<Historias />
-		<Seguridad />
 		<Migrar />
 		<CtaFinal />
 	</main>

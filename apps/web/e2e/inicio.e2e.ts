@@ -138,15 +138,13 @@ test('el modal de plantillas recorre, elige y lleva al registro con la plantilla
 	expect(await page.evaluate(() => localStorage.getItem('ob-tpl'))).toBeTruthy();
 });
 
-test('integraciones filtra por categoría', async ({ page }) => {
+test('producto dice con qué se conecta y desde qué IA se maneja', async ({ page }) => {
 	await page.goto('/');
 	await listo(page);
-	const sec = page.locator('section#integraciones');
-	const tarjetas = sec.locator('.integ');
-	await expect(tarjetas).toHaveCount(26);
-	await sec.getByRole('button', { name: /^Envíos/ }).click();
-	await expect(tarjetas).toHaveCount(1);
-	await expect(sec.locator('.n', { hasText: 'Correo Argentino' })).toBeVisible();
+	const sec = page.locator('section#producto');
+	await expect(sec.getByText('Se conecta con')).toBeVisible();
+	await expect(sec.getByText('Mercado Pago', { exact: true }).first()).toBeAttached();
+	await expect(sec.getByText('ChatGPT')).toBeVisible();
 });
 
 test('precios: la calculadora y el ciclo anual cambian los montos', async ({ page }) => {
@@ -160,19 +158,6 @@ test('precios: la calculadora y el ciclo anual cambian los montos', async ({ pag
 	await sec.getByRole('button', { name: /Anual/ }).click();
 	await expect(sec.getByText('$ 37.425').first()).toBeVisible();
 	await expect(sec.getByText('$ 449.100 por año')).toBeVisible();
-});
-
-test('el conector de IA confirma los cambios', async ({ page }) => {
-	await page.goto('/');
-	await listo(page);
-	const sec = page.locator('section#ia');
-	await sec.getByRole('button', { name: /ChatGPT/ }).click();
-	await expect(sec.getByRole('button', { name: /ChatGPT/ })).toHaveAttribute(
-		'aria-pressed',
-		'true'
-	);
-	await sec.getByRole('button', { name: 'Confirmar' }).click();
-	await expect(sec.getByRole('button', { name: 'Hecho' })).toBeVisible();
 });
 
 test('el widget de Tincho arranca cerrado, se abre y se minimiza', async ({ page }) => {

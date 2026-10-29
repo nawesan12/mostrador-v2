@@ -3,10 +3,22 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import { anim } from '#lib/anim.ts';
 	import * as I from '#lib/icons.ts';
+	import { INTEG } from './datos.ts';
 	import { cara, unsplash } from './formato.ts';
 	import { spot } from './spot.ts';
 
-	/** "Todo lo que tienen las otras. Y lo que les falta." — el bento de producto del handoff. */
+	/**
+	 * "Todo lo que tienen las otras. Y lo que les falta." — el bento de producto del handoff, y abajo,
+	 * en dos renglones, con qué se conecta y desde qué IA se maneja (antes eran secciones aparte).
+	 */
+	const LOGOS = (INTEG as unknown as [string, string, { icon?: unknown; col?: string }][])
+		.filter(([, cat, m]) => cat !== 'ia' && 'icon' in m)
+		.map(([n, , m]) => ({ n, icon: m.icon as I.IconData, col: m.col }));
+	const IAS = [
+		['Claude', I.siClaude, '#D97757'],
+		['ChatGPT', I.siOpenai, '#10A37F'],
+		['Cualquier IA con MCP', I.phPlugsConnectedBold, '#8A5A3E']
+	] as const;
 	const CHATS = [
 		[
 			'1531058240690-006c446962d8',
@@ -100,7 +112,7 @@
 						<Icon icon={I.phSparkleFill} size={20} /><span class="s-n blanco">Asistente con IA</span
 						><span class="excl">Exclusivo</span>
 					</div>
-					<h3>Tu mostrador te avisa qué hacer</h3>
+					<h3>Tincho te avisa qué hacer</h3>
 					<p class="ia-p">
 						Responde consultas, recupera carritos y arma promos con tus números reales. Vos decidís
 						qué manda solo y qué te consulta.
@@ -137,6 +149,28 @@
 						><span class="emitida">Emitida</span>
 					</div>
 				</div>
+			</div>
+		</div>
+		<div class="conecta" use:anim={'reveal'}>
+			<div class="c-fila">
+				<span class="c-t">Se conecta con</span>
+				<span class="c-logos">
+					{#each LOGOS as l (l.n)}
+						<span class="c-logo" title={l.n}
+							><Icon icon={l.icon} size={22} style={l.col ? `color:${l.col}` : ''} /><span
+								class="sr">{l.n}</span
+							></span
+						>
+					{/each}
+				</span>
+			</div>
+			<div class="c-fila">
+				<span class="c-t">Y la manejás desde tu IA</span>
+				<span class="c-logos">
+					{#each IAS as [n, ico, col] (n)}
+						<span class="c-ia"><Icon icon={ico} size={18} style="color:{col}" />{n}</span>
+					{/each}
+				</span>
 			</div>
 		</div>
 	</div>
@@ -550,5 +584,52 @@
 		.bandeja {
 			grid-template-columns: 1fr;
 		}
+	}
+	.conecta {
+		margin-top: 40px;
+		display: flex;
+		flex-direction: column;
+		gap: 14px;
+	}
+	.c-fila {
+		display: flex;
+		align-items: center;
+		gap: 12px 20px;
+		flex-wrap: wrap;
+		padding: 16px 20px;
+		border-radius: 22px;
+		background: #fff;
+		border: 1px solid rgba(58, 29, 18, 0.08);
+	}
+	.c-t {
+		font-size: 14px;
+		font-weight: 600;
+		color: #7a6252;
+		white-space: nowrap;
+	}
+	.c-logos {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 10px 18px;
+	}
+	.c-logo {
+		display: grid;
+		place-items: center;
+	}
+	.c-ia {
+		display: flex;
+		align-items: center;
+		gap: 7px;
+		font-size: 14.5px;
+		font-weight: 600;
+	}
+	.sr {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
 	}
 </style>
