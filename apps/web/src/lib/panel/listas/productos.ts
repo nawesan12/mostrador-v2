@@ -49,7 +49,7 @@ export function configProductos(
 		unidad: 'productos',
 		buscar: 'Nombre, SKU o categoría',
 		kpi: (l) =>
-			`${l.total.toLocaleString('es-AR')} productos · ${(l.resumen.unidades30 ?? 0).toLocaleString('es-AR')} unidades vendidas en 30 días`,
+			`${l.total.toLocaleString('es-AR')} ${l.total === 1 ? 'producto' : 'productos'} · ${(l.resumen.unidades30 ?? 0).toLocaleString('es-AR')} unidades vendidas en 30 días`,
 		primario: { t: 'Nuevo producto', icon: I.phCameraPlusFill, hacer: nuevo },
 		tip: (l) => {
 			const n = l.resumen.sinStockEnMl ?? 0;

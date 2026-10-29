@@ -22,6 +22,8 @@
 	 * el editor lateral).
 	 */
 	let { data } = $props();
+	const publicado = (n: number) =>
+		n === 0 ? 'sin publicar' : n === 1 ? 'publicado en 1 canal' : `publicado en ${n} canales`;
 	const ui = getUi();
 	const tienda = $derived(page.data.tienda as { nombre: string; slug: string });
 	const dominio = $derived(`${SITE.replace(/^https?:\/\//, '')}/t/${tienda.slug}`);
@@ -446,7 +448,7 @@
 		ui.toast({
 			k: 'ok',
 			title: nuevo ? 'Producto creado' : 'Producto guardado',
-			desc: `${p.nombre} · publicado en ${Object.values(p.canales ?? {}).filter(Boolean).length} canales`
+			desc: `${p.nombre} · ${publicado(Object.values(p.canales ?? {}).filter(Boolean).length)}`
 		});
 	}}
 />

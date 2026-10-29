@@ -98,7 +98,6 @@
 	const CANALES = [
 		['web', I.phGlobeSimpleFill, 'Tienda online', '#D2582F'],
 		['ml', I.phHandshakeFill, 'Mercado Libre', '#2D3277'],
-		['ig', I.logosInstagramIcon, 'Instagram Shopping', 'inherit'],
 		['google', I.logosGoogleIcon, 'Google Shopping', 'inherit']
 	] as const;
 	const numero = (s: string) => Math.max(0, Number(s.replace(/\D/g, '')) || 0);
