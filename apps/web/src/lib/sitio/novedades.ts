@@ -30,7 +30,7 @@ export const NOVEDADES: [string, Novedad[]][] = [
 		[
 			{
 				tipo: 'nuevo',
-				titulo: 'Hornero responde en Instagram',
+				titulo: 'Tincho responde en Instagram',
 				foto: '1611162617213-7d7a39e9b1d7',
 				texto:
 					'El asistente ahora contesta mensajes directos de Instagram con el stock y los precios reales de tu tienda.'

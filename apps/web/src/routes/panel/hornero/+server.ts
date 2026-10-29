@@ -10,7 +10,7 @@ import { responderSimulado } from '#lib/server/hornero/simulado.ts';
 import { dbSandbox, sumarUsoHornero } from '#lib/server/sandbox/sandbox.ts';
 import type { RequestHandler } from './$types';
 
-/** Lo que muestra Hornero al abrirse: cómo viene el día y sus ideas. */
+/** Lo que muestra Tincho al abrirse: cómo viene el día y sus ideas. */
 export const GET: RequestHandler = async ({ locals }) => {
 	const t = await datosDe(locals).tablero('hoy');
 	return json({
@@ -40,10 +40,10 @@ const texto = (t: string) =>
 		headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' }
 	});
 
-/** Una pregunta a Hornero: responde en texto, a medida que el modelo escribe. */
+/** Una pregunta a Tincho: responde en texto, a medida que el modelo escribe. */
 export const POST: RequestHandler = async ({ locals, request }) => {
 	const cuerpo = v.safeParse(Pedido, await request.json().catch(() => null));
-	if (!cuerpo.success) error(400, 'Escribile algo a Hornero.');
+	if (!cuerpo.success) error(400, 'Escribile algo a Tincho.');
 	const datos = datosDe(locals);
 
 	// En la demo pública hay topes: por visitante y para todos (ver cupo.ts).

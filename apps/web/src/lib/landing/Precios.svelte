@@ -50,7 +50,7 @@
 			<div class="etiq"><span></span>Precio</div>
 			<h2>Cuanto más vendés, más ahorrás.</h2>
 			<p>
-				Cada plan de Tu Local Web cuesta menos que su equivalente en Tiendanube, y trae Hornero,
+				Cada plan de Tu Local Web cuesta menos que su equivalente en Tiendanube, y trae Tincho,
 				factura de ARCA y punto de venta incluidos.
 			</p>
 			<div class="slider">
@@ -135,7 +135,7 @@
 			{/each}
 		</div>
 		<p class="nota" use:anim={'reveal'}>
-			Las respuestas que Hornero contesta solo (horarios, envíos, stock) no cuentan como IA. Si te
+			Las respuestas que Tincho contesta solo (horarios, envíos, stock) no cuentan como IA. Si te
 			quedás corto, 2.000 más por $&nbsp;4.900. Los mensajes de WhatsApp los cobra Meta a su costo y
 			los primeros 1.000 de cada mes son&nbsp;gratis.
 		</p>

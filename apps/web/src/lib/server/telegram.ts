@@ -1,5 +1,5 @@
 /**
- * Hornero en Telegram (@mostradorhornero_bot): la dueña vincula su tienda con un código de un solo
+ * Tincho en Telegram (@mostradorhornero_bot): la dueña vincula su tienda con un código de un solo
  * uso (Integraciones › Telegram › Vincular), le pregunta en lenguaje natural y recibe un aviso por
  * cada venta. En la demo vive sobre el sandbox; con la API real (DATA_SOURCE=api), el vínculo y el
  * contexto de la tienda salen de Go (`TelegramApi`) y el aviso de cada venta lo manda el worker de Go.
@@ -120,7 +120,7 @@ type Update = {
 };
 
 const AYUDA =
-	'Soy Hornero, de Tu Local Web. Preguntame lo que quieras de tu tienda: "¿qué se vendió hoy?", "¿qué tengo para preparar?", "¿qué me falta?". Y te aviso cada venta.';
+	'Soy Tincho, de Tu Local Web. Preguntame lo que quieras de tu tienda: "¿qué se vendió hoy?", "¿qué tengo para preparar?", "¿qué me falta?". Y te aviso cada venta.';
 
 const SIN_VINCULO =
 	'Todavía no sé de qué tienda sos. Vinculá este chat desde el panel: Integraciones › Telegram › Vincular.';
@@ -196,7 +196,7 @@ async function procesarSandbox({ chat, texto, nombre, cod, responder }: Entrante
 		datos.tablero('7d'),
 		datos.contextoHornero()
 	]);
-	// Los mismos topes que el Hornero del panel (cupo.ts): por tienda y para toda la demo.
+	// Los mismos topes que el Tincho del panel (cupo.ts): por tienda y para toda la demo.
 	const usos = await sumarUsoHornero(db, v.sb.id, diaAr());
 	return responderHornero(
 		texto,
@@ -225,7 +225,7 @@ async function procesarApi({ chat, texto, nombre, cod, responder }: Entrante) {
 		return 'desvinculado';
 	}
 	if (texto === '/ayuda' || texto === '/help') return responder(AYUDA);
-	// Go cuenta el mensaje en el día de la tienda y devuelve lo que sabe Hornero (como el panel).
+	// Go cuenta el mensaje en el día de la tienda y devuelve lo que sabe Tincho (como el panel).
 	const c = await go.contexto(chat);
 	if (!c) return responder(SIN_VINCULO);
 	const { tienda, hoy, semana, contexto, usos } = c;
@@ -237,7 +237,7 @@ async function procesarApi({ chat, texto, nombre, cod, responder }: Entrante) {
 	);
 }
 
-/** La respuesta de Hornero: Workers AI con los topes de cupo.ts, o la simulada. */
+/** La respuesta de Tincho: Workers AI con los topes de cupo.ts, o la simulada. */
 async function responderHornero(
 	texto: string,
 	d: DatosHornero,

@@ -12,7 +12,7 @@
 
 	type Detalle = components['schemas']['PedidoDetalle'];
 
-	/** Hoja del pedido (handoff `ovSheet`): cliente, nota de Hornero, productos, pago, factura, envío e historial. */
+	/** Hoja del pedido (handoff `ovSheet`): cliente, nota de Tincho, productos, pago, factura, envío e historial. */
 	let {
 		open = $bindable(false),
 		pedido,
@@ -122,7 +122,7 @@
 			{#if pedido.nota}
 				<div class="nota">
 					<Icon icon={I.phSparkleFill} size={16} style="color:#b0441d;margin-top:2px;flex:none" />
-					<div><b>Hornero:</b> {pedido.nota}</div>
+					<div><b>Tincho:</b> {pedido.nota}</div>
 				</div>
 			{/if}
 

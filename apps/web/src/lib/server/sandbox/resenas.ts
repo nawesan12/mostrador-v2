@@ -1,6 +1,6 @@
 /**
  * Devoluciones y reseñas de la demo (design/PanelVentas.dc.html): salen de pedidos entregados, y las
- * preguntas de Mercado Libre de los productos publicados, con la respuesta que propone Hornero. Las
+ * preguntas de Mercado Libre de los productos publicados, con la respuesta que propone Tincho. Las
  * reseñas y preguntas que deja el visitante en su tienda online se suman con las mismas reglas que
  * Go (ventas/resenas.go): con compra si traen el código de un pedido cobrado, ocultar sin borrar.
  */
@@ -55,7 +55,7 @@ export function devolucionesDemo(d: Demo, estados: Map<string, EstadoDevolucion>
 	};
 }
 
-/** Preguntas de Mercado Libre y la respuesta que propone Hornero. */
+/** Preguntas de Mercado Libre y la respuesta que propone Tincho. */
 const PREGUNTAS: [string, (n: string) => string][] = [
 	[
 		'¿Hacen envíos a todo el país?',

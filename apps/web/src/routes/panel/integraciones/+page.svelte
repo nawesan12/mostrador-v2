@@ -126,7 +126,7 @@
 		if (!r.ok) return ui.toast({ k: 'err', title: 'No se pudo', desc: 'Probá de nuevo.' });
 		modal = false;
 		await invalidateAll();
-		ui.toast({ k: 'info', title: 'Telegram desvinculado', desc: 'Hornero ya no te escribe ahí' });
+		ui.toast({ k: 'info', title: 'Telegram desvinculado', desc: 'Tincho ya no te escribe ahí' });
 	}
 
 	async function ajustarML(recargo: number, pausarSinStock: boolean) {

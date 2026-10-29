@@ -15,7 +15,7 @@
 
 	let audiencia = $state(0);
 	let iMensaje = $state(0);
-	// El texto que se edita arranca con la propuesta de Hornero y cambia al reescribir.
+	// El texto que se edita arranca con la propuesta de Tincho y cambia al reescribir.
 	let mensaje = $derived(data.mensajes[iMensaje % data.mensajes.length] ?? '');
 	let foto = $state(true);
 	let boton = $state(true);
@@ -112,7 +112,7 @@
 			<div>
 				<div class="et fila">
 					Mensaje<button type="button" class="reescribir" onclick={() => iMensaje++}
-						>✦ Reescribir con Hornero</button
+						>✦ Reescribir con Tincho</button
 					>
 				</div>
 				<textarea bind:value={mensaje} maxlength="1000" aria-label="Mensaje"></textarea>

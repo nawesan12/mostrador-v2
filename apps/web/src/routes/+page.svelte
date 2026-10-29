@@ -19,7 +19,6 @@
 	import Hero from '#lib/landing/Hero.svelte';
 	import HorneroSeccion from '#lib/landing/HorneroSeccion.svelte';
 	import Lenis from '#lib/landing/Lenis.svelte';
-	import Marquesina from '#lib/landing/Marquesina.svelte';
 	import { CHAT } from '#lib/landing/datos.ts';
 	import { Landing, setLanding } from '#lib/landing/estado.svelte.ts';
 
@@ -61,7 +60,6 @@
 	<Header />
 	<main>
 		<Hero />
-		<Marquesina />
 		<HorneroSeccion />
 		<Etapas />
 		<Producto />

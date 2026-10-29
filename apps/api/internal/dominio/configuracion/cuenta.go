@@ -21,7 +21,7 @@ type permiso struct {
 var permisos = []permiso{
 	{"ventas", "Ver ventas y pedidos", "Lista de pedidos y clientes", [4]bool{true, true, true, true}},
 	{"productos", "Editar productos y precios", "Incluye stock e importaciones", [4]bool{true, true, false, true}},
-	{"whatsapp", "Responder WhatsApp", "Y aprobar respuestas de Hornero", [4]bool{true, true, true, false}},
+	{"whatsapp", "Responder WhatsApp", "Y aprobar respuestas de Tincho", [4]bool{true, true, true, false}},
 	{"despachar", "Preparar y despachar", "Etiquetas y cambios de estado", [4]bool{true, true, true, true}},
 	{"finanzas", "Ver finanzas", "Saldo, liquidaciones y Caja", [4]bool{true, true, false, false}},
 	{"facturas", "Emitir facturas", "Factura A, B y C ante ARCA", [4]bool{true, true, true, false}},

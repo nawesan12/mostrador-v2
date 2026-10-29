@@ -14,7 +14,7 @@
 	const FILTROS = [
 		['todo', 'Todo'],
 		['equipo', 'Equipo'],
-		['hornero', 'Hornero'],
+		['hornero', 'Tincho'],
 		['sistema', 'Sistema']
 	] as const;
 	let filtro = $state<(typeof FILTROS)[number][0]>('todo');

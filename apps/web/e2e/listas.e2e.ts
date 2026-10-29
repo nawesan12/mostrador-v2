@@ -67,7 +67,7 @@ test('productos: pausar, editar, crear y exportar', async ({ page }) => {
 	await page.locator('.fila .abrir').first().click();
 	const editor = page.getByRole('dialog', { name: 'Editar producto' });
 	await editor.getByLabel('Nombre').fill(`${nombre} edición especial`);
-	await editor.getByRole('button', { name: '✦ Mejorar con Hornero' }).click();
+	await editor.getByRole('button', { name: '✦ Mejorar con Tincho' }).click();
 	await expect(editor.locator('#desc-prod')).toHaveValue(/envío a todo el país/);
 	await editor.getByRole('button', { name: 'Guardar y publicar' }).click();
 	await expect(page.getByText('Producto guardado')).toBeVisible();

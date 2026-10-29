@@ -34,7 +34,7 @@
 		ui.toast({
 			k: 'wa',
 			title: 'Cambio ofrecido por WhatsApp',
-			desc: `Hornero le muestra 3 alternativas a ${d.cliente.split(' ')[0]}`
+			desc: `Tincho le muestra 3 alternativas a ${d.cliente.split(' ')[0]}`
 		});
 	}
 	const muyBajo = $derived(data.tasa < 2);

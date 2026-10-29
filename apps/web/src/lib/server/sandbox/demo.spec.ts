@@ -58,7 +58,7 @@ describe('datos de la demo', () => {
 		const r = resumenDemo(d, BASE, 0, BASE);
 		expect(r.insignias.pedidos).toBe(d.pedidos.filter((p) => p.estado === 'Para preparar').length);
 		expect(r.notificaciones.filter((n) => !n.leida)).toHaveLength(6);
-		expect(r.notificaciones[0].detalle).toContain('Hornero ya respondió');
+		expect(r.notificaciones[0].detalle).toContain('Tincho ya respondió');
 		const leido = resumenDemo(d, BASE, BASE, BASE);
 		expect(leido.notificaciones.every((n) => n.leida)).toBe(true);
 	});

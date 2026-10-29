@@ -100,7 +100,7 @@
 		</div>
 		<div class="b-txt">
 			<h1>{titulo}</h1>
-			<div class="b-s">Hornero ordenó tus tareas por lo que más plata te mueve.</div>
+			<div class="b-s">Tincho ordenó tus tareas por lo que más plata te mueve.</div>
 		</div>
 		<img src="/hornero/portapapeles.webp" alt="" width="96" height="96" />
 	</div>

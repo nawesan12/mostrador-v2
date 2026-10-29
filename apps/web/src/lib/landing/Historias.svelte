@@ -6,7 +6,7 @@
 	const HISTORIAS = [
 		{
 			img: unsplash('1556745753-b2904692b3cd', 800),
-			q: 'Antes anotaba los pedidos de WhatsApp en un cuaderno. Hoy Hornero responde de noche y yo me levanto con ventas.',
+			q: 'Antes anotaba los pedidos de WhatsApp en un cuaderno. Hoy Tincho responde de noche y yo me levanto con ventas.',
 			quien: 'Valeria Sosa',
 			negocio: 'Café La Esquina · Rosario',
 			etiqueta: 'Ventas por WhatsApp',

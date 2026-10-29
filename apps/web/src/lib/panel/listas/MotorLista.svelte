@@ -14,7 +14,7 @@
 	import type { ConfigLista, Ctx, FiltrosUrl, ListaGenerica, Opcion } from './tipos.ts';
 
 	/**
-	 * Motor de listas del handoff (design/PanelListas.dc.html): encabezado, sugerencia de Hornero,
+	 * Motor de listas del handoff (design/PanelListas.dc.html): encabezado, sugerencia de Tincho,
 	 * vistas, segmentos, búsqueda, facetas, rango, banderas, orden, lista virtual, selección y lote.
 	 * Los filtros viven en la URL; las filas se piden por ventanas al scrollear.
 	 */
@@ -238,7 +238,7 @@
 	{#if tip && !tipHecho}
 		<div class="tip" use:anim={{ t: 'rise', delay: 40 }}>
 			<img src="/hornero/pensando.webp" alt="" width="40" height="40" />
-			<div class="tip-t"><b>Hornero:</b> {tip.texto}</div>
+			<div class="tip-t"><b>Tincho:</b> {tip.texto}</div>
 			<button
 				type="button"
 				onclick={async () => {

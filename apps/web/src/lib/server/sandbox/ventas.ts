@@ -1,6 +1,6 @@
 /**
  * Bandeja y carritos de la demo (design/PanelVentas.dc.html). Las conversaciones salen de quienes
- * compraron hace poco (las tres primeras son las del Resumen) y la sugerencia de Hornero se arma con
+ * compraron hace poco (las tres primeras son las del Resumen) y la sugerencia de Tincho se arma con
  * los datos de la tienda (envío, stock, lista mayorista), sin llamar al modelo.
  */
 import type { components } from '@mostrador/contrato/esquema';

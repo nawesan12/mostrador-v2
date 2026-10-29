@@ -130,7 +130,7 @@
 	};
 	const QUIEN = {
 		persona: 'La tienda',
-		hornero: 'Hornero',
+		hornero: 'Tincho',
 		sistema: 'Tu Local Web',
 		staff: 'Equipo',
 		integracion: 'Integración'

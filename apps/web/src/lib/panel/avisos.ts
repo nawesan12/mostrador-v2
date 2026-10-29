@@ -17,7 +17,7 @@ export const AVISOS: readonly { grupo: string; filas: readonly Fila[] }[] = [
 			{
 				id: 'carrito',
 				t: 'Carrito abandonado recuperado',
-				d: 'Cuando Hornero cierra la venta',
+				d: 'Cuando Tincho cierra la venta',
 				def: [1, 0, 0, 1]
 			}
 		]

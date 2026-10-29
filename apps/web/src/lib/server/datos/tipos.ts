@@ -111,9 +111,9 @@ export interface Datos {
 	ocultarAviso(aviso: 'certificado'): Promise<void>;
 	/** Manda el recordatorio a los carritos abandonados; devuelve cuántos mensajes salieron. */
 	recordarCarritos(): Promise<number>;
-	/** Lo que Hornero sabe de la tienda para responder. */
+	/** Lo que Tincho sabe de la tienda para responder. */
 	contextoHornero(): Promise<ContextoHornero>;
-	/** Aprueba (o deshace) una idea de Hornero. */
+	/** Aprueba (o deshace) una idea de Tincho. */
 	marcarIdea(idea: Idea, hecha: boolean): Promise<void>;
 	listarPedidos(f: FiltrosPedidos): Promise<ListaPedidos>;
 	/** null si no existe. */
@@ -127,7 +127,7 @@ export interface Datos {
 	recordarPago(numero: number): Promise<Resultado>;
 	/** Motor de listas: Clientes, Productos, Inventario, Facturación y Envíos. */
 	listar(lista: NombreLista, f: FiltrosLista): Promise<ListaGenerica>;
-	/** Una acción sobre filas de una lista (o la sugerencia de Hornero); devuelve cuántas cambiaron. */
+	/** Una acción sobre filas de una lista (o la sugerencia de Tincho); devuelve cuántas cambiaron. */
 	accionLista(lista: NombreLista, ids: string[], accion: string, valor?: unknown): Promise<number>;
 	producto(id: string): Promise<Producto | null>;
 	/** Crea (id null) o guarda un producto. null si el id no existe. */

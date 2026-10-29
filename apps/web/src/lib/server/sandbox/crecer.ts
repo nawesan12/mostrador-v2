@@ -187,11 +187,11 @@ export function canalesDemo(
 	const visitas = Math.round(((porCanal.get('web')?.n ?? 0) / 0.034) * 1);
 	const NOTAS: Record<string, string> = {
 		web: `Sin comisión · conversión 3,4% sobre ${visitas.toLocaleString('es-AR')} visitas`,
-		wa: `Hornero cerró ${wa ? 61 : 0}% de las ventas`,
+		wa: `Tincho cerró ${wa ? 61 : 0}% de las ventas`,
 		ml: 'Comisión 14% · ya cubierta con +10%',
 		pos: `Ticket promedio ${pesos(pos?.n ? pos.v / pos.n : 0)}`,
 		ig: `${enIg} productos etiquetados`,
-		tg: 'Hornero responde las consultas',
+		tg: 'Tincho responde las consultas',
 		gg: 'Gratis · 3.100 impresiones',
 		tk: 'Conectalo para vender en videos'
 	};

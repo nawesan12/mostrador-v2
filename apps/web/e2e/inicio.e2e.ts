@@ -43,7 +43,7 @@ test('el CTA lleva al registro', async ({ page }) => {
 	await expect(page).toHaveURL(/\/onboarding$/);
 });
 
-test('el chat de Hornero avanza solo', async ({ page }) => {
+test('el chat de Tincho avanza solo', async ({ page }) => {
 	await page.goto('/');
 	await listo(page);
 	const seccion = page.locator('section#hornero');
@@ -68,23 +68,23 @@ test.describe('menú mobile', () => {
 		const boton = page.getByRole('button', { name: 'Menú', exact: true });
 		await boton.click();
 		await expect(boton).toHaveAttribute('aria-expanded', 'true');
-		await expect(page.getByRole('link', { name: /Hornero IA/ })).toBeVisible();
+		await expect(page.getByRole('link', { name: /Tincho IA/ })).toBeVisible();
 		await page.keyboard.press('Escape');
 		await expect(boton).toHaveAttribute('aria-expanded', 'false');
 		await boton.click();
 		// El del menú (la píldora del hero dice lo mismo y queda debajo del menú abierto).
 		await page
 			.locator('.menu')
-			.getByRole('link', { name: /Conocé a Hornero/ })
+			.getByRole('link', { name: /Conocé a Tincho/ })
 			.click();
 		await expect(boton).toHaveAttribute('aria-expanded', 'false');
 		await expect(page.locator('section#hornero h2')).toBeInViewport();
 	});
 
-	test('con el menú abierto no aparece la burbuja de Hornero', async ({ page }) => {
+	test('con el menú abierto no aparece la burbuja de Tincho', async ({ page }) => {
 		await page.goto('/');
 		await listo(page);
-		const avatar = page.getByRole('button', { name: 'Hornero', exact: true });
+		const avatar = page.getByRole('button', { name: 'Tincho', exact: true });
 		await expect(avatar).toBeVisible({ timeout: 6000 });
 		await page.getByRole('button', { name: 'Menú', exact: true }).click();
 		await expect(avatar).toBeHidden();
@@ -175,17 +175,17 @@ test('el conector de IA confirma los cambios', async ({ page }) => {
 	await expect(sec.getByRole('button', { name: 'Hecho' })).toBeVisible();
 });
 
-test('el widget de Hornero arranca cerrado, se abre y se minimiza', async ({ page }) => {
+test('el widget de Tincho arranca cerrado, se abre y se minimiza', async ({ page }) => {
 	await page.goto('/');
 	await listo(page);
-	const avatar = page.getByRole('button', { name: 'Hornero', exact: true });
+	const avatar = page.getByRole('button', { name: 'Tincho', exact: true });
 	await expect(avatar).toBeVisible({ timeout: 6000 });
 	// Sin popup al entrar: el globo aparece recién al tocar el avatar.
-	await expect(page.getByText('¡Hola! Soy Hornero')).toBeHidden();
+	await expect(page.getByText('¡Hola! Soy Tincho')).toBeHidden();
 	await avatar.click();
-	await expect(page.getByText('¡Hola! Soy Hornero')).toBeVisible();
+	await expect(page.getByText('¡Hola! Soy Tincho')).toBeVisible();
 	await page.getByRole('button', { name: 'Minimizar' }).click();
-	await expect(page.getByText('¡Hola! Soy Hornero')).toBeHidden();
+	await expect(page.getByText('¡Hola! Soy Tincho')).toBeHidden();
 	await expect(avatar).toBeVisible();
 });
 
@@ -203,8 +203,8 @@ test('el widget espera a que se cierre el banner de cookies', async ({ browser }
 	await listo(page);
 	await expect(page.getByText('Usamos cookies')).toBeVisible();
 	await page.waitForTimeout(3000);
-	await expect(page.getByRole('button', { name: 'Hornero', exact: true })).toBeHidden();
+	await expect(page.getByRole('button', { name: 'Tincho', exact: true })).toBeHidden();
 	await page.getByRole('button', { name: 'Solo necesarias' }).click();
-	await expect(page.getByRole('button', { name: 'Hornero', exact: true })).toBeVisible();
+	await expect(page.getByRole('button', { name: 'Tincho', exact: true })).toBeVisible();
 	await ctx.close();
 });

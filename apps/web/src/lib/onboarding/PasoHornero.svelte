@@ -5,7 +5,7 @@
 	import Etiqueta from './Etiqueta.svelte';
 	import { getOnboarding } from './estado.svelte.ts';
 
-	/** Paso 7, Hornero: el tono, dónde atiende y la vista previa de una respuesta. */
+	/** Paso 7, Tincho: el tono, dónde atiende y la vista previa de una respuesta. */
 	const o = getOnboarding();
 	const tonos = Object.entries(TONOS) as [Tono, (typeof TONOS)[Tono]][];
 
@@ -27,7 +27,7 @@
 	<div class="izq">
 		<Etiqueta
 			rotulo="Tu asistente"
-			titulo="Hornero ya conoce tu negocio. ¿Cómo querés que hable?"
+			titulo="Tincho ya conoce tu negocio. ¿Cómo querés que hable?"
 		/>
 		<div class="sub">Tono</div>
 		<div class="tonos" role="group" aria-label="Tono">
@@ -68,7 +68,7 @@
 			<Icon icon={I.logosGoogleMaps} size={20} />
 			<span
 				><b>Horario del local:</b> lun a sáb de 8 a 20 h<br /><span class="r-d"
-					>Fuera de ese horario, Hornero atiende y vos ves todo a la mañana.</span
+					>Fuera de ese horario, Tincho atiende y vos ves todo a la mañana.</span
 				></span
 			>
 		</div>
@@ -94,7 +94,7 @@
 		<div class="chat">
 			<div class="cliente">Hola! ¿Tienen el termo de 1 L en negro?</div>
 			<div class="resp" bind:this={burbuja}>
-				<span class="firma"><Icon icon={I.phSparkleFill} size={11} />Hornero</span>
+				<span class="firma"><Icon icon={I.phSparkleFill} size={11} />Tincho</span>
 				<span class="burbuja">{TONOS[o.e.tono][1]}</span>
 			</div>
 		</div>

@@ -21,7 +21,7 @@
 		],
 		[
 			'2025',
-			'Llega Hornero',
+			'Llega Tincho',
 			'El asistente de IA que responde, vende y avisa cuando algo se traba.'
 		],
 		[

@@ -527,7 +527,7 @@
 					</span>
 				</div>
 				<p>
-					“Me mudé desde Tiendanube en una tarde y ahora pago la mitad. Hornero me contesta los
+					“Me mudé desde Tiendanube en una tarde y ahora pago la mitad. Tincho me contesta los
 					WhatsApp a la noche.”
 				</p>
 			</div>

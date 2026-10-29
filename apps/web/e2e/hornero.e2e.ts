@@ -11,15 +11,15 @@ async function demo(page: Page) {
 	await listo(page);
 }
 
-test('Hornero saluda, propone ideas y responde con los datos', async ({ page, isMobile }) => {
+test('Tincho saluda, propone ideas y responde con los datos', async ({ page, isMobile }) => {
 	await demo(page);
 	if (isMobile)
 		await page
 			.getByRole('navigation', { name: 'Accesos' })
-			.getByRole('button', { name: 'Hornero' })
+			.getByRole('button', { name: 'Tincho' })
 			.click();
-	else await page.getByRole('button', { name: 'Preguntale a Hornero' }).first().click();
-	const panel = page.getByRole('dialog', { name: 'Hornero' });
+	else await page.getByRole('button', { name: 'Preguntale a Tincho' }).first().click();
+	const panel = page.getByRole('dialog', { name: 'Tincho' });
 	await expect(panel).toBeVisible();
 	await expect(
 		panel.getByText(/(Buen día|Buenas tardes|Buenas noches), Valeria\. Hoy vendiste/)
@@ -36,7 +36,7 @@ test('Hornero saluda, propone ideas y responde con los datos', async ({ page, is
 	await expect(panel.locator('.globo.hornero').last()).toContainText('Ayer vendiste');
 	await expect(panel.locator('.globo.hornero b').last()).toContainText('$');
 
-	await panel.getByRole('textbox', { name: 'Escribile a Hornero' }).fill('Subí precios 10%');
+	await panel.getByRole('textbox', { name: 'Escribile a Tincho' }).fill('Subí precios 10%');
 	await panel.getByRole('button', { name: 'Mandar' }).click();
 	await expect(panel.locator('.globo.hornero').last()).toContainText('10%');
 
@@ -58,7 +58,7 @@ test('aprobar una idea queda hecho y se puede deshacer', async ({ page }) => {
 		.locator('.hornero-card')
 		.getByRole('button', { name: /Ver las/ })
 		.click();
-	const panel = page.getByRole('dialog', { name: 'Hornero' });
+	const panel = page.getByRole('dialog', { name: 'Tincho' });
 	const idea = panel.locator('.idea').filter({ hasText: 'Promo de fin de semana' });
 	await idea.getByRole('button', { name: 'Aprobar' }).click();
 	await expect(idea.getByText('Hecho')).toBeVisible();
@@ -76,7 +76,7 @@ test('aprobar una idea queda hecho y se puede deshacer', async ({ page }) => {
 	await expect(page.locator('.burbuja')).toContainText('Listo');
 });
 
-test('la API de Hornero valida lo que recibe', async ({ page }) => {
+test('la API de Tincho valida lo que recibe', async ({ page }) => {
 	await demo(page);
 	const r = await page.request.post('/panel/hornero', {
 		data: { mensajes: [{ rol: 'hornero', texto: 'hola' }] },

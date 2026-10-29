@@ -29,7 +29,7 @@ test('bandeja: abrir, mandar la sugerencia, escribir y tomar', async ({ page, is
 	await expect(page.locator('.msg.yo').last()).toContainText('Listo, ya quedó cambiada');
 	await page.getByRole('button', { name: 'Tomar' }).click();
 	await expect(page.getByText('Tomaste la conversación')).toBeVisible();
-	await expect(page.getByRole('button', { name: 'Devolver a Hornero' })).toBeVisible();
+	await expect(page.getByRole('button', { name: 'Devolver a Tincho' })).toBeVisible();
 	if (isMobile) {
 		await page.getByRole('button', { name: 'Volver a la lista' }).click();
 		await expect(page.locator('.conv').first()).toBeVisible();

@@ -265,7 +265,7 @@ export const LPLANS = [
 		[
 			'Productos ilimitados',
 			'Mercado Pago, transferencia y retiro',
-			'Hornero: 100 respuestas con IA',
+			'Tincho: 100 respuestas con IA',
 			'Respuestas automáticas sin límite',
 			'1 persona · subdominio de Tu Local Web'
 		],
@@ -279,7 +279,7 @@ export const LPLANS = [
 			'Dominio propio y sin marca Tu Local Web',
 			'Todos los medios de pago y envío',
 			'Factura de ARCA automática',
-			'Hornero: 1.000 respuestas con IA',
+			'Tincho: 1.000 respuestas con IA',
 			'Carritos abandonados · 2 personas'
 		],
 		'Probar 14 días'
@@ -291,7 +291,7 @@ export const LPLANS = [
 		[
 			'Mercado Libre e Instagram con un solo stock',
 			'Punto de venta · 1 caja',
-			'Hornero: 3.000 respuestas con IA',
+			'Tincho: 3.000 respuestas con IA',
 			'Acciones masivas y estadísticas',
 			'5 personas con permisos'
 		],
@@ -305,7 +305,7 @@ export const LPLANS = [
 		[
 			'Sucursales, depósitos y cajas ilimitadas',
 			'Listas mayoristas, API y webhooks',
-			'Hornero: 15.000 respuestas con IA',
+			'Tincho: 15.000 respuestas con IA',
 			'Personas ilimitadas',
 			'Gerente de cuenta'
 		],
@@ -420,7 +420,7 @@ export const NOTIFS = [
 	[
 		'wa',
 		'Nuevo mensaje de Lucía',
-		'“¿Tenés el termo en negro?” · Hornero ya respondió',
+		'“¿Tenés el termo en negro?” · Tincho ya respondió',
 		'hace 4 min',
 		true
 	],

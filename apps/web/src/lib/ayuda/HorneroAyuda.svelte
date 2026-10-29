@@ -5,7 +5,7 @@
 	import { buscar, type Articulo } from './articulos.ts';
 
 	/**
-	 * "Preguntale a Hornero" del centro de ayuda (handoff). En el sitio público Hornero responde con
+	 * "Preguntale a Tincho" del centro de ayuda (handoff). En el sitio público Tincho responde con
 	 * los artículos de ayuda: busca el que mejor contesta y lo resume, sin llamar al modelo.
 	 */
 	let pregunta = $state('');
@@ -23,7 +23,7 @@
 	<div class="h-cab">
 		<img src="/hornero/avatar.webp" alt="" width="52" height="52" />
 		<div>
-			<b>Preguntale a Hornero</b>
+			<b>Preguntale a Tincho</b>
 			<div class="h-s">Busca en la ayuda y te lleva a la respuesta</div>
 		</div>
 	</div>
@@ -46,8 +46,8 @@
 	<form class="campo" onsubmit={preguntar}>
 		<input
 			bind:value={pregunta}
-			placeholder="Escribile a Hornero…"
-			aria-label="Pregunta para Hornero"
+			placeholder="Escribile a Tincho…"
+			aria-label="Pregunta para Tincho"
 			maxlength="200"
 		/>
 		<button aria-label="Preguntar"><Icon icon={I.phPaperPlaneTiltFill} size={16} /></button>

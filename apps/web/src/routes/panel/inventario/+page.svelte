@@ -18,7 +18,7 @@
 
 	/**
 	 * Inventario: la lista de PanelListas más lo de PanelCatalogo (KPIs, movimientos de hoy, contar
-	 * stock y el pedido a proveedores que arma Hornero).
+	 * stock y el pedido a proveedores que arma Tincho).
 	 */
 	let { data } = $props();
 	const ui = getUi();
@@ -200,7 +200,7 @@
 		<div class="nota">
 			<Icon icon={I.phSparkleFill} size={16} style="color:#b0441d;margin-top:2px;flex:none" />
 			<div>
-				<b>Hornero:</b> armé el pedido con lo que vendés por día, para que te alcance dos veces el mínimo.
+				<b>Tincho:</b> armé el pedido con lo que vendés por día, para que te alcance dos veces el mínimo.
 				Cambiá las cantidades si querés.
 			</div>
 		</div>

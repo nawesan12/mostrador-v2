@@ -8,7 +8,7 @@
 	import { pesos } from '#lib/panel/formato.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 
-	/** Informes (design/PanelCrecer.dc.html, sRep): 12 meses, KPIs y lo que notó Hornero. */
+	/** Informes (design/PanelCrecer.dc.html, sRep): 12 meses, KPIs y lo que notó Tincho. */
 	let { data } = $props();
 	const ui = getUi();
 
@@ -124,7 +124,7 @@
 		{#each data.insights as t, i (t)}
 			<div class="insight">
 				<span class="in-ico"><Icon icon={ICONOS[i % ICONOS.length]} size={19} /></span>
-				<span><span class="in-t">✦ Hornero notó</span><span class="in-d">{t}</span></span>
+				<span><span class="in-t">✦ Tincho notó</span><span class="in-d">{t}</span></span>
 			</div>
 		{/each}
 	</div>

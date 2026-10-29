@@ -7,7 +7,7 @@ export type Eleccion = { an: boolean; mk: boolean };
 
 const CLAVE = 'mostrador-cookies';
 
-/** Si el banner está a la vista: el widget de Hornero espera a que se cierre para no taparlo. */
+/** Si el banner está a la vista: el widget de Tincho espera a que se cierre para no taparlo. */
 export const banner = $state({ abierto: false });
 
 export function leerEleccion(): Eleccion | null {

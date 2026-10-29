@@ -33,7 +33,7 @@ declare global {
 			CLAVE_BFF?: string;
 			/** Secreto compartido con mostrador-jobs para /api/internal/*. */
 			INTERNAL_SECRET: string;
-			/** Workers AI (Hornero). */
+			/** Workers AI (Tincho). */
 			AI?: Ai;
 			/** workers-ai en producción; simulado en desarrollo y pruebas (no llama al modelo). */
 			HORNERO?: 'workers-ai' | 'simulado';

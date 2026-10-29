@@ -44,7 +44,7 @@
 
 <Seo
 	title="Centro de ayuda · Tu Local Web"
-	description="Guías, preguntas frecuentes y Hornero para resolver todo al instante."
+	description="Guías, preguntas frecuentes y Tincho para resolver todo al instante."
 	path="/ayuda"
 />
 
@@ -97,7 +97,7 @@
 						<Icon icon={I.phCaretRightBold} size={14} style="color:#9A8576" />
 					</a>
 				{:else}
-					<div class="nada">Probá con otras palabras o preguntale a Hornero acá abajo.</div>
+					<div class="nada">Probá con otras palabras o preguntale a Tincho acá abajo.</div>
 				{/each}
 			</div>
 		</div>

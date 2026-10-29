@@ -71,7 +71,7 @@
 				stroke-dashoffset="19.6"
 			></circle></svg
 		>
-		<div class="ave"><img src="/hornero/celebrando.webp" alt="Hornero celebrando" /></div>
+		<div class="ave"><img src="/hornero/celebrando.webp" alt="Tincho celebrando" /></div>
 	</div>
 	<h1>Tu mostrador está 94% listo.</h1>
 	<p class="bajada">Y no tuviste que cargar nada a mano. Ya podés vender por todos tus canales.</p>

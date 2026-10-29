@@ -29,7 +29,7 @@
 
 	const CANALES = [
 		[I.phEnvelopeSimpleFill, 'Email', 'ayuda@tulocalweb.com.ar', 'Respuesta en menos de 24 h'],
-		[I.phChatsCircleFill, 'Chat del panel', 'Hablá con Hornero desde tu panel', 'Disponible 24/7']
+		[I.phChatsCircleFill, 'Chat del panel', 'Hablá con Tincho desde tu panel', 'Disponible 24/7']
 	] as const;
 	const CARAS = [
 		'1531058240690-006c446962d8',

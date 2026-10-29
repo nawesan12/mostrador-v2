@@ -81,7 +81,7 @@ export const VISTAS: { id: string; t: string; filtros: Partial<Filtros> }[] = [
 	{ id: 'sin-pagar', t: 'Sin pagar', filtros: { estado: ['Sin pagar'] } },
 	{ id: 'vip', t: 'Clientes VIP', filtros: { vip: true } },
 	{ id: 'mayoristas', t: 'Mayoristas', filtros: { mayorista: true } },
-	{ id: 'hornero', t: 'Vendidos por Hornero', filtros: { hornero: true } }
+	{ id: 'hornero', t: 'Vendidos por Tincho', filtros: { hornero: true } }
 ];
 
 /** La vista que coincide exactamente con los filtros (sin contar el orden). */

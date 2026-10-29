@@ -44,14 +44,14 @@ export class Shell {
 		guardarCookie('panel_modo', m);
 	}
 
-	/** Panel de Hornero abierto. */
+	/** Panel de Tincho abierto. */
 	ia = $state(false);
-	/** Pregunta que llega de afuera (⌘K) para mandarle a Hornero al abrir. */
+	/** Pregunta que llega de afuera (⌘K) para mandarle a Tincho al abrir. */
 	preguntaPendiente = $state<string | null>(null);
-	/** La charla con Hornero (queda mientras se navega por el panel). */
+	/** La charla con Tincho (queda mientras se navega por el panel). */
 	charla = $state<{ rol: 'persona' | 'hornero'; texto: string }[]>([]);
 
-	/** Abre Hornero (y, si viene, le manda la pregunta). */
+	/** Abre Tincho (y, si viene, le manda la pregunta). */
 	hornero(pregunta?: string) {
 		this.barra = false;
 		this.notificaciones = false;

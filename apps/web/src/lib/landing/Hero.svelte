@@ -28,7 +28,7 @@
 	<div class="in">
 		<div class="texto">
 			<a class="pildora" href="#hornero" use:anim={'rise'}>
-				<span class="avatar"><img src="/hornero/avatar.webp" alt="" /></span>Conocé a Hornero, tu
+				<span class="avatar"><img src="/hornero/avatar.webp" alt="" /></span>Conocé a Tincho, tu
 				asistente con IA<Icon icon={I.phArrowRight} size={14} />
 			</a>
 			<h1 use:anim={{ t: 'rise', delay: 80 }}>

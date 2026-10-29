@@ -1,6 +1,6 @@
 /**
  * Lo que comparten el armador de cupones (panel) y quien los guarda (sandbox / API): el texto del
- * descuento, cuándo vence y la estimación de Hornero (design/PanelCupones.dc.html).
+ * descuento, cuándo vence y la estimación de Tincho (design/PanelCupones.dc.html).
  */
 import type { components } from '@mostrador/contrato/esquema';
 
@@ -106,7 +106,7 @@ export function cuando(c: Pick<Cupon, 'estado' | 'empieza' | 'termina'>, ahora: 
 	return `Vence en ${dias} días`;
 }
 
-/** Lo que calcula Hornero en el armador (la fórmula del handoff). */
+/** Lo que calcula Tincho en el armador (la fórmula del handoff). */
 export function estimar(n: Pick<CuponNuevo, 'tipo' | 'valor' | 'quien' | 'minimo' | 'limite'>) {
 	const v = n.valor;
 	const pctEq =

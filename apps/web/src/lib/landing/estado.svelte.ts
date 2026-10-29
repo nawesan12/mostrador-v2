@@ -3,7 +3,7 @@ import { FEED } from './datos.ts';
 
 /**
  * Estado vivo de la landing, como el componente del handoff (design/Mostrador v4.dc.html):
- * el feed de ventas avanza cada 3,2 s (motion "media"), el chat de Hornero cada 1,7 s y el widget
+ * el feed de ventas avanza cada 3,2 s (motion "media"), el chat de Tincho cada 1,7 s y el widget
  * aparece a los 2,6 s. Se crea en el navegador (onMount); en el servidor queda en su estado inicial.
  */
 export class Landing {
@@ -27,7 +27,7 @@ export class Landing {
 				this.mig = this.mig >= 100 ? 64 : Math.min(100, this.mig + 6);
 			}, 3200),
 			setInterval(() => (this.chat = this.chat >= chatLargo + 2 ? 0 : this.chat + 1), 1700),
-			// Hornero aparece cerrado: sólo el avatar, sin globo ni aviso hasta que lo tocan.
+			// Tincho aparece cerrado: sólo el avatar, sin globo ni aviso hasta que lo tocan.
 			setTimeout(() => (this.widget = true), 2600)
 		);
 	}

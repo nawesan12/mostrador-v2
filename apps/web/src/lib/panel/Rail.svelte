@@ -4,7 +4,7 @@
 	import { AREAS, rutaDe, type Area } from './navegacion.ts';
 	import { getShell } from './shell.svelte.ts';
 
-	/** Rail de áreas (handoff): marca, áreas, Hornero y la persona. No se muestra en el celular. */
+	/** Rail de áreas (handoff): marca, áreas, Tincho y la persona. No se muestra en el celular. */
 	let { area, foto, iniciales }: { area: Area; foto: string | null; iniciales: string } = $props();
 	const shell = getShell();
 	const areas = $derived(shell.modo === 'simple' ? AREAS.slice(0, 1) : AREAS);
@@ -33,8 +33,8 @@
 	<button
 		type="button"
 		class="hornero"
-		title="Preguntale a Hornero"
-		aria-label="Preguntale a Hornero"
+		title="Preguntale a Tincho"
+		aria-label="Preguntale a Tincho"
 		onclick={() => shell.hornero()}
 	>
 		<span class="pulso"></span>

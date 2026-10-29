@@ -62,7 +62,7 @@ export const CATEGORIAS: Categoria[] = [
 	},
 	{
 		slug: 'whatsapp',
-		nombre: 'WhatsApp y Hornero',
+		nombre: 'WhatsApp y Tincho',
 		icono: I.phWhatsappLogoFill,
 		bg: '#E9F8EE',
 		fg: '#1F8A4C'
@@ -104,7 +104,7 @@ export const ARTICULOS: Articulo[] = [
 					'Conectá los canales que ya usás: WhatsApp, Instagram o Mercado Libre.',
 					'Importá tus productos desde Excel, Tiendanube o Mercado Libre. Si un precio no coincide, elegís cuál queda.',
 					'Elegí una plantilla, cómo cobrás y cómo enviás.',
-					'Elegí el tono de Hornero y publicá. Te queda el QR de la tienda para imprimir o compartir.'
+					'Elegí el tono de Tincho y publicá. Te queda el QR de la tienda para imprimir o compartir.'
 				]
 			},
 			{
@@ -118,7 +118,7 @@ export const ARTICULOS: Articulo[] = [
 		slug: 'probar-la-demo',
 		categoria: 'primeros-pasos',
 		titulo: 'Probar la demo antes de crear la cuenta',
-		resumen: 'Una tienda de ejemplo con pedidos, clientes y Hornero, para tocar todo.',
+		resumen: 'Una tienda de ejemplo con pedidos, clientes y Tincho, para tocar todo.',
 		cuerpo: [
 			{
 				t: 'p',
@@ -153,7 +153,7 @@ export const ARTICULOS: Articulo[] = [
 				t: 'lista',
 				x: [
 					'Cambiás de modo desde abajo de la barra lateral; el panel lo recuerda.',
-					'Con ⌘K (o Ctrl+K) buscás cualquier sección o le preguntás a Hornero.',
+					'Con ⌘K (o Ctrl+K) buscás cualquier sección o le preguntás a Tincho.',
 					'En el celular, la barra de abajo lleva a lo más usado y Más abre el resto.'
 				]
 			}
@@ -192,15 +192,15 @@ export const ARTICULOS: Articulo[] = [
 		slug: 'cargar-con-foto',
 		categoria: 'productos',
 		titulo: 'Cargar un producto con foto',
-		resumen: 'Sacale una foto y Hornero completa nombre, descripción y categoría.',
+		resumen: 'Sacale una foto y Tincho completa nombre, descripción y categoría.',
 		cuerpo: [
 			{
 				t: 'p',
-				x: 'Desde ⌘K › Cargar producto con foto, o desde Productos › Nuevo, subís la foto. Hornero propone el nombre, una descripción y la categoría; vos ponés el precio y el stock y lo publicás.'
+				x: 'Desde ⌘K › Cargar producto con foto, o desde Productos › Nuevo, subís la foto. Tincho propone el nombre, una descripción y la categoría; vos ponés el precio y el stock y lo publicás.'
 			},
 			{
 				t: 'p',
-				x: 'En la ficha de cualquier producto, Mejorar con Hornero reescribe la descripción con el tono de tu tienda. Siempre la ves antes de guardarla.'
+				x: 'En la ficha de cualquier producto, Mejorar con Tincho reescribe la descripción con el tono de tu tienda. Siempre la ves antes de guardarla.'
 			}
 		],
 		claves: 'foto camara hornero ficha descripcion'
@@ -259,7 +259,7 @@ export const ARTICULOS: Articulo[] = [
 				t: 'lista',
 				x: [
 					'El precio sale de la lista Mercado Libre (por ejemplo +10 % para cubrir la comisión).',
-					'Las preguntas llegan a Reseñas y preguntas, con la respuesta que propone Hornero.',
+					'Las preguntas llegan a Reseñas y preguntas, con la respuesta que propone Tincho.',
 					'Los pedidos de Mercado Libre entran en Pedidos como cualquier otro.'
 				]
 			}
@@ -398,24 +398,24 @@ export const ARTICULOS: Articulo[] = [
 		claves: 'cupon descuento promocion relampago codigo'
 	},
 
-	// ------------------------------------------------------------------ WhatsApp y Hornero
+	// ------------------------------------------------------------------ WhatsApp y Tincho
 	{
 		slug: 'whatsapp-business',
 		categoria: 'whatsapp',
 		titulo: 'Conectar tu número de WhatsApp Business',
-		resumen: 'El mismo número de siempre, con Hornero atendiendo.',
+		resumen: 'El mismo número de siempre, con Tincho atendiendo.',
 		destacado: 4,
 		cuerpo: [
 			{
 				t: 'p',
-				x: 'Desde Integraciones › WhatsApp conectás tu número con la API oficial de WhatsApp Business (Meta). Seguís usando el mismo número; los mensajes llegan a la bandeja del panel, donde atienden vos, tu equipo y Hornero.'
+				x: 'Desde Integraciones › WhatsApp conectás tu número con la API oficial de WhatsApp Business (Meta). Seguís usando el mismo número; los mensajes llegan a la bandeja del panel, donde atienden vos, tu equipo y Tincho.'
 			},
 			{
 				t: 'pasos',
 				x: [
 					'Tené a mano el celular con el número y acceso a tu cuenta de Facebook.',
 					'Tocá Conectar y seguí los pasos de Meta para verificar el número.',
-					'Elegí si Hornero responde siempre, fuera de horario o nunca.'
+					'Elegí si Tincho responde siempre, fuera de horario o nunca.'
 				]
 			},
 			{
@@ -428,18 +428,18 @@ export const ARTICULOS: Articulo[] = [
 	{
 		slug: 'que-responde-hornero',
 		categoria: 'whatsapp',
-		titulo: 'Qué responde Hornero y cuándo te pasa la conversación',
+		titulo: 'Qué responde Tincho y cuándo te pasa la conversación',
 		resumen: 'Responde con tus datos reales y te avisa cuando hace falta una persona.',
 		cuerpo: [
 			{
 				t: 'p',
-				x: 'Hornero conoce tu catálogo, tu stock, tus envíos y tus precios. Responde consultas de stock y envío, manda el producto con foto, arma el pedido y manda el link de pago.'
+				x: 'Tincho conoce tu catálogo, tu stock, tus envíos y tus precios. Responde consultas de stock y envío, manda el producto con foto, arma el pedido y manda el link de pago.'
 			},
 			{
 				t: 'lista',
 				x: [
 					'Te pasa la conversación cuando piden algo que no sabe, hay un reclamo o el cliente quiere hablar con una persona.',
-					'Tomar una conversación la saca de Hornero hasta que la devolvés.',
+					'Tomar una conversación la saca de Tincho hasta que la devolvés.',
 					'En cada charla te sugiere la respuesta; la mandás tal cual o la cambiás.'
 				]
 			}
@@ -454,7 +454,7 @@ export const ARTICULOS: Articulo[] = [
 		cuerpo: [
 			{
 				t: 'p',
-				x: 'En Marketing elegís la audiencia (todos, VIP, en riesgo o quienes compraron una categoría), el mensaje (Hornero te propone y reescribe) y si va con foto, botón al producto o cupón. Ves la vista previa en el teléfono, el costo exacto y las ventas estimadas según tus campañas anteriores.'
+				x: 'En Marketing elegís la audiencia (todos, VIP, en riesgo o quienes compraron una categoría), el mensaje (Tincho te propone y reescribe) y si va con foto, botón al producto o cupón. Ves la vista previa en el teléfono, el costo exacto y las ventas estimadas según tus campañas anteriores.'
 			},
 			{
 				t: 'p',
@@ -602,7 +602,7 @@ export const ARTICULOS: Articulo[] = [
 			},
 			{
 				t: 'p',
-				x: 'Pagando anual tenés 25 % de descuento. Todos los planes arrancan con 14 días de prueba y ninguno cobra comisión por venta. Si Hornero se te queda corto, sumás el pack de 2.000 respuestas por $ 4.900.'
+				x: 'Pagando anual tenés 25 % de descuento. Todos los planes arrancan con 14 días de prueba y ninguno cobra comisión por venta. Si Tincho se te queda corto, sumás el pack de 2.000 respuestas por $ 4.900.'
 			},
 			{
 				t: 'p',

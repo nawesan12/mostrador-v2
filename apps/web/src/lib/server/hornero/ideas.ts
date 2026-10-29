@@ -1,5 +1,5 @@
 /**
- * Las ideas de Hornero (handoff: "Encontré 3 cosas para hacer"), armadas con el tablero de la tienda:
+ * Las ideas de Tincho (handoff: "Encontré 3 cosas para hacer"), armadas con el tablero de la tienda:
  * recuperar carritos, pausar lo que no tiene stock y una promo de fin de semana.
  */
 import type { Idea, Tablero } from '../datos/tipos.ts';

@@ -47,7 +47,7 @@
 		gap: 20px;
 		max-width: 1400px;
 	}
-	/* Las tarjetas de la home de marca, con el arco terracota del handoff (avatar de Hornero). */
+	/* Las tarjetas de la home de marca, con el arco terracota del handoff (avatar de Tincho). */
 	.familia {
 		display: flex;
 		flex-direction: column;

@@ -21,13 +21,13 @@ function falla(e: unknown): never {
 
 /** Vincular: un link al bot con un código de un solo uso (10 minutos). */
 export const POST: RequestHandler = async ({ locals }) => {
-	if (!habilitado()) error(409, 'Hornero en Telegram todavía no está disponible.');
+	if (!habilitado()) error(409, 'Tincho en Telegram todavía no está disponible.');
 	if (!usaSandbox()) {
 		if (!locals.token) error(401, 'Tu sesión venció. Volvé a ingresar.');
 		return json({ url: await linkVinculoApi(locals.token).catch(falla) });
 	}
 	if (!locals.sandbox)
-		error(409, 'Hornero en Telegram llega a tu cuenta cuando la tienda esté en marcha.');
+		error(409, 'Tincho en Telegram llega a tu cuenta cuando la tienda esté en marcha.');
 	return json({ url: await linkVinculo(dbSandbox(env.SANDBOX), locals.sandbox.id) });
 };
 

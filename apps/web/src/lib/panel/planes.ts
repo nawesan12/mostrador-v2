@@ -5,7 +5,7 @@ export const PLANES = [
 		nombre: 'Gratis',
 		lema: 'Para probar y empezar',
 		precio: 0,
-		incluye: ['Productos ilimitados', 'Hornero: 100 respuestas con IA', '1 persona · subdominio'],
+		incluye: ['Productos ilimitados', 'Tincho: 100 respuestas con IA', '1 persona · subdominio'],
 		personas: 1,
 		hornero: 100
 	},
@@ -17,7 +17,7 @@ export const PLANES = [
 		incluye: [
 			'Dominio propio y factura ARCA',
 			'Todos los medios de pago y envío',
-			'Hornero: 1.000 respuestas con IA',
+			'Tincho: 1.000 respuestas con IA',
 			'2 personas'
 		],
 		personas: 2,
@@ -31,7 +31,7 @@ export const PLANES = [
 		incluye: [
 			'Mercado Libre, Instagram y local',
 			'Acciones masivas y estadísticas',
-			'Hornero: 3.000 respuestas con IA',
+			'Tincho: 3.000 respuestas con IA',
 			'5 personas con permisos'
 		],
 		personas: 5,
@@ -45,7 +45,7 @@ export const PLANES = [
 		incluye: [
 			'Sucursales y cajas ilimitadas',
 			'API, webhooks y mayoristas',
-			'Hornero: 15.000 respuestas con IA',
+			'Tincho: 15.000 respuestas con IA',
 			'Personas ilimitadas'
 		],
 		personas: null,

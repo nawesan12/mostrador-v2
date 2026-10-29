@@ -1,7 +1,7 @@
 /**
  * Genera src/lib/landing/datos.ts con los datos de la landing que están en el script del handoff
  * (design/Mostrador v4.dc.html): feed en vivo, integraciones, categorías, planes, comparativa con la
- * competencia y el chat de Hornero. Uso: bun scripts/datos-landing.ts
+ * competencia y el chat de Tincho. Uso: bun scripts/datos-landing.ts
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { conMarca } from './marca.ts';

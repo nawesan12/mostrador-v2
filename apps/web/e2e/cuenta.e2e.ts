@@ -12,13 +12,13 @@ async function demo(page: Page, ruta: string) {
 	await listo(page);
 }
 
-test('plan: anual, pack de Hornero y cancelación en 3 pasos con deshacer', async ({ page }) => {
+test('plan: anual, pack de Tincho y cancelación en 3 pasos con deshacer', async ({ page }) => {
 	await demo(page, '/panel/plan-y-facturacion');
 	await page.getByRole('group', { name: 'Ciclo' }).getByRole('button', { name: /Anual/ }).click();
 	await expect(page.locator('.c-s')).toContainText('plan Pro anual');
 	await expect(page.locator('.plan.cur')).toContainText('$ 37.425');
 	await page.getByRole('button', { name: /\+2\.000 respuestas/ }).click();
-	await expect(page.getByText('2.000 respuestas más para Hornero')).toBeVisible();
+	await expect(page.getByText('2.000 respuestas más para Tincho')).toBeVisible();
 	await expect(page.locator('.uso')).toContainText('de 5.000');
 
 	await page.getByRole('button', { name: 'Cancelar plan' }).click();

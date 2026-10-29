@@ -331,7 +331,7 @@
 			c.push([NOMBRE_ENVIO[k] ?? k, { envio: f.envio.filter((x) => x !== k) }]);
 		if (f.minimo) c.push([`Desde ${pesos(f.minimo)}`, { minimo: 0 }]);
 		if (f.vip) c.push(['VIP', { vip: false }]);
-		if (f.hornero) c.push(['Vendidos por Hornero', { hornero: false }]);
+		if (f.hornero) c.push(['Vendidos por Tincho', { hornero: false }]);
 		if (f.mayorista) c.push(['Mayoristas', { mayorista: false }]);
 		if (f.fecha !== 'todo') c.push([FECHAS.find((x) => x[0] === f.fecha)![1], { fecha: 'todo' }]);
 		if (f.q) c.push([`«${f.q}»`, { q: '' }]);
@@ -595,7 +595,7 @@
 					/>
 				</div>
 				<div class="banderas">
-					{#each [['vip', 'Solo clientes VIP'], ['hornero', 'Vendidos por Hornero'], ['mayorista', 'Mayoristas']] as const as [k, t] (k)}
+					{#each [['vip', 'Solo clientes VIP'], ['hornero', 'Vendidos por Tincho'], ['mayorista', 'Mayoristas']] as const as [k, t] (k)}
 						<div class="bandera">
 							<span>{t}</span>
 							<Interruptor label={t} checked={f[k]} onchange={(v: boolean) => ir({ [k]: v })} />
@@ -677,7 +677,7 @@
 													icon={I.phCrownSimpleFill}
 													size={13}
 													style="color:#C98A12;flex:none"
-												/>{/if}{#if p.hornero}<span class="q-ai" title="Lo vendió Hornero">✦</span
+												/>{/if}{#if p.hornero}<span class="q-ai" title="Lo vendió Tincho">✦</span
 												>{/if}</span
 										>
 										<span class="q-s">#{p.numero} · {hace(p.creado)} · {p.ciudad}</span>

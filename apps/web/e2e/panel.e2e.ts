@@ -52,7 +52,7 @@ test('notificaciones: filtra y marca todo como leído', async ({ page }) => {
 	await page.getByRole('button', { name: 'Notificaciones' }).click();
 	const caja = page.getByRole('dialog', { name: 'Notificaciones' });
 	await expect(caja.locator('.n')).toHaveCount(6);
-	await expect(caja.getByText(/Hornero ya respondió/)).toBeVisible();
+	await expect(caja.getByText(/Tincho ya respondió/)).toBeVisible();
 	await caja.getByRole('button', { name: 'Sistema' }).click();
 	await expect(caja.locator('.n')).toHaveCount(2);
 	await caja.getByRole('button', { name: 'Marcar todo como leído' }).click();
@@ -68,7 +68,7 @@ test('⌘K busca y lleva a la sección', async ({ page }) => {
 	const cmdk = page.getByRole('dialog', { name: 'Buscar' });
 	await expect(cmdk.getByRole('textbox', { name: 'Buscar' })).toBeFocused();
 	await page.keyboard.type('inform');
-	// Hornero siempre arriba; la sección que coincide queda elegida.
+	// Tincho siempre arriba; la sección que coincide queda elegida.
 	await expect(cmdk.getByRole('option')).toHaveCount(2);
 	await expect(cmdk.getByRole('option', { name: /Informes/ })).toHaveAttribute(
 		'aria-selected',
@@ -77,12 +77,12 @@ test('⌘K busca y lleva a la sección', async ({ page }) => {
 	await page.keyboard.press('Enter');
 	await expect(page).toHaveURL(/\/panel\/informes$/);
 	await expect(cmdk).toBeHidden();
-	// Sin coincidencias, Enter se lo pregunta a Hornero.
+	// Sin coincidencias, Enter se lo pregunta a Tincho.
 	await page.keyboard.press('ControlOrMeta+k');
 	await expect(cmdk.getByRole('textbox', { name: 'Buscar' })).toBeFocused();
 	await page.keyboard.type('qué me conviene vender');
 	await page.keyboard.press('Enter');
-	await expect(page.getByRole('dialog', { name: 'Hornero' })).toBeVisible();
+	await expect(page.getByRole('dialog', { name: 'Tincho' })).toBeVisible();
 });
 
 test.describe('celular', () => {

@@ -378,7 +378,7 @@ export function cuandoTurno(iso: string) {
 	return `${dia} ${d.getUTCDate()}/${d.getUTCMonth() + 1} a las ${horaAr(t)}`;
 }
 
-/** Suma un mensaje a Hornero en el día del visitante y devuelve cuántos lleva. */
+/** Suma un mensaje a Tincho en el día del visitante y devuelve cuántos lleva. */
 export async function sumarUsoHornero(db: DbSandbox, sandboxId: string, dia: string) {
 	const uso = (await cambiosDe(db, sandboxId, 'hornero')).get('uso') as
 		{ dia: string; n: number } | undefined;
@@ -833,7 +833,7 @@ export class DatosSandbox implements Datos {
 		const ahora = Date.now();
 		if (lista === 'clientes') {
 			const todos = await this.regClientes();
-			// La sugerencia de Hornero: cupón a los que están en riesgo.
+			// La sugerencia de Tincho: cupón a los que están en riesgo.
 			const elegidos =
 				accion === 'cupon-riesgo'
 					? todos.filter((c) => c.seg === 'risk' && !c.cupon)
@@ -1468,7 +1468,7 @@ export class DatosSandbox implements Datos {
 				? new Date(Math.max(v.termina, (empieza ?? 0) + 86_400_000)).toISOString()
 				: null,
 			minimo: n.minimo,
-			consejo: n.opciones.hornero ? 'Hornero ya lo puede ofrecer en el chat.' : null,
+			consejo: n.opciones.hornero ? 'Tincho ya lo puede ofrecer en el chat.' : null,
 			creado: new Date(ahora).toISOString()
 		};
 		// Las reglas que usa la tienda online (lib/tienda/cupon.ts) van guardadas con el cupón.
@@ -1896,7 +1896,7 @@ export class DatosSandbox implements Datos {
 								id: 'reponer',
 								tipo: 'reponer',
 								titulo: `Reponer ${plural(reponer.length, 'producto', 'productos')}`,
-								detalle: 'Hornero armó el pedido al proveedor',
+								detalle: 'Tincho armó el pedido al proveedor',
 								valor: null,
 								accion: 'Revisar'
 							},

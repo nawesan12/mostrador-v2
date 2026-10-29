@@ -92,7 +92,7 @@
 	const accion = (id: string, a: string, minimo?: number) =>
 		pedir(`/panel/cupones/${id}`, 'POST', { accion: a, minimo });
 
-	// ---- Consejo de Hornero ----
+	// ---- Consejo de Tincho ----
 	async function aplicarConsejo() {
 		const c = data.consejo!;
 		if (!(await accion(c.cuponId, 'minimo', c.minimo))) return;
@@ -335,7 +335,7 @@
 		[
 			'hornero',
 			I.phSparkleBold,
-			'Hornero lo puede ofrecer',
+			'Tincho lo puede ofrecer',
 			'Lo usa en el chat para cerrar ventas o rescatar carritos'
 		],
 		[
@@ -726,7 +726,7 @@
 				</div>
 				<div class="calcula">
 					<div class="ca-t">
-						<Icon icon={I.phSparkleFill} size={14} style="color:#b0441d" />Lo que calcula Hornero
+						<Icon icon={I.phSparkleFill} size={14} style="color:#b0441d" />Lo que calcula Tincho
 					</div>
 					<div class="ca-f"><span>Ventas extra estimadas</span><b>{pesos(est.ventas)}</b></div>
 					<div class="ca-f"><span>Te cuesta en descuentos</span><b>{pesos(est.costo)}</b></div>

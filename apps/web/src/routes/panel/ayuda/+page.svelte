@@ -6,7 +6,7 @@
 	import { anim } from '#lib/panel/anim.ts';
 	import { getShell } from '#lib/panel/shell.svelte.ts';
 
-	/** Ayuda del panel (design/PanelOperacion.dc.html, sHelp): Hornero, guías y contacto. */
+	/** Ayuda del panel (design/PanelOperacion.dc.html, sHelp): Tincho, guías y contacto. */
 	let { data } = $props();
 	const shell = getShell();
 	let pregunta = $state('');
@@ -40,7 +40,7 @@
 		],
 		[
 			I.phWhatsappLogoFill,
-			'WhatsApp y Hornero',
+			'WhatsApp y Tincho',
 			'Qué responde y cuándo te avisa',
 			'#E9F8EE',
 			'#1F6F4A',
@@ -110,7 +110,7 @@
 	<div class="contactos" use:anim={{ t: 'rise', delay: 120 }}>
 		<button type="button" class="contacto" onclick={() => shell.hornero()}>
 			<Icon icon={I.phSparkleFill} size={24} style="color:#b0441d" />
-			<div class="c-t">Hornero</div>
+			<div class="c-t">Tincho</div>
 			<div class="c-d">Responde al instante, 24 h</div>
 		</button>
 		<a class="contacto" href={resolve('/(sitio)/contacto')}>

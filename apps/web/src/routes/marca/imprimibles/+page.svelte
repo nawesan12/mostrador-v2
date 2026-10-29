@@ -346,7 +346,7 @@
 			</div></Lamina
 		>
 		<span style="font-size:14px;color:#6B5244"
-			>Interior · qué incluye | precios | Hornero y Caja</span
+			>Interior · qué incluye | precios | Tincho y Caja</span
 		>
 		<Lamina nombre="imprimibles-3-triptico-interior" ancho={1122.52} alto={793.7} mm={[297, 210]}
 			><div
@@ -554,7 +554,7 @@
 						</div>
 					</div>
 					<div>
-						<div style="font-size:12px;font-weight:700">Hornero trabaja por vos</div>
+						<div style="font-size:12px;font-weight:700">Tincho trabaja por vos</div>
 						<div style="margin-top:2mm;font-size:10px;line-height:1.55;color:#4A3428">
 							Responde consultas, recupera carritos y te avisa qué reponer antes de quedarte sin
 							stock.

@@ -4,7 +4,7 @@
 	import { rutaDe } from './navegacion.ts';
 	import { getShell } from './shell.svelte.ts';
 
-	/** Barra de abajo en el celular (handoff): Inicio, Pedidos, Hornero, Productos y Más. */
+	/** Barra de abajo en el celular (handoff): Inicio, Pedidos, Tincho, Productos y Más. */
 	let { seccion, pedidos }: { seccion: string; pedidos: number } = $props();
 	const shell = getShell();
 	const enInicio = $derived(seccion === 'Resumen');
@@ -18,7 +18,7 @@
 				>{pedidos}</span
 			>{/if}</a
 	>
-	<button type="button" class="hornero" aria-label="Hornero" onclick={() => shell.hornero()}
+	<button type="button" class="hornero" aria-label="Tincho" onclick={() => shell.hornero()}
 		><span><img src="/hornero/avatar.webp" alt="" /></span></button
 	>
 	<a href={rutaDe('Productos')} class:on={seccion === 'Productos'}

@@ -20,7 +20,7 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
 	});
 };
 
-/** Una acción sobre filas (o la sugerencia de Hornero). */
+/** Una acción sobre filas (o la sugerencia de Tincho). */
 export const POST: RequestHandler = async ({ locals, params, request }) => {
 	const c = (await request.json().catch(() => null)) as {
 		ids?: unknown;

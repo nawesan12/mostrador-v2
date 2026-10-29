@@ -24,7 +24,7 @@ export const PERMISOS = [
 	{
 		id: 'whatsapp',
 		titulo: 'Responder WhatsApp',
-		detalle: 'Y aprobar respuestas de Hornero',
+		detalle: 'Y aprobar respuestas de Tincho',
 		def: [1, 1, 1, 0]
 	},
 	{

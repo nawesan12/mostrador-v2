@@ -3,7 +3,7 @@ export const COMPONENTES = [
 	['tiendas', 'Tiendas online'],
 	['panel', 'Panel de administración'],
 	['pagos', 'Checkout y pagos'],
-	['whatsapp', 'WhatsApp y Hornero (IA)'],
+	['whatsapp', 'WhatsApp y Tincho (IA)'],
 	['arca', 'Facturación electrónica (ARCA)'],
 	['mercadolibre', 'Sincronización con Mercado Libre'],
 	['api', 'API y webhooks']

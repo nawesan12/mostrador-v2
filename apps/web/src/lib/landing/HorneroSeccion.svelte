@@ -6,7 +6,7 @@
 	import { getLanding } from './estado.svelte.ts';
 	import { cara, unsplash } from './formato.ts';
 
-	/** Sección "Conocé a Hornero": el título, lo que hace en cuatro renglones y el chat demo animado. */
+	/** Sección "Conocé a Tincho": el título, lo que hace en cuatro renglones y el chat demo animado. */
 	const l = getLanding();
 	const visibles = $derived(CHAT.slice(0, Math.min(l.chat, CHAT.length)));
 	const siguiente = $derived(CHAT[l.chat]);
@@ -36,7 +36,7 @@
 		<div class="dos">
 			<div class="cab" use:anim={'reveal'}>
 				<div class="sello"><Icon icon={I.phSparkleFill} size={15} />Asistente con IA</div>
-				<h2>Conocé a Hornero. Atiende y vende las 24&nbsp;horas.</h2>
+				<h2>Conocé a Tincho. Atiende y vende las 24&nbsp;horas.</h2>
 				<p>
 					Contesta en WhatsApp, Instagram y Telegram con tus precios y tu stock reales. Lo
 					importante te lo&nbsp;consulta.
@@ -55,7 +55,7 @@
 						<div class="sub">Cliente nueva · llegó por Instagram</div>
 					</div>
 					<span class="atiende"
-						><span class="av"><img src="/hornero/avatar.webp" alt="Hornero" /></span>Hornero
+						><span class="av"><img src="/hornero/avatar.webp" alt="Tincho" /></span>Tincho
 						atendiendo</span
 					>
 				</div>
@@ -65,7 +65,7 @@
 							<div class="m-c" use:entra>{m.t}</div>
 						{:else if m.k === 'h'}
 							<div class="m-h" use:entra>
-								<span class="firma"><Icon icon={I.phSparkleFill} size={11} />Hornero</span><span
+								<span class="firma"><Icon icon={I.phSparkleFill} size={11} />Tincho</span><span
 									class="burbuja">{m.t}</span
 								>
 							</div>
@@ -100,7 +100,7 @@
 						{/if}
 					{/each}
 					{#if escribiendo}
-						<div class="puntos" aria-label="Hornero está escribiendo">
+						<div class="puntos" aria-label="Tincho está escribiendo">
 							<span use:anim={'dots'}></span><span use:anim={{ t: 'dots', delay: 180 }}></span><span
 								use:anim={{ t: 'dots', delay: 360 }}
 							></span>
@@ -108,7 +108,7 @@
 					{/if}
 				</div>
 				<div class="chat-pie">
-					<span>Hornero contesta solo. Vos podés intervenir cuando quieras.</span>
+					<span>Tincho contesta solo. Vos podés intervenir cuando quieras.</span>
 					<span class="tomar">Tomar la conversación</span>
 				</div>
 			</div>
@@ -413,7 +413,7 @@
 		white-space: nowrap;
 	}
 	/* Celular: la escena se compacta para que las métricas no se salgan, y la cabecera del chat
-	   pasa el "Hornero atendiendo" abajo en vez de estrujar el nombre. */
+	   pasa el "Tincho atendiendo" abajo en vez de estrujar el nombre. */
 	@media (max-width: 640px) {
 		.dos {
 			gap: 32px;

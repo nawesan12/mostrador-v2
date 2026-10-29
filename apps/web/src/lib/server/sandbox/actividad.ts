@@ -1,6 +1,6 @@
 /**
  * Actividad de la demo (design/PanelCrecer.dc.html, sAct). Lo que hizo el visitante sale de sus
- * cambios guardados (son su historial real); lo de Hornero, el equipo y el sistema, de la tienda de
+ * cambios guardados (son su historial real); lo de Tincho, el equipo y el sistema, de la tienda de
  * ejemplo. Se puede deshacer lo que vuelve a quedar como estaba con sólo borrar el cambio.
  */
 import type { components } from '@mostrador/contrato/esquema';
@@ -179,7 +179,7 @@ export function actividadDemo(
 		{
 			id: 'd-hornero',
 			tipo: 'hornero',
-			quien: 'Hornero',
+			quien: 'Tincho',
 			foto: null,
 			texto: `respondió ${d.conversaciones.length * 9 + 14} consultas y cerró ${ventasHornero.length} ventas por ${pesos(ventasHornero.reduce((s, p) => s + p.total, 0))}`,
 			cuando: iso(ahora - 5 * MIN),
@@ -212,7 +212,7 @@ export function actividadDemo(
 		{
 			id: 'd-fotos',
 			tipo: 'hornero',
-			quien: 'Hornero',
+			quien: 'Tincho',
 			foto: null,
 			texto: `mejoró las fotos de ${Math.min(12, d.catalogo.productos.length)} productos`,
 			cuando: iso(ahora - 300 * MIN),

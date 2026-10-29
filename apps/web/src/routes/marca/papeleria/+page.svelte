@@ -905,7 +905,7 @@
 							<div
 								style="margin-top:8mm;display:grid;grid-template-columns:1fr 1fr;gap:4mm 10mm;font-size:12px;line-height:1.5;color:#4A3428"
 							>
-								<span>✓ Tienda online + punto de venta</span><span>✓ Hornero, asistente con IA</span
+								<span>✓ Tienda online + punto de venta</span><span>✓ Tincho, asistente con IA</span
 								><span>✓ Mercado Libre y WhatsApp</span><span>✓ Facturación con ARCA</span><span
 									>✓ Envíos con Andreani y OCA</span
 								><span>✓ Finanzas con Caja</span>

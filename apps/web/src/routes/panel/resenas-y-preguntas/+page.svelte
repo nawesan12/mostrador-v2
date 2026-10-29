@@ -144,7 +144,7 @@
 						</div>
 					{:else}
 						<div class="sugerida">
-							<div class="s-t">✦ Respuesta de Hornero</div>
+							<div class="s-t">✦ Respuesta de Tincho</div>
 							{#if editando === q.id}
 								<textarea bind:value={texto} aria-label="Respuesta" maxlength="2000"></textarea>
 							{:else}

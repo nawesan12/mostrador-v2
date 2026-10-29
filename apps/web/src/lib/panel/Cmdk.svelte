@@ -8,8 +8,8 @@
 	import { getShell } from './shell.svelte.ts';
 
 	/**
-	 * ⌘K (handoff): preguntarle a Hornero, las acciones (crear pedido, link de pago, cargar con foto,
-	 * abrir caja) y saltar a cualquier sección. La opción 0 es Hornero; el resto va de la 1 en adelante.
+	 * ⌘K (handoff): preguntarle a Tincho, las acciones (crear pedido, link de pago, cargar con foto,
+	 * abrir caja) y saltar a cualquier sección. La opción 0 es Tincho; el resto va de la 1 en adelante.
 	 */
 	const shell = getShell();
 	let q = $state('');
@@ -33,7 +33,7 @@
 		},
 		{
 			t: 'Cargar producto con foto',
-			s: 'Hornero completa nombre, precio y categoría',
+			s: 'Tincho completa nombre, precio y categoría',
 			icon: I.phCameraBold,
 			id: 'a-foto',
 			grupo: 'Acciones',
@@ -68,7 +68,7 @@
 			)
 		].filter((i) => !q.trim() || `${i.t} ${i.s}`.toLowerCase().includes(q.trim().toLowerCase()))
 	);
-	// Si lo escrito coincide con una sección, Enter va ahí; si no, se lo pregunta a Hornero. Las
+	// Si lo escrito coincide con una sección, Enter va ahí; si no, se lo pregunta a Tincho. Las
 	// flechas la mueven (derived escribible: vuelve a calcularse al cambiar lo escrito).
 	let sel = $derived(q.trim() && items.length ? 1 : 0);
 	$effect(() => {
@@ -120,7 +120,7 @@
 				<input
 					bind:value={q}
 					onkeydown={teclas}
-					placeholder="Buscá una sección o preguntale a Hornero…"
+					placeholder="Buscá una sección o preguntale a Tincho…"
 					aria-label="Buscar"
 					aria-controls="cmdk-lista"
 					aria-activedescendant="cmdk-{sel}"
@@ -140,7 +140,7 @@
 				>
 					<span class="h-ico"><Icon icon={I.phSparkleFill} size={18} /></span>
 					<span class="txt"
-						><span class="t">Preguntale a Hornero</span><span class="s h-q"
+						><span class="t">Preguntale a Tincho</span><span class="s h-q"
 							>“{q.trim() || EJEMPLO}”</span
 						></span
 					>

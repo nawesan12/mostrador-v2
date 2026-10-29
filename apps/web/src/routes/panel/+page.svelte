@@ -120,7 +120,7 @@
 		{
 			icon: I.phCameraFill,
 			t: 'Cargar con foto',
-			k: 'Hornero completa la ficha',
+			k: 'Tincho completa la ficha',
 			bg: 'rgba(210,88,47,.12)',
 			fg: '#b0441d',
 			href: rutaDe('Productos')
@@ -264,7 +264,7 @@
 	<button
 		type="button"
 		class="hornero"
-		aria-label="Preguntale a Hornero"
+		aria-label="Preguntale a Tincho"
 		onclick={() => shell.hornero()}><span><img src="/hornero/avatar.webp" alt="" /></span></button
 	>
 	<div class="hola">
@@ -573,9 +573,9 @@
 
 	<div class="hornero-card" use:anim={{ t: 'rise' }}>
 		<div class="h-cab">
-			<div class="h-av"><img src="/hornero/avatar.webp" alt="Hornero" /></div>
+			<div class="h-av"><img src="/hornero/avatar.webp" alt="Tincho" /></div>
 			<div>
-				<div class="h-n">Hornero</div>
+				<div class="h-n">Tincho</div>
 				<div class="h-s">
 					Atendió {plural(t.hornero.chatsHoy, 'chat', 'chats')} hoy · {plural(
 						t.hornero.ideas,
@@ -653,7 +653,7 @@
 						<span class="cv-m">{v.mensaje}</span>
 						{#if v.atiende === 'hornero'}
 							<span class="cv-bot"
-								><Icon icon={I.phSparkleFill} size={11} />Hornero respondiendo<span
+								><Icon icon={I.phSparkleFill} size={11} />Tincho respondiendo<span
 									class="dots"
 									use:anim={{ t: 'dots' }}
 								></span></span
@@ -741,7 +741,7 @@
 			type="button"
 			class="b-ia abajo"
 			onclick={() => shell.hornero('Escribí respuestas cortas para las reseñas nuevas.')}
-			><Icon icon={I.phSparkleFill} size={14} />Responder con Hornero</button
+			><Icon icon={I.phSparkleFill} size={14} />Responder con Tincho</button
 		>
 	</div>
 
@@ -1620,7 +1620,7 @@
 		flex: 1;
 	}
 
-	/* Hornero */
+	/* Tincho */
 	.hornero-card {
 		position: relative;
 		overflow: hidden;

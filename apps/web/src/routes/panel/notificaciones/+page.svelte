@@ -102,7 +102,7 @@
 		<div class="caja">
 			<div class="t">Resumen diario</div>
 			<div class="d2">
-				Hornero te manda a las 9 h cuánto vendiste ayer, qué pedidos esperan y qué se está quedando
+				Tincho te manda a las 9 h cuánto vendiste ayer, qué pedidos esperan y qué se está quedando
 				sin stock.
 			</div>
 			<div class="pills" role="group" aria-label="Resumen diario">

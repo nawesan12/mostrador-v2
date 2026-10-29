@@ -7,7 +7,7 @@
 	import { getLanding } from './estado.svelte.ts';
 
 	/**
-	 * Widget flotante de Hornero (handoff): a los 2,6 s aparece el avatar, cerrado; el globo se abre
+	 * Widget flotante de Tincho (handoff): a los 2,6 s aparece el avatar, cerrado; el globo se abre
 	 * al tocarlo y al minimizarlo vuelve a quedar el avatar. No se muestra con el menú mobile abierto (taparía los links)
 	 * ni mientras el banner de cookies está a la vista.
 	 */
@@ -29,9 +29,9 @@
 {#if l.widget && !l.menu && !banner.abierto}
 	<div class="widget" use:anim={'rise'}>
 		{#if l.widgetOpen}
-			<div class="globo" use:entra role="dialog" aria-label="Hornero">
+			<div class="globo" use:entra role="dialog" aria-label="Tincho">
 				<div class="g-cab">
-					<span>¡Hola! Soy Hornero</span>
+					<span>¡Hola! Soy Tincho</span>
 					<button
 						type="button"
 						title="Minimizar"
@@ -50,8 +50,8 @@
 		<button
 			type="button"
 			class="avatar"
-			title="Hornero"
-			aria-label="Hornero"
+			title="Tincho"
+			aria-label="Tincho"
 			aria-expanded={l.widgetOpen}
 			onclick={() => (l.widgetOpen = !l.widgetOpen)}
 		>

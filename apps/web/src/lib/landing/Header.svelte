@@ -37,7 +37,7 @@
 		[
 			'#hornero',
 			I.phSparkleFill,
-			'Hornero IA',
+			'Tincho IA',
 			'Tu asistente que vende por vos',
 			'#FDF3DD',
 			'#9A6A10'
@@ -134,7 +134,7 @@
 			<a href="#hornero" class="hornero" onclick={() => (l.menu = false)} use:entrar={MENU.length}>
 				<img src="/hornero/saludo.webp" alt="" />
 				<span class="h-txt"
-					><span class="t">Conocé a Hornero</span><span class="d"
+					><span class="t">Conocé a Tincho</span><span class="d"
 						>Atiende y vende por vos las 24 horas</span
 					></span
 				>

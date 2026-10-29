@@ -1,5 +1,5 @@
 /**
- * Hornero con Workers AI: manda la conversación con el contexto de la tienda y devuelve el texto a
+ * Tincho con Workers AI: manda la conversación con el contexto de la tienda y devuelve el texto a
  * medida que llega (streaming). Acepta los dos formatos de stream de Workers AI.
  */
 export const MODELO = '@cf/google/gemma-4-26b-a4b-it';

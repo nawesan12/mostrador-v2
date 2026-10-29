@@ -131,9 +131,9 @@
 		</nav>
 		<div class="esp"></div>
 		<div class="consejo">
-			<div class="c-av"><img src={ilustracion} alt="Hornero" width="52" height="52" /></div>
+			<div class="c-av"><img src={ilustracion} alt="Tincho" width="52" height="52" /></div>
 			<div>
-				<div class="c-n">Hornero</div>
+				<div class="c-n">Tincho</div>
 				<div class="c-t">{CONSEJOS[paso]}</div>
 			</div>
 		</div>
@@ -150,7 +150,7 @@
 				<button
 					type="button"
 					class="m-av"
-					aria-label="Consejo de Hornero"
+					aria-label="Consejo de Tincho"
 					aria-expanded={o.consejo}
 					onclick={() => (o.consejo = !o.consejo)}><img src={ilustracion} alt="" /></button
 				>
@@ -167,7 +167,7 @@
 					></button>
 				{/each}
 			</div>
-			{#if o.consejo}<div class="m-consejo"><b>Hornero:</b> {CONSEJOS[paso]}</div>{/if}
+			{#if o.consejo}<div class="m-consejo"><b>Tincho:</b> {CONSEJOS[paso]}</div>{/if}
 		</div>
 		<div class="arriba">
 			<span class="ar-paso">Paso {paso + 1} de 8</span>

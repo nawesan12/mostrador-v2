@@ -84,7 +84,7 @@
 						href="#1b"
 						style="padding:4px 10px;border-radius:999px;background:#2A140C;color:#fff;font-size:12px;font-weight:700;text-decoration:none"
 						>1b</a
-					><span style="font-size:14px;color:#6B5244">Hornero · soporte y cuenta de tips</span>
+					><span style="font-size:14px;color:#6B5244">Tincho · soporte y cuenta de tips</span>
 				</div>
 				<div style="display:flex;gap:20px;align-items:center">
 					<Lamina nombre="redes-1b-avatar-hornero" ancho={200} alto={200} escalaPng={2}
@@ -134,7 +134,7 @@
 							>
 								<Icon icon={I.phSparkleBold} size={34} />
 							</div></Lamina
-						><span style="font-size:12px">Hornero</span>
+						><span style="font-size:12px">Tincho</span>
 					</div>
 					<div style="display:flex;flex-direction:column;align-items:center;gap:6px">
 						<Lamina nombre="redes-1c-tiendas" ancho={84} alto={84} escalaPng={1080 / 84} compacta
@@ -390,7 +390,7 @@
 						<div
 							style="position:relative;margin-top:44px;font-size:104px;line-height:.95;letter-spacing:-.045em;font-weight:600"
 						>
-							Dormí. Hornero responde.
+							Dormí. Tincho responde.
 						</div>
 						<img
 							src="/hornero/whatsapp.png"
@@ -520,7 +520,7 @@
 						href="#3e"
 						style="padding:4px 10px;border-radius:999px;background:#2A140C;color:#fff;font-size:12px;font-weight:700;text-decoration:none"
 						>3e</a
-					><span style="font-size:14px;color:#6B5244">Hornero (IA)</span>
+					><span style="font-size:14px;color:#6B5244">Tincho (IA)</span>
 				</div>
 				<Lamina
 					nombre="redes-3e-anuncio-meta"
@@ -535,7 +535,7 @@
 						<div
 							style="display:inline-flex;align-items:center;gap:14px;padding:14px 26px;border-radius:999px;background:#fff;font-size:30px;font-weight:600;color:#C24E25"
 						>
-							✦ Hornero · tu vendedor con IA
+							✦ Tincho · tu vendedor con IA
 						</div>
 						<div
 							style="margin-top:40px;font-size:100px;line-height:.95;letter-spacing:-.045em;font-weight:600"

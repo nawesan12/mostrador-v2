@@ -30,7 +30,7 @@ const vale = (p: Pedido) => p.estado !== 'Cancelado';
 export type CambiosTablero = {
 	meta?: number;
 	certificadoOculto?: boolean;
-	/** Ideas de Hornero aprobadas (carritos = recordatorio mandado). */
+	/** Ideas de Tincho aprobadas (carritos = recordatorio mandado). */
 	ideasHechas?: string[];
 };
 
@@ -313,7 +313,7 @@ export function tableroDemo(
 	};
 }
 
-/** Lo que Hornero sabe de la tienda de ejemplo (ver ContextoHornero en el contrato). */
+/** Lo que Tincho sabe de la tienda de ejemplo (ver ContextoHornero en el contrato). */
 export function contextoDemo(d: Demo, ahora: number): ContextoHornero {
 	const hoy = inicioDelDia(ahora);
 	const vale30 = d.pedidos.filter(

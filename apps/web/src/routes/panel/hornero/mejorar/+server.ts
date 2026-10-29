@@ -16,7 +16,7 @@ const Pedido = v.object({
 const simulado = (nombre: string, d: string) =>
 	`${nombre}. ${d.trim() ? d.trim().replace(/\.?$/, '. ') : ''}Calidad para todos los días, con envío a todo el país y cambios sin vueltas.`;
 
-/** "✦ Mejorar con Hornero": reescribe la descripción de un producto (cuenta en el mismo cupo que la charla). */
+/** "✦ Mejorar con Tincho": reescribe la descripción de un producto (cuenta en el mismo cupo que la charla). */
 export const POST: RequestHandler = async ({ locals, request }) => {
 	const r = v.safeParse(Pedido, await request.json().catch(() => null));
 	if (!r.success) error(400, 'Falta el nombre del producto.');

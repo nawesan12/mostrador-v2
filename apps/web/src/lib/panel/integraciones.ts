@@ -52,7 +52,7 @@ export const INTEGRACIONES: Integracion[] = [
 		hace: [
 			'Publica los productos que elijas',
 			'El stock es uno solo con la tienda y el local',
-			'Las preguntas llegan con la respuesta de Hornero'
+			'Las preguntas llegan con la respuesta de Tincho'
 		],
 		opciones: [
 			{
@@ -73,11 +73,11 @@ export const INTEGRACIONES: Integracion[] = [
 		marca: 'wa',
 		hace: [
 			'Los chats llegan a la bandeja del panel',
-			'Hornero responde y manda links de pago',
+			'Tincho responde y manda links de pago',
 			'Campañas con el costo exacto antes de enviar'
 		],
 		opciones: [
-			{ id: 'hornero', t: 'Hornero responde', d: 'Si está apagado, sólo sugiere', def: true },
+			{ id: 'hornero', t: 'Tincho responde', d: 'Si está apagado, sólo sugiere', def: true },
 			{ id: 'horario', t: 'Sólo fuera de horario', d: 'En horario atiende tu equipo', def: false }
 		],
 		demo: true
@@ -102,11 +102,11 @@ export const INTEGRACIONES: Integracion[] = [
 	{
 		id: 'tg',
 		nombre: 'Telegram',
-		detalle: 'Hornero y avisos',
+		detalle: 'Tincho y avisos',
 		categoria: 'canales',
 		marca: 'tg',
 		hace: [
-			'Preguntale a Hornero por ventas, pedidos y stock desde Telegram',
+			'Preguntale a Tincho por ventas, pedidos y stock desde Telegram',
 			'Te avisa cada venta al momento',
 			'Sólo ve la tienda que vinculaste'
 		],

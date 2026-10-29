@@ -42,7 +42,7 @@ test('crear un cupón con el armador, pausarlo y duplicarlo', async ({ page }) =
 	await expect(page.getByText('Ya tenés un cupón FINDE10.')).toBeVisible();
 });
 
-test('consejo de Hornero, automáticas y relámpago', async ({ page }) => {
+test('consejo de Tincho, automáticas y relámpago', async ({ page }) => {
 	await demo(page);
 	await page.getByRole('button', { name: 'Poner mínimo $ 25.000' }).click();
 	await expect(page.getByText('BIENVENIDA actualizado')).toBeVisible();

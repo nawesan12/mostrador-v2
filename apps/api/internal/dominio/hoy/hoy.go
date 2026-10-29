@@ -61,7 +61,7 @@ func Actividad(ctx context.Context, pool tx, tiendaID string) ([]Evento, error) 
 			e.ID = fmt.Sprint(id)
 			switch actor {
 			case "hornero":
-				e.Tipo, e.Quien = "hornero", "Hornero"
+				e.Tipo, e.Quien = "hornero", "Tincho"
 			case "persona", "staff":
 				e.Tipo, e.Quien = "equipo", "Vos"
 			default:

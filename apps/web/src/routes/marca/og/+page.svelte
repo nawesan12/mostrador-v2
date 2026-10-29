@@ -156,7 +156,7 @@
 							Más barato en cada escalón.
 						</div>
 						<div style="margin-top:20px;font-size:23px;line-height:1.4;color:#D9C8BA">
-							Y con Hornero, factura de ARCA y punto de venta adentro.
+							Y con Tincho, factura de ARCA y punto de venta adentro.
 						</div>
 					</div>
 					<div
@@ -205,7 +205,7 @@
 		<div id="1c" style="display:flex;flex-direction:column;gap:10px">
 			<span
 				style="align-self:flex-start;padding:4px 10px;border-radius:999px;background:#2A140C;color:#fff;font-size:13px;font-weight:700"
-				>1c · Hornero</span
+				>1c · Tincho</span
 			>
 			<Lamina nombre="og-hornero" ancho={1200} alto={630}
 				><div
@@ -233,7 +233,7 @@
 						<div
 							style="margin-top:18px;font-size:76px;line-height:.94;letter-spacing:-.055em;font-weight:600"
 						>
-							Hornero atiende tu WhatsApp mientras dormís.
+							Tincho atiende tu WhatsApp mientras dormís.
 						</div>
 						<div style="margin-top:18px;font-size:23px;line-height:1.4;color:#FFE3D6">
 							Responde con tu stock real, cobra y te avisa lo importante.

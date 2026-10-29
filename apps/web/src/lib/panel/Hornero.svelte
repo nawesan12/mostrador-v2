@@ -11,7 +11,7 @@
 	import { getShell } from './shell.svelte.ts';
 
 	/**
-	 * Hornero (handoff: panel lateral `ovAi`): cómo viene el día, sus ideas para aprobar y la charla.
+	 * Tincho (handoff: panel lateral `ovAi`): cómo viene el día, sus ideas para aprobar y la charla.
 	 * Responde con Workers AI sobre los datos de la tienda.
 	 */
 	const shell = getShell();
@@ -142,7 +142,7 @@
 				<div class="cab-in">
 					<div class="av"><img src="/hornero/avatar.webp" alt="" /></div>
 					<div class="quien">
-						<Dialog.Title class="nombre">Hornero</Dialog.Title>
+						<Dialog.Title class="nombre">Tincho</Dialog.Title>
 						<div class="estado"><span class="punto"></span>Tu asistente · en línea</div>
 					</div>
 					<Dialog.Close class="cerrar" aria-label="Cerrar"
@@ -207,7 +207,7 @@
 					{/if}
 				{/each}
 				{#if escribiendo && !shell.charla.at(-1)?.texto}
-					<div class="globo hornero cargando" aria-label="Hornero está escribiendo">
+					<div class="globo hornero cargando" aria-label="Tincho está escribiendo">
 						<span></span><span></span><span></span>
 					</div>
 				{/if}
@@ -228,8 +228,8 @@
 				>
 					<input
 						bind:value={texto}
-						placeholder="Escribile a Hornero…"
-						aria-label="Escribile a Hornero"
+						placeholder="Escribile a Tincho…"
+						aria-label="Escribile a Tincho"
 						maxlength="1000"
 						autocomplete="off"
 					/>

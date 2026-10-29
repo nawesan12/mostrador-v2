@@ -294,7 +294,7 @@ function automaticas(d: Demo, mes: number, prendidas: Map<string, boolean>): Aut
 		],
 		[
 			'carrito',
-			'Rescate de carrito con Hornero',
+			'Rescate de carrito con Tincho',
 			'Ofrece hasta 10 % si el carrito se enfría',
 			'Carrito abandonado 2 h → “Te guardo 10 % hasta las 20 h”',
 			`${d.carritos.length * 3} carritos recuperados`,

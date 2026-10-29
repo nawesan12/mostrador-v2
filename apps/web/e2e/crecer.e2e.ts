@@ -12,7 +12,7 @@ async function demo(page: Page, ruta: string) {
 	await listo(page);
 }
 
-test('marketing: el costo sigue a la audiencia, Hornero reescribe y la campaña sale', async ({
+test('marketing: el costo sigue a la audiencia, Tincho reescribe y la campaña sale', async ({
 	page
 }) => {
 	await demo(page, '/panel/marketing');
@@ -22,7 +22,7 @@ test('marketing: el costo sigue a la audiencia, Hornero reescribe y la campaña 
 	await expect(page.getByRole('button', { name: `Enviar a ${n} personas` })).toBeVisible();
 	await expect(page.locator('.nu-d').first()).toContainText(`${n} mensajes de marketing`);
 	const antes = await page.getByLabel('Mensaje').inputValue();
-	await page.getByRole('button', { name: '✦ Reescribir con Hornero' }).click();
+	await page.getByRole('button', { name: '✦ Reescribir con Tincho' }).click();
 	await expect(page.getByLabel('Mensaje')).not.toHaveValue(antes);
 	await expect(page.locator('.b-txt')).toContainText('Lucía');
 	await page.getByRole('button', { name: `Enviar a ${n} personas` }).click();

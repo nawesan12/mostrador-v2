@@ -1,8 +1,8 @@
 /**
- * Topes de Hornero en la demo pública, para no salir nunca del límite gratis de Workers AI (10.000
+ * Topes de Tincho en la demo pública, para no salir nunca del límite gratis de Workers AI (10.000
  * neurons por día para toda la cuenta; cada pregunta manda unos 3.000 tokens de contexto): 15 por
  * visitante por día (en su sandbox) y 200 por día para toda la demo. Pasado el tope de la demo,
- * Hornero sigue respondiendo con las respuestas armadas (simulado), sin llamar al modelo.
+ * Tincho sigue respondiendo con las respuestas armadas (simulado), sin llamar al modelo.
  */
 import { env } from 'cloudflare:workers';
 

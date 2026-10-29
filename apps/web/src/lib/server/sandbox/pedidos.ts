@@ -87,7 +87,7 @@ function vipsDe(d: Demo) {
 	);
 }
 
-/** Lo vendió Hornero: 6 de cada 10 pedidos de WhatsApp e Instagram. */
+/** Lo vendió Tincho: 6 de cada 10 pedidos de WhatsApp e Instagram. */
 const deHornero = (p: Pedido) => (p.canal === 'wa' || p.canal === 'ig') && p.numero % 10 < 6;
 
 /** Urgencia del handoff: para despachar (3 hoy, 2 atrasado), sin pagar hace más de un día (1). */

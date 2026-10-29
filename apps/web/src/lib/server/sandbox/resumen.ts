@@ -63,7 +63,7 @@ export function resumenDemo(
 				'wa',
 				'wa',
 				`Nuevo mensaje de ${primerNombre(chat.clienteId)}`,
-				`“${chat.mensaje}” · Hornero ya respondió`,
+				`“${chat.mensaje}” · Tincho ya respondió`,
 				4,
 				'ventas'
 			),

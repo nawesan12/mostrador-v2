@@ -5,7 +5,7 @@
 	import Etiqueta from './Etiqueta.svelte';
 	import { getOnboarding } from './estado.svelte.ts';
 
-	/** Paso 4, Importación: el avance por tipo de dato, lo que va ordenando Hornero y el conflicto de precios. */
+	/** Paso 4, Importación: el avance por tipo de dato, lo que va ordenando Tincho y el conflicto de precios. */
 	const o = getOnboarding();
 	const fmt = (n: number) => Math.round(n).toLocaleString('es-AR');
 	const filas = $derived(
@@ -95,10 +95,10 @@
 	</div>
 	<div class="hornero">
 		<div class="h-cab">
-			<span class="h-av"><img src="/hornero/caja.webp" alt="Hornero" width="52" height="52" /></span
+			<span class="h-av"><img src="/hornero/caja.webp" alt="Tincho" width="52" height="52" /></span
 			>
 			<div>
-				<div class="h-t">Hornero está ordenando</div>
+				<div class="h-t">Tincho está ordenando</div>
 				<div class="h-d">Mientras importamos, mejora lo que llega</div>
 			</div>
 		</div>
@@ -113,7 +113,7 @@
 				</div>
 			{/each}
 			{#if !o.importacionLista}
-				<div class="puntos" aria-label="Hornero sigue trabajando">
+				<div class="puntos" aria-label="Tincho sigue trabajando">
 					<span></span><span></span><span></span>
 				</div>
 			{/if}

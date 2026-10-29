@@ -74,7 +74,7 @@
 	const USO = $derived([
 		['Productos', data.uso.productos, null],
 		['Personas en el equipo', data.uso.personas, actual.personas],
-		['Respuestas de Hornero con IA', data.uso.hornero, tope],
+		['Respuestas de Tincho con IA', data.uso.hornero, tope],
 		['Respuestas automáticas sin IA', data.uso.sinIa, null]
 	] as const);
 	async function pack() {
@@ -82,7 +82,7 @@
 		await invalidateAll();
 		ui.toast({
 			k: 'ai',
-			title: '2.000 respuestas más para Hornero',
+			title: '2.000 respuestas más para Tincho',
 			desc: 'Se suman a este mes · $ 4.900 en tu próxima factura',
 			action: 'Deshacer',
 			onAction: async () => {

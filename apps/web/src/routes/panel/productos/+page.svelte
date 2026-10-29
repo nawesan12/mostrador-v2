@@ -414,7 +414,7 @@
 			<div class="f-txt">
 				<div class="f-t">Cargá productos con una foto</div>
 				<div class="f-d">
-					Hornero completa nombre, descripción, categoría y precio sugerido. Vos solo confirmás.
+					Tincho completa nombre, descripción, categoría y precio sugerido. Vos solo confirmás.
 				</div>
 			</div>
 			<button
@@ -423,7 +423,7 @@
 					ui.toast({
 						k: 'info',
 						title: 'Subir fotos llega con el almacenamiento',
-						desc: 'Mientras, cargá el producto a mano: Hornero te ayuda con la descripción.'
+						desc: 'Mientras, cargá el producto a mano: Tincho te ayuda con la descripción.'
 					});
 					producto = null;
 					editor = true;

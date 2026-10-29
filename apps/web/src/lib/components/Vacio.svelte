@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 
-	/** Estado vacío con Hornero y la primera acción. */
+	/** Estado vacío con Tincho y la primera acción. */
 	let {
 		hornero = 'horno',
 		titulo,

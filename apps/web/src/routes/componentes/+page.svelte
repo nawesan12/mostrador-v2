@@ -59,7 +59,7 @@
 		},
 		{
 			k: 'ai',
-			title: 'Hornero tiene una idea',
+			title: 'Tincho tiene una idea',
 			desc: 'Recuperá 12 carritos por $ 1.440',
 			action: 'Ver'
 		}
@@ -209,14 +209,14 @@
 				<Vacio
 					hornero="horno"
 					titulo="Todavía no hay pedidos"
-					texto="Compartí tu tienda por WhatsApp y Hornero atiende."
+					texto="Compartí tu tienda por WhatsApp y Tincho atiende."
 				>
 					<button type="button" class="btn btn-primary btn-sm">Compartir tienda</button>
 				</Vacio>
 				<Vacio
 					hornero="lupa"
 					titulo="Sin resultados para «termo azul»"
-					texto="Probá con otra palabra o preguntale a Hornero."
+					texto="Probá con otra palabra o preguntale a Tincho."
 				>
 					<button type="button" class="btn btn-soft btn-sm">Limpiar búsqueda</button>
 				</Vacio>
@@ -275,7 +275,7 @@
 	{/snippet}
 	<div class="nota-hornero">
 		<Icon icon={phSparkleFill} size={16} style="color:#b0441d;margin-top:2px" />
-		<div><b>Hornero:</b> pidió que vaya envuelto para regalo. Ya lo anoté en la etiqueta.</div>
+		<div><b>Tincho:</b> pidió que vaya envuelto para regalo. Ya lo anoté en la etiqueta.</div>
 	</div>
 	<div class="bloque">
 		<div class="bloque-t">Productos</div>

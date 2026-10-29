@@ -19,7 +19,7 @@ const datos = (): DatosHornero => ({
 	contexto: contextoDemo(d, AHORA)
 });
 
-describe('Hornero', () => {
+describe('Tincho', () => {
 	it('propone las tres ideas y marca las aprobadas', () => {
 		const ideas = ideasDe(tab());
 		expect(ideas.map((i) => i.id)).toEqual(['carritos', 'stock', 'promo']);

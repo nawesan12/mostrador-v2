@@ -17,7 +17,7 @@ test('/estado muestra los siete componentes y cambia de período', async ({ page
 		'Tiendas online',
 		'Panel de administración',
 		'Checkout y pagos',
-		'WhatsApp y Hornero (IA)',
+		'WhatsApp y Tincho (IA)',
 		'Facturación electrónica (ARCA)',
 		'Sincronización con Mercado Libre',
 		'API y webhooks'

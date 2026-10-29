@@ -45,7 +45,7 @@ test('la meta se edita y queda guardada', async ({ page }) => {
 	await expect(page.locator('.meta')).toContainText('$ 50 M');
 });
 
-test('el aviso de ARCA se descarta y Hornero manda el recordatorio una vez', async ({ page }) => {
+test('el aviso de ARCA se descarta y Tincho manda el recordatorio una vez', async ({ page }) => {
 	await demo(page);
 	await expect(page.getByText(/Tu certificado de ARCA vence/)).toBeVisible();
 	await page.getByRole('button', { name: 'Descartar el aviso' }).click();

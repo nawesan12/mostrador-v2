@@ -155,7 +155,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Asistente con inteligencia artificial',
 				cuerpo: [
 					{
-						p: 'Hornero, el asistente de Tu Local Web, puede redactar respuestas, descripciones y sugerencias. Puede equivocarse: revisá lo importante antes de enviarlo. No usamos tus datos ni los de tus clientes para entrenar modelos de terceros.'
+						p: 'Tincho, el asistente de Tu Local Web, puede redactar respuestas, descripciones y sugerencias. Puede equivocarse: revisá lo importante antes de enviarlo. No usamos tus datos ni los de tus clientes para entrenar modelos de terceros.'
 					}
 				]
 			},
@@ -332,7 +332,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Inteligencia artificial',
 				cuerpo: [
 					{
-						p: 'Cuando Hornero responde un mensaje, el texto se procesa solo para generar esa respuesta. Trabajamos con proveedores de IA que no retienen ni usan esos datos para entrenar sus modelos.'
+						p: 'Cuando Tincho responde un mensaje, el texto se procesa solo para generar esa respuesta. Trabajamos con proveedores de IA que no retienen ni usan esos datos para entrenar sus modelos.'
 					}
 				]
 			},

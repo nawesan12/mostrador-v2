@@ -1,5 +1,5 @@
 /**
- * Hornero en Telegram con la API real (DATA_SOURCE=api): el vínculo del chat vive en Go
+ * Tincho en Telegram con la API real (DATA_SOURCE=api): el vínculo del chat vive en Go
  * (integraciones/telegram). Las rutas del panel van con la sesión de la tienda; las del bot, sólo con
  * la clave del BFF (el webhook ya verificó el secreto de Telegram). El modelo sigue en el Worker: Go
  * devuelve el contexto de la tienda del chat y cuántos mensajes lleva hoy.
@@ -69,7 +69,7 @@ export class TelegramApi extends ClienteBff {
 			throw e;
 		}
 	}
-	/** El contexto de Hornero de la tienda del chat (suma el mensaje al día); null si no está vinculado. */
+	/** El contexto de Tincho de la tienda del chat (suma el mensaje al día); null si no está vinculado. */
 	async contexto(chat: number) {
 		try {
 			return await this.pedir<ContextoTelegram>('POST', '/v1/telegram/contexto', { chat });

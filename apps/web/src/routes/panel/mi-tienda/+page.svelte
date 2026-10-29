@@ -184,7 +184,7 @@
 						</div>
 					{:else}
 						<div class="wa">
-							<Icon icon={I.phWhatsappLogoFill} size={16} />¿Dudas? Escribinos, contesta Hornero al
+							<Icon icon={I.phWhatsappLogoFill} size={16} />¿Dudas? Escribinos, contesta Tincho al
 							toque
 						</div>
 					{/if}

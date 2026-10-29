@@ -93,7 +93,7 @@ func escanear(f pgx.Row, ahora time.Time) (Cupon, error) {
 		c.Estado = "activo"
 	}
 	if hornero && c.Estado != "terminado" {
-		s := "Hornero ya lo puede ofrecer en el chat."
+		s := "Tincho ya lo puede ofrecer en el chat."
 		c.Consejo = &s
 	}
 	return c, err
@@ -289,7 +289,7 @@ var automaticas = []automatica{
 	{"3x2", "3x2 en una categoría", "Llevás 3, pagás 2", "3 unidades → la más barata gratis"},
 	{"cuotas", "Cuotas sin interés", "3 y 6 cuotas desde $ 30.000", "6 cuotas sin interés desde $ 30.000"},
 	{"mayorista", "Precio mayorista", "Desde 12 unidades, lista Mayorista", "12 unidades → precio de lista mayorista"},
-	{"carrito", "Rescate de carrito con Hornero", "Ofrece hasta 10 % si el carrito se enfría", "Carrito abandonado 2 h → “Te guardo 10 % hasta las 20 h”"},
+	{"carrito", "Rescate de carrito con Tincho", "Ofrece hasta 10 % si el carrito se enfría", "Carrito abandonado 2 h → “Te guardo 10 % hasta las 20 h”"},
 	{"cumple", "Cumpleaños", "15 % el día del cumple del cliente", "Le llega por WhatsApp a las 9 h"},
 }
 

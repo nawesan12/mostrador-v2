@@ -110,10 +110,10 @@
 	] as const;
 	const AVISOS = [
 		['venta', 'Cada venta', 'Push y sonido de caja'],
-		['chats', 'Chats que te esperan', 'Solo si Hornero no puede responder'],
+		['chats', 'Chats que te esperan', 'Solo si Tincho no puede responder'],
 		['stock', 'Stock bajo', 'Cuando quede menos de 1 semana'],
 		['diario', 'Resumen diario por WhatsApp', 'Todos los días a las 21 h'],
-		['ideas', 'Ideas de Hornero', 'Máximo 3 por día'],
+		['ideas', 'Ideas de Tincho', 'Máximo 3 por día'],
 		['novedades', 'Novedades de Tu Local Web', 'Una vez por mes']
 	] as const;
 	async function opcion(grupo: 'seguridad' | 'avisos', clave: string, activo: boolean) {

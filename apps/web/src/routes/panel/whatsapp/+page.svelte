@@ -29,7 +29,7 @@
 	const FILTROS: [Filtro, string][] = [
 		['todas', 'Todas'],
 		['vos', 'Te esperan'],
-		['hornero', 'Hornero'],
+		['hornero', 'Tincho'],
 		['resuelto', 'Resueltas']
 	];
 	const lista = $derived(
@@ -40,7 +40,7 @@
 		)
 	);
 	const ETIQUETA = {
-		hornero: ['Hornero', 'rgba(210,88,47,.12)', '#C24E25'],
+		hornero: ['Tincho', 'rgba(210,88,47,.12)', '#C24E25'],
 		vos: ['Te espera', 'rgba(227,169,59,.2)', '#9A6A10'],
 		resuelto: ['Resuelto', 'rgba(47,143,99,.12)', '#2F8F63']
 	} as const;
@@ -93,9 +93,9 @@
 		await post(c.id, { tomada });
 		ui.toast({
 			k: 'info',
-			title: tomada ? 'Tomaste la conversación' : 'Hornero vuelve a atender',
+			title: tomada ? 'Tomaste la conversación' : 'Tincho vuelve a atender',
 			desc: tomada
-				? `Hornero queda en pausa con ${c.nombre.split(' ')[0]}`
+				? `Tincho queda en pausa con ${c.nombre.split(' ')[0]}`
 				: 'Te avisa si necesita algo'
 		});
 	}
@@ -147,7 +147,7 @@
 			<div class="c-s">WhatsApp, Instagram, Telegram y Mercado Libre en un solo lugar</div>
 		</div>
 		<span class="atendiendo"
-			><span class="punto"></span>Hornero atendiendo · {data.atendidasHoy} hoy</span
+			><span class="punto"></span>Tincho atendiendo · {data.atendidasHoy} hoy</span
 		>
 	</div>
 
@@ -230,13 +230,13 @@
 							>{c.tomada
 								? 'Atendés vos'
 								: c.atiende === 'hornero'
-									? 'Hornero está respondiendo…'
+									? 'Tincho está respondiendo…'
 									: 'En línea'}</span
 						>
 					</span>
 					<button type="button" class="tomar" class:devolver={c.tomada} onclick={tomar}
 						><Icon icon={c.tomada ? I.phSparkleFill : I.phHandFill} size={14} />{c.tomada
-							? 'Devolver a Hornero'
+							? 'Devolver a Tincho'
 							: 'Tomar'}</button
 					>
 				</div>
@@ -264,7 +264,7 @@
 							<div class="msg cliente">{m.texto}<span class="hora">{hora(m.en)}</span></div>
 						{:else}
 							<div class="msg-yo">
-								{#if m.de === 'hornero'}<span class="ai">✦ Hornero</span>{/if}
+								{#if m.de === 'hornero'}<span class="ai">✦ Tincho</span>{/if}
 								<span class="msg yo">{m.texto}<span class="hora">{hora(m.en)} ✓✓</span></span>
 							</div>
 						{/if}
@@ -345,7 +345,7 @@
 					</div>
 				{/if}
 				{#if c.cliente.sabe}
-					<div class="f-sabe"><b>✦ Hornero sabe que</b> {c.cliente.sabe}</div>
+					<div class="f-sabe"><b>✦ Tincho sabe que</b> {c.cliente.sabe}</div>
 				{/if}
 				<button
 					type="button"

@@ -500,7 +500,7 @@ function auditoriaDemo(ts: Tienda[], ahora: number): T.AuditoriaEquipo['registro
 		['ver_ficha', 'm-camila', (t) => `Vio la ficha de ${t.nombre}`],
 		['mirar_tienda', 'm-camila', (t) => `Entró a ver la tienda ${t.nombre}`],
 		['extender_prueba', 'm-joaquin', (t) => `Extendió la prueba de ${t.nombre} 7 días`],
-		['regalar_pack', 'm-camila', (t) => `Regaló un pack de Hornero a ${t.nombre}`],
+		['regalar_pack', 'm-camila', (t) => `Regaló un pack de Tincho a ${t.nombre}`],
 		['nota', 'm-joaquin', (t) => `Dejó una nota en ${t.nombre}`],
 		['cambiar_plan', 'm-tomas', (t) => `Cambió el plan de ${t.nombre} a Pro`],
 		['aplicar_credito', 'm-tomas', (t) => `Aplicó $ 19.900 de crédito a ${t.nombre}`],

@@ -23,7 +23,7 @@
 
 	/**
 	 * Editor de producto (design/PanelCatalogo.dc.html, `edOpen`): fotos, nombre, descripción (con
-	 * "Mejorar con Hornero"), precio por canal, stock, dónde se publica y cómo aparece en Google.
+	 * "Mejorar con Tincho"), precio por canal, stock, dónde se publica y cómo aparece en Google.
 	 * Con `producto` null es el alta.
 	 */
 	let {
@@ -160,7 +160,7 @@
 
 	async function mejorar() {
 		if (nombre.trim().length < 2) {
-			error = 'Poné el nombre así Hornero sabe de qué se trata.';
+			error = 'Poné el nombre así Tincho sabe de qué se trata.';
 			return;
 		}
 		mejorando = true;
@@ -349,7 +349,7 @@
 						class="hornero"
 						onclick={mejorar}
 						disabled={mejorando}
-						>{mejorando ? 'Hornero está escribiendo…' : '✦ Mejorar con Hornero'}</button
+						>{mejorando ? 'Tincho está escribiendo…' : '✦ Mejorar con Tincho'}</button
 					></span
 				>
 				<textarea id="desc-prod" bind:value={descripcion} maxlength="4000"></textarea>

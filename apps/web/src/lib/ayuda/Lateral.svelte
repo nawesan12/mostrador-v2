@@ -4,7 +4,7 @@
 	import * as I from '#lib/icons.ts';
 	import HorneroAyuda from './HorneroAyuda.svelte';
 
-	/** La columna de la derecha del centro de ayuda: Hornero, una persona y migrar. */
+	/** La columna de la derecha del centro de ayuda: Tincho, una persona y migrar. */
 </script>
 
 <aside class="lateral">

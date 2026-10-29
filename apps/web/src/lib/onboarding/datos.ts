@@ -13,7 +13,7 @@ export const PASOS = [
 	'Importación',
 	'Tu tienda',
 	'Cobros y envíos',
-	'Hornero',
+	'Tincho',
 	'¡Listo!'
 ] as const;
 export const PORCENTAJE = [6, 28, 52, 71, 80, 88, 92, 94] as const;
@@ -300,7 +300,7 @@ export const CONFIGURACION: { i: IconData; t: string; items: Opcion[] }[] = [
 				clave: 'free',
 				logo: 'free',
 				t: 'Envío gratis desde $ 60.000',
-				d: 'Sugerido por Hornero: 1,8× tu ticket promedio'
+				d: 'Sugerido por Tincho: 1,8× tu ticket promedio'
 			},
 			{
 				clave: 'moto',

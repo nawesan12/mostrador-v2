@@ -62,7 +62,7 @@
 						<span
 							>{voto === 'si'
 								? '¡Gracias! Nos alegra que te sirva.'
-								: 'Gracias. Si te quedó una duda, preguntale a Hornero o escribinos.'}</span
+								: 'Gracias. Si te quedó una duda, preguntale a Tincho o escribinos.'}</span
 						>
 					{:else}
 						<span>¿Te sirvió este artículo?</span>

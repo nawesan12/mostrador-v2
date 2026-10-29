@@ -5,7 +5,7 @@ import type { RequestHandler } from './$types';
 
 const IDEAS: Idea[] = ['carritos', 'stock', 'promo'];
 
-/** Aprobar ({hecha: true}) o deshacer ({hecha: false}) una idea de Hornero. */
+/** Aprobar ({hecha: true}) o deshacer ({hecha: false}) una idea de Tincho. */
 export const POST: RequestHandler = async ({ locals, params, request }) => {
 	const idea = params.idea as Idea;
 	if (!IDEAS.includes(idea)) error(404, 'Esa idea no existe.');
