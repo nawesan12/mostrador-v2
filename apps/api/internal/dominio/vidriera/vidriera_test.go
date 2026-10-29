@@ -105,10 +105,11 @@ func TestCotizar(t *testing.T) {
 	gratis := int64(100000)
 	e := vidriera.Envios{GratisDesde: &gratis, Retiro: true, Moto: true, Correo: true}
 	o := vidriera.Cotizar("1414", 5000, e, lunes)
-	if len(o) != 4 || o[0].Precio != 6900 || o[0].Detalle != "Llega el miércoles 28" || o[1].Precio != 5500 {
+	// Correo a sucursal, moto (CABA) y retiro: Andreani no se ofrece.
+	if len(o) != 3 || o[0].ID != "correo" || o[0].Precio != 5500 || o[0].Detalle != "Llega el viernes 30" || o[1].ID != "moto" {
 		t.Fatalf("CABA: %+v", o)
 	}
-	if o := vidriera.Cotizar("5000", 150000, e, lunes); o[0].Precio != 0 || len(o) != 3 {
+	if o := vidriera.Cotizar("5000", 150000, e, lunes); o[0].Precio != 0 || len(o) != 2 {
 		t.Fatalf("Córdoba con envío gratis: %+v", o)
 	}
 	if o := vidriera.Cotizar("x", 1, e, lunes); len(o) != 1 || o[0].ID != "retiro" {

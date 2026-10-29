@@ -1,10 +1,11 @@
 /**
- * Cotización de envío por código postal. Hasta que Andreani y Correo Argentino estén conectados
- * (cotizan con su API), es una tabla por región; el envío gratis sale de lo que fija la tienda.
+ * Cotización de envío por código postal. Hasta conectar la API de Correo Argentino es una tabla por
+ * región (precio base y días hábiles); el envío gratis sale de lo que fija la tienda. Andreani no se
+ * ofrece: no es una integración. Gemelo en Go: vidriera.Cotizar.
  */
 import type { OpcionEnvio, TiendaPublica } from './tipos.ts';
 
-const REGIONES: [desde: number, hasta: number, andreani: number, dias: number][] = [
+const REGIONES: [desde: number, hasta: number, base: number, dias: number][] = [
 	[1000, 1999, 6900, 2], // CABA y GBA
 	[2000, 3999, 7900, 3], // Santa Fe, Entre Ríos, Litoral
 	[4000, 5999, 8900, 4], // NOA y Córdoba
@@ -37,12 +38,6 @@ export function cotizar(
 	const out: OpcionEnvio[] = [];
 	const gratis = t.envios.gratisDesde !== null && subtotal >= t.envios.gratisDesde;
 	if (r) {
-		out.push({
-			id: 'andreani',
-			nombre: 'Andreani a domicilio',
-			detalle: llega(r[3], hoy),
-			precio: gratis ? 0 : r[2]
-		});
 		if (t.envios.correo)
 			out.push({
 				id: 'correo',

@@ -10,13 +10,10 @@ const lunes = new Date('2026-10-26T12:00:00-03:00');
 describe('cotizar', () => {
 	it('por región, con moto sólo en CABA y retiro siempre', () => {
 		const o = cotizar('1414', 5000, t, lunes);
-		expect(o.map((x) => x.id)).toEqual(['andreani', 'correo', 'moto', 'retiro']);
-		expect(o[0]).toMatchObject({ precio: 6900, detalle: 'Llega el miércoles 28' });
-		expect(cotizar('5000', 5000, t, lunes).map((x) => x.id)).toEqual([
-			'andreani',
-			'correo',
-			'retiro'
-		]);
+		// Andreani no se ofrece: Correo a sucursal, la moto en CABA y retirar.
+		expect(o.map((x) => x.id)).toEqual(['correo', 'moto', 'retiro']);
+		expect(o[0]).toMatchObject({ precio: 5500, detalle: 'Llega el viernes 30' });
+		expect(cotizar('5000', 5000, t, lunes).map((x) => x.id)).toEqual(['correo', 'retiro']);
 	});
 	it('envío gratis desde el monto de la tienda', () => {
 		expect(cotizar('5000', 150000, t, lunes)[0].precio).toBe(0);

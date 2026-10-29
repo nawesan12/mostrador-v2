@@ -15,10 +15,12 @@ type Opcion struct {
 	Precio  int64  `json:"precio"`
 }
 
-// Hasta conectar Andreani y Correo Argentino, una tabla por región.
+// Hasta conectar la API de Correo Argentino, una tabla por región: el precio base y los días hábiles
+// de un envío a domicilio, de los que sale el de Correo a sucursal. Andreani no se ofrece: no es una
+// integración (pide contrato).
 var regiones = []struct {
 	desde, hasta int
-	andreani     int64
+	base         int64
 	dias         int
 }{{1000, 1999, 6900, 2}, {2000, 3999, 7900, 3}, {4000, 5999, 8900, 4}, {6000, 7999, 7500, 3}, {8000, 9499, 9900, 5}, {9500, 9999, 11900, 6}}
 
@@ -47,13 +49,8 @@ func Cotizar(cp string, subtotal int64, e Envios, hoy time.Time) []Opcion {
 		if n < r.desde || n > r.hasta {
 			continue
 		}
-		precio := r.andreani
-		if gratis {
-			precio = 0
-		}
-		out = append(out, Opcion{"andreani", "Andreani a domicilio", llega(r.dias, hoy), precio})
 		if e.Correo {
-			c := (r.andreani*8/10 + 50) / 100 * 100
+			c := (r.base*8/10 + 50) / 100 * 100
 			if gratis {
 				c = 0
 			}
