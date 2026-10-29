@@ -14,7 +14,14 @@
  * En la demo se importa hasta `MAX_PRODUCTOS` productos y `MAX_HISTORIAL` clientes y pedidos: es para
  * probar, no para mudar una tienda entera (eso lo hace la API, sin topes).
  */
-import { MAX_PRODUCTOS, POR_PAGINA, origenDe, type Importado } from '../importar/comun.ts';
+import { deEmpretienda, fichaDeHtml, fichasDelSitemap } from '../empretienda.ts';
+import {
+	leer as leerPagina,
+	MAX_PRODUCTOS,
+	POR_PAGINA,
+	origenDe,
+	type Importado
+} from '../importar/comun.ts';
 import { deShopify, type ProductoShopify } from '../importar/shopify.ts';
 import { leerPaginaWoo } from '../importar/woocommerce.ts';
 import { leerJson } from '../importar/comun.ts';
@@ -65,8 +72,8 @@ const paginaDe = (cursor: unknown) => {
 };
 
 /** El origen https de una tienda pública (sin IPs ni puertos: el Worker sólo sale a dominios). */
-function origen(o: Origen) {
-	const r = origenDe(o.url);
+function origen(o: Origen, sufijo?: string) {
+	const r = origenDe(o.url, sufijo);
 	if (!r) throw new ErrorDefinitivo('La dirección de la tienda no es válida.');
 	return r;
 }
@@ -107,6 +114,40 @@ function woo(base: string, f: typeof fetch): Fuente {
 			}
 			const sigue = p.leidos === POR_PAGINA && n < MAX_PAGINAS;
 			return { productos: viejos(p.items), siguiente: sigue ? { pagina: n + 1 } : null };
+		}
+	};
+}
+
+/**
+ * Empretienda: el sitemap da las fichas y cada paso lee 5, como `empretienda` en Go (que lee 20). El
+ * cursor es la posición en el sitemap, que se vuelve a pedir en cada paso: la lista no entra en él.
+ */
+function empretienda(base: string, f: typeof fetch): Fuente {
+	return {
+		async pagina(etapa, cursor) {
+			if (etapa !== 'productos') return { siguiente: null };
+			const n = (cursor as { desde?: unknown } | null)?.desde;
+			const desde = typeof n === 'number' && Number.isInteger(n) && n > 0 ? n : 0;
+			const xml = await leerPagina(`${base}/sitemap.xml`, f);
+			if (xml === null) {
+				if (desde === 0) throw new ErrorDefinitivo('La tienda no respondió como Empretienda.');
+				throw new Error('Empretienda no respondió.');
+			}
+			const fichas = fichasDelSitemap(xml, base).slice(0, MAX_PRODUCTOS);
+			const tanda = fichas.slice(desde, desde + POR_PAGINA);
+			const leidas = await Promise.all(
+				tanda.map(async (u) => {
+					const html = await leerPagina(u, f);
+					const ficha = html === null ? null : fichaDeHtml(html, u);
+					return { html, item: ficha && deEmpretienda(ficha) };
+				})
+			);
+			// Una ficha que no responde se saltea; si no responde ninguna, se reintenta el paso.
+			if (tanda.length && leidas.every((x) => x.html === null))
+				throw new Error('No respondió ninguna ficha de Empretienda.');
+			const items = leidas.flatMap((x) => (x.item ? [x.item] : []));
+			const sig = desde + tanda.length;
+			return { productos: viejos(items), siguiente: sig < fichas.length ? { desde: sig } : null };
 		}
 	};
 }
@@ -196,6 +237,7 @@ export function fuentes(o: Opciones = {}): Fuentes {
 	return {
 		shopify: (x) => shopify(origen(x), f),
 		woocommerce: (x) => woo(origen(x), f),
+		empretienda: (x) => empretienda(origen(x, '.empretienda.com.ar'), f),
 		tiendanube: (x) => {
 			let c: Partial<CredencialTN> = {};
 			try {

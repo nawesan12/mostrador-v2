@@ -84,52 +84,45 @@
 		});
 	}
 
-	// Importar tienda (Shopify, WooCommerce o Empretienda): primero cuántas páginas hay, después
-	// una página por pedido con barra de avance. Al terminar, el resumen queda en el modal.
+	// Importar tienda: todo va por la cola de importación (productos y, en Tiendanube, clientes y
+	// pedidos). Tiendanube se conecta por OAuth; Shopify, WooCommerce y Empretienda, con el link de la
+	// tienda pública. En la demo cada "avanzar" hace un paso; con la API avanza sola y "avanzar" sólo
+	// lee, así que si nada cambió se espera un poco antes de volver a preguntar.
 	type Fuente = 'shopify' | 'woocommerce' | 'empretienda';
 	const FUENTES = [
 		['shopify', 'Shopify'],
 		['woocommerce', 'WooCommerce'],
 		['empretienda', 'Empretienda']
 	] as const;
-	const NOMBRE = Object.fromEntries(FUENTES) as Record<Fuente, string>;
+	const NOMBRE: Record<string, string> = {
+		...Object.fromEntries(FUENTES),
+		tiendanube: 'Tiendanube',
+		mercadolibre: 'Mercado Libre'
+	};
 	const EJEMPLO: Record<Fuente, string> = {
 		shopify: 'mitienda.myshopify.com',
 		woocommerce: 'mitienda.com.ar',
 		empretienda: 'mitienda.empretienda.com.ar'
 	};
-	type Lote = {
-		leidos: number;
-		creados: number;
-		repetidos: number;
-		recortados: number;
-		fallidos: number;
-		conVariantes: number;
-		stockEstimado: boolean;
-		fin: boolean;
-	};
 	let importando = $state(false);
 	let fuente = $state<Fuente>('shopify');
 	let tiendaImp = $state('');
-	let avance = $state<{ hechas: number; total: number | null } | null>(null);
+	let buscando = $state(false);
 	let errorImp = $state('');
-	let resumen = $state<(Omit<Lote, 'leidos' | 'fin'> & { fuente: Fuente }) | null>(null);
 	const post = (url: string, cuerpo: unknown) =>
 		fetch(url, {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify(cuerpo)
 		});
+	const mensaje = async (r: Response, otro: string) =>
+		((await r.json().catch(() => null)) as { message?: string } | null)?.message ?? otro;
 	function abrirImportar() {
-		resumen = null;
 		errorImp = '';
 		importando = true;
 		void leerCola();
 	}
 
-	// Tiendanube va por OAuth y por la cola de importación (productos, clientes y pedidos): el modal
-	// muestra cómo va la importación actual. En la demo cada "avanzar" hace un paso; con la API avanza
-	// sola y "avanzar" sólo lee, así que si nada cambió se espera un poco antes de volver a preguntar.
 	let cola = $state<Importacion | null>(null);
 	let tiendanube = $state<boolean | null>(null);
 	let avisoTN = $state('');
@@ -148,8 +141,8 @@
 		if (!r?.ok) return;
 		const d = (await r.json()) as { importacion: Importacion | null; tiendanube: boolean };
 		tiendanube = d.tiendanube;
-		// Sólo se muestra la de Tiendanube (las de link van lote por lote, sin la cola).
-		if (d.importacion?.plataforma === 'tiendanube' && (activa(d.importacion) || cola)) {
+		// La que está en curso (o la que se venía mirando) se sigue; una vieja terminada no se muestra.
+		if (d.importacion && (activa(d.importacion) || cola)) {
 			cola = d.importacion;
 			if (activa(cola)) void seguir();
 		}
@@ -180,120 +173,70 @@
 		cola = null;
 		importando = false;
 	}
-	// La vuelta del OAuth trae ?tiendanube=importando (o el motivo del error): se abre el modal.
+	// La vuelta del OAuth trae ?tiendanube=importando (o el motivo del error), y el onboarding
+	// ?importando=1: se abre el modal con la importación en curso.
 	$effect(() => {
 		const tn = page.url.searchParams.get('tiendanube');
-		if (!tn) return;
+		const onb = page.url.searchParams.get('importando');
+		if (!tn && !onb) return;
 		replaceState(resolve('/panel/productos'), {});
-		resumen = null;
 		errorImp = '';
-		avisoTN = tn === 'importando' ? '' : (AVISOS[tn] ?? 'No pudimos conectar tu tienda.');
+		avisoTN = !tn || tn === 'importando' ? '' : (AVISOS[tn] ?? 'No pudimos conectar tu tienda.');
 		importando = true;
-		if (tn === 'importando') cola = { estado: 'pendiente' } as Importacion;
+		if (tn === 'importando' || onb) cola = { estado: 'pendiente' } as Importacion;
 		void leerCola();
 	});
-	const ETAPAS_COLA = [
-		['productos', 'Productos'],
-		['clientes', 'Clientes'],
-		['pedidos', 'Pedidos']
-	] as const;
-	/** Cuánto va: por etapa, porque Tiendanube no dice el total hasta leer cada una. */
+	/** Las etapas de cada plataforma: de un link, sin cuenta, sólo salen productos. */
+	const etapasCola = $derived(
+		cola?.plataforma === 'tiendanube'
+			? ([
+					['productos', 'Productos'],
+					['clientes', 'Clientes'],
+					['pedidos', 'Pedidos']
+				] as const)
+			: ([['productos', 'Productos']] as const)
+	);
+	/**
+	 * Cuánto va. Tiendanube, por etapa (no dice el total hasta leer cada una); un link, por productos
+	 * leídos, sin llegar al final hasta que termina.
+	 */
 	const avanceCola = $derived(
 		!cola || !cola.etapa
 			? 4
 			: cola.estado === 'lista'
 				? 100
-				: Math.max(
-						4,
-						(['productos', 'clientes', 'pedidos', 'redirecciones'].indexOf(cola.etapa) + 0.5) * 25
-					)
+				: cola.plataforma === 'tiendanube'
+					? Math.max(
+							4,
+							(['productos', 'clientes', 'pedidos', 'redirecciones'].indexOf(cola.etapa) + 0.5) * 25
+						)
+					: Math.min(90, 4 + (cola.progreso?.productos ?? 0) / 3)
 	);
+	/** Shopify y WooCommerce no publican el stock de verdad: se avisa al terminar. */
+	const sinStock = $derived(
+		cola?.estado === 'lista' && (cola.plataforma === 'shopify' || cola.plataforma === 'woocommerce')
+	);
+	/** Con el link: primero de qué plataforma es (la que delata el dominio o la que responda). */
 	async function importarTienda() {
 		errorImp = '';
-		avance = { hechas: 0, total: null };
-		const r = await post('/panel/productos/tienda', { fuente, tienda: tiendaImp });
-		if (!r.ok) {
-			avance = null;
-			errorImp =
-				((await r.json().catch(() => null)) as { message?: string } | null)?.message ??
-				'No pudimos leer la tienda.';
-			return;
-		}
-		const d = (await r.json()) as {
-			fuente: Fuente;
-			origen: string;
-			total: number | null;
-			paginas: number | null;
-			fichas?: string[];
-		};
-		// Si el link era de otra plataforma, se usa la que respondió.
-		fuente = d.fuente;
-		avance = { hechas: 0, total: d.total };
-		const suma = {
-			creados: 0,
-			repetidos: 0,
-			recortados: 0,
-			fallidos: 0,
-			conVariantes: 0,
-			stockEstimado: false
-		};
-		// Sin total (Shopify no siempre lo dice): hasta una página incompleta, con el tope de 100.
-		const paginas = d.paginas ?? 100;
-		for (let pagina = 1; pagina <= paginas; pagina++) {
-			const fichas = d.fichas?.slice((pagina - 1) * 5, pagina * 5);
-			const l = await post('/panel/productos/tienda/lote', {
-				fuente: d.fuente,
-				origen: d.origen,
-				pagina,
-				...(fichas ? { fichas } : {})
+		buscando = true;
+		try {
+			const r = await post('/panel/productos/tienda', { fuente, tienda: tiendaImp });
+			if (!r.ok) return void (errorImp = await mensaje(r, 'No pudimos leer la tienda.'));
+			const d = (await r.json()) as { fuente: Fuente; origen: string };
+			fuente = d.fuente;
+			const c = await post('/panel/importaciones', {
+				accion: 'crear',
+				plataforma: d.fuente,
+				url: d.origen
 			});
-			// Una página que no respondió cuenta como no leída y se sigue con la próxima.
-			const x: Lote = l.ok
-				? await l.json()
-				: {
-						creados: 0,
-						repetidos: 0,
-						recortados: 0,
-						conVariantes: 0,
-						leidos: 5,
-						fallidos: fichas?.length ?? 5,
-						stockEstimado: false,
-						fin: false
-					};
-			suma.creados += x.creados;
-			suma.repetidos += x.repetidos;
-			suma.recortados += x.recortados;
-			suma.fallidos += x.fallidos;
-			suma.conVariantes += x.conVariantes;
-			suma.stockEstimado ||= x.stockEstimado;
-			const hechas: number = (avance?.hechas ?? 0) + x.leidos;
-			avance = { hechas: d.total ? Math.min(d.total, hechas) : hechas, total: d.total };
-			if (x.fin && !d.fichas) break;
+			if (!c.ok) return void (errorImp = await mensaje(c, 'No pudimos empezar la importación.'));
+			cola = (await c.json()) as Importacion;
+			void seguir();
+		} finally {
+			buscando = false;
 		}
-		await invalidateAll();
-		avance = null;
-		resumen = { ...suma, fuente: d.fuente };
 	}
-	/** Los renglones del resumen: sólo los que tienen algo que decir. */
-	const notas = $derived(
-		resumen
-			? [
-					resumen.repetidos &&
-						(resumen.repetidos === 1
-							? '1 ya estaba y no se\u00a0repitió.'
-							: `${resumen.repetidos} ya estaban y no se\u00a0repitieron.`),
-					resumen.recortados &&
-						`${resumen.recortados} ${resumen.recortados === 1 ? 'se recortó' : 'se recortaron'}: más de 8\u00a0fotos, opciones o\u00a0textos largos.`,
-					resumen.conVariantes &&
-						`${resumen.conVariantes} con variantes anotadas en la\u00a0descripción.`,
-					resumen.fallidos && `${resumen.fallidos} no se pudieron\u00a0leer.`,
-					resumen.stockEstimado &&
-						(resumen.fuente === 'shopify'
-							? 'Shopify no publica el stock: revisalo.'
-							: `${NOMBRE[resumen.fuente]} no publicó el stock de algunos: revisalo.`)
-				].filter((x): x is string => !!x)
-			: []
-	);
 
 	let archivo = $state<HTMLInputElement>();
 	async function importar(e: Event) {
@@ -345,12 +288,12 @@
 	{#if cola}
 		<div class="m-t" role="status">
 			{cola.estado === 'lista'
-				? 'Tu tienda de Tiendanube ya está\u00a0acá'
+				? `Tu tienda de ${NOMBRE[cola.plataforma] ?? 'tu plataforma'} ya está\u00a0acá`
 				: cola.estado === 'fallida'
 					? 'La importación se\u00a0cortó'
 					: cola.estado === 'cancelada'
 						? 'Frenaste la\u00a0importación'
-						: 'Importando desde\u00a0Tiendanube'}
+						: `Importando desde\u00a0${NOMBRE[cola.plataforma] ?? 'tu tienda'}`}
 		</div>
 		<div class="m-d">
 			{activa(cola)
@@ -369,7 +312,7 @@
 			<span style="width:{avanceCola}%"></span>
 		</div>
 		<ul class="m-etapas">
-			{#each ETAPAS_COLA as [k, nombre] (k)}
+			{#each etapasCola as [k, nombre] (k)}
 				<li
 					class="chip-estado"
 					style:--chip-bg={cola.etapa === k && activa(cola) ? 'rgba(210,88,47,.13)' : 'var(--chip)'}
@@ -390,6 +333,11 @@
 					.join(' · ')}
 			</div>
 		{/if}
+		{#if sinStock}
+			<div class="m-d">
+				{NOMBRE[cola.plataforma]} no publica el stock: revisalo antes de&nbsp;vender.
+			</div>
+		{/if}
 		{#if cola.errores?.length}
 			<ul class="m-notas m-err" role="alert">
 				{#each cola.errores.slice(-3) as e, i (i)}<li>{e.detalle}</li>{/each}
@@ -402,46 +350,14 @@
 				<button type="button" class="btn btn-dark" onclick={cerrarCola}>Listo</button>
 			{/if}
 		</div>
-	{:else if resumen}
-		<div class="m-t" role="status">
-			{resumen.creados}
-			{resumen.creados === 1 ? 'producto importado' : 'productos importados'} de&nbsp;{NOMBRE[
-				resumen.fuente
-			]}
-		</div>
-		{#if notas.length}
-			<ul class="m-notas">
-				{#each notas as n (n)}<li>{n}</li>{/each}
-			</ul>
-		{:else}
-			<div class="m-d">Con fotos, precios, variantes y&nbsp;categorías.</div>
-		{/if}
-		<div class="m-acc">
-			<button type="button" class="b-pri" onclick={() => (importando = false)}>Listo</button>
-		</div>
 	{:else}
 		<div class="m-t">Traé tus productos de otra&nbsp;tienda</div>
 		<div class="m-d">
 			Pegá el link y traemos cada producto con fotos, precio, variantes, categoría y descripción. Si
 			importás dos veces, no se&nbsp;duplican.
 		</div>
-		{#if avance}
-			<div class="m-c">
-				{avance.hechas
-					? avance.total
-						? `Importando ${avance.hechas} de ${avance.total}…`
-						: `Importando ${avance.hechas}…`
-					: 'Leyendo tu tienda…'}
-			</div>
-			<div
-				class="m-barra"
-				role="progressbar"
-				aria-label="Avance de la importación"
-				aria-valuenow={avance.hechas}
-				aria-valuemax={avance.total || 1}
-			>
-				<span style="width:{avance.total ? (avance.hechas / avance.total) * 100 : 4}%"></span>
-			</div>
+		{#if buscando}
+			<div class="m-c" role="status">Buscando tu tienda…</div>
 		{:else}
 			{#if tiendanube === false}
 				<button type="button" class="btn btn-secondary btn-block m-tn" disabled
@@ -472,8 +388,11 @@
 			{#if errorImp}<div class="m-err" role="alert">{errorImp}</div>{/if}
 			<div class="m-acc">
 				<button type="button" class="b-sec" onclick={() => (importando = false)}>Cancelar</button>
-				<button type="button" class="b-pri" disabled={!tiendaImp.trim()} onclick={importarTienda}
-					>Importar</button
+				<button
+					type="button"
+					class="b-pri"
+					disabled={!tiendaImp.trim() || buscando}
+					onclick={importarTienda}>Importar</button
 				>
 			</div>
 		{/if}

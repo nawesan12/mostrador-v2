@@ -120,9 +120,9 @@ test('productos: importar tienda pide un link válido', async ({ page }) => {
 	expect(await sinDesborde(page)).toBeLessThanOrEqual(0);
 });
 
-test('productos: importar tienda de Shopify muestra el resumen', async ({ page }) => {
-	// Nada sale a la red: los dos pasos del BFF se responden acá.
-	const lotes: unknown[] = [];
+test('productos: importar tienda de Shopify va por la cola', async ({ page }) => {
+	// Nada sale a la red: la plataforma y la cola se responden acá.
+	const pedidos: { accion: string }[] = [];
 	await page.route('**/panel/productos/tienda', (r) =>
 		r.fulfill({
 			json: {
@@ -134,20 +134,27 @@ test('productos: importar tienda de Shopify muestra el resumen', async ({ page }
 			}
 		})
 	);
-	await page.route('**/panel/productos/tienda/lote', (r) => {
-		lotes.push(r.request().postDataJSON());
-		const primera = lotes.length === 1;
+	const cola = (estado: string, productos: number) => ({
+		id: 'imp1',
+		plataforma: 'shopify',
+		estado,
+		etapa: 'productos',
+		progreso: { productos, clientes: 0, pedidos: 0, redirecciones: 0, repetidos: 1, recortados: 1 },
+		errores: []
+	});
+	await page.route('**/panel/importaciones', (r) => {
+		if (r.request().method() === 'GET')
+			return r.fulfill({ json: { importacion: null, tiendanube: true } });
+		const b = r.request().postDataJSON() as { accion: string };
+		pedidos.push(b);
+		const avances = pedidos.filter((x) => x.accion === 'avanzar').length;
 		return r.fulfill({
-			json: {
-				leidos: primera ? 5 : 2,
-				creados: primera ? 4 : 2,
-				repetidos: primera ? 1 : 0,
-				recortados: primera ? 0 : 1,
-				fallidos: 0,
-				conVariantes: 0,
-				stockEstimado: true,
-				fin: !primera
-			}
+			json:
+				b.accion === 'crear'
+					? cola('pendiente', 0)
+					: avances < 2
+						? cola('corriendo', 5)
+						: cola('lista', 6)
 		});
 	});
 	await demo(page, '/panel/productos');
@@ -155,14 +162,16 @@ test('productos: importar tienda de Shopify muestra el resumen', async ({ page }
 	await page.getByRole('button', { name: 'WooCommerce' }).click();
 	await page.getByLabel('Link de tu tienda').fill('mitienda.myshopify.com');
 	await page.getByRole('button', { name: 'Importar', exact: true }).click();
-	await expect(page.getByRole('status')).toContainText('6 productos importados de Shopify');
-	await expect(page.getByText('1 ya estaba y no se')).toBeVisible();
-	await expect(page.getByText('1 se recortó')).toBeVisible();
-	await expect(page.getByText('Shopify no publica el stock: revisalo.')).toBeVisible();
-	expect(lotes).toEqual([
-		{ fuente: 'shopify', origen: 'https://mitienda.myshopify.com', pagina: 1 },
-		{ fuente: 'shopify', origen: 'https://mitienda.myshopify.com', pagina: 2 }
-	]);
+	// Si el link era de otra plataforma, se usa la que respondió.
+	await expect(page.getByRole('status')).toContainText('Tu tienda de Shopify ya está');
+	await expect(page.getByText('Productos 6')).toBeVisible();
+	await expect(page.getByText('1 ya estaban · 1 recortados')).toBeVisible();
+	await expect(page.getByText('Shopify no publica el stock')).toBeVisible();
+	expect(pedidos[0]).toEqual({
+		accion: 'crear',
+		plataforma: 'shopify',
+		url: 'https://mitienda.myshopify.com'
+	});
 	expect(await sinDesborde(page)).toBeLessThanOrEqual(0);
 	await page.getByRole('button', { name: 'Listo' }).click();
 });

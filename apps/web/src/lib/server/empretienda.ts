@@ -157,7 +157,9 @@ export function deEmpretienda(f: FichaEmpretienda): Importado | null {
 		});
 		c.variantes = variantes;
 	}
-	return ajustar(c);
+	const i = ajustar(c);
+	// Como en Go, el path de la ficha es su id y la dirección vieja (para las redirecciones).
+	return i && { ...i, externo: camino, url: camino };
 }
 
 /** Las fichas de una página (lo que comparan los casos con Go). */
