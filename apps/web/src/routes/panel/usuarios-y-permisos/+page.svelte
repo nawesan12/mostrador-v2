@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { deslizable } from '#lib/panel/deslizable.ts';
 	import { invalidateAll } from '$app/navigation';
+	import { page } from '$app/state';
 	import Icon from '#lib/components/Icon.svelte';
 	import Modal from '#lib/components/Modal.svelte';
 	import Seo from '#lib/components/Seo.svelte';
@@ -18,8 +19,6 @@
 
 	const lugares = $derived(PLANES.find((p) => p.id === data.plan)?.personas ?? null);
 	const libres = $derived(lugares === null ? null : Math.max(0, lugares - data.equipo.length));
-	const sin2fa = $derived(data.equipo.filter((m) => !m.pendiente && !m.dobleFactor));
-	const activos = $derived(data.equipo.filter((m) => !m.pendiente));
 
 	async function pedir(url: string, method: string, cuerpo?: unknown) {
 		const r = await fetch(url, {
@@ -33,8 +32,13 @@
 		}
 		return r.ok;
 	}
+	/**
+	 * Con la API real, invitar sólo guardaba una fila: no salía ningún mail ni WhatsApp y no hay cómo
+	 * aceptar la invitación. Hasta que exista, no se ofrece «Invitar» ni se dice «Invitación enviada».
+	 */
+	const demo = $derived(!!page.data.demo);
 	const ultimo = (m: M) => {
-		if (m.pendiente) return 'Invitación enviada';
+		if (m.pendiente) return demo ? 'Invitación enviada' : 'Invitación sin mandar';
 		if (!m.ultimo) return 'Nunca entró';
 		const min = Math.round((Date.now() - Date.parse(m.ultimo)) / 60_000);
 		return min < 2
@@ -118,10 +122,18 @@
 					: ` · ${libres} ${libres === 1 ? 'lugar libre' : 'lugares libres'} en tu plan`}
 			</div>
 		</div>
-		<button type="button" class="invitar" onclick={() => (invitando = true)}
-			><Icon icon={I.phUserPlusBold} size={15} />Invitar persona</button
-		>
+		{#if demo}
+			<button type="button" class="invitar" onclick={() => (invitando = true)}
+				><Icon icon={I.phUserPlusBold} size={15} />Invitar persona</button
+			>
+		{/if}
 	</div>
+	{#if !demo}
+		<p class="aviso" use:anim={{ t: 'rise', delay: 30 }}>
+			Sumar personas al equipo todavía no está: la invitación no le llega a nadie. Cuando esté, la
+			vas a mandar desde acá.
+		</p>
+	{/if}
 
 	<div class="lista" use:anim={{ t: 'rise', delay: 50 }}>
 		{#each data.equipo as m (m.id)}
@@ -131,13 +143,15 @@
 							src={unsplash(m.foto, 84, '&h=84&crop=faces')}
 							alt=""
 							class:pend={m.pendiente}
-						/>{:else}<img src="/hornero/avatar.webp" alt="" class:pend={m.pendiente} />{/if}
+						/>{:else}<span class="ini" class:pend={m.pendiente}
+							>{m.nombre.slice(0, 1).toUpperCase()}</span
+						>{/if}
 					<span class="punto" style:background={punto(m)}></span>
 				</span>
 				<span class="p-txt">
 					<span class="p-n"
 						>{m.nombre}{#if m.vos}<span class="vos">Vos</span>{/if}{#if m.pendiente}<span
-								class="inv">Invitación enviada</span
+								class="inv">{demo ? 'Invitación enviada' : 'Sin mandar'}</span
 							>{/if}</span
 					>
 					<span class="p-e">{m.contacto} · {ultimo(m)}</span>
@@ -198,27 +212,15 @@
 				{/each}
 			</div>
 		</div>
+		<!-- La matriz se guarda pero Go todavía no la aplica en cada pantalla: se dice, no se promete. -->
+		<p class="aviso">
+			Por ahora estos permisos se guardan pero no limitan el panel: cada persona invitada ve todo.
+			Lo sensible (ARCA, importar, devolver señas y Telegram) sí pide ser Dueño o Admin.
+		</p>
 	</div>
 
-	<div class="doble" use:anim={{ t: 'rise', delay: 150 }}>
-		<Icon icon={I.phShieldCheckFill} size={22} style="color:#237550" />
-		<span
-			><b>Verificación en dos pasos obligatoria</b> para Dueños y Administradores. {activos.length -
-				sin2fa.length} de {activos.length}
-			{activos.length === 1 ? 'persona ya la activó' : 'personas ya la activaron'}.</span
-		>
-		{#if sin2fa[0]}
-			<button
-				type="button"
-				onclick={() =>
-					ui.toast({
-						k: 'wa',
-						title: `Le mandamos un WhatsApp a ${sin2fa[0].nombre.split(' ')[0]}`,
-						desc: 'Con el paso a paso para activar la verificación'
-					})}>Recordarle a {sin2fa[0].nombre.split(' ')[0]}</button
-			>
-		{/if}
-	</div>
+	<!-- La verificación en dos pasos todavía no existe: no se la muestra como obligatoria ni se
+	     «recuerda» por WhatsApp (antes era un aviso que no mandaba nada). -->
 </div>
 
 <Modal bind:open={invitando} titulo="Invitar a tu equipo" ancho={480} padding={24}>
@@ -427,6 +429,30 @@
 		font-size: 16px;
 		font-weight: 600;
 	}
+	.ini {
+		display: grid;
+		place-items: center;
+		width: 42px;
+		height: 42px;
+		border-radius: 50%;
+		background: var(--durazno);
+		color: #8a3a1c;
+		font-weight: 700;
+		font-size: 17px;
+	}
+	.ini.pend {
+		opacity: 0.55;
+	}
+	.aviso {
+		margin: 12px 0 0;
+		padding: 10px 14px;
+		border-radius: 14px;
+		background: rgba(227, 169, 59, 0.14);
+		color: #7a5410;
+		font-size: 13px;
+		line-height: 1.45;
+		text-wrap: pretty;
+	}
 	.mz-s {
 		font-size: 12.5px;
 		color: var(--mu);
@@ -543,31 +569,6 @@
 			height: 44px;
 			border-radius: 12px;
 		}
-	}
-	.doble {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		flex-wrap: wrap;
-		padding: 14px 18px;
-		border-radius: 20px;
-		background: var(--sf2);
-		border: 1px solid var(--ln);
-	}
-	.doble > span {
-		flex: 1;
-		min-width: 220px;
-		font-size: 14px;
-	}
-	.doble button {
-		padding: 9px 14px;
-		border-radius: 999px;
-		border: 1px solid var(--ln2);
-		background: var(--sf);
-		color: var(--tx);
-		font:
-			600 13px 'Instrument Sans',
-			sans-serif;
 	}
 	.m-t {
 		font-size: 19px;

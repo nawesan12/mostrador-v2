@@ -2,6 +2,7 @@
 	import { deslizable } from '#lib/panel/deslizable.ts';
 	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import Icon from '#lib/components/Icon.svelte';
 	import Interruptor from '#lib/components/Interruptor.svelte';
 	import Modal from '#lib/components/Modal.svelte';
@@ -15,6 +16,11 @@
 
 	/** Configuración (design/PanelOperacion.dc.html, sCfg): negocio, equipo, seguridad, avisos y plan. */
 	let { data } = $props();
+	/**
+	 * Con la API real, los interruptores de Avisos se guardaban pero nada los usaba: los avisos se
+	 * manejan en Notificaciones. Invitar tampoco le llega a nadie todavía.
+	 */
+	const demo = $derived(!!page.data.demo);
 	const ui = getUi();
 
 	const TABS = [
@@ -223,7 +229,12 @@
 							>Equipo · {data.equipo.length}
 							{data.equipo.length === 1 ? 'persona' : 'personas'}</span
 						>
-						<button type="button" class="oscuro" onclick={() => (invitando = true)}>Invitar</button>
+						<!-- Con la API la invitación no le llega a nadie (no hay mail ni forma de aceptarla). -->
+						{#if demo}
+							<button type="button" class="oscuro" onclick={() => (invitando = true)}
+								>Invitar</button
+							>
+						{/if}
 					</div>
 					<div class="miembros">
 						{#each data.equipo as m (m.id)}
@@ -234,7 +245,11 @@
 									/>{:else}<span class="av">{m.nombre[0].toUpperCase()}</span>{/if}
 								<span class="m-txt"
 									><span class="m-n">{m.nombre}{m.vos ? ' (vos)' : ''}</span><span class="m-e"
-										>{m.pendiente ? 'Invitación enviada' : m.contacto}</span
+										>{m.pendiente
+											? demo
+												? 'Invitación enviada'
+												: 'Invitación sin mandar'
+											: m.contacto}</span
 									></span
 								>
 								<span class="permisos"
@@ -278,7 +293,14 @@
 				</div>
 			{:else if tab === 'avisos'}
 				<div class="tarjeta lista">
-					{#each AVISOS as [k, t, d] (k)}
+					{#if !demo}
+						<p class="nota-real">
+							Qué te avisamos y por dónde se elige en
+							<a href={resolve('/panel/[seccion]', { seccion: 'notificaciones' })}>Notificaciones</a
+							>.
+						</p>
+					{/if}
+					{#each demo ? AVISOS : [] as [k, t, d] (k)}
 						<div class="opcion">
 							<span class="o-txt"><span class="o-t">{t}</span><span class="o-d">{d}</span></span>
 							<Interruptor
@@ -587,6 +609,17 @@
 		display: block;
 		font-size: 12.5px;
 		color: var(--mu);
+	}
+	.nota-real {
+		margin: 0 0 6px;
+		font-size: 13.5px;
+		line-height: 1.45;
+		color: var(--mu);
+		text-wrap: pretty;
+	}
+	.nota-real a {
+		color: var(--terracota);
+		font-weight: 600;
 	}
 	.sesiones-t {
 		margin-top: 10px;
