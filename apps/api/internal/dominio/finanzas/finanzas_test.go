@@ -45,7 +45,7 @@ func TestFinanzasConLoQueSeSabe(t *testing.T) {
 	if m := f["movimientos"].([]finanzas.Movimiento); len(m) != 2 || m[1].Monto != 80000 {
 		t.Fatalf("movimientos: %+v", m)
 	}
-	if f["caja"] != nil || f["disponible"] != 0 {
+	if f["caja"] != nil || f["disponible"] != nil || k["aLiquidar"] != nil || k["gastos"] != nil {
 		t.Fatalf("inventó plata sin Mercado Pago: %+v", f)
 	}
 }

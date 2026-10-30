@@ -3680,7 +3680,8 @@ components:
       type: object
       required: [disponible, cuenta, banco, caja, kpis, flujo, movimientos, conciliado]
       properties:
-        disponible: { type: integer, description: 'En Mercado Pago, listo para transferir' }
+        vendido30: { type: integer, description: 'Vendido y cobrado en los últimos 30 días, en pesos' }
+        disponible: { type: [integer, 'null'], description: 'En Mercado Pago, listo para transferir (null: no se trae)' }
         cuenta: { type: [string, 'null'], description: 'Cómo se muestra la cuenta de cobro (CBU terminada en…)' }
         banco: { type: [string, 'null'] }
         caja:
@@ -3699,9 +3700,9 @@ components:
           type: object
           required: [aLiquidar, aLiquidarDetalle, gastos, gastosDetalle, ganancia, gananciaDetalle, margen, mes]
           properties:
-            aLiquidar: { type: integer }
+            aLiquidar: { type: [integer, 'null'] }
             aLiquidarDetalle: { type: string }
-            gastos: { type: integer }
+            gastos: { type: [integer, 'null'] }
             gastosDetalle: { type: string }
             ganancia: { type: [integer, 'null'], description: 'null si a algo vendido le falta el costo (no se estima)' }
             gananciaDetalle: { type: string, description: 'Por qué no hay ganancia ("Falta el costo de 2 productos vendidos"); vacío si la hay' }

@@ -62,20 +62,33 @@ func Leer(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (map[s
 			tiendaID, ahora.Add(-30*24*time.Hour)).Scan(&vendido, &ganado, &sinCosto); err != nil {
 			return err
 		}
-		filas, err := t.Query(ctx, `SELECT numero, comprador->>'nombre', total FROM pedidos WHERE tienda_id = $1 AND pago = 'transf'
+		// Lo que entró: las últimas ventas cobradas, con su medio (antes sólo las transferencias, así
+		// que una tienda que cobraba en efectivo o con Mercado Pago veía «Movimientos» vacío).
+		filas, err := t.Query(ctx, `SELECT numero, coalesce(comprador->>'nombre', ''), total, pago FROM pedidos WHERE tienda_id = $1
 			AND estado NOT IN ('Cancelado', 'Sin pagar') ORDER BY creado_en DESC LIMIT 10`, tiendaID)
 		if err != nil {
 			return err
 		}
 		for filas.Next() {
 			var n int
-			var quien string
+			var quien, pago string
 			var total int64
-			if err := filas.Scan(&n, &quien, &total); err != nil {
+			if err := filas.Scan(&n, &quien, &total, &pago); err != nil {
 				return err
 			}
-			movs = append(movs, Movimiento{ID: fmt.Sprintf("transf-%d", n), Tipo: "transf", Titulo: "Transferencia de " + quien,
-				Detalle: fmt.Sprintf("Pedido #%d · marcada como cobrada", n), Monto: total})
+			titulo := fmt.Sprintf("Pedido #%d", n)
+			if quien != "" {
+				titulo += " de " + quien
+			}
+			tipo, medio := pago, nombreMedio(pago)
+			if pago == "tarjeta" {
+				tipo = "visa"
+			}
+			detalle := medio
+			if pago == "transf" {
+				detalle += " · marcada como cobrada"
+			}
+			movs = append(movs, Movimiento{ID: fmt.Sprintf("pedido-%d", n), Tipo: tipo, Titulo: titulo, Detalle: detalle, Monto: total})
 		}
 		return filas.Err()
 	})
@@ -98,18 +111,39 @@ func Leer(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (map[s
 		flujo[i] = Dia{Dia: ahora.In(argentina).AddDate(0, 0, i).Day()}
 	}
 	return map[string]any{
-		"disponible": 0, "cuenta": nil, "banco": nil, "caja": nil,
+		"disponible": nil, "cuenta": nil, "banco": nil, "caja": nil,
 		"kpis": map[string]any{
-			"aLiquidar": 0, "aLiquidarDetalle": "Conectá tus medios de pago",
-			"gastos": 0, "gastosDetalle": "Se suman con envíos y campañas",
+			// Lo disponible, lo que falta liquidar y los gastos todavía no se traen de ningún lado: el
+			// panel los muestra como «sin dato», no como un cero.
+			"aLiquidar": nil, "aLiquidarDetalle": "Lo ves en tu cuenta de Mercado Pago",
+			"gastos": nil, "gastosDetalle": "Todavía no se registran gastos",
 			"ganancia": ganancia, "margen": margen, "gananciaDetalle": detalle,
 			"mes": meses[ahora.In(argentina).Month()-1],
 		},
-		"flujo":       flujo,
+		"flujo": flujo,
+		// Lo vendido y cobrado en 30 días: lo que sí se sabe mientras no se trae lo de Mercado Pago.
+		"vendido30":   ventas,
 		"movimientos": movs,
 		// Hasta conectar los medios de pago no hay conciliación automática.
 		"conciliado": false,
 	}, nil
+}
+
+// nombreMedio: cómo se lee el medio de pago de un pedido.
+func nombreMedio(pago string) string {
+	switch pago {
+	case "mp":
+		return "Mercado Pago"
+	case "transf":
+		return "Transferencia"
+	case "efectivo":
+		return "Efectivo"
+	case "tarjeta":
+		return "Tarjeta"
+	case "modo":
+		return "MODO"
+	}
+	return "Otro medio"
 }
 
 func plural(n int, uno, varios string) string {

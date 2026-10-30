@@ -3562,8 +3562,10 @@ export interface components {
             }[];
         };
         Finanzas: {
-            /** @description En Mercado Pago, listo para transferir */
-            disponible: number;
+            /** @description Vendido y cobrado en los últimos 30 días, en pesos */
+            vendido30?: number;
+            /** @description En Mercado Pago, listo para transferir (null: no se trae) */
+            disponible: number | null;
             /** @description Cómo se muestra la cuenta de cobro (CBU terminada en…) */
             cuenta: string | null;
             banco: string | null;
@@ -3579,9 +3581,9 @@ export interface components {
                 sincronizado: string;
             } | null;
             kpis: {
-                aLiquidar: number;
+                aLiquidar: number | null;
                 aLiquidarDetalle: string;
-                gastos: number;
+                gastos: number | null;
                 gastosDetalle: string;
                 /** @description null si a algo vendido le falta el costo (no se estima) */
                 ganancia: number | null;

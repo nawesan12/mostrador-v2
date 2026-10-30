@@ -18,18 +18,35 @@
 			? '$ ' + (n / 1e6).toLocaleString('es-AR', { maximumFractionDigits: 1 }) + ' M'
 			: pesos(n);
 	const k = $derived(data.kpis);
-	const KPIS = $derived([
-		['A liquidar', pesos(k.aLiquidar), k.aLiquidarDetalle, 'var(--tx)'],
-		[`Gastos de ${k.mes}`, pesos(k.gastos), k.gastosDetalle, '#C24E25'],
-		[
-			'Ganancia estimada',
-			k.ganancia === null ? 'Sin dato' : millones(k.ganancia),
-			k.ganancia === null || k.margen === null
-				? k.gananciaDetalle || 'Cargá el costo de tus productos'
-				: `margen ${k.margen} % en 30 días`,
-			k.ganancia === null ? 'var(--mu)' : '#2F8F63'
-		]
-	] as const);
+	/** null: el dato no se trae de ningún lado todavía (no es un cero). */
+	const monto = (n: number | null) => (n === null ? 'Sin dato' : pesos(n));
+	// Sin dato de Mercado Pago, «A liquidar» y «Gastos» no se dibujan como tarjetas vacías.
+	const KPIS = $derived(
+		(
+			[
+				[
+					'A liquidar',
+					monto(k.aLiquidar),
+					k.aLiquidarDetalle,
+					k.aLiquidar === null ? 'var(--mu)' : 'var(--tx)'
+				],
+				[
+					`Gastos de ${k.mes}`,
+					monto(k.gastos),
+					k.gastosDetalle,
+					k.gastos === null ? 'var(--mu)' : '#C24E25'
+				],
+				[
+					'Ganancia estimada',
+					k.ganancia === null ? 'Sin dato' : millones(k.ganancia),
+					k.ganancia === null || k.margen === null
+						? k.gananciaDetalle || 'Cargá el costo de tus productos'
+						: `margen ${k.margen} % en 30 días`,
+					k.ganancia === null ? 'var(--mu)' : '#2F8F63'
+				]
+			] as const
+		).filter(([t, v]) => v !== 'Sin dato' || t === 'Ganancia estimada')
+	);
 	const maxEntra = $derived(Math.max(1, ...data.flujo.map((f) => f.entra)));
 	const maxSale = $derived(Math.max(1, ...data.flujo.map((f) => f.sale)));
 	function icono(m: M) {
@@ -76,21 +93,31 @@
 			<h1>Finanzas</h1>
 			<div class="c-s">Todo lo que entra y sale</div>
 		</div>
-		<button type="button" class="transferir" disabled={enviando} onclick={transferir}
-			><Icon icon={I.phArrowUpRightBold} size={15} />Transferir a mi banco</button
-		>
+		<!-- Transferir pide saber cuánto hay en Mercado Pago: sin ese dato, el botón no hace nada. -->
+		{#if data.disponible !== null}
+			<button type="button" class="transferir" disabled={enviando} onclick={transferir}
+				><Icon icon={I.phArrowUpRightBold} size={15} />Transferir a mi banco</button
+			>
+		{/if}
 	</div>
 
 	<div class="kpis" use:anim={{ t: 'rise', delay: 90 }}>
 		<div class="disponible">
 			<div class="d-in">
-				<div class="d-t">Disponible hoy</div>
-				<div class="d-v">{pesos(data.disponible)}</div>
-				<div class="d-d">
-					<Icon icon={I.siMercadopago} size={14} />En Mercado Pago{data.cuenta
-						? ` · ${data.cuenta}`
-						: ''}
-				</div>
+				{#if data.disponible === null}
+					<!-- Lo disponible en Mercado Pago no se trae todavía: va lo vendido y cobrado, que sí se sabe. -->
+					<div class="d-t">Vendido en 30 días</div>
+					<div class="d-v">{pesos(data.vendido30 ?? 0)}</div>
+					<div class="d-d">Lo disponible para retirar lo ves en tu cuenta de Mercado Pago</div>
+				{:else}
+					<div class="d-t">Disponible hoy</div>
+					<div class="d-v">{pesos(data.disponible)}</div>
+					<div class="d-d">
+						<Icon icon={I.siMercadopago} size={14} />En Mercado Pago{data.cuenta
+							? ` · ${data.cuenta}`
+							: ''}
+					</div>
+				{/if}
 			</div>
 		</div>
 		{#each KPIS as [t, v, d, c] (t)}
@@ -102,26 +129,29 @@
 		{/each}
 	</div>
 
-	<div class="tarjeta flujo" use:anim={{ t: 'rise', delay: 135 }}>
-		<div class="f-cab">
-			<span>Flujo de caja · próximas 2 semanas</span>
-			<span class="ley"
-				><span><i style:background="#2F8F63"></i>Entra</span><span
-					><i style:background="#E8875F"></i>Sale</span
-				></span
-			>
+	<!-- Sin cobros ni gastos programados, el flujo serían 14 barras en cero: no se dibuja. -->
+	{#if data.flujo.some((f) => f.entra || f.sale)}
+		<div class="tarjeta flujo" use:anim={{ t: 'rise', delay: 135 }}>
+			<div class="f-cab">
+				<span>Flujo de caja · próximas 2 semanas</span>
+				<span class="ley"
+					><span><i style:background="#2F8F63"></i>Entra</span><span
+						><i style:background="#E8875F"></i>Sale</span
+					></span
+				>
+			</div>
+			<div class="barras">
+				{#each data.flujo as f, i (i)}
+					<div class="col" title="Entra {pesos(f.entra)} · sale {pesos(f.sale)}">
+						<div class="arriba"><span style:height="{(f.entra / maxEntra) * 100}%"></span></div>
+						<div class="linea"></div>
+						<div class="abajo"><span style:height="{(f.sale / maxSale) * 100}%"></span></div>
+						<span class="dia">{f.dia}</span>
+					</div>
+				{/each}
+			</div>
 		</div>
-		<div class="barras">
-			{#each data.flujo as f, i (i)}
-				<div class="col" title="Entra {pesos(f.entra)} · sale {pesos(f.sale)}">
-					<div class="arriba"><span style:height="{(f.entra / maxEntra) * 100}%"></span></div>
-					<div class="linea"></div>
-					<div class="abajo"><span style:height="{(f.sale / maxSale) * 100}%"></span></div>
-					<span class="dia">{f.dia}</span>
-				</div>
-			{/each}
-		</div>
-	</div>
+	{/if}
 
 	<div class="tarjeta movs" use:anim={{ t: 'rise', delay: 180 }}>
 		<div class="mv-cab">
@@ -145,6 +175,8 @@
 				>
 				<b class:entra={m.monto > 0}>{m.monto > 0 ? '+' : '−'} {pesos(Math.abs(m.monto))}</b>
 			</div>
+		{:else}
+			<div class="mv-vacio">Cuando cobres una venta, aparece acá con su medio de pago.</div>
 		{/each}
 	</div>
 </div>
@@ -217,6 +249,11 @@
 		font-size: 36px;
 		font-weight: 600;
 		letter-spacing: -0.045em;
+	}
+	.mv-vacio {
+		padding: 14px 0 4px;
+		font-size: 13px;
+		color: var(--fa);
 	}
 	.d-d {
 		margin-top: 6px;
