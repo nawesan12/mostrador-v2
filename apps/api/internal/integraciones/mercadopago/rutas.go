@@ -193,4 +193,3 @@ func (s *Servicio) Rutas(mux *http.ServeMux) {
 		w.WriteHeader(http.StatusOK)
 	})
 }
-
