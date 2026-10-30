@@ -59,6 +59,7 @@ export const load: PageServerLoad = async ({ params, cookies, url }) => {
 			nombre: p.cliente.split(' ')[0],
 			alias: dt?.alias || dt?.cbu || null,
 			esCbu: !!dt && !dt.alias && !!dt.cbu,
+			estado: p.estado,
 			titular: r.tienda.cobros.datosTransferencia?.titular ?? null
 		}
 	};

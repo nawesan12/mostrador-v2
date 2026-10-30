@@ -59,6 +59,8 @@
 			esCbu?: boolean;
 			/** El código del pedido: con él, la reseña queda con compra. */
 			codigo?: string;
+			/** La reseña se pide recién cuando lo recibió (Entregado o Retirado). */
+			estado?: string;
 		} | null;
 		/** La confirmación de un turno (pagina 'turno'). */
 		turno?: import('../tipos.ts').TurnoPublico | null;
@@ -394,8 +396,8 @@
 						? `${tienda.cobros.cuotas} cuotas sin interés`
 						: 'Compra protegida'}</span
 			>{#if wide && tienda.cobros.cuotas > 1}<span style="opacity:.7"
-					>{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}
-						· {tienda.cobros.transferencia}% off por transferencia{/if}</span
+					>{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}&nbsp;· {tienda
+							.cobros.transferencia}% off por transferencia{/if}</span
 				>{/if}
 		</div>
 
@@ -1180,14 +1182,10 @@
 								>Finalizar compra</a
 							>
 							<span style="display:flex;justify-content:center;gap:10px;color:#6E655C"
-								><Icon icon={I.logosVisa} size={30} /><Icon
-									icon={I.logosMastercard}
-									size={22}
-								/>{#if tienda.cobros.mercadoPago}<Icon
-										icon={I.siMercadopago}
-										size={20}
-										style="color:#00B1EA"
-									/>{/if}</span
+								>{#if tienda.cobros.mercadoPago}<Icon icon={I.logosVisa} size={30} /><Icon
+										icon={I.logosMastercard}
+										size={22}
+									/><Icon icon={I.siMercadopago} size={20} style="color:#00B1EA" />{/if}</span
 							>
 						</div>
 					</div>
@@ -1911,9 +1909,11 @@
 					style="display:inline-block;margin-top:28px;text-decoration:none;padding:15px 26px;border-radius:2px;background:#1C1A17;color:#F4EFEA;font:600 14px 'Instrument Sans';letter-spacing:.04em"
 					>Volver a la tienda</a
 				>
-				<div style="margin-top:clamp(40px,6cqw,64px)">
-					<FormResena slug={tienda.slug} {tema} codigo={pedido.codigo} nombre={pedido.nombre} />
-				</div>
+				{#if pedido.estado === 'Entregado'}
+					<div style="margin-top:clamp(40px,6cqw,64px)">
+						<FormResena slug={tienda.slug} {tema} codigo={pedido.codigo} nombre={pedido.nombre} />
+					</div>
+				{/if}
 			</section>
 		{/if}
 
@@ -2021,8 +2021,8 @@
 						{tienda.nombre}
 					</div>
 					<p style="margin:12px 0 0;font-size:14px;color:#6E655C;line-height:1.55">
-						{#if tienda.cobros.cuotas > 1}{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}
-								y {tienda.cobros.transferencia}% off por transferencia{/if}, en toda la tienda.{:else if tienda.cobros.transferencia > 0}{tienda
+						{#if tienda.cobros.cuotas > 1}{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}&nbsp;y
+								{tienda.cobros.transferencia}% off por transferencia{/if}, en toda la tienda.{:else if tienda.cobros.transferencia > 0}{tienda
 								.cobros.transferencia}% off por transferencia, en toda la tienda.{:else}Compra
 							protegida, con 10 días para arrepentirte.{/if}
 					</p>
@@ -2048,15 +2048,15 @@
 						Medios de pago
 					</div>
 					<div class="sellos">
-						<span><Icon icon={I.logosVisa} size={34} /></span><span
-							><Icon icon={I.logosMastercard} size={22} /></span
-						><span><Icon icon={I.logosAmex} size={30} /></span>{#if tienda.cobros.mercadoPago}<span
+						{#if tienda.cobros.mercadoPago}<span><Icon icon={I.logosVisa} size={34} /></span><span
+								><Icon icon={I.logosMastercard} size={22} /></span
+							><span><Icon icon={I.logosAmex} size={30} /></span><span
 								><Icon icon={I.siMercadopago} size={17} style="color:#00B1EA" /><span
 									style="color:#0A2D6E">Mercado Pago</span
 								></span
-							>{/if}<span
-							><Icon icon={I.phBankFill} size={14} style="color:#2F7A43" />Transferencia</span
-						>
+							>{/if}{#if tienda.cobros.datosTransferencia}<span
+								><Icon icon={I.phBankFill} size={14} style="color:#2F7A43" />Transferencia</span
+							>{/if}
 					</div>
 				</div>
 				<div style="min-width:0">
@@ -2066,10 +2066,7 @@
 						Medios de envío
 					</div>
 					<div class="sellos">
-						<span
-							><span style="color:#D71920;font-weight:800;letter-spacing:-.02em">andreani</span
-							></span
-						>{#if tienda.envios.correo}<span
+						{#if tienda.envios.correo}<span
 								><span
 									style="width:14px;height:14px;border-radius:3px;background:#FFD100;display:inline-block"
 								></span><span style="color:#00205B">Correo Argentino</span></span
@@ -2137,7 +2134,7 @@
 			</div>
 		</footer>
 
-		{#if whatsapp}<a
+		{#if whatsapp && pagina !== 'checkout'}<a
 				href={wa('¡Hola!')}
 				target="_blank"
 				rel="noopener"

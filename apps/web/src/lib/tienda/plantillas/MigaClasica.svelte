@@ -60,6 +60,8 @@
 			esCbu?: boolean;
 			/** El código del pedido: con él, la reseña queda con compra. */
 			codigo?: string;
+			/** La reseña se pide recién cuando lo recibió (Entregado o Retirado). */
+			estado?: string;
 		} | null;
 		/** La confirmación de un turno (pagina 'turno'). */
 		turno?: import('../tipos.ts').TurnoPublico | null;
@@ -359,7 +361,6 @@
 
 	// Nosotros: cómo llega el pedido (la tarjeta de "Horarios" del diseño, con los envíos de la tienda).
 	const llegadas = $derived([
-		{ d: 'Andreani a domicilio', h: 'Todo el país' },
 		...(tienda.envios.correo ? [{ d: 'Correo Argentino', h: 'A sucursal' }] : []),
 		...(tienda.envios.moto ? [{ d: 'Moto en el día', h: 'CABA' }] : []),
 		...(tienda.envios.retiro ? [{ d: 'Retiro en el local', h: 'Sin costo' }] : []),
@@ -1581,14 +1582,16 @@
 					style="display:inline-block;margin-top:28px;padding:15px 22px;border-radius:14px;background:#3A2414;color:#FBF1E6;font:700 15px 'Instrument Sans';text-decoration:none"
 					>Volver a la tienda</a
 				>
-				<div style="margin-top:clamp(40px,6cqw,64px)">
-					<FormResena
-						slug={tienda.slug}
-						tema={{ ...tema, borde: 'transparent' }}
-						codigo={pedido.codigo}
-						nombre={pedido.nombre}
-					/>
-				</div>
+				{#if pedido.estado === 'Entregado'}
+					<div style="margin-top:clamp(40px,6cqw,64px)">
+						<FormResena
+							slug={tienda.slug}
+							tema={{ ...tema, borde: 'transparent' }}
+							codigo={pedido.codigo}
+							nombre={pedido.nombre}
+						/>
+					</div>
+				{/if}
 			</section>
 		{/if}
 
@@ -2140,15 +2143,15 @@
 						Medios de pago
 					</div>
 					<div class="sellos">
-						<span><Icon icon={I.logosVisa} size={34} /></span><span
-							><Icon icon={I.logosMastercard} size={22} /></span
-						><span><Icon icon={I.logosAmex} size={30} /></span>{#if tienda.cobros.mercadoPago}<span
+						{#if tienda.cobros.mercadoPago}<span><Icon icon={I.logosVisa} size={34} /></span><span
+								><Icon icon={I.logosMastercard} size={22} /></span
+							><span><Icon icon={I.logosAmex} size={30} /></span><span
 								><Icon icon={I.siMercadopago} size={17} style="color:#00B1EA" /><span
 									style="color:#0A2D6E">Mercado Pago</span
 								></span
-							>{/if}<span
-							><Icon icon={I.phBankFill} size={14} style="color:#2F7A43" />Transferencia</span
-						>
+							>{/if}{#if tienda.cobros.datosTransferencia}<span
+								><Icon icon={I.phBankFill} size={14} style="color:#2F7A43" />Transferencia</span
+							>{/if}
 					</div>
 				</div>
 				<div style="min-width:0">
@@ -2158,10 +2161,7 @@
 						Medios de envío
 					</div>
 					<div class="sellos">
-						<span
-							><span style="color:#D71920;font-weight:800;letter-spacing:-.02em">andreani</span
-							></span
-						>{#if tienda.envios.correo}<span
+						{#if tienda.envios.correo}<span
 								><span
 									style="width:14px;height:14px;border-radius:3px;background:#FFD100;display:inline-block"
 								></span><span style="color:#00205B">Correo Argentino</span></span
@@ -2229,7 +2229,7 @@
 			</div>
 		</footer>
 
-		{#if whatsapp}<a
+		{#if whatsapp && pagina !== 'checkout'}<a
 				href={wa('¡Hola!')}
 				target="_blank"
 				rel="noopener"

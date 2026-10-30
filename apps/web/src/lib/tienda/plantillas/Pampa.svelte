@@ -60,6 +60,8 @@
 			esCbu?: boolean;
 			/** El código del pedido: con él, la reseña queda con compra. */
 			codigo?: string;
+			/** La reseña se pide recién cuando lo recibió (Entregado o Retirado). */
+			estado?: string;
 		} | null;
 		/** La confirmación de un turno (pagina 'turno'). */
 		turno?: import('../tipos.ts').TurnoPublico | null;
@@ -570,10 +572,9 @@
 							<p style="margin:0;font-size:17px;line-height:1.5;color:#BDBDBD;max-width:420px">
 								{tienda.nombre}{tienda.ciudad
 									? `, desde ${tienda.ciudad}`
-									: ''}.{#if tienda.cobros.cuotas > 1}
-									{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}
-										o {tienda.cobros.transferencia}% off pagando por&nbsp;transferencia{/if}.{:else if tienda.cobros.transferencia > 0}
-									{tienda.cobros.transferencia}% off pagando por&nbsp;transferencia.{/if}
+									: ''}.{#if tienda.cobros.cuotas > 1}&nbsp;{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}&nbsp;o
+										{tienda.cobros.transferencia}% off pagando por&nbsp;transferencia{/if}.{:else if tienda.cobros.transferencia > 0}&nbsp;{tienda
+										.cobros.transferencia}% off pagando por&nbsp;transferencia.{/if}
 							</p>
 							<div style="margin-top:22px;display:flex;gap:0;flex-wrap:wrap">
 								<a
@@ -1550,11 +1551,13 @@
 					</div>
 				{/if}
 			</section>
-			<section
-				style="padding:clamp(28px,4cqw,56px) clamp(14px,2.4cqw,28px);border-bottom:2px solid #2A2A2A"
-			>
-				<FormResena slug={tienda.slug} {tema} codigo={pedido.codigo} nombre={pedido.nombre} />
-			</section>
+			{#if pedido.estado === 'Entregado'}
+				<section
+					style="padding:clamp(28px,4cqw,56px) clamp(14px,2.4cqw,28px);border-bottom:2px solid #2A2A2A"
+				>
+					<FormResena slug={tienda.slug} {tema} codigo={pedido.codigo} nombre={pedido.nombre} />
+				</section>
+			{/if}
 		{/if}
 
 		<!-- ============ TURNOS (con las piezas del checkout) ============ -->
@@ -2150,15 +2153,15 @@
 						Medios de pago
 					</div>
 					<div class="sellos">
-						<span><Icon icon={I.logosVisa} size={34} /></span><span
-							><Icon icon={I.logosMastercard} size={22} /></span
-						><span><Icon icon={I.logosAmex} size={30} /></span>{#if tienda.cobros.mercadoPago}<span
+						{#if tienda.cobros.mercadoPago}<span><Icon icon={I.logosVisa} size={34} /></span><span
+								><Icon icon={I.logosMastercard} size={22} /></span
+							><span><Icon icon={I.logosAmex} size={30} /></span><span
 								><Icon icon={I.siMercadopago} size={17} style="color:#00B1EA" /><span
 									style="color:#0A2D6E">Mercado Pago</span
 								></span
-							>{/if}<span
-							><Icon icon={I.phBankFill} size={14} style="color:#2F7A43" />Transferencia</span
-						>
+							>{/if}{#if tienda.cobros.datosTransferencia}<span
+								><Icon icon={I.phBankFill} size={14} style="color:#2F7A43" />Transferencia</span
+							>{/if}
 					</div>
 				</div>
 				<div style="min-width:0">
@@ -2168,10 +2171,7 @@
 						Medios de envío
 					</div>
 					<div class="sellos">
-						<span
-							><span style="color:#D71920;font-weight:800;letter-spacing:-.02em">andreani</span
-							></span
-						>{#if tienda.envios.correo}<span
+						{#if tienda.envios.correo}<span
 								><span
 									style="width:14px;height:14px;border-radius:3px;background:#FFD100;display:inline-block"
 								></span><span style="color:#00205B">Correo Argentino</span></span
@@ -2239,7 +2239,7 @@
 			</div>
 		</footer>
 
-		{#if whatsapp}<a
+		{#if whatsapp && pagina !== 'checkout'}<a
 				href={wa('¡Hola!')}
 				target="_blank"
 				rel="noopener"

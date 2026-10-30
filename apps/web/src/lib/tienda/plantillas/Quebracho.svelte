@@ -60,6 +60,8 @@
 			esCbu?: boolean;
 			/** El código del pedido: con él, la reseña queda con compra. */
 			codigo?: string;
+			/** La reseña se pide recién cuando lo recibió (Entregado o Retirado). */
+			estado?: string;
 		} | null;
 		/** La confirmación de un turno (pagina 'turno'). */
 		turno?: import('../tipos.ts').TurnoPublico | null;
@@ -468,8 +470,8 @@
 						? `${tienda.cobros.cuotas} cuotas sin interés`
 						: 'Compra protegida'}</span
 			>{#if wide && tienda.cobros.cuotas > 1}<span style="opacity:.8"
-					>{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}
-						· {tienda.cobros.transferencia}% off por transferencia{/if}</span
+					>{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}&nbsp;· {tienda
+							.cobros.transferencia}% off por transferencia{/if}</span
 				>{/if}
 		</div>
 
@@ -1550,9 +1552,11 @@
 					style="display:inline-block;margin-top:26px;text-decoration:none;padding:15px 24px;background:#2B2520;color:#EFE9E1;font:600 14px 'Familjen Grotesk';letter-spacing:.04em"
 					>Volver a la tienda</a
 				>
-				<div style="margin-top:clamp(40px,6cqw,64px)">
-					<FormResena slug={tienda.slug} {tema} codigo={pedido.codigo} nombre={pedido.nombre} />
-				</div>
+				{#if pedido.estado === 'Entregado'}
+					<div style="margin-top:clamp(40px,6cqw,64px)">
+						<FormResena slug={tienda.slug} {tema} codigo={pedido.codigo} nombre={pedido.nombre} />
+					</div>
+				{/if}
 			</section>
 		{/if}
 
@@ -2036,8 +2040,8 @@
 								><Icon icon={I.phMapPin} size={19} style="flex:none" />{tienda.direccion}</span
 							>{/if}{#if tienda.cobros.cuotas > 1}<span style="display:flex;gap:12px"
 								><Icon icon={I.phCreditCard} size={19} style="flex:none" />{tienda.cobros.cuotas} cuotas
-								sin interés{#if tienda.cobros.transferencia > 0}
-									· {tienda.cobros.transferencia}% off por transferencia{/if}</span
+								sin interés{#if tienda.cobros.transferencia > 0}&nbsp;· {tienda.cobros
+										.transferencia}% off por transferencia{/if}</span
 							>{:else if tienda.cobros.transferencia > 0}<span style="display:flex;gap:12px"
 								><Icon icon={I.phBank} size={19} style="flex:none" />{tienda.cobros.transferencia}%
 								off por transferencia</span
@@ -2077,8 +2081,8 @@
 			>
 				<div style="min-width:0;max-width:340px">
 					<p style="margin:0;font-size:14px;color:#BDB2A6;line-height:1.55">
-						{#if tienda.cobros.cuotas > 1}{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}
-								y {tienda.cobros.transferencia}% off por transferencia{/if}, en toda la&nbsp;tienda.{:else if tienda.cobros.transferencia > 0}{tienda
+						{#if tienda.cobros.cuotas > 1}{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}&nbsp;y
+								{tienda.cobros.transferencia}% off por transferencia{/if}, en toda la&nbsp;tienda.{:else if tienda.cobros.transferencia > 0}{tienda
 								.cobros.transferencia}% off por transferencia, en toda la&nbsp;tienda.{:else}Compra
 							protegida, con 10 días para&nbsp;arrepentirte.{/if}
 					</p>
@@ -2110,9 +2114,9 @@
 								><Icon icon={I.siMercadopago} size={17} style="color:#00B1EA" /><span
 									style="color:#0A2D6E">Mercado Pago</span
 								></span
-							>{/if}<span
-							><Icon icon={I.phBankFill} size={14} style="color:#2F7A43" />Transferencia</span
-						>
+							>{/if}{#if tienda.cobros.datosTransferencia}<span
+								><Icon icon={I.phBankFill} size={14} style="color:#2F7A43" />Transferencia</span
+							>{/if}
 					</div>
 				</div>
 				<div style="min-width:0">
@@ -2122,10 +2126,7 @@
 						Medios de envío
 					</div>
 					<div class="sellos">
-						<span
-							><span style="color:#D71920;font-weight:800;letter-spacing:-.02em">andreani</span
-							></span
-						>{#if tienda.envios.correo}<span
+						{#if tienda.envios.correo}<span
 								><span
 									style="width:14px;height:14px;border-radius:3px;background:#FFD100;display:inline-block"
 								></span><span style="color:#00205B">Correo Argentino</span></span
@@ -2193,7 +2194,7 @@
 			</div>
 		</footer>
 
-		{#if whatsapp}<a
+		{#if whatsapp && pagina !== 'checkout'}<a
 				href={wa('¡Hola!')}
 				target="_blank"
 				rel="noopener"

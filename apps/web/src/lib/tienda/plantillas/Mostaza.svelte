@@ -60,6 +60,8 @@
 			esCbu?: boolean;
 			/** El código del pedido: con él, la reseña queda con compra. */
 			codigo?: string;
+			/** La reseña se pide recién cuando lo recibió (Entregado o Retirado). */
+			estado?: string;
 		} | null;
 		/** La confirmación de un turno (pagina 'turno'). */
 		turno?: import('../tipos.ts').TurnoPublico | null;
@@ -151,16 +153,18 @@
 					}
 				]
 			: []),
-		{
-			t: 'Envío a todo el país',
-			d: tienda.envios.gratisDesde
-				? `Gratis desde ${fmt(tienda.envios.gratisDesde)}`
-				: tienda.envios.correo
-					? 'Por Andreani o Correo Argentino'
-					: 'Por Andreani',
-			i: I.phPackageFill,
-			bg: '#EFDDBF'
-		}
+		...(tienda.envios.correo
+			? [
+					{
+						t: 'Envío a todo el país',
+						d: tienda.envios.gratisDesde
+							? `Gratis desde ${fmt(tienda.envios.gratisDesde)}`
+							: 'Por Correo Argentino',
+						i: I.phPackageFill,
+						bg: '#EFDDBF'
+					}
+				]
+			: [])
 	]);
 	const best = $derived(
 		tienda.masVendidos.slice(0, 4).flatMap((id) => (porId.get(id) ? [tarjeta(porId.get(id)!)] : []))
@@ -1711,14 +1715,16 @@
 					style="margin-top:6px;padding:15px 24px;border-radius:999px;background:#3B2416;color:#FBF3E4;font:700 15px 'Instrument Sans';text-decoration:none"
 					>Volver a la tienda</a
 				>
-				<div style="margin-top:clamp(24px,5cqw,48px);align-self:stretch">
-					<FormResena
-						slug={tienda.slug}
-						tema={{ ...tema, borde: 'transparent' }}
-						codigo={pedido.codigo}
-						nombre={pedido.nombre}
-					/>
-				</div>
+				{#if pedido.estado === 'Entregado'}
+					<div style="margin-top:clamp(24px,5cqw,48px);align-self:stretch">
+						<FormResena
+							slug={tienda.slug}
+							tema={{ ...tema, borde: 'transparent' }}
+							codigo={pedido.codigo}
+							nombre={pedido.nombre}
+						/>
+					</div>
+				{/if}
 			</section>
 		{/if}
 
@@ -2270,8 +2276,8 @@
 						{tienda.nombre}
 					</div>
 					<p style="margin:10px 0 0;font-size:14px;color:#E6D3BC;line-height:1.5">
-						{#if tienda.cobros.cuotas > 1}{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}
-								y {tienda.cobros.transferencia}% off por transferencia{/if}, en toda la&nbsp;tienda.{:else if tienda.cobros.transferencia > 0}{tienda
+						{#if tienda.cobros.cuotas > 1}{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}&nbsp;y
+								{tienda.cobros.transferencia}% off por transferencia{/if}, en toda la&nbsp;tienda.{:else if tienda.cobros.transferencia > 0}{tienda
 								.cobros.transferencia}% off por transferencia, en toda la&nbsp;tienda.{:else}Compra
 							protegida, con 10 días para&nbsp;arrepentirte.{/if}
 					</p>
@@ -2295,15 +2301,15 @@
 						Medios de pago
 					</div>
 					<div class="sellos">
-						<span><Icon icon={I.logosVisa} size={34} /></span><span
-							><Icon icon={I.logosMastercard} size={22} /></span
-						><span><Icon icon={I.logosAmex} size={30} /></span>{#if tienda.cobros.mercadoPago}<span
+						{#if tienda.cobros.mercadoPago}<span><Icon icon={I.logosVisa} size={34} /></span><span
+								><Icon icon={I.logosMastercard} size={22} /></span
+							><span><Icon icon={I.logosAmex} size={30} /></span><span
 								><Icon icon={I.siMercadopago} size={17} style="color:#00B1EA" /><span
 									style="color:#0A2D6E">Mercado Pago</span
 								></span
-							>{/if}<span
-							><Icon icon={I.phBankFill} size={14} style="color:#2F7A43" />Transferencia</span
-						>
+							>{/if}{#if tienda.cobros.datosTransferencia}<span
+								><Icon icon={I.phBankFill} size={14} style="color:#2F7A43" />Transferencia</span
+							>{/if}
 					</div>
 				</div>
 				<div style="min-width:0">
@@ -2313,10 +2319,7 @@
 						Medios de envío
 					</div>
 					<div class="sellos">
-						<span
-							><span style="color:#D71920;font-weight:800;letter-spacing:-.02em">andreani</span
-							></span
-						>{#if tienda.envios.correo}<span
+						{#if tienda.envios.correo}<span
 								><span
 									style="width:14px;height:14px;border-radius:3px;background:#FFD100;display:inline-block"
 								></span><span style="color:#00205B">Correo Argentino</span></span
@@ -2384,7 +2387,7 @@
 			</div>
 		</footer>
 
-		{#if whatsapp}<a
+		{#if whatsapp && pagina !== 'checkout'}<a
 				href={wa('¡Hola!')}
 				target="_blank"
 				rel="noopener"
