@@ -145,7 +145,9 @@
 	<div class="cab" use:anim={{ t: 'rise' }}>
 		<div class="c-txt">
 			<h1>Mi tienda</h1>
-			<div class="c-s">Plantilla {elegida?.nombre ?? data.plantilla} · {data.direccion}</div>
+			<div class="c-s">
+				Plantilla {elegida?.nombre ?? data.plantilla} · <span class="dir">{data.direccion}</span>
+			</div>
 		</div>
 		<a class="cambiar" href={resolve('/panel/tarjeta-para-paquetes')}
 			><Icon icon={I.phEnvelopeSimpleFill} size={14} />Tarjeta para paquetes</a
@@ -517,6 +519,11 @@
 		margin-top: 2px;
 		font-size: 15px;
 		color: var(--mu);
+	}
+	/* La dirección baja entera al renglón siguiente; sólo se corta si no entra ni sola. */
+	.dir {
+		display: inline-block;
+		max-width: 100%;
 		overflow-wrap: anywhere;
 	}
 	.cambiar {
