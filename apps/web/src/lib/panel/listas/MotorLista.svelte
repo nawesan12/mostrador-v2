@@ -194,6 +194,8 @@
 		ir({ ...VACIO, orden: f.orden });
 	}
 	let rango = $derived(f.rango);
+	// Sin búsqueda ni filtros (salvo el orden): si no hay filas, la lista está vacía de verdad.
+	const sinFiltros = $derived(firma({ ...VACIO, orden: f.orden }) === firma(f));
 
 	const n = $derived(lista.total.toLocaleString('es-AR'));
 	const rangoTxt = $derived(
@@ -552,8 +554,17 @@
 				<div class="vacio">
 					<div>
 						<img src="/hornero/lupa.webp" alt="" width="110" height="110" />
-						<div class="v-t">Nada con esos filtros</div>
-						<button type="button" class="v-b" onclick={limpiar}>Limpiar filtros</button>
+						{#if sinFiltros}
+							<!-- Lista vacía de verdad: no hay filtros que limpiar; va la primera acción. -->
+							<div class="v-t">Todavía no hay {config.unidad}</div>
+							{#if config.primario}
+								{@const p = config.primario}
+								<button type="button" class="v-b" onclick={() => p.hacer(ctx)}>{p.t}</button>
+							{/if}
+						{:else}
+							<div class="v-t">Nada con esos filtros</div>
+							<button type="button" class="v-b" onclick={limpiar}>Limpiar filtros</button>
+						{/if}
 					</div>
 				</div>
 			{/if}
