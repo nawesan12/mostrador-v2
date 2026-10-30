@@ -255,10 +255,6 @@
 	.pri {
 		background: #d2582f;
 	}
-	.sec {
-		border: 1.5px solid rgba(251, 247, 242, 0.3);
-		color: #fbf7f2 !important;
-	}
 	.ver-ejemplo {
 		margin-top: 18px;
 		scroll-margin-top: 90px;

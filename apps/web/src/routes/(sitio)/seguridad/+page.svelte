@@ -220,9 +220,6 @@
 	.bloque {
 		padding: clamp(56px, 8vw, 104px) 0;
 	}
-	.beige {
-		background: #f4ece2;
-	}
 	.capas {
 		margin-top: 28px;
 		display: grid;
