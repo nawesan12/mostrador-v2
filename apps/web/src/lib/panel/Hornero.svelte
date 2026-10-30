@@ -2,6 +2,7 @@
 	import { Dialog } from 'bits-ui';
 	import { tick } from 'svelte';
 	import { goto, invalidateAll } from '$app/navigation';
+	import { page } from '$app/state';
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
 	import type { IdeaHornero } from '#lib/server/hornero/ideas.ts';
@@ -16,6 +17,7 @@
 	 */
 	const shell = getShell();
 	const ui = getUi();
+	const demo = $derived(!!page.data.demo);
 
 	type Inicio = {
 		hola: string | null;
@@ -27,7 +29,7 @@
 	let escribiendo = $state(false);
 	let texto = $state('');
 	let lista = $state<HTMLElement>();
-	const SUGERENCIAS = ['¿Cuánto vendí ayer?', 'Subí precios 8%', 'Clientes que no vuelven'];
+	const SUGERENCIAS = ['¿Cuánto vendí ayer?', '¿Qué está sin stock?', 'Clientes que no vuelven'];
 
 	async function cargar() {
 		const r = await fetch('/panel/hornero');
@@ -100,8 +102,10 @@
 				k: 'ai',
 				title: idea.listo.titulo,
 				desc: idea.listo.detalle,
-				action: 'Deshacer',
-				onAction: () => marcar(idea, false)
+				// Un mail mandado no se puede deshacer: el toast sólo ofrece Deshacer si se puede.
+				...(idea.id === 'carritos' && !demo
+					? {}
+					: { action: 'Deshacer', onAction: () => marcar(idea, false) })
 			});
 	}
 
@@ -179,9 +183,11 @@
 								<div class="hecho"><Icon icon={I.phCheckCircleFill} size={16} />Hecho</div>
 							{:else}
 								<div class="i-acc">
-									<button type="button" class="aprobar" onclick={() => marcar(idea, true)}
-										>Aprobar</button
-									>
+									{#if idea.aprobable}
+										<button type="button" class="aprobar" onclick={() => marcar(idea, true)}
+											>Aprobar</button
+										>
+									{/if}
 									<button
 										type="button"
 										class="editar"
@@ -189,7 +195,7 @@
 											shell.ia = false;
 											// eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta del panel armada con rutaDe
 											goto(rutaDe(idea.seccion));
-										}}>Editar</button
+										}}>{idea.aprobable ? 'Editar' : `Ir a ${idea.seccion}`}</button
 									>
 								</div>
 							{/if}

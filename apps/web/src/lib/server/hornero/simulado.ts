@@ -17,13 +17,13 @@ export function responderSimulado(pregunta: string, d: DatosHornero) {
 		const pct = Number(q.match(/(\d+)\s*%/)?.[1] ?? 8);
 		const top = [...d.contexto.productos].sort((a, b) => b.vendidos30d - a.vendidos30d)[0];
 		return top
-			? `Con un ${pct}% más, ${top.nombre} pasaría de ${pesos(top.precio)} a **${pesos(Math.round((top.precio * (1 + pct / 100)) / 100) * 100)}**. Te lo dejo listo en Listas de precio para que lo apruebes.`
+			? `Con un ${pct}% más, ${top.nombre} pasaría de ${pesos(top.precio)} a **${pesos(Math.round((top.precio * (1 + pct / 100)) / 100) * 100)}**. Lo aplicás desde **Listas de precio** → «Actualizar precios por inflación».`
 			: 'Todavía no tenés productos cargados para subirles el precio.';
 	}
 	if (/client|vuelv/.test(q))
-		return `Tenés **${d.contexto.clientes.sinVolver} clientes** que compraron más de una vez y hace un mes que no vuelven. Les puedo preparar un mensaje por WhatsApp.`;
+		return `Tenés **${d.contexto.clientes.sinVolver} clientes** que compraron más de una vez y hace un mes que no vuelven. Los ves en **Clientes → Para recuperar**.`;
 	const top = d.semana.masVendidos[0];
 	return top
-		? `Esta semana lo que más salió fue **${top.nombre}** (${top.unidades} unidades). ¿Querés que arme una promo con eso?`
+		? `Esta semana lo que más salió fue **${top.nombre}** (${top.unidades} unidades). Un cupón para ese producto lo creás en **Cupones**.`
 		: 'Todavía no tengo ventas para mirar. Cuando entren los primeros pedidos, te cuento cómo vienen.';
 }

@@ -82,7 +82,7 @@ const GUIAS: [RegExp, string][] = [
 	],
 	[
 		/dominio|mi propia direccion|\.com\.ar/,
-		'En **Mi tienda → Dominio** ves tu dirección y podés conectar un dominio propio.'
+		'En **Cuenta → Dominio** ves tu dirección y podés conectar un dominio propio.'
 	],
 	[
 		/factur|arca|afip/,
@@ -102,7 +102,7 @@ const GUIAS: [RegExp, string][] = [
 	],
 	[
 		/whatsapp/,
-		'En **Integraciones → WhatsApp** conectás tu número para atender desde el panel; yo puedo responder las preguntas de stock y precios.'
+		'WhatsApp Business todavía no se puede conectar al panel: está en camino. Mientras tanto, el botón de WhatsApp de tu tienda abre un chat con el número que cargás en **Configuración → Negocio**.'
 	]
 ];
 
@@ -165,6 +165,8 @@ export function responderSinIa(pregunta: string, d: DatosHornero): string | null
 	}
 	if (/ticket|promedio por compra|gasta cada/.test(q))
 		return `En los últimos 7 días cada compra fue de **${pesos(semana.kpis.ticket.actual)}** en promedio${variacion(semana.kpis.ticket.actual, semana.kpis.ticket.anterior)}.`;
+	if (/conversion|convierte|de cada 100/.test(q) && !semana.kpis.conversion.actual)
+		return 'Todavía no mido las visitas de tu tienda, así que no puedo calcular la conversión. Si conectás **Google Analytics** en Integraciones, la ves en tu cuenta de Google.';
 	if (/conversion|convierte|de cada 100/.test(q))
 		return `De cada 100 visitas, **${semana.kpis.conversion.actual.toLocaleString('es-AR', { maximumFractionDigits: 1 })}** terminan comprando (últimos 7 días).`;
 

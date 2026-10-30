@@ -18,7 +18,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 		hola: t.hola,
 		ventasHoy: t.ventas.actual,
 		ventasAyer: t.ventas.anterior,
-		ideas: ideasDe(t)
+		ideas: ideasDe(t, !usaSandbox())
 	});
 };
 
