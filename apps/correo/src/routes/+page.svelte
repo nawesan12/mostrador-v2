@@ -238,6 +238,7 @@
 					{#key data.leido.id}
 						<Lectura
 							m={data.leido}
+							marca={data.marca}
 							envio={data.filas.find((f) => f.id === data.leido?.id)?.envio ?? null}
 							casillas={data.casillas}
 							{contactos}

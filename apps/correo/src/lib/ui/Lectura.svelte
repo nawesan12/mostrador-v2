@@ -4,10 +4,12 @@
 	import { nuevo, type Borrador } from '#lib/redactar.svelte.ts';
 	import Editor from './Editor.svelte';
 	import Visor from './Visor.svelte';
+	import Imprimir from './Imprimir.svelte';
 	import { PROPUESTAS, familia, keyword, nombre as nombreEtiqueta } from '#lib/etiquetas.ts';
 
 	let {
 		m,
+		marca,
 		envio = null,
 		casillas,
 		contactos,
@@ -17,6 +19,7 @@
 		onenviado
 	}: {
 		m: Mensaje;
+		marca: string;
 		/** Si es un envío programado: su id (para cancelarlo) y cuándo sale. */
 		envio?: { id: string; sale: string } | null;
 		casillas: Casilla[];
@@ -34,6 +37,7 @@
 	let menu = $state(false);
 	/** El adjunto abierto en el visor (índice), o null. */
 	let visor = $state<number | null>(null);
+	let imprimiendo = $state(false);
 	let sub = $state<'etiquetas' | 'mover' | null>(null);
 	let nueva = $state('');
 	const todas = $derived([...new Set([...PROPUESTAS.map(([n]) => keyword(n)), ...m.etiquetas])]);
@@ -160,7 +164,7 @@ body{padding:20px 22px}a{color:#1d5fd1}img{max-width:100%;height:auto}table{max-
 						onclick={() => (sub = sub === 'mover' ? null : 'mover')}
 						><i class="icon-folder-input"></i>Mover a<i class="icon-chevron-right fl"></i></button
 					>
-					<button role="menuitem" onclick={() => (cerrarMenu(), window.print())}
+					<button role="menuitem" onclick={() => (cerrarMenu(), (imprimiendo = true))}
 						><i class="icon-printer"></i>Imprimir</button
 					>
 					<button role="menuitem" onclick={() => (cerrarMenu(), onaccion('spam'))}
@@ -375,6 +379,10 @@ body{padding:20px 22px}a{color:#1d5fd1}img{max-width:100%;height:auto}table{max-
 		{/if}
 	</div>
 </section>
+
+{#if imprimiendo}
+	<Imprimir {m} {marca} oncerrar={() => (imprimiendo = false)} />
+{/if}
 
 {#if visor !== null}
 	<Visor {m} inicio={visor} oncerrar={() => (visor = null)} />
