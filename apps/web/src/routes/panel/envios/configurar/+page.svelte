@@ -78,17 +78,19 @@
 			<h1>Envíos y retiro</h1>
 			<div class="c-s">Cómo les llega lo que compran en tu tienda</div>
 		</div>
-		{#if cambiado}
-			<button
-				type="button"
-				class="cambiar"
-				onclick={() => (e = copia(data.entregas))}
-				disabled={guardando}>Descartar</button
+		<div class="acciones">
+			{#if cambiado}
+				<button
+					type="button"
+					class="cambiar"
+					onclick={() => (e = copia(data.entregas))}
+					disabled={guardando}>Descartar</button
+				>
+			{/if}
+			<button type="button" class="publicar" onclick={guardar} disabled={guardando || !cambiado}
+				>{guardando ? 'Guardando…' : 'Guardar'}</button
 			>
-		{/if}
-		<button type="button" class="publicar" onclick={guardar} disabled={guardando || !cambiado}
-			>{guardando ? 'Guardando…' : 'Guardar'}</button
-		>
+		</div>
 	</div>
 
 	<div class="grilla" use:anim={{ t: 'rise', delay: 60 }}>
@@ -255,6 +257,10 @@
 		font-size: 15px;
 		color: var(--mu);
 		text-wrap: pretty;
+	}
+	.acciones {
+		display: flex;
+		gap: 8px;
 	}
 	.cambiar {
 		padding: 10px 16px;
@@ -432,8 +438,12 @@
 		.volver {
 			min-height: 44px;
 		}
+		.acciones {
+			width: 100%;
+		}
 		.cab .publicar,
 		.cab .cambiar {
+			flex: 1;
 			min-height: 44px;
 		}
 	}
