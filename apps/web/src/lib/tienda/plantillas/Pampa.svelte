@@ -12,7 +12,7 @@
 	import CampoCupon from '../CampoCupon.svelte';
 	import { CuponCheckout, totales } from '../cupon.svelte.ts';
 	import EnvioCorreo from '../EnvioCorreo.svelte';
-	import { cotizar, cotizarYa, cpValido } from '../envio.svelte.ts';
+	import { cotizar, cotizarYa, cpValido, resumenMoto } from '../envio.svelte.ts';
 	import { Seleccion, tarjetaDe } from '../seleccion.svelte.ts';
 	import { partirTitulo } from '../titulo.ts';
 	import { Reserva } from '../reserva.svelte.ts';
@@ -135,7 +135,7 @@
 	// Cinta que corre arriba de todo, con lo que la tienda ofrece de verdad.
 	const cinta = $derived([
 		...(tienda.envios.gratisDesde ? [`Envío gratis desde ${fmt(tienda.envios.gratisDesde)}`] : []),
-		...(tienda.envios.moto ? ['Envío en moto en el día'] : []),
+		...(tienda.envios.moto ? ['Envío en moto'] : []),
 		tienda.cobros.cuotas > 1 ? `${tienda.cobros.cuotas} cuotas sin interés` : 'Compra protegida',
 		...(tienda.cobros.transferencia > 0
 			? [`${tienda.cobros.transferencia}% off por transferencia`]
@@ -144,7 +144,7 @@
 	]);
 	const perks = $derived([
 		tienda.envios.moto
-			? { i: I.phMopedBold, t: 'Moto en el día', d: 'En CABA' }
+			? { i: I.phMopedBold, t: 'Envío en moto', d: resumenMoto(tienda.envios) }
 			: { i: I.phTruckBold, t: 'Envíos', d: 'A todo el país' },
 		...(tienda.cobros.cuotas > 1
 			? [{ i: I.phCreditCardBold, t: `${tienda.cobros.cuotas} cuotas`, d: 'Sin interés' }]
@@ -1370,7 +1370,7 @@
 										>Poné tu código postal para ver cómo te llega.</span
 									>{/each}
 							</div>
-							<EnvioCorreo {tienda} {cp} {envio} />
+							<EnvioCorreo {tienda} {cp} {envio} {opciones} />
 						</div>
 						<div>
 							<div
@@ -2178,7 +2178,7 @@
 									style="width:14px;height:14px;border-radius:3px;background:#FFD100;display:inline-block"
 								></span><span style="color:#00205B">Correo Argentino</span></span
 							>{/if}{#if tienda.envios.moto}<span
-								><Icon icon={I.phMopedFill} size={15} style="color:#1A1A1A" />Moto en el día</span
+								><Icon icon={I.phMopedFill} size={15} style="color:#1A1A1A" />Envío en moto</span
 							>{/if}{#if tienda.envios.retiro}<span
 								><Icon icon={I.phStorefrontFill} size={14} style="color:#1A1A1A" />Retiro en el
 								local</span

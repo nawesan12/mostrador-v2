@@ -56,6 +56,8 @@ export type Dominios = components['schemas']['Dominios'];
 export type ConexionMP = components['schemas']['ConexionMP'];
 export type ConexionML = components['schemas']['ConexionML'];
 export type Medicion = components['schemas']['Medicion'];
+export type Entregas = components['schemas']['Entregas'];
+export type EstadoEntregas = components['schemas']['EstadoEntregas'];
 export type PublicacionML = components['schemas']['PublicacionML'];
 export type ArcaConfig = components['schemas']['ArcaConfig'];
 export type ArcaAlta = components['schemas']['ArcaAlta'];
@@ -180,6 +182,10 @@ export interface Datos {
 	/** GA4, el píxel de Meta y los feeds de productos cargados (Google Shopping y Meta Ads). */
 	medicion(): Promise<Medicion>;
 	guardarMedicion(m: Medicion): Promise<Resultado>;
+	/** Envíos y retiro: retiro y moto, con el estado de Correo y del envío gratis. */
+	entregas(): Promise<EstadoEntregas>;
+	/** Guarda retiro y moto; un dato que no va o todo apagado: error 400 con el motivo. */
+	guardarEntregas(e: Entregas): Promise<void>;
 	/** Mercado Libre como canal (OAuth de la tienda). */
 	mercadoLibre(): Promise<ConexionML>;
 	conectarMercadoLibre(): Promise<string | null>;

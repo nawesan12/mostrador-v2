@@ -178,6 +178,13 @@
 					onclick={() => (tab = id)}><Icon icon={icono} size={17} />{t}</button
 				>
 			{/each}
+			<!-- Envíos y retiro tiene su pantalla (también se llega desde Envíos). -->
+			<a href={resolve('/panel/envios/configurar')}
+				><Icon icon={I.phTruckFill} size={17} />Envíos y retiro<Icon
+					icon={I.phArrowRightBold}
+					size={12}
+				/></a
+			>
 		</nav>
 
 		<div class="contenido">
@@ -375,7 +382,8 @@
 		overflow-x: auto;
 		scrollbar-width: none;
 	}
-	.tabs button {
+	.tabs button,
+	.tabs a {
 		display: flex;
 		align-items: center;
 		gap: 10px;
@@ -390,8 +398,15 @@
 		text-align: left;
 		white-space: nowrap;
 	}
-	.tabs button :global(svg) {
+	.tabs button :global(svg),
+	.tabs a :global(svg) {
 		color: var(--mu);
+	}
+	.tabs a {
+		text-decoration: none;
+	}
+	.tabs a :global(svg:last-child) {
+		margin-left: auto;
 	}
 	.tabs button[aria-current='page'] {
 		background: var(--chip);

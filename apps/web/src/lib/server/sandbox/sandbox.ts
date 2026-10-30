@@ -19,7 +19,15 @@ import { actividadDemo, type FilaCambio, type Nombres } from './actividad.ts';
 import { canalesDemo, informesDemo, marketingDemo, type CampanaDemo } from './crecer.ts';
 import { cuando } from '#lib/panel/cupones.ts';
 import { descripcionDe, lunes9, vigenciaDe } from '#lib/panel/cupones.ts';
-import { cuponesDemo, type CambioCupon, type EstadoRelampago } from './cupones.ts';
+import {
+	cuponesDemo,
+	ENVIO_GRATIS_DESDE,
+	type CambioCupon,
+	type EstadoRelampago
+} from './cupones.ts';
+import { EsquemaEntregas, problemaEntregas } from '#lib/panel/entregas.ts';
+import { error } from '@sveltejs/kit';
+import * as v from 'valibot';
 import { aumentar, proximoLunes, type Redondeo } from '#lib/panel/precios.ts';
 import { and, desc, eq, lt } from 'drizzle-orm';
 import { drizzle, type DrizzleD1Database } from 'drizzle-orm/d1';
@@ -53,6 +61,8 @@ import type {
 	Devolucion,
 	ConexionML,
 	Medicion,
+	Entregas,
+	EstadoEntregas,
 	ConexionMP,
 	PublicacionML,
 	Dominios,
@@ -2405,6 +2415,52 @@ export class DatosSandbox implements Datos {
 		return 'ok';
 	}
 
+	/** Envío gratis desde el monto de la promoción automática, si está prendida (como en Go). */
+	private async envioGratisDesde(): Promise<number | null> {
+		const autos = await cambiosDe(this.db, this.sb.id, 'automatica');
+		const envio = autos.get('envio') as { activa: boolean } | null | undefined;
+		return (envio?.activa ?? true) ? ENVIO_GRATIS_DESDE : null;
+	}
+
+	/**
+	 * Envíos y retiro (como configuracion.LeerEntregas): sin configurar, retiro con la dirección y el
+	 * horario del negocio y sin moto. La demo no tiene cuenta de MiCorreo: Correo nunca está conectado.
+	 */
+	async entregas(): Promise<EstadoEntregas> {
+		const [c, conf, gratisDesde] = await Promise.all([
+			cambiosDe(this.db, this.sb.id, 'entregas'),
+			this.configuracion(),
+			this.envioGratisDesde()
+		]);
+		const e = (c.get('config') as Entregas | undefined) ?? {
+			retiro: true,
+			retiroDireccion: '',
+			retiroHorario: '',
+			moto: false,
+			motoCosto: 0,
+			motoZona: '',
+			motoDemora: ''
+		};
+		return {
+			...e,
+			retiroDireccion: e.retiroDireccion || conf.negocio.direccion || '',
+			retiroHorario: e.retiroHorario || conf.negocio.horario || '',
+			correo: false,
+			gratisDesde
+		};
+	}
+	async guardarEntregas(e: Entregas): Promise<void> {
+		const r = v.safeParse(EsquemaEntregas, e);
+		if (!r.success) error(400, r.issues[0].message);
+		const conf = await this.configuracion();
+		const mal = problemaEntregas(r.output, {
+			correo: false,
+			direccionNegocio: conf.negocio.direccion ?? ''
+		});
+		if (mal) error(400, mal);
+		await guardarCambio(this.db, this.sb.id, 'entregas', 'config', r.output satisfies Entregas);
+	}
+
 	/** En la demo Mercado Libre arranca conectado (como en el handoff) y todo se simula. */
 	async mercadoLibre(): Promise<ConexionML> {
 		const c = await cambiosDe(this.db, this.sb.id, 'cuenta');
@@ -2704,18 +2760,20 @@ export class DatosSandbox implements Datos {
 	 * ejemplo de una plantilla para mirar, sin carrito real.
 	 */
 	async tiendaPublica(vitrina = false): Promise<TiendaPublica> {
-		const [d, t, c, conf, productos, mp, turnos, medicion, cr, respuestasQ] = await Promise.all([
-			this.demo(),
-			this.tienda(),
-			cambiosDe(this.db, this.sb.id, 'mi-tienda'),
-			this.configuracion(),
-			this.regProductos(),
-			this.mercadoPago(),
-			this.turnosTienda(),
-			vitrina ? null : this.medicion(),
-			this.cambiosResenas(),
-			this.respuestasPreguntas()
-		]);
+		const [d, t, c, conf, productos, mp, turnos, medicion, cr, respuestasQ, entregas] =
+			await Promise.all([
+				this.demo(),
+				this.tienda(),
+				cambiosDe(this.db, this.sb.id, 'mi-tienda'),
+				this.configuracion(),
+				this.regProductos(),
+				this.mercadoPago(),
+				this.turnosTienda(),
+				vitrina ? null : this.medicion(),
+				this.cambiosResenas(),
+				this.respuestasPreguntas(),
+				this.entregas()
+			]);
 		const diseno = (c.get('publicado') as DisenoTienda | undefined) ?? DISENO_INICIAL;
 		const p = buscarPlantilla(t.plantilla);
 		const visibles = productos.filter((x) => x.publicado && x.canales.includes('web'));
@@ -2818,8 +2876,19 @@ export class DatosSandbox implements Datos {
 								ejemplo: true
 							}
 			},
-			// Correo Argentino: la demo no tiene cuenta de MiCorreo, y sin cotización real no se ofrece.
-			envios: { gratisDesde: 240_000, retiro: true, moto: true, correo: false },
+			// Lo de Envíos y retiro. Correo Argentino: la demo no tiene cuenta de MiCorreo, y sin
+			// cotización real no se ofrece.
+			envios: {
+				gratisDesde: entregas.gratisDesde,
+				retiro: entregas.retiro,
+				retiroDireccion: entregas.retiro ? entregas.retiroDireccion : '',
+				retiroHorario: entregas.retiro ? entregas.retiroHorario : '',
+				moto: entregas.moto,
+				motoCosto: entregas.moto ? entregas.motoCosto : 0,
+				motoZona: entregas.moto ? entregas.motoZona : '',
+				motoDemora: entregas.moto ? entregas.motoDemora : '',
+				correo: false
+			},
 			turnos,
 			vitrina,
 			// La vitrina de una plantilla nunca mide: no es de nadie.

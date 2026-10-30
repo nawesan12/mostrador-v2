@@ -114,7 +114,11 @@
 	}
 
 	// ---- Pestañas ----
-	let tab = $state<'cup' | 'auto' | 'flash'>('cup');
+	// ?tab=auto abre Automáticas (el link de Envíos y retiro al envío gratis).
+	const TAB_URL = page.url.searchParams.get('tab');
+	let tab = $state<'cup' | 'auto' | 'flash'>(
+		TAB_URL === 'auto' || TAB_URL === 'flash' ? TAB_URL : 'cup'
+	);
 	const TABS = $derived([
 		['cup', 'Cupones', I.phTicketBold, data.cupones.length],
 		['auto', 'Automáticas', I.phMagicWandBold, data.automaticas.filter((a) => a.activa).length],

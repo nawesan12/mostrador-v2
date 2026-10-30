@@ -14,7 +14,7 @@
 	import CampoCupon from '../CampoCupon.svelte';
 	import { CuponCheckout, totales } from '../cupon.svelte.ts';
 	import EnvioCorreo from '../EnvioCorreo.svelte';
-	import { cotizar, cotizarYa, cpValido } from '../envio.svelte.ts';
+	import { cotizar, cotizarYa, cpValido, resumenMoto } from '../envio.svelte.ts';
 	import { Seleccion, tarjetaDe } from '../seleccion.svelte.ts';
 	import { partirTitulo } from '../titulo.ts';
 	import type { OpcionEnvio, ProductoPublico, TiendaPublica } from '../tipos.ts';
@@ -138,7 +138,7 @@
 			? [
 					{
 						t: 'Retirá en el local',
-						d: tienda.direccion || tienda.ciudad || 'Sin costo',
+						d: tienda.envios.retiroDireccion || tienda.ciudad || 'Sin costo',
 						i: I.phStorefrontFill,
 						bg: '#F1E2C8'
 					}
@@ -148,7 +148,7 @@
 			? [
 					{
 						t: 'Envío en moto',
-						d: 'En el día en CABA, si pedís antes de las 16 h',
+						d: [resumenMoto(tienda.envios), tienda.envios.motoDemora].filter(Boolean).join(' · '),
 						i: I.phMopedFill,
 						bg: '#F6E7CC'
 					}
@@ -1575,7 +1575,7 @@
 									>Poné tu código postal para ver cómo te&nbsp;llega.</span
 								>{/each}
 						</div>
-						<EnvioCorreo {tienda} {cp} {envio} />
+						<EnvioCorreo {tienda} {cp} {envio} {opciones} />
 					</div>
 					<div
 						style="padding:18px;border-radius:24px;background:#fff;display:flex;flex-direction:column;gap:8px"
@@ -2326,7 +2326,7 @@
 									style="width:14px;height:14px;border-radius:3px;background:#FFD100;display:inline-block"
 								></span><span style="color:#00205B">Correo Argentino</span></span
 							>{/if}{#if tienda.envios.moto}<span
-								><Icon icon={I.phMopedFill} size={15} style="color:#1A1A1A" />Moto en el día</span
+								><Icon icon={I.phMopedFill} size={15} style="color:#1A1A1A" />Envío en moto</span
 							>{/if}{#if tienda.envios.retiro}<span
 								><Icon icon={I.phStorefrontFill} size={14} style="color:#1A1A1A" />Retiro en el
 								local</span

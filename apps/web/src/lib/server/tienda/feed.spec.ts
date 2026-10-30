@@ -23,7 +23,17 @@ const tienda = (productos: ProductoPublico[]): TiendaPublica =>
 		slug: 'mate-y-co',
 		nombre: 'Mate & Co',
 		productos,
-		envios: { gratisDesde: 100_000, retiro: true, moto: false, correo: true }
+		envios: {
+			gratisDesde: 100_000,
+			retiro: true,
+			retiroDireccion: '',
+			retiroHorario: '',
+			moto: false,
+			motoCosto: 0,
+			motoZona: '',
+			motoDemora: '',
+			correo: true
+		}
 	}) as TiendaPublica;
 
 /** Lo que va dentro de <item> de un producto, campo por campo. */

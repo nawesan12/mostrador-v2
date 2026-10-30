@@ -1,8 +1,10 @@
 <script lang="ts">
 	/**
-	 * Correo Argentino en el checkout de cualquier plantilla: avisa mientras cotiza (o si no pudo) y,
-	 * con Correo elegido, pide la provincia y la localidad (a domicilio) o la sucursal (a sucursal).
-	 * Toma los colores y la letra de la plantilla (currentColor e inherit).
+	 * La entrega elegida en el checkout de cualquier plantilla. Correo Argentino: avisa mientras cotiza
+	 * (o si no pudo) y pide la provincia y la localidad (a domicilio) o la sucursal (a sucursal).
+	 * Retiro: dónde y cuándo se retira. Moto: hasta dónde llega, cuánto tarda y cuánto cuesta (lo que
+	 * puso la tienda en Envíos y retiro). Toma los colores y la letra de la plantilla (currentColor e
+	 * inherit).
 	 */
 	import { estadoCorreo, esCorreo, reintentarCorreo } from './envio.svelte.ts';
 	import { PROVINCIAS, provinciaDeCP } from './provincias.ts';
@@ -20,11 +22,14 @@
 	let {
 		tienda,
 		cp,
-		envio
+		envio,
+		opciones = []
 	}: {
 		tienda: Pick<TiendaPublica, 'slug' | 'envios' | 'direccion' | 'vitrina'>;
 		cp: string;
 		envio: OpcionEnvio['id'] | null;
+		/** Las opciones cotizadas (el precio de la moto ya con el envío gratis si corresponde). */
+		opciones?: OpcionEnvio[];
 	} = $props();
 
 	const estado = $derived(estadoCorreo(cp, tienda));
@@ -73,7 +78,27 @@
 	});
 
 	const elegida = $derived(sucursales?.find((s) => s.codigo === sucursal) ?? null);
+	const e = $derived(tienda.envios);
+	const opcion = $derived(
+		envio === 'moto' ? (opciones.find((o) => o.id === 'moto') ?? null) : null
+	);
+	const fmt = (n: number) => '$\u00a0' + Math.round(n).toLocaleString('es-AR');
 </script>
+
+{#if envio === 'retiro' && (e.retiroDireccion || e.retiroHorario)}
+	<div class="elegida" aria-live="polite">
+		<span class="e-t">Dónde retirás</span>
+		{#if e.retiroDireccion}<span>{e.retiroDireccion}</span>{/if}
+		{#if e.retiroHorario}<span class="e-d">{e.retiroHorario}</span>{/if}
+		<span class="e-d">Te avisamos cuando esté listo.</span>
+	</div>
+{:else if envio === 'moto' && opcion}
+	<div class="elegida" aria-live="polite">
+		<span class="e-t">Envío en moto · {opcion.precio ? fmt(opcion.precio) : 'gratis'}</span>
+		{#if e.motoZona}<span>Llega a {e.motoZona}</span>{/if}
+		{#if e.motoDemora}<span class="e-d">{e.motoDemora}</span>{/if}
+	</div>
+{/if}
 
 {#if estado === 'cotizando'}
 	<p class="aviso" aria-live="polite">Cotizando con Correo Argentino…</p>
@@ -136,6 +161,25 @@
 {/if}
 
 <style>
+	.elegida {
+		margin-top: 10px;
+		padding: 12px 14px;
+		border: 1.5px solid color-mix(in srgb, currentColor 22%, transparent);
+		border-radius: 10px;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		font-size: 14px;
+		overflow-wrap: anywhere;
+		text-wrap: pretty;
+	}
+	.e-t {
+		font-weight: 600;
+	}
+	.e-d {
+		font-size: 13px;
+		opacity: 0.75;
+	}
 	.aviso {
 		margin: 8px 0 0;
 		font-size: 13px;

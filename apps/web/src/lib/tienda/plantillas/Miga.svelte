@@ -14,7 +14,7 @@
 	import CampoCupon from '../CampoCupon.svelte';
 	import { CuponCheckout, totales } from '../cupon.svelte.ts';
 	import EnvioCorreo from '../EnvioCorreo.svelte';
-	import { cotizar, cotizarYa, cpValido } from '../envio.svelte.ts';
+	import { cotizar, cotizarYa, cpValido, resumenMoto } from '../envio.svelte.ts';
 	import { Seleccion, tarjetaDe } from '../seleccion.svelte.ts';
 	import { partirTitulo } from '../titulo.ts';
 	import type { OpcionEnvio, ProductoPublico, TiendaPublica } from '../tipos.ts';
@@ -362,7 +362,7 @@
 	// Nosotros: cómo llega el pedido (la tarjeta de "Horarios" del diseño, con los envíos de la tienda).
 	const llegadas = $derived([
 		...(tienda.envios.correo ? [{ d: 'Correo Argentino', h: 'A sucursal' }] : []),
-		...(tienda.envios.moto ? [{ d: 'Moto en el día', h: 'CABA' }] : []),
+		...(tienda.envios.moto ? [{ d: 'Envío en moto', h: resumenMoto(tienda.envios) }] : []),
 		...(tienda.envios.retiro ? [{ d: 'Retiro en el local', h: 'Sin costo' }] : []),
 		...(tienda.envios.gratisDesde
 			? [{ d: 'Envío gratis', h: `Desde ${fmt(tienda.envios.gratisDesde)}` }]
@@ -1400,7 +1400,7 @@
 										>Poné tu código postal para ver cómo te llega.</span
 									>{/each}
 							</div>
-							<EnvioCorreo {tienda} {cp} {envio} />
+							<EnvioCorreo {tienda} {cp} {envio} {opciones} />
 						</div>
 						<div>
 							<div style="font-size:15px;font-weight:700;margin-bottom:10px">Pago</div>
@@ -2179,7 +2179,7 @@
 									style="width:14px;height:14px;border-radius:3px;background:#FFD100;display:inline-block"
 								></span><span style="color:#00205B">Correo Argentino</span></span
 							>{/if}{#if tienda.envios.moto}<span
-								><Icon icon={I.phMopedFill} size={15} style="color:#1A1A1A" />Moto en el día</span
+								><Icon icon={I.phMopedFill} size={15} style="color:#1A1A1A" />Envío en moto</span
 							>{/if}{#if tienda.envios.retiro}<span
 								><Icon icon={I.phStorefrontFill} size={14} style="color:#1A1A1A" />Retiro en el
 								local</span

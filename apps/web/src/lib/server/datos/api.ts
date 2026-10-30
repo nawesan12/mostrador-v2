@@ -26,6 +26,8 @@ import type {
 	ArcaPrueba,
 	ConexionML,
 	Medicion,
+	Entregas,
+	EstadoEntregas,
 	ConexionMP,
 	PublicacionML,
 	Dominios,
@@ -518,6 +520,12 @@ export class DatosApi implements Datos {
 	}
 	async guardarMedicion(m: Medicion) {
 		return resultado(await this.intentar('/v1/panel/integraciones/medicion', 'PUT', m));
+	}
+	entregas() {
+		return this.pedir<EstadoEntregas>('/v1/panel/configuracion/entregas');
+	}
+	guardarEntregas(e: Entregas) {
+		return this.pedir<void>('/v1/panel/configuracion/entregas', 'PUT', e);
 	}
 	async ajustarIntegracion(a: AjusteIntegracion) {
 		// Por ahora sólo los permisos de las IA se guardan en la API; el resto llega con cada integración.

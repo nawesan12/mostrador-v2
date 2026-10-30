@@ -1737,7 +1737,7 @@
 										>Poné tu código postal para ver cómo te&nbsp;llega.</span
 									>{/each}
 							</div>
-							<EnvioCorreo {tienda} {cp} {envio} />
+							<EnvioCorreo {tienda} {cp} {envio} {opciones} />
 						</div>
 						<div
 							style="padding:16px;border-radius:14px;background:#fff;display:flex;flex-direction:column;gap:6px"
@@ -2472,7 +2472,7 @@
 									style="width:14px;height:14px;border-radius:3px;background:#FFD100;display:inline-block"
 								></span><span style="color:#00205B">Correo Argentino</span></span
 							>{/if}{#if tienda.envios.moto}<span
-								><Icon icon={I.phMopedFill} size={15} style="color:#1A1A1A" />Moto en el día</span
+								><Icon icon={I.phMopedFill} size={15} style="color:#1A1A1A" />Envío en moto</span
 							>{/if}{#if tienda.envios.retiro}<span
 								><Icon icon={I.phStorefrontFill} size={14} style="color:#1A1A1A" />Retiro en el
 								local</span

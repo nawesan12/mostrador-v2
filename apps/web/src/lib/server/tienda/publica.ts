@@ -63,6 +63,15 @@ export async function resolverTienda(
 			opciones: p.opciones ?? [],
 			variantes: p.variantes ?? []
 		}));
+		// Una API sin Envíos y retiro todavía: retiro sin dirección propia y sin moto.
+		tienda.envios = {
+			retiroDireccion: '',
+			retiroHorario: '',
+			motoCosto: 0,
+			motoZona: '',
+			motoDemora: '',
+			...(tienda.envios as Partial<TiendaPublica['envios']>)
+		} as TiendaPublica['envios'];
 		// Sin alias ni CBU no se ofrece transferencia: tampoco su descuento (0 = no hay).
 		if (!tienda.cobros.datosTransferencia) tienda.cobros.transferencia = 0;
 		return {

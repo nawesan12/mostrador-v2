@@ -230,7 +230,7 @@ export const COBROS_REALES = [
 		k: 'local',
 		t: 'Envíos y retiro',
 		d: 'Elegí cómo entregás: retiro, Correo Argentino o moto',
-		href: '/panel/envios'
+		href: '/panel/envios/configurar'
 	},
 	{
 		k: 'arca',
