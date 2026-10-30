@@ -11,6 +11,13 @@
 	 * otros errores se usa la misma pantalla con otro texto.
 	 */
 	const es404 = $derived(page.status === 404);
+	// La sesión venció navegando el panel: a ingresar, que después vuelve acá.
+	$effect(() => {
+		if (page.status === 401 && /^\/(panel|onboarding)(\/|$)/.test(page.url.pathname))
+			location.replace(
+				`/ingresar?volver=${encodeURIComponent(page.url.pathname + page.url.search)}`
+			);
+	});
 	const ACCESOS = [
 		['/', I.phHouseFill, 'Inicio'],
 		['/ingresar', I.phSignInBold, 'Ingresar a mi panel'],

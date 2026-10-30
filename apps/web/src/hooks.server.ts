@@ -115,6 +115,24 @@ export const handle: Handle = async ({ event, resolve }) => {
 		event.locals.sandbox = await leer(dbSandbox(env.SANDBOX), event.cookies.get(COOKIE));
 	}
 	let res = secure(await resolve(event));
+	// Sesión vencida o inválida al abrir una página del panel: en vez de la página de error, se borra
+	// la cookie y se va a ingresar, que después vuelve a donde estaba.
+	if (
+		res.status === 401 &&
+		event.request.method === 'GET' &&
+		!event.locals.mirada &&
+		/^\/(panel|onboarding)(\/|$)/.test(event.url.pathname) &&
+		!event.url.pathname.includes('/__data.json') &&
+		(event.request.headers.get('accept') ?? '').includes('text/html')
+	) {
+		const volver = encodeURIComponent(event.url.pathname + event.url.search);
+		res = new Response(null, { status: 303, headers: { location: `/ingresar?volver=${volver}` } });
+		for (const c of [COOKIE_SESION, COOKIE_SESION_VIEJA])
+			res.headers.append(
+				'set-cookie',
+				`${c}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax${dev ? '' : '; Secure'}`
+			);
+	}
 	// Un link de la tienda vieja (importada): si el path de la tienda no existe y había una dirección
 	// guardada, 301 a la nueva. Sólo ante un 404, así las páginas que existen no consultan nada.
 	// En el dominio propio el path no lleva /t/<slug>: se consulta con él y se responde sin él.
