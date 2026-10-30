@@ -121,7 +121,7 @@
 	<div class="dos">
 		<div class="online">
 			<!-- El QR real del link de la tienda: tocándolo se descarga para imprimir. -->
-			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- descarga de un data: URL -->
+			<!-- eslint-disable svelte/no-navigation-without-resolve -- descarga de un data: URL -->
 			<a
 				class="qr"
 				href={qrSvg}
@@ -129,6 +129,7 @@
 				aria-label="Descargar el QR de la tienda"
 				><img src={qrSvg} alt="QR de {link.replace('https://', '')}" /></a
 			>
+			<!-- eslint-enable svelte/no-navigation-without-resolve -->
 			<div class="on-txt">
 				<div class="on-t">Tu tienda ya está en línea</div>
 				<div class="on-d">{link.replace('https://', '')} · imprimí el QR para el mostrador</div>

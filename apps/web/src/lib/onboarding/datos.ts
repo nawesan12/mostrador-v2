@@ -313,9 +313,7 @@ export const SECCIONES = [
 	['dest', I.phStar, 'Destacados'],
 	['cat', I.phSquaresFour, 'Categorías'],
 	['ig', I.phInstagramLogo, 'Feed de Instagram'],
-	['res', I.phChatCenteredText, 'Reseñas de Google'],
-	['faq', I.phQuestion, 'Preguntas frecuentes'],
-	['blog', I.phArticle, 'Recetas y blog']
+	['res', I.phChatCenteredText, 'Reseñas']
 ] as const;
 export type Seccion = (typeof SECCIONES)[number][0];
 

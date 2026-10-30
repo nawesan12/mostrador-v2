@@ -85,7 +85,8 @@ export function validarCobro(c: Partial<CobroPartner>): Resultado<CobroPartner> 
 	let valor = String(c.valor ?? '');
 	if (c.tipo === 'cbu') {
 		valor = valor.replace(/\D/g, '');
-		if (!cbuValido(valor)) return mal('valor', 'Revisá el CBU o CVU: son 22 números.');
+		if (!cbuValido(valor))
+			return mal('valor', 'Revisá el CBU o CVU: son 22 números y alguno no coincide.');
 	} else if (c.tipo === 'alias') {
 		valor = valor.trim();
 		if (!/^[a-zA-Z0-9.-]{6,20}$/.test(valor))

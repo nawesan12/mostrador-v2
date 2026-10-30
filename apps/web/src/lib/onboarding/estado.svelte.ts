@@ -32,7 +32,7 @@ export const INICIAL: Elecciones = {
 	paleta: 0,
 	fuente: 0,
 	instagram: true,
-	secciones: { dest: true, cat: true, ig: true, res: true, faq: false, blog: false },
+	secciones: { dest: true, cat: true, ig: true, res: true },
 	objetivos: [1, 2],
 	conexiones: { mp: 'on' },
 	conflicto: null,

@@ -107,7 +107,39 @@ async function guardarEnApi(event: RequestEvent, terminado: boolean) {
 	const r = await leerEstado(event.request);
 	if (!r.success) return { error: fail(400, { error: r.issues[0].message }), importar: null };
 	await datosDe(event.locals).guardarOnboarding({ ...r.output, terminado });
-	return { error: null, importar: v.parse(Importar, r.output.elecciones.importar ?? null) };
+	return {
+		error: null,
+		importar: v.parse(Importar, r.output.elecciones.importar ?? null),
+		elecciones: r.output.elecciones
+	};
+}
+
+/**
+ * Las secciones que se eligieron en el paso 5 pasan a la tienda (las de Mi tienda): antes se guardaban
+ * con el resto del onboarding y la tienda las ignoraba. Si Mi tienda tiene cambios sin publicar, sólo
+ * quedan en el borrador. Si algo falla, el onboarding termina igual.
+ */
+async function aplicarSecciones(event: RequestEvent, elecciones: Record<string, unknown>) {
+	const s = v.safeParse(v.record(v.string(), v.boolean()), elecciones.secciones);
+	if (!s.success) return;
+	const ver: Record<string, boolean | undefined> = {
+		prods: s.output.dest,
+		cats: s.output.cat,
+		ig: s.output.ig,
+		revs: s.output.res
+	};
+	try {
+		const datos = datosDe(event.locals);
+		const mt = await datos.miTienda();
+		const secciones = mt.diseno.secciones.map((x) =>
+			typeof ver[x.id] === 'boolean' ? { ...x, visible: ver[x.id]! } : x
+		);
+		if (JSON.stringify(secciones) === JSON.stringify(mt.diseno.secciones)) return;
+		await datos.guardarMiTienda({ ...mt.diseno, secciones });
+		if (!mt.sinPublicar) await datos.publicarTienda();
+	} catch {
+		// Se cambian después desde Mi tienda.
+	}
 }
 
 /** La tienda a traer que se eligió en el paso de importación (inválida: no se importa nada). */
@@ -161,7 +193,10 @@ export const actions: Actions = {
 				error: 'El alias tiene de 6 a 20 letras, números o puntos.'
 			});
 		if (cbu && !cbuValido(cbu))
-			return fail(400, { donde: 'transferencia', error: 'Revisá el CBU o CVU: son 22 números.' });
+			return fail(400, {
+				donde: 'transferencia',
+				error: 'Revisá el CBU o CVU: son 22 números y alguno no coincide.'
+			});
 		const datos = datosDe(event.locals);
 		const actual = (await datos.configuracion()).negocio;
 		await datos.guardarNegocio({ ...actual, alias, cbu, titular });
@@ -203,6 +238,7 @@ export const actions: Actions = {
 			if (!event.locals.token) redirect(303, '/ingresar?m=registro');
 			const g = await guardarEnApi(event, true);
 			if (g.error) return g.error;
+			await aplicarSecciones(event, g.elecciones);
 			redirect(303, await arrancarImportacion(event, g.importar));
 		}
 		const r = await leerEstado(event.request);
