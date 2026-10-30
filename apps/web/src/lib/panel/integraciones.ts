@@ -52,7 +52,7 @@ export const INTEGRACIONES: Integracion[] = [
 		hace: [
 			'Publica los productos que elijas',
 			'El stock es uno solo con la tienda y el local',
-			'Las preguntas llegan con la respuesta de Tincho'
+			'Las preguntas llegan a Reseñas y preguntas para que las respondas'
 		],
 		opciones: [
 			{
@@ -125,7 +125,7 @@ export const INTEGRACIONES: Integracion[] = [
 		marca: 'arca',
 		hace: [
 			'Factura A, B o C sola en cada venta',
-			'Notas de crédito al aprobar devoluciones',
+			'Nota de crédito al anular una factura',
 			'Te avisa antes de que venza el certificado'
 		],
 		opciones: [
@@ -251,7 +251,7 @@ export const PERMISOS_IA = [
 		id: 'plata',
 		icon: I.phCurrencyCircleDollarFill,
 		t: 'Reembolsos y descuentos',
-		d: 'Siempre te pide confirmación',
+		d: 'Crear cupones de descuento',
 		def: false
 	}
 ] as const;

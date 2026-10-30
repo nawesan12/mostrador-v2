@@ -381,7 +381,7 @@
 				<div class="ia-t">Manejá Tu Local Web desde tu IA<span class="mcp">MCP</span></div>
 				<div class="ia-d">
 					Entrás con tu cuenta de la IA y listo. Preguntale por ventas, stock o pedidos, y pedile
-					que cargue, edite o responda por&nbsp;vos.
+					que ajuste un producto, cree un cupón o arme un link de&nbsp;pago.
 				</div>
 			</div>
 		</div>
@@ -399,7 +399,8 @@
 			{/each}
 		</div>
 		<div class="perms">
-			{#each PERMISOS_IA as g (g.id)}
+			<!-- «Responder mensajes» no tiene ninguna herramienta detrás (no hay WhatsApp ni Instagram). -->
+			{#each PERMISOS_IA.filter((g) => g.id !== 'responder') as g (g.id)}
 				{@const on = data.estado.permisosIa[g.id]}
 				<button
 					type="button"
@@ -493,14 +494,16 @@
 							>{on ? '● Conectada' : i.pronto ? 'Próximamente' : 'Disponible'}</span
 						>
 					{/if}
+					<!-- Lo que todavía no se puede conectar no ofrece un «Conectar» que sólo avisa que no. -->
 					<button
 						type="button"
 						class="t-btn"
 						class:on
+						disabled={!on && i.pronto}
 						data-mp-marketplace-connect={i.id === 'mp' && !on ? 'oauth' : undefined}
 						onclick={() => boton(i)}
 					>
-						{on ? 'Configurar' : 'Conectar'}
+						{on ? 'Configurar' : i.pronto ? 'Pronto' : 'Conectar'}
 					</button>
 				</div>
 			</div>
@@ -1098,6 +1101,11 @@
 			sans-serif;
 		cursor: pointer;
 		white-space: nowrap;
+	}
+	.t-btn:disabled {
+		background: var(--chip);
+		color: var(--mu);
+		cursor: default;
 	}
 	.t-btn.on {
 		border: 1px solid var(--ln2);

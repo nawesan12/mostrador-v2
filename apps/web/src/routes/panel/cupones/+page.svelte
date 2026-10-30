@@ -870,8 +870,20 @@
 		</div>
 		{#if !lista.length}
 			<div class="vacio">
-				<img src="/hornero/lupa.webp" alt="" width="100" height="100" />
-				<div>No hay cupones con ese filtro</div>
+				{#if !data.cupones.length}
+					<!-- Sin ningún cupón todavía: no es un filtro que no encontró nada. -->
+					<img src="/hornero/ticket.webp" alt="" width="100" height="100" />
+					<div>Todavía no creaste cupones</div>
+					<p class="v-x">
+						Armá un código de descuento y compartí su link: se aplica solo al entrar a tu tienda.
+					</p>
+					<button type="button" class="nuevo v-b" onclick={abrir}
+						><Icon icon={I.phPlusBold} size={15} />Crear el primero</button
+					>
+				{:else}
+					<img src="/hornero/lupa.webp" alt="" width="100" height="100" />
+					<div>No hay cupones con ese filtro</div>
+				{/if}
 			</div>
 		{/if}
 	{:else if tab === 'auto'}
@@ -1755,6 +1767,18 @@
 	}
 	.vacio img {
 		object-fit: contain;
+	}
+	.v-x {
+		max-width: 360px;
+		margin: 6px auto 0;
+		font-size: 13.5px;
+		font-weight: 400;
+		line-height: 1.45;
+		color: var(--fa);
+		text-wrap: pretty;
+	}
+	.vacio .v-b {
+		margin: 14px auto 0;
 	}
 	/* ---- Automáticas ---- */
 	.auto-d {
