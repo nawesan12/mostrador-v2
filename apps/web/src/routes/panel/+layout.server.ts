@@ -17,8 +17,9 @@ export const load: LayoutServerLoad = async ({ locals, cookies }) => {
 	return {
 		tienda,
 		resumen,
-		// La foto de la tienda: la portada de su plantilla.
-		fotoTienda: plantilla(tienda.plantilla)?.img ?? null,
+		// En la demo, la portada de su plantilla; una tienda real no tiene foto propia todavía, así que
+		// van sus iniciales y no la foto de stock de la plantilla.
+		fotoTienda: usaSandbox() ? (plantilla(tienda.plantilla)?.img ?? null) : null,
 		demo: usaSandbox(),
 		// Alguien del equipo de Tu Local Web viendo la tienda en sólo lectura (aviso fijo).
 		mirada: locals.mirada,

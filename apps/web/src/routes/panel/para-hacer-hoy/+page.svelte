@@ -39,9 +39,11 @@
 	const todas = $derived(data.grupos.flatMap((g) => g.tareas));
 	const hechas = $derived(todas.filter((t) => t.hecha).length);
 	const titulo = $derived(
-		!todas.length || hechas === todas.length
-			? '¡Día terminado! 🎉'
-			: `Te ${todas.length - hechas === 1 ? 'queda 1 cosa' : `quedan ${todas.length - hechas} cosas`} para hoy`
+		!todas.length
+			? 'Nada pendiente por hoy'
+			: hechas === todas.length
+				? '¡Día terminado! 🎉'
+				: `Te ${todas.length - hechas === 1 ? 'queda 1 cosa' : `quedan ${todas.length - hechas} cosas`} para hoy`
 	);
 
 	async function marcar(t: T, hecha: boolean) {
@@ -100,7 +102,11 @@
 		</div>
 		<div class="b-txt">
 			<h1>{titulo}</h1>
-			<div class="b-s">Tincho ordenó tus tareas por lo que más plata te mueve.</div>
+			<div class="b-s">
+				{todas.length
+					? 'Tincho ordenó tus tareas por lo que más plata te mueve.'
+					: 'Cuando entre un pedido para preparar, una transferencia o algo se quede sin stock, te lo anoto acá.'}
+			</div>
 		</div>
 		<img src="/hornero/portapapeles.webp" alt="" width="96" height="96" />
 	</div>

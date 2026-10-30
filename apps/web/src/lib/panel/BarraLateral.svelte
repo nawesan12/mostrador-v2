@@ -30,6 +30,16 @@
 		resumen: components['schemas']['ResumenPanel'];
 	} = $props();
 	const shell = getShell();
+	// Sin foto de la tienda, sus iniciales (nunca una foto de stock).
+	const iniciales = $derived(
+		tienda
+			.split(/\s+/)
+			.filter(Boolean)
+			.map((w) => w[0])
+			.slice(0, 2)
+			.join('')
+			.toUpperCase()
+	);
 	// Celular (sin rail): acordeón. Se dibuja una sola de las dos navegaciones, no las dos escondidas.
 	let ancho = $state(1200);
 	const celular = $derived(ancho < 760);
@@ -89,13 +99,15 @@
 <aside class="barra" class:abierta={shell.barra} aria-label="Secciones">
 	<div class="arriba">
 		<div class="tienda">
-			{#if foto}<img src={foto} alt="" width="34" height="34" />{/if}
+			{#if foto}<img src={foto} alt="" width="34" height="34" />{:else}<span
+					class="t-ini"
+					aria-hidden="true">{iniciales}</span
+				>{/if}
 			<span class="t-txt"
 				><span class="t-n">{tienda}</span><span class="t-d"
 					><span class="vivo"></span>{dominio}</span
 				></span
 			>
-			<Icon icon={I.phCaretUpDown} size={14} style="color:var(--mu)" />
 		</div>
 		<button
 			type="button"
@@ -235,6 +247,18 @@
 		border: 1px solid var(--ln);
 		background: var(--sf);
 		box-shadow: var(--sh);
+	}
+	.t-ini {
+		flex: none;
+		display: grid;
+		place-items: center;
+		width: 34px;
+		height: 34px;
+		border-radius: 10px;
+		background: var(--durazno);
+		color: #8a3a1c;
+		font-size: 13px;
+		font-weight: 700;
 	}
 	.tienda img {
 		border-radius: 10px;

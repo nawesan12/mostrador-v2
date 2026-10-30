@@ -33,6 +33,11 @@
 	const shell = getShell();
 	const ui = getUi();
 	const t = $derived(data.tablero);
+	/**
+	 * Las visitas (conversión, "ahora en tu tienda") y las acreditaciones sólo existen en la demo: la
+	 * API real todavía no las mide, así que ahí no se muestra un cero que parezca un dato.
+	 */
+	const mide = $derived(data.demo);
 	const ahora = new Date();
 
 	const PERIODOS = [
@@ -100,9 +105,9 @@
 		{
 			label: 'Conversión',
 			icon: I.phFunnelSimple,
-			valor: porcentaje(t.kpis.conversion.actual),
-			delta: puntos(t.kpis.conversion.actual, t.kpis.conversion.anterior),
-			nota: 'puntos'
+			valor: mide ? porcentaje(t.kpis.conversion.actual) : '—',
+			delta: mide ? puntos(t.kpis.conversion.actual, t.kpis.conversion.anterior) : null,
+			nota: mide ? 'puntos' : 'Todavía no medimos visitas'
 		},
 		{
 			label: 'Clientes nuevos',
@@ -128,7 +133,7 @@
 		{
 			icon: I.phLinkBold,
 			t: 'Link de pago',
-			k: 'Cobrá por WhatsApp',
+			k: 'Mandalo por donde quieras',
 			bg: 'rgba(47,143,99,.13)',
 			fg: '#237550',
 			href: rutaDe('Pedidos'),
@@ -144,11 +149,13 @@
 		},
 		{
 			icon: I.phMegaphoneFill,
-			t: 'Enviar campaña',
-			k: 'WhatsApp con costo exacto',
+			t: mide ? 'Enviar campaña' : 'Crear un cupón',
+			k: mide ? 'WhatsApp con costo exacto' : 'Para compartir con tus clientes',
 			bg: 'rgba(106,79,160,.13)',
 			fg: '#6A4FA0',
-			href: rutaDe('Marketing')
+			// Las campañas salen por WhatsApp Business, que todavía no se conecta: el acceso lleva a lo
+			// que sí funciona para traer ventas.
+			href: rutaDe(mide ? 'Marketing' : 'Cupones')
 		},
 		{
 			icon: I.phPrinterFill,
@@ -167,7 +174,7 @@
 			t.paraHacer.preparar && {
 				icon: I.phPackageFill,
 				title: plural(t.paraHacer.preparar, 'pedido para preparar', 'pedidos para preparar'),
-				sub: 'Despachá antes de las 17 h',
+				sub: 'Pagados y esperando su paquete',
 				bg: 'rgba(210,88,47,.13)',
 				fg: '#b0441d',
 				href: `${rutaDe('Pedidos')}?estado=para-preparar`
@@ -206,29 +213,32 @@
 	);
 
 	const integraciones = $derived(
-		t.integraciones.map(({ id, valor }) => {
-			const [n, st, aviso] =
-				id === 'mp'
-					? ['Mercado Pago', `Cobros al día · ${pesosCortos(valor)} esta semana`, false]
-					: id === 'ml'
-						? [
-								'Mercado Libre',
-								`${plural(valor, 'publicación sincronizada', 'publicaciones sincronizadas')}`,
-								false
-							]
-						: id === 'wa'
-							? [
-									'WhatsApp',
-									valor ? plural(valor, 'chat esperando', 'chats esperando') : 'Al día',
-									valor > 0
-								]
-							: id === 'arca'
-								? ['ARCA', `Certificado vence en ${plural(valor, 'día', 'días')}`, valor <= 15]
-								: id === 'andreani'
-									? ['Andreani', plural(valor, 'envío en camino', 'envíos en camino'), false]
-									: [id, '', false];
-			return { id, n, st, dot: aviso ? '#E3A93B' : '#2F8F63' };
-		})
+		// Con la API, lo conectado de verdad (el tablero de Go no trae integraciones).
+		data.conectadas?.length && !t.integraciones.length
+			? data.conectadas.map((c) => ({ id: c.marca, n: c.nombre, st: 'Conectada', dot: '#2F8F63' }))
+			: t.integraciones.map(({ id, valor }) => {
+					const [n, st, aviso] =
+						id === 'mp'
+							? ['Mercado Pago', `Cobros al día · ${pesosCortos(valor)} esta semana`, false]
+							: id === 'ml'
+								? [
+										'Mercado Libre',
+										`${plural(valor, 'publicación sincronizada', 'publicaciones sincronizadas')}`,
+										false
+									]
+								: id === 'wa'
+									? [
+											'WhatsApp',
+											valor ? plural(valor, 'chat esperando', 'chats esperando') : 'Al día',
+											valor > 0
+										]
+									: id === 'arca'
+										? ['ARCA', `Certificado vence en ${plural(valor, 'día', 'días')}`, valor <= 15]
+										: id === 'andreani'
+											? ['Andreani', plural(valor, 'envío en camino', 'envíos en camino'), false]
+											: [id, '', false];
+					return { id, n, st, dot: aviso ? '#E3A93B' : '#2F8F63' };
+				})
 	);
 
 	// "Ahora en tu tienda": en la demo se mueve como en el handoff.
@@ -472,50 +482,68 @@
 					<Icon icon={I.phCaretRight} size={14} style="color:var(--fa)" />
 				</a>
 			{:else}
-				<div class="vacio">Nada pendiente por hoy. Buen momento para una campaña.</div>
+				<div class="vacio">
+					Nada pendiente por hoy. Buen momento para sumar productos o un cupón.
+				</div>
 			{/each}
 		</div>
 	</div>
 
-	<div class="tarjeta col">
-		<div class="fila-cab">
-			<div class="titulo">Ahora en tu tienda</div>
-			<span class="vivo"
-				><span class="v-punto"><span use:anim={{ t: 'pulse' }}></span><span></span></span>En vivo</span
-			>
-		</div>
-		<div class="grande">
-			<span class="g-n">{Math.max(0, enVivo)}</span><span class="g-l">personas mirando</span>
-		</div>
-		<div class="barras" aria-hidden="true">
-			{#each barras as b, i (i)}<span style:height="{b.h}%" style:background={b.c}></span>{/each}
-		</div>
-		<div class="paginas">
-			{#each t.enVivo.paginas as p (p.nombre)}
-				<div>
-					<span class="pg-n">{p.nombre}</span><span class="pg-v"
-						>{p.personas + (data.demo ? tick % 3 : 0)}</span
-					>
-				</div>
-			{/each}
-		</div>
-		{#if t.enVivo.carritos}
-			<div class="pie">
-				<div class="armando">
-					<b>{plural(t.enVivo.carritos, 'carrito', 'carritos')}</b>
-					{t.enVivo.carritos === 1 ? 'armándose' : 'armándose'} ahora por
-					<b>{pesos(t.enVivo.carritosMonto)}</b>
-				</div>
+	{#if !mide}
+		<div class="tarjeta col">
+			<div class="fila-cab">
+				<div class="titulo">Visitas de tu tienda</div>
 			</div>
-		{/if}
-	</div>
+			<div class="sin-dato">
+				<img src="/hornero/grafico.webp" alt="" width="72" height="72" />
+				<p>
+					Todavía no medimos quién entra a tu tienda. Con Google Analytics conectado, las visitas
+					las ves en tu cuenta de Google.
+				</p>
+			</div>
+			<a class="b-borde abajo" href={rutaDe('Integraciones')}>Conectar Google Analytics</a>
+		</div>
+	{:else}
+		<div class="tarjeta col">
+			<div class="fila-cab">
+				<div class="titulo">Ahora en tu tienda</div>
+				<span class="vivo"
+					><span class="v-punto"><span use:anim={{ t: 'pulse' }}></span><span></span></span>En vivo</span
+				>
+			</div>
+			<div class="grande">
+				<span class="g-n">{Math.max(0, enVivo)}</span><span class="g-l">personas mirando</span>
+			</div>
+			<div class="barras" aria-hidden="true">
+				{#each barras as b, i (i)}<span style:height="{b.h}%" style:background={b.c}></span>{/each}
+			</div>
+			<div class="paginas">
+				{#each t.enVivo.paginas as p (p.nombre)}
+					<div>
+						<span class="pg-n">{p.nombre}</span><span class="pg-v"
+							>{p.personas + (data.demo ? tick % 3 : 0)}</span
+						>
+					</div>
+				{/each}
+			</div>
+			{#if t.enVivo.carritos}
+				<div class="pie">
+					<div class="armando">
+						<b>{plural(t.enVivo.carritos, 'carrito', 'carritos')}</b>
+						{t.enVivo.carritos === 1 ? 'armándose' : 'armándose'} ahora por
+						<b>{pesos(t.enVivo.carritosMonto)}</b>
+					</div>
+				</div>
+			{/if}
+		</div>
+	{/if}
 
 	<div class="tarjeta col">
 		<div class="fila-cab">
 			<div class="titulo">Caja del local</div>
 			{#if t.caja.abierta}
 				<span class="chip verde">Abierta {horaMin(new Date(t.caja.abierta))}</span>
-			{:else}
+			{:else if mide}
 				<span class="chip gris">Cerrada</span>
 			{/if}
 		</div>
@@ -533,11 +561,14 @@
 				<div class="vacio chico">Todavía no cobraste nada en el local hoy.</div>
 			{/each}
 		</div>
+		<!-- Con la API no hay apertura ni cierre de caja: sólo se cobra. -->
 		<div class="pie botones">
 			<a class="b-osc" href={rutaDe('Ventas en local')}>Cobrar</a>
-			<a class="b-borde" href={rutaDe('Ventas en local')}
-				>{t.caja.abierta ? 'Cerrar caja' : 'Abrir caja'}</a
-			>
+			{#if mide}
+				<a class="b-borde" href={rutaDe('Ventas en local')}
+					>{t.caja.abierta ? 'Cerrar caja' : 'Abrir caja'}</a
+				>
+			{/if}
 		</div>
 	</div>
 
@@ -566,7 +597,11 @@
 					>
 				</div>
 			{:else}
-				<div class="vacio chico">No hay acreditaciones en los próximos 7 días.</div>
+				<div class="vacio chico">
+					{mide
+						? 'No hay acreditaciones en los próximos 7 días.'
+						: 'Todavía no traemos las acreditaciones: las ves en tu cuenta de Mercado Pago.'}
+				</div>
 			{/each}
 		</div>
 	</div>
@@ -577,23 +612,34 @@
 			<div>
 				<div class="h-n">Tincho</div>
 				<div class="h-s">
-					Atendió {plural(t.hornero.chatsHoy, 'chat', 'chats')} hoy · {plural(
-						t.hornero.ideas,
-						'idea nueva',
-						'ideas nuevas'
-					)}
+					{#if t.hornero.chatsHoy || t.hornero.ideas}
+						Atendió {plural(t.hornero.chatsHoy, 'chat', 'chats')} hoy · {plural(
+							t.hornero.ideas,
+							'idea nueva',
+							'ideas nuevas'
+						)}
+					{:else}
+						Tu asistente de la tienda
+					{/if}
 				</div>
 			</div>
 		</div>
 		<div class="burbuja">
 			{#if t.hornero.carritos && !t.hornero.recordados}
 				Hay <b>{plural(t.hornero.carritos, 'carrito abandonado', 'carritos abandonados')}</b> por
-				<b class="naranja">{pesos(t.hornero.carritosMonto)}</b>. ¿Les mando un recordatorio por
-				WhatsApp? Cuesta {pesos(t.hornero.carritos * t.hornero.costoMensaje)}.
+				<b class="naranja">{pesos(t.hornero.carritosMonto)}</b>.
+				{#if mide}
+					¿Les mando un recordatorio por WhatsApp? Cuesta {pesos(
+						t.hornero.carritos * t.hornero.costoMensaje
+					)}.
+				{:else}
+					¿Les mando un mail con el link a su carrito? No tiene costo.
+				{/if}
 			{:else if t.hornero.recordados}
 				Listo: les mandé el recordatorio a {t.hornero.carritos === 1
 					? 'el carrito'
-					: `los ${t.hornero.carritos} carritos`} por WhatsApp. Te aviso cuando alguno compre.
+					: `los ${t.hornero.carritos} carritos`}
+				{mide ? 'por WhatsApp' : 'por mail'}. Si alguien vuelve y compra, lo ves en Carritos.
 			{:else}
 				Todo en orden por ahora. Cuando vea algo para vender más, te aviso acá.
 			{/if}
@@ -613,7 +659,9 @@
 								ui.toast({
 									k: 'ai',
 									title: 'Recordatorios enviados',
-									desc: `${plural(n, 'mensaje', 'mensajes')} en cola por WhatsApp · ${pesos(n * t.hornero.costoMensaje)}`
+									desc: mide
+										? `${plural(n, 'mensaje', 'mensajes')} en cola por WhatsApp · ${pesos(n * t.hornero.costoMensaje)}`
+										: `${plural(n, 'mail', 'mails')} en camino`
 								});
 							}
 						};
@@ -625,7 +673,9 @@
 				<a class="h-si" href={rutaDe('Carritos abandonados')}>Ver carritos</a>
 			{/if}
 			<button type="button" class="h-ideas" onclick={() => shell.hornero()}
-				>Ver {t.hornero.ideas === 1 ? 'la idea' : `las ${t.hornero.ideas} ideas`}</button
+				>{t.hornero.ideas
+					? `Ver ${t.hornero.ideas === 1 ? 'la idea' : `las ${t.hornero.ideas} ideas`}`
+					: 'Hablar con Tincho'}</button
 			>
 		</div>
 	</div>
@@ -738,12 +788,14 @@
 				<div class="vacio chico">Todavía no hay reseñas.</div>
 			{/each}
 		</div>
-		<button
-			type="button"
-			class="b-ia abajo"
-			onclick={() => shell.hornero('Escribí respuestas cortas para las reseñas nuevas.')}
-			><Icon icon={I.phSparkleFill} size={14} />Responder con Tincho</button
-		>
+		{#if t.resenas.nuevas.length}
+			<button
+				type="button"
+				class="b-ia abajo"
+				onclick={() => shell.hornero('Escribí respuestas cortas para las reseñas nuevas.')}
+				><Icon icon={I.phSparkleFill} size={14} />Responder con Tincho</button
+			>
+		{/if}
 	</div>
 
 	<div class="tarjeta col ultima">
@@ -1450,6 +1502,23 @@
 		margin-top: 2px;
 	}
 
+	.sin-dato {
+		flex: 1;
+		display: grid;
+		justify-items: center;
+		align-content: center;
+		gap: 8px;
+		padding: 8px 4px 12px;
+		text-align: center;
+	}
+	.sin-dato p {
+		margin: 0;
+		max-width: 260px;
+		font-size: 13px;
+		line-height: 1.45;
+		color: var(--fa);
+		text-wrap: pretty;
+	}
 	/* En vivo */
 	.vivo {
 		white-space: nowrap;

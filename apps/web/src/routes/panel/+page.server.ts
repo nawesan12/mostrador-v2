@@ -1,5 +1,6 @@
 import { fail } from '@sveltejs/kit';
-import { datosDe } from '#lib/server/datos/index.ts';
+import { INTEGRACIONES } from '#lib/panel/integraciones.ts';
+import { datosDe, usaSandbox } from '#lib/server/datos/index.ts';
 import type { Periodo } from '#lib/server/datos/tipos.ts';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -9,7 +10,21 @@ const PERIODOS: Periodo[] = ['hoy', '7d', '30d'];
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const p = url.searchParams.get('periodo');
 	const periodo = PERIODOS.includes(p as Periodo) ? (p as Periodo) : '7d';
-	return { tablero: await datosDe(locals).tablero(periodo) };
+	const d = datosDe(locals);
+	const [tablero, estado] = await Promise.all([
+		d.tablero(periodo),
+		// Con la API, la tarjeta de Integraciones muestra lo que de verdad está conectado (el tablero
+		// de Go no lo trae). Si falla, la tarjeta invita a conectar en vez de tirar el Resumen.
+		usaSandbox() ? null : d.integraciones().catch(() => null)
+	]);
+	const conectadas = estado
+		? INTEGRACIONES.filter((i) => estado.conectadas[i.id]).map((i) => ({
+				id: i.id,
+				marca: i.marca,
+				nombre: i.nombre
+			}))
+		: null;
+	return { tablero, conectadas };
 };
 
 export const actions: Actions = {

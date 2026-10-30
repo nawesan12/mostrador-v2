@@ -135,7 +135,7 @@ func ParaHacer(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (
 		urgente, semana, hoy := []Tarea{}, []Tarea{}, []Tarea{}
 		if preparar > 0 {
 			urgente = append(urgente, con(Tarea{ID: "preparar", Tipo: "preparar", Titulo: "Despachar " + plural(preparar, "pedido", "pedidos"),
-				Detalle: "Prepará los paquetes para el retiro de hoy", Valor: &prepararMonto, Accion: "Preparar"}))
+				Detalle: "Pedidos pagados que esperan su paquete", Valor: &prepararMonto, Accion: "Preparar"}))
 		}
 		if transf > 0 {
 			ids := make([]string, len(nums))

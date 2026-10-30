@@ -141,12 +141,72 @@ func ObtenerTablero(ctx context.Context, pool interface {
 		if err := llenarVentas(ctx, tx, tiendaID, &t, desde, hasta, ahora); err != nil {
 			return err
 		}
+		if err := llenarResenas(ctx, tx, tiendaID, &t); err != nil {
+			return err
+		}
+		if err := llenarCaja(ctx, tx, tiendaID, &t, ahora); err != nil {
+			return err
+		}
 		// Carritos abandonados de la semana para recordar (Hornero los ofrece en el tablero).
 		return tx.QueryRow(ctx, `SELECT count(*), coalesce(sum(total), 0), bool_or(recordado_en IS NOT NULL) IS TRUE
 			FROM carritos WHERE tienda_id = $1 AND recuperado_en IS NULL AND actualizado > now() - interval '7 days'`, tiendaID).
 			Scan(&t.Hornero.Carritos, &t.Hornero.CarritosMonto, &t.Hornero.Recordados)
 	})
 	return t, err
+}
+
+// llenarResenas: el promedio de las reseñas visibles y las últimas tres sin responder de la tienda
+// online (antes el Resumen decía "Todavía no hay reseñas" aunque las hubiera).
+func llenarResenas(ctx context.Context, tx pgx.Tx, tiendaID string, t *Tablero) error {
+	var prom *float64
+	if err := tx.QueryRow(ctx, `SELECT round(avg(estrellas)::numeric, 1)::float8 FROM resenas
+		WHERE tienda_id = $1 AND NOT oculta`, tiendaID).Scan(&prom); err != nil {
+		return err
+	}
+	t.Resenas.Promedio = prom
+	filas, err := tx.Query(ctx, `SELECT r.texto, r.autor, coalesce(p.nombre, ''), r.estrellas FROM resenas r
+		LEFT JOIN productos p ON p.tienda_id = r.tienda_id AND p.id = r.producto_id
+		WHERE r.tienda_id = $1 AND NOT r.oculta AND r.respuesta IS NULL
+		ORDER BY r.creada DESC LIMIT 3`, tiendaID)
+	if err != nil {
+		return err
+	}
+	defer filas.Close()
+	for filas.Next() {
+		var texto, autor, producto string
+		var estrellas int
+		if err := filas.Scan(&texto, &autor, &producto, &estrellas); err != nil {
+			return err
+		}
+		t.Resenas.Nuevas = append(t.Resenas.Nuevas, map[string]any{
+			"texto": texto, "autor": autor, "producto": producto, "canal": "web", "estrellas": estrellas,
+		})
+	}
+	return filas.Err()
+}
+
+// llenarCaja: lo cobrado hoy (hora de Argentina) en el local, por medio de pago, con las ventas del
+// punto de venta. No hay apertura ni cierre de caja: `abierta` queda en null.
+func llenarCaja(ctx context.Context, tx pgx.Tx, tiendaID string, t *Tablero, ahora time.Time) error {
+	a := ahora.In(horaArgentina)
+	hoy := time.Date(a.Year(), a.Month(), a.Day(), 0, 0, 0, 0, horaArgentina)
+	filas, err := tx.Query(ctx, `SELECT pago, sum(total)::bigint FROM pedidos
+		WHERE tienda_id = $1 AND canal = 'pos' AND creado_en >= $2 AND `+vendido+`
+		GROUP BY pago ORDER BY 2 DESC`, tiendaID, hoy)
+	if err != nil {
+		return err
+	}
+	defer filas.Close()
+	for filas.Next() {
+		var medio string
+		var monto int64
+		if err := filas.Scan(&medio, &monto); err != nil {
+			return err
+		}
+		t.Caja.Total += monto
+		t.Caja.Medios = append(t.Caja.Medios, map[string]any{"medio": medio, "monto": monto})
+	}
+	return filas.Err()
 }
 
 // GuardarMeta guarda la meta de ventas del mes (0 la saca).
