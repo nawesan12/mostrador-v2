@@ -59,7 +59,8 @@
 					<button type="button" aria-pressed={rubro === r} onclick={() => (rubro = r)}>{r}</button>
 				{/each}
 			</div>
-			<div class="cuerpo">
+			<!-- data-lenis-prevent: el scroll suave de la página no se come el gesto en el celular. -->
+			<div class="cuerpo" data-lenis-prevent>
 				<div class="grilla">
 					{#each lista as t (t.id)}
 						{@const sel = t.id === o.e.plantilla}
@@ -190,7 +191,11 @@
 	}
 	.cuerpo {
 		flex: 1;
+		/* Sin esto, en flex el hijo no se achica y nunca aparece el scroll. */
+		min-height: 0;
 		overflow: auto;
+		overscroll-behavior: contain;
+		-webkit-overflow-scrolling: touch;
 		padding: 4px 24px 24px;
 	}
 	.grilla {

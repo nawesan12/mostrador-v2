@@ -2,7 +2,8 @@
 	import { page } from '$app/state';
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
-	import { QR, RESUMEN } from './datos.ts';
+	import { renderSVG } from 'uqr';
+	import { RESUMEN } from './datos.ts';
 	import { getOnboarding } from './estado.svelte.ts';
 
 	/**
@@ -16,6 +17,12 @@
 	const real = $derived(page.data.tienda as { nombre: string; slug: string } | null);
 	const link = $derived(
 		real ? `https://tulocalweb.com.ar/t/${real.slug}` : 'https://laesquina.com.ar'
+	);
+	const qrSvg = $derived(
+		'data:image/svg+xml;charset=utf-8,' +
+			encodeURIComponent(
+				renderSVG(link, { border: 2, ecc: 'M', whiteColor: '#FBF7F2', blackColor: '#2A140C' })
+			)
 	);
 	let copiado = $state(false);
 	let invitacion = $state('');
@@ -113,9 +120,15 @@
 	</div>
 	<div class="dos">
 		<div class="online">
-			<div class="qr" aria-hidden="true">
-				{#each QR as q, i (i)}<span class:lleno={q}></span>{/each}
-			</div>
+			<!-- El QR real del link de la tienda: tocándolo se descarga para imprimir. -->
+			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- descarga de un data: URL -->
+			<a
+				class="qr"
+				href={qrSvg}
+				download="qr-{real?.slug ?? 'tienda'}.svg"
+				aria-label="Descargar el QR de la tienda"
+				><img src={qrSvg} alt="QR de {link.replace('https://', '')}" /></a
+			>
 			<div class="on-txt">
 				<div class="on-t">Tu tienda ya está en línea</div>
 				<div class="on-d">{link.replace('https://', '')} · imprimí el QR para el mostrador</div>
@@ -319,21 +332,18 @@
 		align-items: center;
 	}
 	.qr {
-		width: 84px;
-		height: 84px;
+		width: 96px;
+		height: 96px;
 		flex: none;
 		border-radius: 14px;
 		background: #fbf7f2;
-		padding: 8px;
-		display: grid;
-		grid-template-columns: repeat(7, 1fr);
-		gap: 2px;
+		padding: 6px;
+		display: block;
 	}
-	.qr span {
-		border-radius: 1.5px;
-	}
-	.qr .lleno {
-		background: #2a140c;
+	.qr img {
+		width: 100%;
+		height: 100%;
+		display: block;
 	}
 	.on-txt {
 		flex: 1;
