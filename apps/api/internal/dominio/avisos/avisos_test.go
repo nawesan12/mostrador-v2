@@ -118,6 +118,17 @@ func TestMailsAQuienCompra(t *testing.T) {
 		}
 	}
 	_, _ = w.Pasada(ctx)
+	// «Marcar como pagado» acredita la transferencia: sale el mail del pago.
+	pago := false
+	for _, x := range mails.Enviados {
+		pago = pago || x.Para == "lucia@ejemplo.com" && strings.Contains(x.Asunto, "Recibimos tu pago")
+	}
+	if !pago {
+		t.Error("marcar como pagado no mandó «Recibimos tu pago»")
+	}
+	if d, err := pedidos.Obtener(ctx, b.App, luna, r.Numero); err != nil || d.EstadoPago != "Acreditada" {
+		t.Errorf("pago: %+v %v", d.EstadoPago, err)
+	}
 	m, _ = mails.Ultimo("lucia@ejemplo.com")
 	if !strings.Contains(m.Asunto, "en camino") || !strings.Contains(m.Texto, "AND-123456") {
 		t.Fatalf("en camino: %+v", m)

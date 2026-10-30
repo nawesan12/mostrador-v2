@@ -457,9 +457,20 @@ func CambiarEstado(ctx context.Context, pool tx, tiendaID string, numero int, es
 		if !TransicionValida(de, estado, envio) {
 			return ErrTransicion
 		}
+		// «Marcar como pagado» (Sin pagar → Para preparar) es la tienda diciendo que cobró: la
+		// transferencia queda acreditada y lo demás cobrado (Mercado Pago lo confirma su aviso). Antes sólo
+		// cambiaba la etapa y el pago seguía «Pendiente»: no salía el mail de pago ni se podía reseñar.
+		// Deshacerlo (Para preparar → Sin pagar) lo vuelve a pendiente.
 		_, err = t.Exec(ctx, `UPDATE pedidos SET estado = $3,
-				estados_en = estados_en || jsonb_build_object($3::text, now())
-			WHERE tienda_id = $1 AND numero = $2`, tiendaID, numero, estado)
+				estados_en = estados_en || jsonb_build_object($3::text, now()),
+				estado_pago = CASE
+					WHEN pago = 'mp' THEN estado_pago
+					WHEN $4 = 'Sin pagar' AND $3 = 'Para preparar' AND estado_pago = 'Pendiente'
+						THEN CASE WHEN pago = 'transf' THEN 'Acreditada' ELSE 'Cobrado' END
+					WHEN $4 = 'Para preparar' AND $3 = 'Sin pagar' AND estado_pago IN ('Acreditada', 'Cobrado')
+						THEN 'Pendiente'
+					ELSE estado_pago END
+			WHERE tienda_id = $1 AND numero = $2`, tiendaID, numero, estado, de)
 		return err
 	})
 }
