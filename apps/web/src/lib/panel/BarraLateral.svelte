@@ -167,6 +167,10 @@
 				>
 			</a>
 		{/if}
+		<!-- En el celular «abajo» no se muestra: cerrar sesión va al final del menú. -->
+		<form class="salir-movil" method="POST" action="/salir" data-sveltekit-reload>
+			<button class="salir"><Icon icon={I.phSignOutBold} size={17} />Cerrar sesión</button>
+		</form>
 	</div>
 	<div class="abajo">
 		{#if resumen.prueba.diasRestantes > 0}
@@ -390,6 +394,18 @@
 	.salir:hover {
 		background: var(--sf);
 		color: var(--tx);
+	}
+	.salir-movil {
+		display: none;
+	}
+	@media (max-width: 759px) {
+		.salir-movil {
+			display: block;
+			padding: 0 8px 20px;
+		}
+		.salir-movil .salir {
+			min-height: 44px;
+		}
 	}
 	.prueba {
 		position: relative;
