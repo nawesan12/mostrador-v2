@@ -152,8 +152,8 @@
 					</div>
 					<div class="fila arca">
 						<span class="f-n"
-							><img src="/marcas/arca.webp" alt="ARCA" height="14" width="138" />Factura B
-							#0004-00812</span
+							><img src="/marcas/arca.webp" alt="ARCA" height="14" width="138" />Factura&nbsp;B
+							<span style="white-space:nowrap">#0004-00812</span></span
 						><span class="emitida">Emitida</span>
 					</div>
 				</div>

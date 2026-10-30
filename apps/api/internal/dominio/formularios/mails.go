@@ -54,11 +54,11 @@ func mailConsultaRecibida(c Consulta) correo.Mensaje {
 	return correo.Mensaje{
 		Para:   c.Email,
 		Asunto: "Recibimos tu consulta",
-		Texto: fmt.Sprintf("Hola, %s.\n\nGracias por escribirnos. Alguien del equipo de ventas te contacta en menos de 2 horas hábiles"+
+		Texto: fmt.Sprintf("Hola, %s.\n\nGracias por escribirnos. Alguien del equipo de ventas te contacta a la brevedad"+
 			" (por WhatsApp si nos dejaste el número).\n\nMientras tanto, podés crear tu tienda gratis.\n\nTu Local Web", c.Nombre),
 		HTML: plantilla("Recibimos tu consulta",
 			fmt.Sprintf("Hola, %s. Gracias por escribirnos.", n),
-			"Alguien del equipo de ventas te contacta en menos de 2 horas hábiles (por WhatsApp si nos dejaste el número). Te atiende una persona, no un call center.",
+			"Alguien del equipo de ventas te contacta a la brevedad (por WhatsApp si nos dejaste el número). Te atiende una persona, no un call center.",
 			"Mientras tanto, podés crear tu tienda gratis."),
 	}
 }
@@ -71,7 +71,7 @@ func mailConsultaEquipo(para string, c Consulta) correo.Mensaje {
 		Para:   para,
 		Asunto: "Consulta de ventas: " + c.Nombre,
 		Texto:  "Llegó una consulta desde /contacto.\n\n" + t,
-		HTML:   plantilla("Consulta de ventas", "Llegó desde /contacto. Respondé en menos de 2 horas hábiles.", h),
+		HTML:   plantilla("Consulta de ventas", "Llegó desde /contacto. Respondé a la brevedad.", h),
 	}
 }
 

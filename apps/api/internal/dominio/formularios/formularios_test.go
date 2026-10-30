@@ -38,7 +38,7 @@ func TestConsultaDeVentas(t *testing.T) {
 	if nombre != "Lucía Fernández" || wa != "1155550000" || fact != "5-a-20" {
 		t.Fatalf("%s %s %s", nombre, wa, fact)
 	}
-	if msj, ok := m.Ultimo("lucia@tutienda.com.ar"); !ok || !strings.Contains(msj.Texto, "2 horas hábiles") {
+	if msj, ok := m.Ultimo("lucia@tutienda.com.ar"); !ok || !strings.Contains(msj.Texto, "a la brevedad") {
 		t.Fatalf("confirmación %+v", msj)
 	}
 	if msj, ok := m.Ultimo("equipo@tulocalweb.com.ar"); !ok || !strings.Contains(msj.Texto, "$ 5 a 20 M") || !strings.Contains(msj.Texto, "Tiendanube") {

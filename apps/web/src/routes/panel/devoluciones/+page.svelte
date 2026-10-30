@@ -51,7 +51,7 @@
 	<div class="cab" use:anim={{ t: 'rise' }}>
 		<div class="c-txt">
 			<h1>Devoluciones</h1>
-			<div class="c-s">Cambios y reintegros con tu política de 30 días</div>
+			<div class="c-s">Cambios, reintegros y arrepentimientos (10&nbsp;días por ley)</div>
 		</div>
 		<span class="tasa" class:alta={!muyBajo}
 			>{data.tasa.toLocaleString('es-AR')}% de tus pedidos · {muyBajo

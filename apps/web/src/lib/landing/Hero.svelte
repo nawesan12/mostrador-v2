@@ -31,7 +31,7 @@
 				asistente con IA<Icon icon={I.phArrowRight} size={14} />
 			</a>
 			<h1 use:anim={{ t: 'rise', delay: 80 }}>
-				Todo tu negocio. <span>Sin complicaciones.</span>
+				Todo tu negocio. <span>Sin&nbsp;complicaciones.</span>
 			</h1>
 			<p class="bajada" use:anim={{ t: 'rise', delay: 160 }}>
 				Tienda online, WhatsApp, Mercado Libre, local y facturación. Para el que recién arranca y

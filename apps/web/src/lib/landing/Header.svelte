@@ -30,7 +30,7 @@
 			'#plantillas',
 			I.phPaintBrushBroadFill,
 			'Plantillas',
-			'Más de 15 diseños por rubro',
+			'Diseños para cada rubro',
 			'#EFE9F7',
 			'#6A4FA0'
 		],

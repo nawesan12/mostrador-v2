@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { PLANES } from '#lib/panel/planes.ts';
 	import { resolve } from '$app/paths';
 	import Icon from '#lib/components/Icon.svelte';
 	import { anim } from '#lib/anim.ts';
@@ -13,7 +14,9 @@
 	let anual = $state(false);
 
 	const planes = $derived(
-		LPLANS.map(([n, d, p, f, cta, hi]) => {
+		LPLANS.map(([n, d0, p, f, cta, hi]) => {
+			// El lema sale del mismo catálogo que el panel (el del diseño repetía la etiqueta).
+			const d = PLANES.find((x) => x.nombre === n)?.lema ?? d0;
 			const yr = anual && p > 0;
 			return {
 				n,
@@ -49,7 +52,7 @@
 		<div class="planes" use:anim={'reveal'}>
 			{#each planes as p (p.n)}
 				<div class="plan" class:hi={p.hi}>
-					{#if p.hi}<span class="elegido">El más elegido</span>{/if}
+					{#if p.hi}<span class="elegido">Recomendado</span>{/if}
 					<div>
 						<div class="pl-n">{p.n}</div>
 						<div class="pl-d">{p.d}</div>

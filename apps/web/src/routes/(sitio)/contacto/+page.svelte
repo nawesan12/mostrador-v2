@@ -28,14 +28,19 @@
 	};
 
 	const CANALES = [
-		[I.phEnvelopeSimpleFill, 'Email', 'ayuda@tulocalweb.com.ar', 'Respuesta en menos de 24 h'],
-		[I.phChatsCircleFill, 'Chat del panel', 'Hablá con Tincho desde tu panel', 'Disponible 24/7']
+		[
+			I.phEnvelopeSimpleFill,
+			'Email',
+			'hola@tulocalweb.com.ar',
+			'Te responde una persona del equipo'
+		],
+		[
+			I.phChatsCircleFill,
+			'Chat del panel',
+			'Hablá con Tincho desde tu panel',
+			'Responde al instante'
+		]
 	] as const;
-	const CARAS = [
-		'1531058240690-006c446962d8',
-		'1687422811062-a966b55cb217',
-		'1520333789090-1afc82db536a'
-	];
 </script>
 
 <Seo
@@ -65,19 +70,8 @@
 				{/each}
 			</div>
 			<div class="equipo">
-				<div class="caras">
-					{#each CARAS as id (id)}
-						<img
-							src="https://images.unsplash.com/photo-{id}?auto=format&fit=crop&w=96&h=96&q=60&crop=faces"
-							alt=""
-							width="40"
-							height="40"
-						/>
-					{/each}
-				</div>
 				<div class="eq-t">
-					<b>Equipo de ventas en Buenos Aires, Córdoba y Rosario.</b> Te atiende una persona, no un call
-					center.
+					<b>Te atiende una persona del equipo,</b> no un call&nbsp;center.
 				</div>
 			</div>
 		</div>
@@ -87,7 +81,7 @@
 				<div class="exito" role="status">
 					<img src="/hornero/celebrando.webp" alt="" width="140" height="140" />
 					<div class="ex-t">¡Listo, {form && 'nombre' in form ? form.nombre : ''}!</div>
-					<p>Te respondemos en menos de 24 h. Mientras tanto, podés crear tu tienda&nbsp;gratis.</p>
+					<p>Te respondemos por mail. Mientras tanto, podés crear tu tienda&nbsp;gratis.</p>
 					<div class="ex-acc">
 						<a href="/onboarding">Crear mi tienda</a>
 						<button type="button" onclick={() => (otra = true)}>Enviar otra consulta</button>
@@ -233,18 +227,6 @@
 		padding: 16px 18px;
 		border-radius: 20px;
 		background: #f4ece2;
-	}
-	.caras {
-		display: flex;
-		flex: none;
-	}
-	.caras img {
-		border-radius: 50%;
-		object-fit: cover;
-		box-shadow: 0 0 0 3px #f4ece2;
-	}
-	.caras img + img {
-		margin-left: -10px;
 	}
 	.eq-t {
 		font-size: 14px;

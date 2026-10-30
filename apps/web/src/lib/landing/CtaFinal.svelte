@@ -20,7 +20,7 @@
 		/>
 		<div class="sombra"></div>
 		<div class="txt">
-			<h2 use:anim={'reveal'}>Abrí Tu Local Web hoy.</h2>
+			<h2 use:anim={'reveal'}>Abrí Tu&nbsp;Local&nbsp;Web&nbsp;hoy.</h2>
 			<p use:anim={'reveal'}>
 				14 días gratis, sin tarjeta. Si venís de otra plataforma, la migración corre por nuestra
 				cuenta.

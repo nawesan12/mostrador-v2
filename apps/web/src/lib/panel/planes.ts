@@ -26,7 +26,7 @@ export const PLANES = [
 	{
 		id: 'pro',
 		nombre: 'Pro',
-		lema: 'El más elegido',
+		lema: 'Para vender en todos tus canales',
 		precio: 49_900,
 		incluye: [
 			'Mercado Libre, Instagram y local',

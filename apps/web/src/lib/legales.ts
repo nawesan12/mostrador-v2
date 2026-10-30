@@ -582,7 +582,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Atención al cliente',
 				cuerpo: [
 					{
-						p: 'Podés escribirnos por email a ayuda@tulocalweb.com.ar o desde el chat del panel, de lunes a sábado de 8 a 22 h. Te respondemos en menos de 48 horas hábiles y te damos un número de reclamo.'
+						p: 'Podés escribirnos por email a soporte@tulocalweb.com.ar. Te respondemos en menos de 48 horas hábiles y te damos un número de reclamo.'
 					}
 				]
 			},
@@ -733,7 +733,7 @@ export const LEGALES: Legal[] = [
 						ul: [
 							'Cifrado TLS en tránsito y AES-256 en reposo.',
 							'Verificación en dos pasos obligatoria para el equipo de Tu Local Web.',
-							'Copias de seguridad diarias con retención de 30 días.',
+							'Copias de seguridad diarias con retención de 14 días.',
 							'Registro de accesos y revisión trimestral de permisos.'
 						]
 					}
