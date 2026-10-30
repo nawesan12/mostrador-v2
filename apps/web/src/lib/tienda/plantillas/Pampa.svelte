@@ -425,6 +425,11 @@
 	let reservando = $state(false);
 	let cancelando = $state(false);
 	let seguro = $state(false);
+	// El nombre gigante del pie: que la palabra más larga entre entera en el renglón (antes se cortaba
+	// a mitad de palabra, «ALMAC / EN»). En cqw, con el ancho de una letra de esta tipografía.
+	const pieNombre = $derived(
+		Math.min(22, Math.floor(120 / Math.max(4, ...tienda.nombre.split(/\s+/).map((w) => w.length))))
+	);
 </script>
 
 <svelte:window bind:innerWidth={ancho} />
@@ -2151,7 +2156,7 @@
 		<footer style="padding:clamp(28px,4cqw,48px) clamp(14px,2.4cqw,28px) 22px">
 			<div
 				aria-hidden="true"
-				style="font-family:'Archivo Black',sans-serif;font-size:clamp(80px,22cqw,320px);line-height:.78;letter-spacing:-.06em;color:#1C1C1C;user-select:none;text-transform:uppercase;overflow-wrap:anywhere"
+				style="font-family:'Archivo Black',sans-serif;font-size:clamp(36px,{pieNombre}cqw,320px);line-height:.78;letter-spacing:-.06em;color:#1C1C1C;user-select:none;text-transform:uppercase;overflow-wrap:break-word"
 			>
 				{tienda.nombre}
 			</div>
@@ -2172,24 +2177,26 @@
 			<div
 				style="margin-top:32px;padding-top:24px;border-top:1px solid color-mix(in srgb,currentColor 16%,transparent);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:22px"
 			>
-				<div style="min-width:0">
-					<div
-						style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:10px"
-					>
-						Medios de pago
+				{#if tienda.cobros.mercadoPago || tienda.cobros.datosTransferencia}
+					<div style="min-width:0">
+						<div
+							style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:10px"
+						>
+							Medios de pago
+						</div>
+						<div class="sellos">
+							{#if tienda.cobros.mercadoPago}<span><Icon icon={I.logosVisa} size={34} /></span><span
+									><Icon icon={I.logosMastercard} size={22} /></span
+								><span><Icon icon={I.logosAmex} size={30} /></span><span
+									><Icon icon={I.siMercadopago} size={17} style="color:#00B1EA" /><span
+										style="color:#0A2D6E">Mercado Pago</span
+									></span
+								>{/if}{#if tienda.cobros.datosTransferencia}<span
+									><Icon icon={I.phBankFill} size={14} style="color:#2F7A43" />Transferencia</span
+								>{/if}
+						</div>
 					</div>
-					<div class="sellos">
-						{#if tienda.cobros.mercadoPago}<span><Icon icon={I.logosVisa} size={34} /></span><span
-								><Icon icon={I.logosMastercard} size={22} /></span
-							><span><Icon icon={I.logosAmex} size={30} /></span><span
-								><Icon icon={I.siMercadopago} size={17} style="color:#00B1EA" /><span
-									style="color:#0A2D6E">Mercado Pago</span
-								></span
-							>{/if}{#if tienda.cobros.datosTransferencia}<span
-								><Icon icon={I.phBankFill} size={14} style="color:#2F7A43" />Transferencia</span
-							>{/if}
-					</div>
-				</div>
+				{/if}
 				<div style="min-width:0">
 					<div
 						style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:10px"

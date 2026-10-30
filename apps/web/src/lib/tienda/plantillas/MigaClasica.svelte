@@ -2162,24 +2162,26 @@
 			<div
 				style="margin-top:32px;padding-top:24px;border-top:1px solid color-mix(in srgb,currentColor 16%,transparent);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:22px"
 			>
-				<div style="min-width:0">
-					<div
-						style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:10px"
-					>
-						Medios de pago
+				{#if tienda.cobros.mercadoPago || tienda.cobros.datosTransferencia}
+					<div style="min-width:0">
+						<div
+							style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:10px"
+						>
+							Medios de pago
+						</div>
+						<div class="sellos">
+							{#if tienda.cobros.mercadoPago}<span><Icon icon={I.logosVisa} size={34} /></span><span
+									><Icon icon={I.logosMastercard} size={22} /></span
+								><span><Icon icon={I.logosAmex} size={30} /></span><span
+									><Icon icon={I.siMercadopago} size={17} style="color:#00B1EA" /><span
+										style="color:#0A2D6E">Mercado Pago</span
+									></span
+								>{/if}{#if tienda.cobros.datosTransferencia}<span
+									><Icon icon={I.phBankFill} size={14} style="color:#2F7A43" />Transferencia</span
+								>{/if}
+						</div>
 					</div>
-					<div class="sellos">
-						{#if tienda.cobros.mercadoPago}<span><Icon icon={I.logosVisa} size={34} /></span><span
-								><Icon icon={I.logosMastercard} size={22} /></span
-							><span><Icon icon={I.logosAmex} size={30} /></span><span
-								><Icon icon={I.siMercadopago} size={17} style="color:#00B1EA" /><span
-									style="color:#0A2D6E">Mercado Pago</span
-								></span
-							>{/if}{#if tienda.cobros.datosTransferencia}<span
-								><Icon icon={I.phBankFill} size={14} style="color:#2F7A43" />Transferencia</span
-							>{/if}
-					</div>
-				</div>
+				{/if}
 				<div style="min-width:0">
 					<div
 						style="font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:10px"
