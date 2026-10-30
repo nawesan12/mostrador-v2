@@ -305,3 +305,122 @@ export async function cambiarClave(email: string, actual: string, nueva: string)
 	const hechos = u[0][1].updated as Record<string, unknown> | undefined;
 	if (!hechos || !(cuenta.id in hechos)) throw new Error('No se pudo cambiar la clave.');
 }
+
+// ---- Respuestas guardadas: una carpeta de la casilla propia, un correo por respuesta ----
+
+const CARPETA_RESPUESTAS = 'Respuestas guardadas';
+export type Respuesta = { id: string; titulo: string; atajo: string; texto: string };
+
+/** El atajo por defecto, si la persona no elige uno: "Lista de precios" → ";listadeprecios". */
+export const atajoDe = (t: string) =>
+	';' +
+	t
+		.normalize('NFD')
+		.replace(/[̀-ͯ]/g, '')
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '')
+		.slice(0, 20);
+
+async function carpetaRespuestas(j: Jmap, crear: boolean) {
+	const c = await principal(j);
+	const r = await j.llamar([
+		['Mailbox/get', { accountId: c.id, properties: ['name', 'role'] }, 'b']
+	]);
+	const ya = ((r.get('b')?.list ?? []) as { id: string; name: string }[]).find(
+		(b) => b.name === CARPETA_RESPUESTAS
+	);
+	if (ya || !crear) return { cuenta: c.id, carpeta: ya?.id ?? null };
+	const n = await j.llamar([
+		['Mailbox/set', { accountId: c.id, create: { r: { name: CARPETA_RESPUESTAS } } }, 'c']
+	]);
+	const id = (n.get('c')?.created as Record<string, { id: string }> | undefined)?.r?.id;
+	if (!id) throw new Error('No se pudo crear la carpeta de respuestas.');
+	return { cuenta: c.id, carpeta: id };
+}
+
+export async function leerRespuestas(j: Jmap): Promise<Respuesta[]> {
+	const { cuenta, carpeta } = await carpetaRespuestas(j, false);
+	if (!carpeta) return [];
+	const r = await j.llamar([
+		[
+			'Email/query',
+			{
+				accountId: cuenta,
+				filter: { inMailbox: carpeta },
+				sort: [{ property: 'subject', isAscending: true }]
+			},
+			'q'
+		],
+		[
+			'Email/get',
+			{
+				accountId: cuenta,
+				'#ids': { resultOf: 'q', name: 'Email/query', path: '/ids' },
+				properties: ['subject', 'textBody', 'bodyValues'],
+				fetchTextBodyValues: true
+			},
+			'g'
+		]
+	]);
+	return (
+		(r.get('g')?.list ?? []) as {
+			id: string;
+			subject: string;
+			textBody: { partId: string }[];
+			bodyValues: Record<string, { value: string }>;
+		}[]
+	).map((e) => {
+		// El asunto guarda "Título ;atajo".
+		const m = /^(.*?)\s+(;[a-z0-9]{1,20})$/.exec(e.subject ?? '');
+		return {
+			id: e.id,
+			titulo: m ? m[1] : e.subject,
+			atajo: m ? m[2] : atajoDe(e.subject ?? ''),
+			texto: e.textBody
+				.map((p) => e.bodyValues[p.partId]?.value ?? '')
+				.join('\n')
+				.trim()
+		};
+	});
+}
+
+export async function guardarRespuesta(
+	j: Jmap,
+	r: { id?: string | null; titulo: string; atajo: string; texto: string }
+) {
+	const titulo = r.titulo.trim().slice(0, 80);
+	const texto = r.texto.trim().slice(0, 8000);
+	if (!titulo || !texto) throw new Error('Poné un título y el texto.');
+	const atajo = /^;[a-z0-9]{1,20}$/.test(r.atajo.trim())
+		? r.atajo.trim()
+		: atajoDe(r.atajo || titulo);
+	const { cuenta, carpeta } = await carpetaRespuestas(j, true);
+	const llamadas: [string, Record<string, unknown>, string][] = [
+		[
+			'Email/set',
+			{
+				accountId: cuenta,
+				create: {
+					n: {
+						mailboxIds: { [carpeta!]: true },
+						keywords: { $seen: true },
+						from: [{ email: j.cred.email }],
+						subject: `${titulo} ${atajo}`,
+						bodyValues: { t: { value: texto } },
+						textBody: [{ partId: 't', type: 'text/plain' }]
+					}
+				},
+				// Editar es reemplazar: se crea la nueva y se borra la vieja en el mismo pedido.
+				...(r.id ? { destroy: [r.id] } : {})
+			},
+			's'
+		]
+	];
+	const res = await j.llamar(llamadas);
+	if (res.get('s')?.notCreated) throw new Error('No se pudo guardar la respuesta.');
+}
+
+export async function borrarRespuesta(j: Jmap, id: string) {
+	const { cuenta } = await carpetaRespuestas(j, false);
+	await j.llamar([['Email/set', { accountId: cuenta, destroy: [id] }, 'd']]);
+}

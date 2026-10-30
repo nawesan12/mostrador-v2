@@ -12,6 +12,7 @@
 	const NAV = [
 		{ id: 'firma', l: 'Firma', ic: 'icon-pen-line' },
 		{ id: 'respuesta', l: 'Respuesta automática', ic: 'icon-plane' },
+		{ id: 'respuestas', l: 'Respuestas guardadas', ic: 'icon-message-square-text' },
 		{ id: 'reglas', l: 'Reglas', ic: 'icon-filter' },
 		{ id: 'reenviar', l: 'Reenviar correos', ic: 'icon-forward' },
 		{ id: 'avisos', l: 'Avisos en el teléfono', ic: 'icon-bell' },
@@ -58,6 +59,17 @@
 	const SI = { de: 'Si llega de', asunto: 'Si el asunto dice' };
 	const ACCION = { mover: 'moverlo a', etiquetar: 'ponerle la etiqueta', reenviar: 'mandarlo a' };
 
+	// Respuestas guardadas: la que se edita (id vacío = nueva), o null.
+	let resp = $state<{ id: string; titulo: string; atajo: string; texto: string } | null>(null);
+	const atajoDe = (t: string) =>
+		';' +
+		t
+			.normalize('NFD')
+			.replace(/[\u0300-\u036f]/g, '')
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, '')
+			.slice(0, 20);
+
 	let guardando = $state(false);
 	let aviso = $state('');
 	$effect(() => {
@@ -72,6 +84,7 @@
 			await update({ reset: false });
 			guardando = false;
 			editando = null;
+			resp = null;
 		};
 	};
 
@@ -129,7 +142,7 @@
 							>
 						{/each}
 					</div>
-					<form method="POST" action="?/firma" use:enhance={mejorar} class="dos">
+					<form method="POST" action="?s={s}&/firma" use:enhance={mejorar} class="dos">
 						<input type="hidden" name="cuenta" value={firma.cuenta} />
 						<input type="hidden" name="identidad" value={firma.identidad} />
 						<div class="campos">
@@ -166,8 +179,89 @@
 						</div>
 					</form>
 				</section>
+			{:else if s === 'respuestas'}
+				<section>
+					<div class="cab">
+						<div>
+							<h2>Respuestas guardadas</h2>
+							<p>
+								Textos que escribís seguido. Al redactar, elegilos del menú Respuestas o escribí su
+								atajo y un espacio.
+							</p>
+						</div>
+						{#if !resp}
+							<button
+								class="guardar"
+								onclick={() => (resp = { id: '', titulo: '', atajo: '', texto: '' })}
+								><i class="icon-plus"></i>Nueva</button
+							>
+						{/if}
+					</div>
+					{#if resp}
+						<form method="POST" action="?s={s}&/respuesta" use:enhance={mejorar} class="campos">
+							<input type="hidden" name="id" value={resp.id} />
+							<label
+								><span>Título</span><input
+									class="in"
+									name="titulo"
+									bind:value={resp.titulo}
+									placeholder="Precios y formas de pago"
+									required
+								/></label
+							>
+							<label
+								><span>Atajo</span><input
+									class="in"
+									name="atajo"
+									bind:value={resp.atajo}
+									placeholder={atajoDe(resp.titulo || 'precios')}
+								/></label
+							>
+							<label
+								><span>Texto</span><textarea
+									class="in"
+									name="texto"
+									rows="8"
+									bind:value={resp.texto}
+									required></textarea></label
+							>
+							<div class="botones">
+								<button class="guardar" disabled={guardando}
+									>{guardando ? 'Guardando…' : 'Guardar respuesta'}</button
+								>
+								<button type="button" class="cancelar" onclick={() => (resp = null)}
+									>Cancelar</button
+								>
+							</div>
+						</form>
+					{:else}
+						<div class="lista-resp">
+							{#each data.respuestas as r (r.id)}
+								<div class="r">
+									<div class="rt">
+										<div class="rn">{r.titulo} <span class="ra">{r.atajo}</span></div>
+										<div class="rx">{r.texto}</div>
+									</div>
+									<button
+										class="ic"
+										aria-label="Editar {r.titulo}"
+										onclick={() => (resp = { ...r })}><i class="icon-pencil"></i></button
+									>
+									<form method="POST" action="?s={s}&/borrarRespuesta" use:enhance={mejorar}>
+										<input type="hidden" name="id" value={r.id} />
+										<button class="ic" aria-label="Borrar {r.titulo}"
+											><i class="icon-trash-2"></i></button
+										>
+									</form>
+								</div>
+							{:else}
+								<p class="vacio">Todavía no hay ninguna. Armá la primera con «Nueva».</p>
+							{/each}
+						</div>
+					{/if}
+				</section>
 			{:else if s === 'respuesta' && vac}
-				<form method="POST" action="?/vacaciones" use:enhance={mejorar}>
+				<form method="POST" action="?s={s}&/vacaciones" use:enhance={mejorar}>
 					<section>
 						<div class="cab">
 							<div>
@@ -230,7 +324,7 @@
 					</section>
 				</form>
 			{:else if s === 'reglas'}
-				<form method="POST" action="?/filtros" use:enhance={mejorar}>
+				<form method="POST" action="?s={s}&/filtros" use:enhance={mejorar}>
 					<input type="hidden" name="filtros" value={filtrosJson} />
 					<section>
 						<div class="cab">
@@ -309,7 +403,7 @@
 					</section>
 				</form>
 			{:else if s === 'reenviar'}
-				<form method="POST" action="?/filtros" use:enhance={mejorar}>
+				<form method="POST" action="?s={s}&/filtros" use:enhance={mejorar}>
 					<input type="hidden" name="filtros" value={filtrosJson} />
 					<section>
 						<div class="cab">
@@ -364,7 +458,7 @@
 					</div>
 				</section>
 			{:else if s === 'clave'}
-				<form method="POST" action="?/clave" use:enhance={mejorar}>
+				<form method="POST" action="?s={s}&/clave" use:enhance={mejorar}>
 					<section>
 						<div class="cab">
 							<div>
@@ -824,6 +918,59 @@
 		color: #fff;
 		font-size: 16px;
 		font-weight: 600;
+	}
+	.guardar i {
+		margin-right: 8px;
+	}
+	.botones {
+		display: flex;
+		gap: 10px;
+		align-items: center;
+	}
+	.cancelar {
+		height: 48px;
+		padding: 0 20px;
+		border-radius: 999px;
+		font-size: 16px;
+		color: var(--mut);
+	}
+	.lista-resp {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+	.r {
+		display: flex;
+		align-items: flex-start;
+		gap: 4px;
+		padding: 14px 12px 14px 16px;
+		border-radius: 12px;
+		background: var(--hun);
+	}
+	.rt {
+		flex: 1;
+		min-width: 0;
+	}
+	.rn {
+		font-size: 16px;
+		font-weight: 600;
+	}
+	.ra {
+		font-family: 'Geist Mono', monospace;
+		font-size: 14px;
+		font-weight: 400;
+		color: var(--accT);
+	}
+	.rx {
+		margin-top: 4px;
+		font-size: 15px;
+		color: var(--mut);
+		white-space: pre-line;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
 	}
 	.guardar:disabled {
 		opacity: 0.7;

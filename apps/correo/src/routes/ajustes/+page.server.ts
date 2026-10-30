@@ -1,6 +1,9 @@
 import { fail } from '@sveltejs/kit';
 import {
+	borrarRespuesta,
 	cambiarClave,
+	guardarRespuesta,
+	leerRespuestas,
 	firmasYVacaciones,
 	guardarFiltros,
 	guardarFirma,
@@ -16,14 +19,16 @@ import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, cookies }) => {
 	const j = new Jmap(locals.cred!);
-	const [fv, filtros, cuentas] = await Promise.all([
+	const [fv, filtros, cuentas, respuestas] = await Promise.all([
 		firmasYVacaciones(j),
 		leerFiltros(j),
-		j.cuentas()
+		j.cuentas(),
+		leerRespuestas(j)
 	]);
 	return {
 		...fv,
 		filtros,
+		respuestas,
 		casillas: cuentas.map((c) => ({ cuenta: c.id, email: c.email, personal: c.personal })),
 		yo: locals.cred!.email,
 		marca: marca(),
@@ -75,6 +80,25 @@ export const actions: Actions = {
 			return fail(400, { error: e instanceof Error ? e.message : 'No se pudo.' });
 		}
 		return { ok: 'Reglas guardadas' };
+	},
+	respuesta: async ({ locals, request }) => {
+		const f = await request.formData();
+		try {
+			await guardarRespuesta(new Jmap(locals.cred!), {
+				id: texto(f, 'id') || null,
+				titulo: texto(f, 'titulo'),
+				atajo: texto(f, 'atajo'),
+				texto: texto(f, 'texto')
+			});
+		} catch (e) {
+			return fail(400, { error: e instanceof Error ? e.message : 'No se pudo.' });
+		}
+		return { ok: 'Respuesta guardada' };
+	},
+	borrarRespuesta: async ({ locals, request }) => {
+		const f = await request.formData();
+		await borrarRespuesta(new Jmap(locals.cred!), texto(f, 'id'));
+		return { ok: 'Respuesta borrada' };
 	},
 	clave: async ({ locals, request, cookies, url }) => {
 		const f = await request.formData();

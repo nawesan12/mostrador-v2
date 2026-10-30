@@ -28,6 +28,42 @@
 	let archivo = $state<HTMLInputElement>();
 	let subiendo = $state(false);
 	let citaVisible = $state(false);
+	let caja = $state<HTMLTextAreaElement>();
+
+	// Respuestas guardadas: se cargan una vez; ";atajo" + espacio la escribe, o se elige del menú.
+	let respuestas = $state<{ titulo: string; atajo: string; texto: string }[]>([]);
+	let menuResp = $state(false);
+	$effect(() => {
+		fetch('/respuestas')
+			.then((r) => (r.ok ? r.json() : { respuestas: [] }))
+			.then((d: { respuestas: typeof respuestas }) => (respuestas = d.respuestas))
+			.catch(() => {});
+	});
+	/** Pone el texto donde está el cursor (o antes de la firma), reemplazando `quitar` caracteres previos. */
+	function insertar(texto: string, quitar = 0) {
+		const sep = '\n\n-- \n';
+		const fin =
+			firma && b.texto.endsWith(sep + firma)
+				? b.texto.length - (sep + firma).length
+				: b.texto.length;
+		const pos = caja && document.activeElement === caja ? caja.selectionStart : fin;
+		b.texto = b.texto.slice(0, pos - quitar) + texto + b.texto.slice(pos);
+		menuResp = false;
+		const cursor = pos - quitar + texto.length;
+		requestAnimationFrame(() => {
+			caja?.focus();
+			caja?.setSelectionRange(cursor, cursor);
+		});
+	}
+	function teclaTexto(ev: KeyboardEvent) {
+		if ((ev.key !== ' ' && ev.key !== 'Enter' && ev.key !== 'Tab') || !caja) return;
+		const antes = b.texto.slice(0, caja.selectionStart);
+		const m = /(;[a-z0-9]{1,20})$/.exec(antes);
+		const r = m && respuestas.find((x) => x.atajo === m[1]);
+		if (!r) return;
+		ev.preventDefault();
+		insertar(r.texto + (ev.key === ' ' ? ' ' : ev.key === 'Enter' ? '\n' : ''), m[1].length);
+	}
 
 	const casilla = $derived(casillas.find((c) => c.cuenta === b.cuenta));
 	// La firma de la casilla desde la que sale: se agrega al final y cambia si se cambia la casilla.
@@ -243,7 +279,9 @@
 		<div class="cuerpo">
 			<!-- svelte-ignore a11y_autofocus -->
 			<textarea
+				bind:this={caja}
 				bind:value={b.texto}
+				onkeydown={teclaTexto}
 				aria-label="Mensaje"
 				autofocus={forma === 'adentro'}
 				placeholder={forma === 'adentro' ? '' : 'Escribí el mensaje'}></textarea>
@@ -323,6 +361,28 @@
 					: ''}</button
 			>
 			<input type="file" multiple hidden bind:this={archivo} onchange={adjuntar} />
+			<span class="resp">
+				<button class="her" aria-expanded={menuResp} onclick={() => (menuResp = !menuResp)}
+					><i class="icon-message-square-text"></i>{forma === 'ventana' ? 'Respuestas' : ''}</button
+				>
+				{#if menuResp}
+					<div class="prog vidrio">
+						<div class="pt">Respuestas guardadas</div>
+						{#each respuestas as r (r.atajo + r.titulo)}
+							<button class="op" onclick={() => insertar(r.texto)}
+								><span class="opt">{r.titulo}</span><span class="opd"
+									>{r.atajo} · {r.texto.slice(0, 60)}</span
+								></button
+							>
+						{:else}
+							<div class="vacio">Todavía no guardaste ninguna.</div>
+						{/each}
+						<a class="op otro" href="/ajustes?s=respuestas"
+							><i class="icon-settings"></i>Armar respuestas</a
+						>
+					</div>
+				{/if}
+			</span>
 			<span class="estado"
 				>{b.adjuntos.length
 					? `${b.adjuntos.length} ${b.adjuntos.length === 1 ? 'adjunto' : 'adjuntos'} · ${tamano(b.adjuntos.reduce((n, a) => n + a.tamano, 0))}`
@@ -801,6 +861,18 @@
 	}
 	.manual button:disabled {
 		opacity: 0.5;
+	}
+	.resp {
+		position: relative;
+	}
+	.vacio {
+		padding: 8px 16px 12px;
+		font-size: 15px;
+		color: var(--mut);
+	}
+	a.op {
+		text-decoration: none;
+		color: var(--accT);
 	}
 	.her {
 		display: inline-flex;
