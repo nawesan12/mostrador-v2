@@ -17,6 +17,9 @@ export type DatosHornero = {
 
 export function datosParaElModelo(d: DatosHornero) {
 	const { hoy, semana, contexto } = d;
+	// Con la API real las visitas no se miden (conversión 0) y no hay WhatsApp para mandar mensajes:
+	// al modelo no se le pasa un 0 % ni un costo por mensaje que después repetiría como dato.
+	const midoVisitas = semana.kpis.conversion.actual > 0;
 	return {
 		// Hoy hasta ahora y ayer completo; el detalle de cada día va en ventasPorDia.
 		hoyHastaAhora: { ventas: hoy.ventas.actual, pedidos: hoy.kpis.pedidos.actual },
@@ -26,7 +29,7 @@ export function datosParaElModelo(d: DatosHornero) {
 			semanaAnterior: semana.ventas.anterior,
 			pedidos: semana.kpis.pedidos.actual,
 			ticketPromedio: semana.kpis.ticket.actual,
-			conversionPorcentaje: semana.kpis.conversion.actual,
+			conversionPorcentaje: midoVisitas ? semana.kpis.conversion.actual : 'no se mide todavía',
 			clientesNuevos: semana.kpis.clientesNuevos.actual,
 			masVendidos: semana.masVendidos.map((p) => `${p.nombre}: ${p.unidades} u`)
 		},
@@ -37,7 +40,7 @@ export function datosParaElModelo(d: DatosHornero) {
 		ventasPorCanal30Dias: contexto.canales30d,
 		pendientes: semana.paraHacer,
 		carritosAbandonados: { cantidad: semana.hornero.carritos, monto: semana.hornero.carritosMonto },
-		costoMensajeWhatsApp: semana.hornero.costoMensaje,
+		...(midoVisitas ? { costoMensajeWhatsApp: semana.hornero.costoMensaje } : {}),
 		resenas: { promedio: semana.resenas.promedio, nuevas: semana.resenas.nuevas }
 	};
 }
