@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import Icon from '#lib/components/Icon.svelte';
 	import LogoTienda from '../LogoTienda.svelte';
+	import VacioTienda from '../VacioTienda.svelte';
 	import { enOrden } from '../secciones.ts';
 	import { acentoElegido } from '../acentos.ts';
 	import * as I from '#lib/icons.ts';
@@ -13,7 +14,7 @@
 	import CampoCupon from '../CampoCupon.svelte';
 	import { CuponCheckout, totales } from '../cupon.svelte.ts';
 	import EnvioCorreo from '../EnvioCorreo.svelte';
-	import { cotizar, cotizarYa, cpValido } from '../envio.svelte.ts';
+	import { comoLlega, cotizar, cotizarYa, cpValido, textoEnvios } from '../envio.svelte.ts';
 	import { Seleccion, tarjetaDe } from '../seleccion.svelte.ts';
 	import { partirTitulo } from '../titulo.ts';
 	import { page } from '$app/state';
@@ -35,6 +36,7 @@
 		| 'carrito'
 		| 'checkout'
 		| 'nosotros'
+		| 'no-existe'
 		| 'listo'
 		| 'turnos'
 		| 'turno';
@@ -368,10 +370,7 @@
 		producto
 			? [
 					['Descripción', producto.descripcion || `${producto.nombre}, de ${tienda.nombre}.`],
-					[
-						'Envíos',
-						`Enviamos a todo el país${tienda.envios.retiro ? ' y podés retirarlo en el local' : ''}. Calculá el costo con tu código\u00a0postal.`
-					],
+					['Envíos', textoEnvios(tienda.envios)],
 					[
 						'Cambios y devoluciones',
 						'Tenés 10 días desde que lo recibís para arrepentirte de la compra, sin dar explicaciones (botón de arrepentimiento, abajo de\u00a0todo).'
@@ -851,7 +850,7 @@
 										<h1
 											style="margin:12px 0 0;font-family:{T.f};font-weight:{T.fw};font-size:clamp(38px,5.4cqw,72px);line-height:.95;letter-spacing:{T.ls};overflow-wrap:anywhere"
 										>
-											{titulo[0]}{#if titulo[1]}
+											{titulo[1] ? `${titulo[0]} ` : titulo[0]}{#if titulo[1]}
 												<span style="font-style:{T.fi}">{titulo[1]}</span>{/if}
 										</h1>
 										<a
@@ -1092,7 +1091,11 @@
 		{/if}
 
 		<!-- ============ CATÁLOGO ============ -->
-		{#if pagina === 'catalogo'}
+		{#if pagina === 'catalogo' && !tienda.productos.length}
+			<section style="padding:clamp(40px,7cqw,96px) clamp(16px,4cqw,48px)">
+				<VacioTienda {tienda} {tema} motivo="sin-productos" />
+			</section>
+		{:else if pagina === 'catalogo'}
 			<section style="padding:24px clamp(14px,3.5cqw,44px) clamp(48px,7cqw,90px)">
 				<div style="font-size:12.5px;color:{T.mu}">
 					<a href={base || '/'} style="color:inherit;text-decoration:none">Inicio</a> /
@@ -2421,6 +2424,13 @@
 		{/if}
 
 		<!-- ============ NOSOTROS ============ -->
+		<!-- ============ NO EXISTE (producto o página que no está) ============ -->
+		{#if pagina === 'no-existe'}
+			<section style="padding:clamp(40px,7cqw,96px) clamp(16px,4cqw,48px)">
+				<VacioTienda {tienda} {tema} motivo="no-existe" />
+			</section>
+		{/if}
+
 		{#if pagina === 'nosotros'}
 			<section style="padding:clamp(44px,6.5cqw,90px) clamp(14px,3.5cqw,44px) 0;text-align:center">
 				{#if tienda.ciudad}<div
@@ -2431,57 +2441,58 @@
 				<h1
 					style="margin:16px auto 0;max-width:920px;font-family:{T.f};font-weight:{T.fw};font-size:clamp(42px,6.6cqw,96px);line-height:.96;letter-spacing:{T.ls};text-transform:{T.tt};overflow-wrap:anywhere"
 				>
-					{titulo[0]}{#if titulo[1]}
+					{titulo[1] ? `${titulo[0]} ` : titulo[0]}{#if titulo[1]}
 						<i style="font-style:{T.fi}">{titulo[1]}</i>{/if}
 				</h1>
 			</section>
 			<section
 				style="padding:clamp(36px,5.5cqw,76px) clamp(14px,3.5cqw,44px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:clamp(16px,3cqw,40px);align-items:center"
 			>
-				<div style="aspect-ratio:4/5;border-radius:{T.rL};overflow:hidden;background:{T.sf2}">
-					{#if tienda.portada.foto}<img
+				{#if tienda.portada.foto}<div
+						style="aspect-ratio:4/5;border-radius:{T.rL};overflow:hidden;background:{T.sf2}"
+					>
+						<img
 							src={img(tienda.portada.foto, 1000, 1250)}
 							alt=""
 							style="width:100%;height:100%;object-fit:cover"
-						/>{/if}
-				</div>
+						/>
+					</div>{/if}
 				<div style="max-width:540px">
 					<p style="margin:0;font-family:{T.f2};font-size:clamp(21px,2.4cqw,29px);line-height:1.35">
-						{tienda.nombre}{tienda.ciudad ? `, desde ${tienda.ciudad}` : ''}. Comprás online y te lo
-						mandamos a todo el{tienda.envios.retiro
-							? ' país, o lo retirás en el\u00a0local'
-							: '\u00a0país'}.
+						{tienda.nombre}{tienda.ciudad ? `, desde ${tienda.ciudad}` : ''}. {comoLlega(
+							tienda.envios
+						)}
 					</p>
-					<div
-						style="margin-top:26px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;border-top:1px solid {T.ln};padding-top:20px"
-					>
-						<div>
-							<div
-								style="font-family:{T.f};font-weight:{T.fw};font-size:clamp(30px,3.6cqw,44px);line-height:1"
-							>
-								{tienda.productos.length}
-							</div>
-							<div style="font-size:13px;color:{T.mu};margin-top:4px">productos</div>
-						</div>
-						{#if tienda.cobros.cuotas > 1}<div>
-								<div
-									style="font-family:{T.f};font-weight:{T.fw};font-size:clamp(30px,3.6cqw,44px);line-height:1"
-								>
-									{tienda.cobros.cuotas}
-								</div>
-								<div style="font-size:13px;color:{T.mu};margin-top:4px">cuotas sin interés</div>
-							</div>{/if}
-						{#if tienda.promedio}<div>
-								<div
-									style="font-family:{T.f};font-weight:{T.fw};font-size:clamp(30px,3.6cqw,44px);line-height:1"
-								>
-									{tienda.promedio.toLocaleString('es-AR')}
-								</div>
-								<div style="font-size:13px;color:{T.mu};margin-top:4px">
-									de promedio en&nbsp;reseñas
-								</div>
-							</div>{/if}
-					</div>
+					{#if tienda.productos.length || tienda.cobros.cuotas > 1 || tienda.promedio}<div
+							style="margin-top:26px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;border-top:1px solid {T.ln};padding-top:20px"
+						>
+							{#if tienda.productos.length}<div>
+									<div
+										style="font-family:{T.f};font-weight:{T.fw};font-size:clamp(30px,3.6cqw,44px);line-height:1"
+									>
+										{tienda.productos.length}
+									</div>
+									<div style="font-size:13px;color:{T.mu};margin-top:4px">productos</div>
+								</div>{/if}
+							{#if tienda.cobros.cuotas > 1}<div>
+									<div
+										style="font-family:{T.f};font-weight:{T.fw};font-size:clamp(30px,3.6cqw,44px);line-height:1"
+									>
+										{tienda.cobros.cuotas}
+									</div>
+									<div style="font-size:13px;color:{T.mu};margin-top:4px">cuotas sin interés</div>
+								</div>{/if}
+							{#if tienda.promedio}<div>
+									<div
+										style="font-family:{T.f};font-weight:{T.fw};font-size:clamp(30px,3.6cqw,44px);line-height:1"
+									>
+										{tienda.promedio.toLocaleString('es-AR')}
+									</div>
+									<div style="font-size:13px;color:{T.mu};margin-top:4px">
+										de promedio en&nbsp;reseñas
+									</div>
+								</div>{/if}
+						</div>{/if}
 				</div>
 			</section>
 			<section

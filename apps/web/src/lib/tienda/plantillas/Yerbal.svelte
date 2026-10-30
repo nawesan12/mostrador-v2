@@ -5,6 +5,7 @@
 	import { page } from '$app/state';
 	import Icon from '#lib/components/Icon.svelte';
 	import LogoTienda from '../LogoTienda.svelte';
+	import VacioTienda from '../VacioTienda.svelte';
 	import { enOrden } from '../secciones.ts';
 	import * as I from '#lib/icons.ts';
 	import FormResena from '../FormResena.svelte';
@@ -14,7 +15,7 @@
 	import CampoCupon from '../CampoCupon.svelte';
 	import { CuponCheckout, totales } from '../cupon.svelte.ts';
 	import EnvioCorreo from '../EnvioCorreo.svelte';
-	import { cotizar, cotizarYa, cpValido } from '../envio.svelte.ts';
+	import { comoLlega, cotizar, cotizarYa, cpValido, envia, textoEnvios } from '../envio.svelte.ts';
 	import { Seleccion, tarjetaDe } from '../seleccion.svelte.ts';
 	import { partirTitulo } from '../titulo.ts';
 	import { Reserva } from '../reserva.svelte.ts';
@@ -35,6 +36,7 @@
 		| 'carrito'
 		| 'checkout'
 		| 'nosotros'
+		| 'no-existe'
 		| 'listo'
 		| 'turnos'
 		| 'turno';
@@ -115,6 +117,8 @@
 		`https://wa.me/${whatsapp.startsWith('54') ? whatsapp : '54' + whatsapp}?text=${encodeURIComponent(texto)}`;
 	// "En oferta" va en la URL (?ofertas=1), así los botones de "Ver ofertas" llegan filtrados.
 	const soloOferta = $derived(page.url.searchParams.has('ofertas'));
+	// Sin logo, la inicial en el cuadradito de la marca.
+	const inicial = $derived(tienda.nombre.trim().charAt(0).toUpperCase());
 	const ver = (s: string) => tienda.secciones.includes(s as TiendaPublica['secciones'][number]);
 	// Las líneas con variante no se tocan desde la tarjeta: ahí se elige en la ficha.
 	const enCarrito = (id: string) =>
@@ -148,6 +152,8 @@
 			.sort((a, b) => a.precio / a.anterior! - b.precio / b.anterior!)
 	);
 	const oferta = $derived(ofertas[0] ?? null);
+	// Lo que va al lado del banner de la portada: la oferta y el descuento por transferencia.
+	const ladoHero = $derived(!!oferta || tienda.cobros.transferencia > 0);
 	const maxOff = $derived(oferta ? Math.round((1 - oferta.precio / oferta.anterior!) * 100) : 0);
 	const best = $derived(
 		tienda.masVendidos.slice(0, 6).flatMap((id) => (porId.get(id) ? [tarjeta(porId.get(id)!)] : []))
@@ -245,10 +251,7 @@
 		producto
 			? [
 					['Descripción', producto.descripcion || `${producto.nombre}, de ${tienda.nombre}.`],
-					[
-						'Envíos',
-						`Enviamos a todo el país${tienda.envios.retiro ? ' y podés retirarlo en el local' : ''}. Calculá el costo con tu código postal.`
-					],
+					['Envíos', textoEnvios(tienda.envios)],
 					[
 						'Cambios y devoluciones',
 						'Tenés 10 días desde que lo recibís para arrepentirte de la compra, sin dar explicaciones (botón de arrepentimiento, abajo de todo).'
@@ -587,15 +590,16 @@
 					style="display:flex;align-items:center;gap:8px;min-width:0;flex:{nar
 						? '0 1 auto'
 						: 'none'};color:#1E2B22;text-decoration:none"
-					><span
-						style="width:36px;height:36px;border-radius:10px;background:var(--acento, #2F5D50);color:#E8C547;display:grid;place-items:center;flex:none"
-						><Icon icon={I.phLeafFill} size={20} /></span
-					><span
+					>{#if !tienda.logo}<span
+							style="width:36px;height:36px;border-radius:10px;background:var(--acento, #2F5D50);color:#E8C547;display:grid;place-items:center;flex:none;font-weight:800;font-size:19px;letter-spacing:-.03em"
+							>{inicial}</span
+						>{/if}<span
 						style="font-weight:800;font-size:21px;letter-spacing:-.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
 						><LogoTienda {tienda} /></span
 					></a
 				>
-				{#if wide}{@render buscador()}{:else}<span style="flex:1"></span>{/if}
+				{#if wide && tienda.productos.length}{@render buscador()}{:else}<span style="flex:1"
+					></span>{/if}
 				{#if nar && tienda.turnos}<a
 						href="{base}/turnos"
 						aria-label="Reservar turno"
@@ -614,7 +618,9 @@
 						>{/if}</a
 				>
 			</div>
-			{#if nar}<div style="padding:0 clamp(12px,3cqw,32px) 10px;display:flex">
+			{#if nar && tienda.productos.length}<div
+					style="padding:0 clamp(12px,3cqw,32px) 10px;display:flex"
+				>
 					{@render buscador()}
 				</div>{/if}
 			{#if encontrados.length || busca.trim().length >= 2}
@@ -674,9 +680,11 @@
 							style="padding:clamp(12px,2cqw,24px) clamp(12px,3cqw,32px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:10px"
 						>
 							<div
-								style="grid-column:span {nar
-									? 1
-									: 2};position:relative;min-height:min(440px,100cqw);border-radius:16px;overflow:hidden;background:var(--acento, #2F5D50);color:#EEF1E8;padding:clamp(22px,4cqw,48px);display:flex;flex-direction:column;justify-content:flex-end"
+								style="grid-column:{nar
+									? 'span 1'
+									: ladoHero
+										? 'span 2'
+										: '1 / -1'};position:relative;min-height:min(440px,100cqw);border-radius:16px;overflow:hidden;background:var(--acento, #2F5D50);color:#EEF1E8;padding:clamp(22px,4cqw,48px);display:flex;flex-direction:column;justify-content:flex-end"
 							>
 								{#if tienda.portada.foto}<img
 										src={img(tienda.portada.foto, 1400)}
@@ -714,61 +722,61 @@
 									</div>
 								</div>
 							</div>
-							<div
-								style="display:grid;grid-template-rows:{oferta
-									? '1fr 1fr'
-									: '1fr'};gap:10px;min-width:0"
-							>
-								{#if oferta}
-									<a
-										href="{base}/producto/{oferta.slug ?? oferta.id}"
-										style="padding:20px;border-radius:16px;background:#E8C547;color:#1E2B22;text-decoration:none;display:flex;flex-direction:column;justify-content:space-between;gap:10px"
-										><span style="display:flex;justify-content:space-between;align-items:start"
-											><b style="font-size:13px;letter-spacing:.04em">OFERTA</b><span
-												style="padding:3px 6px;border-radius:5px;background:#1E2B22;color:#E8C547;font-size:12.5px;font-weight:700"
-												>−{maxOff}%</span
-											></span
-										><span style="display:flex;gap:12px;align-items:center;min-width:0"
-											>{#if oferta.foto}<img
-													src={img(oferta.foto, 200, 200)}
-													alt=""
-													style="width:76px;height:76px;border-radius:12px;object-fit:cover;flex:none"
-												/>{/if}<span style="min-width:0"
-												><b style="display:block;font-size:17px;letter-spacing:-.02em"
-													>{oferta.nombre}</b
-												><span style="margin-top:4px;display:flex;align-items:baseline;gap:8px"
-													><b style="font-size:24px;letter-spacing:-.02em">{fmt(oferta.precio)}</b
-													><s style="font-size:13px;opacity:.6">{fmt(oferta.anterior!)}</s></span
-												></span
-											></span
-										></a
-									>
-								{/if}
-								{#if tienda.cobros.transferencia > 0}<div
-										style="padding:20px;border-radius:16px;background:#fff;display:flex;align-items:center;gap:14px;flex-wrap:wrap"
-									>
-										<Icon
-											icon={I.phBankBold}
-											size={34}
-											style="color:var(--acento, #2F5D50);flex:none"
-										/>
-										<div style="flex:1;min-width:160px">
-											<b style="font-size:17px;letter-spacing:-.02em"
-												>{tienda.cobros.transferencia}% off por transferencia</b
-											>
-											{#if tienda.cobros.cuotas > 1}<div
-													style="font-size:13.5px;color:#56645A;margin-top:2px"
-												>
-													O hasta {tienda.cobros.cuotas} cuotas sin interés con&nbsp;tarjeta
-												</div>{/if}
-										</div>
+							{#if ladoHero}<div
+									style="display:grid;grid-template-rows:{oferta
+										? '1fr 1fr'
+										: '1fr'};gap:10px;min-width:0"
+								>
+									{#if oferta}
 										<a
-											href="{base}/catalogo"
-											style="padding:11px 14px;border-radius:10px;background:#1E2B22;color:#EEF1E8;font:700 13.5px 'Schibsted Grotesk';white-space:nowrap;text-decoration:none"
-											>Comprar</a
+											href="{base}/producto/{oferta.slug ?? oferta.id}"
+											style="padding:20px;border-radius:16px;background:#E8C547;color:#1E2B22;text-decoration:none;display:flex;flex-direction:column;justify-content:space-between;gap:10px"
+											><span style="display:flex;justify-content:space-between;align-items:start"
+												><b style="font-size:13px;letter-spacing:.04em">OFERTA</b><span
+													style="padding:3px 6px;border-radius:5px;background:#1E2B22;color:#E8C547;font-size:12.5px;font-weight:700"
+													>−{maxOff}%</span
+												></span
+											><span style="display:flex;gap:12px;align-items:center;min-width:0"
+												>{#if oferta.foto}<img
+														src={img(oferta.foto, 200, 200)}
+														alt=""
+														style="width:76px;height:76px;border-radius:12px;object-fit:cover;flex:none"
+													/>{/if}<span style="min-width:0"
+													><b style="display:block;font-size:17px;letter-spacing:-.02em"
+														>{oferta.nombre}</b
+													><span style="margin-top:4px;display:flex;align-items:baseline;gap:8px"
+														><b style="font-size:24px;letter-spacing:-.02em">{fmt(oferta.precio)}</b
+														><s style="font-size:13px;opacity:.6">{fmt(oferta.anterior!)}</s></span
+													></span
+												></span
+											></a
 										>
-									</div>{/if}
-							</div>
+									{/if}
+									{#if tienda.cobros.transferencia > 0}<div
+											style="padding:20px;border-radius:16px;background:#fff;display:flex;align-items:center;gap:14px;flex-wrap:wrap"
+										>
+											<Icon
+												icon={I.phBankBold}
+												size={34}
+												style="color:var(--acento, #2F5D50);flex:none"
+											/>
+											<div style="flex:1;min-width:160px">
+												<b style="font-size:17px;letter-spacing:-.02em"
+													>{tienda.cobros.transferencia}% off por transferencia</b
+												>
+												{#if tienda.cobros.cuotas > 1}<div
+														style="font-size:13.5px;color:#56645A;margin-top:2px"
+													>
+														O hasta {tienda.cobros.cuotas} cuotas sin interés con&nbsp;tarjeta
+													</div>{/if}
+											</div>
+											<a
+												href="{base}/catalogo"
+												style="padding:11px 14px;border-radius:10px;background:#1E2B22;color:#EEF1E8;font:700 13.5px 'Schibsted Grotesk';white-space:nowrap;text-decoration:none"
+												>Comprar</a
+											>
+										</div>{/if}
+								</div>{/if}
 						</section>
 					{/if}
 				{:else if seccion === 'cats'}
@@ -824,64 +832,66 @@
 						</section>
 					{/if}
 
-					<section style="padding:clamp(32px,5cqw,56px) clamp(12px,3cqw,32px) 0">
-						<div
-							style="padding:clamp(18px,3cqw,32px);border-radius:16px;background:#fff;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:20px;align-items:center"
+					{#if envia(tienda.envios)}<section
+							style="padding:clamp(32px,5cqw,56px) clamp(12px,3cqw,32px) 0"
 						>
-							<div>
-								<h2
-									style="margin:0;font-weight:800;font-size:clamp(26px,3.2cqw,36px);letter-spacing:-.04em"
-								>
-									¿Cuándo te llega?
-								</h2>
-								<p style="margin:6px 0 0;font-size:14.5px;color:#56645A">
-									Poné tu código postal y te decimos cuándo y&nbsp;cuánto.
-								</p>
-								<div style="margin-top:14px;display:flex;gap:6px;max-width:380px">
-									<input
-										bind:value={cpInicio}
-										inputmode="numeric"
-										maxlength="4"
-										placeholder="Código postal"
-										aria-label="Código postal"
-										onkeydown={(e) =>
-											e.key === 'Enter' &&
-											cpValido(cpInicio) &&
-											cotizarYa(cpInicio, subtotal, tienda).then((o) => (cotizadoInicio = o))}
-										style="flex:1;min-width:0;padding:12px 14px;border-radius:10px;border:1.5px solid #1E2B22;background:transparent;font:600 15px 'Schibsted Grotesk';color:#1E2B22"
-									/><button
-										type="button"
-										onclick={() =>
-											cpValido(cpInicio) &&
-											cotizarYa(cpInicio, subtotal, tienda).then((o) => (cotizadoInicio = o))}
-										style="padding:12px 18px;border:0;border-radius:10px;background:#1E2B22;color:#EEF1E8;font:700 14px 'Schibsted Grotesk';cursor:pointer"
-										>Calcular</button
+							<div
+								style="padding:clamp(18px,3cqw,32px);border-radius:16px;background:#fff;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:20px;align-items:center"
+							>
+								<div>
+									<h2
+										style="margin:0;font-weight:800;font-size:clamp(26px,3.2cqw,36px);letter-spacing:-.04em"
 									>
-								</div>
-							</div>
-							{#if cotizadoInicio}
-								<div style="display:flex;flex-direction:column;gap:6px">
-									{#each cotizadoInicio as s (s.id)}<div
-											style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:#F2F4EE"
+										¿Cuándo te llega?
+									</h2>
+									<p style="margin:6px 0 0;font-size:14.5px;color:#56645A">
+										Poné tu código postal y te decimos cuándo y&nbsp;cuánto.
+									</p>
+									<div style="margin-top:14px;display:flex;gap:6px;max-width:380px">
+										<input
+											bind:value={cpInicio}
+											inputmode="numeric"
+											maxlength="4"
+											placeholder="Código postal"
+											aria-label="Código postal"
+											onkeydown={(e) =>
+												e.key === 'Enter' &&
+												cpValido(cpInicio) &&
+												cotizarYa(cpInicio, subtotal, tienda).then((o) => (cotizadoInicio = o))}
+											style="flex:1;min-width:0;padding:12px 14px;border-radius:10px;border:1.5px solid #1E2B22;background:transparent;font:600 15px 'Schibsted Grotesk';color:#1E2B22"
+										/><button
+											type="button"
+											onclick={() =>
+												cpValido(cpInicio) &&
+												cotizarYa(cpInicio, subtotal, tienda).then((o) => (cotizadoInicio = o))}
+											style="padding:12px 18px;border:0;border-radius:10px;background:#1E2B22;color:#EEF1E8;font:700 14px 'Schibsted Grotesk';cursor:pointer"
+											>Calcular</button
 										>
-											<Icon
-												icon={iconoEnvio(s.id)}
-												size={20}
-												style="color:var(--acento, #2F5D50);flex:none"
-											/><span style="flex:1;min-width:0;font-size:14px"
-												><b>{s.nombre}</b> · {s.detalle}</span
-											><b
-												style="font-size:14px;white-space:nowrap;color:{s.precio
-													? '#1E2B22'
-													: 'var(--acento, #2F5D50)'}">{s.precio ? fmt(s.precio) : 'Gratis'}</b
-											>
-										</div>{:else}<span style="font-size:14px;color:#56645A"
-											>No llegamos a ese código postal&nbsp;todavía.</span
-										>{/each}
+									</div>
 								</div>
-							{/if}
-						</div>
-					</section>
+								{#if cotizadoInicio}
+									<div style="display:flex;flex-direction:column;gap:6px">
+										{#each cotizadoInicio as s (s.id)}<div
+												style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:#F2F4EE"
+											>
+												<Icon
+													icon={iconoEnvio(s.id)}
+													size={20}
+													style="color:var(--acento, #2F5D50);flex:none"
+												/><span style="flex:1;min-width:0;font-size:14px"
+													><b>{s.nombre}</b> · {s.detalle}</span
+												><b
+													style="font-size:14px;white-space:nowrap;color:{s.precio
+														? '#1E2B22'
+														: 'var(--acento, #2F5D50)'}">{s.precio ? fmt(s.precio) : 'Gratis'}</b
+												>
+											</div>{:else}<span style="font-size:14px;color:#56645A"
+												>No llegamos a ese código postal&nbsp;todavía.</span
+											>{/each}
+									</div>
+								{/if}
+							</div>
+						</section>{/if}
 				{:else if seccion === 'revs'}
 					{#if ver('revs') && tienda.resenas.length}
 						<section style="padding:clamp(32px,5cqw,56px) clamp(12px,3cqw,32px) 0">
@@ -937,7 +947,11 @@
 		{/if}
 
 		<!-- ============ CATÁLOGO ============ -->
-		{#if pagina === 'catalogo'}
+		{#if pagina === 'catalogo' && !tienda.productos.length}
+			<section style="padding:clamp(40px,7cqw,96px) clamp(16px,4cqw,48px)">
+				<VacioTienda {tienda} {tema} motivo="sin-productos" />
+			</section>
+		{:else if pagina === 'catalogo'}
 			<section
 				style="padding:16px clamp(12px,3cqw,32px) clamp(40px,6cqw,72px);display:flex;gap:clamp(14px,2.4cqw,28px);align-items:flex-start"
 			>
@@ -2354,6 +2368,13 @@
 		{/if}
 
 		<!-- ============ NOSOTROS ============ -->
+		<!-- ============ NO EXISTE (producto o página que no está) ============ -->
+		{#if pagina === 'no-existe'}
+			<section style="padding:clamp(40px,7cqw,96px) clamp(16px,4cqw,48px)">
+				<VacioTienda {tienda} {tema} motivo="no-existe" />
+			</section>
+		{/if}
+
 		{#if pagina === 'nosotros'}
 			<section
 				style="padding:clamp(14px,2.4cqw,28px) clamp(12px,3cqw,32px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:10px"
@@ -2373,8 +2394,9 @@
 					<p
 						style="margin:14px 0 0;font-size:15.5px;line-height:1.55;color:#D6E0D4;max-width:480px"
 					>
-						{tienda.nombre}{tienda.ciudad ? `, desde ${tienda.ciudad}` : ''}. Comprás online y te lo
-						mandamos a todo el país{tienda.envios.retiro ? ', o lo retirás en el local' : ''}.
+						{tienda.nombre}{tienda.ciudad ? `, desde ${tienda.ciudad}` : ''}. {comoLlega(
+							tienda.envios
+						)}
 					</p>
 				</div>
 				{#if tienda.portada.foto || tienda.fotos[0]}
@@ -2392,15 +2414,18 @@
 			<section
 				style="padding:10px clamp(12px,3cqw,32px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(46%,180px),1fr));gap:10px"
 			>
-				<div style="padding:18px;border-radius:14px;background:#fff">
-					<b style="display:block;font-size:34px;letter-spacing:-.04em">{tienda.productos.length}</b
-					><span style="font-size:13.5px;color:#56645A">productos</span>
-				</div>
-				<div style="padding:18px;border-radius:14px;background:#fff">
-					<b style="display:block;font-size:34px;letter-spacing:-.04em"
-						>{tienda.categorias.length}</b
-					><span style="font-size:13.5px;color:#56645A">categorías</span>
-				</div>
+				{#if tienda.productos.length}<div style="padding:18px;border-radius:14px;background:#fff">
+						<b style="display:block;font-size:34px;letter-spacing:-.04em"
+							>{tienda.productos.length}</b
+						><span style="font-size:13.5px;color:#56645A">productos</span>
+					</div>{/if}
+				{#if tienda.categorias.length}<div style="padding:18px;border-radius:14px;background:#fff">
+						<b style="display:block;font-size:34px;letter-spacing:-.04em"
+							>{tienda.categorias.length}</b
+						><span style="font-size:13.5px;color:#56645A"
+							>{tienda.categorias.length === 1 ? 'categoría' : 'categorías'}</span
+						>
+					</div>{/if}
 				{#if tienda.cobros.cuotas > 1}<div style="padding:18px;border-radius:14px;background:#fff">
 						<b style="display:block;font-size:34px;letter-spacing:-.04em">{tienda.cobros.cuotas}</b
 						><span style="font-size:13.5px;color:#56645A">cuotas sin interés</span>

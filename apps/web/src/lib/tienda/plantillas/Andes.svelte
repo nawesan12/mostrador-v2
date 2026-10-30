@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	import Icon from '#lib/components/Icon.svelte';
 	import LogoTienda from '../LogoTienda.svelte';
+	import VacioTienda from '../VacioTienda.svelte';
 	import { enOrden } from '../secciones.ts';
 	import * as I from '#lib/icons.ts';
 	import FormResena from '../FormResena.svelte';
@@ -13,7 +14,14 @@
 	import CampoCupon from '../CampoCupon.svelte';
 	import { CuponCheckout, totales } from '../cupon.svelte.ts';
 	import EnvioCorreo from '../EnvioCorreo.svelte';
-	import { cotizar, cotizarYa, cpValido, resumenMoto } from '../envio.svelte.ts';
+	import {
+		comoLlega,
+		cotizar,
+		cotizarYa,
+		cpValido,
+		resumenMoto,
+		textoEnvios
+	} from '../envio.svelte.ts';
 	import { Seleccion, tarjetaDe } from '../seleccion.svelte.ts';
 	import { partirTitulo } from '../titulo.ts';
 	import { untrack } from 'svelte';
@@ -34,6 +42,7 @@
 		| 'carrito'
 		| 'checkout'
 		| 'nosotros'
+		| 'no-existe'
 		| 'listo'
 		| 'turnos'
 		| 'turno';
@@ -300,10 +309,7 @@
 		producto
 			? [
 					['Descripción', producto.descripcion || `${producto.nombre}, de ${tienda.nombre}.`],
-					[
-						'Envíos',
-						`Enviamos a todo el país${tienda.envios.retiro ? ' y podés retirarlo en el local' : ''}. Calculá el costo con tu código postal.`
-					],
+					['Envíos', textoEnvios(tienda.envios)],
 					[
 						'Cambios y devoluciones',
 						'Tenés 10 días desde que lo recibís para arrepentirte de la compra, sin dar explicaciones (botón de arrepentimiento, abajo de todo).'
@@ -512,8 +518,12 @@
 		})),
 		{ t: 'Nosotros', href: `${base}/nosotros`, on: pagina === 'nosotros' }
 	]);
+	// La foto de la portada (o la del destacado); sin ninguna, la portada es sólo texto.
+	const fotoHero = $derived(tienda.portada.foto ?? destacado?.foto ?? null);
 	const stats = $derived([
-		{ v: String(tienda.productos.length), t: 'productos', bg: '#0E1116', fg: '#fff' },
+		...(tienda.productos.length
+			? [{ v: String(tienda.productos.length), t: 'productos', bg: '#0E1116', fg: '#fff' }]
+			: []),
 		...(tienda.cobros.cuotas > 1
 			? [
 					{
@@ -647,16 +657,19 @@
 						>{/each}
 				</nav>{/if}
 			<span style="flex:1"></span>
-			<button
-				type="button"
-				onclick={() => abrirCmp()}
-				aria-label="Comparar"
-				style="position:relative;display:flex;align-items:center;gap:6px;white-space:nowrap;flex:none;border:0;cursor:pointer;padding:9px 12px;border-radius:12px;background:#fff;box-shadow:inset 0 0 0 1px rgba(14,17,22,.08);color:#0E1116;font:600 13px 'Instrument Sans'"
-				><Icon icon={I.phColumnsBold} size={16} />{#if wide}Comparar{/if}{#if comparar.length}<span
-						style="min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--acento, #2F6BFF);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center"
-						>{comparar.length}</span
-					>{/if}</button
-			>
+			{#if tienda.productos.length}<button
+					type="button"
+					onclick={() => abrirCmp()}
+					aria-label="Comparar"
+					style="position:relative;display:flex;align-items:center;gap:6px;white-space:nowrap;flex:none;border:0;cursor:pointer;padding:9px 12px;border-radius:12px;background:#fff;box-shadow:inset 0 0 0 1px rgba(14,17,22,.08);color:#0E1116;font:600 13px 'Instrument Sans'"
+					><Icon
+						icon={I.phColumnsBold}
+						size={16}
+					/>{#if wide}Comparar{/if}{#if comparar.length}<span
+							style="min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--acento, #2F6BFF);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center"
+							>{comparar.length}</span
+						>{/if}</button
+				>{/if}
 			{#if nar && tienda.turnos}<a
 					href="{base}/turnos"
 					aria-label="Reservar turno"
@@ -805,7 +818,9 @@
 						{#if ver('hero')}
 							<section style="padding:clamp(12px,2cqw,24px) clamp(14px,3cqw,36px) 0">
 								<div
-									style="position:relative;border-radius:30px;overflow:hidden;background:radial-gradient(80% 90% at 70% 40%,#1D2A4A 0%,#0E1116 62%);color:#fff;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));min-height:min(640px,130cqw)"
+									style="position:relative;border-radius:30px;overflow:hidden;background:radial-gradient(80% 90% at 70% 40%,#1D2A4A 0%,#0E1116 62%);color:#fff;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));min-height:{fotoHero
+										? 'min(640px,130cqw)'
+										: 'min(440px,100cqw)'}"
 								>
 									<div
 										style="position:relative;z-index:1;padding:clamp(24px,4.4cqw,60px);display:flex;flex-direction:column;justify-content:space-between;gap:24px;min-width:0"
@@ -881,16 +896,16 @@
 											</div>
 										{/if}
 									</div>
-									<div style="position:relative;min-height:380px">
-										<div
-											style="position:absolute;left:50%;top:50%;width:78%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(closest-side,rgba(47,107,255,.45),rgba(47,107,255,0))"
-										></div>
-										{#if tienda.portada.foto || destacado?.foto}<img
-												src={img(tienda.portada.foto ?? destacado?.foto ?? null, 1100)}
+									{#if fotoHero}<div style="position:relative;min-height:380px">
+											<div
+												style="position:absolute;left:50%;top:50%;width:78%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(closest-side,rgba(47,107,255,.45),rgba(47,107,255,0))"
+											></div>
+											<img
+												src={img(fotoHero, 1100)}
 												alt=""
 												style="position:absolute;left:50%;top:50%;width:min(86%,560px);aspect-ratio:1;object-fit:cover;transform:translate(-50%,-50%);border-radius:40px;mix-blend-mode:screen;opacity:.92"
-											/>{/if}
-									</div>
+											/>
+										</div>{/if}
 								</div>
 							</section>
 						{/if}
@@ -1116,7 +1131,11 @@
 			{/if}
 
 			<!-- ============ CATÁLOGO ============ -->
-			{#if pagina === 'catalogo'}
+			{#if pagina === 'catalogo' && !tienda.productos.length}
+				<section style="padding:clamp(40px,7cqw,96px) clamp(16px,4cqw,48px)">
+					<VacioTienda {tienda} {tema} motivo="sin-productos" />
+				</section>
+			{:else if pagina === 'catalogo'}
 				<section style="padding:22px clamp(14px,3cqw,36px) clamp(48px,7cqw,90px)">
 					<div style="font-size:12.5px;color:#69717E">
 						<a href={base || '/'} style="color:inherit;text-decoration:none">Inicio</a> /
@@ -2489,6 +2508,13 @@
 			{/if}
 
 			<!-- ============ NOSOTROS ============ -->
+			<!-- ============ NO EXISTE (producto o página que no está) ============ -->
+			{#if pagina === 'no-existe'}
+				<section style="padding:clamp(40px,7cqw,96px) clamp(16px,4cqw,48px)">
+					<VacioTienda {tienda} {tema} motivo="no-existe" />
+				</section>
+			{/if}
+
 			{#if pagina === 'nosotros'}
 				<section style="padding:clamp(28px,4cqw,56px) clamp(14px,3cqw,36px) 0">
 					{#if tienda.ciudad}<div
@@ -2501,20 +2527,20 @@
 					>
 						{tienda.portada.titulo}
 					</h1>
-					<div
-						style="margin-top:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px"
-					>
-						{#each stats as s (s.t)}<div
-								style="padding:18px;border-radius:20px;background:{s.bg};color:{s.fg}"
-							>
-								<div
-									style="font-family:'Sora',sans-serif;font-weight:700;font-size:clamp(30px,3.6cqw,44px);letter-spacing:-.05em"
+					{#if stats.length}<div
+							style="margin-top:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px"
+						>
+							{#each stats as s (s.t)}<div
+									style="padding:18px;border-radius:20px;background:{s.bg};color:{s.fg}"
 								>
-									{s.v}
-								</div>
-								<div style="font-size:13.5px;margin-top:4px;opacity:.75">{s.t}</div>
-							</div>{/each}
-					</div>
+									<div
+										style="font-family:'Sora',sans-serif;font-weight:700;font-size:clamp(30px,3.6cqw,44px);letter-spacing:-.05em"
+									>
+										{s.v}
+									</div>
+									<div style="font-size:13.5px;margin-top:4px;opacity:.75">{s.t}</div>
+								</div>{/each}
+						</div>{/if}
 				</section>
 				<section
 					style="padding:12px clamp(14px,3cqw,36px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:10px"
@@ -2532,8 +2558,9 @@
 						style="padding:clamp(20px,3cqw,32px);border-radius:24px;background:#fff;display:flex;flex-direction:column;gap:14px"
 					>
 						<p style="margin:0;font-size:17px;line-height:1.6">
-							{tienda.nombre}{tienda.ciudad ? `, desde ${tienda.ciudad}` : ''}. Comprás online y te
-							lo mandamos a todo el país{tienda.envios.retiro ? ', o lo retirás en el local' : ''}.
+							{tienda.nombre}{tienda.ciudad ? `, desde ${tienda.ciudad}` : ''}. {comoLlega(
+								tienda.envios
+							)}
 						</p>
 						<div style="display:flex;flex-direction:column;gap:10px;font-size:14.5px">
 							{#if tienda.direccion}<span style="display:flex;gap:10px"

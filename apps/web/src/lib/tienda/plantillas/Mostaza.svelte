@@ -7,6 +7,7 @@
 	import { cuandoLargo, duracion } from '#lib/turnos/formato.ts';
 	import Icon from '#lib/components/Icon.svelte';
 	import LogoTienda from '../LogoTienda.svelte';
+	import VacioTienda from '../VacioTienda.svelte';
 	import { enOrden } from '../secciones.ts';
 	import * as I from '#lib/icons.ts';
 	import FormResena from '../FormResena.svelte';
@@ -16,7 +17,14 @@
 	import CampoCupon from '../CampoCupon.svelte';
 	import { CuponCheckout, totales } from '../cupon.svelte.ts';
 	import EnvioCorreo from '../EnvioCorreo.svelte';
-	import { cotizar, cotizarYa, cpValido, resumenMoto } from '../envio.svelte.ts';
+	import {
+		comoLlega,
+		cotizar,
+		cotizarYa,
+		cpValido,
+		resumenMoto,
+		textoEnvios
+	} from '../envio.svelte.ts';
 	import { Seleccion, tarjetaDe } from '../seleccion.svelte.ts';
 	import { partirTitulo } from '../titulo.ts';
 	import type { OpcionEnvio, ProductoPublico, TiendaPublica } from '../tipos.ts';
@@ -34,6 +42,7 @@
 		| 'carrito'
 		| 'checkout'
 		| 'nosotros'
+		| 'no-existe'
 		| 'listo'
 		| 'turnos'
 		| 'turno';
@@ -133,6 +142,8 @@
 
 	// Título de la portada: el último tramo va en mostaza, como en el diseño ("Café rico, / sin vueltas.").
 	const titulo = $derived(partirTitulo(tienda.portada.titulo));
+	// Sin logo, la inicial en el círculo de la marca (nada que sugiera un rubro que la tienda no eligió).
+	const inicial = $derived(tienda.nombre.trim().charAt(0).toUpperCase());
 
 	// Las tres formas de recibirlo del diseño, con los envíos que la tienda tiene de verdad.
 	const modes = $derived([
@@ -229,10 +240,7 @@
 		producto
 			? [
 					['Descripción', producto.descripcion || `${producto.nombre}, de ${tienda.nombre}.`],
-					[
-						'Envíos',
-						`Enviamos a todo el país${tienda.envios.retiro ? ' y podés retirarlo en el local' : ''}. Calculá el costo con tu código postal.`
-					],
+					['Envíos', textoEnvios(tienda.envios)],
 					[
 						'Cambios y devoluciones',
 						'Tenés 10 días desde que lo recibís para arrepentirte de la compra, sin dar explicaciones (botón de arrepentimiento, abajo de todo).'
@@ -493,10 +501,10 @@
 			<a
 				href={base || '/'}
 				style="display:flex;align-items:center;gap:9px;min-width:0;text-decoration:none;color:#3B2416"
-				><span
-					style="width:38px;height:38px;border-radius:50%;background:#3B2416;color:#F5C26B;display:grid;place-items:center;flex:none"
-					><Icon icon={I.phCoffeeBeanFill} size={20} /></span
-				><span
+				>{#if !tienda.logo}<span
+						style="width:38px;height:38px;border-radius:50%;background:#3B2416;color:#F5C26B;display:grid;place-items:center;flex:none;{B};font-weight:800;font-size:20px;letter-spacing:-.03em"
+						>{inicial}</span
+					>{/if}<span
 					style="{B};font-weight:800;font-size:23px;letter-spacing:-.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
 					><LogoTienda {tienda} /></span
 				></a
@@ -582,51 +590,52 @@
 										>{/if}
 								</div>
 							</div>
-							<div
-								style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:clamp(10px,1.4cqw,16px);min-height:min(560px,110cqw)"
-							>
-								<div
-									style="grid-row:span 2;border-radius:28px;overflow:hidden;background:#D9B98C;position:relative"
+							<!-- Sin fotos ni reseñas no hay mosaico: la portada ocupa todo el ancho. -->
+							{#if fotoGrande || fotoChica || tienda.promedio}<div
+									style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:clamp(10px,1.4cqw,16px);min-height:min(560px,110cqw)"
 								>
-									{#if fotoGrande}<img
-											src={fotoGrande}
-											alt=""
-											style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
-										/>{/if}{#if !tienda.portada.foto && best[0]}<a
-											href={best[0].href}
-											style="position:absolute;left:14px;bottom:14px;max-width:calc(100% - 28px);padding:8px 12px;border-radius:14px;background:#FBF3E4;font-size:13px;font-weight:700;color:#3B2416;text-decoration:none"
-											>{best[0].n} · {best[0].price}</a
-										>{/if}
-								</div>
-								<div
-									style="border-radius:28px;overflow:hidden;background:#D9B98C;position:relative;grid-row:{tienda.promedio
-										? 'auto'
-										: 'span 2'}"
-								>
-									{#if fotoChica}<img
-											src={fotoChica}
-											alt=""
-											style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
-										/>{/if}
-								</div>
-								{#if tienda.promedio}
 									<div
-										style="border-radius:28px;background:var(--acento, #C9821A);color:#2A170C;padding:18px;display:flex;flex-direction:column;justify-content:space-between"
+										style="grid-row:span 2;border-radius:28px;overflow:hidden;background:#D9B98C;position:relative"
 									>
-										<Icon icon={I.phStarFill} size={24} />
-										<div>
-											<div
-												style="{B};font-weight:800;font-size:clamp(34px,4cqw,48px);line-height:1;letter-spacing:-.04em"
-											>
-												{tienda.promedio.toLocaleString('es-AR')}
-											</div>
-											<div style="font-size:13px;font-weight:600;margin-top:4px">
-												de promedio en reseñas
+										{#if fotoGrande}<img
+												src={fotoGrande}
+												alt=""
+												style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
+											/>{/if}{#if !tienda.portada.foto && best[0]}<a
+												href={best[0].href}
+												style="position:absolute;left:14px;bottom:14px;max-width:calc(100% - 28px);padding:8px 12px;border-radius:14px;background:#FBF3E4;font-size:13px;font-weight:700;color:#3B2416;text-decoration:none"
+												>{best[0].n} · {best[0].price}</a
+											>{/if}
+									</div>
+									<div
+										style="border-radius:28px;overflow:hidden;background:#D9B98C;position:relative;grid-row:{tienda.promedio
+											? 'auto'
+											: 'span 2'}"
+									>
+										{#if fotoChica}<img
+												src={fotoChica}
+												alt=""
+												style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
+											/>{/if}
+									</div>
+									{#if tienda.promedio}
+										<div
+											style="border-radius:28px;background:var(--acento, #C9821A);color:#2A170C;padding:18px;display:flex;flex-direction:column;justify-content:space-between"
+										>
+											<Icon icon={I.phStarFill} size={24} />
+											<div>
+												<div
+													style="{B};font-weight:800;font-size:clamp(34px,4cqw,48px);line-height:1;letter-spacing:-.04em"
+												>
+													{tienda.promedio.toLocaleString('es-AR')}
+												</div>
+												<div style="font-size:13px;font-weight:600;margin-top:4px">
+													de promedio en reseñas
+												</div>
 											</div>
 										</div>
-									</div>
-								{/if}
-							</div>
+									{/if}
+								</div>{/if}
 						</section>
 					{/if}
 
@@ -843,7 +852,11 @@
 		{/if}
 
 		<!-- ============ CATÁLOGO (el "Menú y pedido" del diseño) ============ -->
-		{#if pagina === 'catalogo'}
+		{#if pagina === 'catalogo' && !tienda.productos.length}
+			<section style="padding:clamp(40px,7cqw,96px) clamp(16px,4cqw,48px)">
+				<VacioTienda {tienda} {tema} motivo="sin-productos" />
+			</section>
+		{:else if pagina === 'catalogo'}
 			<section style="padding:clamp(18px,3cqw,32px) clamp(14px,3.5cqw,40px) clamp(48px,7cqw,90px)">
 				<div style="font-size:13px;color:#7A5A44">
 					<a href={base || '/'} style="color:inherit;text-decoration:none">Inicio</a> /
@@ -2163,6 +2176,13 @@
 		{/if}
 
 		<!-- ============ NOSOTROS ============ -->
+		<!-- ============ NO EXISTE (producto o página que no está) ============ -->
+		{#if pagina === 'no-existe'}
+			<section style="padding:clamp(40px,7cqw,96px) clamp(16px,4cqw,48px)">
+				<VacioTienda {tienda} {tema} motivo="no-existe" />
+			</section>
+		{/if}
+
 		{#if pagina === 'nosotros'}
 			<section
 				style="padding:clamp(18px,3cqw,32px) clamp(14px,3.5cqw,40px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:clamp(14px,2cqw,24px)"
@@ -2196,12 +2216,12 @@
 			<section
 				style="padding:clamp(14px,2cqw,24px) clamp(14px,3.5cqw,40px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:clamp(10px,1.4cqw,16px)"
 			>
-				<div style="padding:22px;border-radius:24px;background:#fff">
-					<div style="{B};font-weight:800;font-size:48px;line-height:1;letter-spacing:-.04em">
-						{tienda.productos.length}
-					</div>
-					<div style="font-size:14px;color:#7A5A44;margin-top:6px">productos en el menú</div>
-				</div>
+				{#if tienda.productos.length}<div style="padding:22px;border-radius:24px;background:#fff">
+						<div style="{B};font-weight:800;font-size:48px;line-height:1;letter-spacing:-.04em">
+							{tienda.productos.length}
+						</div>
+						<div style="font-size:14px;color:#7A5A44;margin-top:6px">productos en el menú</div>
+					</div>{/if}
 				{#if tienda.cobros.cuotas > 1}<div style="padding:22px;border-radius:24px;background:#fff">
 						<div style="{B};font-weight:800;font-size:48px;line-height:1;letter-spacing:-.04em">
 							{tienda.cobros.cuotas}
@@ -2225,8 +2245,9 @@
 						{tienda.envios.retiro ? 'Vení a vernos' : 'Hablemos'}
 					</h2>
 					<p style="margin:14px 0 0;font-size:16px;line-height:1.55;color:#5E4332">
-						{tienda.nombre}{tienda.ciudad ? `, desde ${tienda.ciudad}` : ''}. Pedís online y te lo
-						mandamos{tienda.envios.retiro ? ', o lo retirás en el local' : ' a todo el país'}.
+						{tienda.nombre}{tienda.ciudad ? `, desde ${tienda.ciudad}` : ''}. {comoLlega(
+							tienda.envios
+						).replace('Comprás', 'Pedís')}
 					</p>
 					<div style="margin-top:16px;display:flex;flex-direction:column;gap:10px;font-size:15px">
 						{#if tienda.direccion}<span style="display:flex;gap:10px"
@@ -2269,7 +2290,7 @@
 							style="position:absolute;left:44%;top:40%;max-width:52%;display:flex;align-items:center;gap:8px;padding:8px 12px 8px 8px;border-radius:999px;background:#3B2416;color:#FBF3E4;font-size:13px;font-weight:700;box-shadow:0 10px 20px -6px rgba(59,36,22,.6)"
 							><span
 								style="width:26px;height:26px;border-radius:50%;background:#F5C26B;color:#2A170C;display:grid;place-items:center;flex:none"
-								><Icon icon={I.phCoffeeBeanFill} size={15} /></span
+								>{inicial}</span
 							><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
 								>{tienda.nombre}</span
 							></span

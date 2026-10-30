@@ -5,6 +5,7 @@
 	import { goto } from '$app/navigation';
 	import Icon from '#lib/components/Icon.svelte';
 	import LogoTienda from '../LogoTienda.svelte';
+	import VacioTienda from '../VacioTienda.svelte';
 	import { enOrden } from '../secciones.ts';
 	import * as I from '#lib/icons.ts';
 	import FormResena from '../FormResena.svelte';
@@ -14,7 +15,7 @@
 	import CampoCupon from '../CampoCupon.svelte';
 	import { CuponCheckout, totales } from '../cupon.svelte.ts';
 	import EnvioCorreo from '../EnvioCorreo.svelte';
-	import { cotizar, cotizarYa, cpValido } from '../envio.svelte.ts';
+	import { comoLlega, cotizar, cotizarYa, cpValido, textoEnvios } from '../envio.svelte.ts';
 	import { Seleccion, tarjetaDe } from '../seleccion.svelte.ts';
 	import { partirTitulo } from '../titulo.ts';
 	import { Reserva } from '../reserva.svelte.ts';
@@ -34,6 +35,7 @@
 		| 'carrito'
 		| 'checkout'
 		| 'nosotros'
+		| 'no-existe'
 		| 'listo'
 		| 'turnos'
 		| 'turno';
@@ -214,10 +216,7 @@
 		producto
 			? [
 					['Descripción', producto.descripcion || `${producto.nombre}, de ${tienda.nombre}.`],
-					[
-						'Envíos',
-						`Enviamos a todo el país${tienda.envios.retiro ? ' y podés retirarlo en el local' : ''}. Calculá el costo con tu código postal.`
-					],
+					['Envíos', textoEnvios(tienda.envios)],
 					[
 						'Cambios y devoluciones',
 						'Tenés 10 días desde que lo recibís para arrepentirte de la compra, sin dar explicaciones (botón de arrepentimiento, abajo de todo).'
@@ -623,9 +622,7 @@
 								Comprar, <i style="color:#C9B98F">sin vueltas.</i>
 							</h2>
 							<span style="font-size:14px;color:#BDB2A6;max-width:340px"
-								>Comprás online y te lo mandamos a todo el país{tienda.envios.retiro
-									? ', o lo retirás en el local'
-									: ''}.</span
+								>{comoLlega(tienda.envios)}</span
 							>
 						</div>
 						<div
@@ -798,7 +795,11 @@
 		{/if}
 
 		<!-- ============ CATÁLOGO ============ -->
-		{#if pagina === 'catalogo'}
+		{#if pagina === 'catalogo' && !tienda.productos.length}
+			<section style="padding:clamp(40px,7cqw,96px) clamp(16px,4cqw,48px)">
+				<VacioTienda {tienda} {tema} motivo="sin-productos" />
+			</section>
+		{:else if pagina === 'catalogo'}
 			<section style="padding:28px clamp(16px,4cqw,52px) clamp(56px,8cqw,100px)">
 				<div
 					style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;padding-bottom:18px;border-bottom:1px solid rgba(43,37,32,.2)"
@@ -2011,6 +2012,13 @@
 		{/if}
 
 		<!-- ============ NOSOTROS ============ -->
+		<!-- ============ NO EXISTE (producto o página que no está) ============ -->
+		{#if pagina === 'no-existe'}
+			<section style="padding:clamp(40px,7cqw,96px) clamp(16px,4cqw,48px)">
+				<VacioTienda {tienda} {tema} motivo="no-existe" />
+			</section>
+		{/if}
+
 		{#if pagina === 'nosotros'}
 			<section
 				style="padding:clamp(36px,5cqw,72px) clamp(16px,4cqw,52px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:clamp(20px,4cqw,56px);align-items:end"
@@ -2022,8 +2030,9 @@
 						<i style="color:var(--acento, #4F5B3A)">{titulo[1]}</i>{/if}
 				</h1>
 				<p style="margin:0;font-size:17px;line-height:1.6;color:#6F6358;max-width:460px">
-					{tienda.nombre}{tienda.ciudad ? `, desde ${tienda.ciudad}` : ''}. Comprás online y te lo
-					mandamos a todo el país{tienda.envios.retiro ? ', o lo retirás en el local' : ''}.
+					{tienda.nombre}{tienda.ciudad ? `, desde ${tienda.ciudad}` : ''}. {comoLlega(
+						tienda.envios
+					)}
 				</p>
 			</section>
 			{#if tienda.portada.foto}

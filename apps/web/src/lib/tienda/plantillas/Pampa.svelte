@@ -5,6 +5,7 @@
 	import { goto } from '$app/navigation';
 	import Icon from '#lib/components/Icon.svelte';
 	import LogoTienda from '../LogoTienda.svelte';
+	import VacioTienda from '../VacioTienda.svelte';
 	import { enOrden } from '../secciones.ts';
 	import * as I from '#lib/icons.ts';
 	import FormResena from '../FormResena.svelte';
@@ -14,7 +15,15 @@
 	import CampoCupon from '../CampoCupon.svelte';
 	import { CuponCheckout, totales } from '../cupon.svelte.ts';
 	import EnvioCorreo from '../EnvioCorreo.svelte';
-	import { cotizar, cotizarYa, cpValido, resumenMoto } from '../envio.svelte.ts';
+	import {
+		comoLlega,
+		cotizar,
+		cotizarYa,
+		cpValido,
+		entregaCorta,
+		resumenMoto,
+		textoEnvios
+	} from '../envio.svelte.ts';
 	import { Seleccion, tarjetaDe } from '../seleccion.svelte.ts';
 	import { partirTitulo } from '../titulo.ts';
 	import { Reserva } from '../reserva.svelte.ts';
@@ -34,6 +43,7 @@
 		| 'carrito'
 		| 'checkout'
 		| 'nosotros'
+		| 'no-existe'
 		| 'listo'
 		| 'turnos'
 		| 'turno';
@@ -153,7 +163,9 @@
 	const perks = $derived([
 		tienda.envios.moto
 			? { i: I.phMopedBold, t: 'Envío en moto', d: resumenMoto(tienda.envios) }
-			: { i: I.phTruckBold, t: 'Envíos', d: 'A todo el país' },
+			: tienda.envios.correo || !tienda.envios.retiro
+				? { i: I.phTruckBold, t: 'Envíos', d: entregaCorta(tienda.envios) }
+				: { i: I.phStorefrontBold, t: 'Retiro', d: 'En el local, sin costo' },
 		...(tienda.cobros.cuotas > 1
 			? [{ i: I.phCreditCardBold, t: `${tienda.cobros.cuotas} cuotas`, d: 'Sin interés' }]
 			: []),
@@ -163,6 +175,18 @@
 		tienda.envios.gratisDesde
 			? { i: I.phTruckBold, t: 'Envío gratis', d: `Desde ${fmt(tienda.envios.gratisDesde)}` }
 			: { i: I.phArrowsClockwiseBold, t: 'Arrepentimiento', d: '10 días para devolverlo' }
+	]);
+	// Las cifras de Nosotros: sólo las que hay (nunca «0 productos»).
+	const cifras = $derived([
+		...(tienda.productos.length ? [{ v: String(tienda.productos.length), t: 'Productos' }] : []),
+		...(tienda.cobros.cuotas > 1
+			? [{ v: String(tienda.cobros.cuotas), t: 'Cuotas sin interés' }]
+			: []),
+		...(tienda.promedio
+			? [{ v: tienda.promedio.toLocaleString('es-AR'), t: 'En reseñas' }]
+			: tienda.cobros.transferencia > 0
+				? [{ v: `${tienda.cobros.transferencia}%`, t: 'Off por transferencia' }]
+				: [])
 	]);
 	const best = $derived(
 		tienda.masVendidos.slice(0, 8).flatMap((id) => (porId.get(id) ? [tarjeta(porId.get(id)!)] : []))
@@ -214,10 +238,7 @@
 		producto
 			? [
 					['Descripción', producto.descripcion || `${producto.nombre}, de ${tienda.nombre}.`],
-					[
-						'Envíos',
-						`Enviamos a todo el país${tienda.envios.retiro ? ' y podés retirarlo en el local' : ''}. Calculá el costo con tu código postal.`
-					],
+					['Envíos', textoEnvios(tienda.envios)],
 					[
 						'Cambios y devoluciones',
 						'Tenés 10 días desde que lo recibís para arrepentirte de la compra, sin dar explicaciones (botón de arrepentimiento, abajo de todo).'
@@ -593,14 +614,16 @@
 										>{/if}
 								</h1>
 								<div>
-									<p style="margin:0;font-size:17px;line-height:1.5;color:#BDBDBD;max-width:420px">
-										{tienda.nombre}{tienda.ciudad
-											? `, desde ${tienda.ciudad}`
-											: ''}.{#if tienda.cobros.cuotas > 1}&nbsp;{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}&nbsp;o
-												{tienda.cobros.transferencia}% off pagando por&nbsp;transferencia{/if}.{:else if tienda.cobros.transferencia > 0}&nbsp;{tienda
-												.cobros.transferencia}% off pagando por&nbsp;transferencia.{/if}
-									</p>
-									<div style="margin-top:22px;display:flex;gap:0;flex-wrap:wrap">
+									{#if tienda.ciudad || tienda.cobros.cuotas > 1 || tienda.cobros.transferencia > 0}<p
+											style="margin:0 0 22px;font-size:17px;line-height:1.5;color:#BDBDBD;max-width:420px"
+										>
+											{tienda.nombre}{tienda.ciudad
+												? `, desde ${tienda.ciudad}`
+												: ''}.{#if tienda.cobros.cuotas > 1}&nbsp;{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}&nbsp;o
+													{tienda.cobros.transferencia}% off pagando por&nbsp;transferencia{/if}.{:else if tienda.cobros.transferencia > 0}&nbsp;{tienda
+													.cobros.transferencia}% off pagando por&nbsp;transferencia.{/if}
+										</p>{/if}
+									<div style="display:flex;gap:0;flex-wrap:wrap">
 										<a
 											href="{base}/catalogo"
 											style="padding:18px 28px;border:2px solid var(--acento, #E6FF4D);background:var(--acento, #E6FF4D);color:#111;font:800 14px 'Archivo';letter-spacing:.12em;text-transform:uppercase;text-decoration:none"
@@ -613,42 +636,44 @@
 									</div>
 								</div>
 							</div>
-							<div style="position:relative;min-height:min(640px,120cqw);background:#1E1E1E">
-								{#if tienda.portada.foto}<img
-										src={img(tienda.portada.foto, 1200)}
-										alt=""
-										style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:grayscale(.25) contrast(1.05)"
-									/>{/if}
-								{#if maxOff}<span
-										style="position:absolute;top:16px;right:16px;padding:8px 12px;background:#FF4D2E;color:#111;font:800 12px 'Archivo';letter-spacing:.12em;text-transform:uppercase;transform:rotate(3deg)"
-										>Hasta −{maxOff}%</span
-									>{/if}
-								{#if destacado}<div
-										style="position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:12px;padding:14px 16px;background:#111;border-top:2px solid #2A2A2A"
-									>
-										{#if destacado.foto}<img
-												src={img(destacado.foto, 120, 120)}
-												alt=""
-												style="width:46px;height:46px;object-fit:cover;flex:none"
-											/>{/if}<span style="flex:1;min-width:0"
-											><span style="display:block;font-size:14px;font-weight:700"
-												>{destacado.nombre}</span
-											><span style="display:block;font-size:12.5px;color:#8A8A8A"
-												>{destacado.stock <= 3
-													? destacado.stock === 1
-														? 'Queda 1'
-														: `Quedan ${destacado.stock}`
-													: 'El más vendido'}</span
-											></span
-										><a
-											href="{base}/producto/{destacado.slug ?? destacado.id}"
-											style="padding:10px 14px;border:0;background:#F2F2F2;color:#111;font:800 12px 'Archivo';letter-spacing:.1em;text-transform:uppercase;text-decoration:none;white-space:nowrap"
-											>{destacadoPrecio?.desde ? 'Desde ' : ''}{fmt(
-												destacadoPrecio?.precio ?? destacado.precio
-											)}</a
+							{#if tienda.portada.foto || destacado || maxOff}<div
+									style="position:relative;min-height:min(640px,120cqw);background:#1E1E1E"
+								>
+									{#if tienda.portada.foto}<img
+											src={img(tienda.portada.foto, 1200)}
+											alt=""
+											style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:grayscale(.25) contrast(1.05)"
+										/>{/if}
+									{#if maxOff}<span
+											style="position:absolute;top:16px;right:16px;padding:8px 12px;background:#FF4D2E;color:#111;font:800 12px 'Archivo';letter-spacing:.12em;text-transform:uppercase;transform:rotate(3deg)"
+											>Hasta −{maxOff}%</span
+										>{/if}
+									{#if destacado}<div
+											style="position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:12px;padding:14px 16px;background:#111;border-top:2px solid #2A2A2A"
 										>
-									</div>{/if}
-							</div>
+											{#if destacado.foto}<img
+													src={img(destacado.foto, 120, 120)}
+													alt=""
+													style="width:46px;height:46px;object-fit:cover;flex:none"
+												/>{/if}<span style="flex:1;min-width:0"
+												><span style="display:block;font-size:14px;font-weight:700"
+													>{destacado.nombre}</span
+												><span style="display:block;font-size:12.5px;color:#8A8A8A"
+													>{destacado.stock <= 3
+														? destacado.stock === 1
+															? 'Queda 1'
+															: `Quedan ${destacado.stock}`
+														: 'El más vendido'}</span
+												></span
+											><a
+												href="{base}/producto/{destacado.slug ?? destacado.id}"
+												style="padding:10px 14px;border:0;background:#F2F2F2;color:#111;font:800 12px 'Archivo';letter-spacing:.1em;text-transform:uppercase;text-decoration:none;white-space:nowrap"
+												>{destacadoPrecio?.desde ? 'Desde ' : ''}{fmt(
+													destacadoPrecio?.precio ?? destacado.precio
+												)}</a
+											>
+										</div>{/if}
+								</div>{/if}
 						</section>
 					{/if}
 
@@ -799,7 +824,11 @@
 		{/if}
 
 		<!-- ============ CATÁLOGO ============ -->
-		{#if pagina === 'catalogo'}
+		{#if pagina === 'catalogo' && !tienda.productos.length}
+			<section style="padding:clamp(40px,7cqw,96px) clamp(16px,4cqw,48px)">
+				<VacioTienda {tienda} {tema} motivo="sin-productos" />
+			</section>
+		{:else if pagina === 'catalogo'}
 			<section
 				style="padding:clamp(26px,4cqw,48px) clamp(14px,2.4cqw,28px) 0;border-bottom:2px solid #2A2A2A"
 			>
@@ -2045,9 +2074,18 @@
 		{/if}
 
 		<!-- ============ NOSOTROS ============ -->
+		<!-- ============ NO EXISTE (producto o página que no está) ============ -->
+		{#if pagina === 'no-existe'}
+			<section style="padding:clamp(40px,7cqw,96px) clamp(16px,4cqw,48px)">
+				<VacioTienda {tienda} {tema} motivo="no-existe" />
+			</section>
+		{/if}
+
 		{#if pagina === 'nosotros'}
 			<section
-				style="position:relative;min-height:clamp(420px,56cqw,720px);border-bottom:2px solid #2A2A2A;overflow:hidden;background:#1E1E1E"
+				style="position:relative;min-height:{tienda.portada.foto
+					? 'clamp(420px,56cqw,720px)'
+					: 'clamp(220px,26cqw,340px)'};border-bottom:2px solid #2A2A2A;overflow:hidden;background:#1E1E1E"
 			>
 				{#if tienda.portada.foto}<img
 						src={img(tienda.portada.foto, 1800)}
@@ -2077,30 +2115,29 @@
 			>
 				<div style="padding:clamp(22px,3.4cqw,44px);border-right:2px solid #2A2A2A">
 					<p style="margin:0;font-size:clamp(19px,2.2cqw,26px);line-height:1.4;font-weight:500">
-						{tienda.nombre}{tienda.ciudad ? `, desde ${tienda.ciudad}` : ''}. Comprás online y te lo
-						mandamos a todo el país{tienda.envios.retiro ? ', o lo retirás en el local' : ''}.
+						{tienda.nombre}{tienda.ciudad ? `, desde ${tienda.ciudad}` : ''}. {comoLlega(
+							tienda.envios
+						)}
 					</p>
 				</div>
-				<div
-					style="display:grid;grid-template-columns:repeat({1 +
-						(tienda.cobros.cuotas > 1 ? 1 : 0) +
-						(tienda.promedio || tienda.cobros.transferencia > 0 ? 1 : 0)},minmax(0,1fr))"
-				>
-					{#each [{ v: String(tienda.productos.length), t: 'Productos' }, ...(tienda.cobros.cuotas > 1 ? [{ v: String(tienda.cobros.cuotas), t: 'Cuotas sin interés' }] : []), ...(tienda.promedio ? [{ v: tienda.promedio.toLocaleString('es-AR'), t: 'En reseñas' }] : tienda.cobros.transferencia > 0 ? [{ v: `${tienda.cobros.transferencia}%`, t: 'Off por transferencia' }] : [])] as s (s.t)}<div
-							style="padding:clamp(18px,2.6cqw,32px);border-right:2px solid #2A2A2A;display:flex;flex-direction:column;justify-content:flex-end;min-width:0"
-						>
-							<div
-								style="font-family:'Archivo Black',sans-serif;font-size:clamp(34px,4.4cqw,58px);line-height:.9;color:var(--acento, #E6FF4D)"
+				{#if cifras.length}<div
+						style="display:grid;grid-template-columns:repeat({cifras.length},minmax(0,1fr))"
+					>
+						{#each cifras as s (s.t)}<div
+								style="padding:clamp(18px,2.6cqw,32px);border-right:2px solid #2A2A2A;display:flex;flex-direction:column;justify-content:flex-end;min-width:0"
 							>
-								{s.v}
-							</div>
-							<div
-								style="margin-top:6px;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8A8A8A"
-							>
-								{s.t}
-							</div>
-						</div>{/each}
-				</div>
+								<div
+									style="font-family:'Archivo Black',sans-serif;font-size:clamp(34px,4.4cqw,58px);line-height:.9;color:var(--acento, #E6FF4D)"
+								>
+									{s.v}
+								</div>
+								<div
+									style="margin-top:6px;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8A8A8A"
+								>
+									{s.t}
+								</div>
+							</div>{/each}
+					</div>{/if}
 			</section>
 			{#if tienda.direccion || whatsapp}
 				<section

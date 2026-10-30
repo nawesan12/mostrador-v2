@@ -5,6 +5,7 @@
 	import { goto } from '$app/navigation';
 	import Icon from '#lib/components/Icon.svelte';
 	import LogoTienda from '../LogoTienda.svelte';
+	import VacioTienda from '../VacioTienda.svelte';
 	import { enOrden } from '../secciones.ts';
 	import * as I from '#lib/icons.ts';
 	import FormResena from '../FormResena.svelte';
@@ -14,7 +15,14 @@
 	import CampoCupon from '../CampoCupon.svelte';
 	import { CuponCheckout, totales } from '../cupon.svelte.ts';
 	import EnvioCorreo from '../EnvioCorreo.svelte';
-	import { cotizar, cotizarYa, cpValido } from '../envio.svelte.ts';
+	import {
+		cotizar,
+		cotizarYa,
+		cpValido,
+		entregaCorta,
+		envia,
+		textoEnvios
+	} from '../envio.svelte.ts';
 	import { Seleccion, tarjetaDe } from '../seleccion.svelte.ts';
 	import { partirTitulo } from '../titulo.ts';
 	import { Reserva } from '../reserva.svelte.ts';
@@ -34,6 +42,7 @@
 		| 'carrito'
 		| 'checkout'
 		| 'nosotros'
+		| 'no-existe'
 		| 'listo'
 		| 'turnos'
 		| 'turno';
@@ -220,10 +229,7 @@
 		producto
 			? [
 					['Descripción', producto.descripcion || `${producto.nombre}, de ${tienda.nombre}.`],
-					[
-						'Envíos',
-						`Enviamos a todo el país${tienda.envios.retiro ? ' y podés retirarlo en el local' : ''}. Calculá el costo con tu código postal.`
-					],
+					['Envíos', textoEnvios(tienda.envios)],
 					[
 						'Cambios y devoluciones',
 						'Tenés 10 días desde que lo recibís para arrepentirte de la compra, sin dar explicaciones (botón de arrepentimiento, abajo de todo).'
@@ -422,11 +428,15 @@
 		);
 	const stats = $derived(
 		[
-			{ v: String(tienda.productos.length), t: 'productos' },
-			{
-				v: String(tienda.categorias.length),
-				t: tienda.categorias.length === 1 ? 'categoría' : 'categorías'
-			},
+			...(tienda.productos.length ? [{ v: String(tienda.productos.length), t: 'productos' }] : []),
+			...(tienda.categorias.length
+				? [
+						{
+							v: String(tienda.categorias.length),
+							t: tienda.categorias.length === 1 ? 'categoría' : 'categorías'
+						}
+					]
+				: []),
 			...(tienda.cobros.cuotas > 1
 				? [{ v: String(tienda.cobros.cuotas), t: 'cuotas sin interés' }]
 				: []),
@@ -895,7 +905,11 @@
 		{/if}
 
 		<!-- ============ CATÁLOGO ============ -->
-		{#if pagina === 'catalogo'}
+		{#if pagina === 'catalogo' && !tienda.productos.length}
+			<section style="padding:clamp(40px,7cqw,96px) clamp(16px,4cqw,48px)">
+				<VacioTienda {tienda} {tema} motivo="sin-productos" />
+			</section>
+		{:else if pagina === 'catalogo'}
 			<section style="padding:24px clamp(14px,3.5cqw,44px) clamp(48px,7cqw,90px)">
 				<h1
 					style="margin:0;font-family:'Gloock',serif;font-weight:400;font-size:clamp(46px,6.6cqw,92px);line-height:.95;overflow-wrap:anywhere"
@@ -2156,13 +2170,22 @@
 		{/if}
 
 		<!-- ============ NOSOTROS ============ -->
+		<!-- ============ NO EXISTE (producto o página que no está) ============ -->
+		{#if pagina === 'no-existe'}
+			<section style="padding:clamp(40px,7cqw,96px) clamp(16px,4cqw,48px)">
+				<VacioTienda {tienda} {tema} motivo="no-existe" />
+			</section>
+		{/if}
+
 		{#if pagina === 'nosotros'}
 			<section style="padding:clamp(30px,5cqw,64px) clamp(14px,3.5cqw,44px) 0">
 				<div
 					style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px"
 				>
 					<div
-						style="grid-column:span {abSpan};padding:clamp(24px,4cqw,52px);border-radius:32px;background:#3A1F25;color:#FBF4F1;display:flex;flex-direction:column;justify-content:flex-end;min-height:360px;min-width:0"
+						style="grid-column:{fotoNos
+							? `span ${abSpan}`
+							: '1 / -1'};padding:clamp(24px,4cqw,52px);border-radius:32px;background:#3A1F25;color:#FBF4F1;display:flex;flex-direction:column;justify-content:flex-end;min-height:360px;min-width:0"
 					>
 						<div
 							style="font-size:12.5px;font-weight:800;letter-spacing:.24em;text-transform:uppercase;color:#F3D9DE"
@@ -2180,26 +2203,28 @@
 								{tienda.portada.lema}
 							</p>{/if}
 					</div>
-					<div
-						style="border-radius:32px;overflow:hidden;background:#F3D9DE;min-height:360px;position:relative"
-					>
-						{#if fotoNos}<img
+					{#if fotoNos}<div
+							style="border-radius:32px;overflow:hidden;background:#F3D9DE;min-height:360px;position:relative"
+						>
+							<img
 								src={img(fotoNos, 800)}
 								alt=""
 								style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
-							/>{/if}
-					</div>
+							/>
+						</div>{/if}
 				</div>
-				<div
-					style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px"
-				>
-					{#each stats as s (s.t)}<div style="padding:22px;border-radius:26px;background:{s.bg}">
-							<div style="font-family:'Gloock',serif;font-size:clamp(34px,4cqw,48px);line-height:1">
-								{s.v}
-							</div>
-							<div style="margin-top:6px;font-size:14px;color:#6E4F55">{s.t}</div>
-						</div>{/each}
-				</div>
+				{#if stats.length}<div
+						style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px"
+					>
+						{#each stats as s (s.t)}<div style="padding:22px;border-radius:26px;background:{s.bg}">
+								<div
+									style="font-family:'Gloock',serif;font-size:clamp(34px,4cqw,48px);line-height:1"
+								>
+									{s.v}
+								</div>
+								<div style="margin-top:6px;font-size:14px;color:#6E4F55">{s.t}</div>
+							</div>{/each}
+					</div>{/if}
 			</section>
 			<section
 				style="padding:clamp(40px,6cqw,80px) clamp(14px,3.5cqw,44px);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:12px"
@@ -2217,15 +2242,17 @@
 								style="color:var(--acento, #B4475B);flex:none"
 							/>{tienda.direccion}</span
 						>{/if}
-					<span style="display:flex;gap:10px;font-size:15px"
-						><Icon
-							icon={I.phTruck}
-							size={18}
-							style="color:var(--acento, #B4475B);flex:none"
-						/>Enviamos a todo el país{tienda.envios.gratisDesde
-							? `, gratis desde ${fmt(tienda.envios.gratisDesde)}`
-							: ''}</span
-					>
+					{#if envia(tienda.envios)}<span style="display:flex;gap:10px;font-size:15px"
+							><Icon
+								icon={I.phTruck}
+								size={18}
+								style="color:var(--acento, #B4475B);flex:none"
+							/>{tienda.envios.correo
+								? 'Enviamos a todo el país'
+								: entregaCorta(tienda.envios)}{tienda.envios.gratisDesde
+								? `, gratis desde ${fmt(tienda.envios.gratisDesde)}`
+								: ''}</span
+						>{/if}
 					{#if tienda.envios.retiro}<span style="display:flex;gap:10px;font-size:15px"
 							><Icon
 								icon={I.phStorefrontFill}

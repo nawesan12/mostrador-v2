@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import Icon from '#lib/components/Icon.svelte';
 	import LogoTienda from '../LogoTienda.svelte';
+	import VacioTienda from '../VacioTienda.svelte';
 	import { enOrden } from '../secciones.ts';
 	import * as I from '#lib/icons.ts';
 	import FormResena from '../FormResena.svelte';
@@ -12,7 +13,7 @@
 	import CampoCupon from '../CampoCupon.svelte';
 	import { CuponCheckout, totales } from '../cupon.svelte.ts';
 	import EnvioCorreo from '../EnvioCorreo.svelte';
-	import { cotizar, cotizarYa, cpValido } from '../envio.svelte.ts';
+	import { comoLlega, cotizar, cotizarYa, cpValido, textoEnvios } from '../envio.svelte.ts';
 	import { Seleccion, tarjetaDe } from '../seleccion.svelte.ts';
 	import { partirTitulo } from '../titulo.ts';
 	import { page } from '$app/state';
@@ -33,6 +34,7 @@
 		| 'carrito'
 		| 'checkout'
 		| 'nosotros'
+		| 'no-existe'
 		| 'listo'
 		| 'turnos'
 		| 'turno';
@@ -178,10 +180,7 @@
 		producto
 			? [
 					['Descripción', producto.descripcion || `${producto.nombre}, de ${tienda.nombre}.`],
-					[
-						'Envíos',
-						`Enviamos a todo el país${tienda.envios.retiro ? ' y podés retirarlo en el local' : ''}. Calculá el costo con tu código postal.`
-					],
+					['Envíos', textoEnvios(tienda.envios)],
 					[
 						'Cambios y devoluciones',
 						'Tenés 10 días desde que lo recibís para arrepentirte de la compra, sin dar explicaciones (botón de arrepentimiento, abajo de todo).'
@@ -694,7 +693,11 @@
 		{/if}
 
 		<!-- ============ CATÁLOGO ============ -->
-		{#if pagina === 'catalogo'}
+		{#if pagina === 'catalogo' && !tienda.productos.length}
+			<section style="padding:clamp(40px,7cqw,96px) clamp(16px,4cqw,48px)">
+				<VacioTienda {tienda} {tema} motivo="sin-productos" />
+			</section>
+		{:else if pagina === 'catalogo'}
 			<section style="padding:28px clamp(16px,4cqw,48px) clamp(56px,8cqw,96px)">
 				<div style="font-size:12.5px;color:#6E655C">
 					<a href={base || '/'} style="color:inherit;text-decoration:none">Inicio</a> /
@@ -1934,6 +1937,13 @@
 		{/if}
 
 		<!-- ============ NOSOTROS ============ -->
+		<!-- ============ NO EXISTE (producto o página que no está) ============ -->
+		{#if pagina === 'no-existe'}
+			<section style="padding:clamp(40px,7cqw,96px) clamp(16px,4cqw,48px)">
+				<VacioTienda {tienda} {tema} motivo="no-existe" />
+			</section>
+		{/if}
+
 		{#if pagina === 'nosotros'}
 			<section style="padding:clamp(48px,7cqw,96px) clamp(16px,4cqw,48px) 0;text-align:center">
 				{#if tienda.ciudad}<div
@@ -1944,51 +1954,54 @@
 				<h1
 					style="margin:16px auto 0;max-width:900px;font-family:'Instrument Serif',serif;font-weight:400;font-size:clamp(46px,7cqw,104px);line-height:.95;letter-spacing:-.02em"
 				>
-					{titulo[0]}{#if titulo[1]}
+					{titulo[1] ? `${titulo[0]} ` : titulo[0]}{#if titulo[1]}
 						<i>{titulo[1]}</i>{/if}
 				</h1>
 			</section>
 			<section
 				style="padding:clamp(40px,6cqw,80px) clamp(16px,4cqw,48px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:clamp(16px,3cqw,40px);align-items:center"
 			>
-				<div style="aspect-ratio:4/5;border-radius:2px;overflow:hidden;background:#D8CEC3">
-					{#if tienda.portada.foto}<img
+				{#if tienda.portada.foto}<div
+						style="aspect-ratio:4/5;border-radius:2px;overflow:hidden;background:#D8CEC3"
+					>
+						<img
 							src={img(tienda.portada.foto, 1000)}
 							alt=""
 							style="width:100%;height:100%;object-fit:cover"
-						/>{/if}
-				</div>
+						/>
+					</div>{/if}
 				<div style="max-width:520px">
 					<p
 						style="margin:0;font-family:'Instrument Serif',serif;font-size:clamp(24px,2.6cqw,32px);line-height:1.3"
 					>
-						{tienda.nombre}{tienda.ciudad ? `, desde ${tienda.ciudad}` : ''}. Comprás online y te lo
-						mandamos a todo el país{tienda.envios.retiro ? ', o lo retirás en el local' : ''}.
+						{tienda.nombre}{tienda.ciudad ? `, desde ${tienda.ciudad}` : ''}. {comoLlega(
+							tienda.envios
+						)}
 					</p>
-					<div
-						style="margin-top:28px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px;border-top:1px solid rgba(28,26,23,.14);padding-top:22px"
-					>
-						<div>
-							<div style="font-family:'Instrument Serif',serif;font-size:44px;line-height:1">
-								{tienda.productos.length}
-							</div>
-							<div style="font-size:13px;color:#6E655C;margin-top:4px">productos</div>
-						</div>
-						{#if tienda.cobros.cuotas > 1}<div>
-								<div style="font-family:'Instrument Serif',serif;font-size:44px;line-height:1">
-									{tienda.cobros.cuotas}
-								</div>
-								<div style="font-size:13px;color:#6E655C;margin-top:4px">cuotas sin interés</div>
-							</div>{/if}
-						{#if tienda.promedio}<div>
-								<div style="font-family:'Instrument Serif',serif;font-size:44px;line-height:1">
-									{tienda.promedio.toLocaleString('es-AR')}
-								</div>
-								<div style="font-size:13px;color:#6E655C;margin-top:4px">
-									de promedio en reseñas
-								</div>
-							</div>{/if}
-					</div>
+					{#if tienda.productos.length || tienda.cobros.cuotas > 1 || tienda.promedio}<div
+							style="margin-top:28px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px;border-top:1px solid rgba(28,26,23,.14);padding-top:22px"
+						>
+							{#if tienda.productos.length}<div>
+									<div style="font-family:'Instrument Serif',serif;font-size:44px;line-height:1">
+										{tienda.productos.length}
+									</div>
+									<div style="font-size:13px;color:#6E655C;margin-top:4px">productos</div>
+								</div>{/if}
+							{#if tienda.cobros.cuotas > 1}<div>
+									<div style="font-family:'Instrument Serif',serif;font-size:44px;line-height:1">
+										{tienda.cobros.cuotas}
+									</div>
+									<div style="font-size:13px;color:#6E655C;margin-top:4px">cuotas sin interés</div>
+								</div>{/if}
+							{#if tienda.promedio}<div>
+									<div style="font-family:'Instrument Serif',serif;font-size:44px;line-height:1">
+										{tienda.promedio.toLocaleString('es-AR')}
+									</div>
+									<div style="font-size:13px;color:#6E655C;margin-top:4px">
+										de promedio en reseñas
+									</div>
+								</div>{/if}
+						</div>{/if}
 				</div>
 			</section>
 			<section

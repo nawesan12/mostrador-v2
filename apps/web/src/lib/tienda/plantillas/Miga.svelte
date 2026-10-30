@@ -7,6 +7,7 @@
 	import { cuandoLargo, duracion } from '#lib/turnos/formato.ts';
 	import Icon from '#lib/components/Icon.svelte';
 	import LogoTienda from '../LogoTienda.svelte';
+	import VacioTienda from '../VacioTienda.svelte';
 	import { enOrden } from '../secciones.ts';
 	import * as I from '#lib/icons.ts';
 	import FormResena from '../FormResena.svelte';
@@ -16,7 +17,15 @@
 	import CampoCupon from '../CampoCupon.svelte';
 	import { CuponCheckout, totales } from '../cupon.svelte.ts';
 	import EnvioCorreo from '../EnvioCorreo.svelte';
-	import { cotizar, cotizarYa, cpValido, resumenMoto } from '../envio.svelte.ts';
+	import {
+		comoLlega,
+		cotizar,
+		cotizarYa,
+		cpValido,
+		envia,
+		resumenMoto,
+		textoEnvios
+	} from '../envio.svelte.ts';
 	import { Seleccion, tarjetaDe } from '../seleccion.svelte.ts';
 	import { partirTitulo } from '../titulo.ts';
 	import type { OpcionEnvio, ProductoPublico, TiendaPublica } from '../tipos.ts';
@@ -34,6 +43,7 @@
 		| 'carrito'
 		| 'checkout'
 		| 'nosotros'
+		| 'no-existe'
 		| 'listo'
 		| 'turnos'
 		| 'turno';
@@ -130,13 +140,23 @@
 	// Las tarjetas grandes de color del diseño (eran combos): lo que la tienda ofrece de verdad.
 	const perks = $derived([
 		{
-			k: 'Envíos',
-			t: tienda.envios.gratisDesde
-				? `Envío gratis desde ${fmt(tienda.envios.gratisDesde)}`
-				: 'Enviamos a todo el país',
-			d: tienda.envios.retiro
-				? `O lo retirás en el local${tienda.direccion ? `, ${tienda.direccion}` : ''}.`
-				: 'Calculá el costo con tu código postal en cada producto.',
+			k: envia(tienda.envios) ? 'Envíos' : 'Retiro',
+			t:
+				tienda.envios.gratisDesde && envia(tienda.envios)
+					? `Envío gratis desde ${fmt(tienda.envios.gratisDesde)}`
+					: tienda.envios.correo
+						? 'Enviamos a todo el país'
+						: tienda.envios.moto
+							? 'Te lo llevamos en moto'
+							: 'Retiralo en el local',
+			// Sólo retiro: dónde (sin prometer envíos que la tienda no hace).
+			d: !envia(tienda.envios)
+				? tienda.direccion
+					? `Sin costo, en ${tienda.direccion}.`
+					: 'Sin costo. Te avisamos cuando esté listo.'
+				: tienda.envios.retiro
+					? `O lo retirás en el local${tienda.direccion ? `, ${tienda.direccion}` : ''}.`
+					: 'Calculá el costo con tu código postal en cada producto.',
 			bg: '#F6D776',
 			fg: '#2A1C12',
 			bbg: '#2A1C12',
@@ -219,10 +239,7 @@
 	const acc = $derived(
 		producto
 			? [
-					[
-						'Envíos',
-						`Enviamos a todo el país${tienda.envios.retiro ? ' y podés retirarlo en el local' : ''}. Calculá el costo con tu código postal.`
-					],
+					['Envíos', textoEnvios(tienda.envios)],
 					[
 						'Cambios y devoluciones',
 						'Tenés 10 días desde que lo recibís para arrepentirte de la compra, sin dar explicaciones (botón de arrepentimiento, abajo de todo).'
@@ -496,10 +513,10 @@
 			<a
 				href={base || '/'}
 				style="display:flex;align-items:center;gap:10px;min-width:0;text-decoration:none;color:#2A1C12"
-				><span
-					style="width:40px;height:40px;flex:none;border-radius:50%;background:var(--acento, #D9452B);color:#F4EADB;display:grid;place-items:center;font-family:'Schibsted Grotesk',sans-serif;font-weight:800;letter-spacing:-.03em;font-size:20px"
-					>{inicial}</span
-				><span
+				>{#if !tienda.logo}<span
+						style="width:40px;height:40px;flex:none;border-radius:50%;background:var(--acento, #D9452B);color:#F4EADB;display:grid;place-items:center;font-family:'Schibsted Grotesk',sans-serif;font-weight:800;letter-spacing:-.03em;font-size:20px"
+						>{inicial}</span
+					>{/if}<span
 					style="font-family:'Schibsted Grotesk',sans-serif;font-weight:800;letter-spacing:-.03em;font-size:23px;line-height:1;overflow-wrap:anywhere"
 					><LogoTienda {tienda} /></span
 				></a
@@ -794,7 +811,11 @@
 		{/if}
 
 		<!-- ============ CATÁLOGO ============ -->
-		{#if pagina === 'catalogo'}
+		{#if pagina === 'catalogo' && !tienda.productos.length}
+			<section style="padding:clamp(40px,7cqw,96px) clamp(16px,4cqw,48px)">
+				<VacioTienda {tienda} {tema} motivo="sin-productos" />
+			</section>
+		{:else if pagina === 'catalogo'}
 			<section style="padding:24px clamp(14px,3.5cqw,44px) clamp(48px,7cqw,90px)">
 				<div
 					style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap"
@@ -1247,7 +1268,7 @@
 											src={img(p.foto, 120, 120)}
 											alt=""
 											style="width:44px;height:44px;border-radius:14px;object-fit:cover;flex:none;background:#F1DFC9"
-										/>{:else}<Icon icon={I.phCoffeeFill} size={28} style="color:#9A2E18" />{/if}
+										/>{:else}<Icon icon={I.phBasketFill} size={28} style="color:#9A2E18" />{/if}
 									<div style="flex:1;min-width:200px">
 										<div style="font-weight:700">¿Le sumás {p.nombre}?</div>
 										{#if p.categoria}<div style="font-size:13px;color:#6A4F3C">
@@ -2028,19 +2049,26 @@
 		{/if}
 
 		<!-- ============ NOSOTROS ============ -->
+		<!-- ============ NO EXISTE (producto o página que no está) ============ -->
+		{#if pagina === 'no-existe'}
+			<section style="padding:clamp(40px,7cqw,96px) clamp(16px,4cqw,48px)">
+				<VacioTienda {tienda} {tema} motivo="no-existe" />
+			</section>
+		{/if}
+
 		{#if pagina === 'nosotros'}
 			<section
 				style="padding:clamp(18px,3cqw,40px) clamp(14px,3.5cqw,44px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:clamp(16px,3cqw,40px);align-items:center"
 			>
-				<div
-					style="position:relative;min-height:440px;border-radius:26px;transform:rotate(-1.5deg);overflow:hidden;background:#E9D3B5"
-				>
-					{#if tienda.portada.foto}<img
+				{#if tienda.portada.foto}<div
+						style="position:relative;min-height:440px;border-radius:26px;transform:rotate(-1.5deg);overflow:hidden;background:#E9D3B5"
+					>
+						<img
 							src={img(tienda.portada.foto, 1000)}
 							alt=""
 							style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
-						/>{/if}
-				</div>
+						/>
+					</div>{/if}
 				<div style="min-width:0;display:flex;flex-direction:column;gap:18px">
 					{#if tienda.ciudad}<div
 							style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--acento, #D9452B)"
@@ -2053,39 +2081,46 @@
 						{tienda.portada.titulo}
 					</h1>
 					<p style="margin:0;font-size:16px;line-height:1.6;color:#6A4F3C;max-width:500px">
-						{tienda.nombre}{tienda.ciudad ? `, desde ${tienda.ciudad}` : ''}. Pedís online y te lo
-						mandamos a todo el país{tienda.envios.retiro ? ', o lo retirás en el local' : ''}.
+						{tienda.nombre}{tienda.ciudad ? `, desde ${tienda.ciudad}` : ''}. {comoLlega(
+							tienda.envios
+						).replace('Comprás', 'Pedís')}
 					</p>
-					<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
-						<div style="padding:14px;border-radius:20px;background:#fff">
-							<div
-								style="font-family:'Schibsted Grotesk',sans-serif;font-weight:800;letter-spacing:-.03em;font-size:clamp(24px,2.8cqw,34px)"
-							>
-								{tienda.productos.length}
-							</div>
-							<div style="font-size:12.5px;color:#7A5F4C;margin-top:2px">productos</div>
-						</div>
-						{#if tienda.cobros.cuotas > 1}<div
-								style="padding:14px;border-radius:20px;background:#fff"
-							>
-								<div
-									style="font-family:'Schibsted Grotesk',sans-serif;font-weight:800;letter-spacing:-.03em;font-size:clamp(24px,2.8cqw,34px)"
+					{#if tienda.productos.length || tienda.cobros.cuotas > 1 || tienda.promedio}<div
+							style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px"
+						>
+							{#if tienda.productos.length}<div
+									style="padding:14px;border-radius:20px;background:#fff"
 								>
-									{tienda.cobros.cuotas}
-								</div>
-								<div style="font-size:12.5px;color:#7A5F4C;margin-top:2px">cuotas sin interés</div>
-							</div>{/if}
-						{#if tienda.promedio}<div style="padding:14px;border-radius:20px;background:#fff">
-								<div
-									style="font-family:'Schibsted Grotesk',sans-serif;font-weight:800;letter-spacing:-.03em;font-size:clamp(24px,2.8cqw,34px)"
+									<div
+										style="font-family:'Schibsted Grotesk',sans-serif;font-weight:800;letter-spacing:-.03em;font-size:clamp(24px,2.8cqw,34px)"
+									>
+										{tienda.productos.length}
+									</div>
+									<div style="font-size:12.5px;color:#7A5F4C;margin-top:2px">productos</div>
+								</div>{/if}
+							{#if tienda.cobros.cuotas > 1}<div
+									style="padding:14px;border-radius:20px;background:#fff"
 								>
-									{tienda.promedio.toLocaleString('es-AR')}
-								</div>
-								<div style="font-size:12.5px;color:#7A5F4C;margin-top:2px">
-									de promedio en reseñas
-								</div>
-							</div>{/if}
-					</div>
+									<div
+										style="font-family:'Schibsted Grotesk',sans-serif;font-weight:800;letter-spacing:-.03em;font-size:clamp(24px,2.8cqw,34px)"
+									>
+										{tienda.cobros.cuotas}
+									</div>
+									<div style="font-size:12.5px;color:#7A5F4C;margin-top:2px">
+										cuotas sin interés
+									</div>
+								</div>{/if}
+							{#if tienda.promedio}<div style="padding:14px;border-radius:20px;background:#fff">
+									<div
+										style="font-family:'Schibsted Grotesk',sans-serif;font-weight:800;letter-spacing:-.03em;font-size:clamp(24px,2.8cqw,34px)"
+									>
+										{tienda.promedio.toLocaleString('es-AR')}
+									</div>
+									<div style="font-size:12.5px;color:#7A5F4C;margin-top:2px">
+										de promedio en reseñas
+									</div>
+								</div>{/if}
+						</div>{/if}
 				</div>
 			</section>
 			<section
