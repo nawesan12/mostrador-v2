@@ -113,17 +113,27 @@ export async function completar(
 	guardar.removeItem(CLAVE);
 	if (!e?.fapi || !e.cliente || !/^sia_[A-Za-z0-9]+$/.test(e.intento ?? ''))
 		throw new ErrorClerk('estado_invalido');
-	if (!nonce) throw new ErrorClerk('cancelado');
-	const ingreso = await pedir(
-		e.fapi,
-		`/client/sign_ins/${e.intento}?rotating_token_nonce=${encodeURIComponent(nonce)}`,
-		{ cliente: e.cliente },
-		f
-	);
+	// Con cuenta en Clerk la vuelta trae el nonce. Alguien nuevo vuelve sin él (el ingreso tiene que
+	// pasar a alta): se consulta igual con el token del cliente que quedó guardado.
+	const ruta = nonce
+		? `/client/sign_ins/${e.intento}?rotating_token_nonce=${encodeURIComponent(nonce)}`
+		: `/client/sign_ins/${e.intento}`;
+	let ingreso: Awaited<ReturnType<typeof pedir>>;
+	try {
+		ingreso = await pedir(e.fapi, ruta, { cliente: e.cliente }, f);
+	} catch (x) {
+		// "No existe esa cuenta" no es un error: es alguien nuevo, va al alta.
+		if (!(x instanceof ErrorClerk) || x.codigo !== 'external_account_not_found') throw x;
+		ingreso = {
+			json: { response: { first_factor_verification: { status: 'transferable' } } },
+			cliente: e.cliente
+		} as Awaited<ReturnType<typeof pedir>>;
+	}
 	let cliente = ingreso.cliente;
 	let sesion = ingreso.json.response?.created_session_id ?? null;
+	const verif = ingreso.json.response?.first_factor_verification;
 	// Sin cuenta en Clerk: el ingreso se transfiere a un alta con los datos del proveedor.
-	if (!sesion && ingreso.json.response?.first_factor_verification?.status === 'transferable') {
+	if (!sesion && verif?.status === 'transferable') {
 		const alta = await pedir(
 			e.fapi,
 			'/client/sign_ups',

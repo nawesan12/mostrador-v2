@@ -142,9 +142,40 @@ describe('ida y vuelta con Clerk', () => {
 		);
 	});
 
-	it('sin nonce (canceló en Google) o sin el estado guardado, no sigue', async () => {
+	it('una persona nueva vuelve sin nonce: igual se consulta el ingreso y se hace el alta', async () => {
 		const g = new Guardado();
-		const { f } = fapiFalsa(inicio);
+		const { f, pedidos } = fapiFalsa({
+			...inicio,
+			'GET /v1/client/sign_ins/sia_1': {
+				response: {
+					id: 'sia_1',
+					created_session_id: null,
+					first_factor_verification: { status: 'transferable' }
+				}
+			},
+			'POST /v1/client/sign_ups': {
+				response: { id: 'sua_1', status: 'complete', created_session_id: 'sess_3' }
+			},
+			'POST /v1/client/sessions/sess_3/tokens': { jwt: 'jwt-sin-nonce' }
+		});
+		await iniciar(FAPI, 'google', 'https://tulocalweb.com.ar/ingresar/clerk', g, f);
+		expect(await completar('', g, f)).toBe('jwt-sin-nonce');
+		const consulta = pedidos.find((p) => p.url.pathname === '/v1/client/sign_ins/sia_1');
+		expect(consulta?.url.searchParams.has('rotating_token_nonce')).toBe(false);
+	});
+
+	it('sin el estado guardado o si canceló en el proveedor, no sigue', async () => {
+		const g = new Guardado();
+		const { f } = fapiFalsa({
+			...inicio,
+			'GET /v1/client/sign_ins/sia_1': {
+				response: {
+					id: 'sia_1',
+					created_session_id: null,
+					first_factor_verification: { status: 'failed' }
+				}
+			}
+		});
 		await expect(completar('n', g, f)).rejects.toEqual(new ErrorClerk('estado_invalido'));
 		await iniciar(FAPI, 'google', 'https://tulocalweb.com.ar/ingresar/clerk', g, f);
 		await expect(completar('', g, f)).rejects.toEqual(new ErrorClerk('cancelado'));
