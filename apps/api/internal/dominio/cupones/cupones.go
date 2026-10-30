@@ -282,15 +282,36 @@ type automatica struct {
 	ID, Titulo, Detalle, Ejemplo string
 }
 
+// Lo que aplica la tienda online cuando la tienda prende estas promociones (vidriera las lee de acá):
+// la pantalla las describe con los mismos números, así no dice una cosa y cobra otra.
+const (
+	TransferenciaPct = 15
+	EnvioGratisDesde = 40000
+)
+
 var automaticas = []automatica{
-	{"transf", "Descuento por transferencia", "10 % si pagan con transferencia o efectivo", "Carrito de $ 50.000 → paga $ 45.000"},
-	{"envio", "Envío gratis desde un monto", "Desde $ 40.000 a todo el país", "Le faltan $ 6.000 → “Sumá algo y el envío es gratis”"},
+	{"transf", "Descuento por transferencia", fmt.Sprintf("%d %% si pagan con transferencia", TransferenciaPct),
+		fmt.Sprintf("Carrito de $ 50.000 → paga %s", pesosTxt(50000*(100-TransferenciaPct)/100))},
+	{"envio", "Envío gratis desde un monto", fmt.Sprintf("Desde %s a todo el país", pesosTxt(EnvioGratisDesde)),
+		"Le faltan $ 6.000 → “Sumá algo y el envío es gratis”"},
 	{"cantidad", "Descuento por cantidad", "3 o más unidades: 15 % off", "3 unidades → 15 % off automático"},
 	{"3x2", "3x2 en una categoría", "Llevás 3, pagás 2", "3 unidades → la más barata gratis"},
 	{"cuotas", "Cuotas sin interés", "3 y 6 cuotas desde $ 30.000", "6 cuotas sin interés desde $ 30.000"},
 	{"mayorista", "Precio mayorista", "Desde 12 unidades, lista Mayorista", "12 unidades → precio de lista mayorista"},
 	{"carrito", "Rescate de carrito con Tincho", "Ofrece hasta 10 % si el carrito se enfría", "Carrito abandonado 2 h → “Te guardo 10 % hasta las 20 h”"},
 	{"cumple", "Cumpleaños", "15 % el día del cumple del cliente", "Le llega por WhatsApp a las 9 h"},
+}
+
+func pesosTxt(n int64) string {
+	s := fmt.Sprint(n)
+	var b strings.Builder
+	for i, r := range s {
+		if i > 0 && (len(s)-i)%3 == 0 {
+			b.WriteByte('.')
+		}
+		b.WriteRune(r)
+	}
+	return "$ " + b.String()
 }
 
 // Leer devuelve todo lo de la pantalla.

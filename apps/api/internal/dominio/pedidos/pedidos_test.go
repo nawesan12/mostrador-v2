@@ -95,19 +95,25 @@ func TestEstadosYLote(t *testing.T) {
 
 func TestTransiciones(t *testing.T) {
 	casos := []struct {
-		de, a string
-		ok    bool
+		de, a, envio string
+		ok           bool
 	}{
-		{"Sin pagar", "Para preparar", true},
-		{"Para preparar", "Sin pagar", true},
-		{"Para preparar", "En camino", false},
-		{"Entregado", "Cancelado", false},
-		{"Cancelado", "Para preparar", true},
-		{"En camino", "Inventado", false},
+		{"Sin pagar", "Para preparar", "correo", true},
+		{"Para preparar", "Sin pagar", "correo", true},
+		{"Para preparar", "En camino", "correo", false},
+		{"Entregado", "Cancelado", "correo", false},
+		{"Cancelado", "Para preparar", "correo", true},
+		{"En camino", "Inventado", "correo", false},
+		{"Listo para despachar", "En camino", "correo", true},
+		// El retiro en el local: Listo para retirar → Retirado, sin "En camino".
+		{"Listo para despachar", "En camino", "retiro", false},
+		{"Listo para despachar", "Entregado", "retiro", true},
+		{"Entregado", "Listo para despachar", "retiro", true},
+		{"Listo para despachar", "Entregado", "correo", false},
 	}
 	for _, c := range casos {
-		if pedidos.TransicionValida(c.de, c.a) != c.ok {
-			t.Errorf("%s → %s: quería %v", c.de, c.a, c.ok)
+		if pedidos.TransicionValida(c.de, c.a, c.envio) != c.ok {
+			t.Errorf("%s → %s (%s): quería %v", c.de, c.a, c.envio, c.ok)
 		}
 	}
 }

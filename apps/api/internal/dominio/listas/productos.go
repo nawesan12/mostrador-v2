@@ -267,9 +267,12 @@ func Productos(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (
 			if ventas == nil {
 				ventas = make([]int, 8)
 			}
-			margen := 0
-			if p.Precio > 0 {
-				margen = int((p.Precio - p.Costo) * 100 / p.Precio)
+			// Sin costo cargado el margen no se sabe (null), no es 100 %.
+			var margen any
+			lowm := false
+			if p.Precio > 0 && p.Costo > 0 {
+				m := int((p.Precio - p.Costo) * 100 / p.Precio)
+				margen, lowm = m, m < 25
 			}
 			canales := []string{}
 			for k, on := range p.Canales {
@@ -294,7 +297,7 @@ func Productos(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (
 				"id": p.ID, "nombre": p.Nombre, "descripcion": p.Descripcion, "foto": p.Foto, "sku": p.SKU,
 				"categoria": cat, "precio": p.Precio, "costo": p.Costo, "margen": margen, "stock": p.Stock,
 				"ventas": ventas, "vendidos30": p.Vendidos30d, "canales": canales, "publicado": p.Publicado,
-				"estado": estado, "lowm": margen < 25, "star": p.Vendidos30d > 60, "variantes": resumen, "_ficha": p,
+				"estado": estado, "lowm": lowm, "star": p.Vendidos30d > 60, "variantes": resumen, "_ficha": p,
 			})
 		}
 		return filas.Err()
@@ -312,7 +315,13 @@ var DefProductos = Def{
 		{"sold", func(a, b Registro) bool { return numero(a["vendidos30"]) > numero(b["vendidos30"]) }},
 		{"stock", func(a, b Registro) bool { return numero(a["stock"]) < numero(b["stock"]) }},
 		{"price", func(a, b Registro) bool { return numero(a["precio"]) > numero(b["precio"]) }},
-		{"margin", func(a, b Registro) bool { return numero(a["margen"]) > numero(b["margen"]) }},
+		{"margin", func(a, b Registro) bool {
+			// Los que no tienen costo (margen sin dato) van al final.
+			if a["margen"] == nil || b["margen"] == nil {
+				return a["margen"] != nil && b["margen"] == nil
+			}
+			return numero(a["margen"]) > numero(b["margen"])
+		}},
 	},
 	Resumen: func(todos, l []Registro) map[string]float64 {
 		r := map[string]float64{"precioMax": 10000}

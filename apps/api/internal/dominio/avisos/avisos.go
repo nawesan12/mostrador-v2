@@ -15,6 +15,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/outbox"
 )
@@ -51,6 +52,7 @@ type pedido struct {
 	tienda, slug                  string
 	alias, cbu, titular, whatsapp string
 	direccion                     string
+	descuentos                    []pedidos.Descuento
 }
 
 func pesos(n int64) string {
@@ -81,10 +83,10 @@ func (s *Servicio) manejar(ctx context.Context, ev outbox.Evento) error {
 	err := s.Pool.EnTienda(ctx, ev.TiendaID, func(t pgx.Tx) error {
 		var items, comprador, negocio []byte
 		err := t.QueryRow(ctx, `SELECT p.numero, p.comprador, p.pago, p.envio, p.estado_pago, p.codigo_publico, p.seguimiento,
-				p.items, p.subtotal, p.costo_envio, p.total, p.avisos ? $2, t.nombre, t.slug, t.negocio
+				p.items, p.subtotal, p.costo_envio, p.total, p.avisos ? $2, t.nombre, t.slug, t.negocio, p.descuentos
 			FROM pedidos p JOIN tiendas t ON t.id = p.tienda_id WHERE p.numero = $1`, d.Numero, d.Aviso).
 			Scan(&p.numero, &comprador, &p.pago, &p.envio, &p.estadoPago, &p.codigo, &p.seguimiento, &items,
-				&p.subtotal, &p.envioCosto, &p.total, &ya, &p.tienda, &p.slug, &negocio)
+				&p.subtotal, &p.envioCosto, &p.total, &ya, &p.tienda, &p.slug, &negocio, &p.descuentos)
 		if err != nil {
 			return err
 		}
@@ -92,6 +94,7 @@ func (s *Servicio) manejar(ctx context.Context, ev outbox.Evento) error {
 		_ = json.Unmarshal(comprador, &c)
 		p.nombre, p.email = strings.Split(strings.TrimSpace(c.Nombre)+" ", " ")[0], c.Email
 		_ = json.Unmarshal(items, &p.items)
+		p.descuentos = pedidos.DescuentosCompletos(p.descuentos, p.subtotal+p.envioCosto-p.total)
 		var n struct{ Alias, CBU, Titular, Whatsapp, Direccion string }
 		_ = json.Unmarshal(negocio, &n)
 		p.alias, p.cbu, p.titular, p.whatsapp, p.direccion = n.Alias, n.CBU, n.Titular, n.Whatsapp, n.Direccion
@@ -182,8 +185,14 @@ func (s *Servicio) mail(p pedido, aviso string) (correo.Mensaje, bool) {
 		det = append(det, fmt.Sprintf("%d × %s — %s", it.Cantidad, n, pesos(it.Precio*int64(it.Cantidad))))
 	}
 	if aviso == "confirmacion" {
+		if len(p.descuentos) > 0 || p.envioCosto > 0 {
+			det = append(det, "Subtotal — "+pesos(p.subtotal))
+		}
 		if p.envioCosto > 0 {
 			det = append(det, "Envío — "+pesos(p.envioCosto))
+		}
+		for _, d := range p.descuentos {
+			det = append(det, d.Concepto+" — −"+pesos(d.Monto))
 		}
 		det = append(det, "Total — "+pesos(p.total))
 	}

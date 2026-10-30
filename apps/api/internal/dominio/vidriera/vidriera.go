@@ -17,6 +17,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cupones"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/listas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/turnos"
@@ -130,13 +131,11 @@ type Envios struct {
 	Correo      bool   `json:"correo"`
 }
 
-// Cobros por defecto hasta que la tienda los configure. Cuotas sin interés: ninguna (0), porque
-// las absorbe la tienda y no se le promete al que compra lo que la tienda no eligió; las plantillas
-// no las muestran con menos de 2.
-const (
-	transferencia = 15
-	cuotas        = 0
-)
+// Cuotas sin interés: ninguna (0), porque las absorbe la tienda y no se le promete al que compra lo
+// que la tienda no eligió; las plantillas no las muestran con menos de 2. El descuento por
+// transferencia y el envío gratis salen de las promociones automáticas que prendió la tienda
+// (cupones.TransferenciaPct, cupones.EnvioGratisDesde): la misma fuente que muestra el panel.
+const cuotas = 0
 
 var slugValido = regexp.MustCompile(`^[a-z0-9-]{2,60}$`)
 
@@ -169,10 +168,11 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 	err = pool.EnTienda(ctx, id, func(t pgx.Tx) error {
 		var diseno, negocio []byte
 		var mp bool
+		var autos map[string]bool
 		if err := t.QueryRow(ctx, `SELECT nombre, plantilla, diseno_publicado, negocio,
-				EXISTS (SELECT 1 FROM mp_conexiones WHERE tienda_id = $1 AND NOT reautorizar), ga4, pixel_meta
+				EXISTS (SELECT 1 FROM mp_conexiones WHERE tienda_id = $1 AND NOT reautorizar), ga4, pixel_meta, automaticas
 			FROM tiendas WHERE id = $1`, id).Scan(&out.Nombre, &out.Plantilla, &diseno, &negocio, &mp,
-			&out.Medicion.GA4, &out.Medicion.Pixel); err != nil {
+			&out.Medicion.GA4, &out.Medicion.Pixel, &autos); err != nil {
 			return err
 		}
 		if err := t.QueryRow(ctx, `SELECT nombre FROM dominios WHERE tienda_id = $1 AND principal AND verificado_en IS NOT NULL`,
@@ -198,13 +198,17 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 		var n struct{ Direccion, Whatsapp, Alias, CBU, Titular string }
 		_ = json.Unmarshal(negocio, &n)
 		out.Direccion, out.Whatsapp = n.Direccion, n.Whatsapp
-		out.Cobros = map[string]any{"transferencia": transferencia, "cuotas": cuotas, "mercadoPago": mp, "datosTransferencia": nil}
-		// Sin alias ni CBU cargados no se ofrece transferencia (nunca un alias inventado).
+		out.Cobros = map[string]any{"transferencia": 0, "cuotas": cuotas, "mercadoPago": mp, "datosTransferencia": nil}
+		// Sin alias ni CBU cargados no se ofrece transferencia (nunca un alias inventado), ni su descuento.
 		if n.Alias != "" || n.CBU != "" {
 			out.Cobros["datosTransferencia"] = map[string]string{"alias": n.Alias, "cbu": n.CBU, "titular": n.Titular}
-		} else {
-			// Sin datos para transferir tampoco hay descuento por transferencia (0 = no se ofrece).
-			out.Cobros["transferencia"] = 0
+			if autos["transf"] {
+				out.Cobros["transferencia"] = cupones.TransferenciaPct
+			}
+		}
+		if autos["envio"] {
+			g := int64(cupones.EnvioGratisDesde)
+			out.Envios.GratisDesde = &g
 		}
 		var err error
 		if out.Turnos, err = turnos.ResumenDe(ctx, t, id, mp); err != nil {
@@ -456,8 +460,8 @@ func Comprar(ctx context.Context, pool tx, mp Pagador, sitio, slug string, c Com
 	n.Pago = "transf"
 	if c.Pago == "mercadopago" {
 		n.Pago = "mp"
-	} else if combinable {
-		n.Descuento = (subtotal - descCupon) * transferencia / 100
+	} else if pct, _ := t.Cobros["transferencia"].(int); combinable && pct > 0 {
+		n.Descuento = (subtotal - descCupon) * int64(pct) / 100
 	}
 	n.Descuento += descCupon
 	n.DescuentoCupon = descCupon
@@ -468,8 +472,7 @@ func Comprar(ctx context.Context, pool tx, mp Pagador, sitio, slug string, c Com
 	if c.Envio != "retiro" {
 		n.Entrega = &pedidos.Entrega{Direccion: strings.TrimSpace(c.Direccion), CP: strings.TrimSpace(c.CP)}
 	}
-	nota := strings.TrimSpace(fmt.Sprintf("Tienda online · DNI %s · Entrega: %s (%s)", c.DNI, c.Direccion, c.CP))
-	n.Nota = &nota
+	n.Nota = notaCompra(c)
 	b := make([]byte, 18)
 	_, _ = rand.Read(b)
 	n.CodigoPublico = base64.RawURLEncoding.EncodeToString(b)
@@ -493,6 +496,28 @@ func Comprar(ctx context.Context, pool tx, mp Pagador, sitio, slug string, c Com
 		r.URL, err = mp.PagarPedido(ctx, id, numero, fmt.Sprintf("%s/t/%s/pedido/%s", sitio, slug, r.Codigo))
 	}
 	return r, err
+}
+
+// notaCompra: el DNI y adónde se entrega, sólo lo que vino (nada de campos vacíos). Sin nada, sin nota.
+func notaCompra(c Compra) *string {
+	partes := []string{}
+	if d := strings.TrimSpace(c.DNI); d != "" {
+		partes = append(partes, "DNI "+d)
+	}
+	if c.Envio != "retiro" {
+		dir, cp := strings.TrimSpace(c.Direccion), strings.TrimSpace(c.CP)
+		switch {
+		case dir != "" && cp != "":
+			partes = append(partes, fmt.Sprintf("Entrega: %s (CP %s)", dir, cp))
+		case dir != "":
+			partes = append(partes, "Entrega: "+dir)
+		}
+	}
+	if len(partes) == 0 {
+		return nil
+	}
+	nota := strings.Join(partes, " · ")
+	return &nota
 }
 
 // precioDe la línea: el de la variante si tiene, si no el del producto. Con opciones exige una

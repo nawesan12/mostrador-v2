@@ -11,6 +11,7 @@ import (
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/avisos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/configuracion"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cupones"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/listas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/vidriera"
@@ -46,6 +47,10 @@ func TestMailsAQuienCompra(t *testing.T) {
 	if err := configuracion.GuardarNegocio(ctx, b.App, luna, configuracion.Negocio{Nombre: "Luna", Alias: "luna.mates", CBU: "2850590940090418135201", Titular: "Luna SRL"}); err != nil {
 		t.Fatal(err)
 	}
+	// El 15 % por transferencia lo prende la tienda (arranca apagado).
+	if err := cupones.FijarAutomatica(ctx, b.App, luna, "transf", true); err != nil {
+		t.Fatal(err)
+	}
 	r, err := vidriera.Comprar(ctx, b.App, nil, "", "luna", compra, time.Now())
 	if err != nil {
 		t.Fatal(err)
@@ -59,7 +64,7 @@ func TestMailsAQuienCompra(t *testing.T) {
 	if !ok || !strings.Contains(m.Asunto, "Tu pedido #") {
 		t.Fatalf("confirmación: %+v", m)
 	}
-	for _, want := range []string{"luna.mates", "2850590940090418135201", "Luna SRL", "1 × Mate", "/t/luna/pedido/" + r.Codigo} {
+	for _, want := range []string{"luna.mates", "2850590940090418135201", "Luna SRL", "1 × Mate", "Descuento por transferencia — −$ 1.500", "/t/luna/pedido/" + r.Codigo} {
 		if !strings.Contains(m.Texto, want) {
 			t.Errorf("falta %q en el mail", want)
 		}
@@ -92,5 +97,39 @@ func TestMailsAQuienCompra(t *testing.T) {
 	m, _ = mails.Ultimo("lucia@ejemplo.com")
 	if !strings.Contains(m.Asunto, "en camino") || !strings.Contains(m.Texto, "AND-123456") {
 		t.Fatalf("en camino: %+v", m)
+	}
+
+	// Retiro en el local: Listo para retirar → Retirado, sin "En camino" ni su mail.
+	compra.Envio, compra.Email = "retiro", "tomas@ejemplo.com"
+	r2, err := vidriera.Comprar(ctx, b.App, nil, "", "luna", compra, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, e := range []string{"Para preparar", "Listo para despachar"} {
+		if err := pedidos.CambiarEstado(ctx, b.App, luna, r2.Numero, e); err != nil {
+			t.Fatalf("%s: %v", e, err)
+		}
+	}
+	if err := pedidos.CambiarEstado(ctx, b.App, luna, r2.Numero, "En camino"); !errors.Is(err, pedidos.ErrTransicion) {
+		t.Fatalf("retiro en camino: %v", err)
+	}
+	if err := pedidos.CambiarEstado(ctx, b.App, luna, r2.Numero, "Entregado"); err != nil {
+		t.Fatal(err)
+	}
+	_, _ = w.Pasada(ctx)
+	for _, x := range mails.Enviados {
+		if x.Para == "tomas@ejemplo.com" && strings.Contains(x.Asunto, "en camino") {
+			t.Fatal("al que retira le llegó «en camino»")
+		}
+	}
+	if m, _ := mails.Ultimo("tomas@ejemplo.com"); !strings.Contains(m.Asunto, "listo para retirar") {
+		t.Fatalf("retiro: %+v", m)
+	}
+	d, err := pedidos.Obtener(ctx, b.App, luna, r2.Numero)
+	if err != nil || d.Nota != nil && strings.Contains(*d.Nota, "()") {
+		t.Fatalf("nota: %v %v", d.Nota, err)
+	}
+	if len(d.Descuentos) != 1 || d.Subtotal+d.CostoEnvio-d.Descuentos[0].Monto != d.Total {
+		t.Fatalf("descuentos: %+v", d.Descuentos)
 	}
 }

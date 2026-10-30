@@ -153,6 +153,7 @@ func CrearDesdeProductos(ctx context.Context, pool tx, tiendaID string, n Pedido
 			codigo = &n.CodigoPublico
 		}
 		js, _ := json.Marshal(items)
+		desc, _ := json.Marshal(lineasDescuento(n))
 		if _, err := t.Exec(ctx, `SELECT 1 FROM tiendas WHERE id = $1 FOR UPDATE`, tiendaID); err != nil {
 			return err
 		}
@@ -185,15 +186,32 @@ func CrearDesdeProductos(ctx context.Context, pool tx, tiendaID string, n Pedido
 		}
 		return t.QueryRow(ctx, `
 			INSERT INTO pedidos (tienda_id, numero, comprador, canal, pago, estado_pago, envio, estado, facturado,
-				items, subtotal, costo_envio, total, nota, estados_en, ciudad_envio, codigo_publico, cupon, entrega)
+				items, subtotal, costo_envio, total, nota, estados_en, ciudad_envio, codigo_publico, cupon, entrega, descuentos)
 			SELECT $1, coalesce(max(numero), 1000) + 1, $2, $3, $4, $5, $6, $7, false, $8, $9, $11::bigint, $9::bigint + $11::bigint - $12::bigint, $10,
-				jsonb_build_object($7::text, now()), $13, $14, $15, $16
+				jsonb_build_object($7::text, now()), $13, $14, $15, $16, $17
 			FROM pedidos WHERE tienda_id = $1
 			RETURNING numero`,
 			tiendaID, comprador, n.Canal, n.Pago, estadoPago, n.Envio, estado, js, total, n.Nota,
-			n.CostoEnvio, n.Descuento, n.CiudadEnvio, codigo, cupon, n.Entrega).Scan(&numero)
+			n.CostoEnvio, n.Descuento, n.CiudadEnvio, codigo, cupon, n.Entrega, desc).Scan(&numero)
 	})
 	return numero, total + n.CostoEnvio - n.Descuento, err
+}
+
+// lineasDescuento: cada descuento del pedido por separado (el cupón y el de la transferencia), para
+// que el detalle y el mail cierren: subtotal + envío − descuentos = total.
+func lineasDescuento(n PedidoNuevo) []Descuento {
+	out := []Descuento{}
+	if n.Cupon != "" && n.DescuentoCupon > 0 {
+		out = append(out, Descuento{Concepto: "Cupón " + n.Cupon, Monto: n.DescuentoCupon})
+	}
+	if resto := n.Descuento - n.DescuentoCupon; resto > 0 {
+		concepto := "Descuento"
+		if n.Pago == "transf" {
+			concepto = "Descuento por transferencia"
+		}
+		out = append(out, Descuento{Concepto: concepto, Monto: resto})
+	}
+	return out
 }
 
 // descontar baja el stock de la línea sólo si alcanza (la condición del UPDATE evita vender lo que no

@@ -3471,13 +3471,14 @@ components:
             sincronizado: { type: string, format: date-time }
         kpis:
           type: object
-          required: [aLiquidar, aLiquidarDetalle, gastos, gastosDetalle, ganancia, margen, mes]
+          required: [aLiquidar, aLiquidarDetalle, gastos, gastosDetalle, ganancia, gananciaDetalle, margen, mes]
           properties:
             aLiquidar: { type: integer }
             aLiquidarDetalle: { type: string }
             gastos: { type: integer }
             gastosDetalle: { type: string }
-            ganancia: { type: integer }
+            ganancia: { type: [integer, 'null'], description: 'null si a algo vendido le falta el costo (no se estima)' }
+            gananciaDetalle: { type: string, description: 'Por qué no hay ganancia ("Falta el costo de 2 productos vendidos"); vacío si la hay' }
             margen: { type: [integer, 'null'] }
             mes: { type: string }
         flujo:
@@ -4102,7 +4103,7 @@ components:
       allOf:
         - { $ref: '#/components/schemas/PedidoFila' }
         - type: object
-          required: [items, subtotal, costoEnvio, comprador, estadoPago, factura, seguimiento, llega, nota, entrega, historial]
+          required: [items, subtotal, costoEnvio, descuentos, comprador, estadoPago, factura, seguimiento, llega, nota, entrega, historial]
           properties:
             items:
               type: array
@@ -4118,6 +4119,15 @@ components:
                   variante: { type: [string, 'null'], description: 'Texto de la variante al comprar: "Talle M · Color Negro"' }
             subtotal: { type: integer }
             costoEnvio: { type: integer }
+            descuentos:
+              type: array
+              description: 'Cada descuento por separado (cupón, transferencia): subtotal + envío − descuentos = total'
+              items:
+                type: object
+                required: [concepto, monto]
+                properties:
+                  concepto: { type: string, description: '"Cupón VERANO10", "Descuento por transferencia"' }
+                  monto: { type: integer }
             comprador:
               type: object
               required: [nombre, foto, telefono, email, desde, pedidos, gastado]

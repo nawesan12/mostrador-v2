@@ -1,6 +1,8 @@
 // Package finanzas: la pantalla Finanzas (design/PanelOperacion.dc.html). Lo disponible, las
 // liquidaciones y el retiro dependen de Mercado Pago y los demás medios; hasta conectarlos van en
-// cero y el retiro responde 409. Ventas, margen y transferencias conciliadas salen de los datos.
+// cero y el retiro responde 409. Ventas y margen salen de los pedidos y de los costos cargados: si a
+// algo vendido le falta el costo, la ganancia no se estima (no se inventa un margen). Las
+// transferencias marcadas como cobradas a mano no se dan por conciliadas.
 package finanzas
 
 import (
@@ -40,17 +42,24 @@ type Dia struct {
 
 // Leer arma la pantalla.
 func Leer(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (map[string]any, error) {
-	var ventas int64
-	var margen *int
+	var ventas, vendido, ganado int64
+	var sinCosto int
 	movs := []Movimiento{}
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
 		if err := t.QueryRow(ctx, `SELECT coalesce(sum(total), 0) FROM pedidos WHERE tienda_id = $1
 			AND estado NOT IN ('Cancelado', 'Sin pagar') AND creado_en > $2`, tiendaID, ahora.Add(-30*24*time.Hour)).Scan(&ventas); err != nil {
 			return err
 		}
-		// El margen sale de los costos cargados en los productos.
-		if err := t.QueryRow(ctx, `SELECT round(avg((precio - costo) * 100.0 / precio))::int FROM productos
-			WHERE tienda_id = $1 AND costo > 0 AND precio > 0`, tiendaID).Scan(&margen); err != nil {
+		// La ganancia, de lo vendido de verdad: precio cobrado menos el costo cargado del producto.
+		// Los ítems guardan el nombre; los que no tienen costo se cuentan aparte.
+		if err := t.QueryRow(ctx, `SELECT coalesce(sum((i->>'precio')::bigint * (i->>'cantidad')::int), 0),
+				coalesce(sum(((i->>'precio')::bigint - pr.costo) * (i->>'cantidad')::int) FILTER (WHERE pr.costo > 0), 0),
+				count(DISTINCT i->>'nombre') FILTER (WHERE coalesce(pr.costo, 0) <= 0)
+			FROM pedidos p CROSS JOIN LATERAL jsonb_array_elements(p.items) i
+			LEFT JOIN LATERAL (SELECT costo FROM productos WHERE tienda_id = p.tienda_id AND nombre = i->>'nombre'
+				ORDER BY costo DESC LIMIT 1) pr ON true
+			WHERE p.tienda_id = $1 AND p.estado NOT IN ('Cancelado', 'Sin pagar') AND p.creado_en > $2`,
+			tiendaID, ahora.Add(-30*24*time.Hour)).Scan(&vendido, &ganado, &sinCosto); err != nil {
 			return err
 		}
 		filas, err := t.Query(ctx, `SELECT numero, comprador->>'nombre', total FROM pedidos WHERE tienda_id = $1 AND pago = 'transf'
@@ -66,16 +75,23 @@ func Leer(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (map[s
 				return err
 			}
 			movs = append(movs, Movimiento{ID: fmt.Sprintf("transf-%d", n), Tipo: "transf", Titulo: "Transferencia de " + quien,
-				Detalle: fmt.Sprintf("conciliada con #%d", n), Monto: total})
+				Detalle: fmt.Sprintf("Pedido #%d · marcada como cobrada", n), Monto: total})
 		}
 		return filas.Err()
 	})
 	if err != nil {
 		return nil, err
 	}
-	var ganancia int64
-	if margen != nil {
-		ganancia = ventas * int64(*margen) / 100
+	var ganancia *int64
+	var margen *int
+	detalle := "Sin ventas en 30 días"
+	switch {
+	case sinCosto > 0:
+		detalle = fmt.Sprintf("Falta el costo de %d %s", sinCosto, plural(sinCosto, "producto vendido", "productos vendidos"))
+	case vendido > 0:
+		m := int(ganado * 100 / vendido)
+		ganancia, margen = &ganado, &m
+		detalle = ""
 	}
 	flujo := make([]Dia, 14)
 	for i := range flujo {
@@ -86,13 +102,21 @@ func Leer(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (map[s
 		"kpis": map[string]any{
 			"aLiquidar": 0, "aLiquidarDetalle": "Conectá tus medios de pago",
 			"gastos": 0, "gastosDetalle": "Se suman con envíos y campañas",
-			"ganancia": ganancia, "margen": margen,
+			"ganancia": ganancia, "margen": margen, "gananciaDetalle": detalle,
 			"mes": meses[ahora.In(argentina).Month()-1],
 		},
 		"flujo":       flujo,
 		"movimientos": movs,
-		"conciliado":  true,
+		// Hasta conectar los medios de pago no hay conciliación automática.
+		"conciliado": false,
 	}, nil
+}
+
+func plural(n int, uno, varios string) string {
+	if n == 1 {
+		return uno
+	}
+	return varios
 }
 
 // Rutas del panel.

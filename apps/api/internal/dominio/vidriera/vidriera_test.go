@@ -54,6 +54,13 @@ func TestTiendaOnline(t *testing.T) {
 		t.Fatal("una tienda que no existe")
 	}
 
+	// Las promociones arrancan apagadas: sin prender la de transferencia, no hay descuento.
+	if tienda.Cobros["transferencia"] != 0 || tienda.Envios.GratisDesde != nil {
+		t.Fatalf("promociones prendidas de entrada: %+v %+v", tienda.Cobros, tienda.Envios)
+	}
+	if err := cupones.FijarAutomatica(ctx, b.App, luna, "transf", true); err != nil {
+		t.Fatal(err)
+	}
 	// Transferencia: precio del servidor, envío por región, 15 % off y el código público.
 	lunes := time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)
 	r, err := vidriera.Comprar(ctx, b.App, nil, "https://tulocalweb.com.ar", "luna", compra(p.ID, 2, "transferencia"), lunes)
@@ -128,6 +135,9 @@ func TestCompraConCupon(t *testing.T) {
 	stock := 50
 	p, err := listas.Guardar(ctx, b.App, luna, "", listas.Editable{Nombre: "Mate", Precio: 10000, Stock: &stock})
 	if err != nil {
+		t.Fatal(err)
+	}
+	if err := cupones.FijarAutomatica(ctx, b.App, luna, "transf", true); err != nil {
 		t.Fatal(err)
 	}
 	ahora := time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)
@@ -249,6 +259,9 @@ func TestTiendaConVariantes(t *testing.T) {
 	luna := pruebadb.CrearTienda(t, b.App, "luna")
 	// Con datos para transferir (sin ellos la tienda no ofrece transferencia).
 	if err := configuracion.GuardarNegocio(ctx, b.App, luna, configuracion.Negocio{Nombre: "Luna", Alias: "luna.tienda"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := cupones.FijarAutomatica(ctx, b.App, luna, "transf", true); err != nil {
 		t.Fatal(err)
 	}
 	pruebadb.CrearTienda(t, b.App, "sol")

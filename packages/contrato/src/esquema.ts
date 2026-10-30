@@ -3400,7 +3400,10 @@ export interface components {
                 aLiquidarDetalle: string;
                 gastos: number;
                 gastosDetalle: string;
-                ganancia: number;
+                /** @description null si a algo vendido le falta el costo (no se estima) */
+                ganancia: number | null;
+                /** @description Por qué no hay ganancia ("Falta el costo de 2 productos vendidos"); vacío si la hay */
+                gananciaDetalle: string;
                 margen: number | null;
                 mes: string;
             };
@@ -3931,6 +3934,12 @@ export interface components {
             }[];
             subtotal: number;
             costoEnvio: number;
+            /** @description Cada descuento por separado (cupón, transferencia): subtotal + envío − descuentos = total */
+            descuentos: {
+                /** @description "Cupón VERANO10", "Descuento por transferencia" */
+                concepto: string;
+                monto: number;
+            }[];
             comprador: {
                 nombre: string;
                 foto: string | null;

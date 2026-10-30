@@ -25,8 +25,17 @@ var (
 	ErrTransicion = errors.New("el pedido no puede pasar a ese estado")
 )
 
-// TransicionValida: avanzar una etapa, volver una (deshacer) o cancelar (y deshacer la cancelación).
-func TransicionValida(de, a string) bool {
+// CircuitoDe: el retiro en el local no pasa por "En camino" (Listo para retirar → Retirado).
+func CircuitoDe(envio string) []string {
+	if envio == "retiro" {
+		return slices.DeleteFunc(slices.Clone(Circuito), func(e string) bool { return e == "En camino" })
+	}
+	return Circuito
+}
+
+// TransicionValida: avanzar una etapa, volver una (deshacer) o cancelar (y deshacer la cancelación),
+// en el circuito del envío del pedido.
+func TransicionValida(de, a, envio string) bool {
 	if de == a || !slices.Contains(Estados, a) {
 		return false
 	}
@@ -36,7 +45,11 @@ func TransicionValida(de, a string) bool {
 	if de == "Cancelado" {
 		return a != "Entregado"
 	}
-	d := slices.Index(Circuito, a) - slices.Index(Circuito, de)
+	c := CircuitoDe(envio)
+	if !slices.Contains(c, a) {
+		return false
+	}
+	d := slices.Index(c, a) - slices.Index(c, de)
 	return d == 1 || d == -1
 }
 
@@ -293,12 +306,21 @@ type Paso struct {
 	Hecho  bool       `json:"hecho"`
 }
 
+// Descuento es una línea del detalle: "Cupón VERANO10" o "Descuento por transferencia" y lo que restó.
+type Descuento struct {
+	Concepto string `json:"concepto"`
+	Monto    int64  `json:"monto"`
+}
+
 // Detalle es el pedido completo (la hoja).
 type Detalle struct {
 	Fila
 	Items      []Item `json:"items"`
 	Subtotal   int64  `json:"subtotal"`
 	CostoEnvio int64  `json:"costoEnvio"`
+	// Descuentos: cada uno por separado; si suman menos que subtotal + envío − total (pedidos de
+	// antes de guardarlos), la diferencia va como "Descuento".
+	Descuentos []Descuento `json:"descuentos"`
 	Comprador  struct {
 		Comprador
 		Desde   time.Time `json:"desde"`
@@ -321,11 +343,11 @@ func Obtener(ctx context.Context, pool tx, tiendaID string, numero int) (Detalle
 		var comprador Comprador
 		var estadosEn map[string]time.Time
 		err := t.QueryRow(ctx, `SELECT `+columnasFila+`, comprador, subtotal, costo_envio, estado_pago, factura,
-				seguimiento, nota, estados_en, entrega
+				seguimiento, nota, estados_en, entrega, descuentos
 			FROM pedidos WHERE tienda_id = $1 AND numero = $2`, tiendaID, numero).Scan(
 			&d.Numero, &d.Cliente, &d.Foto, &d.Ciudad, &d.Canal, &d.Pago, &d.Envio, &d.Estado, &d.Total, &d.Creado,
 			&d.Items, &d.VIP, &d.Hornero, &d.Mayorista, &comprador, &d.Subtotal, &d.CostoEnvio, &d.EstadoPago,
-			&d.Factura, &d.Seguimiento, &d.Nota, &estadosEn, &d.Entrega)
+			&d.Factura, &d.Seguimiento, &d.Nota, &estadosEn, &d.Entrega, &d.Descuentos)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return ErrNoExiste
 		}
@@ -333,6 +355,7 @@ func Obtener(ctx context.Context, pool tx, tiendaID string, numero int) (Detalle
 			return err
 		}
 		d.Comprador.Comprador = comprador
+		d.Descuentos = DescuentosCompletos(d.Descuentos, d.Subtotal+d.CostoEnvio-d.Total)
 		d.CantidadProductos = len(d.Items)
 		d.Productos = []Producto{}
 		for i, it := range d.Items {
@@ -353,6 +376,22 @@ func Obtener(ctx context.Context, pool tx, tiendaID string, numero int) (Detalle
 	return d, err
 }
 
+// DescuentosCompletos suma, si falta, la línea que hace cerrar la cuenta (pedidos viejos).
+func DescuentosCompletos(ds []Descuento, total int64) []Descuento {
+	out := slices.Clone(ds)
+	if out == nil {
+		out = []Descuento{}
+	}
+	var suma int64
+	for _, x := range out {
+		suma += x.Monto
+	}
+	if total-suma > 0 {
+		out = append(out, Descuento{Concepto: "Descuento", Monto: total - suma})
+	}
+	return out
+}
+
 func historial(f Fila, canal, pago, envio string, facturado bool, en map[string]time.Time) []Paso {
 	cuando := func(e string) *time.Time {
 		if t, ok := en[e]; ok {
@@ -366,6 +405,9 @@ func historial(f Fila, canal, pago, envio string, facturado bool, en map[string]
 		return append(h, Paso{Texto: "Pedido cancelado", Cuando: cuando("Cancelado"), Hecho: true})
 	}
 	paso := slices.Index(Circuito, f.Estado)
+	if envio == "retiro" && paso >= 3 {
+		paso = 4 // el retiro no pasa por "En camino"
+	}
 	if paso >= 1 {
 		h = append(h, Paso{Texto: "Pago aprobado · " + nombrePago[pago], Cuando: cuando("Para preparar"), Hecho: true})
 	} else {
@@ -375,7 +417,13 @@ func historial(f Fila, canal, pago, envio string, facturado bool, en map[string]
 		h = append(h, Paso{Texto: "Factura B emitida", Cuando: cuando("Para preparar"), Hecho: true})
 	}
 	if paso >= 2 {
-		h = append(h, Paso{Texto: "Preparado", Cuando: cuando("Listo para despachar"), Hecho: true})
+		texto := "Preparado"
+		if envio == "retiro" {
+			texto = "Listo para retirar"
+		}
+		h = append(h, Paso{Texto: texto, Cuando: cuando("Listo para despachar"), Hecho: true})
+	} else if envio == "retiro" {
+		h = append(h, Paso{Texto: "Preparar para retirar"})
 	} else {
 		h = append(h, Paso{Texto: "Preparar y despachar"})
 	}
@@ -398,15 +446,15 @@ var (
 // CambiarEstado avanza, vuelve atrás o cancela un pedido.
 func CambiarEstado(ctx context.Context, pool tx, tiendaID string, numero int, estado string) error {
 	return pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		var de string
-		err := t.QueryRow(ctx, `SELECT estado FROM pedidos WHERE tienda_id = $1 AND numero = $2 FOR UPDATE`, tiendaID, numero).Scan(&de)
+		var de, envio string
+		err := t.QueryRow(ctx, `SELECT estado, envio FROM pedidos WHERE tienda_id = $1 AND numero = $2 FOR UPDATE`, tiendaID, numero).Scan(&de, &envio)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return ErrNoExiste
 		}
 		if err != nil {
 			return err
 		}
-		if !TransicionValida(de, estado) {
+		if !TransicionValida(de, estado, envio) {
 			return ErrTransicion
 		}
 		_, err = t.Exec(ctx, `UPDATE pedidos SET estado = $3,
@@ -435,8 +483,10 @@ func EnLote(ctx context.Context, pool tx, tiendaID string, numeros []int, accion
 		return cambios, nil
 	}
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		// Los de retiro no se despachan: "etiquetas" no los pasa a En camino.
 		r, err := t.Query(ctx, `UPDATE pedidos SET estado = $4, estados_en = estados_en || jsonb_build_object($4::text, now())
-			WHERE tienda_id = $1 AND numero = ANY($2) AND estado = $3 RETURNING numero`, tiendaID, numeros, de, a)
+			WHERE tienda_id = $1 AND numero = ANY($2) AND estado = $3 AND ($4 <> 'En camino' OR envio <> 'retiro')
+			RETURNING numero`, tiendaID, numeros, de, a)
 		if err != nil {
 			return err
 		}
