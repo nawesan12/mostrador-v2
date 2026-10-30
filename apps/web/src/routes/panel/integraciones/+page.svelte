@@ -253,7 +253,11 @@
 		if (i.id === 'mp' || i.id === 'ml') return conectarMP(i.id);
 		if (i.id === 'tg') return vincularTelegram();
 		if (i.pronto)
-			return ui.toast({ k: 'info', title: i.nombre, desc: 'Llega pronto. Te avisamos.' });
+			return ui.toast({
+				k: 'info',
+				title: i.nombre,
+				desc: 'Todavía no se puede conectar. Llega pronto.'
+			});
 		if (await ajustar({ tipo: 'conexion', id: i.id, valor: true }))
 			ui.toast({
 				k: 'ok',
@@ -282,7 +286,7 @@
 			return ui.toast({
 				k: 'info',
 				title: p.nombre,
-				desc: 'Con tu cuenta real llega pronto. Probalo en la demo.'
+				desc: 'Llega pronto.'
 			});
 		iaAbierta = p;
 		modalIa = true;
@@ -768,8 +772,7 @@
 			{/each}
 		</ol>
 		<div class="m-cuenta">
-			Al permitir el acceso elegís si sólo puede leer o también hacer cambios. En la demo, la
-			conexión vence con tu tienda de prueba, a las 24&nbsp;horas.
+			Al permitir el acceso elegís si sólo puede leer o también hacer&nbsp;cambios.
 		</div>
 		{#if activas.length}
 			<div class="m-sec">Conectadas</div>

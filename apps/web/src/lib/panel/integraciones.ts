@@ -67,6 +67,8 @@ export const INTEGRACIONES: Integracion[] = [
 	},
 	{
 		id: 'wa',
+		// Sin conexión real todavía: no se ofrece como disponible.
+		pronto: true,
 		nombre: 'WhatsApp Business',
 		detalle: 'Bandeja y campañas',
 		categoria: 'canales',
@@ -84,6 +86,8 @@ export const INTEGRACIONES: Integracion[] = [
 	},
 	{
 		id: 'ig',
+		// Sin conexión real todavía: no se ofrece como disponible.
+		pronto: true,
 		nombre: 'Instagram',
 		detalle: 'Shopping y mensajes',
 		categoria: 'canales',
@@ -131,6 +135,8 @@ export const INTEGRACIONES: Integracion[] = [
 	},
 	{
 		id: 'payway',
+		// Sin conexión real todavía: no se ofrece como disponible.
+		pronto: true,
 		nombre: 'Payway',
 		detalle: 'Tarjetas y cuotas',
 		categoria: 'cobros',
@@ -141,6 +147,8 @@ export const INTEGRACIONES: Integracion[] = [
 	},
 	{
 		id: 'correo',
+		// Sin conexión real todavía: no se ofrece como disponible.
+		pronto: true,
 		nombre: 'Correo Argentino',
 		detalle: 'Sucursal y domicilio',
 		categoria: 'envios',

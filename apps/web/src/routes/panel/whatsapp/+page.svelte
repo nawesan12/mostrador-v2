@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { deslizable } from '#lib/panel/deslizable.ts';
 	import { tick } from 'svelte';
 	import { goto, invalidateAll } from '$app/navigation';
@@ -146,218 +147,236 @@
 			<h1>Bandeja</h1>
 			<div class="c-s">WhatsApp, Instagram, Telegram y Mercado Libre en un solo lugar</div>
 		</div>
-		<span class="atendiendo"
-			><span class="punto"></span>Tincho atendiendo · {data.atendidasHoy} hoy</span
-		>
+		{#if data.conversaciones.length}
+			<span class="atendiendo"
+				><span class="punto"></span>Tincho atendiendo · {data.atendidasHoy} hoy</span
+			>
+		{/if}
 	</div>
 
-	<div class="bandeja" class:angosto class:celular use:anim={{ t: 'rise', delay: 60 }}>
-		{#if !celular || !enHilo}
-			<div class="lista">
-				<div class="l-cab">
-					<label class="buscar"
-						><Icon icon={I.phMagnifyingGlass} size={15} /><input
-							bind:value={buscar}
-							placeholder="Buscar conversación"
-							aria-label="Buscar conversación"
-						/></label
-					>
-					<div class="filtros" role="group" aria-label="Filtrar" use:deslizable>
-						{#each FILTROS as [id, t] (id)}
-							<button type="button" aria-pressed={filtro === id} onclick={() => (filtro = id)}
-								>{t}<span
-									>{id === 'todas'
-										? data.conversaciones.length
-										: data.conversaciones.filter((x) => x.atiende === id).length}</span
-								></button
-							>
-						{/each}
-					</div>
-				</div>
-				<div class="convs" data-lenis-prevent>
-					{#each lista as x (x.id)}
-						{@const e = ETIQUETA[x.atiende]}
-						<button
-							type="button"
-							class="conv"
-							class:on={x.id === c?.id}
-							onclick={() => abrir(x.id)}
+	{#if !data.conversaciones.length}
+		<div class="sin-canales" use:anim={{ t: 'rise', delay: 60 }}>
+			<Icon icon={I.phChatsCircleBold} size={30} />
+			<div class="sc-t">Todavía no hay mensajes</div>
+			<p>
+				Acá llegan los mensajes de tus canales. Las preguntas de Mercado Libre entran cuando lo
+				conectás; WhatsApp e Instagram llegan&nbsp;pronto.
+			</p>
+			<a class="btn btn-secondary" href={resolve('/panel/integraciones')}>Ver integraciones</a>
+		</div>
+	{:else}
+		<div class="bandeja" class:angosto class:celular use:anim={{ t: 'rise', delay: 60 }}>
+			{#if !celular || !enHilo}
+				<div class="lista">
+					<div class="l-cab">
+						<label class="buscar"
+							><Icon icon={I.phMagnifyingGlass} size={15} /><input
+								bind:value={buscar}
+								placeholder="Buscar conversación"
+								aria-label="Buscar conversación"
+							/></label
 						>
-							<span class="av">
-								{#if x.foto}<img src={cara(x.foto)} alt="" />{:else}<span class="ini"
-										>{iniciales(x.nombre)}</span
-									>{/if}
-								<span class="canal"
-									><MarcaIcono k={x.canal} size={19} radius={10} fondo="var(--sf)" /></span
+						<div class="filtros" role="group" aria-label="Filtrar" use:deslizable>
+							{#each FILTROS as [id, t] (id)}
+								<button type="button" aria-pressed={filtro === id} onclick={() => (filtro = id)}
+									>{t}<span
+										>{id === 'todas'
+											? data.conversaciones.length
+											: data.conversaciones.filter((x) => x.atiende === id).length}</span
+									></button
 								>
-							</span>
-							<span class="c-cuerpo">
-								<span class="c-fila"
-									><span class="c-n">{x.nombre}</span><span class="c-h">{hace(x.creado)}</span
-									></span
-								>
-								<span class="c-m">{x.ultimo}</span>
-								<span class="c-pie"
-									><span class="tag" style:background={e[1]} style:color={e[2]}>{e[0]}</span
-									>{#if x.sinLeer}<span class="sin">{x.sinLeer}</span>{/if}</span
-								>
-							</span>
-						</button>
-					{:else}
-						<div class="vacio">No hay conversaciones con ese filtro.</div>
-					{/each}
-				</div>
-			</div>
-		{/if}
-
-		{#if c && (!celular || enHilo)}
-			<div class="hilo-col">
-				<div class="h-cab">
-					{#if celular}<button
-							type="button"
-							class="volver"
-							aria-label="Volver a la lista"
-							onclick={() => (enHilo = false)}><Icon icon={I.phCaretLeftBold} size={14} /></button
-						>{/if}
-					{#if c.foto}<img class="h-av" src={cara(c.foto)} alt="" />{:else}<span class="h-av ini"
-							>{iniciales(c.nombre)}</span
-						>{/if}
-					<span class="h-txt">
-						<span class="h-n"
-							>{c.nombre}<MarcaIcono k={c.canal} size={16} radius={0} fondo="transparent" /></span
-						>
-						<span class="h-s"
-							>{c.tomada
-								? 'Atendés vos'
-								: c.atiende === 'hornero'
-									? 'Tincho está respondiendo…'
-									: 'En línea'}</span
-						>
-					</span>
-					<button type="button" class="tomar" class:devolver={c.tomada} onclick={tomar}
-						><Icon icon={c.tomada ? I.phSparkleFill : I.phHandFill} size={14} />{c.tomada
-							? 'Devolver a Tincho'
-							: 'Tomar'}</button
-					>
-				</div>
-				<div class="hilo" bind:this={hilo} data-lenis-prevent>
-					<div class="dia">Hoy</div>
-					{#each c.mensajes as m, i (i)}
-						{#if m.producto}
-							<div class="tarjeta-prod">
-								<div class="tp-in">
-									{#if m.producto.foto}<img
-											src={unsplash(m.producto.foto, 480, '&h=220')}
-											alt=""
-										/>{/if}
-									<div class="tp-pie">
-										<span
-											><span class="tp-n">{m.producto.nombre}</span><span class="tp-s"
-												>Quedan {m.producto.stock}</span
-											></span
-										>
-										<b>{pesos(m.producto.precio)}</b>
-									</div>
-								</div>
-							</div>
-						{:else if m.de === 'cliente'}
-							<div class="msg cliente">{m.texto}<span class="hora">{hora(m.en)}</span></div>
-						{:else}
-							<div class="msg-yo">
-								{#if m.de === 'hornero'}<span class="ai">✦ Tincho</span>{/if}
-								<span class="msg yo">{m.texto}<span class="hora">{hora(m.en)} ✓✓</span></span>
-							</div>
-						{/if}
-					{/each}
-				</div>
-				{#if c.sugerencia}
-					<div class="sugerencia">
-						<Icon icon={I.phSparkleFill} size={15} style="color:#b0441d;margin-top:2px;flex:none" />
-						<span><b>Sugerencia:</b> {c.sugerencia}</span>
-						<button type="button" onclick={() => mandar(c!.sugerencia!)}>Enviar</button>
-					</div>
-				{/if}
-				<div class="escribir">
-					<div class="rapidas" use:deslizable>
-						{#each ACCIONES as [icono, t, texto] (t)}
-							<button
-								type="button"
-								onclick={() =>
-									texto
-										? mandar(texto)
-										: shell.abrirLink({ para: c!.nombre, concepto: `Pedido de ${c!.nombre}` })}
-								><Icon icon={icono} size={14} style="color:#b0441d" />{t}</button
-							>
-						{/each}
-					</div>
-					<form
-						class="campo"
-						onsubmit={(e) => {
-							e.preventDefault();
-							void mandar(borrador);
-						}}
-					>
-						<input
-							bind:value={borrador}
-							placeholder="Escribí un mensaje…"
-							aria-label="Escribí un mensaje"
-							maxlength="2000"
-						/>
-						<button class="mandar" aria-label="Mandar" disabled={!borrador.trim()}
-							><Icon icon={I.phPaperPlaneTiltFill} size={16} /></button
-						>
-					</form>
-				</div>
-			</div>
-		{/if}
-
-		{#if c && !angosto}
-			<div class="ficha" data-lenis-prevent>
-				<div class="f-cab">
-					{#if c.foto}<img src={cara(c.foto)} alt="" />{:else}<span class="ini grande"
-							>{iniciales(c.nombre)}</span
-						>{/if}
-					<div class="f-n">{c.nombre}</div>
-					<div class="f-s">{c.cliente.ciudad} · cliente desde {anio(c.cliente.desde)}</div>
-				</div>
-				<div class="f-kpis">
-					<div><span>Gastó</span><b>{pesos(c.cliente.gastado)}</b></div>
-					<div><span>Pedidos</span><b>{c.cliente.pedidos}</b></div>
-				</div>
-				{#if c.cliente.etiquetas.length}
-					<div>
-						<div class="f-t">Etiquetas</div>
-						<div class="f-tags">
-							{#each c.cliente.etiquetas as t (t)}<span>{t}</span>{/each}
+							{/each}
 						</div>
 					</div>
-				{/if}
-				{#if c.cliente.ultimoPedido}
-					{@const u = c.cliente.ultimoPedido}
-					<div>
-						<div class="f-t">Último pedido</div>
-						<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta del panel con query -->
-						<a class="f-ped" href="{rutaDe('Pedidos')}?pedido={u.numero}"
-							><b>#{u.numero}</b> · {u.resumen} · {pesos(u.total)}<span
-								style:color={ESTADOS[u.estado]?.[1]}>{u.estado}</span
-							></a
+					<div class="convs" data-lenis-prevent>
+						{#each lista as x (x.id)}
+							{@const e = ETIQUETA[x.atiende]}
+							<button
+								type="button"
+								class="conv"
+								class:on={x.id === c?.id}
+								onclick={() => abrir(x.id)}
+							>
+								<span class="av">
+									{#if x.foto}<img src={cara(x.foto)} alt="" />{:else}<span class="ini"
+											>{iniciales(x.nombre)}</span
+										>{/if}
+									<span class="canal"
+										><MarcaIcono k={x.canal} size={19} radius={10} fondo="var(--sf)" /></span
+									>
+								</span>
+								<span class="c-cuerpo">
+									<span class="c-fila"
+										><span class="c-n">{x.nombre}</span><span class="c-h">{hace(x.creado)}</span
+										></span
+									>
+									<span class="c-m">{x.ultimo}</span>
+									<span class="c-pie"
+										><span class="tag" style:background={e[1]} style:color={e[2]}>{e[0]}</span
+										>{#if x.sinLeer}<span class="sin">{x.sinLeer}</span>{/if}</span
+									>
+								</span>
+							</button>
+						{:else}
+							<div class="vacio">No hay conversaciones con ese filtro.</div>
+						{/each}
+					</div>
+				</div>
+			{/if}
+
+			{#if c && (!celular || enHilo)}
+				<div class="hilo-col">
+					<div class="h-cab">
+						{#if celular}<button
+								type="button"
+								class="volver"
+								aria-label="Volver a la lista"
+								onclick={() => (enHilo = false)}><Icon icon={I.phCaretLeftBold} size={14} /></button
+							>{/if}
+						{#if c.foto}<img class="h-av" src={cara(c.foto)} alt="" />{:else}<span class="h-av ini"
+								>{iniciales(c.nombre)}</span
+							>{/if}
+						<span class="h-txt">
+							<span class="h-n"
+								>{c.nombre}<MarcaIcono k={c.canal} size={16} radius={0} fondo="transparent" /></span
+							>
+							<span class="h-s"
+								>{c.tomada
+									? 'Atendés vos'
+									: c.atiende === 'hornero'
+										? 'Tincho está respondiendo…'
+										: 'En línea'}</span
+							>
+						</span>
+						<button type="button" class="tomar" class:devolver={c.tomada} onclick={tomar}
+							><Icon icon={c.tomada ? I.phSparkleFill : I.phHandFill} size={14} />{c.tomada
+								? 'Devolver a Tincho'
+								: 'Tomar'}</button
 						>
 					</div>
-				{/if}
-				{#if c.cliente.sabe}
-					<div class="f-sabe"><b>✦ Tincho sabe que</b> {c.cliente.sabe}</div>
-				{/if}
-				<button
-					type="button"
-					class="f-crear"
-					onclick={() =>
-						// eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta del panel con query
-						goto(`/panel/pedidos/nuevo${c!.clienteId ? `?cliente=${c!.clienteId}` : ''}`)}
-					>Crear pedido para {c.nombre.split(' ')[0]}</button
-				>
-			</div>
-		{/if}
-	</div>
+					<div class="hilo" bind:this={hilo} data-lenis-prevent>
+						<div class="dia">Hoy</div>
+						{#each c.mensajes as m, i (i)}
+							{#if m.producto}
+								<div class="tarjeta-prod">
+									<div class="tp-in">
+										{#if m.producto.foto}<img
+												src={unsplash(m.producto.foto, 480, '&h=220')}
+												alt=""
+											/>{/if}
+										<div class="tp-pie">
+											<span
+												><span class="tp-n">{m.producto.nombre}</span><span class="tp-s"
+													>Quedan {m.producto.stock}</span
+												></span
+											>
+											<b>{pesos(m.producto.precio)}</b>
+										</div>
+									</div>
+								</div>
+							{:else if m.de === 'cliente'}
+								<div class="msg cliente">{m.texto}<span class="hora">{hora(m.en)}</span></div>
+							{:else}
+								<div class="msg-yo">
+									{#if m.de === 'hornero'}<span class="ai">✦ Tincho</span>{/if}
+									<span class="msg yo">{m.texto}<span class="hora">{hora(m.en)} ✓✓</span></span>
+								</div>
+							{/if}
+						{/each}
+					</div>
+					{#if c.sugerencia}
+						<div class="sugerencia">
+							<Icon
+								icon={I.phSparkleFill}
+								size={15}
+								style="color:#b0441d;margin-top:2px;flex:none"
+							/>
+							<span><b>Sugerencia:</b> {c.sugerencia}</span>
+							<button type="button" onclick={() => mandar(c!.sugerencia!)}>Enviar</button>
+						</div>
+					{/if}
+					<div class="escribir">
+						<div class="rapidas" use:deslizable>
+							{#each ACCIONES as [icono, t, texto] (t)}
+								<button
+									type="button"
+									onclick={() =>
+										texto
+											? mandar(texto)
+											: shell.abrirLink({ para: c!.nombre, concepto: `Pedido de ${c!.nombre}` })}
+									><Icon icon={icono} size={14} style="color:#b0441d" />{t}</button
+								>
+							{/each}
+						</div>
+						<form
+							class="campo"
+							onsubmit={(e) => {
+								e.preventDefault();
+								void mandar(borrador);
+							}}
+						>
+							<input
+								bind:value={borrador}
+								placeholder="Escribí un mensaje…"
+								aria-label="Escribí un mensaje"
+								maxlength="2000"
+							/>
+							<button class="mandar" aria-label="Mandar" disabled={!borrador.trim()}
+								><Icon icon={I.phPaperPlaneTiltFill} size={16} /></button
+							>
+						</form>
+					</div>
+				</div>
+			{/if}
+
+			{#if c && !angosto}
+				<div class="ficha" data-lenis-prevent>
+					<div class="f-cab">
+						{#if c.foto}<img src={cara(c.foto)} alt="" />{:else}<span class="ini grande"
+								>{iniciales(c.nombre)}</span
+							>{/if}
+						<div class="f-n">{c.nombre}</div>
+						<div class="f-s">{c.cliente.ciudad} · cliente desde {anio(c.cliente.desde)}</div>
+					</div>
+					<div class="f-kpis">
+						<div><span>Gastó</span><b>{pesos(c.cliente.gastado)}</b></div>
+						<div><span>Pedidos</span><b>{c.cliente.pedidos}</b></div>
+					</div>
+					{#if c.cliente.etiquetas.length}
+						<div>
+							<div class="f-t">Etiquetas</div>
+							<div class="f-tags">
+								{#each c.cliente.etiquetas as t (t)}<span>{t}</span>{/each}
+							</div>
+						</div>
+					{/if}
+					{#if c.cliente.ultimoPedido}
+						{@const u = c.cliente.ultimoPedido}
+						<div>
+							<div class="f-t">Último pedido</div>
+							<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta del panel con query -->
+							<a class="f-ped" href="{rutaDe('Pedidos')}?pedido={u.numero}"
+								><b>#{u.numero}</b> · {u.resumen} · {pesos(u.total)}<span
+									style:color={ESTADOS[u.estado]?.[1]}>{u.estado}</span
+								></a
+							>
+						</div>
+					{/if}
+					{#if c.cliente.sabe}
+						<div class="f-sabe"><b>✦ Tincho sabe que</b> {c.cliente.sabe}</div>
+					{/if}
+					<button
+						type="button"
+						class="f-crear"
+						onclick={() =>
+							// eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta del panel con query
+							goto(`/panel/pedidos/nuevo${c!.clienteId ? `?cliente=${c!.clienteId}` : ''}`)}
+						>Crear pedido para {c.nombre.split(' ')[0]}</button
+					>
+				</div>
+			{/if}
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -580,6 +599,29 @@
 		font-weight: 700;
 		display: grid;
 		place-items: center;
+	}
+	.sin-canales {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 10px;
+		max-width: 460px;
+		margin: 24px auto;
+		padding: 32px 24px;
+		border-radius: 20px;
+		background: var(--sf);
+		text-align: center;
+		color: var(--mu);
+	}
+	.sc-t {
+		font-size: 18px;
+		font-weight: 700;
+		color: var(--tx);
+	}
+	.sin-canales p {
+		margin: 0 0 6px;
+		font-size: 14.5px;
+		line-height: 1.5;
 	}
 	.vacio {
 		padding: 24px;
