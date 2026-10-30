@@ -33,7 +33,7 @@
 		},
 		{
 			t: 'Cargar producto con foto',
-			s: 'Tincho completa nombre, precio y categoría',
+			s: 'Subí las fotos y completá nombre y precio',
 			icon: I.phCameraBold,
 			id: 'a-foto',
 			grupo: 'Acciones',

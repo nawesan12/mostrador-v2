@@ -417,22 +417,18 @@
 		<div class="foto">
 			<img src="/hornero/foto.webp" alt="" width="64" height="64" />
 			<div class="f-txt">
-				<div class="f-t">Cargá productos con una foto</div>
+				<div class="f-t">Cargá productos con sus fotos</div>
+				<!-- Tincho no completa la ficha desde la foto (no hay nada que lo haga): se dice lo que hay. -->
 				<div class="f-d">
-					Tincho completa nombre, descripción, categoría y precio sugerido. Vos solo confirmás.
+					Subí las fotos desde el celular y completá nombre, precio y&nbsp;stock.
 				</div>
 			</div>
 			<button
 				type="button"
 				onclick={() => {
-					ui.toast({
-						k: 'info',
-						title: 'Subir fotos llega con el almacenamiento',
-						desc: 'Mientras, cargá el producto a mano: Tincho te ayuda con la descripción.'
-					});
 					producto = null;
 					editor = true;
-				}}><Icon icon={I.phCameraFill} size={16} style="color:#b0441d" />Subir fotos</button
+				}}><Icon icon={I.phCameraFill} size={16} style="color:#b0441d" />Cargar producto</button
 			>
 		</div>
 	{/snippet}
@@ -443,6 +439,7 @@
 	{producto}
 	tienda={tienda.nombre}
 	{dominio}
+	recargoML={data.recargoML}
 	guardado={async (p, nuevo) => {
 		await invalidateAll();
 		ui.toast({

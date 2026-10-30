@@ -51,7 +51,7 @@ test('clientes: alta y etiqueta', async ({ page }) => {
 
 test('productos: pausar, editar, crear y exportar', async ({ page }) => {
 	await demo(page, '/panel/productos');
-	await expect(page.getByText('Cargá productos con una foto')).toBeVisible();
+	await expect(page.getByText('Cargá productos con sus fotos')).toBeVisible();
 	expect(await sinDesborde(page)).toBeLessThanOrEqual(0);
 
 	const primero = page.locator('.fila').first();

@@ -192,11 +192,11 @@ export const ARTICULOS: Articulo[] = [
 		slug: 'cargar-con-foto',
 		categoria: 'productos',
 		titulo: 'Cargar un producto con foto',
-		resumen: 'Sacale una foto y Tincho completa nombre, descripción y categoría.',
+		resumen: 'Subí las fotos desde el celular y completá nombre, precio y stock.',
 		cuerpo: [
 			{
 				t: 'p',
-				x: 'Desde ⌘K › Cargar producto con foto, o desde Productos › Nuevo, subís la foto. Tincho propone el nombre, una descripción y la categoría; vos ponés el precio y el stock y lo publicás.'
+				x: 'Desde ⌘K › Cargar producto con foto, o desde Productos › Nuevo, subís las fotos (la primera es la portada). Después ponés el nombre, el precio y el stock y lo publicás.'
 			},
 			{
 				t: 'p',

@@ -31,6 +31,7 @@
 		producto,
 		tienda,
 		dominio,
+		recargoML = null,
 		guardado,
 		borrado
 	}: {
@@ -38,6 +39,8 @@
 		producto: Producto | null;
 		tienda: string;
 		dominio: string;
+		/** El recargo de la conexión con Mercado Libre; null si no está conectado. */
+		recargoML?: number | null;
 		guardado: (p: Producto, nuevo: boolean) => void;
 		borrado: (nombre: string) => void;
 	} = $props();
@@ -136,16 +139,32 @@
 			.replace(/[^a-z0-9]+/g, '-')
 			.replace(/^-|-$/g, '') || 'producto'
 	);
-	const PRECIOS = $derived([
-		['Tienda y local', precio, 'Precio base'],
-		['Mercado Libre', Math.round((precio * 1.1) / 10) * 10, '+10% por comisión'],
-		['Mayorista', Math.round((precio * 0.75) / 10) * 10, 'Desde 10 u']
-	] as const);
-	const CANALES = [
-		['web', I.phGlobeSimpleFill, 'Tienda online', '#D2582F'],
-		['ml', I.phHandshakeFill, 'Mercado Libre', '#2D3277'],
-		['google', I.logosGoogleIcon, 'Google Shopping', 'inherit']
-	] as const;
+	/**
+	 * El precio de la tienda y, con Mercado Libre conectado, el que se publica allá: con el recargo
+	 * real de la conexión y el mismo redondeo que la API (precioML). Antes había un «Mayorista · Desde
+	 * 10 u» y un «+10 %» fijos que no existían.
+	 */
+	const PRECIOS = $derived<(readonly [string, number, string])[]>(
+		recargoML === null
+			? [['Tienda y local', precio, 'Precio base']]
+			: [
+					['Tienda y local', precio, 'Precio base'],
+					[
+						'Mercado Libre',
+						Math.floor((precio * (100 + recargoML) + 50) / 100),
+						recargoML ? `+${recargoML} % por comisión` : 'Sin recargo'
+					]
+				]
+	);
+	const CANALES = $derived(
+		(
+			[
+				['web', I.phGlobeSimpleFill, 'Tienda online', '#D2582F'],
+				['ml', I.phHandshakeFill, 'Mercado Libre', '#2D3277'],
+				['google', I.logosGoogleIcon, 'Google Shopping', 'inherit']
+			] as const
+		).filter(([k]) => k !== 'ml' || recargoML !== null)
+	);
 	const numero = (s: string) => Math.max(0, Number(s.replace(/\D/g, '')) || 0);
 
 	// Las opciones completas (con nombre y algún valor) arman las combinaciones.
@@ -409,7 +428,7 @@
 		</div>
 
 		<div class="tarjeta">
-			<div class="t">Precio por canal</div>
+			<div class="t">{recargoML === null ? 'Precio' : 'Precio por canal'}</div>
 			<div class="precios">
 				{#each PRECIOS as [t, v, nota], i (t)}
 					<div class="precio">

@@ -125,7 +125,7 @@
 		{
 			icon: I.phCameraFill,
 			t: 'Cargar con foto',
-			k: 'Tincho completa la ficha',
+			k: 'Subí las fotos del celular',
 			bg: 'rgba(210,88,47,.12)',
 			fg: '#b0441d',
 			href: rutaDe('Productos')
