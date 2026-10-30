@@ -17,3 +17,4 @@ test-results/
 playwright-report/
 .wrangler/
 build
+*.tmp.mjs

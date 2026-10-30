@@ -28,3 +28,6 @@ playwright-report
 
 # Ajustes locales de plugins de Claude Code
 .claude/*.local.md
+
+# Scripts de prueba a mano (Playwright): nunca al repo.
+*.tmp.mjs
