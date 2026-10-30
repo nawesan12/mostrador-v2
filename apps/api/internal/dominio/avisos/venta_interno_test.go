@@ -11,7 +11,7 @@ func TestMailVentaArmado(t *testing.T) {
 	email, tel := "lucia@ejemplo.com", "11 5555-0101"
 	v := venta{numero: 1042, tienda: "Luna <Mates>", para: "hola@luna.com", pago: "mp", estadoPago: "Aprobado", envio: "correo",
 		comprador: pedidos.Comprador{Nombre: "Lucía Pérez", Email: &email, Telefono: &tel},
-		nota:      "DNI 30111222",
+		nota:      "DNI 30111222 · Entrega: Gorriti 4500 (CP 1414)",
 		entrega:   pedidos.Entrega{Direccion: "Gorriti 4500", Localidad: "CABA", CP: "1414", Tipo: "D"},
 		items:     []item{{Nombre: "Mate", Cantidad: 2, Precio: 10000, Variante: "Negro"}},
 		subtotal:  20000, envioCosto: 5500, total: 23500,
@@ -22,7 +22,7 @@ func TestMailVentaArmado(t *testing.T) {
 	}
 	for _, want := range []string{"2 × Mate (Negro) — $ 20.000", "Subtotal — $ 20.000", "Envío — $ 5.500",
 		"Cupón HOLA — −$ 2.000", "Total — $ 23.500", "Pago: Mercado Pago · acreditado",
-		"Entrega: Correo Argentino a domicilio: Gorriti 4500, CABA (CP 1414)", "Teléfono: 11 5555-0101", "Nota: DNI 30111222",
+		"Entrega: Correo Argentino a domicilio: Gorriti 4500, CABA (CP 1414)", "Teléfono: 11 5555-0101", "Nota: DNI 30111222\n",
 		"Ver el pedido: https://tulocalweb.com.ar/panel/pedidos/1042", "https://tulocalweb.com.ar/panel/notificaciones"} {
 		if !strings.Contains(m.Texto, want) {
 			t.Errorf("falta %q en:\n%s", want, m.Texto)

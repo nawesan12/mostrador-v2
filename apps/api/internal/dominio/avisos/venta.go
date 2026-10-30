@@ -93,6 +93,15 @@ func emailValido(e string) bool {
 	return e != "" && !strings.ContainsAny(e, "\r\n<>,; ") && strings.Contains(e, "@")
 }
 
+// sinViuda escapa el texto y une las dos últimas palabras: ninguna queda sola en el último renglón.
+func sinViuda(s string) string {
+	e := html.EscapeString(s)
+	if i := strings.LastIndex(e, " "); i > 0 {
+		e = e[:i] + "&nbsp;" + e[i+1:]
+	}
+	return e
+}
+
 // entregaDe dice cómo recibe el pedido quien compró, con lo que quedó guardado.
 func entregaDe(v venta) string {
 	e := v.entrega
@@ -180,8 +189,15 @@ func mailVenta(sitio string, v venta) correo.Mensaje {
 	if v.comprador.Telefono != nil && *v.comprador.Telefono != "" {
 		filas = append(filas, [2]string{"Teléfono", *v.comprador.Telefono})
 	}
-	if v.nota != "" {
-		filas = append(filas, [2]string{"Nota", v.nota})
+	// La nota de la tienda online trae el DNI y adónde se entrega; lo de la entrega ya está arriba.
+	var nota []string
+	for _, x := range strings.Split(v.nota, " · ") {
+		if x = strings.TrimSpace(x); x != "" && !strings.HasPrefix(x, "Entrega: ") {
+			nota = append(nota, x)
+		}
+	}
+	if len(nota) > 0 {
+		filas = append(filas, [2]string{"Nota", strings.Join(nota, " · ")})
 	}
 
 	base := strings.TrimRight(sitio, "/")
@@ -199,7 +215,7 @@ func mailVenta(sitio string, v venta) correo.Mensaje {
 	fmt.Fprintf(&b, `<!doctype html><html lang="es-AR"><body style="margin:0;background:#FBF7F2;font-family:Helvetica,Arial,sans-serif;color:#2A140C"><div style="max-width:560px;margin:0 auto;padding:32px 24px"><div style="font-size:20px;font-weight:700">%s</div><h1 style="margin:24px 0 0;font-size:26px;line-height:1.15;font-weight:600">%s</h1>`,
 		html.EscapeString(v.tienda), html.EscapeString(titulo))
 	for _, x := range parrafos {
-		fmt.Fprintf(&b, `<p style="margin:12px 0 0;font-size:15.5px;line-height:1.5;color:#5C4536">%s</p>`, html.EscapeString(x))
+		fmt.Fprintf(&b, `<p style="margin:12px 0 0;font-size:15.5px;line-height:1.5;color:#5C4536">%s</p>`, sinViuda(x))
 	}
 	b.WriteString(`<div style="margin:18px 0 0;padding:14px 16px;border-radius:14px;background:#fff;font-size:14.5px;line-height:1.7">`)
 	for _, x := range det {
@@ -208,7 +224,7 @@ func mailVenta(sitio string, v venta) correo.Mensaje {
 	b.WriteString(`</div><table style="margin:18px 0 0;border-collapse:collapse;font-size:14.5px;line-height:1.4">`)
 	for _, f := range filas {
 		fmt.Fprintf(&b, `<tr><td style="padding:6px 16px 6px 0;color:#7A6252;white-space:nowrap;vertical-align:top">%s</td><td style="padding:6px 0;font-weight:600">%s</td></tr>`,
-			html.EscapeString(f[0]), html.EscapeString(f[1]))
+			html.EscapeString(f[0]), sinViuda(f[1]))
 	}
 	b.WriteString(`</table>`)
 	fmt.Fprintf(&b, `<p style="margin:22px 0 0"><a href="%s" style="display:inline-block;padding:12px 18px;border-radius:999px;background:#2A140C;color:#fff;text-decoration:none;font-weight:600">Ver el pedido</a></p>`, html.EscapeString(link))
