@@ -187,7 +187,10 @@ func Exportar(ctx context.Context, pool tx, tiendaID, tipo string) ([][]any, err
 			 FROM productos WHERE tienda_id = $1 ORDER BY nombre`},
 		"clientes": {[]any{"Nombre", "Email", "Teléfono", "Pedidos", "Gastado"},
 			`SELECT comprador->>'nombre', coalesce(comprador->>'email', ''), coalesce(comprador->>'telefono', ''), count(*), sum(total)
-			 FROM pedidos WHERE tienda_id = $1 AND estado <> 'Cancelado' GROUP BY 1, 2, 3 ORDER BY 1`},
+			 FROM pedidos WHERE tienda_id = $1 AND estado <> 'Cancelado'
+				AND NOT (comprador->>'nombre' = 'Consumidor final' AND coalesce(comprador->>'email', '') = ''
+				AND coalesce(comprador->>'telefono', '') = '')
+			 GROUP BY 1, 2, 3 ORDER BY 1`},
 		"pedidos": {[]any{"Número", "Fecha", "Cliente", "Canal", "Pago", "Envío", "Estado", "Total"},
 			`SELECT numero, to_char(creado_en, 'YYYY-MM-DD'), comprador->>'nombre', canal, pago, envio, estado, total
 			 FROM pedidos WHERE tienda_id = $1 ORDER BY numero DESC`},
@@ -202,14 +205,17 @@ func Exportar(ctx context.Context, pool tx, tiendaID, tipo string) ([][]any, err
 				CASE WHEN EXISTS (SELECT 1 FROM comprobantes n WHERE n.asociado = c.id AND n.estado = 'emitido') THEN 'void' ELSE c.estado END,
 				coalesce(c.cae, '')
 			 FROM comprobantes c WHERE c.tienda_id = $1 ORDER BY c.creado_en DESC`},
+		// Las reseñas de la tienda online (antes salía sólo el encabezado aunque las hubiera).
+		"resenas": {[]any{"Fecha", "Cliente", "Producto", "Estrellas", "Reseña", "Respuesta", "Oculta"},
+			`SELECT to_char(r.creada AT TIME ZONE 'America/Argentina/Buenos_Aires', 'YYYY-MM-DD'), r.autor,
+				coalesce(p.nombre, ''), r.estrellas, r.texto, coalesce(r.respuesta, ''), CASE WHEN r.oculta THEN 'Sí' ELSE 'No' END
+			 FROM resenas r LEFT JOIN productos p ON p.tienda_id = r.tienda_id AND p.id = r.producto_id
+			 WHERE r.tienda_id = $1 ORDER BY r.creada DESC`},
 	}
 	q, ok := consultas[tipo]
 	if !ok {
-		// Reseñas y conversaciones llegan con la tienda online y WhatsApp.
-		// Mientras tanto sale el encabezado solo, como cualquier exportación vacía.
+		// Las conversaciones llegan con WhatsApp: mientras tanto sale el encabezado solo.
 		switch tipo {
-		case "resenas":
-			return [][]any{{"Fecha", "Cliente", "Producto", "Estrellas", "Reseña"}}, nil
 		case "conversaciones":
 			return [][]any{{"Conversación", "Cliente", "De", "Mensaje", "Fecha"}}, nil
 		}
@@ -238,14 +244,17 @@ func MisDatos(ctx context.Context, pool tx, tiendaID string) (map[string]any, er
 	c := map[string]int{}
 	var recientes []Exportacion
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		var p, cl, pe, f int
+		var p, cl, pe, f, r int
 		if err := t.QueryRow(ctx, `SELECT (SELECT count(*) FROM productos WHERE tienda_id = $1),
-				(SELECT count(DISTINCT comprador->>'nombre') FROM pedidos WHERE tienda_id = $1),
+				(SELECT count(DISTINCT comprador->>'nombre') FROM pedidos WHERE tienda_id = $1
+					AND NOT (comprador->>'nombre' = 'Consumidor final' AND coalesce(comprador->>'email', '') = ''
+					AND coalesce(comprador->>'telefono', '') = '')),
 				(SELECT count(*) FROM pedidos WHERE tienda_id = $1),
-				(SELECT count(*) FROM comprobantes WHERE tienda_id = $1)`, tiendaID).Scan(&p, &cl, &pe, &f); err != nil {
+				(SELECT count(*) FROM comprobantes WHERE tienda_id = $1),
+				(SELECT count(*) FROM resenas WHERE tienda_id = $1)`, tiendaID).Scan(&p, &cl, &pe, &f, &r); err != nil {
 			return err
 		}
-		c = map[string]int{"productos": p, "clientes": cl, "pedidos": pe, "facturas": f, "resenas": 0, "conversaciones": 0}
+		c = map[string]int{"productos": p, "clientes": cl, "pedidos": pe, "facturas": f, "resenas": r, "conversaciones": 0}
 		return t.QueryRow(ctx, `SELECT coalesce(preferencias->'exportaciones', '[]') FROM tiendas WHERE id = $1`, tiendaID).Scan(&recientes)
 	})
 	if recientes == nil {

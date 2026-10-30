@@ -35,6 +35,11 @@ const claveCliente = `coalesce(lower(nullif(%s, '')), %s)`
 // por email, o por nombre si no hay), las fichas propias (importadas o cargadas en el panel, aunque
 // no tengan pedidos) y el historial importado, que cuenta para pedidos, gastado, última compra y
 // segmento.
+// anonimo: la venta sin datos de quien compra (el local cobra a "Consumidor final"). No es un
+// cliente: contarla como tal sumaba un «Consumidor final» a la lista con cada venta de mostrador.
+const anonimo = `(comprador->>'nombre' = 'Consumidor final' AND coalesce(comprador->>'email', '') = ''
+	AND coalesce(comprador->>'telefono', '') = '')`
+
 func Clientes(ctx context.Context, pool tx, tiendaID string, ahora time.Time) ([]Registro, error) {
 	por := map[string]*cliente{}
 	orden := []string{}
@@ -57,7 +62,7 @@ func Clientes(ctx context.Context, pool tx, tiendaID string, ahora time.Time) ([
 				(array_agg(canal ORDER BY creado_en))[1],
 				count(*), max(creado_en), sum(total), bool_or(mayorista),
 				array_agg(creado_en)
-			FROM pedidos WHERE tienda_id = $1 AND estado <> 'Cancelado'
+			FROM pedidos WHERE tienda_id = $1 AND estado <> 'Cancelado' AND NOT `+anonimo+`
 			GROUP BY 1`, tiendaID)
 		if err != nil {
 			return err

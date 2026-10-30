@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import Icon from '#lib/components/Icon.svelte';
 	import Modal from '#lib/components/Modal.svelte';
 	import Seo from '#lib/components/Seo.svelte';
@@ -24,7 +25,11 @@
 			plural(data.conteos.facturas, 'comprobante', 'comprobantes')
 		],
 		['resenas', I.phStar, 'Reseñas', plural(data.conteos.resenas, 'reseña', 'reseñas')],
-		['conversaciones', I.phChatsCircle, 'Conversaciones', 'WhatsApp e Instagram']
+		// Con la API todavía no hay conversaciones (WhatsApp e Instagram no se conectan): no se ofrece
+		// bajar un archivo que sólo tendría el encabezado.
+		...(page.data.demo
+			? ([['conversaciones', I.phChatsCircle, 'Conversaciones', 'WhatsApp e Instagram']] as const)
+			: [])
 	] as const);
 	const NOMBRES: Record<string, string> = {
 		productos: 'Productos',
