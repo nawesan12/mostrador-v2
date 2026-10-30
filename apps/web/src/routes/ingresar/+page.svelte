@@ -612,7 +612,7 @@
 		</div>
 		<div class="garantias">
 			<span><Icon icon={phLockSimpleFill} size={15} />Conexión cifrada</span>
-			<span><Icon icon={phShieldCheckFill} size={15} />Verificación en dos pasos</span>
+			<span><Icon icon={phShieldCheckFill} size={15} />Aviso por mail de cada ingreso</span>
 			<span><Icon icon={phMapPinFill} size={15} />Hecho en Argentina</span>
 		</div>
 	</aside>
