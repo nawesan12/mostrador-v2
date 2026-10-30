@@ -43,7 +43,7 @@ type ErrEntrega struct{ Motivo string }
 
 func (e ErrEntrega) Error() string { return e.Motivo }
 
-// Topes (los mismos de la migración 00048 y de la web).
+// Topes (los mismos de la migración 00049 y de la web).
 const (
 	maxDireccion = 160
 	maxHorario   = 80

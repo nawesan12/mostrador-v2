@@ -1,6 +1,6 @@
 /**
  * Envíos y retiro (Configuración): retiro en el local y envío propio en moto. Los topes y los
- * mensajes son los de Go (configuracion/entregas.go y la migración 00048).
+ * mensajes son los de Go (configuracion/entregas.go y la migración 00049).
  */
 import * as v from 'valibot';
 import type { components } from '@mostrador/contrato/esquema';

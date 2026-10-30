@@ -561,3 +561,20 @@ URL, para que no quede en el historial ni en logs.
   cierra apenas se tiene el token.
 - La foto del proveedor queda en `auth.usuarios.foto` (sólo https) y sale en `GET /v1/auth/sesion`.
 - En la demo los botones llevan al recorrido de ejemplo, como antes; WhatsApp sigue sólo en la demo.
+
+## 32. Envíos y retiro configurables (migración 00049)
+
+- **Una fila por tienda en `entregas`**: retiro (sí/no, dirección y horario en texto) y envío propio
+  en moto (sí/no, costo fijo en pesos, zona y demora en texto). Sin fila, retiro en el local y sin
+  moto, como antes. Dirección y horario vacíos: los del negocio (se resuelve al leer, en Go y en el
+  sandbox). Correo Argentino no va acá: se ofrece si hay `ca_conexiones`.
+- **Al menos una forma de entrega**: retiro, moto o Correo conectado. La moto pide la zona y el
+  retiro, alguna dirección. Mismos mensajes en Go (`configuracion/entregas.go`) y en la web
+  (`lib/panel/entregas.ts`, que usa el sandbox).
+- **La zona de la moto es texto**: no se cruza con el CP (no hay de dónde sacar barrios). Se ofrece
+  con cualquier CP válido y quien compra ve la zona antes de elegirla. El envío gratis de la
+  promoción automática vale también para la moto. Un pedido con moto sigue el flujo de envío.
+- **Nada prometido que la tienda no configuró**: se sacaron «Moto en el día en CABA» y «antes de las
+  16 h» de las plantillas; la portada muestra el costo y la zona reales y el pie, «Envío en moto».
+- Pantalla en `/panel/envios/configurar` (desde Envíos, Configuración y el onboarding). En la demo,
+  el envío gratis sale de la automática (40.000, como en Go) y la moto arranca apagada.
