@@ -1,5 +1,6 @@
 import { datosDe } from '#lib/server/datos/index.ts';
 import { leerFiltros } from '#lib/panel/pedidos/filtros.ts';
+import { enCastellano } from '#lib/panel/textos-export.ts';
 import type { RequestHandler } from './$types';
 
 const MAX = 5000;
@@ -33,8 +34,10 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		'Productos',
 		'Total'
 	];
-	const lineas = filas.map((p) =>
-		[
+	// Canal, pago, envío y estado en castellano (no "transf" ni "retiro").
+	const tabla = enCastellano<unknown>([
+		cab,
+		...filas.map((p) => [
 			p.numero,
 			new Date(p.creado).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }),
 			p.cliente,
@@ -45,10 +48,9 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 			p.estado,
 			p.productos.map((x) => x.nombre).join(' + '),
 			p.total
-		]
-			.map(celda)
-			.join(';')
-	);
+		])
+	]);
+	const lineas = tabla.slice(1).map((f) => f.map(celda).join(';'));
 	const hoy = new Date().toISOString().slice(0, 10);
 	return new Response('﻿' + [cab.join(';'), ...lineas].join('\r\n'), {
 		headers: {
