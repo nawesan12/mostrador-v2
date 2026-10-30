@@ -65,6 +65,8 @@ export type TiendaPublica = {
 	/** Secciones visibles de la portada, en orden. */
 	secciones: ('hero' | 'cats' | 'prods' | 'revs' | 'ig' | 'wa')[];
 	portada: { titulo: string; lema: string; foto: string | null };
+	/** El logo subido en Mi tienda (URL); vacío: el nombre en letras. */
+	logo: string;
 	ciudad: string;
 	direccion: string;
 	whatsapp: string;

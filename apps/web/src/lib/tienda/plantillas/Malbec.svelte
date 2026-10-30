@@ -6,6 +6,7 @@
 	import { Reserva } from '../reserva.svelte.ts';
 	import { cuandoLargo, duracion } from '#lib/turnos/formato.ts';
 	import Icon from '#lib/components/Icon.svelte';
+	import LogoTienda from '../LogoTienda.svelte';
 	import * as I from '#lib/icons.ts';
 	import FormResena from '../FormResena.svelte';
 	import PreguntasProducto from '../PreguntasProducto.svelte';
@@ -520,7 +521,7 @@
 				style="text-decoration:none;color:#F4E9E1;text-align:center;line-height:1;min-width:0"
 				><span
 					style="display:block;font-family:'Cormorant Garamond',serif;font-weight:600;font-size:clamp(24px,2.6cqw,32px);letter-spacing:.04em"
-					>{tienda.nombre}</span
+					><LogoTienda {tienda} /></span
 				>{#if tienda.ciudad}<span
 						style="display:block;margin-top:3px;font-size:10px;letter-spacing:.34em;text-transform:uppercase;color:#E8B86A"
 						>{tienda.ciudad}</span

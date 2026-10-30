@@ -6,6 +6,7 @@
 	import { Reserva } from '../reserva.svelte.ts';
 	import { cuandoLargo, duracion } from '#lib/turnos/formato.ts';
 	import Icon from '#lib/components/Icon.svelte';
+	import LogoTienda from '../LogoTienda.svelte';
 	import * as I from '#lib/icons.ts';
 	import FormResena from '../FormResena.svelte';
 	import PreguntasProducto from '../PreguntasProducto.svelte';
@@ -494,7 +495,7 @@
 					><Icon icon={I.phCoffeeBeanFill} size={20} /></span
 				><span
 					style="{B};font-weight:800;font-size:23px;letter-spacing:-.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
-					>{tienda.nombre}</span
+					><LogoTienda {tienda} /></span
 				></a
 			>
 			{#if wide}<nav

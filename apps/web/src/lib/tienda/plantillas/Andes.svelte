@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import Icon from '#lib/components/Icon.svelte';
+	import LogoTienda from '../LogoTienda.svelte';
 	import * as I from '#lib/icons.ts';
 	import FormResena from '../FormResena.svelte';
 	import PreguntasProducto from '../PreguntasProducto.svelte';
@@ -618,7 +619,7 @@
 					></span></span
 				><span
 					style="font-family:'Sora',sans-serif;font-weight:700;font-size:19px;letter-spacing:-.04em;overflow:hidden;text-overflow:ellipsis"
-					>{tienda.nombre}</span
+					><LogoTienda {tienda} /></span
 				></a
 			>
 			{#if wide}<nav style="display:flex;gap:2px;margin-left:10px;min-width:0;overflow:hidden">

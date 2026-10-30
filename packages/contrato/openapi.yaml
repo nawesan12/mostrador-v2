@@ -3744,6 +3744,11 @@ components:
               id: { type: string, enum: [hero, cats, prods, revs, ig, wa] }
               visible: { type: boolean }
         paleta: { type: integer, minimum: 0, maximum: 3 }
+        plantilla: { type: string, description: 'Id de la plantilla a la que se cambia al publicar (vacío o ausente: la de siempre)' }
+        titulo: { type: string, maxLength: 80, description: 'Título de la portada (vacío: el nombre de la tienda)' }
+        lema: { type: string, maxLength: 120, description: 'Lema bajo el título de la portada' }
+        portada: { type: string, maxLength: 300, description: 'URL de la foto de portada (vacío: la de un producto)' }
+        logo: { type: string, maxLength: 300, description: 'URL del logo (vacío: el nombre en letras)' }
     Tarjeta:
       type: object
       description: 'La tarjeta A6 para los paquetes (pieza 7a de Imprimibles). Los textos aceptan {nombre}, {fecha}, {productos} y {pedido}'
@@ -3759,9 +3764,10 @@ components:
         instagram: { type: string, pattern: '^[a-zA-Z0-9._]{0,30}$' }
     MiTienda:
       type: object
-      required: [plantilla, direccion, diseno, sinPublicar, vista]
+      required: [plantilla, plantillaId, direccion, diseno, sinPublicar, vista]
       properties:
         plantilla: { type: string }
+        plantillaId: { type: string, description: 'La plantilla del borrador (o la de la tienda)' }
         direccion: { type: string, description: 'Dónde se ve la tienda (dominio o dirección de Tu Local Web)' }
         diseno: { $ref: '#/components/schemas/DisenoTienda' }
         sinPublicar: { type: boolean }
@@ -3793,6 +3799,8 @@ components:
               properties:
                 foto: { type: [string, 'null'] }
                 titulo: { type: string }
+                lema: { type: string }
+            logo: { type: string }
     Negocio:
       type: object
       required: [nombre, razonSocial, cuit, condicion, direccion, whatsapp, email, horario]

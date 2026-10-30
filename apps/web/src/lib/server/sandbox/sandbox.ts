@@ -2723,7 +2723,10 @@ export class DatosSandbox implements Datos {
 		]);
 		const borrador = (c.get('borrador') as DisenoTienda | undefined) ?? DISENO_INICIAL;
 		const publicado = (c.get('publicado') as DisenoTienda | undefined) ?? DISENO_INICIAL;
-		const p = buscarPlantilla(t.plantilla);
+		// En la demo la plantilla de la tienda fija su nombre y su dirección: la elegida en Mi tienda
+		// queda en el diseño y se usa para dibujarla.
+		const plantillaId = borrador.plantilla || publicado.plantilla || t.plantilla;
+		const p = buscarPlantilla(plantillaId);
 		const vendidos = new Map<string, number>();
 		for (const x of d.pedidos)
 			for (const i of x.items)
@@ -2736,7 +2739,8 @@ export class DatosSandbox implements Datos {
 			? d.resenas.reduce((s, r) => s + r.estrellas, 0) / d.resenas.length
 			: 0;
 		return {
-			plantilla: p?.nombre ?? t.plantilla,
+			plantilla: p?.nombre ?? plantillaId,
+			plantillaId,
 			direccion: `${SITE.replace(/^https?:\/\//, '')}/t/${t.slug}`,
 			diseno: borrador,
 			sinPublicar: JSON.stringify(borrador) !== JSON.stringify(publicado),
@@ -2750,7 +2754,12 @@ export class DatosSandbox implements Datos {
 					? { promedio: Math.round(promedio * 10) / 10, texto: (buenas[0] ?? d.resenas[0]).texto }
 					: null,
 				fotos: [...new Set(top.flatMap((x) => (x.foto ? [x.foto] : [])))].slice(0, 6),
-				portada: { foto: p?.img ?? top[0]?.foto ?? null, titulo: p?.lema ?? t.nombre }
+				portada: {
+					foto: borrador.portada || (p?.img ?? top[0]?.foto ?? null),
+					titulo: borrador.titulo || (p?.lema ?? t.nombre),
+					lema: borrador.lema ?? ''
+				},
+				logo: borrador.logo ?? ''
 			}
 		};
 	}
@@ -2775,7 +2784,8 @@ export class DatosSandbox implements Datos {
 				this.entregas()
 			]);
 		const diseno = (c.get('publicado') as DisenoTienda | undefined) ?? DISENO_INICIAL;
-		const p = buscarPlantilla(t.plantilla);
+		const plantillaId = diseno.plantilla || t.plantilla;
+		const p = buscarPlantilla(plantillaId);
 		const visibles = productos.filter((x) => x.publicado && x.canales.includes('web'));
 		const vendidos = new Map(visibles.map((x) => [x.id, x.vendidos30]));
 		const masVendidos = [...visibles]
@@ -2816,14 +2826,15 @@ export class DatosSandbox implements Datos {
 		return {
 			slug: t.slug,
 			nombre: t.nombre,
-			plantilla: t.plantilla,
+			plantilla: plantillaId,
 			paleta: diseno.paleta,
 			secciones: diseno.secciones.filter((s) => s.visible).map((s) => s.id),
 			portada: {
-				titulo: p?.lema ?? t.nombre,
-				lema: d.catalogo.ciudad ? `Desde ${d.catalogo.ciudad}` : '',
-				foto: p?.img ?? visibles.find((x) => x.foto)?.foto ?? null
+				titulo: diseno.titulo || (p?.lema ?? t.nombre),
+				lema: diseno.lema || (d.catalogo.ciudad ? `Desde ${d.catalogo.ciudad}` : ''),
+				foto: diseno.portada || (p?.img ?? visibles.find((x) => x.foto)?.foto ?? null)
 			},
+			logo: diseno.logo ?? '',
 			ciudad: d.catalogo.ciudad,
 			direccion: conf.negocio.direccion,
 			whatsapp: conf.negocio.whatsapp,

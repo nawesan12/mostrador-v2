@@ -10,8 +10,11 @@ import (
 	"slices"
 	"strings"
 
+	"unicode/utf8"
+
 	"github.com/jackc/pgx/v5"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/tiendas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
@@ -26,10 +29,17 @@ type Seccion struct {
 	Visible bool   `json:"visible"`
 }
 
-// Diseno es components/schemas/DisenoTienda.
+// Diseno es components/schemas/DisenoTienda. Plantilla va sólo mientras el borrador cambia la de la
+// tienda: al publicar pasa a tiendas.plantilla y se saca del diseño. Titulo, Lema, Portada (foto) y
+// Logo vacíos: lo de siempre (el nombre de la tienda y la foto de un producto).
 type Diseno struct {
 	Secciones []Seccion `json:"secciones"`
 	Paleta    int       `json:"paleta"`
+	Plantilla string    `json:"plantilla,omitempty"`
+	Titulo    string    `json:"titulo,omitempty"`
+	Lema      string    `json:"lema,omitempty"`
+	Portada   string    `json:"portada,omitempty"`
+	Logo      string    `json:"logo,omitempty"`
 }
 
 var ids = []string{"hero", "cats", "prods", "revs", "ig", "wa"}
@@ -43,8 +53,20 @@ func Inicial() Diseno {
 	return d
 }
 
+// foto: una URL http(s) corta (las fotos subidas a /panel/fotos vuelven con su origen).
+func foto(u string) bool {
+	return u == "" || (len(u) <= 300 && (strings.HasPrefix(u, "https://") || strings.HasPrefix(u, "http://")) &&
+		!strings.ContainsAny(u, " \"'<>"))
+}
+
 func (d Diseno) valido() bool {
 	if d.Paleta < 0 || d.Paleta > 3 || len(d.Secciones) != len(ids) {
+		return false
+	}
+	if d.Plantilla != "" && !slices.Contains(tiendas.Plantillas, d.Plantilla) {
+		return false
+	}
+	if utf8.RuneCountInString(d.Titulo) > 80 || utf8.RuneCountInString(d.Lema) > 120 || !foto(d.Portada) || !foto(d.Logo) {
 		return false
 	}
 	vistos := map[string]bool{}
@@ -103,8 +125,17 @@ func Leer(ctx context.Context, pool tx, tiendaID, sitio string) (map[string]any,
 			}
 		}
 		var portada *string
-		if len(fotos) > 0 {
+		if borrador.Portada != "" {
+			portada = &borrador.Portada
+		} else if len(fotos) > 0 {
 			portada = &fotos[0]
+		}
+		titulo := nombre
+		if borrador.Titulo != "" {
+			titulo = borrador.Titulo
+		}
+		if borrador.Plantilla != "" {
+			plantilla = borrador.Plantilla
 		}
 		cuatro := prods
 		if len(cuatro) > 4 {
@@ -112,12 +143,14 @@ func Leer(ctx context.Context, pool tx, tiendaID, sitio string) (map[string]any,
 		}
 		res = map[string]any{
 			"plantilla":   strings.ToUpper(plantilla[:1]) + plantilla[1:],
+			"plantillaId": plantilla,
 			"direccion":   strings.TrimPrefix(strings.TrimPrefix(sitio, "https://"), "http://") + "/t/" + slug,
 			"diseno":      borrador,
 			"sinPublicar": string(a) != string(b),
 			"vista": map[string]any{
 				"tienda": nombre, "categorias": cats, "productos": cuatro, "resena": nil, "fotos": fotos,
-				"portada": map[string]any{"foto": portada, "titulo": nombre},
+				"portada": map[string]any{"foto": portada, "titulo": titulo, "lema": borrador.Lema},
+				"logo":    borrador.Logo,
 			},
 		}
 		return nil
@@ -130,8 +163,11 @@ func Guardar(ctx context.Context, pool tx, tiendaID string, d Diseno) error {
 	if !d.valido() {
 		return ErrInvalido
 	}
+	d.Titulo, d.Lema = strings.TrimSpace(d.Titulo), strings.TrimSpace(d.Lema)
 	return pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		_, err := t.Exec(ctx, `UPDATE tiendas SET diseno_borrador = $2 WHERE id = $1`, tiendaID, d)
+		// La plantilla va en el borrador sólo si cambia la que tiene la tienda.
+		_, err := t.Exec(ctx, `UPDATE tiendas SET diseno_borrador = CASE WHEN $2::jsonb->>'plantilla' = plantilla
+			THEN $2::jsonb - 'plantilla' ELSE $2::jsonb END WHERE id = $1`, tiendaID, d)
 		return err
 	})
 }
@@ -139,7 +175,12 @@ func Guardar(ctx context.Context, pool tx, tiendaID string, d Diseno) error {
 // Publicar copia el borrador a lo que ve la gente.
 func Publicar(ctx context.Context, pool tx, tiendaID string) error {
 	return pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		_, err := t.Exec(ctx, `UPDATE tiendas SET diseno_publicado = coalesce(diseno_borrador, diseno_publicado) WHERE id = $1`, tiendaID)
+		// La plantilla del borrador pasa a la tienda y sale de los dos diseños.
+		_, err := t.Exec(ctx, `UPDATE tiendas SET
+				plantilla = coalesce(nullif(diseno_borrador->>'plantilla', ''), plantilla),
+				diseno_borrador = diseno_borrador - 'plantilla',
+				diseno_publicado = coalesce(diseno_borrador - 'plantilla', diseno_publicado)
+			WHERE id = $1`, tiendaID)
 		return err
 	})
 }
@@ -172,7 +213,7 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, sitio
 			return
 		}
 		if err := Guardar(r.Context(), pool, id, d); err != nil {
-			problema.Escribir(w, problema.Invalido("Revisá las secciones."))
+			problema.Escribir(w, problema.Invalido("Revisá el diseño: las secciones, la plantilla, los textos o las fotos."))
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)

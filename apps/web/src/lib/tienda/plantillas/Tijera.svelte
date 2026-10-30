@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	import { untrack } from 'svelte';
 	import Icon from '#lib/components/Icon.svelte';
+	import LogoTienda from '../LogoTienda.svelte';
 	import * as I from '#lib/icons.ts';
 	import FormResena from '../FormResena.svelte';
 	import PreguntasProducto from '../PreguntasProducto.svelte';
@@ -536,7 +537,7 @@
 					><Icon icon={I.phScissorsBold} size={19} /></span
 				><span
 					style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
-					>{tienda.nombre}</span
+					><LogoTienda {tienda} /></span
 				></a
 			>
 			{#if wide}<nav style="display:flex;gap:4px;margin-left:12px">

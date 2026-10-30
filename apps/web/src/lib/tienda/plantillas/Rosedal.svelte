@@ -4,6 +4,7 @@
 	import { untrack } from 'svelte';
 	import { goto } from '$app/navigation';
 	import Icon from '#lib/components/Icon.svelte';
+	import LogoTienda from '../LogoTienda.svelte';
 	import * as I from '#lib/icons.ts';
 	import FormResena from '../FormResena.svelte';
 	import PreguntasProducto from '../PreguntasProducto.svelte';
@@ -498,11 +499,13 @@
 			<a
 				href={base || '/'}
 				style="text-decoration:none;color:#3A1F25;display:flex;align-items:baseline;gap:6px;min-width:0"
-				><span style="font-family:'Gloock',serif;font-size:25px;line-height:1">{logo[0]}</span
-				>{#if logo[1]}<span
-						style="font-size:11px;font-weight:800;letter-spacing:.3em;text-transform:uppercase;color:#B4475B"
-						>{logo[1]}</span
-					>{/if}</a
+				><LogoTienda {tienda}
+					><span style="font-family:'Gloock',serif;font-size:25px;line-height:1">{logo[0]}</span
+					>{#if logo[1]}<span
+							style="font-size:11px;font-weight:800;letter-spacing:.3em;text-transform:uppercase;color:#B4475B"
+							>{logo[1]}</span
+						>{/if}</LogoTienda
+				></a
 			>
 			{#if wide}<nav style="display:flex;gap:4px;margin-left:14px">
 					{#each nav as n (n.t)}<a

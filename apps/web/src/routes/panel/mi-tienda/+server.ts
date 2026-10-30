@@ -1,8 +1,15 @@
 import { error } from '@sveltejs/kit';
 import * as v from 'valibot';
+import { plantilla } from '#lib/plantillas.ts';
 import { datosDe } from '#lib/server/datos/index.ts';
 import type { RequestHandler } from './$types';
 
+// Las fotos subidas a /panel/fotos vuelven con su origen (https en producción, http en local).
+const foto = v.pipe(
+	v.string(),
+	v.maxLength(300),
+	v.regex(/^$|^https?:\/\/[^\s"'<>]+$/, 'Esa foto no es válida: subila de nuevo.')
+);
 const IDS = ['hero', 'cats', 'prods', 'revs', 'ig', 'wa'] as const;
 const Diseno = v.object({
 	secciones: v.pipe(
@@ -12,7 +19,19 @@ const Diseno = v.object({
 			'Faltan secciones.'
 		)
 	),
-	paleta: v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(3))
+	paleta: v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(3)),
+	plantilla: v.optional(
+		v.pipe(
+			v.string(),
+			v.check((id) => id === '' || !!plantilla(id), 'Elegí una de las plantillas.')
+		)
+	),
+	titulo: v.optional(
+		v.pipe(v.string(), v.trim(), v.maxLength(80, 'El título va hasta 80 letras.'))
+	),
+	lema: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(120, 'El lema va hasta 120 letras.'))),
+	portada: v.optional(foto),
+	logo: v.optional(foto)
 });
 
 /** Guardar el borrador del diseño. */

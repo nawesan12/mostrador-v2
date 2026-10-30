@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import Icon from '#lib/components/Icon.svelte';
+	import LogoTienda from '../LogoTienda.svelte';
 	import * as I from '#lib/icons.ts';
 	import FormResena from '../FormResena.svelte';
 	import PreguntasProducto from '../PreguntasProducto.svelte';
@@ -587,7 +588,7 @@
 						><Icon icon={I.phLeafFill} size={20} /></span
 					><span
 						style="font-weight:800;font-size:21px;letter-spacing:-.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
-						>{tienda.nombre}</span
+						><LogoTienda {tienda} /></span
 					></a
 				>
 				{#if wide}{@render buscador()}{:else}<span style="flex:1"></span>{/if}

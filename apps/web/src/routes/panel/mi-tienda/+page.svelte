@@ -8,6 +8,9 @@
 	import { anim } from '#lib/panel/anim.ts';
 	import { pesos } from '#lib/panel/formato.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
+	import Modal from '#lib/components/Modal.svelte';
+	import { subir as subirArchivo } from '#lib/panel/fotos.ts';
+	import { PLANTILLAS, plantilla } from '#lib/plantillas.ts';
 
 	/** Mi tienda (design/PanelOperacion.dc.html, sStore): secciones, colores y vista previa en vivo. */
 	let { data } = $props();
@@ -31,23 +34,85 @@
 	// Lo que se edita es local y se guarda en cada cambio; al recargar vuelve lo guardado.
 	let secciones = $derived<Seccion[]>(data.diseno.secciones.map((s) => ({ ...s })));
 	let paleta = $derived(data.diseno.paleta);
+	let plantillaId = $derived(data.plantillaId);
+	let titulo = $derived(data.diseno.titulo ?? '');
+	let lema = $derived(data.diseno.lema ?? '');
+	let portada = $derived(data.diseno.portada ?? '');
+	let logo = $derived(data.diseno.logo ?? '');
 	let sinPublicar = $derived(data.sinPublicar);
 	const pal = $derived(PALETAS[paleta]);
+	const elegida = $derived(plantilla(plantillaId));
+	// La tienda pública, para abrirla (la dirección viene sin protocolo).
+	const enlace = $derived(data.direccion.replace(/^[^/]+/, ''));
 
 	// Los guardados van en fila: si dos salen juntos, el último en llegar tiene que ser el último hecho.
 	let fila = Promise.resolve();
 	function guardar() {
 		sinPublicar = true;
-		const cuerpo = JSON.stringify({ secciones, paleta });
+		const cuerpo = JSON.stringify({
+			secciones,
+			paleta,
+			plantilla: plantillaId,
+			titulo,
+			lema,
+			portada,
+			logo
+		});
 		fila = fila.then(async () => {
-			await fetch('/panel/mi-tienda', {
+			const r = await fetch('/panel/mi-tienda', {
 				method: 'PUT',
 				headers: { 'content-type': 'application/json' },
 				body: cuerpo
 			});
+			if (!r.ok)
+				ui.toast({
+					k: 'err',
+					title: 'No se guardó el cambio',
+					desc:
+						((await r.json().catch(() => null)) as { message?: string } | null)?.message ??
+						'Probá de nuevo en un rato.'
+				});
 		});
 		return fila;
 	}
+
+	let eligiendo = $state(false);
+	function elegir(id: string) {
+		eligiendo = false;
+		if (id === plantillaId) return;
+		plantillaId = id;
+		void guardar();
+	}
+
+	// Logo y foto de portada: se suben como las fotos de los productos.
+	let subiendo = $state<'' | 'logo' | 'portada'>('');
+	async function subirFoto(e: Event, cual: 'logo' | 'portada') {
+		const input = e.currentTarget as HTMLInputElement;
+		const archivo = input.files?.[0];
+		input.value = '';
+		if (!archivo) return;
+		subiendo = cual;
+		try {
+			const url = await subirArchivo(archivo);
+			if (cual === 'logo') logo = url;
+			else portada = url;
+			await guardar();
+		} catch (err) {
+			ui.toast({
+				k: 'err',
+				title: 'No pudimos subir la foto',
+				desc: err instanceof Error ? err.message : 'Probá de nuevo en un rato.'
+			});
+		} finally {
+			subiendo = '';
+		}
+	}
+	function quitar(cual: 'logo' | 'portada') {
+		if (cual === 'logo') logo = '';
+		else portada = '';
+		void guardar();
+	}
+	const fotoPortada = $derived(portada || data.vista.portada.foto);
 	function subir(i: number) {
 		if (!i) return;
 		const a = [...secciones];
@@ -79,13 +144,17 @@
 	<div class="cab" use:anim={{ t: 'rise' }}>
 		<div class="c-txt">
 			<h1>Mi tienda</h1>
-			<div class="c-s">Plantilla {data.plantilla} · {data.direccion}</div>
+			<div class="c-s">Plantilla {elegida?.nombre ?? data.plantilla} · {data.direccion}</div>
 		</div>
 		<a class="cambiar" href={resolve('/panel/tarjeta-para-paquetes')}
 			><Icon icon={I.phEnvelopeSimpleFill} size={14} />Tarjeta para paquetes</a
 		>
-		<a class="cambiar" href="{resolve('/')}#plantillas"
-			><Icon icon={I.phSwapBold} size={14} />Cambiar plantilla</a
+		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- la tienda pública, en otra pestaña -->
+		<a class="cambiar" href={enlace} target="_blank" rel="noopener"
+			><Icon icon={I.phStorefrontFill} size={14} />Ver mi tienda</a
+		>
+		<button type="button" class="cambiar" onclick={() => (eligiendo = true)}
+			><Icon icon={I.phSwapBold} size={14} />Cambiar plantilla</button
 		>
 		<button type="button" class="publicar" class:listo={!sinPublicar} onclick={publicar}
 			>{sinPublicar ? 'Publicar cambios' : 'Todo publicado'}</button
@@ -94,7 +163,62 @@
 
 	<div class="editor" use:anim={{ t: 'rise', delay: 60 }}>
 		<div class="panelito">
-			<div class="p-t">Secciones</div>
+			<div class="p-t">Marca y portada</div>
+			{#each [['logo', 'Logo', logo], ['portada', 'Foto de portada', portada]] as const as [cual, t, url] (cual)}
+				<div class="foto-fila">
+					<div class="miniatura" class:logo={cual === 'logo'}>
+						{#if url}<img src={url} alt="" />{:else}<Icon
+								icon={cual === 'logo' ? I.phStorefrontFill : I.phImageFill}
+								size={18}
+							/>{/if}
+					</div>
+					<div class="f-txt">
+						<b>{t}</b>
+						<span
+							>{url
+								? 'Subido'
+								: cual === 'logo'
+									? 'Sin logo: va el nombre en letras'
+									: 'Sin foto: va la de un producto'}</span
+						>
+					</div>
+					<label class="mini-btn" class:ocupado={subiendo === cual}>
+						{subiendo === cual ? 'Subiendo…' : url ? 'Cambiar' : 'Subir'}
+						<input
+							type="file"
+							accept="image/jpeg,image/png,image/webp"
+							class="sr-only"
+							disabled={!!subiendo}
+							onchange={(e) => subirFoto(e, cual)}
+						/>
+					</label>
+					{#if url}<button
+							type="button"
+							class="mini-btn icono"
+							aria-label="Quitar {t.toLowerCase()}"
+							onclick={() => quitar(cual)}><Icon icon={I.phTrash} size={15} /></button
+						>{/if}
+				</div>
+			{/each}
+			<label class="campo"
+				><span>Título de la portada</span><input
+					class="input"
+					maxlength="80"
+					placeholder={data.vista.tienda}
+					bind:value={titulo}
+					onchange={guardar}
+				/></label
+			>
+			<label class="campo"
+				><span>Lema</span><input
+					class="input"
+					maxlength="120"
+					placeholder="Ej.: Hecho a mano en Rosario"
+					bind:value={lema}
+					onchange={guardar}
+				/></label
+			>
+			<div class="p-t colores">Secciones</div>
 			{#each secciones as s, i (s.id)}
 				{@const [icono, t] = SECCIONES[s.id]}
 				<div class="sec">
@@ -138,21 +262,24 @@
 			</div>
 			<div class="sitio" style:background={pal.bg} style:color={pal.ink}>
 				<div class="s-cab">
-					<b>{data.vista.tienda}</b><span class="esp"></span><span class="s-cats"
+					{#if logo}<img class="s-logo" src={logo} alt={data.vista.tienda} />{:else}<b
+							>{data.vista.tienda}</b
+						>{/if}<span class="esp"></span><span class="s-cats"
 						>{data.vista.categorias.slice(0, 3).join(' · ')}</span
 					><Icon icon={I.phHandbag} size={17} />
 				</div>
 				{#each visibles as s (s.id)}
 					{#if s.id === 'hero'}
 						<div class="hero">
-							{#if data.vista.portada.foto}<img
-									src={data.vista.portada.foto.startsWith('http')
-										? data.vista.portada.foto
-										: unsplash(data.vista.portada.foto, 1000)}
+							{#if fotoPortada}<img
+									src={fotoPortada.startsWith('http') ? fotoPortada : unsplash(fotoPortada, 1000)}
 									alt=""
 								/>{/if}
 							<div class="sombra"></div>
-							<div class="lema">{data.vista.portada.titulo}</div>
+							<div class="lema">
+								{titulo || data.vista.tienda}
+								{#if lema}<small>{lema}</small>{/if}
+							</div>
 						</div>
 					{:else if s.id === 'prods'}
 						<div class="prods">
@@ -184,8 +311,7 @@
 						</div>
 					{:else}
 						<div class="wa">
-							<Icon icon={I.phWhatsappLogoFill} size={16} />¿Dudas? Escribinos, contesta Tincho al
-							toque
+							<Icon icon={I.phWhatsappLogoFill} size={16} />¿Dudas? Escribinos por WhatsApp
 						</div>
 					{/if}
 				{/each}
@@ -194,7 +320,174 @@
 	</div>
 </div>
 
+<Modal bind:open={eligiendo} titulo="Elegí la plantilla" ancho={860}>
+	<div class="m-cab">
+		<h2>Elegí la plantilla</h2>
+		<p>Se aplica a tu tienda cuando tocás «Publicar cambios». Tus productos no cambian.</p>
+	</div>
+	<div class="plantillas">
+		{#each PLANTILLAS as p (p.id)}
+			<button
+				type="button"
+				class="tpl"
+				aria-pressed={p.id === plantillaId}
+				onclick={() => elegir(p.id)}
+			>
+				<span class="tpl-foto" style:background={p.bg}
+					><img src={p.img} alt="" loading="lazy" /></span
+				>
+				<span class="tpl-n">{p.nombre}</span>
+				<span class="tpl-r">{p.rubro}</span>
+			</button>
+		{/each}
+	</div>
+</Modal>
+
 <style>
+	.m-cab h2 {
+		margin: 0;
+		font-size: 22px;
+		letter-spacing: -0.02em;
+	}
+	.m-cab p {
+		margin: 4px 0 16px;
+		color: var(--mu);
+		font-size: 14px;
+		text-wrap: pretty;
+	}
+	.plantillas {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+		gap: 12px;
+	}
+	.tpl {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		padding: 8px;
+		border-radius: 16px;
+		border: 2px solid var(--ln);
+		background: var(--sf);
+		color: var(--tx);
+		text-align: left;
+		font: inherit;
+		cursor: pointer;
+	}
+	.tpl[aria-pressed='true'] {
+		border-color: #d2582f;
+	}
+	.tpl-foto {
+		display: block;
+		aspect-ratio: 4 / 3;
+		border-radius: 10px;
+		overflow: hidden;
+		margin-bottom: 6px;
+	}
+	.tpl-foto img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+	.tpl-n {
+		font-weight: 600;
+		font-size: 14px;
+	}
+	.tpl-r {
+		font-size: 12.5px;
+		color: var(--mu);
+	}
+	.foto-fila {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 8px 10px;
+		border-radius: 14px;
+		border: 1px solid var(--ln);
+	}
+	.miniatura {
+		width: 44px;
+		height: 44px;
+		flex: none;
+		border-radius: 10px;
+		overflow: hidden;
+		display: grid;
+		place-items: center;
+		background: var(--sf2, rgba(0, 0, 0, 0.05));
+		color: var(--mu);
+	}
+	.miniatura img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+	.miniatura.logo img {
+		object-fit: contain;
+	}
+	.f-txt {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		font-size: 13.5px;
+	}
+	.f-txt span {
+		font-size: 12px;
+		color: var(--mu);
+	}
+	.mini-btn {
+		display: inline-grid;
+		place-items: center;
+		min-height: 36px;
+		padding: 0 12px;
+		border-radius: 999px;
+		border: 1px solid var(--ln2);
+		background: var(--sf);
+		color: var(--tx);
+		font:
+			600 13px 'Instrument Sans',
+			sans-serif;
+		cursor: pointer;
+		white-space: nowrap;
+	}
+	.mini-btn.icono {
+		width: 36px;
+		padding: 0;
+	}
+	.mini-btn.ocupado {
+		opacity: 0.6;
+	}
+	.campo {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		padding: 4px 4px 0;
+		font-size: 13px;
+		font-weight: 600;
+	}
+	.s-logo {
+		height: 26px;
+		width: auto;
+		max-width: 140px;
+		object-fit: contain;
+	}
+	.lema small {
+		display: block;
+		margin-top: 6px;
+		font-size: 13px;
+		font-weight: 500;
+		opacity: 0.9;
+	}
+	@media (max-width: 760px) {
+		.sec button,
+		.mini-btn {
+			min-width: 44px;
+			min-height: 44px;
+		}
+		.paletas button {
+			min-width: 44px;
+			min-height: 44px;
+		}
+	}
 	.pagina {
 		display: flex;
 		flex-direction: column;

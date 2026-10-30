@@ -3614,6 +3614,16 @@ export interface components {
                 visible: boolean;
             }[];
             paleta: number;
+            /** @description Id de la plantilla a la que se cambia al publicar (vacío o ausente: la de siempre) */
+            plantilla?: string;
+            /** @description Título de la portada (vacío: el nombre de la tienda) */
+            titulo?: string;
+            /** @description Lema bajo el título de la portada */
+            lema?: string;
+            /** @description URL de la foto de portada (vacío: la de un producto) */
+            portada?: string;
+            /** @description URL del logo (vacío: el nombre en letras) */
+            logo?: string;
         };
         /** @description La tarjeta A6 para los paquetes (pieza 7a de Imprimibles). Los textos aceptan {nombre}, {fecha}, {productos} y {pedido} */
         Tarjeta: {
@@ -3630,6 +3640,8 @@ export interface components {
         };
         MiTienda: {
             plantilla: string;
+            /** @description La plantilla del borrador (o la de la tienda) */
+            plantillaId: string;
             /** @description Dónde se ve la tienda (dominio o dirección de Tu Local Web) */
             direccion: string;
             diseno: components["schemas"]["DisenoTienda"];
@@ -3650,7 +3662,9 @@ export interface components {
                 portada: {
                     foto: string | null;
                     titulo: string;
+                    lema?: string;
                 };
+                logo?: string;
             };
         };
         Negocio: {

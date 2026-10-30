@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import Icon from '#lib/components/Icon.svelte';
+	import LogoTienda from '../LogoTienda.svelte';
 	import * as I from '#lib/icons.ts';
 	import FormResena from '../FormResena.svelte';
 	import PreguntasProducto from '../PreguntasProducto.svelte';
@@ -658,7 +659,7 @@
 			<a
 				href={base || '/'}
 				style="text-decoration:none;color:{T.ink};font-family:{T.f};font-weight:{T.fw};font-size:{T.logoSz};letter-spacing:{T.ls};text-transform:{T.tt};line-height:1;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis"
-				>{tienda.nombre}</a
+				><LogoTienda {tienda} /></a
 			>
 			{#if wide}<nav style="display:flex;gap:22px;margin-left:18px">
 					{#each nav as n (n.href)}<a

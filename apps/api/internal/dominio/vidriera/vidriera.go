@@ -76,12 +76,14 @@ type Categoria struct {
 
 // Tienda es components/schemas/TiendaPublica (lib/tienda/tipos.ts).
 type Tienda struct {
-	Slug        string            `json:"slug"`
-	Nombre      string            `json:"nombre"`
-	Plantilla   string            `json:"plantilla"`
-	Paleta      int               `json:"paleta"`
-	Secciones   []string          `json:"secciones"`
-	Portada     map[string]any    `json:"portada"`
+	Slug      string         `json:"slug"`
+	Nombre    string         `json:"nombre"`
+	Plantilla string         `json:"plantilla"`
+	Paleta    int            `json:"paleta"`
+	Secciones []string       `json:"secciones"`
+	Portada   map[string]any `json:"portada"`
+	// Logo subido en Mi tienda (URL); vacío: el nombre en letras.
+	Logo        string            `json:"logo"`
 	Ciudad      string            `json:"ciudad"`
 	Direccion   string            `json:"direccion"`
 	Whatsapp    string            `json:"whatsapp"`
@@ -169,6 +171,7 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 	if err != nil {
 		return Tienda{}, err
 	}
+	var miPortada struct{ Titulo, Lema, Portada string }
 	out := Tienda{Slug: slug, Secciones: []string{"hero", "cats", "prods", "revs", "ig", "wa"}, Resenas: []ResenaPublica{}, Preguntas: []PreguntaPublica{},
 		Fotos: []string{}, MasVendidos: []string{}}
 	// Los más vendidos de los últimos 30 días (los ítems de los pedidos guardan el nombre).
@@ -207,9 +210,14 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 				ID      string `json:"id"`
 				Visible bool   `json:"visible"`
 			} `json:"secciones"`
-			Paleta int `json:"paleta"`
+			Paleta                      int `json:"paleta"`
+			Titulo, Lema, Portada, Logo string
 		}
-		if json.Unmarshal(diseno, &d) == nil && len(d.Secciones) > 0 {
+		if json.Unmarshal(diseno, &d) == nil {
+			miPortada.Titulo, miPortada.Lema, miPortada.Portada = d.Titulo, d.Lema, d.Portada
+			out.Logo = d.Logo
+		}
+		if len(d.Secciones) > 0 {
 			out.Secciones = out.Secciones[:0]
 			for _, s := range d.Secciones {
 				if s.Visible {
@@ -371,7 +379,14 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 	if len(out.Fotos) > 0 {
 		foto = &out.Fotos[0]
 	}
-	out.Portada = map[string]any{"titulo": out.Nombre, "lema": "", "foto": foto}
+	if miPortada.Portada != "" {
+		foto = &miPortada.Portada
+	}
+	titulo := out.Nombre
+	if miPortada.Titulo != "" {
+		titulo = miPortada.Titulo
+	}
+	out.Portada = map[string]any{"titulo": titulo, "lema": miPortada.Lema, "foto": foto}
 	return out, nil
 }
 
