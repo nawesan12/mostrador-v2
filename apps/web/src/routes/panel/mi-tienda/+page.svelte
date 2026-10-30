@@ -9,9 +9,11 @@
 	import { pesos } from '#lib/panel/formato.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 	import Modal from '#lib/components/Modal.svelte';
+	import Segmentado from '#lib/components/Segmentado.svelte';
 	import { subir as subirArchivo } from '#lib/panel/fotos.ts';
 	import { PLANTILLAS, plantilla } from '#lib/plantillas.ts';
 	import { acentos } from '#lib/tienda/acentos.ts';
+	import { LARGO_DESCRIPCION, LARGO_TITULO, textosPorDefecto } from '#lib/tienda/compartir.ts';
 
 	/** Mi tienda (design/PanelOperacion.dc.html, sStore): secciones, colores y vista previa en vivo. */
 	let { data } = $props();
@@ -34,6 +36,23 @@
 	let lema = $derived(data.diseno.lema ?? '');
 	let portada = $derived(data.diseno.portada ?? '');
 	let logo = $derived(data.diseno.logo ?? '');
+	// Al compartir: vacíos, lo sugerido y la imagen armada con la plantilla.
+	let compartirTitulo = $derived(data.diseno.compartirTitulo ?? '');
+	let compartirDescripcion = $derived(data.diseno.compartirDescripcion ?? '');
+	let compartirFoto = $derived(data.diseno.compartirFoto ?? '');
+	let imagenPropia = $derived(!!data.diseno.compartirFoto);
+	// Lo sugerido sigue a lo que se edita (título de la portada y lema) con los datos de la tienda.
+	const sugeridos = $derived(
+		textosPorDefecto({
+			...data.hechos,
+			titulo: titulo.trim() || (data.diseno.titulo ? data.vista.tienda : data.hechos.titulo),
+			lema: lema.trim()
+		})
+	);
+	const host = $derived(data.direccion.split('/')[0]);
+	// La vista previa de la imagen se vuelve a pedir cada vez que se guarda un cambio.
+	let vuelta = $state(0);
+	let cargandoImagen = $state(true);
 	let sinPublicar = $derived(data.sinPublicar);
 	const elegida = $derived(plantilla(plantillaId));
 	// Color de acento: el de la plantilla o una de tres alternativas (lib/tienda/acentos.ts).
@@ -57,7 +76,10 @@
 			titulo,
 			lema,
 			portada,
-			logo
+			logo,
+			compartirTitulo,
+			compartirDescripcion,
+			compartirFoto
 		});
 		fila = fila.then(async () => {
 			const r = await fetch('/panel/mi-tienda', {
@@ -65,7 +87,8 @@
 				headers: { 'content-type': 'application/json' },
 				body: cuerpo
 			});
-			if (!r.ok)
+			if (r.ok) vuelta++;
+			else
 				ui.toast({
 					k: 'err',
 					title: 'No se guardó el cambio',
@@ -86,8 +109,8 @@
 	}
 
 	// Logo y foto de portada: se suben como las fotos de los productos.
-	let subiendo = $state<'' | 'logo' | 'portada'>('');
-	async function subirFoto(e: Event, cual: 'logo' | 'portada') {
+	let subiendo = $state<'' | 'logo' | 'portada' | 'compartir'>('');
+	async function subirFoto(e: Event, cual: 'logo' | 'portada' | 'compartir') {
 		const input = e.currentTarget as HTMLInputElement;
 		const archivo = input.files?.[0];
 		input.value = '';
@@ -96,6 +119,7 @@
 		try {
 			const url = await subirArchivo(archivo);
 			if (cual === 'logo') logo = url;
+			else if (cual === 'compartir') compartirFoto = url;
 			else portada = url;
 			await guardar();
 		} catch (err) {
@@ -108,8 +132,9 @@
 			subiendo = '';
 		}
 	}
-	function quitar(cual: 'logo' | 'portada') {
+	function quitar(cual: 'logo' | 'portada' | 'compartir') {
 		if (cual === 'logo') logo = '';
+		else if (cual === 'compartir') compartirFoto = '';
 		else portada = '';
 		void guardar();
 	}
@@ -137,6 +162,19 @@
 		});
 	}
 	const visibles = $derived(secciones.filter((s) => s.visible));
+	function elegirImagen(v: 'armada' | 'propia') {
+		imagenPropia = v === 'propia';
+		// Volver a la armada deja de usar la foto propia (si había una).
+		if (!imagenPropia && compartirFoto) {
+			compartirFoto = '';
+			void guardar();
+		}
+	}
+	const imagenPrevia = $derived(compartirFoto || `/panel/mi-tienda/compartir?v=${vuelta}`);
+	$effect(() => {
+		void imagenPrevia;
+		cargandoImagen = true;
+	});
 </script>
 
 <Seo title="Mi tienda · Panel" description="Editor de la tienda" path="/panel/mi-tienda" noindex />
@@ -257,71 +295,166 @@
 			</div>
 		</div>
 
-		<div class="navegador">
-			<div class="barra">
-				<span style:background="#E0A595"></span><span style:background="#E7CB8F"></span><span
-					style:background="#A9CBA8"
-				></span>
-				<span class="url">{data.direccion}</span>
-			</div>
-			<div class="sitio" style:background={pal.bg} style:color={pal.ink}>
-				<div class="s-cab">
-					{#if logo}<img class="s-logo" src={logo} alt={data.vista.tienda} />{:else}<b
-							>{data.vista.tienda}</b
-						>{/if}<span class="esp"></span><span class="s-cats"
-						>{data.vista.categorias.slice(0, 3).join(' · ')}</span
-					><Icon icon={I.phHandbag} size={17} />
+		<div class="derecha">
+			<div class="navegador">
+				<div class="barra">
+					<span style:background="#E0A595"></span><span style:background="#E7CB8F"></span><span
+						style:background="#A9CBA8"
+					></span>
+					<span class="url">{data.direccion}</span>
 				</div>
-				{#each visibles as s (s.id)}
-					{#if s.id === 'hero'}
-						<div class="hero">
-							{#if fotoPortada}<img
-									src={fotoPortada.startsWith('http') ? fotoPortada : unsplash(fotoPortada, 1000)}
-									alt=""
-								/>{/if}
-							<div class="sombra"></div>
-							<div class="lema">
-								{titulo || data.vista.tienda}
-								{#if lema}<small>{lema}</small>{/if}
-							</div>
-						</div>
-					{:else if s.id === 'prods'}
-						<div class="prods">
-							{#each data.vista.productos as p, i (i)}
-								<div>
-									<div class="foto">
-										{#if p.foto}<img src={unsplash(p.foto, 300)} alt="" />{/if}
-									</div>
-									<div class="pn">{p.nombre}</div>
-									<div class="pp" style:color={pal.acc}>{pesos(p.precio)}</div>
+				<div class="sitio" style:background={pal.bg} style:color={pal.ink}>
+					<div class="s-cab">
+						{#if logo}<img class="s-logo" src={logo} alt={data.vista.tienda} />{:else}<b
+								>{data.vista.tienda}</b
+							>{/if}<span class="esp"></span><span class="s-cats"
+							>{data.vista.categorias.slice(0, 3).join(' · ')}</span
+						><Icon icon={I.phHandbag} size={17} />
+					</div>
+					{#each visibles as s (s.id)}
+						{#if s.id === 'hero'}
+							<div class="hero">
+								{#if fotoPortada}<img
+										src={fotoPortada.startsWith('http') ? fotoPortada : unsplash(fotoPortada, 1000)}
+										alt=""
+									/>{/if}
+								<div class="sombra"></div>
+								<div class="lema">
+									{titulo || data.vista.tienda}
+									{#if lema}<small>{lema}</small>{/if}
 								</div>
-							{/each}
-						</div>
-					{:else if s.id === 'cats'}
-						<div class="cats">
-							{#each data.vista.categorias as c (c)}<span
-									style:background={pal.acc}
-									style:color={opciones[0].sobre}>{c}</span
-								>{/each}
-						</div>
-					{:else if s.id === 'revs'}
-						{#if data.vista.resena}
-							<div class="revs">
-								<span class="estrellas">★★★★★</span>
-								{data.vista.resena.promedio.toLocaleString('es-AR')} · “{data.vista.resena.texto}”
+							</div>
+						{:else if s.id === 'prods'}
+							<div class="prods">
+								{#each data.vista.productos as p, i (i)}
+									<div>
+										<div class="foto">
+											{#if p.foto}<img src={unsplash(p.foto, 300)} alt="" />{/if}
+										</div>
+										<div class="pn">{p.nombre}</div>
+										<div class="pp" style:color={pal.acc}>{pesos(p.precio)}</div>
+									</div>
+								{/each}
+							</div>
+						{:else if s.id === 'cats'}
+							<div class="cats">
+								{#each data.vista.categorias as c (c)}<span
+										style:background={pal.acc}
+										style:color={opciones[0].sobre}>{c}</span
+									>{/each}
+							</div>
+						{:else if s.id === 'revs'}
+							{#if data.vista.resena}
+								<div class="revs">
+									<span class="estrellas">★★★★★</span>
+									{data.vista.resena.promedio.toLocaleString('es-AR')} · “{data.vista.resena.texto}”
+								</div>
+							{/if}
+						{:else if s.id === 'ig'}
+							<div class="ig">
+								{#each data.vista.fotos as f, i (i)}<img src={unsplash(f, 200)} alt="" />{/each}
+							</div>
+						{:else}
+							<div class="wa">
+								<Icon icon={I.phWhatsappLogoFill} size={16} />¿Dudas? Escribinos por WhatsApp
 							</div>
 						{/if}
-					{:else if s.id === 'ig'}
-						<div class="ig">
-							{#each data.vista.fotos as f, i (i)}<img src={unsplash(f, 200)} alt="" />{/each}
-						</div>
-					{:else}
-						<div class="wa">
-							<Icon icon={I.phWhatsappLogoFill} size={16} />¿Dudas? Escribinos por WhatsApp
-						</div>
-					{/if}
-				{/each}
+					{/each}
+				</div>
 			</div>
+
+			<section class="panelito compartir" aria-labelledby="t-compartir">
+				<div class="p-t" id="t-compartir">Al compartir el link</div>
+				<div class="c-grid">
+					<div class="c-campos">
+						<label class="campo"
+							><span>Título</span><input
+								class="input"
+								maxlength={LARGO_TITULO}
+								placeholder={sugeridos.titulo}
+								bind:value={compartirTitulo}
+								onchange={guardar}
+							/></label
+						>
+						<label class="campo"
+							><span>Descripción</span><textarea
+								class="textarea"
+								rows="3"
+								maxlength={LARGO_DESCRIPCION}
+								placeholder={sugeridos.descripcion}
+								bind:value={compartirDescripcion}
+								onchange={guardar}></textarea></label
+						>
+						<div class="campo">
+							<span>Imagen</span>
+							<Segmentado
+								label="Imagen al compartir"
+								opciones={[
+									['armada', 'La de tu plantilla'],
+									['propia', 'Una foto tuya']
+								]}
+								value={imagenPropia ? 'propia' : 'armada'}
+								onchange={elegirImagen}
+							/>
+						</div>
+						{#if imagenPropia}
+							<div class="foto-fila">
+								<div class="miniatura">
+									{#if compartirFoto}<img src={compartirFoto} alt="" />{:else}<Icon
+											icon={I.phImageFill}
+											size={18}
+										/>{/if}
+								</div>
+								<div class="f-txt">
+									<b>Foto para compartir</b>
+									<span>{compartirFoto ? 'Subida' : 'Se recorta a 1200 × 630'}</span>
+								</div>
+								<label class="mini-btn" class:ocupado={subiendo === 'compartir'}>
+									{subiendo === 'compartir' ? 'Subiendo…' : compartirFoto ? 'Cambiar' : 'Subir'}
+									<input
+										type="file"
+										accept="image/jpeg,image/png,image/webp"
+										class="sr-only"
+										disabled={!!subiendo}
+										onchange={(e) => subirFoto(e, 'compartir')}
+									/>
+								</label>
+								{#if compartirFoto}<button
+										type="button"
+										class="mini-btn icono"
+										aria-label="Quitar la foto para compartir"
+										onclick={() => quitar('compartir')}><Icon icon={I.phTrash} size={15} /></button
+									>{/if}
+							</div>
+						{/if}
+						<p class="c-nota">
+							Vacíos, van los sugeridos. Se aplica al publicar; en un chat donde ya estaba el link,
+							WhatsApp puede seguir mostrando la vista&nbsp;anterior.
+						</p>
+					</div>
+					<div class="chat-wa">
+						<div class="wa-t">Así se ve en WhatsApp</div>
+						<div class="burbuja">
+							<div class="tarjeta-wa">
+								<div class="t-img" class:cargando={cargandoImagen}>
+									<img
+										src={imagenPrevia}
+										alt="Imagen al compartir {data.vista.tienda}"
+										onload={() => (cargandoImagen = false)}
+										onerror={() => (cargandoImagen = false)}
+									/>
+								</div>
+								<div class="t-txt">
+									<b>{compartirTitulo.trim() || sugeridos.titulo}</b>
+									<span class="t-desc">{compartirDescripcion.trim() || sugeridos.descripcion}</span>
+									<span class="t-host">{host}</span>
+								</div>
+							</div>
+							<span class="b-url">https://{data.direccion}</span>
+						</div>
+					</div>
+				</div>
+			</section>
 		</div>
 	</div>
 </div>
@@ -788,6 +921,117 @@
 		color: #fff;
 		font-size: 12.5px;
 		font-weight: 600;
+	}
+	.derecha {
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+		min-width: 0;
+	}
+	.c-grid {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 340px);
+		gap: 16px;
+		align-items: start;
+	}
+	.c-campos {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		min-width: 0;
+	}
+	.c-campos .textarea {
+		resize: vertical;
+		font: inherit;
+		font-size: 15px;
+	}
+	.c-nota {
+		margin: 0;
+		padding: 0 4px;
+		font-size: 12px;
+		color: var(--mu);
+		text-wrap: pretty;
+	}
+	.chat-wa {
+		min-width: 0;
+		padding: 14px;
+		border-radius: 18px;
+		background: #efe7dc;
+	}
+	.wa-t {
+		font-size: 12px;
+		font-weight: 600;
+		color: #7a6252;
+		margin-bottom: 8px;
+	}
+	.burbuja {
+		margin-left: auto;
+		max-width: min(330px, 100%);
+		padding: 4px 4px 8px;
+		border-radius: 14px 14px 4px 14px;
+		background: #d8f3df;
+		color: #1f2a20;
+		font-size: 13.5px;
+		line-height: 1.45;
+	}
+	.b-url {
+		display: block;
+		padding: 6px 8px 0;
+		color: #1f6f4a;
+		font-weight: 600;
+		overflow-wrap: anywhere;
+	}
+	.tarjeta-wa {
+		border-radius: 10px;
+		overflow: hidden;
+		background: rgba(0, 0, 0, 0.05);
+	}
+	.t-img {
+		aspect-ratio: 1200 / 630;
+		background: rgba(0, 0, 0, 0.06);
+		transition: opacity 0.2s;
+	}
+	.t-img.cargando {
+		opacity: 0.55;
+	}
+	.t-img img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
+	}
+	.t-txt {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		padding: 8px 10px 9px;
+	}
+	.t-txt b {
+		font-size: 13.5px;
+		line-height: 1.3;
+		overflow-wrap: anywhere;
+	}
+	.t-desc {
+		font-size: 12.5px;
+		line-height: 1.35;
+		color: #4b5a4e;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+	.t-host {
+		font-size: 12px;
+		color: #6b786d;
+	}
+	@media (max-width: 760px) {
+		.c-grid {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.burbuja {
+			max-width: 100%;
+		}
 	}
 	@media (max-width: 999px) {
 		.editor {

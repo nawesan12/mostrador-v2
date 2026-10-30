@@ -3767,6 +3767,9 @@ components:
         lema: { type: string, maxLength: 120, description: 'Lema bajo el título de la portada' }
         portada: { type: string, maxLength: 300, description: 'URL de la foto de portada (vacío: la de un producto)' }
         logo: { type: string, maxLength: 300, description: 'URL del logo (vacío: el nombre en letras)' }
+        compartirTitulo: { type: string, maxLength: 70, description: 'Título de la vista previa al compartir la tienda (vacío: el sugerido)' }
+        compartirDescripcion: { type: string, maxLength: 160, description: 'Descripción de la vista previa al compartir (vacío: la sugerida)' }
+        compartirFoto: { type: string, maxLength: 300, description: 'URL de una foto propia para compartir (vacío: la imagen armada con la plantilla)' }
     Tarjeta:
       type: object
       description: 'La tarjeta A6 para los paquetes (pieza 7a de Imprimibles). Los textos aceptan {nombre}, {fecha}, {productos} y {pedido}'

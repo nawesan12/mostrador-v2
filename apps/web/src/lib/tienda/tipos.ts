@@ -67,6 +67,11 @@ export type TiendaPublica = {
 	portada: { titulo: string; lema: string; foto: string | null };
 	/** El logo subido en Mi tienda (URL); vacío: el nombre en letras. */
 	logo: string;
+	/**
+	 * Mi tienda › Al compartir: título, descripción y foto propia de la vista previa (vacío: lo
+	 * sugerido y la imagen dibujada con la plantilla, lib/tienda/compartir.ts).
+	 */
+	compartir: { titulo: string; descripcion: string; foto: string };
 	ciudad: string;
 	direccion: string;
 	whatsapp: string;

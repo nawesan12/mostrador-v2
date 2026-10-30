@@ -31,7 +31,8 @@ type Seccion struct {
 
 // Diseno es components/schemas/DisenoTienda. Plantilla va sólo mientras el borrador cambia la de la
 // tienda: al publicar pasa a tiendas.plantilla y se saca del diseño. Titulo, Lema, Portada (foto) y
-// Logo vacíos: lo de siempre (el nombre de la tienda y la foto de un producto).
+// Logo vacíos: lo de siempre (el nombre de la tienda y la foto de un producto). Compartir*: la vista
+// previa al compartir la tienda (vacíos: lo sugerido y la imagen armada con la plantilla).
 type Diseno struct {
 	Secciones []Seccion `json:"secciones"`
 	Paleta    int       `json:"paleta"`
@@ -40,6 +41,10 @@ type Diseno struct {
 	Lema      string    `json:"lema,omitempty"`
 	Portada   string    `json:"portada,omitempty"`
 	Logo      string    `json:"logo,omitempty"`
+
+	CompartirTitulo      string `json:"compartirTitulo,omitempty"`
+	CompartirDescripcion string `json:"compartirDescripcion,omitempty"`
+	CompartirFoto        string `json:"compartirFoto,omitempty"`
 }
 
 var ids = []string{"hero", "cats", "prods", "revs", "ig", "wa"}
@@ -67,6 +72,9 @@ func (d Diseno) valido() bool {
 		return false
 	}
 	if utf8.RuneCountInString(d.Titulo) > 80 || utf8.RuneCountInString(d.Lema) > 120 || !foto(d.Portada) || !foto(d.Logo) {
+		return false
+	}
+	if utf8.RuneCountInString(d.CompartirTitulo) > 70 || utf8.RuneCountInString(d.CompartirDescripcion) > 160 || !foto(d.CompartirFoto) {
 		return false
 	}
 	vistos := map[string]bool{}
@@ -164,6 +172,7 @@ func Guardar(ctx context.Context, pool tx, tiendaID string, d Diseno) error {
 		return ErrInvalido
 	}
 	d.Titulo, d.Lema = strings.TrimSpace(d.Titulo), strings.TrimSpace(d.Lema)
+	d.CompartirTitulo, d.CompartirDescripcion = strings.TrimSpace(d.CompartirTitulo), strings.TrimSpace(d.CompartirDescripcion)
 	return pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
 		// La plantilla va en el borrador sólo si cambia la que tiene la tienda.
 		_, err := t.Exec(ctx, `UPDATE tiendas SET diseno_borrador = CASE WHEN $2::jsonb->>'plantilla' = plantilla

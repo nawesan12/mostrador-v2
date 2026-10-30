@@ -31,7 +31,18 @@ const Diseno = v.object({
 	),
 	lema: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(120, 'El lema va hasta 120 letras.'))),
 	portada: v.optional(foto),
-	logo: v.optional(foto)
+	logo: v.optional(foto),
+	compartirTitulo: v.optional(
+		v.pipe(v.string(), v.trim(), v.maxLength(70, 'El título para compartir va hasta 70 letras.'))
+	),
+	compartirDescripcion: v.optional(
+		v.pipe(
+			v.string(),
+			v.trim(),
+			v.maxLength(160, 'La descripción para compartir va hasta 160 letras.')
+		)
+	),
+	compartirFoto: v.optional(foto)
 });
 
 /** Guardar el borrador del diseño. */

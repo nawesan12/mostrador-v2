@@ -74,6 +74,12 @@ export async function resolverTienda(
 		} as TiendaPublica['envios'];
 		// Sin alias ni CBU no se ofrece transferencia: tampoco su descuento (0 = no hay).
 		if (!tienda.cobros.datosTransferencia) tienda.cobros.transferencia = 0;
+		// Una API sin Al compartir todavía: lo sugerido.
+		tienda.compartir = {
+			titulo: tienda.compartir?.titulo ?? '',
+			descripcion: tienda.compartir?.descripcion ?? '',
+			foto: tienda.compartir?.foto ?? ''
+		};
 		return {
 			tienda: { ...tienda, turnos: tienda.turnos ?? null, medicion: medicionSegura(tienda) },
 			datos: null,

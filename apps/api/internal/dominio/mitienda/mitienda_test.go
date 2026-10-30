@@ -94,3 +94,40 @@ func TestPlantillaTextosYFotosAlPublicar(t *testing.T) {
 		}
 	}
 }
+
+// Al compartir: título, descripción y foto propia van al borrador y a la tienda al publicar.
+func TestAlCompartir(t *testing.T) {
+	ctx := context.Background()
+	b := pruebadb.Nueva(t)
+	id := pruebadb.CrearTienda(t, b.App, "brisa")
+	d := mitienda.Inicial()
+	d.CompartirTitulo, d.CompartirDescripcion = " Brisa · Velas de soja ", "Hechas a mano en Mendoza."
+	d.CompartirFoto = "https://tulocalweb.com.ar/f/fotos/c.webp"
+	if err := mitienda.Guardar(ctx, b.App, id, d); err != nil {
+		t.Fatal(err)
+	}
+	if p, _ := vidriera.Publica(ctx, b.App, "brisa"); p.Compartir != (vidriera.Compartir{}) {
+		t.Fatalf("se vio antes de publicar: %+v", p.Compartir)
+	}
+	if err := mitienda.Publicar(ctx, b.App, id); err != nil {
+		t.Fatal(err)
+	}
+	p, err := vidriera.Publica(ctx, b.App, "brisa")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.Compartir != (vidriera.Compartir{Titulo: "Brisa · Velas de soja", Descripcion: d.CompartirDescripcion, Foto: d.CompartirFoto}) {
+		t.Fatalf("publicada: %+v", p.Compartir)
+	}
+	for _, malo := range []func(*mitienda.Diseno){
+		func(x *mitienda.Diseno) { x.CompartirTitulo = strings.Repeat("a", 71) },
+		func(x *mitienda.Diseno) { x.CompartirDescripcion = strings.Repeat("a", 161) },
+		func(x *mitienda.Diseno) { x.CompartirFoto = "javascript:alert(1)" },
+	} {
+		x := mitienda.Inicial()
+		malo(&x)
+		if err := mitienda.Guardar(ctx, b.App, id, x); err == nil {
+			t.Fatalf("aceptó %+v", x)
+		}
+	}
+}

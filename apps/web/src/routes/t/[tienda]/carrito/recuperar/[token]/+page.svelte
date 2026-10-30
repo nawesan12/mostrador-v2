@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import Seo from '#lib/components/Seo.svelte';
+	import { imagenTienda, textosCompartir } from '#lib/tienda/compartir.ts';
 	import { carritoDe } from '#lib/tienda/carrito.svelte.ts';
 	import Plantilla from '#lib/tienda/Plantilla.svelte';
 
@@ -19,8 +20,9 @@
 
 <Seo
 	title="Tu carrito · {data.tienda.nombre}"
-	description={data.tienda.nombre}
+	description={textosCompartir(data.tienda).descripcion}
 	path="/t/{data.tienda.slug}/carrito"
 	noindex={true}
+	imagen={imagenTienda(data.tienda)}
 />
 <Plantilla tienda={data.tienda} pagina="carrito" />

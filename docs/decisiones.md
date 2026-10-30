@@ -604,3 +604,25 @@ URL, para que no quede en el historial ni en logs.
   Importa porque «Recordarme» ahora dura un año.
 - La lista muestra todas las sesiones vigentes (la actual primero), con «Cerrar» y «Cerrar todas
   las demás» (`DELETE /v1/panel/sesiones`).
+
+## 34. La vista previa al compartir una tienda (sin migración)
+
+- **Imagen armada por el servidor, una por tienda y por producto**: `/t/<slug>/compartir/<v>.jpg` y
+  `/t/<slug>/producto/<slug>/compartir/<v>.jpg`, 1200 × 630 en JPEG de menos de 300 KB. satori
+  arma un SVG con las letras como trazos (el contenedor no necesita fuentes instaladas) y vips, el
+  mismo que achica las fotos, lo pasa a JPEG. Las fuentes (WOFF latinos, OFL) van en
+  `lib/server/compartir/fuentes` y se leen con `read()` del build. Nada nuevo en la imagen Docker.
+- **El estilo de la plantilla**: colores, tipografía, radios y el acento elegido; tres composiciones
+  (editorial, grilla, catálogo) con el adorno de cada una. Sin fotos queda armada igual: el nombre
+  grande, la inicial en el acento y, en las de catálogo, las categorías con cuántos productos tienen.
+  Sólo datos de la tienda: nunca la imagen genérica de Tu Local Web ni algo inventado.
+- **WhatsApp guarda por URL**: `<v>` es un hash de lo que se dibuja (`versionDe`); al editar la
+  tienda cambia la URL. Con la versión vigente se cachea un año (`immutable`); con una vieja, cinco
+  minutos. En el servidor, memoria más disco (la carpeta temporal del contenedor). og:image siempre
+  en tulocalweb.com.ar, también para las tiendas con dominio propio.
+- **Textos**: título «Nombre · lema» (o lo que vende), descripción con datos reales (cantidad de
+  productos, categorías, entrega, Mercado Pago) que nunca repite el título (`lib/tienda/compartir.ts`).
+- **Editable en Mi tienda › Al compartir el link**: título, descripción y la imagen (la de la
+  plantilla o una foto propia, recortada a 1200 × 630). Va en el diseño (`compartirTitulo`,
+  `compartirDescripcion`, `compartirFoto` en `diseno_borrador`/`diseno_publicado`): sin migración, y
+  se ve al publicar. La vista previa del editor usa el borrador (`/panel/mi-tienda/compartir`).

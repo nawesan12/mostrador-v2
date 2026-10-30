@@ -83,7 +83,9 @@ type Tienda struct {
 	Secciones []string       `json:"secciones"`
 	Portada   map[string]any `json:"portada"`
 	// Logo subido en Mi tienda (URL); vacío: el nombre en letras.
-	Logo        string            `json:"logo"`
+	Logo string `json:"logo"`
+	// Compartir: título, descripción y foto propia de la vista previa al compartir (vacíos: lo sugerido).
+	Compartir   Compartir         `json:"compartir"`
 	Ciudad      string            `json:"ciudad"`
 	Direccion   string            `json:"direccion"`
 	Whatsapp    string            `json:"whatsapp"`
@@ -103,6 +105,13 @@ type Tienda struct {
 	Medicion Medicion        `json:"medicion"`
 	// Dominio: el propio que eligió como principal, ya verificado (null: sólo /t/<slug>).
 	Dominio *string `json:"dominio"`
+}
+
+// Compartir es lo que la tienda escribió en Mi tienda › Al compartir.
+type Compartir struct {
+	Titulo      string `json:"titulo"`
+	Descripcion string `json:"descripcion"`
+	Foto        string `json:"foto"`
 }
 
 // Medicion son los IDs de GA4 y del píxel de Meta de la tienda (la tienda online los carga sólo con
@@ -212,10 +221,14 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 			} `json:"secciones"`
 			Paleta                      int `json:"paleta"`
 			Titulo, Lema, Portada, Logo string
+			CompartirTitulo             string `json:"compartirTitulo"`
+			CompartirDescripcion        string `json:"compartirDescripcion"`
+			CompartirFoto               string `json:"compartirFoto"`
 		}
 		if json.Unmarshal(diseno, &d) == nil {
 			miPortada.Titulo, miPortada.Lema, miPortada.Portada = d.Titulo, d.Lema, d.Portada
 			out.Logo = d.Logo
+			out.Compartir = Compartir{d.CompartirTitulo, d.CompartirDescripcion, d.CompartirFoto}
 		}
 		if len(d.Secciones) > 0 {
 			out.Secciones = out.Secciones[:0]

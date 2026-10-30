@@ -15,6 +15,7 @@
 		imageAlt = 'Tu Local Web: tu tienda online, WhatsApp, Mercado Libre y el local en un solo panel.',
 		noindex = false,
 		foto = null,
+		imagen = null,
 		jsonLd
 	}: {
 		title: string;
@@ -34,6 +35,11 @@
 		imageAlt?: string;
 		/** Foto propia (id de Unsplash o https), p. ej. la portada de una tienda: reemplaza a `image`. */
 		foto?: string | null;
+		/**
+		 * La imagen al compartir ya armada, 1200 × 630 en JPEG (URL absoluta, p. ej. la de una
+		 * tienda: lib/tienda/compartir.ts). Pisa a `foto` y a `image`.
+		 */
+		imagen?: string | null;
 		noindex?: boolean;
 		jsonLd?: Record<string, unknown>;
 	} = $props();
@@ -50,12 +56,15 @@
 	});
 	// Con foto propia, recortada a 1200 × 630 como pide la vista previa al compartir.
 	const img = $derived(
-		foto
-			? foto.startsWith('/')
-				? SITE + foto
-				: unsplash(foto, 1200, '&h=630')
-			: `${SITE}/og/${image}.jpg`
+		imagen ??
+			(foto
+				? foto.startsWith('/')
+					? SITE + foto
+					: unsplash(foto, 1200, '&h=630')
+				: `${SITE}/og/${image}.jpg`)
 	);
+	// Las medidas van cuando se saben: la imagen armada o una de static/og.
+	const medidas = $derived(!!imagen || !foto);
 	// Un cierre de etiqueta dentro del JSON terminaría el bloque antes de tiempo: se escapa `<`.
 	const ld = $derived(
 		jsonLd
@@ -79,7 +88,8 @@
 	<meta property="og:title" content={title} />
 	<meta property="og:description" content={description} />
 	<meta property="og:image" content={img} />
-	{#if !foto}
+	{#if imagen}<meta property="og:image:secure_url" content={imagen} />{/if}
+	{#if medidas}
 		<meta property="og:image:type" content="image/jpeg" />
 		<meta property="og:image:width" content="1200" />
 		<meta property="og:image:height" content="630" />

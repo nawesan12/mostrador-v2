@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import Icon from '#lib/components/Icon.svelte';
 	import Seo from '#lib/components/Seo.svelte';
+	import { imagenTienda } from '#lib/tienda/compartir.ts';
 	import * as I from '#lib/icons.ts';
 	import { plantilla as buscarPlantilla } from '#lib/plantillas.ts';
 	import type { PageProps } from './$types';
@@ -24,6 +25,7 @@
 	description="Revocá tu compra en {t.nombre} hasta 10 días después de recibirla."
 	path="/t/{t.slug}/arrepentimiento"
 	noindex
+	imagen={imagenTienda(t)}
 />
 
 <div

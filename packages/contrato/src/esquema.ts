@@ -3647,6 +3647,12 @@ export interface components {
             portada?: string;
             /** @description URL del logo (vacío: el nombre en letras) */
             logo?: string;
+            /** @description Título de la vista previa al compartir la tienda (vacío: el sugerido) */
+            compartirTitulo?: string;
+            /** @description Descripción de la vista previa al compartir (vacío: la sugerida) */
+            compartirDescripcion?: string;
+            /** @description URL de una foto propia para compartir (vacío: la imagen armada con la plantilla) */
+            compartirFoto?: string;
         };
         /** @description La tarjeta A6 para los paquetes (pieza 7a de Imprimibles). Los textos aceptan {nombre}, {fecha}, {productos} y {pedido} */
         Tarjeta: {

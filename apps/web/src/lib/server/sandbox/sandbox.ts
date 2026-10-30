@@ -2843,6 +2843,11 @@ export class DatosSandbox implements Datos {
 				foto: diseno.portada || (p?.img ?? visibles.find((x) => x.foto)?.foto ?? null)
 			},
 			logo: diseno.logo ?? '',
+			compartir: {
+				titulo: diseno.compartirTitulo ?? '',
+				descripcion: diseno.compartirDescripcion ?? '',
+				foto: diseno.compartirFoto ?? ''
+			},
 			ciudad: d.catalogo.ciudad,
 			direccion: conf.negocio.direccion,
 			whatsapp: conf.negocio.whatsapp,
