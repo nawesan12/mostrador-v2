@@ -39,6 +39,11 @@ declare global {
 			AI?: Ai;
 			/** workers-ai en producción; simulado en desarrollo y pruebas (no llama al modelo). */
 			HORNERO?: 'workers-ai' | 'simulado';
+			/**
+			 * Clave publicable de Clerk (pk_live_… / pk_test_…): de ella sale la Frontend API para
+			 * seguir con Google o Apple. No es secreta. Vacía: no se muestran esos botones.
+			 */
+			CLERK_PUBLISHABLE_KEY?: string;
 			/** App de socio de Tiendanube (importar con OAuth en la demo). Secretos de wrangler. */
 			TIENDANUBE_CLIENT_ID?: string;
 			TIENDANUBE_SECRETO?: string;

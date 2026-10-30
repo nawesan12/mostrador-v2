@@ -7,3 +7,6 @@ ENCRYPTION_KEY=
 # https://tulocalweb.com.ar/panel/importar/tiendanube/vuelta
 TIENDANUBE_CLIENT_ID=
 TIENDANUBE_SECRETO=
+# Clerk (seguir con Google o Apple, sólo con DATA_SOURCE=api): la clave publicable de la instancia
+# (pk_test_… en local, pk_live_… en producción). No es secreta. Vacía: no se muestran esos botones.
+CLERK_PUBLISHABLE_KEY=

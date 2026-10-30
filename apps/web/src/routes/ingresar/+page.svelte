@@ -7,7 +7,9 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import Seo from '#lib/components/Seo.svelte';
 	import { fuerza } from '#lib/fuerza.ts';
+	import { ErrorClerk, iniciar, type ProveedorClerk } from '#lib/clerk.ts';
 	import {
+		logosApple,
 		logosGoogleIcon,
 		logosWhatsappIcon,
 		phArrowLeftBold,
@@ -51,18 +53,24 @@
 		sin_email: 'No pudimos saber tu email desde esa cuenta. Probá con tu email.',
 		vincular:
 			'Ya hay una cuenta con ese email. Ingresá con tu contraseña y conectá esa cuenta desde Mis datos.',
-		proveedor_apagado: 'Ese ingreso todavía no está disponible. Probá con tu email.'
+		proveedor_apagado: 'Ese ingreso todavía no está disponible. Probá con tu email.',
+		clerk_token_invalido: 'El ingreso venció o no es válido. Probá de nuevo.',
+		demasiados_intentos: 'Hubo demasiados intentos. Probá de nuevo en 15 minutos.'
 	};
 	const errorUrl = $derived.by(() => {
 		const c = page.url.searchParams.get('error');
 		return c ? (ERRORES_URL[c] ?? 'No pudimos completar el ingreso. Probá de nuevo.') : '';
 	});
+	// Error al arrancar el ingreso con Google o Apple (antes de salir de esta página).
+	let errSocial = $state('');
 	const err = $derived(
-		(form && 'errores' in form
-			? form.errores
-			: errorUrl && !form
-				? { form: errorUrl }
-				: {}) as Record<string, string>
+		(errSocial
+			? { form: errSocial }
+			: form && 'errores' in form
+				? form.errores
+				: errorUrl && !form
+					? { form: errorUrl }
+					: {}) as Record<string, string>
 	);
 
 	// Desde el onboarding ("Seguir" con el email): /ingresar?m=registro&email=…
@@ -93,6 +101,28 @@
 	/** Link a otro modo de esta misma pantalla. */
 	const aModo = (m: Modo) => `${resolve('/ingresar')}?m=${m}`;
 	const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+
+	/**
+	 * Google y Apple por Clerk (lib/clerk.ts): se arranca el ingreso desde el navegador y se va al
+	 * proveedor. Sin Clerk (la demo), el botón sigue al formulario `?/social`.
+	 */
+	async function seguirCon(e: MouseEvent, proveedor: ProveedorClerk) {
+		if (!data.clerk) return;
+		e.preventDefault();
+		enviando = true;
+		errSocial = '';
+		try {
+			location.assign(
+				await iniciar(data.clerk, proveedor, `${location.origin}${resolve('/ingresar/clerk')}`)
+			);
+		} catch (x) {
+			enviando = false;
+			errSocial =
+				x instanceof ErrorClerk && x.codigo === 'too_many_requests'
+					? 'Hubo demasiados intentos. Probá de nuevo en unos minutos.'
+					: 'No pudimos conectar con Google o Apple. Probá de nuevo o entrá con tu email.';
+		}
+	}
 
 	const conEnvio = () => {
 		enviando = true;
@@ -153,15 +183,31 @@
 									formaction="?/social"
 									name="proveedor"
 									value="google"
-									class="social"><Icon icon={logosGoogleIcon} size={18} />Google</button
+									class="social"
+									disabled={enviando}
+									onclick={(e) => seguirCon(e, 'google')}
+									><Icon icon={logosGoogleIcon} size={18} />Seguir con Google</button
 								>
 								<button
 									type="submit"
 									formaction="?/social"
 									name="proveedor"
-									value="whatsapp"
-									class="social"><Icon icon={logosWhatsappIcon} size={18} />WhatsApp</button
+									value="apple"
+									class="social"
+									disabled={enviando}
+									onclick={(e) => seguirCon(e, 'apple')}
+									><Icon icon={logosApple} size={18} />Seguir con Apple</button
 								>
+								{#if data.whatsapp}
+									<button
+										type="submit"
+										formaction="?/social"
+										name="proveedor"
+										value="whatsapp"
+										class="social"
+										><Icon icon={logosWhatsappIcon} size={18} />Seguir con WhatsApp</button
+									>
+								{/if}
 							</div>
 							<div class="o"><span></span>o con tu email<span></span></div>
 						{/if}
@@ -225,15 +271,31 @@
 									formaction="?/social"
 									name="proveedor"
 									value="google"
-									class="social"><Icon icon={logosGoogleIcon} size={18} />Google</button
+									class="social"
+									disabled={enviando}
+									onclick={(e) => seguirCon(e, 'google')}
+									><Icon icon={logosGoogleIcon} size={18} />Seguir con Google</button
 								>
 								<button
 									type="submit"
 									formaction="?/social"
 									name="proveedor"
-									value="whatsapp"
-									class="social"><Icon icon={logosWhatsappIcon} size={18} />WhatsApp</button
+									value="apple"
+									class="social"
+									disabled={enviando}
+									onclick={(e) => seguirCon(e, 'apple')}
+									><Icon icon={logosApple} size={18} />Seguir con Apple</button
 								>
+								{#if data.whatsapp}
+									<button
+										type="submit"
+										formaction="?/social"
+										name="proveedor"
+										value="whatsapp"
+										class="social"
+										><Icon icon={logosWhatsappIcon} size={18} />Seguir con WhatsApp</button
+									>
+								{/if}
 							</div>
 							<div class="o"><span></span>o con tu email<span></span></div>
 						{/if}
@@ -343,7 +405,7 @@
 								aria-pressed={canal === 'email'}
 								onclick={() => (canal = 'email')}>Email</button
 							>
-							{#if data.sociales}
+							{#if data.whatsapp}
 								<button
 									type="button"
 									aria-pressed={canal === 'whatsapp'}
@@ -693,9 +755,10 @@
 	.bajada b {
 		color: #2a140c;
 	}
+	/* Dos por fila como el handoff; a 375 px «Seguir con Google» no entra en media fila: uno por fila. */
 	.sociales {
 		display: grid;
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
 		gap: 8px;
 	}
 	.social {
@@ -710,6 +773,11 @@
 		font-size: 14.5px;
 		font-weight: 600;
 		color: #2a140c;
+		white-space: nowrap;
+	}
+	/* El tercero (WhatsApp, sólo en la demo) ocupa la fila entera. */
+	.social:nth-child(3) {
+		grid-column: 1 / -1;
 	}
 	.o {
 		display: flex;

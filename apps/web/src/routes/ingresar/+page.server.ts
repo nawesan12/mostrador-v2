@@ -1,5 +1,7 @@
 import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 import * as v from 'valibot';
+import { fapiDe } from '#lib/clerk.ts';
 import { cuentasDe, usaSandbox } from '#lib/server/datos/index.ts';
 import { ErrorCuenta } from '#lib/server/auth/cuentas.ts';
 import {
@@ -12,21 +14,14 @@ import {
 } from '#lib/server/auth/esquemas.ts';
 import { esProveedor, irAlProveedor } from '#lib/server/auth/social.ts';
 import { guardarSesion } from '#lib/server/auth/sesion.ts';
+import { destino, VOLVER, volverValido } from '#lib/server/auth/volver.ts';
 import type { Actions, PageServerLoad } from './$types';
-
-/**
- * Volver a donde se pidió entrar (hoy, sólo el consentimiento de una IA): el formulario postea a
- * `?/ingresar` y pierde la consulta, así que va en una cookie corta.
- */
-const VOLVER = 'mostrador-volver';
-const volverValido = (v: string | null | undefined) =>
-	!!v && v.startsWith('/oauth/autorizar?') && v.length < 2000;
 
 export const load: PageServerLoad = async (event) => {
 	const { url, cookies } = event;
 	const v = url.searchParams.get('volver');
 	if (volverValido(v))
-		cookies.set(VOLVER, v!, { path: '/', httpOnly: true, sameSite: 'lax', maxAge: 600 });
+		cookies.set(VOLVER, v, { path: '/', httpOnly: true, sameSite: 'lax', maxAge: 600 });
 	// El link de contraseña nueva se mira al abrirlo: si venció o ya se usó, se avisa de entrada en
 	// vez de pedir la contraseña y recién ahí decirlo. Si la API no contesta, se muestra el
 	// formulario (al enviarlo, Go vuelve a validar).
@@ -41,16 +36,11 @@ export const load: PageServerLoad = async (event) => {
 				linkVencido = e instanceof ErrorCuenta && e.estado >= 400 && e.estado < 500;
 			}
 	}
-	// Google y WhatsApp sólo en la demo: en producción el ingreso social va a ser con Clerk, y hasta
-	// entonces no se ofrece un botón que no anda.
-	return { sociales: usaSandbox(), linkVencido };
+	// Google y Apple van por Clerk (docs/decisiones.md §31): con la API, sólo si la instancia está
+	// configurada; en la demo llevan al recorrido de ejemplo. WhatsApp, sólo en la demo.
+	const clerk = usaSandbox() ? null : fapiDe(env.CLERK_PUBLISHABLE_KEY);
+	return { clerk, sociales: usaSandbox() || !!clerk, whatsapp: usaSandbox(), linkVencido };
 };
-
-function destino(cookies: RequestEvent['cookies']) {
-	const v = cookies.get(VOLVER);
-	cookies.delete(VOLVER, { path: '/' });
-	return volverValido(v) ? v! : '/panel';
-}
 
 const datos = async (request: Request) => Object.fromEntries(await request.formData());
 
@@ -111,10 +101,20 @@ export const actions: Actions = {
 		}
 		redirect(303, '/onboarding?paso=1');
 	},
-	/** Google, Mercado Pago y Mercado Libre van al proveedor; WhatsApp pide el número. */
+	/**
+	 * Sin JavaScript o en la demo. Google y Apple van por Clerk desde el navegador (en la demo, al
+	 * recorrido de ejemplo); Mercado Pago y Mercado Libre, al proveedor; WhatsApp pide el número.
+	 */
 	social: async (event) => {
 		const proveedor = String((await event.request.formData()).get('proveedor') ?? '');
 		if (proveedor === 'whatsapp') return { modo: 'whatsapp' as const };
+		if (proveedor === 'google' || proveedor === 'apple') {
+			if (usaSandbox()) redirect(303, '/prueba');
+			return fail(400, {
+				modo: 'login',
+				errores: { form: 'Para seguir con Google o Apple, activá JavaScript en tu navegador.' }
+			});
+		}
 		if (!esProveedor(proveedor))
 			return fail(400, { modo: 'login', errores: { form: 'Elegí cómo querés ingresar.' } });
 		return irAlProveedor(event, proveedor, '/prueba', 'login');

@@ -36,14 +36,13 @@ Ojo: la cuenta compartida con Caja tiene tope de 100 mails por día. ¿Usamos la
 - ⬜ `RESEND_API_KEY=`
 - ⬜ `MAIL_FROM=` (sugerido: `Mostrador <hola@tulocalweb.com.ar>`)
 
-## 4. Google (PR 5 login, PR 8 onboarding, PR 20 integraciones)
+## 4. Google (login por Clerk, PR 8 onboarding, PR 20 integraciones)
 
 Dónde: console.cloud.google.com → proyecto "Mostrador".
 
-- ⬜ OAuth client (Web), con pantalla de consentimiento en producción. Redirects:
-  `https://tulocalweb.com.ar/ingresar/google/vuelta`, `http://localhost:5173/ingresar/google/vuelta`
-  - `GOOGLE_CLIENT_ID=`
-  - `GOOGLE_CLIENT_SECRET=`
+- ⬜ OAuth client (Web) para **Clerk** (el ingreso con Google ya no es OAuth propio: docs/decisiones.md
+  §31). Se carga en el dashboard de Clerk (producción), no en Tu Local Web. Redirect:
+  `https://clerk.grupovimo.com.ar/v1/oauth_callback`
 - ⬜ Places API (New) habilitada + API key restringida: `GOOGLE_PLACES_API_KEY=`
 - ⬜ Merchant Center (para Google Shopping): `GOOGLE_MERCHANT_ID=`, más una service account JSON con acceso a Content API: `GOOGLE_SERVICE_ACCOUNT_JSON=`
 - ⬜ GA4 del sitio de Mostrador: `PUBLIC_GA4_ID=` (G-XXXX) y `GA4_API_SECRET=` (Measurement Protocol)
@@ -146,3 +145,13 @@ Dónde: con clave fiscal → "Administración de certificados digitales" (homolo
 ## 16. Lo genero yo (no hace falta que hagas nada)
 
 `SESSION_SECRET`, `CODES_HMAC_KEY`, `CREDENTIALS_MASTER_KEY` (AES-GCM + HKDF por tienda), `INTERNAL_SECRET`, `OAUTH_SIGNING_KEY` (MCP), `WHATSAPP_VERIFY_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`, `REVALIDATION_KEY`, contraseñas de Postgres local.
+
+## Clerk (identidad compartida de Grupo Vimo: Google, Apple)
+
+Una sola aplicación para todo Grupo Vimo (también la app de iPhone). Instancia de desarrollo para
+local y tests; producción en `clerk.grupovimo.com.ar`.
+
+- ⬜ Desarrollo: `CLERK_PUBLISHABLE_KEY=pk_test_…`, `CLERK_SECRET_KEY=sk_test_…`
+- ⬜ Producción: `CLERK_PUBLISHABLE_KEY=pk_live_…`, `CLERK_SECRET_KEY=sk_live_…`
+- En el VPS: `MOSTRADOR_CLERK_SECRETO`, `MOSTRADOR_CLERK_PUBLICABLE` y `MOSTRADOR_CLERK_ORIGENES` en
+  `api.conf`; `CLERK_PUBLISHABLE_KEY` en `web.conf`.

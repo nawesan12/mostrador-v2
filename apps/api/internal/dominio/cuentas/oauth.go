@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strings"
@@ -42,6 +43,8 @@ type Perfil struct {
 	// Verificado: el proveedor garantiza que el email es de esta persona (sólo así se vincula a una
 	// cuenta existente).
 	Verificado bool
+	// Foto de perfil (https). Vacía: no se toca la que haya.
+	Foto string
 }
 
 func texto2(m map[string]any, k string) string {
@@ -58,16 +61,6 @@ func texto2(m map[string]any, k string) string {
 // proveedor está apagado.
 func Proveedores(cfg map[string][2]string) map[string]*Proveedor {
 	ps := map[string]*Proveedor{
-		"google": {
-			ID: "google", Nombre: "Google",
-			AuthURL: "https://accounts.google.com/o/oauth2/v2/auth", TokenURL: "https://oauth2.googleapis.com/token",
-			PerfilURL: "https://openidconnect.googleapis.com/v1/userinfo", Alcances: []string{"openid", "email", "profile"},
-			Extra: map[string]string{"prompt": "select_account"},
-			Perfil: func(m map[string]any) Perfil {
-				v, _ := m["email_verified"].(bool)
-				return Perfil{Sujeto: texto2(m, "sub"), Email: texto2(m, "email"), Nombre: texto2(m, "given_name"), Verificado: v}
-			},
-		},
 		"mercadopago": {
 			ID: "mercadopago", Nombre: "Mercado Pago",
 			AuthURL: "https://auth.mercadopago.com/authorization", TokenURL: "https://api.mercadopago.com/oauth/token",
@@ -106,7 +99,7 @@ func (s *Servicio) proveedor(id string) (*Proveedor, error) {
 // Disponibles: qué proveedores están configurados.
 func (s *Servicio) Disponibles() []string {
 	out := []string{}
-	for _, id := range []string{"google", "mercadopago", "mercadolibre"} {
+	for _, id := range []string{"mercadopago", "mercadolibre"} {
 		if p, ok := s.OAuth[id]; ok && p.ClientID != "" {
 			out = append(out, id)
 		}
@@ -194,6 +187,7 @@ func (s *Servicio) entrarConPerfil(ctx context.Context, proveedor string, perfil
 	err := s.Pool.QueryRow(ctx, `SELECT usuario_id FROM auth.identidades WHERE proveedor = $1 AND sujeto = $2`,
 		proveedor, perfil.Sujeto).Scan(&usuario)
 	if err == nil {
+		s.ponerFoto(ctx, usuario, perfil.Foto)
 		ses, err := s.sesionDeUsuario(ctx, usuario, SesionLarga, cl)
 		return IngresoSocial{Sesion: ses}, err
 	}
@@ -213,6 +207,12 @@ func (s *Servicio) entrarConPerfil(ctx context.Context, proveedor string, perfil
 			ON CONFLICT DO NOTHING`, proveedor, perfil.Sujeto, usuario, email); err != nil {
 			return IngresoSocial{}, err
 		}
+		// El proveedor garantiza el email: queda verificado también en Tu Local Web.
+		if _, err := s.Pool.Exec(ctx, `UPDATE auth.usuarios SET email_verificado_en = now()
+			WHERE id = $1 AND email_verificado_en IS NULL`, usuario); err != nil {
+			return IngresoSocial{}, err
+		}
+		s.ponerFoto(ctx, usuario, perfil.Foto)
 		ses, err := s.sesionDeUsuario(ctx, usuario, SesionLarga, cl)
 		return IngresoSocial{Sesion: ses}, err
 	case !errors.Is(err, pgx.ErrNoRows):
@@ -244,6 +244,11 @@ func (s *Servicio) entrarConPerfil(ctx context.Context, proveedor string, perfil
 			proveedor, perfil.Sujeto, u, email); err != nil {
 			return err
 		}
+		if perfil.Foto != "" {
+			if _, err := tx.Exec(ctx, `UPDATE auth.usuarios SET foto = $2 WHERE id = $1`, u, perfil.Foto); err != nil {
+				return err
+			}
+		}
 		ses, err = crearSesion(ctx, tx, u, tiendaID, SesionLarga, cl)
 		return err
 	})
@@ -251,6 +256,17 @@ func (s *Servicio) entrarConPerfil(ctx context.Context, proveedor string, perfil
 		s.bienvenida(ctx, email, nombre, "La tienda de "+strings.Fields(nombre)[0])
 	}
 	return IngresoSocial{Sesion: ses, Nueva: err == nil}, err
+}
+
+// ponerFoto guarda la foto del proveedor si cambió. Es un detalle: si falla, se entra igual.
+func (s *Servicio) ponerFoto(ctx context.Context, usuario, foto string) {
+	if foto == "" {
+		return
+	}
+	if _, err := s.Pool.Exec(ctx, `UPDATE auth.usuarios SET foto = $2 WHERE id = $1 AND foto IS DISTINCT FROM $2`,
+		usuario, foto); err != nil {
+		slog.Warn("cuentas: guardar la foto", "error", err)
+	}
 }
 
 func (s *Servicio) cliente() *http.Client {

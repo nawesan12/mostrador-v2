@@ -181,7 +181,7 @@ func (s *Servicio) Rutas(mux *http.ServeMux, claveBFF string) {
 // rutasSociales: proveedores OAuth y link por WhatsApp.
 func (s *Servicio) rutasSociales(mux *http.ServeMux, claveBFF string) {
 	mux.HandleFunc("GET /v1/auth/proveedores", func(w http.ResponseWriter, _ *http.Request) {
-		escribir(w, http.StatusOK, map[string]any{"oauth": s.Disponibles(), "whatsapp": s.WhatsApp != nil})
+		escribir(w, http.StatusOK, map[string]any{"oauth": s.Disponibles(), "clerk": s.Clerk != nil, "whatsapp": s.WhatsApp != nil})
 	})
 	mux.HandleFunc("POST /v1/auth/oauth/{proveedor}/inicio", func(w http.ResponseWriter, r *http.Request) {
 		u, err := s.IniciarOAuth(r.Context(), r.PathValue("proveedor"), ClienteDe(r, claveBFF))
@@ -197,6 +197,19 @@ func (s *Servicio) rutasSociales(mux *http.ServeMux, claveBFF string) {
 			return
 		}
 		res, err := s.VolverOAuth(r.Context(), r.PathValue("proveedor"), a.Codigo, a.Estado, ClienteDe(r, claveBFF))
+		if err != nil {
+			escribirError(w, err)
+			return
+		}
+		escribir(w, http.StatusOK, res)
+	})
+	// Token de sesión de Clerk (web o app de iPhone) → sesión de Tu Local Web.
+	mux.HandleFunc("POST /v1/auth/clerk", func(w http.ResponseWriter, r *http.Request) {
+		var a struct{ Token string }
+		if !leer(w, r, &a) {
+			return
+		}
+		res, err := s.IngresarConClerk(r.Context(), a.Token, ClienteDe(r, claveBFF))
 		if err != nil {
 			escribirError(w, err)
 			return
@@ -269,6 +282,10 @@ func escribirError(w http.ResponseWriter, err error) {
 		problema.Escribir(w, problema.NoProcesable("sin_email", "No pudimos saber tu email desde esa cuenta. Probá con tu email."))
 	case errors.Is(err, ErrVincular):
 		problema.Escribir(w, problema.Conflicto("vincular", "Ya hay una cuenta con ese email. Ingresá con tu contraseña y conectá esa cuenta desde Mis datos."))
+	case errors.Is(err, ErrTokenClerk):
+		p := problema.SinSesion()
+		p.Codigo, p.Titulo, p.Detalle = "clerk_token_invalido", "No pudimos ingresar", "El ingreso venció o no es válido. Probá de nuevo."
+		problema.Escribir(w, p)
 	case errors.Is(err, ErrTokenInvalido):
 		problema.Escribir(w, problema.NoProcesable("link_invalido", "El link venció o ya se usó. Pedí uno nuevo."))
 	default:

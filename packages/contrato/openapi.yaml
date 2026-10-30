@@ -63,6 +63,46 @@ paths:
       responses:
         '200': { description: Sesión en curso, content: { application/json: { schema: { $ref: '#/components/schemas/DatosSesion' } } } }
         '401': { $ref: '#/components/responses/Problema' }
+  /v1/auth/clerk:
+    post:
+      operationId: ingresarConClerk
+      summary: Entra con el token de sesión de Clerk (Google, Apple). Lo usan la web (por el BFF) y la app de iPhone.
+      description: |
+        Clerk es la identidad compartida de Grupo Vimo: una sola instancia para todas las apps. El
+        cliente completa el ingreso con Clerk (la web, con la Frontend API en modo nativo; la app de
+        iPhone, con el SDK de Clerk para Swift) y manda acá el token de sesión de Clerk
+        (`session.getToken()`, un JWT RS256 que vive 60 segundos): conviene pedirlo justo antes.
+
+        Go no confía en nada del cliente: verifica la firma con las claves públicas de la instancia
+        (JWKS), el emisor (`iss`, la Frontend API), el vencimiento y, si el token trae `azp` (el
+        origen del navegador que lo pidió), que sea un origen permitido (`MOSTRADOR_CLERK_ORIGENES`).
+        La app nativa no tiene origen: su token viene sin `azp` y se acepta. Después lee a la persona
+        con la Backend API de Clerk (email verificado, nombre y foto).
+
+        Si la identidad de Clerk ya está vinculada, entra a esa cuenta. Si no, la vincula a la cuenta
+        de Tu Local Web con ese email (Clerk sólo da emails verificados) o crea una cuenta nueva, como
+        el registro: tienda provisoria, mail de bienvenida y `nueva: true` para seguir al onboarding.
+
+        La respuesta es la sesión propia de Tu Local Web. La web la guarda en la cookie
+        `__Host-mostrador_sesion`; la app de iPhone guarda `token` en el Keychain y lo manda como
+        `Authorization: Bearer` en cada pedido. La sesión dura 30 días y es independiente de la de
+        Clerk (cerrar una no cierra la otra).
+
+        Límite: 30 intentos cada 15 minutos por IP (la del visitante si el pedido viene del BFF).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string, maxLength: 8192, description: Token de sesión de Clerk (JWT) }
+      responses:
+        '200': { description: Sesión, content: { application/json: { schema: { $ref: '#/components/schemas/IngresoSocial' } } } }
+        '401': { description: 'Token inválido o vencido (`clerk_token_invalido`)', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problema' } } } }
+        '422': { description: 'Clerk apagado (`proveedor_apagado`) o la persona no tiene un email verificado (`sin_email`)', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problema' } } } }
+        '429': { $ref: '#/components/responses/Problema' }
   /v1/auth/recuperar:
     post:
       operationId: recuperar
@@ -4585,6 +4625,13 @@ components:
         token: { type: string, description: 'Se entrega una sola vez; el BFF lo guarda en una cookie httpOnly' }
         venceEn: { type: string, format: date-time }
         tiendaId: { type: string }
+    IngresoSocial:
+      allOf:
+        - { $ref: '#/components/schemas/Sesion' }
+        - type: object
+          required: [nueva]
+          properties:
+            nueva: { type: boolean, description: 'La cuenta se creó recién: sigue al onboarding' }
     DatosSesion:
       type: object
       required: [usuario, tiendaId, rol, venceEn]
@@ -4596,6 +4643,7 @@ components:
             id: { type: string, format: uuid }
             nombre: { type: string }
             email: { type: string }
+            foto: { type: string, description: 'Foto de perfil (https) que dio Google o Apple al entrar con Clerk' }
         tiendaId: { type: string }
         rol: { type: string, enum: [duenio, admin, ventas, deposito, ''] }
         venceEn: { type: string, format: date-time }

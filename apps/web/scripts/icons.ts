@@ -54,7 +54,9 @@ const EXTRA = [
 	'ph:calendar-blank',
 	'ph:arrow-down-bold',
 	'ph:pencil-simple',
-	'ph:calendar-x'
+	'ph:calendar-x',
+	// Seguir con Apple en /ingresar (Clerk).
+	'logos:apple'
 ];
 const names = new Set<string>([...EXTRA, ...process.argv.slice(2)]);
 for (const f of files)

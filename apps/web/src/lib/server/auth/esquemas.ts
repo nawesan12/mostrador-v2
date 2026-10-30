@@ -47,7 +47,7 @@ export const Recuperar = v.variant('canal', [
 export const Enlace = v.object({ telefono });
 
 /** Proveedores de ingreso con OAuth (los mismos que la API). */
-export const PROVEEDORES = ['google', 'mercadopago', 'mercadolibre'] as const;
+export const PROVEEDORES = ['mercadopago', 'mercadolibre'] as const;
 export type ProveedorOAuth = (typeof PROVEEDORES)[number];
 
 export const Restablecer = v.object({

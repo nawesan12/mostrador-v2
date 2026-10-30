@@ -22,6 +22,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/tiendas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/clerk"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/limite"
@@ -55,8 +56,11 @@ type Servicio struct {
 	Correo correo.Correo
 	// URL pública del sitio, para los links de los mails.
 	Sitio string
-	// Ingreso con Google, Mercado Pago y Mercado Libre (Proveedores); los apagados no tienen ClientID.
+	// Ingreso con Mercado Pago y Mercado Libre (Proveedores); los apagados no tienen ClientID.
 	OAuth map[string]*Proveedor
+	// Clerk: Google, Apple y los demás ingresos sociales de Grupo Vimo (web y app de iPhone). nil:
+	// apagado.
+	Clerk *clerk.Cliente
 	// WhatsApp de la plataforma: links de ingreso y de contraseña nueva. nil: no se manda.
 	WhatsApp whatsapp.Mensajero
 	// Cliente HTTP para los proveedores (tests: el del servidor falso).
@@ -304,6 +308,8 @@ type Datos struct {
 		ID     string `json:"id"`
 		Nombre string `json:"nombre"`
 		Email  string `json:"email"`
+		// Foto de perfil (la de Google o Apple al entrar con Clerk). Vacía: no tiene.
+		Foto string `json:"foto,omitempty"`
 	} `json:"usuario"`
 	TiendaID string    `json:"tiendaId"`
 	Rol      string    `json:"rol"`
@@ -328,12 +334,12 @@ func (s *Servicio) Sesion(ctx context.Context, token string) (Datos, error) {
 	var tienda, rol *string
 	var visto time.Time
 	err := s.Pool.QueryRow(ctx, `
-		SELECT u.id, u.nombre, u.email, s.tienda_id, m.rol, s.vence_en, s.visto_en
+		SELECT u.id, u.nombre, u.email, coalesce(u.foto, ''), s.tienda_id, m.rol, s.vence_en, s.visto_en
 		FROM auth.sesiones s
 		JOIN auth.usuarios u ON u.id = s.usuario_id
 		LEFT JOIN auth.membresias m ON m.usuario_id = s.usuario_id AND m.tienda_id = s.tienda_id
 		WHERE s.token_hash = $1 AND s.vence_en > now()`, hashToken(token)).
-		Scan(&d.Usuario.ID, &d.Usuario.Nombre, &d.Usuario.Email, &tienda, &rol, &d.VenceEn, &visto)
+		Scan(&d.Usuario.ID, &d.Usuario.Nombre, &d.Usuario.Email, &d.Usuario.Foto, &tienda, &rol, &d.VenceEn, &visto)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return d, ErrSinSesion
 	}

@@ -86,6 +86,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/auth/clerk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Entra con el token de sesión de Clerk (Google, Apple). Lo usan la web (por el BFF) y la app de iPhone.
+         * @description Clerk es la identidad compartida de Grupo Vimo: una sola instancia para todas las apps. El
+         *     cliente completa el ingreso con Clerk (la web, con la Frontend API en modo nativo; la app de
+         *     iPhone, con el SDK de Clerk para Swift) y manda acá el token de sesión de Clerk
+         *     (`session.getToken()`, un JWT RS256 que vive 60 segundos): conviene pedirlo justo antes.
+         *
+         *     Go no confía en nada del cliente: verifica la firma con las claves públicas de la instancia
+         *     (JWKS), el emisor (`iss`, la Frontend API), el vencimiento y, si el token trae `azp` (el
+         *     origen del navegador que lo pidió), que sea un origen permitido (`MOSTRADOR_CLERK_ORIGENES`).
+         *     La app nativa no tiene origen: su token viene sin `azp` y se acepta. Después lee a la persona
+         *     con la Backend API de Clerk (email verificado, nombre y foto).
+         *
+         *     Si la identidad de Clerk ya está vinculada, entra a esa cuenta. Si no, la vincula a la cuenta
+         *     de Tu Local Web con ese email (Clerk sólo da emails verificados) o crea una cuenta nueva, como
+         *     el registro: tienda provisoria, mail de bienvenida y `nueva: true` para seguir al onboarding.
+         *
+         *     La respuesta es la sesión propia de Tu Local Web. La web la guarda en la cookie
+         *     `__Host-mostrador_sesion`; la app de iPhone guarda `token` en el Keychain y lo manda como
+         *     `Authorization: Bearer` en cada pedido. La sesión dura 30 días y es independiente de la de
+         *     Clerk (cerrar una no cierra la otra).
+         *
+         *     Límite: 30 intentos cada 15 minutos por IP (la del visitante si el pedido viene del BFF).
+         */
+        post: operations["ingresarConClerk"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/recuperar": {
         parameters: {
             query?: never;
@@ -4364,12 +4404,18 @@ export interface components {
             venceEn: string;
             tiendaId: string;
         };
+        IngresoSocial: components["schemas"]["Sesion"] & {
+            /** @description La cuenta se creó recién: sigue al onboarding */
+            nueva: boolean;
+        };
         DatosSesion: {
             usuario: {
                 /** Format: uuid */
                 id: string;
                 nombre: string;
                 email: string;
+                /** @description Foto de perfil (https) que dio Google o Apple al entrar con Clerk */
+                foto?: string;
             };
             tiendaId: string;
             /** @enum {string} */
@@ -5002,6 +5048,52 @@ export interface operations {
                 };
             };
             401: components["responses"]["Problema"];
+        };
+    };
+    ingresarConClerk: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Token de sesión de Clerk (JWT) */
+                    token: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Sesión */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IngresoSocial"];
+                };
+            };
+            /** @description Token inválido o vencido (`clerk_token_invalido`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problema"];
+                };
+            };
+            /** @description Clerk apagado (`proveedor_apagado`) o la persona no tiene un email verificado (`sin_email`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problema"];
+                };
+            };
+            429: components["responses"]["Problema"];
         };
     };
     recuperar: {

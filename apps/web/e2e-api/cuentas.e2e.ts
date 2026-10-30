@@ -108,14 +108,14 @@ test('registro, salir, recuperar por mail, contraseña nueva e ingreso', async (
 
 test('ingreso con proveedores apagados y link por WhatsApp', async ({ page }) => {
 	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
-	// Sin credenciales de Google en la API, el botón explica que todavía no está.
+	// Sin la clave publicable de Clerk, no se ofrecen Google ni Apple (docs/decisiones.md §31).
 	await page.goto('/ingresar');
 	await listo(page);
-	await page.getByRole('button', { name: 'Google' }).click();
-	await expect(page.getByRole('alert')).toContainText('todavía no está disponible');
+	await expect(page.getByRole('button', { name: 'Seguir con Google' })).toHaveCount(0);
 
 	// WhatsApp: en desarrollo la API lo manda al log; responde igual haya o no cuenta con ese número.
-	await page.getByRole('button', { name: 'WhatsApp' }).first().click();
+	await page.goto('/ingresar?m=whatsapp');
+	await listo(page);
 	await page.getByLabel('WhatsApp de tu cuenta').fill('11 5555-0000');
 	await page.getByRole('button', { name: 'Mandame el link' }).click();
 	await expect(page.getByRole('heading', { name: 'Revisá tu WhatsApp' })).toBeVisible();

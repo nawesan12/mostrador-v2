@@ -24,6 +24,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/telegram"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/tiendanube"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/cifrado"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/clerk"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/config"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
@@ -90,7 +91,7 @@ func correr() error {
 		Handler: servidor.Nuevo(servidor.Dependencias{
 			App: app,
 			Cuentas: &cuentas.Servicio{Pool: app, Correo: mails, Sitio: cfg.Sitio,
-				OAuth: cuentas.Proveedores(cfg.OAuth), WhatsApp: wa},
+				OAuth: cuentas.Proveedores(cfg.OAuth), WhatsApp: wa, Clerk: clerkDe(cfg)},
 			Arrepentimiento: &arrepentimiento.Servicio{Pool: app, Correo: mails, Equipo: cfg.CorreoEquipo},
 			Formularios:     &formularios.Servicio{Pool: app, Correo: mails, Sitio: cfg.Sitio, Equipo: cfg.CorreoEquipo},
 			ClaveBFF:        cfg.ClaveBFF,
@@ -127,6 +128,20 @@ func correr() error {
 	apagar, cancelar := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancelar()
 	return srv.Shutdown(apagar)
+}
+
+// clerkDe arma el ingreso con Clerk. Sin clave secreta queda apagado; con claves mal formadas también,
+// con un aviso (el resto de la API sigue).
+func clerkDe(cfg config.Config) *clerk.Cliente {
+	if cfg.ClerkSecreto == "" {
+		return nil
+	}
+	c, err := clerk.Nuevo(cfg.ClerkSecreto, cfg.ClerkPublicable, cfg.ClerkOrigenes)
+	if err != nil {
+		slog.Error("clerk: configuración inválida, ingreso con Clerk apagado", "error", err)
+		return nil
+	}
+	return c
 }
 
 // facturacionDe arma la facturación con ARCA. Sin clave de cifrado la clave privada no se puede

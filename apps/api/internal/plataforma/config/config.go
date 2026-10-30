@@ -25,9 +25,14 @@ type Config struct {
 	// Bandeja del equipo: le llegan las consultas de ventas, las postulaciones de partners y los
 	// arrepentimientos. Vacía: no se avisa (los pedidos quedan igual en la base).
 	CorreoEquipo string
-	// Ingreso con proveedores: {google|mercadopago|mercadolibre: [client id, secreto]}. Sin client
-	// id, el proveedor queda apagado.
+	// Ingreso con proveedores: {mercadopago|mercadolibre|tiendanube: [client id, secreto]}. Sin
+	// client id, el proveedor queda apagado.
 	OAuth map[string][2]string
+	// Clerk (Google, Apple y demás ingresos sociales de Grupo Vimo): clave secreta y publicable de la
+	// instancia (de la publicable sale el emisor de los tokens) y los orígenes que pueden haber pedido
+	// el token (azp; vacío: el sitio). Sin clave secreta, apagado.
+	ClerkSecreto, ClerkPublicable string
+	ClerkOrigenes                 []string
 	// WhatsApp Cloud de la plataforma (links de ingreso y de contraseña nueva).
 	WhatsAppToken, WhatsAppNumeroID string
 	// Mercado Pago: token de la cuenta de la plataforma (el abono) y clave de los webhooks. El OAuth
@@ -66,11 +71,13 @@ func Leer() (Config, error) {
 		SMTPClave:    os.Getenv("MOSTRADOR_SMTP_CLAVE"),
 		CorreoEquipo: os.Getenv("MOSTRADOR_CORREO_EQUIPO"),
 		OAuth: map[string][2]string{
-			"google":       {os.Getenv("MOSTRADOR_GOOGLE_CLIENT_ID"), os.Getenv("MOSTRADOR_GOOGLE_SECRETO")},
 			"mercadopago":  {os.Getenv("MOSTRADOR_MP_CLIENT_ID"), os.Getenv("MOSTRADOR_MP_SECRETO")},
 			"mercadolibre": {os.Getenv("MOSTRADOR_ML_CLIENT_ID"), os.Getenv("MOSTRADOR_ML_SECRETO")},
 			"tiendanube":   {os.Getenv("MOSTRADOR_TN_CLIENT_ID"), os.Getenv("MOSTRADOR_TN_SECRETO")},
 		},
+		ClerkSecreto:     os.Getenv("MOSTRADOR_CLERK_SECRETO"),
+		ClerkPublicable:  os.Getenv("MOSTRADOR_CLERK_PUBLICABLE"),
+		ClerkOrigenes:    lista(os.Getenv("MOSTRADOR_CLERK_ORIGENES")),
 		WhatsAppToken:    os.Getenv("MOSTRADOR_WHATSAPP_TOKEN"),
 		WhatsAppNumeroID: os.Getenv("MOSTRADOR_WHATSAPP_NUMERO_ID"),
 		MPToken:          os.Getenv("MOSTRADOR_MP_TOKEN"),
@@ -86,6 +93,9 @@ func Leer() (Config, error) {
 	default:
 		return c, fmt.Errorf("MOSTRADOR_ENTORNO=%q: tiene que ser desarrollo, staging o produccion", c.Entorno)
 	}
+	if len(c.ClerkOrigenes) == 0 && !c.Desarrollo() {
+		c.ClerkOrigenes = []string{c.Sitio}
+	}
 	if c.Desarrollo() {
 		// Postgres de infra/compose.dev.yml. La base de la app es mostrador_dev (la crea el bootstrap
 		// con el migrador como dueño); el admin entra a la base por defecto del contenedor.
@@ -97,6 +107,9 @@ func Leer() (Config, error) {
 		c.BaseStaff = conDefecto(c.BaseStaff, fmt.Sprintf(local, "mostrador_staff", "mostrador_dev"))
 		c.SMTP = conDefecto(c.SMTP, "127.0.0.1:1026")
 		c.Sitio = conDefecto(os.Getenv("MOSTRADOR_SITIO"), "http://localhost:5173")
+		if len(c.ClerkOrigenes) == 0 {
+			c.ClerkOrigenes = []string{c.Sitio}
+		}
 	}
 	return c, nil
 }
@@ -126,6 +139,17 @@ func (c Config) Exigir(campos ...string) error {
 		return fmt.Errorf("falta configurar: %s", strings.Join(faltan, ", "))
 	}
 	return nil
+}
+
+// lista separa por comas y saca los vacíos.
+func lista(v string) []string {
+	var out []string
+	for _, x := range strings.Split(v, ",") {
+		if x = strings.TrimSpace(x); x != "" {
+			out = append(out, x)
+		}
+	}
+	return out
 }
 
 func valor(k, def string) string { return conDefecto(os.Getenv(k), def) }

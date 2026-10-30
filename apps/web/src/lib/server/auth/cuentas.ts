@@ -28,7 +28,10 @@ export class CuentasApi extends ClienteBff {
 	}
 	/** Qué ingresos están configurados en la API. */
 	proveedores() {
-		return this.pedir<{ oauth: string[]; whatsapp: boolean }>('GET', '/v1/auth/proveedores');
+		return this.pedir<{ oauth: string[]; clerk: boolean; whatsapp: boolean }>(
+			'GET',
+			'/v1/auth/proveedores'
+		);
 	}
 	/** URL del proveedor a la que se manda a la persona (con state y PKCE guardados en Go). */
 	iniciarOAuth(proveedor: string) {
@@ -44,6 +47,10 @@ export class CuentasApi extends ClienteBff {
 			`/v1/auth/oauth/${encodeURIComponent(proveedor)}/vuelta`,
 			{ codigo, estado }
 		);
+	}
+	/** Entra con el token de sesión de Clerk (Google, Apple): Go lo verifica con la instancia. */
+	ingresarConClerk(token: string) {
+		return this.pedir<Sesion & { nueva: boolean }>('POST', '/v1/auth/clerk', { token });
 	}
 	/** Link para entrar sin contraseña, al WhatsApp de la cuenta. */
 	pedirEnlace(telefono: string) {

@@ -538,3 +538,26 @@ URL, para que no quede en el historial ni en logs.
   seguimiento por API existe en Paq.ar, que pide acuerdo comercial.
 - **Sin verificar todavía contra la API real**: sólo contra el MiCorreo falso de los tests. Se cierra
   con credenciales de apitest y una cuenta de MiCorreo de prueba.
+
+## 31. Google y Apple por Clerk, sumado al ingreso propio (migración 00048)
+
+- **Aditivo**: email y contraseña siguen igual (Go). Google, Apple y los demás sociales pasan por
+  Clerk, una sola aplicación para todo Grupo Vimo (también la app de iPhone). Mercado Pago y Mercado
+  Libre siguen con el OAuth propio de §18; el OAuth propio de Google se sacó (sus identidades se
+  borran: la cuenta se vuelve a vincular sola por el email verificado).
+- **Sin cookies de Clerk en tulocalweb.com.ar**: la instancia vive en grupovimo.com.ar y compartir
+  sesión con otro dominio pide dominios satélite (pagos). En cambio la web habla con la Frontend API en
+  modo nativo, como la app de iPhone (`lib/clerk.ts`): el token del cliente va en `Authorization` y
+  sólo dura el ida y vuelta en sessionStorage. Para eso la instancia tiene que tener la Native API
+  prendida, `https://tulocalweb.com.ar` en `allowed_origins` y `/ingresar/clerk` en las redirect URLs
+  (sin eso Clerk no devuelve el `rotating_token_nonce`). No hace falta CSP nueva: no se carga ningún
+  script ni iframe de Clerk, y las páginas fuera de `/t/` no tienen CSP.
+- **Go no le cree al navegador**: `POST /v1/auth/clerk` recibe el token de sesión de Clerk, verifica
+  firma (JWKS bajado una vez con la clave secreta), emisor (sale de la clave publicable), vencimiento y
+  `azp` (si viene, tiene que ser un origen permitido; la app nativa no lo manda) y lee email
+  verificado, nombre y foto con la Backend API. De ahí sigue el camino de §18: identidad vinculada
+  (`auth.identidades`, proveedor `clerk`), vincular por email o cuenta nueva con onboarding y mail de
+  bienvenida. La sesión que vuelve es la propia (cookie `__Host-mostrador_sesion`); la de Clerk se
+  cierra apenas se tiene el token.
+- La foto del proveedor queda en `auth.usuarios.foto` (sólo https) y sale en `GET /v1/auth/sesion`.
+- En la demo los botones llevan al recorrido de ejemplo, como antes; WhatsApp sigue sólo en la demo.
