@@ -20,7 +20,8 @@ export const load: LayoutServerLoad = async ({
 	if (!locals.dominio && r.tienda.dominio && !r.tienda.vitrina && request.method === 'GET')
 		redirect(
 			301,
-			`https://${r.tienda.dominio}${url.pathname.slice(base.length) || '/'}${url.search}`
+			`https://${r.tienda.dominio}${url.pathname.slice(base.length) || '/'}${url.search}`,
+			{ external: [`https://${r.tienda.dominio}`] }
 		);
 	if (locals.dominio) r.tienda.base = '';
 	// La vitrina se cachea un minuto; la tienda del visitante, los turnos y su confirmación, nunca.
