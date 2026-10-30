@@ -23,7 +23,7 @@ func plantilla(titulo string, parrafos ...string) string {
 	var b strings.Builder
 	b.WriteString(`<!doctype html><html lang="es-AR"><body style="margin:0;background:#FBF7F2;font-family:'Instrument Sans',Helvetica,Arial,sans-serif;color:#2A140C">
 <div style="max-width:560px;margin:0 auto;padding:32px 24px">
-<div style="font-size:22px;font-weight:700;letter-spacing:-.03em">mostrador</div>
+<div style="font-size:22px;font-weight:700;letter-spacing:-.03em">Tu Local Web</div>
 <h1 style="margin:28px 0 0;font-size:28px;line-height:1.1;letter-spacing:-.03em;font-weight:600">`)
 	b.WriteString(html.EscapeString(titulo))
 	b.WriteString(`</h1>`)
@@ -55,7 +55,7 @@ func mailConsultaRecibida(c Consulta) correo.Mensaje {
 		Para:   c.Email,
 		Asunto: "Recibimos tu consulta",
 		Texto: fmt.Sprintf("Hola, %s.\n\nGracias por escribirnos. Alguien del equipo de ventas te contacta en menos de 2 horas hábiles"+
-			" (por WhatsApp si nos dejaste el número).\n\nMientras tanto, podés crear tu tienda gratis.\n\nMostrador", c.Nombre),
+			" (por WhatsApp si nos dejaste el número).\n\nMientras tanto, podés crear tu tienda gratis.\n\nTu Local Web", c.Nombre),
 		HTML: plantilla("Recibimos tu consulta",
 			fmt.Sprintf("Hola, %s. Gracias por escribirnos.", n),
 			"Alguien del equipo de ventas te contacta en menos de 2 horas hábiles (por WhatsApp si nos dejaste el número). Te atiende una persona, no un call center.",
@@ -81,7 +81,7 @@ func mailPostulacionRecibida(p Postulacion) correo.Mensaje {
 		Para:   p.Email,
 		Asunto: "Te postulaste al programa de partners",
 		Texto: fmt.Sprintf("Hola, %s.\n\nRecibimos la postulación de %s al programa de partners de Tu Local Web."+
-			" El acceso al panel de partners te llega a este email.\n\nMostrador", p.Nombre, p.Agencia),
+			" El acceso al panel de partners te llega a este email.\n\nTu Local Web", p.Nombre, p.Agencia),
 		HTML: plantilla("¡Bienvenido al programa!",
 			fmt.Sprintf("Hola, %s. Recibimos la postulación de <b style=\"color:#2A140C\">%s</b> al programa de partners de Tu Local Web.", n, html.EscapeString(p.Agencia)),
 			"El acceso al panel de partners te llega a este email. Revisá también la carpeta de spam."),
@@ -109,7 +109,7 @@ func mailSuscripcion(para, linkBaja string) correo.Mensaje {
 		Para:   para,
 		Asunto: "Te sumaste a las novedades de Tu Local Web",
 		Texto: "Listo: una vez por mes te mandamos un resumen de lo nuevo en Tu Local Web. Nada más.\n\n" +
-			"Si no fuiste vos o no lo querés más, date de baja acá: " + linkBaja + "\n\nMostrador",
+			"Si no fuiste vos o no lo querés más, date de baja acá: " + linkBaja + "\n\nTu Local Web",
 		HTML: plantilla("Te sumaste a las novedades",
 			"Una vez por mes te mandamos un resumen de lo nuevo en Tu Local Web. Nada más.",
 			fmt.Sprintf(`<span style="font-size:13.5px;color:#7A6252">Si no fuiste vos o no lo querés más, <a href="%s" style="color:#C24E25">date de baja</a>.</span>`, l)),

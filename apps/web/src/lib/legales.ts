@@ -402,18 +402,11 @@ export const LEGALES: Legal[] = [
 				t: 'cookies',
 				filas: [
 					{
-						nombre: 'mostrador_session',
+						nombre: '__Host-mostrador_sesion',
 						color: '#2F8F63',
 						tipo: 'Necesaria',
 						para: 'Mantiene tu sesión iniciada',
 						dura: '30 días'
-					},
-					{
-						nombre: 'csrf_token',
-						color: '#2F8F63',
-						tipo: 'Necesaria',
-						para: 'Protege los formularios',
-						dura: 'Sesión'
 					},
 					{
 						nombre: 'mostrador-cookies',

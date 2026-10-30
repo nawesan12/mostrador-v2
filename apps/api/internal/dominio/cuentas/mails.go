@@ -16,10 +16,10 @@ func mailRecuperar(para, nombre, link string) correo.Mensaje {
 		Para:   para,
 		Asunto: "Creá tu nueva contraseña de Tu Local Web",
 		Texto: fmt.Sprintf("Hola, %s.\n\nPara crear una contraseña nueva entrá a este link (vence en 30 minutos):\n%s\n\n"+
-			"Si no fuiste vos, ignorá este mail: tu contraseña sigue siendo la misma.\n\nMostrador", nombre, link),
+			"Si no fuiste vos, ignorá este mail: tu contraseña sigue siendo la misma.\n\nTu Local Web", nombre, link),
 		HTML: fmt.Sprintf(`<!doctype html><html lang="es-AR"><body style="margin:0;background:#FBF7F2;font-family:'Instrument Sans',Helvetica,Arial,sans-serif;color:#2A140C">
 <div style="max-width:560px;margin:0 auto;padding:32px 24px">
-<div style="font-size:22px;font-weight:700;letter-spacing:-.03em">mostrador</div>
+<div style="font-size:22px;font-weight:700;letter-spacing:-.03em">Tu Local Web</div>
 <h1 style="margin:28px 0 0;font-size:28px;line-height:1.1;letter-spacing:-.03em;font-weight:600">Creá tu nueva contraseña</h1>
 <p style="margin:12px 0 0;font-size:15.5px;line-height:1.5;color:#5C4536">Hola, %s. Tocá el botón para elegir una contraseña nueva. El link vence en 30 minutos.</p>
 <p style="margin:24px 0"><a href="%s" style="display:inline-block;padding:14px 22px;border-radius:999px;background:#D2582F;color:#fff;font-weight:600;text-decoration:none">Crear contraseña nueva</a></p>

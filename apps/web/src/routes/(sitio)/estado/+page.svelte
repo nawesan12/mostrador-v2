@@ -199,7 +199,7 @@
 				</form>
 				{#if form && 'error' in form}<small id="est-err">{form.error}</small>{/if}
 			{/if}
-			<div class="a-pie">También por <a href="/estado/rss.xml">RSS</a> y en @mostradorestado</div>
+			<div class="a-pie">También por <a href="/estado/rss.xml">RSS</a></div>
 		</div>
 	</div>
 </div>

@@ -123,7 +123,7 @@ func mailRecibido(para, nombre, tienda, codigo string) correo.Mensaje {
 		Para:   para,
 		Asunto: "Recibimos tu pedido de arrepentimiento · " + codigo,
 		Texto: fmt.Sprintf("Hola, %s.\n\n%s recibió tu pedido de arrepentimiento de la compra.\nTu código de trámite es %s.\n\n"+
-			"La tienda se va a comunicar con vos para coordinar la devolución del producto y el reintegro.\n\nMostrador, en nombre de %s", nombre, tienda, codigo, tienda),
+			"La tienda se va a comunicar con vos para coordinar la devolución del producto y el reintegro.\n\nTu Local Web, en nombre de %s", nombre, tienda, codigo, tienda),
 		HTML: fmt.Sprintf(`<!doctype html><html lang="es-AR"><body style="margin:0;background:#FBF7F2;font-family:'Instrument Sans',Helvetica,Arial,sans-serif;color:#2A140C">
 <div style="max-width:560px;margin:0 auto;padding:32px 24px">
 <div style="font-size:20px;font-weight:700;letter-spacing:-.02em">%s</div>

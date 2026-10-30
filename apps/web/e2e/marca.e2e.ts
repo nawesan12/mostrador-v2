@@ -76,7 +76,7 @@ test.describe('/marca', () => {
 			page.waitForEvent('download', { timeout: 60_000 }),
 			page.getByRole('button', { name: 'Descargar todo' }).click()
 		]);
-		expect(descarga.suggestedFilename()).toBe('mostrador-og.zip');
+		expect(descarga.suggestedFilename()).toBe('tulocalweb-og.zip');
 		const ruta = info.outputPath('og.zip');
 		await descarga.saveAs(ruta);
 		const zip = readFileSync(ruta);

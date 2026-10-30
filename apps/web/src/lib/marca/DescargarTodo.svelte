@@ -19,7 +19,7 @@
 				archivos.push({ nombre: `${p.nombre}.png`, blob: await p.png() });
 				hecho++;
 			}
-			descargar(await zip(archivos), `mostrador-${fam.clave}.zip`);
+			descargar(await zip(archivos), `tulocalweb-${fam.clave}.zip`);
 		} catch {
 			ui.toast({
 				k: 'err',

@@ -50,7 +50,7 @@ test('ARCA: datos fiscales, pedido de certificado (.csr) y pasos en ARCA', async
 		page.waitForEvent('download'),
 		d.getByRole('button', { name: /Descargar pedido/ }).click()
 	]);
-	expect(descarga.suggestedFilename()).toBe('mostrador-20448592341.csr');
+	expect(descarga.suggestedFilename()).toBe('tulocalweb-20448592341.csr');
 	const csr = await readFile((await descarga.path())!, 'utf8');
 	expect(csr.startsWith('-----BEGIN CERTIFICATE REQUEST-----')).toBe(true);
 	expect(csr.trimEnd().endsWith('-----END CERTIFICATE REQUEST-----')).toBe(true);

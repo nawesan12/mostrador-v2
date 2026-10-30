@@ -112,7 +112,7 @@
 		const url = URL.createObjectURL(new Blob([csr], { type: 'application/pkcs10' }));
 		const a = document.createElement('a');
 		a.href = url;
-		a.download = `mostrador-${limpiarCuit(cuit)}.csr`;
+		a.download = `tulocalweb-${limpiarCuit(cuit)}.csr`;
 		a.click();
 		setTimeout(() => URL.revokeObjectURL(url), 1000);
 	}

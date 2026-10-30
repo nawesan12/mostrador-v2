@@ -1129,7 +1129,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Genera la clave (queda cifrada en Mostrador y no sale nunca) y devuelve el pedido de certificado (CSR en PEM) para subir a ARCA. Reemplaza la clave anterior: el certificado que había deja de servir. Sólo dueña o admin. */
+        /** Genera la clave (queda cifrada en Tu Local Web y no sale nunca) y devuelve el pedido de certificado (CSR en PEM) para subir a ARCA. Reemplaza la clave anterior: el certificado que había deja de servir. Sólo dueña o admin. */
         post: operations["pedidoCertificadoArca"];
         delete?: never;
         options?: never;
@@ -1299,7 +1299,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** El abono de Mostrador. Crea la suscripción pendiente y devuelve dónde cargar la tarjeta; el plan cambia cuando Mercado Pago avisa. */
+        /** El abono de Tu Local Web. Crea la suscripción pendiente y devuelve dónde cargar la tarjeta; el plan cambia cuando Mercado Pago avisa. */
         post: operations["suscribirPlan"];
         delete?: never;
         options?: never;
@@ -1807,7 +1807,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Plan, uso del mes, medio de pago y facturas de Mostrador. */
+        /** Plan, uso del mes, medio de pago y facturas de Tu Local Web. */
         get: operations["planCuenta"];
         put?: never;
         post?: never;
@@ -2372,7 +2372,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Los pedidos importados de otra plataforma de un cliente (el id de la lista de Clientes), del más nuevo al más viejo, hasta 200. No son pedidos de Mostrador. */
+        /** Los pedidos importados de otra plataforma de un cliente (el id de la lista de Clientes), del más nuevo al más viejo, hasta 200. No son pedidos de Tu Local Web. */
         get: operations["historialCliente"];
         put?: never;
         post?: never;
@@ -2389,7 +2389,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Un link de la tienda vieja: 301 con Location = el path en Mostrador, relativo a la tienda. Lo pide el BFF cuando un path de /t/{slug} no existe. */
+        /** Un link de la tienda vieja: 301 con Location = el path en Tu Local Web, relativo a la tienda. Lo pide el BFF cuando un path de /t/{slug} no existe. */
         get: operations["redireccionTienda"];
         put?: never;
         post?: never;
@@ -3444,7 +3444,7 @@ export interface components {
         };
         MiTienda: {
             plantilla: string;
-            /** @description Dónde se ve la tienda (dominio o dirección de Mostrador) */
+            /** @description Dónde se ve la tienda (dominio o dirección de Tu Local Web) */
             direccion: string;
             diseno: components["schemas"]["DisenoTienda"];
             sinPublicar: boolean;
@@ -3652,7 +3652,7 @@ export interface components {
             homologacion: boolean;
         };
         ConexionMP: {
-            /** @description La aplicación de Mostrador tiene credenciales */
+            /** @description La aplicación de Tu Local Web tiene credenciales */
             disponible: boolean;
             conectada: boolean;
             /** @description user_id de la cuenta de Mercado Pago */
@@ -4626,7 +4626,7 @@ export interface components {
                 proximoCobro: string | null;
                 credito: number;
             }[];
-            /** @description Facturas de Mostrador a cada tienda (ARCA). Vacío hasta conectar ARCA. */
+            /** @description Facturas de Tu Local Web a cada tienda (ARCA). Vacío hasta conectar ARCA. */
             comprobantes: {
                 numero: string;
                 tienda: string;

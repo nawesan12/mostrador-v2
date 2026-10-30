@@ -29,7 +29,7 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
 		return new Response(zip(archivos).buffer as ArrayBuffer, {
 			headers: {
 				'content-type': 'application/zip',
-				'content-disposition': `attachment; filename="mostrador-${dia}.zip"`
+				'content-disposition': `attachment; filename="tulocalweb-${dia}.zip"`
 			}
 		});
 	}

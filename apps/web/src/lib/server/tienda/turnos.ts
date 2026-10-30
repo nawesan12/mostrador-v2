@@ -194,7 +194,7 @@ export function ics(t: TurnoPublico, url: string) {
 	const lineas = [
 		'BEGIN:VCALENDAR',
 		'VERSION:2.0',
-		'PRODID:-//Mostrador//Turnos//ES',
+		'PRODID:-//Tu Local Web//Turnos//ES',
 		'CALSCALE:GREGORIAN',
 		'METHOD:PUBLISH',
 		'BEGIN:VEVENT',
