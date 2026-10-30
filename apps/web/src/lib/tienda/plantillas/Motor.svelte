@@ -4,6 +4,7 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import LogoTienda from '../LogoTienda.svelte';
 	import { enOrden } from '../secciones.ts';
+	import { acentoElegido } from '../acentos.ts';
 	import * as I from '#lib/icons.ts';
 	import FormResena from '../FormResena.svelte';
 	import PreguntasProducto from '../PreguntasProducto.svelte';
@@ -170,6 +171,8 @@
 			star
 		] = TH[tid] as Tema;
 		const fam = TH[tid][0] as Familia;
+		// El acento elegido en Mi tienda; como texto sólo si va con texto claro encima (si no, no se lee).
+		const elegido = acentoElegido(tid, tienda.paleta);
 		const dark = tid === 'pampa' || tid === 'malbec';
 		return {
 			f,
@@ -179,9 +182,9 @@
 			fi,
 			bg,
 			ink,
-			acc,
+			acc: elegido ?? acc,
 			ai,
-			at,
+			at: elegido && ai.toUpperCase() === '#FFFFFF' ? elegido : at,
 			sf,
 			sf2,
 			mu,

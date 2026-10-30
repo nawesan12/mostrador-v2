@@ -100,7 +100,7 @@
 			old: p.anterior && !t.desde ? fmt(p.anterior) : null,
 			img: img(p.foto, 700, 875),
 			tag: t.agotado ? 'Sin stock' : p.etiqueta,
-			tagBg: p.anterior ? '#9C4A2F' : '#1C1A17',
+			tagBg: p.anterior ? 'var(--acento, #9C4A2F)' : '#1C1A17',
 			cuotas:
 				tienda.cobros.cuotas > 1
 					? `${tienda.cobros.cuotas} × ${fmt(t.precio / tienda.cobros.cuotas)} sin interés`
@@ -814,7 +814,7 @@
 									alt={producto.nombre}
 									style="width:100%;height:100%;object-fit:cover"
 								/>{/if}{#if sel.anterior || producto.etiqueta}<span
-									style="position:absolute;top:14px;left:14px;padding:5px 10px;border-radius:2px;background:#9C4A2F;color:#F4EFEA;font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase"
+									style="position:absolute;top:14px;left:14px;padding:5px 10px;border-radius:2px;background:var(--acento, #9C4A2F);color:#F4EFEA;font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase"
 									>{sel.anterior
 										? `−${Math.round((1 - sel.precio / sel.anterior) * 100)}%`
 										: producto.etiqueta}</span
@@ -873,7 +873,7 @@
 							<div style="margin-top:22px">
 								<div
 									style="font-size:13px;margin-bottom:10px;color:{sel.aviso && !o.elegido
-										? '#9C4A2F'
+										? 'var(--acento, #9C4A2F)'
 										: '#1C1A17'}"
 								>
 									{o.nombre}{#if o.elegido}: <b>{o.elegido}</b>{/if}
@@ -922,7 +922,7 @@
 									</div>{/if}
 							</div>{/each}
 						{#if sel.stock > 0 && sel.stock <= 3 && (!sel.conOpciones || sel.variante)}<div
-								style="margin-top:16px;font-size:12.5px;color:#9C4A2F"
+								style="margin-top:16px;font-size:12.5px;color:var(--acento, #9C4A2F)"
 							>
 								{sel.stock === 1 ? 'Queda 1' : `Quedan ${sel.stock}`}{#if sel.variante}
 									en {sel.texto.toLowerCase()}{/if}
@@ -1355,7 +1355,7 @@
 						</div>
 						{#if error}<div
 								role="alert"
-								style="padding:12px 14px;border-radius:2px;background:rgba(156,74,47,.12);color:#9C4A2F;font-size:14px"
+								style="padding:12px 14px;border-radius:2px;background:rgba(156,74,47,.12);color:var(--acento, #9C4A2F);font-size:14px"
 							>
 								{error}
 							</div>{/if}
@@ -1701,7 +1701,7 @@
 
 					{#if error}<div
 							role="alert"
-							style="padding:12px 14px;border-radius:2px;background:rgba(156,74,47,.12);color:#9C4A2F;font-size:14px"
+							style="padding:12px 14px;border-radius:2px;background:rgba(156,74,47,.12);color:var(--acento, #9C4A2F);font-size:14px"
 						>
 							{error}
 						</div>{/if}
@@ -1799,7 +1799,7 @@
 				</p>
 				{#if aviso === 'pendiente' || aviso === 'error'}<div
 						role="status"
-						style="margin-top:16px;padding:12px 14px;border-radius:2px;background:rgba(156,74,47,.12);color:#9C4A2F;font-size:14px"
+						style="margin-top:16px;padding:12px 14px;border-radius:2px;background:rgba(156,74,47,.12);color:var(--acento, #9C4A2F);font-size:14px"
 					>
 						{aviso === 'pendiente'
 							? 'Mercado Pago todavía no acreditó la seña: te avisamos cuando entre.'
@@ -1826,7 +1826,7 @@
 				</div>
 				{#if error}<div
 						role="alert"
-						style="margin-top:12px;padding:12px 14px;border-radius:2px;background:rgba(156,74,47,.12);color:#9C4A2F;font-size:14px"
+						style="margin-top:12px;padding:12px 14px;border-radius:2px;background:rgba(156,74,47,.12);color:var(--acento, #9C4A2F);font-size:14px"
 					>
 						{error}
 					</div>{/if}
@@ -2163,7 +2163,7 @@
 
 <style>
 	.ceibo :global(a:hover) {
-		color: #9c4a2f;
+		color: var(--acento, #9c4a2f);
 	}
 	.zoom :global(img) {
 		transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.1, 1);

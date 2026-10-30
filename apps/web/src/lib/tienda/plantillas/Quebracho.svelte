@@ -339,7 +339,7 @@
 						t: 'Transferencia',
 						d: `${tienda.cobros.transferencia}% off · te mandamos el alias al confirmar`,
 						i: I.phBank,
-						c: '#4F5B3A'
+						c: 'var(--acento, #4F5B3A)'
 					}
 				]
 			: []),
@@ -414,7 +414,7 @@
 		borde: 'rgba(43,37,32,.14)',
 		acento: '#2B2520',
 		sobreAcento: '#EFE9E1',
-		estrella: '#4F5B3A',
+		estrella: 'var(--acento, #4F5B3A)',
 		radio: '0px',
 		fuente: "'Familjen Grotesk', sans-serif",
 		titulos: "'Newsreader', serif",
@@ -465,7 +465,7 @@
 	<div style="container-type:inline-size;width:100%;background:#EFE9E1;position:relative">
 		<!-- barra promo -->
 		<div
-			style="display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;padding:9px 16px;background:#4F5B3A;color:#EFE9E1;font-size:13px;text-align:center"
+			style="display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;padding:9px 16px;background:var(--acento, #4F5B3A);color:#EFE9E1;font-size:13px;text-align:center"
 		>
 			<span
 				>{tienda.envios.gratisDesde
@@ -515,7 +515,7 @@
 				aria-label="Carrito"
 				style="position:relative;color:#2B2520;display:grid;flex:none"
 				><Icon icon={I.phArmchair} size={23} />{#if carrito.unidades}<span
-						style="position:absolute;top:-6px;right:-8px;min-width:17px;height:17px;border-radius:999px;background:#4F5B3A;color:#fff;font-size:10.5px;font-weight:700;display:grid;place-items:center"
+						style="position:absolute;top:-6px;right:-8px;min-width:17px;height:17px;border-radius:999px;background:var(--acento, #4F5B3A);color:#fff;font-size:10.5px;font-weight:700;display:grid;place-items:center"
 						>{carrito.unidades}</span
 					>{/if}</a
 			>
@@ -553,7 +553,7 @@
 								style="margin:clamp(16px,2.4cqw,28px) 0 clamp(18px,2.6cqw,30px);font-family:'Newsreader',serif;font-weight:400;font-size:clamp(52px,9.6cqw,150px);line-height:.86;letter-spacing:-.045em;overflow-wrap:anywhere"
 							>
 								{titulo[1] ? `${titulo[0]} ` : titulo[0]}{#if titulo[1]}
-									<i style="color:#4F5B3A">{titulo[1]}</i>{/if}
+									<i style="color:var(--acento, #4F5B3A)">{titulo[1]}</i>{/if}
 							</h1>
 							{#if tienda.portada.foto}<div
 									style="position:relative;aspect-ratio:{nar
@@ -592,7 +592,7 @@
 										style="font-size:15px"
 										>{#if tienda.cobros.cuotas > 1}{tienda.cobros.cuotas} cuotas sin interés{/if}{#if tienda.cobros.transferencia > 0}
 											{#if tienda.cobros.cuotas > 1}·{/if}
-											<span style="color:#4F5B3A;font-weight:600"
+											<span style="color:var(--acento, #4F5B3A);font-weight:600"
 												>{tienda.cobros.transferencia}% off por transferencia</span
 											>{/if}</span
 									>{/if}<a
@@ -743,7 +743,7 @@
 														· {r.conCompra ? 'compró' : 'sobre'} {r.producto}{/if}
 												</div>
 												{#if r.conCompra}<div
-														style="margin-top:6px;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;letter-spacing:.04em;color:#4F5B3A"
+														style="margin-top:6px;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--acento, #4F5B3A)"
 													>
 														<Icon icon={I.phSealCheckFill} size={13} />Compra verificada
 													</div>{/if}
@@ -938,7 +938,7 @@
 						<b style="font-size:28px;font-weight:600"
 							>{sel.desde ? 'Desde ' : ''}{fmt(sel.precio)}</b
 						>{#if tachado}<s style="color:#8C8278">{fmt(tachado)}</s><span
-								style="font-size:13px;color:#4F5B3A;font-weight:600"
+								style="font-size:13px;color:var(--acento, #4F5B3A);font-weight:600"
 								>−{Math.round((1 - sel.precio / tachado) * 100)}%</span
 							>{/if}
 					</div>
@@ -949,7 +949,7 @@
 								<b>{fmt(sel.precio / tienda.cobros.cuotas)}</b
 								>{/if}{#if tienda.cobros.transferencia > 0}
 								{#if tienda.cobros.cuotas > 1}·{/if}
-								<b style="color:#4F5B3A"
+								<b style="color:var(--acento, #4F5B3A)"
 									>{fmt(sel.precio * (1 - tienda.cobros.transferencia / 100))} por&nbsp;transferencia</b
 								>{/if}
 						</div>{/if}
@@ -1010,7 +1010,11 @@
 					{#if tienda.envios.retiro && tienda.direccion}<div
 							style="margin-top:20px;padding:14px 16px;background:#E6DED2;display:flex;gap:12px;align-items:center"
 						>
-							<Icon icon={I.phCalendarCheck} size={24} style="color:#4F5B3A;flex:none" />
+							<Icon
+								icon={I.phCalendarCheck}
+								size={24}
+								style="color:var(--acento, #4F5B3A);flex:none"
+							/>
 							<div style="font-size:14px;line-height:1.4">
 								También podés <b>retirarlo sin costo</b> en {tienda.direccion}.
 							</div>
@@ -1056,8 +1060,9 @@
 								{#each cotizado as o (o.id)}<span
 										style="display:flex;justify-content:space-between;gap:10px"
 										><span>{o.nombre} · {o.detalle}</span><b
-											style="white-space:nowrap;color:{o.precio ? '#2B2520' : '#4F5B3A'}"
-											>{o.precio ? fmt(o.precio) : 'Gratis'}</b
+											style="white-space:nowrap;color:{o.precio
+												? '#2B2520'
+												: 'var(--acento, #4F5B3A)'}">{o.precio ? fmt(o.precio) : 'Gratis'}</b
 										></span
 									>{/each}
 							</div>{/if}
@@ -1150,8 +1155,11 @@
 							style="margin-top:18px;padding:14px 16px;background:#E6DED2;display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:14px"
 						>
 							<span style="flex:1;min-width:200px;display:flex;align-items:center;gap:10px"
-								><Icon icon={I.phTruck} size={22} style="color:#4F5B3A;flex:none" />{#if falta}<span
-										>Te faltan <b>{fmt(falta)}</b> para el envío gratis</span
+								><Icon
+									icon={I.phTruck}
+									size={22}
+									style="color:var(--acento, #4F5B3A);flex:none"
+								/>{#if falta}<span>Te faltan <b>{fmt(falta)}</b> para el envío gratis</span
 									>{:else}<b>Tenés envío gratis</b>{/if}</span
 							><span
 								style="flex:1;min-width:160px;height:3px;background:rgba(43,37,32,.15);overflow:hidden"
@@ -1159,7 +1167,7 @@
 									style="display:block;height:100%;width:{Math.min(
 										100,
 										(subtotal / tienda.envios.gratisDesde) * 100
-									)}%;background:#4F5B3A"
+									)}%;background:var(--acento, #4F5B3A)"
 								></span></span
 							>
 						</div>
@@ -1280,7 +1288,7 @@
 											><span style="font-size:12px;color:#6F6358">sin interés</span></span
 										>{/if}{#if tienda.cobros.transferencia > 0}<span
 											style="padding:10px;background:#fff;border:1px solid rgba(43,37,32,.16);text-align:center"
-											><b style="display:block;color:#4F5B3A"
+											><b style="display:block;color:var(--acento, #4F5B3A)"
 												>{fmt(subtotal * (1 - tienda.cobros.transferencia / 100))}</b
 											><span style="font-size:12px;color:#6F6358">por transferencia</span></span
 										>{/if}
@@ -1399,8 +1407,10 @@
 											><span style="display:block;font-size:14.5px;font-weight:600">{s.nombre}</span
 											><span style="display:block;font-size:12.5px;color:#6F6358">{s.detalle}</span
 											></span
-										><b style="white-space:nowrap;color:{s.precio ? '#2B2520' : '#4F5B3A'}"
-											>{s.precio ? fmt(s.precio) : 'Gratis'}</b
+										><b
+											style="white-space:nowrap;color:{s.precio
+												? '#2B2520'
+												: 'var(--acento, #4F5B3A)'}">{s.precio ? fmt(s.precio) : 'Gratis'}</b
 										></button
 									>{:else}<span style="font-size:13.5px;color:#6F6358"
 										>Poné tu código postal para ver cómo te llega.</span
@@ -1446,7 +1456,7 @@
 							</div>{/if}
 						<button
 							disabled={!envio || !pagos.length || enviando || tienda.vitrina}
-							style="padding:18px;border:0;background:#4F5B3A;color:#fff;font:600 15.5px 'Familjen Grotesk';cursor:pointer;display:flex;justify-content:center;align-items:center;gap:8px"
+							style="padding:18px;border:0;background:var(--acento, #4F5B3A);color:#fff;font:600 15.5px 'Familjen Grotesk';cursor:pointer;display:flex;justify-content:center;align-items:center;gap:8px"
 							><Icon icon={I.phLockSimple} size={16} />{tienda.vitrina
 								? 'Es una tienda de ejemplo'
 								: !pagos.length
@@ -1537,7 +1547,7 @@
 				<h1
 					style="margin:12px 0 0;font-family:'Newsreader',serif;font-weight:400;font-size:clamp(46px,6.6cqw,92px);line-height:.92;letter-spacing:-.04em;overflow-wrap:anywhere"
 				>
-					¡Gracias, <i style="color:#4F5B3A">{pedido.nombre}!</i>
+					¡Gracias, <i style="color:var(--acento, #4F5B3A)">{pedido.nombre}!</i>
 				</h1>
 				<p style="margin:18px 0 0;font-size:16px;line-height:1.6;color:#6F6358">
 					Recibimos tu pedido <b style="color:#2B2520">#{pedido.numero}</b> por
@@ -1547,7 +1557,7 @@
 					<div
 						style="margin-top:22px;padding:14px 16px;background:#E6DED2;display:flex;gap:12px;align-items:center;font-size:14.5px;line-height:1.55"
 					>
-						<Icon icon={I.phBank} size={24} style="color:#4F5B3A;flex:none" />
+						<Icon icon={I.phBank} size={24} style="color:var(--acento, #4F5B3A);flex:none" />
 						<span
 							><b>Transferí {fmt(pedido.total)}</b>
 							{#if pedido.alias}al {pedido.esCbu ? 'CBU/CVU' : 'alias'}
@@ -1606,7 +1616,7 @@
 					<h1
 						style="margin:0;font-family:'Newsreader',serif;font-weight:400;font-size:clamp(46px,6.6cqw,92px);line-height:.92;letter-spacing:-.04em;overflow-wrap:anywhere"
 					>
-						Reservá <i style="color:#4F5B3A">tu turno</i>
+						Reservá <i style="color:var(--acento, #4F5B3A)">tu turno</i>
 					</h1>
 					<div>
 						<div style="font-family:'Newsreader',serif;font-size:32px">1 · Servicio</div>
@@ -1662,7 +1672,7 @@
 											alt=""
 											style="width:56px;height:56px;border-radius:50%;object-fit:cover;display:block;margin:0 auto"
 										/>{:else}<span
-											style="width:56px;height:56px;border-radius:50%;background:#E6DED2;color:#4F5B3A;display:grid;place-items:center;margin:0 auto"
+											style="width:56px;height:56px;border-radius:50%;background:#E6DED2;color:var(--acento, #4F5B3A);display:grid;place-items:center;margin:0 auto"
 											><Icon icon={p ? I.phUserFill : I.phShuffleBold} size={22} /></span
 										>{/if}<span
 										style="display:block;margin-top:8px;font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
@@ -1708,10 +1718,10 @@
 									disabled={!d.abierto}
 									onclick={() => reserva.elegirDia(d.dia)}
 									style="padding:9px 0;text-align:center;cursor:pointer;font-family:inherit;min-width:0;border:1.5px solid {on
-										? '#4F5B3A'
-										: 'rgba(43,37,32,.18)'};background:{on ? '#4F5B3A' : 'transparent'};color:{on
-										? '#fff'
-										: '#2B2520'}"
+										? 'var(--acento, #4F5B3A)'
+										: 'rgba(43,37,32,.18)'};background:{on
+										? 'var(--acento, #4F5B3A)'
+										: 'transparent'};color:{on ? '#fff' : '#2B2520'}"
 									><span
 										style="display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase"
 										>{d.w}</span
@@ -1751,9 +1761,9 @@
 												style="padding:10px 0;text-align:center;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;text-decoration:{h.libre
 													? 'none'
 													: 'line-through'};border:1.5px solid {on
-													? '#4F5B3A'
+													? 'var(--acento, #4F5B3A)'
 													: 'rgba(43,37,32,.18)'};background:{on
-													? '#4F5B3A'
+													? 'var(--acento, #4F5B3A)'
 													: 'transparent'};color:{on ? '#fff' : '#2B2520'}">{h.hora}</button
 											>{/each}
 									</div>
@@ -1865,7 +1875,7 @@
 						</div>{/if}
 					<button
 						disabled={!reserva.listo || reservando || tienda.vitrina}
-						style="margin-top:16px;width:100%;padding:18px;border:0;background:#4F5B3A;color:#fff;font:600 15.5px 'Familjen Grotesk';cursor:pointer"
+						style="margin-top:16px;width:100%;padding:18px;border:0;background:var(--acento, #4F5B3A);color:#fff;font:600 15.5px 'Familjen Grotesk';cursor:pointer"
 						>{tienda.vitrina
 							? 'Es una tienda de ejemplo'
 							: !reserva.listo
@@ -1941,7 +1951,7 @@
 							href="{base}/turno/{turno.codigo}/turno.ics"
 							download="turno.ics"
 							data-sveltekit-reload
-							style="display:flex;align-items:center;gap:8px;padding:15px 24px;border:0;background:#4F5B3A;color:#fff;font:600 14px 'Familjen Grotesk';letter-spacing:.04em;text-decoration:none;cursor:pointer"
+							style="display:flex;align-items:center;gap:8px;padding:15px 24px;border:0;background:var(--acento, #4F5B3A);color:#fff;font:600 14px 'Familjen Grotesk';letter-spacing:.04em;text-decoration:none;cursor:pointer"
 							><Icon icon={I.phCalendarPlusBold} size={17} />Agregar al calendario</a
 						>{/if}
 					{#if turno.cancelable}
@@ -1970,7 +1980,7 @@
 						</form>
 					{:else if cancelado}<a
 							href="{base}/turnos"
-							style="padding:15px 24px;border:0;background:#4F5B3A;color:#fff;font:600 14px 'Familjen Grotesk';letter-spacing:.04em;text-decoration:none;cursor:pointer"
+							style="padding:15px 24px;border:0;background:var(--acento, #4F5B3A);color:#fff;font:600 14px 'Familjen Grotesk';letter-spacing:.04em;text-decoration:none;cursor:pointer"
 							>Reservar otro</a
 						>{/if}
 					<a
@@ -2001,7 +2011,7 @@
 					style="margin:0;font-family:'Newsreader',serif;font-weight:400;font-size:clamp(48px,7.4cqw,110px);line-height:.88;letter-spacing:-.045em;overflow-wrap:anywhere"
 				>
 					{titulo[1] ? `${titulo[0]} ` : titulo[0]}{#if titulo[1]}
-						<i style="color:#4F5B3A">{titulo[1]}</i>{/if}
+						<i style="color:var(--acento, #4F5B3A)">{titulo[1]}</i>{/if}
 				</h1>
 				<p style="margin:0;font-size:17px;line-height:1.6;color:#6F6358;max-width:460px">
 					{tienda.nombre}{tienda.ciudad ? `, desde ${tienda.ciudad}` : ''}. Comprás online y te lo
@@ -2028,7 +2038,7 @@
 								/>{/if}
 						</div>
 						<div
-							style="background:#4F5B3A;color:#EFE9E1;padding:18px;display:flex;flex-direction:column;justify-content:flex-end;min-width:0"
+							style="background:var(--acento, #4F5B3A);color:#EFE9E1;padding:18px;display:flex;flex-direction:column;justify-content:flex-end;min-width:0"
 						>
 							<div
 								style="font-family:'Newsreader',serif;font-size:clamp(34px,4.4cqw,56px);line-height:1"
@@ -2223,7 +2233,7 @@
 
 <style>
 	.quebracho section :global(a:not([style*='background']):hover) {
-		color: #4f5b3a;
+		color: var(--acento, #4f5b3a);
 	}
 	.zoom :global(img) {
 		transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.1, 1);

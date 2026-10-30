@@ -99,7 +99,7 @@
 				? {
 						s: `−${Math.round((1 - p.precio / p.anterior) * 100)}%`,
 						si: I.phFireFill,
-						sc: '#B5651D'
+						sc: 'var(--acento, #B5651D)'
 					}
 				: p.etiqueta
 					? { s: p.etiqueta, si: I.phSparkleFill, sc: '#8A4A12' }
@@ -152,7 +152,7 @@
 							: 'En toda la tienda.',
 						bg: '#fff',
 						fg: '#3A2414',
-						bbg: '#B5651D',
+						bbg: 'var(--acento, #B5651D)',
 						bfg: '#FBF1E6'
 					}
 				]
@@ -163,10 +163,10 @@
 						k: 'Transferencia',
 						t: `${tienda.cobros.transferencia}% off`,
 						d: 'Pagando por transferencia, te mandamos el alias al confirmar el pedido.',
-						bg: '#B5651D',
+						bg: 'var(--acento, #B5651D)',
 						fg: '#FBF1E6',
 						bbg: '#FBF1E6',
-						bfg: '#B5651D'
+						bfg: 'var(--acento, #B5651D)'
 					}
 				]
 			: [])
@@ -421,7 +421,7 @@
 		campo: '#FBF1E6',
 		tarjeta: '#fff',
 		borde: 'rgba(58,36,20,.14)',
-		acento: '#B5651D',
+		acento: 'var(--acento, #B5651D)',
 		sobreAcento: '#FBF1E6',
 		estrella: '#D98A2B',
 		radio: '12px',
@@ -493,7 +493,7 @@
 				href={base || '/'}
 				style="display:flex;align-items:center;gap:10px;min-width:0;text-decoration:none;color:#3A2414"
 				><span
-					style="width:40px;height:40px;flex:none;border-radius:50%;background:#B5651D;color:#FBF1E6;display:grid;place-items:center;font-family:'Young Serif',serif;font-size:20px"
+					style="width:40px;height:40px;flex:none;border-radius:50%;background:var(--acento, #B5651D);color:#FBF1E6;display:grid;place-items:center;font-family:'Young Serif',serif;font-size:20px"
 					>{inicial}</span
 				><span
 					style="font-family:'Young Serif',serif;font-size:23px;line-height:1;overflow-wrap:anywhere"
@@ -511,7 +511,11 @@
 			<span style="flex:1"></span>
 			{#if wide && tienda.direccion}<span
 					style="display:flex;align-items:center;gap:7px;font-size:13px;color:#7A5F4C"
-					><Icon icon={I.phMapPinFill} size={15} style="color:#B5651D" />{tienda.direccion}</span
+					><Icon
+						icon={I.phMapPinFill}
+						size={15}
+						style="color:var(--acento, #B5651D)"
+					/>{tienda.direccion}</span
 				>{/if}
 			<a
 				href="{base}/carrito"
@@ -563,7 +567,8 @@
 								<h1
 									style="margin:0;font-family:'Young Serif',serif;font-weight:400;font-size:clamp(50px,7.6cqw,104px);line-height:.95;letter-spacing:-.02em;overflow-wrap:anywhere"
 								>
-									{titulo[0]}{#if titulo[1]}<br /><span style="color:#B5651D">{titulo[1]}</span
+									{titulo[0]}{#if titulo[1]}<br /><span style="color:var(--acento, #B5651D)"
+											>{titulo[1]}</span
 										>{/if}
 								</h1>
 								{#if tienda.portada.lema}<p
@@ -574,7 +579,7 @@
 								<div style="display:flex;gap:10px;flex-wrap:wrap">
 									<a
 										href="{base}/catalogo"
-										style="display:flex;align-items:center;gap:8px;padding:16px 26px;border:0;border-radius:999px;background:#B5651D;color:#FBF1E6;font:700 15px 'Instrument Sans';text-decoration:none;box-shadow:0 14px 28px -14px rgba(181,101,29,.9)"
+										style="display:flex;align-items:center;gap:8px;padding:16px 26px;border:0;border-radius:999px;background:var(--acento, #B5651D);color:#FBF1E6;font:700 15px 'Instrument Sans';text-decoration:none;box-shadow:0 14px 28px -14px rgba(181,101,29,.9)"
 										><Icon icon={I.phBasketBold} size={17} />Hacer mi pedido</a
 									><a
 										href="{base}/nosotros"
@@ -623,7 +628,7 @@
 														style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
 														>{o.n}</span
 													><span
-														style="font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:#F6E2C6;color:#B5651D;white-space:nowrap"
+														style="font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:#F6E2C6;color:var(--acento, #B5651D);white-space:nowrap"
 														>{o.price}</span
 													></a
 												>{/each}
@@ -836,7 +841,7 @@
 							><span
 								style="width:76px;height:76px;border-radius:50%;overflow:hidden;background:#F1DFC9;box-shadow:0 0 0 {on
 									? '3px'
-									: '0px'} #B5651D"
+									: '0px'} var(--acento, #B5651D)"
 								>{#if c.img}<img
 										src={c.img}
 										alt=""
@@ -932,7 +937,7 @@
 						</div>{/if}
 				</div>
 				<div style="position:sticky;top:90px;min-width:0">
-					<div style="font-size:13px;font-weight:700;color:#B5651D">
+					<div style="font-size:13px;font-weight:700;color:var(--acento, #B5651D)">
 						<a href={base || '/'} style="color:inherit;text-decoration:none">Inicio</a
 						>{#if producto.categoria}&nbsp;·&nbsp;<a
 								href={enlaceCat(producto.categoria)}
@@ -975,7 +980,7 @@
 							<div
 								style="margin-bottom:8px;font-size:13.5px;font-weight:700;color:{sel.aviso &&
 								!o.elegido
-									? '#B5651D'
+									? 'var(--acento, #B5651D)'
 									: '#3A2414'}"
 							>
 								{o.nombre}{#if o.elegido}: <span style="font-weight:400">{o.elegido}</span>{/if}
@@ -1055,7 +1060,7 @@
 							type="button"
 							onclick={agregar}
 							disabled={sel.stock === 0 || tienda.vitrina}
-							style="flex:1;min-width:180px;padding:16px;border:0;border-radius:999px;background:#B5651D;color:#FBF1E6;font:700 15px 'Instrument Sans';cursor:pointer"
+							style="flex:1;min-width:180px;padding:16px;border:0;border-radius:999px;background:var(--acento, #B5651D);color:#FBF1E6;font:700 15px 'Instrument Sans';cursor:pointer"
 							>{sel.boton('Sumar al pedido')}</button
 						>
 					</div>
@@ -1206,7 +1211,7 @@
 											style="position:absolute;left:0;top:0;bottom:0;width:{Math.min(
 												100,
 												(subtotal / tienda.envios.gratisDesde) * 100
-											)}%;border-radius:2px;background:#B5651D"
+											)}%;border-radius:2px;background:var(--acento, #B5651D)"
 										></div>
 									</div>
 								</div>
@@ -1309,7 +1314,7 @@
 								>{/if}
 							<a
 								href="{base}/checkout"
-								style="margin-top:4px;padding:16px;border-radius:999px;background:#B5651D;color:#FBF1E6;font:700 15px 'Instrument Sans';text-align:center;text-decoration:none"
+								style="margin-top:4px;padding:16px;border-radius:999px;background:var(--acento, #B5651D);color:#FBF1E6;font:700 15px 'Instrument Sans';text-align:center;text-decoration:none"
 								>Elegir envío y pagar</a
 							>
 						</div>
@@ -1408,19 +1413,22 @@
 										aria-checked={on}
 										onclick={() => (envio = s.id)}
 										style="display:flex;align-items:center;gap:12px;padding:15px;border-radius:18px;border:1.5px solid {on
-											? '#B5651D'
+											? 'var(--acento, #B5651D)'
 											: 'rgba(58,36,20,.1)'};background:{on
 											? '#FFF7EE'
 											: '#fff'};text-align:left;cursor:pointer;font-family:inherit;color:#3A2414"
 										><span
 											style="width:20px;height:20px;border-radius:50%;border:2px solid {on
-												? '#B5651D'
+												? 'var(--acento, #B5651D)'
 												: 'rgba(58,36,20,.25)'};display:grid;place-items:center;flex:none"
 											>{#if on}<span
-													style="width:10px;height:10px;border-radius:50%;background:#B5651D"
+													style="width:10px;height:10px;border-radius:50%;background:var(--acento, #B5651D)"
 												></span>{/if}</span
-										><Icon icon={iconoEnvio(s.id)} size={22} style="color:#B5651D;flex:none" /><span
-											style="flex:1;min-width:0"
+										><Icon
+											icon={iconoEnvio(s.id)}
+											size={22}
+											style="color:var(--acento, #B5651D);flex:none"
+										/><span style="flex:1;min-width:0"
 											><span style="display:block;font-size:14.5px;font-weight:700">{s.nombre}</span
 											><span style="display:block;font-size:12.5px;color:#7A5F4C">{s.detalle}</span
 											></span
@@ -1446,16 +1454,16 @@
 										aria-checked={on}
 										onclick={() => (pago = s.id)}
 										style="display:flex;align-items:center;gap:12px;padding:15px;border-radius:18px;border:1.5px solid {on
-											? '#B5651D'
+											? 'var(--acento, #B5651D)'
 											: 'rgba(58,36,20,.1)'};background:{on
 											? '#FFF7EE'
 											: '#fff'};text-align:left;cursor:pointer;font-family:inherit;color:#3A2414"
 										><span
 											style="width:20px;height:20px;border-radius:50%;border:2px solid {on
-												? '#B5651D'
+												? 'var(--acento, #B5651D)'
 												: 'rgba(58,36,20,.25)'};display:grid;place-items:center;flex:none"
 											>{#if on}<span
-													style="width:10px;height:10px;border-radius:50%;background:#B5651D"
+													style="width:10px;height:10px;border-radius:50%;background:var(--acento, #B5651D)"
 												></span>{/if}</span
 										><Icon icon={s.i} size={22} style="color:{s.c};flex:none" /><span
 											style="flex:1;min-width:0"
@@ -1473,7 +1481,7 @@
 							</div>{/if}
 						<button
 							disabled={!envio || !pagos.length || enviando || tienda.vitrina}
-							style="padding:17px;border:0;border-radius:999px;background:#B5651D;color:#FBF1E6;font:700 15.5px 'Instrument Sans';cursor:pointer;display:flex;justify-content:center;align-items:center;gap:8px"
+							style="padding:17px;border:0;border-radius:999px;background:var(--acento, #B5651D);color:#FBF1E6;font:700 15.5px 'Instrument Sans';cursor:pointer;display:flex;justify-content:center;align-items:center;gap:8px"
 							><Icon icon={I.phLockSimpleFill} size={16} />{tienda.vitrina
 								? 'Es una tienda de ejemplo'
 								: !pagos.length
@@ -1564,7 +1572,7 @@
 				style="padding:clamp(40px,6cqw,80px) clamp(14px,3.5cqw,44px);max-width:720px;margin:0 auto;text-align:center"
 			>
 				<span
-					style="display:inline-grid;place-items:center;width:64px;height:64px;border-radius:50%;background:#B5651D;color:#FBF1E6"
+					style="display:inline-grid;place-items:center;width:64px;height:64px;border-radius:50%;background:var(--acento, #B5651D);color:#FBF1E6"
 					><Icon icon={I.phCheckBold} size={28} /></span
 				>
 				<h1
@@ -1650,16 +1658,16 @@
 									aria-checked={on}
 									onclick={() => reserva.elegirServicio(s.id)}
 									style="display:flex;align-items:center;gap:12px;padding:15px;text-align:left;border-radius:18px;border:1.5px solid {on
-										? '#B5651D'
+										? 'var(--acento, #B5651D)'
 										: 'rgba(58,36,20,.1)'};background:{on
 										? '#FFF7EE'
 										: '#fff'};cursor:pointer;font-family:inherit;color:#3A2414"
 									><span
 										style="width:20px;height:20px;border-radius:50%;border:2px solid {on
-											? '#B5651D'
+											? 'var(--acento, #B5651D)'
 											: 'rgba(58,36,20,.25)'};display:grid;place-items:center;flex:none"
 										>{#if on}<span
-												style="width:10px;height:10px;border-radius:50%;background:#B5651D"
+												style="width:10px;height:10px;border-radius:50%;background:var(--acento, #B5651D)"
 											></span>{/if}</span
 									><span style="flex:1;min-width:0"
 										><span style="display:block;font-size:14.5px;font-weight:600">{s.nombre}</span
@@ -1684,7 +1692,7 @@
 									aria-checked={on}
 									onclick={() => reserva.elegirProfesional(p?.id ?? null)}
 									style="flex:none;width:112px;padding:10px;text-align:center;border-radius:18px;border:1.5px solid {on
-										? '#B5651D'
+										? 'var(--acento, #B5651D)'
 										: 'rgba(58,36,20,.1)'};background:{on
 										? '#FFF7EE'
 										: '#fff'};cursor:pointer;font-family:inherit;color:#3A2414"
@@ -1693,7 +1701,7 @@
 											alt=""
 											style="width:52px;height:52px;border-radius:50%;object-fit:cover;display:block;margin:0 auto"
 										/>{:else}<span
-											style="width:52px;height:52px;border-radius:50%;background:#FFF7EE;color:#B5651D;display:grid;place-items:center;margin:0 auto"
+											style="width:52px;height:52px;border-radius:50%;background:#FFF7EE;color:var(--acento, #B5651D);display:grid;place-items:center;margin:0 auto"
 											><Icon icon={p ? I.phUserFill : I.phShuffleBold} size={22} /></span
 										>{/if}<span
 										style="display:block;margin-top:8px;font-size:13.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
@@ -1741,7 +1749,7 @@
 									style="padding:9px 0;text-align:center;min-width:0;opacity:{d.abierto
 										? 1
 										: 0.35};border-radius:18px;border:1.5px solid {sel
-										? '#B5651D'
+										? 'var(--acento, #B5651D)'
 										: 'rgba(58,36,20,.1)'};background:{sel
 										? '#FFF7EE'
 										: '#fff'};cursor:pointer;font-family:inherit;color:#3A2414"
@@ -1784,7 +1792,7 @@
 													: 'line-through'};opacity:{h.libre
 													? 1
 													: 0.4};border-radius:18px;border:1.5px solid {on
-													? '#B5651D'
+													? 'var(--acento, #B5651D)'
 													: 'rgba(58,36,20,.1)'};background:{on
 													? '#FFF7EE'
 													: '#fff'};cursor:pointer;font-family:inherit;color:#3A2414"
@@ -1817,11 +1825,12 @@
 						<div>
 							<div style="font-size:15px;font-weight:700;margin-bottom:10px">Pago</div>
 							<div
-								style="display:flex;align-items:center;gap:12px;padding:15px;text-align:left;border-radius:18px;border:1.5px solid #B5651D;background:#FFF7EE;cursor:pointer;font-family:inherit;color:#3A2414"
+								style="display:flex;align-items:center;gap:12px;padding:15px;text-align:left;border-radius:18px;border:1.5px solid var(--acento, #B5651D);background:#FFF7EE;cursor:pointer;font-family:inherit;color:#3A2414"
 							>
 								<span
-									style="width:20px;height:20px;border-radius:50%;border:2px solid #B5651D;display:grid;place-items:center;flex:none"
-									><span style="width:10px;height:10px;border-radius:50%;background:#B5651D"
+									style="width:20px;height:20px;border-radius:50%;border:2px solid var(--acento, #B5651D);display:grid;place-items:center;flex:none"
+									><span
+										style="width:10px;height:10px;border-radius:50%;background:var(--acento, #B5651D)"
 									></span></span
 								>{#if reserva.sena}<Icon
 										icon={I.siMercadopago}
@@ -1835,7 +1844,7 @@
 									>{:else}<Icon
 										icon={I.phStorefrontFill}
 										size={22}
-										style="color:#B5651D;flex:none"
+										style="color:var(--acento, #B5651D);flex:none"
 									/><span style="flex:1;min-width:0"
 										><span style="display:block;font-size:14.5px;font-weight:600"
 											>Pagás en el local</span
@@ -1898,7 +1907,7 @@
 						</div>{/if}
 					<button
 						disabled={!reserva.listo || reservando || tienda.vitrina}
-						style="margin-top:16px;width:100%;padding:17px;border:0;border-radius:999px;background:#B5651D;color:#FBF1E6;font:700 15.5px 'Instrument Sans';cursor:pointer"
+						style="margin-top:16px;width:100%;padding:17px;border:0;border-radius:999px;background:var(--acento, #B5651D);color:#FBF1E6;font:700 15.5px 'Instrument Sans';cursor:pointer"
 						>{tienda.vitrina
 							? 'Es una tienda de ejemplo'
 							: !reserva.listo
@@ -1918,7 +1927,7 @@
 				style="padding:clamp(40px,6cqw,80px) clamp(14px,3.5cqw,44px);max-width:720px;margin:0 auto;text-align:center"
 			>
 				<span
-					style="display:inline-grid;place-items:center;width:64px;height:64px;border-radius:50%;background:#B5651D;color:#FBF1E6"
+					style="display:inline-grid;place-items:center;width:64px;height:64px;border-radius:50%;background:var(--acento, #B5651D);color:#FBF1E6"
 					><Icon icon={cancelado ? I.phCalendarX : I.phCheckBold} size={28} /></span
 				>
 				<h1
@@ -1960,7 +1969,7 @@
 							<Icon
 								icon={I.phMapPinFill}
 								size={16}
-								style="color:#B5651D;flex:none"
+								style="color:var(--acento, #B5651D);flex:none"
 							/>{turno.direccion}
 						</div>{/if}
 				</div>
@@ -2018,7 +2027,7 @@
 								href={wa(`¡Hola! Tengo un turno el ${cuandoLargo(turno.inicio)}.`)}
 								target="_blank"
 								rel="noopener"
-								style="color:#B5651D">por WhatsApp</a
+								style="color:var(--acento, #B5651D)">por WhatsApp</a
 							>{/if}.
 					</p>{/if}
 			</section>
@@ -2040,7 +2049,7 @@
 				</div>
 				<div style="min-width:0;display:flex;flex-direction:column;gap:18px">
 					{#if tienda.ciudad}<div
-							style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#B5651D"
+							style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--acento, #B5651D)"
 						>
 							{tienda.ciudad}
 						</div>{/if}
@@ -2100,7 +2109,7 @@
 							><Icon
 								icon={I.phMapPinFill}
 								size={18}
-								style="color:#B5651D;flex:none"
+								style="color:var(--acento, #B5651D);flex:none"
 							/>{tienda.direccion}</span
 						>
 					</div>{/if}
@@ -2295,7 +2304,7 @@
 
 <style>
 	.miga-clasica :global(a:hover) {
-		color: #b5651d;
+		color: var(--acento, #b5651d);
 	}
 	.sube {
 		transition: transform 0.25s;

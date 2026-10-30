@@ -104,7 +104,7 @@
 			old: rebaja ? fmt(p.anterior!) : null,
 			img: img(p.foto, 600, 600),
 			tag: t.agotado ? 'Sin stock' : rebaja ? `−${off(p)}%` : p.etiqueta,
-			tbg: !t.agotado && rebaja ? '#2F6BFF' : '#0E1116',
+			tbg: !t.agotado && rebaja ? 'var(--acento, #2F6BFF)' : '#0E1116',
 			cuotas:
 				tienda.cobros.cuotas > 1
 					? `${tienda.cobros.cuotas} × ${fmt(t.precio / tienda.cobros.cuotas)} sin interés`
@@ -152,7 +152,7 @@
 	]);
 	const USOS = [
 		['#0E1116', '#fff'],
-		['#2F6BFF', '#fff'],
+		['var(--acento, #2F6BFF)', '#fff'],
 		['#fff', '#0E1116'],
 		['#fff', '#0E1116'],
 		['#E3E8EF', '#0E1116']
@@ -244,9 +244,14 @@
 						: '',
 				img: img(p.foto, 500, 375),
 				pick,
-				bd: pick ? '#2F6BFF' : 'transparent',
-				btnBg: pick ? '#2F6BFF' : '#0E1116',
-				rows: filas.map(([t, v, b]) => ({ t, v, best: b, c: b ? '#2F6BFF' : '#0E1116' }))
+				bd: pick ? 'var(--acento, #2F6BFF)' : 'transparent',
+				btnBg: pick ? 'var(--acento, #2F6BFF)' : '#0E1116',
+				rows: filas.map(([t, v, b]) => ({
+					t,
+					v,
+					best: b,
+					c: b ? 'var(--acento, #2F6BFF)' : '#0E1116'
+				}))
 			};
 		});
 	});
@@ -353,7 +358,7 @@
 				].map(([v, t, on]) => ({
 					v: String(v),
 					t: String(t),
-					bd: on ? '#2F6BFF' : '#E3E8EF',
+					bd: on ? 'var(--acento, #2F6BFF)' : '#E3E8EF',
 					bg: on ? '#F3F6FF' : '#fff'
 				}))
 			: []
@@ -422,9 +427,9 @@
 		if (envio && !opciones.some((o) => o.id === envio)) envio = null;
 	});
 	const ch = (on: boolean) => ({
-		bd: on ? '#2F6BFF' : 'rgba(14,17,22,.1)',
+		bd: on ? 'var(--acento, #2F6BFF)' : 'rgba(14,17,22,.1)',
 		bg: on ? '#F3F6FF' : '#fff',
-		rc: on ? '#2F6BFF' : '#C5CCD6'
+		rc: on ? 'var(--acento, #2F6BFF)' : '#C5CCD6'
 	});
 	const pagos = $derived([
 		...(tienda.cobros.datosTransferencia
@@ -508,7 +513,14 @@
 	const stats = $derived([
 		{ v: String(tienda.productos.length), t: 'productos', bg: '#0E1116', fg: '#fff' },
 		...(tienda.cobros.cuotas > 1
-			? [{ v: `${tienda.cobros.cuotas}`, t: 'cuotas sin interés', bg: '#2F6BFF', fg: '#fff' }]
+			? [
+					{
+						v: `${tienda.cobros.cuotas}`,
+						t: 'cuotas sin interés',
+						bg: 'var(--acento, #2F6BFF)',
+						fg: '#fff'
+					}
+				]
 			: []),
 		...(tienda.cobros.transferencia > 0
 			? [
@@ -588,7 +600,7 @@
 	<div style="container-type:inline-size;width:100%;background:#F3F5F8;position:relative">
 		<!-- barra promo -->
 		<div
-			style="display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;padding:8px 16px;background:#2F6BFF;color:#fff;font-size:13px;font-weight:600;text-align:center"
+			style="display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;padding:8px 16px;background:var(--acento, #2F6BFF);color:#fff;font-size:13px;font-weight:600;text-align:center"
 		>
 			<span
 				>{tienda.envios.gratisDesde
@@ -616,7 +628,8 @@
 				style="display:flex;align-items:center;gap:9px;white-space:nowrap;flex:0 1 auto;min-width:0;text-decoration:none;color:#0E1116"
 				><span
 					style="width:32px;height:32px;border-radius:10px;background:#0E1116;display:grid;place-items:center;flex:none"
-					><span style="width:12px;height:12px;border-radius:50%;border:3px solid #2F6BFF"
+					><span
+						style="width:12px;height:12px;border-radius:50%;border:3px solid var(--acento, #2F6BFF)"
 					></span></span
 				><span
 					style="font-family:'Sora',sans-serif;font-weight:700;font-size:19px;letter-spacing:-.04em;overflow:hidden;text-overflow:ellipsis"
@@ -638,7 +651,7 @@
 				aria-label="Comparar"
 				style="position:relative;display:flex;align-items:center;gap:6px;white-space:nowrap;flex:none;border:0;cursor:pointer;padding:9px 12px;border-radius:12px;background:#fff;box-shadow:inset 0 0 0 1px rgba(14,17,22,.08);color:#0E1116;font:600 13px 'Instrument Sans'"
 				><Icon icon={I.phColumnsBold} size={16} />{#if wide}Comparar{/if}{#if comparar.length}<span
-						style="min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#2F6BFF;color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center"
+						style="min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--acento, #2F6BFF);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center"
 						>{comparar.length}</span
 					>{/if}</button
 			>
@@ -697,7 +710,7 @@
 								style="position:relative;padding:14px;border-radius:24px;background:#fff;border:2px solid {c.bd};display:flex;flex-direction:column;gap:12px"
 							>
 								{#if c.pick}<span
-										style="position:absolute;top:-11px;left:14px;padding:4px 10px;border-radius:999px;background:#2F6BFF;color:#fff;font-size:11.5px;font-weight:700"
+										style="position:absolute;top:-11px;left:14px;padding:4px 10px;border-radius:999px;background:var(--acento, #2F6BFF);color:#fff;font-size:11.5px;font-weight:700"
 										>El más vendido</span
 									>{/if}
 								<a
@@ -744,7 +757,7 @@
 									><button
 										type="button"
 										onclick={() => alternar(c.p.id)}
-										style="display:flex;justify-content:center;align-items:center;gap:6px;padding:7px 11px;border:0;border-radius:10px;background:#EAF0FF;color:#2F6BFF;font:600 13.5px 'Instrument Sans';cursor:pointer"
+										style="display:flex;justify-content:center;align-items:center;gap:6px;padding:7px 11px;border:0;border-radius:10px;background:#EAF0FF;color:var(--acento, #2F6BFF);font:600 13.5px 'Instrument Sans';cursor:pointer"
 										>Quitar de la comparación<Icon icon={I.phXBold} size={11} /></button
 									>
 								</div>
@@ -809,7 +822,7 @@
 												style="margin:0;font-family:'Sora',sans-serif;font-weight:700;font-size:clamp(48px,7.6cqw,110px);line-height:.92;letter-spacing:-.06em;overflow-wrap:anywhere"
 											>
 												{titulo[0]}{#if titulo[1]}<br /><span
-														style="background:linear-gradient(90deg,#9DB8FF,#2F6BFF);-webkit-background-clip:text;background-clip:text;color:transparent"
+														style="background:linear-gradient(90deg,#9DB8FF,var(--acento, #2F6BFF));-webkit-background-clip:text;background-clip:text;color:transparent"
 														>{titulo[1]}</span
 													>{/if}
 											</h1>
@@ -828,7 +841,7 @@
 													>{#if destacado.anterior && !dt.desde}<s style="color:#7C8494"
 															>{fmt(destacado.anterior)}</s
 														><span
-															style="padding:4px 9px;border-radius:999px;background:#2F6BFF;font-size:12px;font-weight:700"
+															style="padding:4px 9px;border-radius:999px;background:var(--acento, #2F6BFF);font-size:12px;font-weight:700"
 															>−{off(destacado)}%</span
 														>{/if}
 												</div>
@@ -888,7 +901,7 @@
 								>
 									<span
 										style="width:40px;height:40px;border-radius:12px;background:#EAF0FF;display:grid;place-items:center;flex:none"
-										><Icon icon={p.i} size={20} style="color:#2F6BFF" /></span
+										><Icon icon={p.i} size={20} style="color:var(--acento, #2F6BFF)" /></span
 									>
 									<div>
 										<div style="font-size:14px;font-weight:700">{p.t}</div>
@@ -988,8 +1001,10 @@
 													style="width:12px;height:12px;border-radius:4px;border:1.5px solid {enCmp(
 														p.id
 													)
-														? '#2F6BFF'
-														: '#C5CCD6'};background:{enCmp(p.id) ? '#2F6BFF' : '#fff'}"
+														? 'var(--acento, #2F6BFF)'
+														: '#C5CCD6'};background:{enCmp(p.id)
+														? 'var(--acento, #2F6BFF)'
+														: '#fff'}"
 												></span>{#if wide}Comparar{/if}</button
 											>
 										</div>{/each}
@@ -1146,9 +1161,9 @@
 												style="display:flex;align-items:center;gap:9px;color:#0E1116;text-decoration:none"
 												><span
 													style="width:17px;height:17px;border-radius:5px;border:1.5px solid {on
-														? '#2F6BFF'
+														? 'var(--acento, #2F6BFF)'
 														: '#C5CCD6'};background:{on
-														? '#2F6BFF'
+														? 'var(--acento, #2F6BFF)'
 														: '#fff'};color:#fff;display:grid;place-items:center;flex:none"
 													>{#if on}<Icon icon={I.phCheckBold} size={11} />{/if}</span
 												>{o.nombre}<span style="margin-left:auto;color:#8A919D">{o.cantidad}</span
@@ -1164,7 +1179,7 @@
 								<span style="display:flex;gap:6px;flex-wrap:wrap"
 									>{#if categoria}<a
 											href={enlaceCat(null)}
-											style="display:flex;align-items:center;gap:6px;padding:7px 11px;border-radius:10px;background:#EAF0FF;color:#2F6BFF;font-weight:600;text-decoration:none"
+											style="display:flex;align-items:center;gap:6px;padding:7px 11px;border-radius:10px;background:#EAF0FF;color:var(--acento, #2F6BFF);font-weight:600;text-decoration:none"
 											>{categoria}<Icon icon={I.phXBold} size={11} /></a
 										>{/if}</span
 								>
@@ -1268,7 +1283,7 @@
 										style="aspect-ratio:1;padding:0;border:0;border-radius:14px;overflow:hidden;background:radial-gradient(70% 70% at 50% 45%,#1D2A4A,#0E1116);cursor:pointer;box-shadow:0 0 0 {i ===
 										sel.fotoIdx
 											? '2px'
-											: '0px'} #2F6BFF"
+											: '0px'} var(--acento, #2F6BFF)"
 										><img
 											src={img(f, 200, 200)}
 											alt=""
@@ -1280,10 +1295,10 @@
 					<div style="position:sticky;top:80px;min-width:0">
 						<div style="display:flex;gap:6px;flex-wrap:wrap">
 							{#if esMasVendido}<span
-									style="padding:5px 10px;border-radius:999px;background:#EAF0FF;color:#2F6BFF;font-size:12px;font-weight:700"
+									style="padding:5px 10px;border-radius:999px;background:#EAF0FF;color:var(--acento, #2F6BFF);font-size:12px;font-weight:700"
 									>Más vendido{producto.categoria ? ` en ${producto.categoria}` : ''}</span
 								>{:else if producto.etiqueta}<span
-									style="padding:5px 10px;border-radius:999px;background:#EAF0FF;color:#2F6BFF;font-size:12px;font-weight:700"
+									style="padding:5px 10px;border-radius:999px;background:#EAF0FF;color:var(--acento, #2F6BFF);font-size:12px;font-weight:700"
 									>{producto.etiqueta}</span
 								>{/if}{#if sel.stock > 0}<span
 									style="padding:5px 10px;border-radius:999px;background:#E7F6EE;color:#14894B;font-size:12px;font-weight:700"
@@ -1316,7 +1331,7 @@
 								<b style="font-family:'Sora',sans-serif;font-size:34px;letter-spacing:-.04em"
 									>{sel.desde ? 'Desde ' : ''}{fmt(sel.precio)}</b
 								>{#if tachado}<s style="color:#8A919D">{fmt(tachado)}</s><span
-										style="padding:3px 8px;border-radius:999px;background:#2F6BFF;color:#fff;font-size:12px;font-weight:700"
+										style="padding:3px 8px;border-radius:999px;background:var(--acento, #2F6BFF);color:#fff;font-size:12px;font-weight:700"
 										>−{Math.round((1 - sel.precio / tachado) * 100)}%</span
 									>{/if}
 							</div>
@@ -1353,7 +1368,7 @@
 													? 1
 													: 0.35};box-shadow:inset 0 0 0 1px rgba(14,17,22,.12),0 0 0 {x.elegido
 													? '2px'
-													: '0px'} #F3F5F8,0 0 0 {x.elegido ? '4px' : '0px'} #2F6BFF"
+													: '0px'} #F3F5F8,0 0 0 {x.elegido ? '4px' : '0px'} var(--acento, #2F6BFF)"
 												>{#if x.color}<span
 														style="display:block;width:100%;height:100%;background:{x.color}"
 													></span>{:else}<img
@@ -1374,7 +1389,7 @@
 												disabled={!x.disponible && !x.elegido}
 												onclick={() => sel.elegir(o.nombre, x.valor)}
 												style="min-width:52px;min-height:46px;padding:10px 14px;border-radius:12px;border:1.5px solid {x.elegido
-													? '#2F6BFF'
+													? 'var(--acento, #2F6BFF)'
 													: '#E3E8EF'};background:{x.elegido
 													? '#F3F6FF'
 													: '#fff'};font:700 14px 'Instrument Sans';color:{x.disponible
@@ -1532,7 +1547,7 @@
 									><Icon
 										icon={I.phTruck}
 										size={20}
-										style="color:#2F6BFF;flex:none"
+										style="color:var(--acento, #2F6BFF);flex:none"
 									/>{#if falta}<span>Te faltan <b>{fmt(falta)}</b> para el envío gratis</span
 										>{:else}<b>Tenés envío gratis</b>{/if}</span
 								><span
@@ -1541,7 +1556,7 @@
 										style="display:block;height:100%;width:{Math.min(
 											100,
 											(subtotal / tienda.envios.gratisDesde) * 100
-										)}%;background:#2F6BFF;border-radius:3px"
+										)}%;background:var(--acento, #2F6BFF);border-radius:3px"
 									></span></span
 								>
 							</div>
@@ -1621,7 +1636,7 @@
 														type="button"
 														aria-label="Sumar {a.nombre}"
 														onclick={() => sumar(a)}
-														style="width:30px;height:30px;border:0;border-radius:9px;background:#EAF0FF;color:#2F6BFF;display:grid;place-items:center;cursor:pointer;flex:none"
+														style="width:30px;height:30px;border:0;border-radius:9px;background:#EAF0FF;color:var(--acento, #2F6BFF);display:grid;place-items:center;cursor:pointer;flex:none"
 														><Icon icon={I.phPlusBold} size={14} /></button
 													>
 												</div>{/each}
@@ -1678,7 +1693,9 @@
 				{#if !lineas.length}
 					<section style="padding:22px clamp(14px,3cqw,36px) clamp(48px,7cqw,90px)">
 						<p style="margin:0;font-size:15px;color:#69717E">Tu carrito está vacío.</p>
-						<a href="{base}/catalogo" style="display:inline-block;margin-top:10px;color:#2F6BFF"
+						<a
+							href="{base}/catalogo"
+							style="display:inline-block;margin-top:10px;color:var(--acento, #2F6BFF)"
 							>Ver los productos</a
 						>
 					</section>
@@ -1708,7 +1725,7 @@
 							>
 								<div style="display:flex;align-items:center;gap:10px">
 									<span
-										style="width:26px;height:26px;border-radius:50%;background:#2F6BFF;color:#fff;display:grid;place-items:center;font-size:12.5px;font-weight:700"
+										style="width:26px;height:26px;border-radius:50%;background:var(--acento, #2F6BFF);color:#fff;display:grid;place-items:center;font-size:12.5px;font-weight:700"
 										>1</span
 									><b style="flex:1;font-size:15.5px">Tus datos</b>
 								</div>
@@ -1735,13 +1752,13 @@
 							<div
 								style="padding:16px;border-radius:20px;background:#fff;border:2px solid {envio
 									? 'transparent'
-									: '#2F6BFF'}"
+									: 'var(--acento, #2F6BFF)'}"
 							>
 								<div style="display:flex;align-items:center;gap:10px">
 									<span
 										style="width:26px;height:26px;border-radius:50%;background:{envio
 											? '#E7F6EE'
-											: '#2F6BFF'};color:{envio
+											: 'var(--acento, #2F6BFF)'};color:{envio
 											? '#14894B'
 											: '#fff'};display:grid;place-items:center;font-size:12.5px;font-weight:700"
 										>{envio ? '✓' : '2'}</span
@@ -1792,7 +1809,7 @@
 											><span
 												style="width:18px;height:18px;border-radius:50%;border:2px solid {k.rc};display:grid;place-items:center;flex:none"
 												>{#if envio === s.id}<span
-														style="width:8px;height:8px;border-radius:50%;background:#2F6BFF"
+														style="width:8px;height:8px;border-radius:50%;background:var(--acento, #2F6BFF)"
 													></span>{/if}</span
 											>
 											<div style="flex:1;min-width:0">
@@ -1811,12 +1828,12 @@
 							<!-- 3 Pago -->
 							<div
 								style="padding:16px;border-radius:20px;background:#fff;border:2px solid {envio
-									? '#2F6BFF'
+									? 'var(--acento, #2F6BFF)'
 									: 'transparent'}"
 							>
 								<div style="display:flex;align-items:center;gap:10px">
 									<span
-										style="width:26px;height:26px;border-radius:50%;background:#2F6BFF;color:#fff;display:grid;place-items:center;font-size:12.5px;font-weight:700"
+										style="width:26px;height:26px;border-radius:50%;background:var(--acento, #2F6BFF);color:#fff;display:grid;place-items:center;font-size:12.5px;font-weight:700"
 										>3</span
 									><b style="flex:1;font-size:15.5px">Pago</b>
 								</div>
@@ -1834,7 +1851,7 @@
 											><span
 												style="width:18px;height:18px;border-radius:50%;border:2px solid {k.rc};display:grid;place-items:center;flex:none"
 												>{#if pago === p.id}<span
-														style="width:8px;height:8px;border-radius:50%;background:#2F6BFF"
+														style="width:8px;height:8px;border-radius:50%;background:var(--acento, #2F6BFF)"
 													></span>{/if}</span
 											><Icon icon={p.i} size={22} style="color:{p.c};flex:none" />
 											<div style="flex:1;min-width:0">
@@ -1853,7 +1870,7 @@
 								</div>{/if}
 							<button
 								disabled={!envio || !pagos.length || enviando || tienda.vitrina}
-								style="padding:17px;border:0;border-radius:14px;background:#2F6BFF;color:#fff;font:700 15.5px 'Instrument Sans';cursor:pointer;display:flex;justify-content:center;align-items:center;gap:8px"
+								style="padding:17px;border:0;border-radius:14px;background:var(--acento, #2F6BFF);color:#fff;font:700 15.5px 'Instrument Sans';cursor:pointer;display:flex;justify-content:center;align-items:center;gap:8px"
 								><Icon icon={I.phLockSimpleFill} size={16} />{tienda.vitrina
 									? 'Es una tienda de ejemplo'
 									: !pagos.length
@@ -1922,7 +1939,7 @@
 										suave="#8A919D"
 										borde="rgba(255,255,255,.14)"
 										fondo="#1D2330"
-										acento="#2F6BFF"
+										acento="var(--acento, #2F6BFF)"
 										sobreAcento="#fff"
 										radio="10px"
 										fuente="'Instrument Sans',sans-serif"
@@ -1977,7 +1994,7 @@
 						<div style="padding:16px;border-radius:20px;background:#fff">
 							<div style="display:flex;align-items:center;gap:10px">
 								<span
-									style="width:26px;height:26px;border-radius:50%;background:#2F6BFF;color:#fff;display:grid;place-items:center;font-size:12.5px;font-weight:700"
+									style="width:26px;height:26px;border-radius:50%;background:var(--acento, #2F6BFF);color:#fff;display:grid;place-items:center;font-size:12.5px;font-weight:700"
 									>1</span
 								><b style="flex:1;font-size:15.5px">Servicio</b>
 							</div>
@@ -2001,7 +2018,7 @@
 												style="width:18px;height:18px;border-radius:50%;border:2px solid {ch(on)
 													.rc};display:grid;place-items:center;flex:none"
 												>{#if on}<span
-														style="width:8px;height:8px;border-radius:50%;background:#2F6BFF"
+														style="width:8px;height:8px;border-radius:50%;background:var(--acento, #2F6BFF)"
 													></span>{/if}</span
 											><span style="flex:1;min-width:0"
 												><span style="display:block;font-size:14.5px;font-weight:600"
@@ -2017,7 +2034,7 @@
 						<div style="padding:16px;border-radius:20px;background:#fff">
 							<div style="display:flex;align-items:center;gap:10px">
 								<span
-									style="width:26px;height:26px;border-radius:50%;background:#2F6BFF;color:#fff;display:grid;place-items:center;font-size:12.5px;font-weight:700"
+									style="width:26px;height:26px;border-radius:50%;background:var(--acento, #2F6BFF);color:#fff;display:grid;place-items:center;font-size:12.5px;font-weight:700"
 									>2</span
 								><b style="flex:1;font-size:15.5px">Profesional</b>
 							</div>
@@ -2058,7 +2075,7 @@
 						<div style="padding:16px;border-radius:20px;background:#fff">
 							<div style="display:flex;align-items:center;gap:10px">
 								<span
-									style="width:26px;height:26px;border-radius:50%;background:#2F6BFF;color:#fff;display:grid;place-items:center;font-size:12.5px;font-weight:700"
+									style="width:26px;height:26px;border-radius:50%;background:var(--acento, #2F6BFF);color:#fff;display:grid;place-items:center;font-size:12.5px;font-weight:700"
 									>3</span
 								><b style="flex:1;font-size:15.5px">Día y horario</b><span
 									style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:#0E1116"
@@ -2146,7 +2163,7 @@
 							<div style="padding:16px;border-radius:20px;background:#fff">
 								<div style="display:flex;align-items:center;gap:10px">
 									<span
-										style="width:26px;height:26px;border-radius:50%;background:#2F6BFF;color:#fff;display:grid;place-items:center;font-size:12.5px;font-weight:700"
+										style="width:26px;height:26px;border-radius:50%;background:var(--acento, #2F6BFF);color:#fff;display:grid;place-items:center;font-size:12.5px;font-weight:700"
 										>4</span
 									><b style="flex:1;font-size:15.5px">Tus datos</b>
 								</div>
@@ -2175,7 +2192,7 @@
 							<div style="padding:16px;border-radius:20px;background:#fff">
 								<div style="display:flex;align-items:center;gap:10px">
 									<span
-										style="width:26px;height:26px;border-radius:50%;background:#2F6BFF;color:#fff;display:grid;place-items:center;font-size:12.5px;font-weight:700"
+										style="width:26px;height:26px;border-radius:50%;background:var(--acento, #2F6BFF);color:#fff;display:grid;place-items:center;font-size:12.5px;font-weight:700"
 										>5</span
 									><b style="flex:1;font-size:15.5px">Pago</b>
 								</div>
@@ -2188,7 +2205,8 @@
 										<span
 											style="width:18px;height:18px;border-radius:50%;border:2px solid {ch(true)
 												.rc};display:grid;place-items:center;flex:none"
-											><span style="width:8px;height:8px;border-radius:50%;background:#2F6BFF"
+											><span
+												style="width:8px;height:8px;border-radius:50%;background:var(--acento, #2F6BFF)"
 											></span></span
 										>{#if reserva.sena}<Icon
 												icon={I.siMercadopago}
@@ -2224,7 +2242,7 @@
 							</div>{/if}
 						<button
 							disabled={!reserva.listo || reservando || tienda.vitrina}
-							style="padding:17px;border:0;border-radius:14px;background:#2F6BFF;color:#fff;font:700 15.5px 'Instrument Sans';cursor:pointer;display:flex;justify-content:center;align-items:center;gap:8px"
+							style="padding:17px;border:0;border-radius:14px;background:var(--acento, #2F6BFF);color:#fff;font:700 15.5px 'Instrument Sans';cursor:pointer;display:flex;justify-content:center;align-items:center;gap:8px"
 							><Icon icon={I.phCalendarCheckBold} size={16} />{tienda.vitrina
 								? 'Es una tienda de ejemplo'
 								: !reserva.listo
@@ -2435,7 +2453,11 @@
 							<div
 								style="margin-top:18px;padding:14px 16px;border-radius:16px;background:#EAF0FF;text-align:left;font-size:14.5px;line-height:1.6;display:flex;gap:10px"
 							>
-								<Icon icon={I.phBankFill} size={22} style="color:#2F6BFF;flex:none" />
+								<Icon
+									icon={I.phBankFill}
+									size={22}
+									style="color:var(--acento, #2F6BFF);flex:none"
+								/>
 								<span
 									><b>Transferí {fmt(pedido.total)}</b>
 									{#if pedido.alias}al {pedido.esCbu ? 'CBU/CVU' : 'alias'}
@@ -2444,7 +2466,7 @@
 											href={wa(`¡Hola! Te mando el comprobante del pedido #${pedido.numero}.`)}
 											target="_blank"
 											rel="noopener"
-											style="color:#2F6BFF">por WhatsApp</a
+											style="color:var(--acento, #2F6BFF)">por WhatsApp</a
 										>{/if}. Lo preparamos apenas se&nbsp;acredite.</span
 								>
 							</div>
@@ -2466,7 +2488,9 @@
 			<!-- ============ NOSOTROS ============ -->
 			{#if pagina === 'nosotros'}
 				<section style="padding:clamp(28px,4cqw,56px) clamp(14px,3cqw,36px) 0">
-					{#if tienda.ciudad}<div style="font-size:12.5px;font-weight:700;color:#2F6BFF">
+					{#if tienda.ciudad}<div
+							style="font-size:12.5px;font-weight:700;color:var(--acento, #2F6BFF)"
+						>
 							{tienda.ciudad}
 						</div>{/if}
 					<h1
@@ -2513,18 +2537,27 @@
 									><Icon
 										icon={I.phMapPinFill}
 										size={18}
-										style="color:#2F6BFF;flex:none"
+										style="color:var(--acento, #2F6BFF);flex:none"
 									/>{tienda.direccion}</span
 								>{/if}{#if tienda.cobros.cuotas > 1}<span style="display:flex;gap:10px"
-									><Icon icon={I.phCreditCard} size={18} style="color:#2F6BFF;flex:none" />{tienda
-										.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}&nbsp;· {tienda
-											.cobros.transferencia}% off por transferencia{/if}</span
+									><Icon
+										icon={I.phCreditCard}
+										size={18}
+										style="color:var(--acento, #2F6BFF);flex:none"
+									/>{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}&nbsp;·
+										{tienda.cobros.transferencia}% off por transferencia{/if}</span
 								>{:else if tienda.cobros.transferencia > 0}<span style="display:flex;gap:10px"
-									><Icon icon={I.phBank} size={18} style="color:#2F6BFF;flex:none" />{tienda.cobros
-										.transferencia}% off por transferencia</span
+									><Icon
+										icon={I.phBank}
+										size={18}
+										style="color:var(--acento, #2F6BFF);flex:none"
+									/>{tienda.cobros.transferencia}% off por transferencia</span
 								>{/if}{#if tienda.envios.gratisDesde}<span style="display:flex;gap:10px"
-									><Icon icon={I.phTruck} size={18} style="color:#2F6BFF;flex:none" />Envío gratis
-									desde {fmt(tienda.envios.gratisDesde)}</span
+									><Icon
+										icon={I.phTruck}
+										size={18}
+										style="color:var(--acento, #2F6BFF);flex:none"
+									/>Envío gratis desde {fmt(tienda.envios.gratisDesde)}</span
 								>{/if}
 						</div>
 					</div>

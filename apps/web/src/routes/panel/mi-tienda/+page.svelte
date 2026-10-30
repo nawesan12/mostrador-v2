@@ -11,6 +11,7 @@
 	import Modal from '#lib/components/Modal.svelte';
 	import { subir as subirArchivo } from '#lib/panel/fotos.ts';
 	import { PLANTILLAS, plantilla } from '#lib/plantillas.ts';
+	import { acentos } from '#lib/tienda/acentos.ts';
 
 	/** Mi tienda (design/PanelOperacion.dc.html, sStore): secciones, colores y vista previa en vivo. */
 	let { data } = $props();
@@ -25,12 +26,6 @@
 		ig: [I.logosInstagramIcon, 'Instagram'],
 		wa: [I.phWhatsappLogoFill, 'Botón de WhatsApp']
 	} as const;
-	const PALETAS = [
-		{ bg: '#F3E9DC', ink: '#3B2416', acc: '#6B3A22' },
-		{ bg: '#EEF1E8', ink: '#1E2B22', acc: '#2F5D50' },
-		{ bg: '#FBF3EC', ink: '#2A140C', acc: '#C24E25' },
-		{ bg: '#1E1410', ink: '#F4E9E1', acc: '#E8875F' }
-	];
 	// Lo que se edita es local y se guarda en cada cambio; al recargar vuelve lo guardado.
 	let secciones = $derived<Seccion[]>(data.diseno.secciones.map((s) => ({ ...s })));
 	let paleta = $derived(data.diseno.paleta);
@@ -40,8 +35,14 @@
 	let portada = $derived(data.diseno.portada ?? '');
 	let logo = $derived(data.diseno.logo ?? '');
 	let sinPublicar = $derived(data.sinPublicar);
-	const pal = $derived(PALETAS[paleta]);
 	const elegida = $derived(plantilla(plantillaId));
+	// Color de acento: el de la plantilla o una de tres alternativas (lib/tienda/acentos.ts).
+	const opciones = $derived(acentos(plantillaId));
+	const pal = $derived({
+		bg: elegida?.bg ?? '#F3E9DC',
+		ink: elegida?.tx ?? '#3B2416',
+		acc: (opciones[paleta] ?? opciones[0]).color
+	});
 	// La tienda pública, para abrirla (la dirección viene sin protocolo).
 	const enlace = $derived(data.direccion.replace(/^[^/]+/, ''));
 
@@ -236,14 +237,15 @@
 					>
 				</div>
 			{/each}
-			<div class="p-t colores">Colores</div>
-			<div class="paletas" role="group" aria-label="Colores">
-				{#each PALETAS as p, i (i)}
+			<div class="p-t colores">Color de acento</div>
+			<div class="paletas" role="group" aria-label="Color de acento">
+				{#each opciones as o, i (o.color)}
 					<button
 						type="button"
-						aria-label="Paleta {i + 1}"
+						aria-label={i ? 'Color ' + (i + 1) : 'El de la plantilla'}
+						title={i ? undefined : 'El de la plantilla'}
 						aria-pressed={paleta === i}
-						style:background="linear-gradient(135deg,{p.bg} 50%,{p.acc} 50%)"
+						style:background="linear-gradient(135deg,{pal.bg} 50%,{o.color} 50%)"
 						onclick={() => {
 							paleta = i;
 							void guardar();
@@ -295,7 +297,9 @@
 						</div>
 					{:else if s.id === 'cats'}
 						<div class="cats">
-							{#each data.vista.categorias as c (c)}<span style:background={pal.acc}>{c}</span
+							{#each data.vista.categorias as c (c)}<span
+									style:background={pal.acc}
+									style:color={opciones[0].sobre}>{c}</span
 								>{/each}
 						</div>
 					{:else if s.id === 'revs'}

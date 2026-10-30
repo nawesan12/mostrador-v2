@@ -376,7 +376,7 @@
 						t: 'Transferencia',
 						d: `${tienda.cobros.transferencia}% off · te mandamos el alias al confirmar`,
 						i: I.phBankBold,
-						c: '#2F5D50'
+						c: 'var(--acento, #2F5D50)'
 					}
 				]
 			: []),
@@ -491,7 +491,7 @@
 {#snippet paso(p: Tarjeta, alto: number)}
 	{@const q = enCarrito(p.id)}
 	{#if q}<span
-			style="display:flex;align-items:center;justify-content:space-between;padding:3px;border-radius:9px;background:#2F5D50;color:#fff;flex:none"
+			style="display:flex;align-items:center;justify-content:space-between;padding:3px;border-radius:9px;background:var(--acento, #2F5D50);color:#fff;flex:none"
 			><button
 				type="button"
 				aria-label="Uno menos"
@@ -511,7 +511,7 @@
 			onclick={() => sumar(p.id)}
 			disabled={p.agotado || tienda.vitrina}
 			aria-label="Agregar {p.n}"
-			style="display:flex;justify-content:center;align-items:center;gap:6px;padding:9px;border-radius:9px;border:1.5px solid #2F5D50;background:transparent;color:#2F5D50;font:700 13.5px 'Schibsted Grotesk';cursor:pointer"
+			style="display:flex;justify-content:center;align-items:center;gap:6px;padding:9px;border-radius:9px;border:1.5px solid var(--acento, #2F5D50);background:transparent;color:var(--acento, #2F5D50);font:700 13.5px 'Schibsted Grotesk';cursor:pointer"
 			><Icon icon={I.phPlusBold} size={13} />{p.agotado ? 'Sin stock' : 'Agregar'}</button
 		>{/if}
 {/snippet}
@@ -545,7 +545,8 @@
 				>{/if}</span
 		>
 		{#if tienda.cobros.transferencia > 0}<span
-				style="font-size:11.5px;color:#2F5D50;font-weight:600">{p.transf} por transferencia</span
+				style="font-size:11.5px;color:var(--acento, #2F5D50);font-weight:600"
+				>{p.transf} por transferencia</span
 			>{/if}
 		<span style="flex:1"></span>
 		{@render paso(p, 30)}
@@ -561,7 +562,7 @@
 	>
 		<!-- barra promo -->
 		<div
-			style="display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 14px;background:#2F5D50;color:#EEF1E8;font-size:13px;font-weight:600;text-align:center"
+			style="display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 14px;background:var(--acento, #2F5D50);color:#EEF1E8;font-size:13px;font-weight:600;text-align:center"
 		>
 			<Icon icon={I.phTruckBold} size={15} /><span
 				>{tienda.envios.gratisDesde
@@ -585,7 +586,7 @@
 						? '0 1 auto'
 						: 'none'};color:#1E2B22;text-decoration:none"
 					><span
-						style="width:36px;height:36px;border-radius:10px;background:#2F5D50;color:#E8C547;display:grid;place-items:center;flex:none"
+						style="width:36px;height:36px;border-radius:10px;background:var(--acento, #2F5D50);color:#E8C547;display:grid;place-items:center;flex:none"
 						><Icon icon={I.phLeafFill} size={20} /></span
 					><span
 						style="font-weight:800;font-size:21px;letter-spacing:-.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
@@ -596,7 +597,7 @@
 				{#if nar && tienda.turnos}<a
 						href="{base}/turnos"
 						aria-label="Reservar turno"
-						style="display:grid;place-items:center;flex:none;width:40px;height:40px;border-radius:10px;background:#2F5D50;color:#E8C547"
+						style="display:grid;place-items:center;flex:none;width:40px;height:40px;border-radius:10px;background:var(--acento, #2F5D50);color:#E8C547"
 						><Icon icon={I.phCalendarCheckBold} size={18} /></a
 					>{/if}
 				<a
@@ -647,7 +648,7 @@
 							)
 								? '#DDE8DF'
 								: 'transparent'};color:#1E2B22;white-space:nowrap;text-decoration:none"
-							><Icon icon={n.i} size={15} style="color:#2F5D50" />{n.t}</a
+							><Icon icon={n.i} size={15} style="color:var(--acento, #2F5D50)" />{n.t}</a
 						>{/each}
 				</nav>{/if}
 		</header>
@@ -673,7 +674,7 @@
 							<div
 								style="grid-column:span {nar
 									? 1
-									: 2};position:relative;min-height:min(440px,100cqw);border-radius:16px;overflow:hidden;background:#2F5D50;color:#EEF1E8;padding:clamp(22px,4cqw,48px);display:flex;flex-direction:column;justify-content:flex-end"
+									: 2};position:relative;min-height:min(440px,100cqw);border-radius:16px;overflow:hidden;background:var(--acento, #2F5D50);color:#EEF1E8;padding:clamp(22px,4cqw,48px);display:flex;flex-direction:column;justify-content:flex-end"
 							>
 								{#if tienda.portada.foto}<img
 										src={img(tienda.portada.foto, 1400)}
@@ -744,7 +745,11 @@
 								{#if tienda.cobros.transferencia > 0}<div
 										style="padding:20px;border-radius:16px;background:#fff;display:flex;align-items:center;gap:14px;flex-wrap:wrap"
 									>
-										<Icon icon={I.phBankBold} size={34} style="color:#2F5D50;flex:none" />
+										<Icon
+											icon={I.phBankBold}
+											size={34}
+											style="color:var(--acento, #2F5D50);flex:none"
+										/>
 										<div style="flex:1;min-width:160px">
 											<b style="font-size:17px;letter-spacing:-.02em"
 												>{tienda.cobros.transferencia}% off por transferencia</b
@@ -783,7 +788,7 @@
 											/>{:else}<Icon
 												icon={I.phPackageFill}
 												size={24}
-												style="color:#2F5D50"
+												style="color:var(--acento, #2F5D50)"
 											/>{/if}</span
 									><span
 										style="font-size:13px;font-weight:700;text-align:center;line-height:1.2;overflow-wrap:anywhere"
@@ -805,7 +810,7 @@
 								</h2>
 								<a
 									href="{base}/catalogo"
-									style="font:700 14px 'Schibsted Grotesk';color:#2F5D50;display:flex;align-items:center;gap:6px;text-decoration:none"
+									style="font:700 14px 'Schibsted Grotesk';color:var(--acento, #2F5D50);display:flex;align-items:center;gap:6px;text-decoration:none"
 									>Ver todos<Icon icon={I.phArrowRightBold} size={14} /></a
 								>
 							</div>
@@ -860,13 +865,13 @@
 											<Icon
 												icon={iconoEnvio(s.id)}
 												size={20}
-												style="color:#2F5D50;flex:none"
+												style="color:var(--acento, #2F5D50);flex:none"
 											/><span style="flex:1;min-width:0;font-size:14px"
 												><b>{s.nombre}</b> · {s.detalle}</span
 											><b
 												style="font-size:14px;white-space:nowrap;color:{s.precio
 													? '#1E2B22'
-													: '#2F5D50'}">{s.precio ? fmt(s.precio) : 'Gratis'}</b
+													: 'var(--acento, #2F5D50)'}">{s.precio ? fmt(s.precio) : 'Gratis'}</b
 											>
 										</div>{:else}<span style="font-size:14px;color:#56645A"
 											>No llegamos a ese código postal&nbsp;todavía.</span
@@ -908,7 +913,7 @@
 													· {r.conCompra ? 'compró' : 'sobre'} {r.producto}{/if}
 											</div>
 											{#if r.conCompra}<div
-													style="margin-top:5px;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#2F5D50"
+													style="margin-top:5px;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--acento, #2F5D50)"
 												>
 													<Icon icon={I.phSealCheckFill} size={13} />Compra verificada
 												</div>{/if}
@@ -945,7 +950,7 @@
 									c.c === categoria}<a
 									href={enlaceCat(c.c, orden, soloOferta)}
 									style="display:flex;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:8px;background:{on
-										? '#2F5D50'
+										? 'var(--acento, #2F5D50)'
 										: 'transparent'};color:{on ? '#fff' : '#1E2B22'};font-weight:{on
 										? 700
 										: 500};text-decoration:none">{c.t}<span style="opacity:.6">{c.n}</span></a
@@ -962,8 +967,8 @@
 									onclick={f.cambiar}
 									style="display:flex;align-items:center;gap:9px;padding:0;border:0;background:transparent;font:400 13.5px 'Schibsted Grotesk';color:#1E2B22;cursor:pointer;text-align:left"
 									><span
-										style="width:18px;height:18px;border-radius:5px;border:1.5px solid #2F5D50;background:{f.on
-											? '#2F5D50'
+										style="width:18px;height:18px;border-radius:5px;border:1.5px solid var(--acento, #2F5D50);background:{f.on
+											? 'var(--acento, #2F5D50)'
 											: 'transparent'};display:grid;place-items:center;color:#fff;flex:none"
 										>{#if f.on}<Icon icon={I.phCheckBold} size={11} />{/if}</span
 									><span style="flex:1">{f.t}</span><span style="color:#8A968C">{f.n}</span></button
@@ -1048,8 +1053,8 @@
 									onclick={f.cambiar}
 									style="display:flex;align-items:center;gap:9px;padding:0;border:0;background:transparent;font:400 13.5px 'Schibsted Grotesk';color:#1E2B22;cursor:pointer;text-align:left"
 									><span
-										style="width:18px;height:18px;border-radius:5px;border:1.5px solid #2F5D50;background:{f.on
-											? '#2F5D50'
+										style="width:18px;height:18px;border-radius:5px;border:1.5px solid var(--acento, #2F5D50);background:{f.on
+											? 'var(--acento, #2F5D50)'
 											: 'transparent'};display:grid;place-items:center;color:#fff;flex:none"
 										>{#if f.on}<Icon icon={I.phCheckBold} size={11} />{/if}</span
 									><span style="flex:1">{f.t}</span><span style="color:#8A968C">{f.n}</span></button
@@ -1118,7 +1123,7 @@
 										<div
 											style="font-size:12px;color:#6B7A6E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
 										>
-											{#if tienda.cobros.transferencia > 0}<b style="color:#2F5D50"
+											{#if tienda.cobros.transferencia > 0}<b style="color:var(--acento, #2F5D50)"
 													>{p.transf} por transferencia</b
 												>{/if}
 										</div>
@@ -1128,7 +1133,7 @@
 										>{#if p.old}<s style="font-size:11.5px;color:#8A968C">{p.old}</s>{/if}
 									</div>
 									{#if q}<span
-											style="flex:none;display:flex;align-items:center;gap:2px;padding:3px;border-radius:9px;background:#2F5D50;color:#fff"
+											style="flex:none;display:flex;align-items:center;gap:2px;padding:3px;border-radius:9px;background:var(--acento, #2F5D50);color:#fff"
 											><button
 												type="button"
 												aria-label="Uno menos"
@@ -1148,7 +1153,7 @@
 											aria-label="Agregar {p.n}"
 											disabled={p.agotado || tienda.vitrina}
 											onclick={() => sumar(p.id)}
-											style="flex:none;width:40px;height:40px;padding:0;border-radius:9px;border:1.5px solid #2F5D50;background:transparent;color:#2F5D50;display:grid;place-items:center;cursor:pointer"
+											style="flex:none;width:40px;height:40px;padding:0;border-radius:9px;border:1.5px solid var(--acento, #2F5D50);background:transparent;color:var(--acento, #2F5D50);display:grid;place-items:center;cursor:pointer"
 											><Icon icon={I.phPlusBold} size={15} /></button
 										>{/if}
 								</div>
@@ -1159,7 +1164,7 @@
 						<button
 							type="button"
 							onclick={() => (mostrar += 24)}
-							style="margin-top:16px;width:100%;padding:12px;border:0;text-align:center;border-radius:12px;background:#fff;font:700 14px 'Schibsted Grotesk';color:#2F5D50;cursor:pointer"
+							style="margin-top:16px;width:100%;padding:12px;border:0;text-align:center;border-radius:12px;background:#fff;font:700 14px 'Schibsted Grotesk';color:var(--acento, #2F5D50);cursor:pointer"
 							>Ver más · ves {catalog.length} de {listado.length}</button
 						>
 					{/if}
@@ -1204,7 +1209,7 @@
 										style="aspect-ratio:1;padding:0;border:0;border-radius:10px;overflow:hidden;background:#fff;cursor:pointer;box-shadow:0 0 0 {i ===
 										sel.fotoIdx
 											? '2px'
-											: '0px'} #2F5D50"
+											: '0px'} var(--acento, #2F5D50)"
 										><img
 											src={img(f, 200, 200)}
 											alt=""
@@ -1222,7 +1227,7 @@
 								>
 									{#if producto.categoria}<a
 											href={enlaceCat(producto.categoria)}
-											style="display:flex;align-items:center;gap:4px;padding:4px 9px;border-radius:6px;background:#DDE8DF;color:#2F5D50;font-size:12px;font-weight:800;text-transform:uppercase;text-decoration:none"
+											style="display:flex;align-items:center;gap:4px;padding:4px 9px;border-radius:6px;background:#DDE8DF;color:var(--acento, #2F5D50);font-size:12px;font-weight:800;text-transform:uppercase;text-decoration:none"
 											>{producto.categoria}</a
 										>{/if}{#if producto.etiqueta}<span
 											style="padding:4px 9px;border-radius:6px;background:#F2F4EE;font-size:12px;font-weight:700"
@@ -1268,7 +1273,7 @@
 													? 1
 													: 0.4};box-shadow:inset 0 0 0 1px rgba(30,43,34,.12),0 0 0 {x.elegido
 													? '2px'
-													: '0px'} #EEF1E8,0 0 0 {x.elegido ? '4px' : '0px'} #2F5D50"
+													: '0px'} #EEF1E8,0 0 0 {x.elegido ? '4px' : '0px'} var(--acento, #2F5D50)"
 												>{#if x.color}<span
 														style="display:block;width:100%;height:100%;background:{x.color}"
 													></span>{:else}<img
@@ -1293,7 +1298,7 @@
 												disabled={!x.disponible && !x.elegido}
 												onclick={() => sel.elegir(o.nombre, x.valor)}
 												style="min-height:48px;padding:10px 6px;border-radius:10px;border:1.5px solid {x.elegido
-													? '#2F5D50'
+													? 'var(--acento, #2F5D50)'
 													: 'rgba(30,43,34,.12)'};background:{x.elegido
 													? '#DDE8DF'
 													: '#fff'};text-align:center;font:400 13.5px 'Schibsted Grotesk';color:{x.disponible
@@ -1321,7 +1326,7 @@
 											sel.precio / tienda.cobros.cuotas
 										)}{/if}{#if tienda.cobros.transferencia > 0}{#if tienda.cobros.cuotas > 1}
 											·
-										{/if}<b style="color:#2F5D50"
+										{/if}<b style="color:var(--acento, #2F5D50)"
 											>{fmt(sel.precio * (1 - tienda.cobros.transferencia / 100))} por transferencia</b
 										>{/if}
 								</div>{/if}
@@ -1353,7 +1358,7 @@
 									type="button"
 									onclick={agregar}
 									disabled={sel.stock === 0 || tienda.vitrina}
-									style="flex:1;padding:14px;border:0;border-radius:10px;background:#2F5D50;color:#fff;font:800 15px 'Schibsted Grotesk';cursor:pointer"
+									style="flex:1;padding:14px;border:0;border-radius:10px;background:var(--acento, #2F5D50);color:#fff;font:800 15px 'Schibsted Grotesk';cursor:pointer"
 									>{sel.boton(`Agregar · ${fmt(sel.precio * cantidad)}`)}</button
 								>
 							</div>
@@ -1392,8 +1397,9 @@
 							{#if cotizado}{#each cotizado as o (o.id)}<span
 										style="display:flex;justify-content:space-between;gap:10px;padding:8px 0 0"
 										><span>{o.nombre} · {o.detalle}</span><b
-											style="white-space:nowrap;color:{o.precio ? '#1E2B22' : '#2F5D50'}"
-											>{o.precio ? fmt(o.precio) : 'Gratis'}</b
+											style="white-space:nowrap;color:{o.precio
+												? '#1E2B22'
+												: 'var(--acento, #2F5D50)'}">{o.precio ? fmt(o.precio) : 'Gratis'}</b
 										></span
 									>{/each}{/if}
 						</div>
@@ -1503,7 +1509,7 @@
 						<p style="margin:6px 0 0;font-size:15px;color:#56645A">Todavía no sumaste nada.</p>
 						<a
 							href="{base}/catalogo"
-							style="align-self:flex-start;padding:14px 22px;border-radius:10px;background:#2F5D50;color:#fff;font:800 15px 'Schibsted Grotesk';text-decoration:none"
+							style="align-self:flex-start;padding:14px 22px;border-radius:10px;background:var(--acento, #2F5D50);color:#fff;font:800 15px 'Schibsted Grotesk';text-decoration:none"
 							>Ver productos</a
 						>
 					{:else}
@@ -1521,7 +1527,7 @@
 										style="display:block;width:{Math.min(
 											100,
 											(subtotal / tienda.envios.gratisDesde) * 100
-										)}%;height:100%;background:#2F5D50"
+										)}%;height:100%;background:var(--acento, #2F5D50)"
 									></span></span
 								>
 							</div>
@@ -1616,12 +1622,12 @@
 								)}</span
 							>{/if}
 						{#if tienda.cobros.transferencia > 0}<span
-								style="font-size:13.5px;color:#2F5D50;font-weight:700"
+								style="font-size:13.5px;color:var(--acento, #2F5D50);font-weight:700"
 								>{fmt(subtotal * (1 - tienda.cobros.transferencia / 100))} pagando por transferencia</span
 							>{/if}
 						<a
 							href="{base}/checkout"
-							style="padding:15px;border-radius:10px;background:#2F5D50;color:#fff;font:800 15px 'Schibsted Grotesk';text-align:center;text-decoration:none"
+							style="padding:15px;border-radius:10px;background:var(--acento, #2F5D50);color:#fff;font:800 15px 'Schibsted Grotesk';text-align:center;text-decoration:none"
 							>Ir a pagar</a
 						>{#if whatsapp}<a
 								href={wa(textoPedido)}
@@ -1640,7 +1646,9 @@
 			{#if !lineas.length}
 				<section style="padding:16px clamp(12px,3cqw,32px) clamp(40px,6cqw,72px)">
 					<p style="font-size:15px;color:#56645A">Tu carrito está vacío.</p>
-					<a href="{base}/catalogo" style="color:#2F5D50;font-weight:700">Ver productos</a>
+					<a href="{base}/catalogo" style="color:var(--acento, #2F5D50);font-weight:700"
+						>Ver productos</a
+					>
 				</section>
 			{:else}
 				<form
@@ -1665,7 +1673,7 @@
 						<div style="display:flex;gap:6px">
 							{#each ['1 · Datos', '2 · Entrega', '3 · Pago'] as t, i (t)}<span
 									style="flex:1;padding:9px;border-radius:9px;background:{i === 0
-										? '#2F5D50'
+										? 'var(--acento, #2F5D50)'
 										: '#fff'};color:{i === 0
 										? '#fff'
 										: '#6B7A6E'};font-size:13px;font-weight:700;text-align:center">{t}</span
@@ -1727,24 +1735,27 @@
 										aria-checked={on}
 										onclick={() => (envio = s.id)}
 										style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;border:1.5px solid {on
-											? '#2F5D50'
+											? 'var(--acento, #2F5D50)'
 											: 'rgba(30,43,34,.12)'};background:{on
 											? '#F7F9F4'
 											: 'transparent'};text-align:left;cursor:pointer;font-family:inherit;color:#1E2B22"
 										><span
-											style="width:18px;height:18px;border-radius:50%;border:2px solid #2F5D50;display:grid;place-items:center;flex:none"
+											style="width:18px;height:18px;border-radius:50%;border:2px solid var(--acento, #2F5D50);display:grid;place-items:center;flex:none"
 											>{#if on}<span
-													style="width:8px;height:8px;border-radius:50%;background:#2F5D50"
+													style="width:8px;height:8px;border-radius:50%;background:var(--acento, #2F5D50)"
 												></span>{/if}</span
-										><Icon icon={iconoEnvio(s.id)} size={20} style="color:#2F5D50;flex:none" /><span
-											style="flex:1;min-width:0"
+										><Icon
+											icon={iconoEnvio(s.id)}
+											size={20}
+											style="color:var(--acento, #2F5D50);flex:none"
+										/><span style="flex:1;min-width:0"
 											><b style="font-size:14px">{s.nombre}</b><span
 												style="display:block;font-size:12px;color:#6B7A6E">{s.detalle}</span
 											></span
 										><b
 											style="font-size:14px;white-space:nowrap;color:{s.precio
 												? '#1E2B22'
-												: '#2F5D50'}">{s.precio ? fmt(s.precio) : 'Gratis'}</b
+												: 'var(--acento, #2F5D50)'}">{s.precio ? fmt(s.precio) : 'Gratis'}</b
 										></button
 									>{:else}<span style="font-size:13.5px;color:#6B7A6E"
 										>Poné tu código postal para ver cómo te&nbsp;llega.</span
@@ -1764,13 +1775,14 @@
 									aria-checked={on}
 									onclick={() => (pago = p.id)}
 									style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;border:1.5px solid {on
-										? '#2F5D50'
+										? 'var(--acento, #2F5D50)'
 										: 'rgba(30,43,34,.12)'};background:{on
 										? '#F7F9F4'
 										: 'transparent'};text-align:left;cursor:pointer;font-family:inherit;color:#1E2B22"
 									><span
-										style="width:18px;height:18px;border-radius:50%;border:2px solid #2F5D50;display:grid;place-items:center;flex:none"
-										>{#if on}<span style="width:8px;height:8px;border-radius:50%;background:#2F5D50"
+										style="width:18px;height:18px;border-radius:50%;border:2px solid var(--acento, #2F5D50);display:grid;place-items:center;flex:none"
+										>{#if on}<span
+												style="width:8px;height:8px;border-radius:50%;background:var(--acento, #2F5D50)"
 											></span>{/if}</span
 									><Icon icon={p.i} size={20} style="color:{p.c};flex:none" /><span
 										style="flex:1;min-width:0"
@@ -1863,7 +1875,7 @@
 				style="padding:clamp(24px,4cqw,48px) clamp(12px,3cqw,32px) clamp(40px,6cqw,72px);max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:10px"
 			>
 				<div
-					style="padding:clamp(20px,3cqw,32px);border-radius:16px;background:#2F5D50;color:#EEF1E8;display:flex;flex-direction:column;gap:12px"
+					style="padding:clamp(20px,3cqw,32px);border-radius:16px;background:var(--acento, #2F5D50);color:#EEF1E8;display:flex;flex-direction:column;gap:12px"
 				>
 					<span
 						style="width:52px;height:52px;border-radius:50%;background:#E8C547;color:#1E2B22;display:grid;place-items:center"
@@ -1890,7 +1902,7 @@
 								href={wa(`¡Hola! Te mando el comprobante del pedido #${pedido.numero}.`)}
 								target="_blank"
 								rel="noopener"
-								style="color:#2F5D50;font-weight:700">por WhatsApp</a
+								style="color:var(--acento, #2F5D50);font-weight:700">por WhatsApp</a
 							>{/if}. Lo preparamos apenas se&nbsp;acredite.
 					</div>
 				{/if}
@@ -1938,7 +1950,7 @@
 						{#each PASOS_TURNO as t, i (t)}<span
 								style="flex:1;min-width:0;padding:9px 4px;border-radius:9px;background:{i <=
 								reserva.paso
-									? '#2F5D50'
+									? 'var(--acento, #2F5D50)'
 									: '#fff'};color:{i <= reserva.paso
 									? '#fff'
 									: '#6B7A6E'};font-size:12px;font-weight:700;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
@@ -1964,13 +1976,14 @@
 									aria-checked={on}
 									onclick={() => reserva.elegirServicio(s.id)}
 									style="display:flex;align-items:center;gap:12px;width:100%;padding:12px;border-radius:10px;border:1.5px solid {on
-										? '#2F5D50'
+										? 'var(--acento, #2F5D50)'
 										: 'rgba(30,43,34,.12)'};background:{on
 										? '#F7F9F4'
 										: 'transparent'};text-align:left;cursor:pointer;font-family:inherit;color:#1E2B22"
 									><span
-										style="width:18px;height:18px;border-radius:50%;border:2px solid #2F5D50;display:grid;place-items:center;flex:none"
-										>{#if on}<span style="width:8px;height:8px;border-radius:50%;background:#2F5D50"
+										style="width:18px;height:18px;border-radius:50%;border:2px solid var(--acento, #2F5D50);display:grid;place-items:center;flex:none"
+										>{#if on}<span
+												style="width:8px;height:8px;border-radius:50%;background:var(--acento, #2F5D50)"
 											></span>{/if}</span
 									><span style="flex:1;min-width:0"
 										><span style="display:block;font-size:14.5px;font-weight:700">{s.nombre}</span
@@ -1995,7 +2008,7 @@
 									aria-checked={on}
 									onclick={() => reserva.elegirProfesional(p?.id ?? null)}
 									style="flex:none;width:110px;padding:10px;border-radius:10px;border:1.5px solid {on
-										? '#2F5D50'
+										? 'var(--acento, #2F5D50)'
 										: 'rgba(30,43,34,.12)'};background:{on
 										? '#F7F9F4'
 										: 'transparent'};text-align:center;cursor:pointer;font-family:inherit;color:#1E2B22"
@@ -2004,7 +2017,7 @@
 											alt=""
 											style="width:56px;height:56px;border-radius:50%;object-fit:cover;display:block;margin:0 auto"
 										/>{:else}<span
-											style="width:56px;height:56px;border-radius:50%;background:#DDE8DF;color:#2F5D50;display:grid;place-items:center;margin:0 auto"
+											style="width:56px;height:56px;border-radius:50%;background:#DDE8DF;color:var(--acento, #2F5D50);display:grid;place-items:center;margin:0 auto"
 											><Icon icon={p ? I.phUserFill : I.phShuffleBold} size={22} /></span
 										>{/if}<span
 										style="display:block;margin-top:8px;font-size:13.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
@@ -2050,10 +2063,10 @@
 									disabled={!d.abierto}
 									onclick={() => reserva.elegirDia(d.dia)}
 									style="padding:9px 0;text-align:center;cursor:pointer;font-family:inherit;min-width:0;border-radius:9px;border:1.5px solid {on
-										? '#2F5D50'
-										: 'rgba(30,43,34,.12)'};background:{on ? '#2F5D50' : '#fff'};color:{on
-										? '#fff'
-										: '#1E2B22'}"
+										? 'var(--acento, #2F5D50)'
+										: 'rgba(30,43,34,.12)'};background:{on
+										? 'var(--acento, #2F5D50)'
+										: '#fff'};color:{on ? '#fff' : '#1E2B22'}"
 									><span
 										style="display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase"
 										>{d.w}</span
@@ -2093,10 +2106,10 @@
 												style="padding:10px 0;text-align:center;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;text-decoration:{h.libre
 													? 'none'
 													: 'line-through'};border-radius:9px;border:1.5px solid {on
-													? '#2F5D50'
-													: 'rgba(30,43,34,.12)'};background:{on ? '#2F5D50' : '#fff'};color:{on
-													? '#fff'
-													: '#1E2B22'}">{h.hora}</button
+													? 'var(--acento, #2F5D50)'
+													: 'rgba(30,43,34,.12)'};background:{on
+													? 'var(--acento, #2F5D50)'
+													: '#fff'};color:{on ? '#fff' : '#1E2B22'}">{h.hora}</button
 											>{/each}
 									</div>
 								</div>{/each}
@@ -2127,11 +2140,12 @@
 							<b style="font-size:16px">Pago</b>
 							<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px">
 								<div
-									style="display:flex;align-items:center;gap:12px;width:100%;padding:12px;border-radius:10px;border:1.5px solid #2F5D50;background:#F7F9F4;text-align:left;cursor:pointer;font-family:inherit;color:#1E2B22"
+									style="display:flex;align-items:center;gap:12px;width:100%;padding:12px;border-radius:10px;border:1.5px solid var(--acento, #2F5D50);background:#F7F9F4;text-align:left;cursor:pointer;font-family:inherit;color:#1E2B22"
 								>
 									<span
-										style="width:18px;height:18px;border-radius:50%;border:2px solid #2F5D50;display:grid;place-items:center;flex:none"
-										><span style="width:8px;height:8px;border-radius:50%;background:#2F5D50"
+										style="width:18px;height:18px;border-radius:50%;border:2px solid var(--acento, #2F5D50);display:grid;place-items:center;flex:none"
+										><span
+											style="width:8px;height:8px;border-radius:50%;background:var(--acento, #2F5D50)"
 										></span></span
 									>{#if reserva.sena}<Icon
 											icon={I.siMercadopago}
@@ -2226,7 +2240,9 @@
 				<span
 					style="width:52px;height:52px;border-radius:50%;background:{cancelado
 						? '#1E2B22'
-						: '#2F5D50'};color:{cancelado ? '#EEF1E8' : '#E8C547'};display:grid;place-items:center"
+						: 'var(--acento, #2F5D50)'};color:{cancelado
+						? '#EEF1E8'
+						: '#E8C547'};display:grid;place-items:center"
 					><Icon icon={cancelado ? I.phCalendarX : I.phCheckBold} size={24} /></span
 				>
 				<h1
@@ -2283,7 +2299,7 @@
 							href="{base}/turno/{turno.codigo}/turno.ics"
 							download="turno.ics"
 							data-sveltekit-reload
-							style="display:flex;align-items:center;gap:8px;padding:15px 20px;border:0;border-radius:10px;background:#2F5D50;color:#fff;font:800 15px 'Schibsted Grotesk';text-align:center;text-decoration:none;cursor:pointer"
+							style="display:flex;align-items:center;gap:8px;padding:15px 20px;border:0;border-radius:10px;background:var(--acento, #2F5D50);color:#fff;font:800 15px 'Schibsted Grotesk';text-align:center;text-decoration:none;cursor:pointer"
 							><Icon icon={I.phCalendarPlusBold} size={17} />Agregar al calendario</a
 						>{/if}
 					{#if turno.cancelable}
@@ -2312,7 +2328,7 @@
 						</form>
 					{:else if cancelado}<a
 							href="{base}/turnos"
-							style="padding:15px 20px;border:0;border-radius:10px;background:#2F5D50;color:#fff;font:800 15px 'Schibsted Grotesk';text-align:center;text-decoration:none;cursor:pointer"
+							style="padding:15px 20px;border:0;border-radius:10px;background:var(--acento, #2F5D50);color:#fff;font:800 15px 'Schibsted Grotesk';text-align:center;text-decoration:none;cursor:pointer"
 							>Reservar otro</a
 						>{/if}
 					<a
@@ -2340,7 +2356,7 @@
 				style="padding:clamp(14px,2.4cqw,28px) clamp(12px,3cqw,32px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:10px"
 			>
 				<div
-					style="padding:clamp(22px,4cqw,48px);border-radius:16px;background:#2F5D50;color:#EEF1E8;display:flex;flex-direction:column;justify-content:flex-end;min-height:min(440px,100cqw);min-width:0"
+					style="padding:clamp(22px,4cqw,48px);border-radius:16px;background:var(--acento, #2F5D50);color:#EEF1E8;display:flex;flex-direction:column;justify-content:flex-end;min-height:min(440px,100cqw);min-width:0"
 				>
 					{#if tienda.ciudad}<span
 							style="font-size:13px;font-weight:700;letter-spacing:.06em;color:#E8C547;text-transform:uppercase"
@@ -2410,7 +2426,7 @@
 								><Icon
 									icon={I.phMapPinBold}
 									size={17}
-									style="color:#2F5D50;flex:none"
+									style="color:var(--acento, #2F5D50);flex:none"
 								/>{tienda.direccion}</a
 							>{/if}
 						{#if whatsapp}<a

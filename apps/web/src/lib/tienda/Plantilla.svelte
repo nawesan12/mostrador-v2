@@ -12,6 +12,7 @@
 	import Rosedal from './plantillas/Rosedal.svelte';
 	import Tijera from './plantillas/Tijera.svelte';
 	import Yerbal from './plantillas/Yerbal.svelte';
+	import { acentoElegido } from './acentos.ts';
 
 	type Props = ComponentProps<typeof Ceibo>;
 
@@ -35,6 +36,12 @@
 
 	let props: Props = $props();
 	const Vista = $derived(PROPIAS[props.tienda.plantilla] ?? Motor);
+	// El color de acento elegido en Mi tienda: las plantillas lo leen de var(--acento).
+	const acento = $derived(acentoElegido(props.tienda.plantilla, props.tienda.paleta));
 </script>
 
-<Vista {...props} />
+{#if acento}
+	<div style:--acento={acento} style:display="contents"><Vista {...props} /></div>
+{:else}
+	<Vista {...props} />
+{/if}

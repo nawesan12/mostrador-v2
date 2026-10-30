@@ -470,7 +470,7 @@
 	>
 		<!-- barra promo -->
 		<div
-			style="display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;padding:9px 16px;background:#C9821A;color:#2A170C;font-size:13px;font-weight:600;text-align:center"
+			style="display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;padding:9px 16px;background:var(--acento, #C9821A);color:#2A170C;font-size:13px;font-weight:600;text-align:center"
 		>
 			<span
 				>{tienda.envios.gratisDesde
@@ -609,7 +609,7 @@
 								</div>
 								{#if tienda.promedio}
 									<div
-										style="border-radius:28px;background:#C9821A;color:#2A170C;padding:18px;display:flex;flex-direction:column;justify-content:space-between"
+										style="border-radius:28px;background:var(--acento, #C9821A);color:#2A170C;padding:18px;display:flex;flex-direction:column;justify-content:space-between"
 									>
 										<Icon icon={I.phStarFill} size={24} />
 										<div>
@@ -1346,7 +1346,7 @@
 										style="display:block;height:100%;width:{Math.min(
 											100,
 											(subtotal / tienda.envios.gratisDesde) * 100
-										)}%;background:#C9821A"
+										)}%;background:var(--acento, #C9821A)"
 									></span></span
 								>
 							</div>
@@ -2165,7 +2165,7 @@
 				style="padding:clamp(18px,3cqw,32px) clamp(14px,3.5cqw,40px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:clamp(14px,2cqw,24px)"
 			>
 				<div
-					style="padding:clamp(26px,4.5cqw,56px);border-radius:28px;background:#C9821A;color:#2A170C;display:flex;flex-direction:column;justify-content:flex-end;min-height:min(520px,110cqw);min-width:0"
+					style="padding:clamp(26px,4.5cqw,56px);border-radius:28px;background:var(--acento, #C9821A);color:#2A170C;display:flex;flex-direction:column;justify-content:flex-end;min-height:min(520px,110cqw);min-width:0"
 				>
 					{#if tienda.ciudad}<div
 							style="font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase"
