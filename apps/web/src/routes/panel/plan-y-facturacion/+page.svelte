@@ -7,7 +7,7 @@
 	import { anim } from '#lib/panel/anim.ts';
 	import { pesos } from '#lib/panel/formato.ts';
 	import { MOTIVOS } from '#lib/panel/permisos.ts';
-	import { PLANES, precioAnual } from '#lib/panel/planes.ts';
+	import { PLANES, planVigente, precioAnual } from '#lib/panel/planes.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 
 	/** Plan y facturación (design/PanelCuenta.dc.html, sPlan): planes, uso, medio de pago y cancelar. */
@@ -24,6 +24,9 @@
 	const anual = $derived(ciclo === 'anio');
 	const indice = (id: string) => PLANES.findIndex((p) => p.id === id);
 	const actual = $derived(PLANES[indice(data.actual)]);
+	// Durante la prueba gratis, una tienda en Gratis usa Pro: los límites son los de Pro.
+	const probando = $derived(data.enPrueba && data.actual === 'gratis');
+	const vigente = $derived(PLANES[indice(planVigente(data.actual, data.enPrueba))]);
 
 	async function pedir(url: string, method: string, cuerpo?: unknown) {
 		const r = await fetch(url, {
@@ -70,10 +73,10 @@
 	}
 
 	// ---- Uso ----
-	const tope = $derived(actual.hornero + data.uso.packs * 2000);
+	const tope = $derived(vigente.hornero + data.uso.packs * 2000);
 	const USO = $derived([
 		['Productos', data.uso.productos, null],
-		['Personas en el equipo', data.uso.personas, actual.personas],
+		['Personas en el equipo', data.uso.personas, vigente.personas],
 		['Respuestas de Tincho con IA', data.uso.hornero, tope],
 		['Respuestas automáticas sin IA', data.uso.sinIa, null]
 	] as const);
@@ -205,12 +208,19 @@
 		<div class="c-txt">
 			<h1>Plan y facturación</h1>
 			<div class="c-s">
-				Estás en <b>plan {actual.nombre} {anual ? 'anual' : 'mensual'}</b>{data.enPrueba
-					? ' (en prueba)'
-					: ''} ·
-				{data.cancelado
-					? `se da de baja el ${fecha(data.cancelado.hasta)}`
-					: `próximo cobro el ${fecha(data.proximoCobro)}`}
+				{#if probando}
+					Estás probando <b>el plan Pro gratis</b> hasta el {fecha(data.proximoCobro)}. Después
+					seguís en Gratis, salvo que elijas&nbsp;otro.
+				{:else}
+					Estás en <b>plan {actual.nombre} {anual ? 'anual' : 'mensual'}</b>{data.enPrueba
+						? ' (en prueba)'
+						: ''} ·
+					{data.cancelado
+						? `se da de baja el ${fecha(data.cancelado.hasta)}`
+						: data.actual === 'gratis'
+							? 'sin cobros'
+							: `próximo cobro el ${fecha(data.proximoCobro)}`}
+				{/if}
 			</div>
 		</div>
 		<div class="ciclos" role="group" aria-label="Ciclo">

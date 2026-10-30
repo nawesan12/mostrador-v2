@@ -55,3 +55,7 @@ export const PLANES = [
 export type IdPlan = (typeof PLANES)[number]['id'];
 /** Pagando por año, 25 % menos. */
 export const precioAnual = (mensual: number) => Math.round(mensual * 0.75);
+
+/** El plan que rige hoy: durante la prueba gratis, una tienda en Gratis usa Pro. */
+export const planVigente = (actual: string, enPrueba: boolean) =>
+	actual === 'gratis' && enPrueba ? 'pro' : actual;
