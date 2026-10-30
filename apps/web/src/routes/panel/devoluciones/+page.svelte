@@ -24,7 +24,8 @@
 		ui.toast({
 			k: 'ok',
 			title: 'Devolución aprobada',
-			desc: `Le mandamos la etiqueta de Andreani a ${d.cliente.split(' ')[0]}`,
+			// Aprobar sólo cambia el estado: no hay etiqueta de transporte ni aviso automático.
+			desc: `Avisale a ${d.cliente.split(' ')[0]} cómo te hace llegar el producto`,
 			action: 'Deshacer',
 			onAction: () => resolver(d.id, 'deshacer')
 		});
@@ -32,9 +33,11 @@
 	async function cambio(d: (typeof data.devoluciones)[number]) {
 		await resolver(d.id, 'cambio');
 		ui.toast({
-			k: 'wa',
-			title: 'Cambio ofrecido por WhatsApp',
-			desc: `Tincho le muestra 3 alternativas a ${d.cliente.split(' ')[0]}`
+			k: 'ok',
+			title: 'Quedó como cambio ofrecido',
+			desc: `Escribile a ${d.cliente.split(' ')[0]} con las opciones que tenés`,
+			action: 'Deshacer',
+			onAction: () => resolver(d.id, 'deshacer')
 		});
 	}
 	const muyBajo = $derived(data.tasa < 2);
@@ -53,11 +56,14 @@
 			<h1>Devoluciones</h1>
 			<div class="c-s">Cambios, reintegros y arrepentimientos (10&nbsp;días por ley)</div>
 		</div>
-		<span class="tasa" class:alta={!muyBajo}
-			>{data.tasa.toLocaleString('es-AR')}% de tus pedidos · {muyBajo
-				? 'muy bajo'
-				: 'para mirar'}</span
-		>
+		<!-- Sin devoluciones, un "0 %" no dice nada (puede no haber pedidos todavía). -->
+		{#if data.devoluciones.length}
+			<span class="tasa" class:alta={!muyBajo}
+				>{data.tasa.toLocaleString('es-AR')}% de tus pedidos · {muyBajo
+					? 'muy bajo'
+					: 'para mirar'}</span
+			>
+		{/if}
 	</div>
 	<div class="lista" use:anim={{ t: 'rise', delay: 60 }}>
 		{#each data.devoluciones as d (d.id)}

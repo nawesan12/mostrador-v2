@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
+	import { page } from '$app/state';
 	import Icon from '#lib/components/Icon.svelte';
 	import Interruptor from '#lib/components/Interruptor.svelte';
 	import Seo from '#lib/components/Seo.svelte';
@@ -16,6 +17,11 @@
 	const k = $derived(data.carritos);
 	const pendientes = $derived(k.carritos.filter((x) => !x.recordado));
 	const ticket = $derived(k.abiertos ? k.monto / k.abiertos : 0);
+	/**
+	 * Con la API real, los recordatorios van por mail y no cuestan nada (WhatsApp Business todavía no
+	 * se conecta). Los de WhatsApp y el segundo aviso con descuento sólo existen en la demo.
+	 */
+	const demo = $derived(!!page.data.demo);
 
 	async function post(ruta: string, cuerpo: object = {}) {
 		const r = await fetch(`/panel/carritos-abandonados/${ruta}`, {
@@ -30,33 +36,42 @@
 		const r = await post('todos');
 		const { enviados } = (await r.json()) as { enviados: number };
 		ui.toast({
-			k: 'wa',
-			title: enviados ? `${enviados} recordatorios en camino` : 'Ya estaban todos recordados',
-			desc: enviados
-				? `Costo total ${pesos(enviados * k.costoMensaje)} · te avisamos cuando compren`
-				: 'No se mandó nada de nuevo'
+			k: demo ? 'wa' : 'ok',
+			title: enviados
+				? `${enviados} ${enviados === 1 ? 'recordatorio' : 'recordatorios'} en camino`
+				: 'Ya estaban todos recordados',
+			desc: !enviados
+				? 'No se mandó nada de nuevo'
+				: demo
+					? `Costo total ${pesos(enviados * k.costoMensaje)} · te avisamos cuando compren`
+					: 'Por mail, con el link a su carrito'
 		});
 	}
 	async function uno(c: (typeof k.carritos)[number]) {
 		const r = await post(c.id);
 		if (r.ok)
 			ui.toast({
-				k: 'wa',
+				k: demo ? 'wa' : 'ok',
 				title: 'Recordatorio enviado',
-				desc: `${c.nombre} · ${pesos(k.costoMensaje)} de WhatsApp`
+				desc: demo
+					? `${c.nombre} · ${pesos(k.costoMensaje)} de WhatsApp`
+					: `${c.nombre} · por mail, con el link a su carrito`
 			});
 	}
-	const AUTOS = [
+	const TODOS = [
 		['hora', 'Recordatorio por WhatsApp a la hora'],
 		['dia', 'Segundo aviso a las 24 h con 5% off'],
 		['email', 'Email al tercer día']
 	] as const;
-	async function automatico(clave: (typeof AUTOS)[number][0], on: boolean) {
+	const AUTOS = $derived(
+		demo ? TODOS : ([['email', 'Mail al tercer día con el link a su carrito']] as const)
+	);
+	async function automatico(clave: (typeof TODOS)[number][0], on: boolean) {
 		await post('automaticos', { ...k.automaticos, [clave]: on });
 		ui.toast({
 			k: 'ok',
 			title: on ? 'Recordatorio activado' : 'Recordatorio apagado',
-			desc: AUTOS.find((a) => a[0] === clave)![1]
+			desc: AUTOS.find((a) => a[0] === clave)?.[1] ?? ''
 		});
 	}
 </script>
@@ -75,9 +90,9 @@
 			<div class="c-s">Gente que estuvo a un paso de comprarte</div>
 		</div>
 		<button type="button" class="primario" disabled={!pendientes.length} onclick={todos}
-			><Icon icon={I.phWhatsappLogoFill} size={15} />Recordar a todos · {pesos(
-				pendientes.length * k.costoMensaje
-			)}</button
+			>{#if demo}<Icon icon={I.phWhatsappLogoFill} size={15} />Recordar a todos · {pesos(
+					pendientes.length * k.costoMensaje
+				)}{:else}<Icon icon={I.phEnvelopeSimpleFill} size={15} />Recordar a todos por mail{/if}</button
 		>
 	</div>
 
@@ -139,12 +154,18 @@
 					<span class="hecho"><Icon icon={I.phCheckCircleFill} size={16} />Recordado</span>
 				{:else}
 					<button type="button" class="recordar" onclick={() => uno(c)}
-						><Icon icon={I.logosWhatsappIcon} size={14} />Recordar</button
+						><Icon
+							icon={demo ? I.logosWhatsappIcon : I.phEnvelopeSimpleFill}
+							size={14}
+						/>Recordar</button
 					>
 				{/if}
 			</div>
 		{:else}
-			<div class="vacio">No hay carritos abandonados. Cuando alguien deje uno, aparece acá.</div>
+			<div class="vacio">
+				No hay carritos abandonados. Cuando alguien deje su mail en el checkout y no termine la
+				compra, aparece acá.
+			</div>
 		{/each}
 	</div>
 </div>

@@ -67,15 +67,16 @@
 
 	// ---- Cobro ----
 	const MEDIOS = [
-		['mp', I.phQrCodeBold, 'QR MP', '#00B1EA'],
 		['efectivo', I.phMoneyFill, 'Efectivo', '#2F8F63'],
+		['mp', I.phQrCodeBold, 'Mercado Pago', '#00B1EA'],
 		['tarjeta', I.phCreditCardFill, 'Tarjeta', '#3E6BFD'],
 		['modo', I.phDeviceMobileFill, 'MODO', '#00A88F'],
 		['transf', I.phBankFill, 'Transfer.', '#6B5244'],
 		['dividir', I.phSplitHorizontalFill, 'Dividir', '#C24E25']
 	] as const;
 	type Medio = Exclude<(typeof MEDIOS)[number][0], 'dividir'>;
-	let medio = $state<(typeof MEDIOS)[number][0]>('mp');
+	// El cobro anota el medio: no genera un QR ni pasa la tarjeta. Por eso arranca en efectivo.
+	let medio = $state<(typeof MEDIOS)[number][0]>('efectivo');
 	let cobrando = $state(false);
 	let dividir = $state(false);
 	let parte = $state(0);
@@ -112,7 +113,8 @@
 		ui.toast({
 			k: 'ok',
 			title: `Cobrado ${pesos(t)}`,
-			desc: `${nota ?? MEDIOS.find((m) => m[0] === pago)![2]} · Factura B emitida`,
+			// La factura depende de ARCA (y de Facturar al cobrar): se ve en Facturación, no se promete acá.
+			desc: nota ?? MEDIOS.find((m) => m[0] === pago)![2],
 			action: 'Ver pedido',
 			onAction: () => {
 				// eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta del panel con query
@@ -145,7 +147,9 @@
 			<div class="c-s">
 				{data.caja.abierta
 					? `Caja abierta desde las ${horaMin(new Date(data.caja.abierta))}`
-					: 'Caja cerrada'} · mismo stock que la web
+					: data.caja.total
+						? `${pesos(data.caja.total)} cobrados hoy`
+						: 'Mismo stock que la web'}
 			</div>
 		</div>
 		<span class="lector"><Icon icon={I.phBarcode} size={16} />Funciona con lector de códigos</span>
@@ -193,9 +197,13 @@
 					</button>
 				{:else}
 					<div class="vacio">
-						{buscar.trim()
-							? `Nada con «${buscar.trim()}».`
-							: 'Todavía no tenés productos para vender.'}
+						{#if buscar.trim()}
+							Nada con «{buscar.trim()}».
+						{:else}
+							Todavía no tenés productos para vender.
+							<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta del panel armada con rutaDe -->
+							<a class="v-link" href={rutaDe('Productos')}>Cargar el primero</a>
+						{/if}
 					</div>
 				{/each}
 			</div>
@@ -250,7 +258,7 @@
 				<button type="button" class="cobrar" disabled={!total || cobrando} onclick={alCobrar}
 					>Cobrar {pesos(total)}</button
 				>
-				<div class="nota">La factura sale sola por ARCA · ticket por WhatsApp opcional</div>
+				<div class="nota">Anotá cómo te pagaron: con ARCA conectada, la factura sale sola</div>
 			</div>
 		</div>
 	</div>
@@ -489,6 +497,12 @@
 		padding: 28px;
 		color: var(--mu);
 		font-size: 14px;
+	}
+	.v-link {
+		display: inline-block;
+		margin-left: 4px;
+		color: var(--terracota);
+		font-weight: 600;
 	}
 	.ticket {
 		position: sticky;

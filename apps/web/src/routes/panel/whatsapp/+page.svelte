@@ -145,7 +145,7 @@
 	<div class="cab" use:anim={{ t: 'rise' }}>
 		<div class="c-txt">
 			<h1>Bandeja</h1>
-			<div class="c-s">WhatsApp, Instagram, Telegram y Mercado Libre en un solo lugar</div>
+			<div class="c-s">Las preguntas de Mercado Libre hoy; WhatsApp e Instagram, pronto</div>
 		</div>
 		{#if data.conversaciones.length}
 			<span class="atendiendo"

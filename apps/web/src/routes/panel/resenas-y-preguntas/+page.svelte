@@ -91,7 +91,7 @@
 	<div class="cab" use:anim={{ t: 'rise' }}>
 		<div class="c-txt">
 			<h1>Reseñas y preguntas</h1>
-			<div class="c-s">De tu tienda, Google y Mercado Libre</div>
+			<div class="c-s">Reseñas de tu tienda online y preguntas de la tienda y Mercado Libre</div>
 		</div>
 		<div class="tabs" role="group" aria-label="Ver">
 			<button type="button" aria-pressed={tab === 'q'} onclick={() => (tab = 'q')}
