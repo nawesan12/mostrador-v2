@@ -79,7 +79,7 @@
 				</div>
 			</div>
 			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- /contacto llega con las páginas públicas -->
-			<a href="/contacto">Hablar con ventas</a>
+			<a href="/contacto" data-sin-widget>Hablar con ventas</a>
 		</div>
 	</div>
 </section>

@@ -25,7 +25,7 @@
 				14 días gratis, sin tarjeta. Si venís de otra plataforma, la migración corre por nuestra
 				cuenta.
 			</p>
-			<div class="ctas" use:anim={'reveal'}>
+			<div class="ctas" data-sin-widget use:anim={'reveal'}>
 				<a class="pri" href={registro}
 					>Crear mi tienda gratis <Icon icon={phArrowRightBold} size={16} /></a
 				>

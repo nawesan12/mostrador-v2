@@ -4,6 +4,7 @@
 	import { anim } from '#lib/anim.ts';
 	import { phMinusBold } from '#lib/icons.ts';
 	import { banner } from '#lib/consentimiento.svelte.ts';
+	import { onMount } from 'svelte';
 	import { getLanding } from './estado.svelte.ts';
 
 	/**
@@ -14,6 +15,21 @@
 	const l = getLanding();
 	// Los CTA llevan al onboarding, que es el registro (handoff: Onboarding Mostrador.dc.html).
 	const registro = resolve('/onboarding');
+
+	// Se corre mientras están a la vista los botones de abajo de la página («Hablar con ventas»):
+	// en el celular el avatar los tapaba.
+	let tapa = $state(false);
+	onMount(() => {
+		const els = [...document.querySelectorAll('[data-sin-widget]')];
+		// Cuáles de esos botones están a la vista, por posición (no es estado de la UI).
+		const vistos = els.map(() => false);
+		const io = new IntersectionObserver((es) => {
+			for (const e of es) vistos[els.indexOf(e.target)] = e.isIntersecting;
+			tapa = vistos.some(Boolean);
+		});
+		for (const el of els) io.observe(el);
+		return () => io.disconnect();
+	});
 
 	function entra(el: HTMLElement) {
 		el.animate(
@@ -26,7 +42,7 @@
 	}
 </script>
 
-{#if l.widget && !l.menu && !banner.abierto}
+{#if l.widget && !l.menu && !banner.abierto && !tapa}
 	<div class="widget" use:anim={'rise'}>
 		{#if l.widgetOpen}
 			<div class="globo" use:entra role="dialog" aria-label="Tincho">
@@ -147,5 +163,15 @@
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+	}
+	@media (max-width: 759px) {
+		.widget {
+			right: calc(14px + env(safe-area-inset-right));
+			bottom: calc(14px + env(safe-area-inset-bottom));
+		}
+		.avatar {
+			width: 52px;
+			height: 52px;
+		}
 	}
 </style>

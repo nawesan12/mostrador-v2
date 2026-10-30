@@ -629,7 +629,7 @@ export const CATALOGOS: Catalogo[] = [
 				categoria: 'Dulces',
 				precio: 6400,
 				anterior: null,
-				foto: '1608198093002-ad4e005484ec',
+				foto: '1691242720281-9269de4d9f86',
 				etiqueta: null,
 				detalle: null
 			},
@@ -718,7 +718,7 @@ export const CATALOGOS: Catalogo[] = [
 				categoria: 'Dulces',
 				precio: 6400,
 				anterior: null,
-				foto: '1608198093002-ad4e005484ec',
+				foto: '1691242720281-9269de4d9f86',
 				etiqueta: null,
 				detalle: null
 			},
@@ -837,7 +837,7 @@ export const CATALOGOS: Catalogo[] = [
 				categoria: 'Panadería',
 				precio: 6900,
 				anterior: null,
-				foto: '1606313564200-e75d5e30476c',
+				foto: '1691242720281-9269de4d9f86',
 				etiqueta: null,
 				detalle: 'Con glaseado de limón y amapola'
 			},

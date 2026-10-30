@@ -482,10 +482,21 @@
 		font-weight: 700;
 		color: #237550;
 	}
+	/* Cuatro planes: 4 columnas, 2 × 2 o 1, nunca 3 + 1. */
 	.planes {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+		grid-template-columns: repeat(4, minmax(0, 1fr));
 		gap: 12px;
+	}
+	@media (max-width: 1279px) {
+		.planes {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+	@media (max-width: 599px) {
+		.planes {
+			grid-template-columns: 1fr;
+		}
 	}
 	.plan {
 		position: relative;
