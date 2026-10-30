@@ -89,3 +89,47 @@ export function cotizar(
 		});
 	return out;
 }
+
+/** Sólo con retiro no hay a dónde mandar nada: ni CP que pedir ni costo que calcular. */
+export const envia = (e: Pick<EnviosTienda, 'correo' | 'moto'>) => e.correo || e.moto;
+
+/**
+ * Cómo llega lo que se compra, en una frase corta para la portada («A todo el país», «En moto a
+ * Palermo», «Retiro en el local»): sólo lo que la tienda ofrece de verdad.
+ */
+export function entregaCorta(e: EnviosTienda): string {
+	if (e.correo) return 'A todo el país';
+	if (e.moto) return e.motoZona.trim() ? `En moto a ${e.motoZona.trim()}` : 'En moto';
+	return e.retiro ? 'Retiro en el local' : 'A coordinar';
+}
+
+/** «Comprás online y te lo mandamos a todo el país, o lo retirás en el local.», según la tienda. */
+export function comoLlega(e: EnviosTienda): string {
+	return sinViuda(comoLlegaTexto(e));
+}
+
+/** La última palabra pegada a la anterior: nunca sola en el último renglón. */
+const sinViuda = (s: string) => s.replace(/ (\S+)$/, '\u00a0$1');
+
+function comoLlegaTexto(e: EnviosTienda): string {
+	const retiro = e.retiro ? ', o lo retirás en el local' : '';
+	if (e.correo) return `Comprás online y te lo mandamos a todo el país${retiro}.`;
+	if (e.moto)
+		return `Comprás online y te lo llevamos en moto${e.motoZona.trim() ? ` a ${e.motoZona.trim()}` : ''}${retiro}.`;
+	if (e.retiro) return 'Comprás online y lo retirás en el local.';
+	return 'Comprás online y coordinamos la entrega con vos.';
+}
+
+/** El texto de «Envíos» de la ficha de un producto: con qué llega y, si envía, que se calcula. */
+export function textoEnvios(e: EnviosTienda): string {
+	const retiro = e.retiro ? ' y podés retirarlo en el local' : '';
+	if (e.correo)
+		return `Enviamos a todo el país${retiro}. Calculá el costo con tu código\u00a0postal.`;
+	if (e.moto)
+		return `Lo llevamos en moto${e.motoZona.trim() ? ` a ${e.motoZona.trim()}` : ''}${retiro}. Calculá el costo con tu código\u00a0postal.`;
+	if (e.retiro) {
+		const donde = detalleRetiro(e);
+		return sinViuda(donde ? `Lo retirás en el local: ${donde}.` : 'Lo retirás en el local.');
+	}
+	return 'Coordinamos la entrega con vos después de la compra.';
+}

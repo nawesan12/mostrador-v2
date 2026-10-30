@@ -6,15 +6,19 @@
 import { SvelteMap } from 'svelte/reactivity';
 import { carritoDe } from './carrito.svelte.ts';
 import {
+	comoLlega,
 	cotizar as cotizarBase,
 	cpValido,
+	entregaCorta,
+	envia,
 	esCorreo,
 	resumenMoto,
+	textoEnvios,
 	type CotizacionCorreo
 } from './envio.ts';
 import type { OpcionEnvio, TiendaPublica } from './tipos.ts';
 
-export { cpValido, esCorreo, resumenMoto };
+export { comoLlega, cpValido, entregaCorta, envia, esCorreo, resumenMoto, textoEnvios };
 
 type Estado = CotizacionCorreo | 'error';
 type Tienda = Pick<TiendaPublica, 'slug' | 'envios' | 'direccion' | 'vitrina'>;

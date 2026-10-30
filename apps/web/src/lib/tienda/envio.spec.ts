@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cotizar } from './envio.ts';
+import { comoLlega, cotizar, entregaCorta, envia, textoEnvios } from './envio.ts';
 
 const t = {
 	envios: {
@@ -58,5 +58,32 @@ describe('cotizar', () => {
 	});
 	it('un código postal inválido sólo deja retirar', () => {
 		expect(cotizar('01', 1, t, correo).map((x) => x.id)).toEqual(['retiro']);
+	});
+});
+
+describe('textos de entrega', () => {
+	const soloRetiro = { ...t.envios, moto: false, correo: false, retiroHorario: '' };
+	it('con sólo retiro no promete envíos', () => {
+		expect(envia(soloRetiro)).toBe(false);
+		expect(entregaCorta(soloRetiro)).toBe('Retiro en el local');
+		expect(comoLlega(soloRetiro)).toBe('Comprás online y lo retirás en el\u00a0local.');
+		expect(textoEnvios(soloRetiro)).toBe('Lo retirás en el local: Belgrano\u00a0742.');
+		expect(textoEnvios({ ...soloRetiro, retiroDireccion: '' })).toBe(
+			'Lo retirás en el\u00a0local.'
+		);
+	});
+	it('con moto, la zona que puso la tienda', () => {
+		const moto = { ...t.envios, correo: false };
+		expect(entregaCorta(moto)).toBe('En moto a Palermo y Villa Crespo');
+		expect(comoLlega(moto)).toBe(
+			'Comprás online y te lo llevamos en moto a Palermo y Villa Crespo, o lo retirás en el\u00a0local.'
+		);
+	});
+	it('con Correo, a todo el país', () => {
+		expect(entregaCorta(t.envios)).toBe('A todo el país');
+		expect(comoLlega(t.envios)).toBe(
+			'Comprás online y te lo mandamos a todo el país, o lo retirás en el\u00a0local.'
+		);
+		expect(textoEnvios(t.envios)).toMatch(/^Enviamos a todo el país y podés retirarlo/);
 	});
 });
