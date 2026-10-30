@@ -642,12 +642,37 @@ export class DatosSandbox implements Datos {
 	}
 	private async regProductos() {
 		const d = await this.demo();
+		const borrados = await cambiosDe(this.db, this.sb.id, 'producto-borrado');
 		return registrosProductos(
 			d,
 			Date.now(),
 			await this.cambiosProductos(),
 			await this.ajustesStock()
-		);
+		).filter((p) => !borrados.has(p.id));
+	}
+	async borrarProducto(id: string): Promise<Resultado> {
+		const p = (await this.regProductos()).find((x) => x.id === id);
+		if (!p) return 'no-existe';
+		await guardarCambio(this.db, this.sb.id, 'producto-borrado', id, { borrado: true });
+		return 'ok';
+	}
+	async duplicarProducto(id: string): Promise<Producto | null> {
+		const p = await this.producto(id);
+		if (!p) return null;
+		const copia = await this.guardarProducto(null, {
+			nombre: `${p.nombre} (copia)`.slice(0, 120),
+			descripcion: p.descripcion,
+			categoria: p.categoria,
+			precio: p.precio,
+			costo: p.costo,
+			sku: '',
+			stock: 0,
+			fotos: p.fotos,
+			opciones: p.opciones,
+			variantes: p.variantes.map((v) => ({ ...v, sku: '', stock: 0 })),
+			canales: { web: false }
+		});
+		return copia;
 	}
 	private async regClientes() {
 		const [d, cambios, { fichas, historial }] = await Promise.all([

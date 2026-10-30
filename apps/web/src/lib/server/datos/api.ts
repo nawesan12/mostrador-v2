@@ -224,6 +224,15 @@ export class DatosApi implements Datos {
 		const r = await this.intentar(`/v1/panel/productos/${encodeURIComponent(id)}`, 'PUT', p);
 		return r.ok ? conVariantes((await r.json()) as Producto) : null;
 	}
+	async borrarProducto(id: string) {
+		return resultado(
+			await this.intentar(`/v1/panel/productos/${encodeURIComponent(id)}`, 'DELETE')
+		);
+	}
+	async duplicarProducto(id: string) {
+		const r = await this.intentar(`/v1/panel/productos/${encodeURIComponent(id)}/duplicar`, 'POST');
+		return r.ok ? conVariantes((await r.json()) as Producto) : null;
+	}
 
 	movimientosHoy() {
 		return this.pedir<MovimientoStock[]>('/v1/panel/inventario/movimientos');

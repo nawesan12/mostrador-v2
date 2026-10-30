@@ -188,6 +188,30 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, fact 
 	mux.HandleFunc("PUT /v1/panel/productos/{id}", con(func(w http.ResponseWriter, r *http.Request, id string) {
 		guardar(w, r, id, r.PathValue("id"), http.StatusOK)
 	}))
+	mux.HandleFunc("DELETE /v1/panel/productos/{id}", con(func(w http.ResponseWriter, r *http.Request, id string) {
+		switch err := Borrar(r.Context(), pool, id, r.PathValue("id")); {
+		case errors.Is(err, ErrNoExiste):
+			problema.Escribir(w, problema.NoEncontrado("Ese producto no existe."))
+		case errors.Is(err, ErrEnMercadoLibre):
+			problema.Escribir(w, problema.Conflicto("en_mercadolibre", "Está publicado en Mercado Libre: sacalo de ahí primero."))
+		case err != nil:
+			problema.Escribir(w, problema.Interno())
+		default:
+			w.WriteHeader(http.StatusNoContent)
+		}
+	}))
+	mux.HandleFunc("POST /v1/panel/productos/{id}/duplicar", con(func(w http.ResponseWriter, r *http.Request, id string) {
+		p, err := Duplicar(r.Context(), pool, id, r.PathValue("id"), time.Now())
+		switch {
+		case errors.Is(err, ErrNoExiste):
+			problema.Escribir(w, problema.NoEncontrado("Ese producto no existe."))
+		case err != nil:
+			problema.Escribir(w, problema.Invalido(err.Error()))
+		default:
+			w.WriteHeader(http.StatusCreated)
+			escribir(w, p)
+		}
+	}))
 	mux.HandleFunc("GET /v1/panel/productos/{id}", con(func(w http.ResponseWriter, r *http.Request, id string) {
 		p, err := Obtener(r.Context(), pool, id, r.PathValue("id"), time.Now())
 		switch {

@@ -31,13 +31,15 @@
 		producto,
 		tienda,
 		dominio,
-		guardado
+		guardado,
+		borrado
 	}: {
 		open?: boolean;
 		producto: Producto | null;
 		tienda: string;
 		dominio: string;
 		guardado: (p: Producto, nuevo: boolean) => void;
+		borrado: (nombre: string) => void;
 	} = $props();
 	const ui = getUi();
 
@@ -58,6 +60,47 @@
 	let elegirFoto = $state<HTMLInputElement>();
 	let error = $state<string | null>(null);
 	let guardando = $state(false);
+	// Borrar pide un segundo toque: «¿Lo borro?».
+	let confirmando = $state(false);
+	$effect(() => {
+		if (!open) confirmando = false;
+	});
+
+	const mensaje = async (r: Response, si: string) =>
+		((await r.json().catch(() => null)) as { message?: string } | null)?.message ?? si;
+	async function duplicar() {
+		if (!producto) return;
+		guardando = true;
+		const r = await fetch(`/panel/productos/${encodeURIComponent(producto.id)}/duplicar`, {
+			method: 'POST'
+		});
+		guardando = false;
+		if (!r.ok) {
+			error = await mensaje(r, 'No pudimos duplicarlo.');
+			return;
+		}
+		open = false;
+		guardado((await r.json()) as Producto, true);
+	}
+	async function borrar() {
+		if (!producto) return;
+		if (!confirmando) {
+			confirmando = true;
+			return;
+		}
+		guardando = true;
+		const r = await fetch(`/panel/productos/${encodeURIComponent(producto.id)}`, {
+			method: 'DELETE'
+		});
+		guardando = false;
+		confirmando = false;
+		if (!r.ok) {
+			error = await mensaje(r, 'No pudimos borrarlo.');
+			return;
+		}
+		open = false;
+		borrado(producto.nombre);
+	}
 	let mejorando = $state(false);
 
 	$effect(() => {
@@ -516,6 +559,28 @@
 
 	{#snippet pie()}
 		<div class="pie">
+			{#if producto}
+				<button
+					type="button"
+					class="icono"
+					class:peligro={confirmando}
+					onclick={borrar}
+					disabled={guardando}
+					aria-label={confirmando ? 'Sí, borrar el producto' : 'Borrar el producto'}
+					title="Borrar"
+					><Icon icon={I.phTrash} size={18} />{#if confirmando}<span>¿Lo borro?</span>{/if}</button
+				>
+				{#if !confirmando}
+					<button
+						type="button"
+						class="icono"
+						onclick={duplicar}
+						disabled={guardando}
+						aria-label="Duplicar el producto"
+						title="Duplicar"><Icon icon={I.phCopyBold} size={18} /></button
+					>
+				{/if}
+			{/if}
 			<button type="button" class="cancelar" onclick={() => (open = false)}>Cancelar</button>
 			<button type="button" class="guardar" onclick={guardar} disabled={guardando}
 				>Guardar y publicar</button
@@ -952,6 +1017,24 @@
 		width: 100%;
 		display: flex;
 		gap: 8px;
+	}
+	.icono {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 0 14px;
+		min-height: 46px;
+		border-radius: 999px;
+		border: 1px solid var(--ln2);
+		background: transparent;
+		color: var(--mu);
+		font-size: 14px;
+		font-weight: 600;
+	}
+	.icono.peligro {
+		border-color: #c0392b;
+		background: #c0392b;
+		color: #fff;
 	}
 	.cancelar {
 		padding: 13px 18px;

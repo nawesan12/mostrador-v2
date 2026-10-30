@@ -451,6 +451,10 @@
 			desc: `${p.nombre} · ${publicado(Object.values(p.canales ?? {}).filter(Boolean).length)}`
 		});
 	}}
+	borrado={async (nombre) => {
+		await invalidateAll();
+		ui.toast({ k: 'ok', title: 'Producto borrado', desc: nombre });
+	}}
 />
 
 <Modal bind:open={cambiandoPrecio} titulo="Cambiar precio" ancho={420}>

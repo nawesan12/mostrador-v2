@@ -132,6 +132,10 @@ export interface Datos {
 	producto(id: string): Promise<Producto | null>;
 	/** Crea (id null) o guarda un producto. null si el id no existe. */
 	guardarProducto(id: string | null, p: ProductoEditable): Promise<Producto | null>;
+	/** Borra un producto. 'no-se-puede': está publicado en Mercado Libre. */
+	borrarProducto(id: string): Promise<Resultado>;
+	/** Una copia pausada (sin stock ni SKU). null si el id no existe. */
+	duplicarProducto(id: string): Promise<Producto | null>;
 	/** Movimientos de stock de hoy (ventas, ajustes, conteos, ingresos). */
 	movimientosHoy(): Promise<MovimientoStock[]>;
 	bandeja(): Promise<{ conversaciones: ConversacionBreve[]; atendidasHoy: number }>;

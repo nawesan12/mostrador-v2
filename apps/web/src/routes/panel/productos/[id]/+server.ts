@@ -104,3 +104,11 @@ export const PUT: RequestHandler = async ({ locals, params, request }) => {
 	}
 	return json({ ...p, ...(mercadoLibre ? { mercadoLibre } : {}) });
 };
+
+/** Borrar el producto. Si está publicado en Mercado Libre, primero hay que sacarlo de ahí. */
+export const DELETE: RequestHandler = async ({ locals, params }) => {
+	const r = await datosDe(locals).borrarProducto(params.id);
+	if (r === 'no-existe') error(404, 'Ese producto no existe.');
+	if (r === 'no-se-puede') error(409, 'Está publicado en Mercado Libre: sacalo de ahí primero.');
+	return new Response(null, { status: 204 });
+};
