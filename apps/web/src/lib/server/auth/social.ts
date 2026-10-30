@@ -6,6 +6,7 @@ import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
 import { cuentasDe, usaSandbox } from '../datos/index.ts';
 import { ErrorApi } from '../bff.ts';
 import { PROVEEDORES, type ProveedorOAuth } from './esquemas.ts';
+import { irAfuera } from '#lib/server/afuera.ts';
 
 export const esProveedor = (p: string): p is ProveedorOAuth =>
 	(PROVEEDORES as readonly string[]).includes(p);
@@ -28,5 +29,5 @@ export async function irAlProveedor(
 		if (!(e instanceof ErrorApi)) throw e;
 		return fail(e.estado >= 500 ? 503 : e.estado, { modo, errores: { form: e.message } });
 	}
-	redirect(303, url);
+	irAfuera(url);
 }

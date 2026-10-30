@@ -9,6 +9,7 @@ import { resolverTienda } from '#lib/server/tienda/publica.ts';
 import { cotizar, cpValido } from '#lib/tienda/envio.ts';
 import { precioDe } from '#lib/tienda/variantes.ts';
 import type { Actions } from './$types';
+import { irAfuera } from '#lib/server/afuera.ts';
 
 const Pedido = v.object({
 	carrito: v.pipe(
@@ -81,7 +82,7 @@ export const actions: Actions = {
 				});
 			}
 			const g = (await res.json()) as { codigo: string; url?: string };
-			if (g.url && /^https:\/\/(www\.)?mercadopago\.com(\.ar)?\//.test(g.url)) redirect(303, g.url);
+			if (g.url) irAfuera(g.url);
 			redirect(303, `/t/${r.tienda.slug}/pedido/${g.codigo}`);
 		}
 		// La demo no tiene cuenta de MiCorreo: Correo Argentino no se ofrece (Go lo cotiza con la API).

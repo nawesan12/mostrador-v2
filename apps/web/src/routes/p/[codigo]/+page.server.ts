@@ -2,6 +2,7 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import { usaSandbox } from '#lib/server/datos/index.ts';
 import { pagarLink, verLink } from '#lib/server/links.ts';
 import type { Actions, PageServerLoad } from './$types';
+import { irAfuera } from '#lib/server/afuera.ts';
 
 export const load: PageServerLoad = async ({ params, setHeaders }) => {
 	const link = await verLink(params.codigo.toUpperCase());
@@ -21,7 +22,7 @@ export const actions: Actions = {
 			});
 		if (r === 'error')
 			return fail(502, { error: 'Mercado Pago no respondió. Probá de nuevo en un rato.' });
-		if (typeof r === 'object') redirect(303, r.url);
+		if (typeof r === 'object') irAfuera(r.url);
 		return { pagado: true };
 	}
 };

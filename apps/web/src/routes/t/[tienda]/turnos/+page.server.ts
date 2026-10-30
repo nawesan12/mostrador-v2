@@ -4,6 +4,7 @@ import { COOKIE } from '#lib/server/sandbox/sandbox.ts';
 import { resolverTienda } from '#lib/server/tienda/publica.ts';
 import { reservar } from '#lib/server/tienda/turnos.ts';
 import type { Actions, PageServerLoad } from './$types';
+import { irAfuera } from '#lib/server/afuera.ts';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const { tienda } = await parent();
@@ -46,8 +47,7 @@ export const actions: Actions = {
 			ip
 		);
 		if ('error' in res) return fail(res.estado, { error: res.error });
-		if (res.url && /^https:\/\/(www\.)?mercadopago\.com(\.ar)?\//.test(res.url))
-			redirect(303, res.url);
+		if (res.url) irAfuera(res.url);
 		redirect(303, `/t/${r.tienda.slug}/turno/${res.codigo}`);
 	}
 };
