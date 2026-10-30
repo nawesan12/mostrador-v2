@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { PLANTILLAS } from '#lib/plantillas.ts';
 	import { page } from '$app/state';
 	import Marca from '#lib/landing/Marca.svelte';
 	import { onMount, tick } from 'svelte';
@@ -38,6 +39,12 @@
 	onMount(() => {
 		o.demo = data.demo;
 		o.cargar();
+		// Desde «Usar esta plantilla» de la landing: ?plantilla= manda sobre lo guardado.
+		const tpl = page.url.searchParams.get('plantilla');
+		if (tpl && PLANTILLAS.some((p) => p.id === tpl)) {
+			o.e.plantilla = tpl;
+			o.guardar();
+		}
 		// Desde /migrar: la plataforma (?desde=) y el link (?origen=) ya elegidos para el paso 4.
 		const desde = page.url.searchParams.get('desde');
 		if (!data.demo && (desde === 'tiendanube' || desde === 'shopify' || desde === 'woocommerce')) {

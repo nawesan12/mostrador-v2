@@ -5,6 +5,7 @@
 	import TplMini from '#lib/components/TplMini.svelte';
 	import * as I from '#lib/icons.ts';
 	import { PLANTILLAS } from '#lib/plantillas.ts';
+	import { slugDe } from '#lib/slug.ts';
 	import { getLanding } from './estado.svelte.ts';
 
 	/** Modal de plantilla de la landing (handoff: tplModal). */
@@ -119,8 +120,13 @@
 					{/each}
 				</div>
 				<div class="esp"></div>
-				<a class="usar" href={registro} onclick={usar}
+				<!-- La plantilla va en la URL además del almacenamiento: llega aunque el navegador lo bloquee. -->
+				<a class="usar" href="{registro}?plantilla={t.id}" onclick={usar}
 					>Usar esta plantilla <Icon icon={I.phArrowRightBold} size={15} /></a
+				>
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- vitrina pública de ejemplo -->
+				<a class="ver" href="/t/{slugDe(t.tienda)}" target="_blank" rel="noopener"
+					>Ver la tienda de ejemplo <Icon icon={I.phArrowUpRightBold} size={14} /></a
 				>
 				<div class="nota">Gratis en todos los planes · la cambiás cuando quieras</div>
 			</div>
@@ -337,6 +343,20 @@
 		border: 0;
 		background: linear-gradient(180deg, #ee7a4a 0%, #d2582f 55%, #bc4920 100%);
 		box-shadow: var(--inflado-naranja);
+	}
+	.ver {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+		margin-top: 10px;
+		padding: 12px;
+		border-radius: 999px;
+		font-size: 14.5px;
+		font-weight: 600;
+		color: #b0441d;
+		text-decoration: none;
+		box-shadow: inset 0 0 0 1px rgba(176, 68, 29, 0.3);
 	}
 	.usar:hover {
 		color: #fff;
