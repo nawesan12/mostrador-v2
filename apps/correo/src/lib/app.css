@@ -1,0 +1,70 @@
+@import '@fontsource/geist/400.css';
+@import '@fontsource/geist/500.css';
+@import '@fontsource/geist/600.css';
+@import '@fontsource/geist/700.css';
+@import '@fontsource/geist-mono/400.css';
+@import '@fontsource/geist-mono/500.css';
+@import 'lucide-static/font/lucide.css';
+@import './tokens.css';
+
+/* El vidrio necesita algo que desenfocar: sin backdrop-filter, los paneles casi opacos (README §5). */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+	:root {
+		--panel: oklch(0.2 0.012 var(--nh) / 0.92);
+		--card: oklch(0.2 0.012 var(--nh) / 0.9);
+	}
+	:root[data-tema='claro'] {
+		--panel: oklch(0.99 0.006 var(--nh) / 0.92);
+		--card: oklch(1 0 0 / 0.9);
+	}
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+html,
+body {
+	margin: 0;
+	height: 100%;
+}
+body {
+	background-color: var(--side);
+	background-image: var(--tex);
+	background-size: var(--texS);
+	background-attachment: fixed;
+	color: var(--fg);
+	font-family: Geist, ui-sans-serif, system-ui, sans-serif;
+	font-size: 16px;
+	line-height: 1.5;
+	-webkit-font-smoothing: antialiased;
+}
+a {
+	color: var(--accT);
+}
+button,
+input,
+textarea,
+select {
+	font: inherit;
+	color: inherit;
+}
+button {
+	cursor: pointer;
+	background: none;
+	border: 0;
+	padding: 0;
+}
+[class^='icon-'],
+[class*=' icon-'] {
+	line-height: 1;
+}
+.vidrio {
+	backdrop-filter: var(--blur);
+	-webkit-backdrop-filter: var(--blur);
+}
+:focus-visible {
+	outline: 2px solid var(--acc);
+	outline-offset: 2px;
+}
