@@ -7,7 +7,7 @@ const seguir = (page: Page) => page.locator('.pie .seguir').click();
 
 test.beforeEach(async ({ page }) => {
 	await page.addInitScript(() => {
-		localStorage.setItem('mostrador-cookies', 'nec');
+		localStorage.setItem('tlw-cookies', 'nec');
 	});
 });
 

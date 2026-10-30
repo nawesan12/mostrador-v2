@@ -22,13 +22,13 @@ async function auditar(page: Page, ruta: string) {
 }
 
 test('accesibilidad: sitio público', async ({ page }) => {
-	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 	for (const ruta of ['/', '/prueba', '/ingresar', '/migrar', '/ayuda', '/nosotros', '/onboarding'])
 		await auditar(page, ruta);
 });
 
 test('accesibilidad: panel', async ({ page }) => {
-	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 	await page.goto('/prueba');
 	await listo(page);
 	await page.getByRole('button', { name: /^Litoral/ }).click();

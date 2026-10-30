@@ -23,7 +23,7 @@ test('registro, salir, recuperar por mail, contraseña nueva e ingreso', async (
 	page,
 	context
 }) => {
-	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 	const email = `lucia+${Date.now()}@laesquina.com.ar`;
 
 	// Registro: crea cuenta y tienda y sigue en el onboarding, que se guarda en la API.
@@ -44,7 +44,7 @@ test('registro, salir, recuperar por mail, contraseña nueva e ingreso', async (
 	await page.getByRole('button', { name: /Ir a mi panel/ }).click();
 	await expect(page).toHaveURL(/\/panel$/);
 	await expect(page.locator('.barra .t-n')).toHaveText('La Esquina');
-	const cookie = (await context.cookies()).find((c) => c.name.endsWith('mostrador_sesion'));
+	const cookie = (await context.cookies()).find((c) => c.name.endsWith('tlw_sesion'));
 	expect(cookie?.httpOnly).toBe(true);
 
 	// El mismo email no se registra dos veces.
@@ -107,7 +107,7 @@ test('registro, salir, recuperar por mail, contraseña nueva e ingreso', async (
 });
 
 test('ingreso con proveedores apagados y link por WhatsApp', async ({ page }) => {
-	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 	// Sin la clave publicable de Clerk, no se ofrecen Google ni Apple (docs/decisiones.md §31).
 	await page.goto('/ingresar');
 	await listo(page);

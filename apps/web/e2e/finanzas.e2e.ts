@@ -3,7 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 const listo = (page: Page) => page.locator('html[data-listo]').waitFor({ state: 'attached' });
 
 test('finanzas: transferir deja en cero lo disponible y suma el movimiento', async ({ page }) => {
-	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 	await page.goto('/prueba');
 	await listo(page);
 	await page.getByRole('button', { name: /^Litoral/ }).click();

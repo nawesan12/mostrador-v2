@@ -9,7 +9,7 @@ const sinDesborde = (page: Page) =>
 	page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
 
 test('importar desde Tiendanube: conectar, progreso de la cola y resumen', async ({ page }) => {
-	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 	await page.goto('/prueba');
 	await listo(page);
 	await page.getByRole('button', { name: /^Litoral/ }).click();

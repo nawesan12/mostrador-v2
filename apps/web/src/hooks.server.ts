@@ -3,7 +3,7 @@ import type { Handle } from '@sveltejs/kit/hooks';
 import { env } from 'cloudflare:workers';
 import { csrfForbidden } from '#lib/server/csrf.ts';
 import { COOKIE, dbSandbox, leer } from '#lib/server/sandbox/sandbox.ts';
-import { COOKIE_SESION } from '#lib/server/auth/sesion.ts';
+import { COOKIE_SESION, COOKIE_SESION_VIEJA } from '#lib/server/auth/sesion.ts';
 import { COOKIE_EQUIPO, COOKIE_MIRADA } from '#lib/server/staff/index.ts';
 import { redireccionTienda } from '#lib/server/tienda/redireccion.ts';
 import { slugDeDominio } from '#lib/server/tienda/dominio.ts';
@@ -100,7 +100,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 	event.locals.mirada = false;
 	if (String(env.DATA_SOURCE) === 'api') {
 		// La sesión la valida Go en cada pedido del panel; acá sólo se lee la cookie.
-		event.locals.token = event.cookies.get(COOKIE_SESION) ?? null;
+		event.locals.token =
+			event.cookies.get(COOKIE_SESION) ?? event.cookies.get(COOKIE_SESION_VIEJA) ?? null;
 		if (event.url.pathname.startsWith('/staff'))
 			event.locals.equipo = event.cookies.get(COOKIE_EQUIPO) ?? null;
 		// Alguien del equipo viendo una tienda: el panel usa ese token de sólo lectura (Go rechaza

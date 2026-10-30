@@ -22,7 +22,7 @@ test('una IA se conecta a una tienda real por OAuth y usa el MCP contra la API',
 	request
 }) => {
 	// La dueña: cuenta nueva (queda con sesión).
-	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 	await page.goto('/ingresar?m=registro');
 	await listo(page);
 	await page.getByRole('textbox', { name: 'Tu nombre' }).fill('Lucía');

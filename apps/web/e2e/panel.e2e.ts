@@ -6,7 +6,7 @@ const sinDesborde = (page: Page) =>
 
 /** Arma la demo de Litoral (Mate & Co) y entra al panel. */
 async function demo(page: Page) {
-	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 	await page.goto('/prueba');
 	await listo(page);
 	await page.getByRole('button', { name: /^Litoral/ }).click();

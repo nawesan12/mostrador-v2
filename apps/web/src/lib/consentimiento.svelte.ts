@@ -1,11 +1,13 @@
 /**
- * Elección de cookies del visitante, como en el handoff: localStorage['mostrador-cookies'] guarda
+ * Elección de cookies del visitante, como en el handoff: localStorage['tlw-cookies'] guarda
  * 'all', 'nec' o un JSON {an, mk}. Analíticas (GA4) y marketing (Meta Pixel) sólo se cargan si están
  * permitidas; Cloudflare Web Analytics no usa cookies y va siempre.
  */
 export type Eleccion = { an: boolean; mk: boolean };
 
-const CLAVE = 'mostrador-cookies';
+const CLAVE = 'tlw-cookies';
+/** La clave de antes del cambio de marca: se pasa a la nueva la primera vez que se lee. */
+const CLAVE_VIEJA = 'mostrador-cookies';
 
 /** Si el banner está a la vista: el widget de Tincho espera a que se cierre para no taparlo. */
 export const banner = $state({ abierto: false });
@@ -14,6 +16,12 @@ export function leerEleccion(): Eleccion | null {
 	let v: string | null;
 	try {
 		v = localStorage.getItem(CLAVE);
+		const vieja = v ? null : localStorage.getItem(CLAVE_VIEJA);
+		if (vieja) {
+			localStorage.setItem(CLAVE, vieja);
+			localStorage.removeItem(CLAVE_VIEJA);
+			v = vieja;
+		}
 	} catch {
 		return null;
 	}

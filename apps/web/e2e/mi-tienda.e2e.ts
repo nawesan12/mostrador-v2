@@ -5,7 +5,7 @@ const listo = (page: Page) => page.locator('html[data-listo]').waitFor({ state: 
 test('mi tienda: ocultar, reordenar y cambiar colores queda sin publicar hasta publicar', async ({
 	page
 }) => {
-	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 	await page.goto('/prueba');
 	await listo(page);
 	await page.getByRole('button', { name: /^Litoral/ }).click();

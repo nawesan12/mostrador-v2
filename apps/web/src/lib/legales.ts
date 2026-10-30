@@ -402,14 +402,14 @@ export const LEGALES: Legal[] = [
 				t: 'cookies',
 				filas: [
 					{
-						nombre: '__Host-mostrador_sesion',
+						nombre: '__Host-tlw_sesion',
 						color: '#2F8F63',
 						tipo: 'Necesaria',
 						para: 'Mantiene tu sesión iniciada',
 						dura: '30 días'
 					},
 					{
-						nombre: 'mostrador-cookies',
+						nombre: 'tlw-cookies',
 						color: '#2F8F63',
 						tipo: 'Necesaria',
 						para: 'Guarda tu elección de cookies',

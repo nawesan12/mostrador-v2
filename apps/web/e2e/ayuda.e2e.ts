@@ -5,7 +5,7 @@ const listo = (page: Page) => page.locator('html[data-listo]').waitFor({ state: 
 test('centro de ayuda: buscar, abrir una sección y un artículo, y preguntarle a Tincho', async ({
 	page
 }) => {
-	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 	await page.goto('/ayuda');
 	await listo(page);
 	await page.getByLabel('Buscar en la ayuda').fill('factura');
@@ -30,7 +30,7 @@ test('centro de ayuda: buscar, abrir una sección y un artículo, y preguntarle 
 });
 
 test('ayuda del panel: las guías llevan al artículo y preguntar abre Tincho', async ({ page }) => {
-	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 	await page.goto('/prueba');
 	await listo(page);
 	await page.getByRole('button', { name: /^Litoral/ }).click();

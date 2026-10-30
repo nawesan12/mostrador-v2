@@ -113,7 +113,7 @@ export interface paths {
          *     el registro: tienda provisoria, mail de bienvenida y `nueva: true` para seguir al onboarding.
          *
          *     La respuesta es la sesión propia de Tu Local Web. La web la guarda en la cookie
-         *     `__Host-mostrador_sesion`; la app de iPhone guarda `token` en el Keychain y lo manda como
+         *     `__Host-tlw_sesion`; la app de iPhone guarda `token` en el Keychain y lo manda como
          *     `Authorization: Bearer` en cada pedido. La sesión dura 30 días y es independiente de la de
          *     Clerk (cerrar una no cierra la otra).
          *

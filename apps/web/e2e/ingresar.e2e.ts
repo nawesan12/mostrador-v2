@@ -6,7 +6,7 @@ const sinDesborde = (page: Page) =>
 
 test.beforeEach(async ({ page }) => {
 	// El banner de cookies tapa parte del formulario en mobile: en estos tests ya se eligió.
-	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 });
 
 test('login: errores en criollo, mostrar contraseña y en la demo lleva a /demo', async ({
@@ -91,7 +91,7 @@ test.describe('banner de cookies', () => {
 		await page.addInitScript(() => {
 			if (sessionStorage.getItem('e2e-cookies-limpias')) return;
 			sessionStorage.setItem('e2e-cookies-limpias', '1');
-			localStorage.removeItem('mostrador-cookies');
+			localStorage.removeItem('tlw-cookies');
 		});
 	});
 
@@ -104,7 +104,7 @@ test.describe('banner de cookies', () => {
 		await banner.getByRole('switch', { name: 'Marketing' }).click();
 		await banner.getByRole('button', { name: 'Guardar mi elección' }).click();
 		await expect(banner).toHaveCount(0);
-		expect(await page.evaluate(() => localStorage.getItem('mostrador-cookies'))).toBe(
+		expect(await page.evaluate(() => localStorage.getItem('tlw-cookies'))).toBe(
 			'{"an":true,"mk":true}'
 		);
 		await page.reload();

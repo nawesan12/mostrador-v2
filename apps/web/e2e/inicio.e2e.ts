@@ -5,7 +5,7 @@ const sinDesborde = (page: Page) =>
 	page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
 
 test.beforeEach(async ({ page }) => {
-	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 });
 
 test('la portada carga con los encabezados de seguridad y sin desborde', async ({ page }) => {
@@ -104,7 +104,7 @@ test('tablet (1024 px): sin desborde y con el hero apilado', async ({ page }) =>
 test('con movimiento reducido no hay animaciones infinitas', async ({ browser }) => {
 	const ctx = await browser.newContext({ reducedMotion: 'reduce' });
 	const page = await ctx.newPage();
-	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 	await page.goto('/');
 	await listo(page);
 	const infinitas = await page.evaluate(

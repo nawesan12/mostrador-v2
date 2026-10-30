@@ -9,7 +9,7 @@
 		<script>
 			try {
 				// Sólo una elección válida (como leerEleccion): 'all', 'nec' o {an, mk}.
-				var c = localStorage.getItem('mostrador-cookies');
+				var c = localStorage.getItem('tlw-cookies') || localStorage.getItem('mostrador-cookies');
 				var ok = c === 'all' || c === 'nec';
 				if (!ok && c) {
 					var o = JSON.parse(c);

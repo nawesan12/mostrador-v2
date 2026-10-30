@@ -11,7 +11,7 @@ async function ir(page: Page, ruta: string) {
 }
 
 test('equipo: el backoffice de ejemplo cambia la navegación según el rol', async ({ page }) => {
-	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 	await ir(page, '/staff');
 	await expect(page.getByText(/backoffice de ejemplo/)).toBeVisible();
 	const nav = page.getByRole('navigation', { name: 'Secciones del equipo' });
@@ -35,7 +35,7 @@ test('equipo: el backoffice de ejemplo cambia la navegación según el rol', asy
 });
 
 test('equipo: tiendas, ficha y acciones (en la demo no se aplican)', async ({ page }) => {
-	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 	await ir(page, '/staff/tiendas');
 	await expect(page.getByRole('heading', { name: 'Tiendas' })).toBeVisible();
 	await page.locator('.fila .abrir').first().click();
@@ -55,7 +55,7 @@ test('equipo: tiendas, ficha y acciones (en la demo no se aplican)', async ({ pa
 });
 
 test('equipo: consultas con plazo legal, partners, facturación y auditoría', async ({ page }) => {
-	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 	await ir(page, '/staff/consultas');
 	await expect(page.getByRole('heading', { name: 'Consultas' })).toBeVisible();
 	await page.locator('a.fila').first().click();

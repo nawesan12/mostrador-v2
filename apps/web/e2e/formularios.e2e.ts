@@ -5,7 +5,7 @@ const sinDesborde = (page: Page) =>
 	page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
 
 test.beforeEach(async ({ page }) => {
-	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 });
 
 test('contacto: valida, conserva lo escrito y saluda por el nombre', async ({ page }) => {

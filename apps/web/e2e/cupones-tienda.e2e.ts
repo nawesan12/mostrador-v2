@@ -4,7 +4,7 @@ const listo = (page: Page) => page.locator('html[data-listo]').waitFor({ state: 
 const pesos = (s: string) => Number(s.replace(/\D/g, ''));
 
 test('tienda: un cupón se valida, descuenta y suma un uso en el panel', async ({ page }) => {
-	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 	await page.goto('/prueba');
 	await listo(page);
 	await page.getByRole('button', { name: /^Litoral/ }).click();
@@ -56,7 +56,7 @@ test('tienda: un cupón se valida, descuenta y suma un uso en el panel', async (
 });
 
 test('tienda: el link de un cupón lo deja aplicado en el checkout', async ({ page }) => {
-	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 	await page.goto('/prueba');
 	await listo(page);
 	await page.getByRole('button', { name: /^Litoral/ }).click();

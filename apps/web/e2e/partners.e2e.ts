@@ -11,7 +11,7 @@ async function sinDesborde(page: Page) {
 test('panel de partners de ejemplo: inicio, tiendas, link, comisiones, perfil y materiales', async ({
 	page
 }) => {
-	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 	await page.goto('/partners');
 	await listo(page);
 	await page.getByRole('button', { name: 'Ver el panel de partners de ejemplo' }).click();

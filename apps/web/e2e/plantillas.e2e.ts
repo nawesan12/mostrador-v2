@@ -47,7 +47,7 @@ for (const id of [...PROPIAS.filter((x) => x !== 'tijera'), 'ceibo', 'patio']) {
 	test(`turnos en ${id}`, async ({ page }) => {
 		const errores: string[] = [];
 		page.on('pageerror', (e) => errores.push(e.message));
-		await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+		await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 		await page.goto('/prueba');
 		await page.locator('html[data-listo]').waitFor({ state: 'attached' });
 		// El nombre del botón es su texto visible ("Miga Gastronomía · …"); "Miga" no es "Miga Clásica".

@@ -52,7 +52,7 @@ test('una IA se conecta por OAuth, usa el servidor MCP y se desconecta', async (
 		state: 'estado-123',
 		scope: 'lectura acciones'
 	});
-	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 	await page.goto(`/oauth/autorizar?${q}`);
 	await expect(page).toHaveURL(/\/demo\?volver=/);
 	await listo(page);
@@ -181,7 +181,7 @@ test('desconectar desde el panel revoca la conexión', async ({ page, request })
 		code_challenge_method: 'S256',
 		scope: 'lectura'
 	});
-	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
+	await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 	await page.goto('/prueba');
 	await listo(page);
 	await page.getByRole('button', { name: /^Litoral/ }).click();
