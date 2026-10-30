@@ -14,7 +14,7 @@
 		alcanceTexto,
 		cuando,
 		encabezado,
-		estimar,
+		costoPorUso,
 		grande,
 		vigenciaTexto,
 		type CuponNuevo
@@ -323,14 +323,7 @@
 			' · ' +
 			vigenciaTexto(n.vigencia, ahora)
 	);
-	const est = $derived(estimar(n));
-	const margenColor = $derived(
-		est.margen < 15
-			? ['rgba(184,58,46,.12)', '#B83A2E']
-			: est.margen < 25
-				? ['rgba(227,169,59,.18)', '#9A6A10']
-				: ['rgba(47,143,99,.13)', '#2F8F63']
-	);
+	const est = $derived(costoPorUso(n, data.ticket));
 	const OPCIONES = $derived([
 		[
 			'hornero',
@@ -728,19 +721,18 @@
 					<div class="ca-t">
 						<Icon icon={I.phSparkleFill} size={14} style="color:#b0441d" />Lo que calcula Tincho
 					</div>
-					<div class="ca-f"><span>Ventas extra estimadas</span><b>{pesos(est.ventas)}</b></div>
-					<div class="ca-f"><span>Te cuesta en descuentos</span><b>{pesos(est.costo)}</b></div>
-					<div class="ca-f">
-						<span>Margen que te queda</span><b
-							class="margen"
-							style:background={margenColor[0]}
-							style:color={margenColor[1]}>{est.margen} %</b
-						>
-					</div>
-					{#if est.margen < 15}
-						<div class="aviso">
-							Con este descuento algunos productos quedan por debajo del costo. Probá con un mínimo
-							de compra.
+					{#if est}
+						<div class="ca-f">
+							<span>{data.ticket ? 'Tu ticket promedio (30 días)' : 'Compra'}</span><b
+								>{pesos(est.ticket)}</b
+							>
+						</div>
+						<div class="ca-f"><span>Te cuesta cada uso</span><b>{pesos(est.costo)}</b></div>
+					{:else if n.tipo === 'envio'}
+						<div class="ca-n">Cada uso te cuesta lo que salga el envío de ese pedido.</div>
+					{:else}
+						<div class="ca-n">
+							Cuando tengas ventas, te calculo cuánto te cuesta cada uso con tu ticket&nbsp;real.
 						</div>
 					{/if}
 				</div>
@@ -1465,14 +1457,10 @@
 	.ca-f span {
 		color: var(--mu);
 	}
-	.margen {
-		padding: 2px 8px;
-		border-radius: 999px;
-	}
-	.aviso {
-		font-size: 12px;
-		line-height: 1.4;
-		color: #b83a2e;
+	.ca-n {
+		font-size: 13px;
+		line-height: 1.45;
+		color: var(--mu);
 	}
 	.crear {
 		padding: 13px 18px;

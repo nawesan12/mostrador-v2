@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cuando, estimar, grande, lunes9, vigenciaDe } from './cupones.ts';
+import { costoPorUso, cuando, grande, lunes9, vigenciaDe } from './cupones.ts';
 
 const JUEVES = Date.parse('2026-10-22T18:00:00Z');
 
@@ -23,11 +23,16 @@ describe('cupones', () => {
 		expect(cuando({ estado: 'pausado', empieza: null, termina }, JUEVES)).toBe('Pausado por vos');
 		expect(grande({ tipo: 'fijo', valor: 3000 })).toBe('$ 3k');
 	});
-	it('la estimación del handoff', () => {
-		const e = estimar({ tipo: 'fijo', valor: 3000, quien: 'nuevos', minimo: 15_000, limite: 200 });
-		expect(e).toEqual({ ventas: 74 * 38_000, costo: 74 * 3000, margen: 36 });
-		expect(estimar({ tipo: 'pct', valor: 30, quien: 'todos', minimo: 0, limite: 300 }).margen).toBe(
-			14
-		);
+	it('el costo de cada uso sale del ticket real', () => {
+		expect(costoPorUso({ tipo: 'pct', valor: 10, minimo: 0 }, 20_000)).toEqual({
+			ticket: 20_000,
+			costo: 2_000
+		});
+		// La compra mínima manda si es mayor que el ticket.
+		expect(costoPorUso({ tipo: 'pct', valor: 10, minimo: 30_000 }, 20_000)?.costo).toBe(3_000);
+		expect(costoPorUso({ tipo: 'fijo', valor: 3000, minimo: 0 }, 0)?.costo).toBe(3000);
+		// Sin ventas no hay ticket: no se inventa.
+		expect(costoPorUso({ tipo: 'pct', valor: 10, minimo: 0 }, 0)).toBeNull();
+		expect(costoPorUso({ tipo: 'envio', valor: 0, minimo: 0 }, 20_000)).toBeNull();
 	});
 });

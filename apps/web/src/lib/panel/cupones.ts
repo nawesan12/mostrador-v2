@@ -106,21 +106,19 @@ export function cuando(c: Pick<Cupon, 'estado' | 'empieza' | 'termina'>, ahora: 
 	return `Vence en ${dias} días`;
 }
 
-/** Lo que calcula Tincho en el armador (la fórmula del handoff). */
-export function estimar(n: Pick<CuponNuevo, 'tipo' | 'valor' | 'quien' | 'minimo' | 'limite'>) {
-	const v = n.valor;
-	const pctEq =
-		n.tipo === 'pct' ? v : n.tipo === 'fijo' ? Math.min(60, v / 400) : n.tipo === 'envio' ? 8 : 33;
-	const alcance = { todos: 1, nuevos: 0.55, vip: 0.25, riesgo: 0.4 }[n.quien];
-	const usos = Math.round(
-		(n.limite || 260) * Math.min(1, pctEq / 20 + 0.3) * alcance * (n.minimo > 50_000 ? 0.6 : 1)
-	);
-	const ticket = Math.max(n.minimo, 38_000);
-	const ventas = usos * ticket;
-	const costo =
-		n.tipo === 'fijo' ? usos * v : n.tipo === 'envio' ? usos * 5200 : (ventas * pctEq) / 100;
-	const margen = Math.round(42 - pctEq * 0.95 + n.minimo / 10_000);
-	return { ventas, costo, margen };
+/**
+ * Lo que calcula Tincho en el armador, con datos de la tienda: cuánto cuesta cada uso según el
+ * ticket promedio real de los últimos 30 días (o la compra mínima, si es mayor). null si todavía no
+ * hay ventas para calcular (no se inventa un ticket) o si el costo depende del envío.
+ */
+export function costoPorUso(
+	n: Pick<CuponNuevo, 'tipo' | 'valor' | 'minimo'>,
+	ticket: number
+): { ticket: number; costo: number } | null {
+	const base = Math.max(ticket, n.minimo);
+	if (n.tipo === 'fijo') return { ticket: base, costo: n.valor };
+	if (n.tipo !== 'pct' || !ticket) return null;
+	return { ticket: base, costo: Math.round((base * n.valor) / 100) };
 }
 
 /** La descripción que queda guardada. */
