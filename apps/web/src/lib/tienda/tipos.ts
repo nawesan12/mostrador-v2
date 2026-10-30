@@ -85,6 +85,7 @@ export type TiendaPublica = {
 		/** Datos para transferir que cargó la tienda (null: no ofrece transferencia). `ejemplo` en la demo. */
 		datosTransferencia: { alias: string; cbu: string; titular: string; ejemplo?: boolean } | null;
 	};
+	/** correo: la tienda conectó su cuenta de MiCorreo (cotiza la API, envio.svelte.ts). */
 	envios: { gratisDesde: number | null; retiro: boolean; moto: boolean; correo: boolean };
 	/** Turnos con seña; null si la tienda no los tomó. `sena` es el % que se cobra de verdad. */
 	turnos: TurnosTienda | null;
@@ -111,7 +112,7 @@ export type ProximosTurnos = {
 
 /** Una opción de envío cotizada para un código postal. */
 export type OpcionEnvio = {
-	id: 'andreani' | 'correo' | 'moto' | 'retiro';
+	id: 'andreani' | 'correo-domicilio' | 'correo-sucursal' | 'moto' | 'retiro';
 	nombre: string;
 	detalle: string;
 	precio: number;

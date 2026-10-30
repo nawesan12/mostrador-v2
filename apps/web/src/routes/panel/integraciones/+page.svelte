@@ -23,6 +23,7 @@
 	import { getUi } from '#lib/ui.svelte.ts';
 	import { validarGa4, validarPixel } from '#lib/tienda/medicion.ts';
 	import Arca from './Arca.svelte';
+	import Correo from './Correo.svelte';
 
 	/**
 	 * Integraciones (design/PanelOperacion.dc.html, sInt). "Configurar" no está diseñado: se arma con
@@ -246,8 +247,11 @@
 			: null
 	);
 
+	let correoAbierto = $state(false);
+
 	async function boton(i: Integracion) {
 		if (i.id === 'arca') return void (arcaAbierto = true);
+		if (i.id === 'correo') return void (correoAbierto = true);
 		const on = data.estado.conectadas[i.id];
 		if (on || esMedicion(i.id)) return abrir(i);
 		if (i.id === 'mp' || i.id === 'ml') return conectarMP(i.id);
@@ -737,6 +741,8 @@
 </Modal>
 
 <Arca bind:open={arcaAbierto} arca={data.arca} demo={data.demo} />
+
+<Correo bind:open={correoAbierto} correo={data.correo} demo={data.demo} />
 
 <Modal
 	bind:open={modalIa}

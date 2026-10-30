@@ -894,6 +894,140 @@ paths:
       summary: Borra los tokens de la tienda.
       responses:
         '204': { description: Desconectada }
+  /v1/panel/integraciones/correo:
+    get:
+      operationId: conexionCorreo
+      summary: Si la tienda conectó su cuenta de MiCorreo (Correo Argentino), con el origen y el paquete típico.
+      responses:
+        '200':
+          description: Estado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConexionCorreo' }
+    post:
+      operationId: conectarCorreo
+      summary: Valida la cuenta de MiCorreo (/users/validate) y guarda el customerId; la contraseña no se guarda. Credenciales de API propias, cifradas (dueña o admin).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AltaCorreo' }
+      responses:
+        '200':
+          description: Conectada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConexionCorreo' }
+        '400': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+        '502': { $ref: '#/components/responses/Problema' }
+    put:
+      operationId: ajustarCorreo
+      summary: Cambia el origen y el paquete típico sin volver a pedir la contraseña (dueña o admin).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [origen, paquete]
+              properties:
+                origen: { $ref: '#/components/schemas/OrigenCorreo' }
+                paquete: { $ref: '#/components/schemas/PaqueteCorreo' }
+      responses:
+        '200':
+          description: Guardado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConexionCorreo' }
+        '400': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+    delete:
+      operationId: desconectarCorreo
+      summary: Borra la conexión (y las credenciales de API propias). Los envíos ya importados quedan.
+      responses:
+        '204': { description: Desconectada }
+  /v1/panel/pedidos/{numero}/correo:
+    parameters:
+      - { name: numero, in: path, required: true, schema: { type: integer } }
+    get:
+      operationId: envioCorreo
+      summary: El envío por Correo Argentino de un pedido (409 no_es_correo si va por otro lado).
+      responses:
+        '200':
+          description: Envío
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EnvioCorreo' }
+        '404': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+    post:
+      operationId: generarEnvioCorreo
+      summary: Da de alta el envío en MiCorreo (/shipping/import). Un segundo pedido no lo duplica. 409 correo_rechazo con el mensaje de Correo.
+      responses:
+        '200':
+          description: Generado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EnvioCorreo' }
+        '400': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+        '502': { $ref: '#/components/responses/Problema' }
+  /v1/panel/pedidos/{numero}/correo/seguimiento:
+    put:
+      operationId: seguimientoCorreo
+      summary: Guarda el número de seguimiento que dio MiCorreo al pagar el rótulo (también en el pedido).
+      parameters:
+        - { name: numero, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [seguimiento], properties: { seguimiento: { type: string } } }
+      responses:
+        '200':
+          description: Guardado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EnvioCorreo' }
+        '400': { $ref: '#/components/responses/Problema' }
+  /v1/publico/tiendas/{slug}/correo/cotizacion:
+    get:
+      operationId: cotizarCorreo
+      summary: Cotización real de Correo Argentino para el checkout (409 sin_correo si la tienda no lo conectó, 502 si Correo no cotizó). Tope por IP.
+      security: []
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+        - { name: cp, in: query, required: true, schema: { type: string } }
+        - { name: unidades, in: query, schema: { type: integer } }
+      responses:
+        '200':
+          description: Cotización
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CotizacionCorreo' }
+        '400': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+        '502': { $ref: '#/components/responses/Problema' }
+  /v1/publico/tiendas/{slug}/correo/sucursales:
+    get:
+      operationId: sucursalesCorreo
+      summary: Sucursales de Correo de una provincia donde se puede retirar, las más cercanas al CP primero.
+      security: []
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+        - { name: provincia, in: query, required: true, schema: { type: string } }
+        - { name: cp, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: Sucursales
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/SucursalCorreo' } }
+        '400': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+        '502': { $ref: '#/components/responses/Problema' }
   /v1/panel/integraciones/medicion:
     get:
       operationId: medicion
@@ -947,8 +1081,11 @@ paths:
                 dni: { type: string }
                 cp: { type: string }
                 direccion: { type: string }
-                envio: { type: string, enum: [andreani, correo, moto, retiro] }
+                envio: { type: string, enum: [moto, retiro, correo-domicilio, correo-sucursal], description: 'Correo Argentino: a domicilio o a sucursal (el pedido queda con envio correo y la modalidad en la entrega)' }
                 pago: { type: string, enum: [transferencia, mercadopago] }
+                provincia: { type: string, description: 'Correo Argentino: código de provincia de MiCorreo (una letra)' }
+                localidad: { type: string, description: 'Correo Argentino a domicilio' }
+                sucursal: { type: string, description: 'Correo Argentino a sucursal: el código de /correo/sucursales' }
       responses:
         '201':
           description: Pedido creado
@@ -3802,6 +3939,84 @@ components:
         vence: { type: string, format: date-time }
         emisor: { type: string }
         homologacion: { type: boolean }
+    OrigenCorreo:
+      type: object
+      required: [cp, calle, altura, localidad, provincia]
+      properties:
+        cp: { type: string, description: '4 números' }
+        calle: { type: string }
+        altura: { type: string }
+        piso: { type: string }
+        depto: { type: string }
+        localidad: { type: string }
+        provincia: { type: string, description: 'Código de MiCorreo (una letra)' }
+    PaqueteCorreo:
+      type: object
+      required: [peso, alto, ancho, largo]
+      properties:
+        peso: { type: integer, minimum: 1, maximum: 25000, description: 'Gramos por unidad' }
+        alto: { type: integer, minimum: 1, maximum: 150 }
+        ancho: { type: integer, minimum: 1, maximum: 150 }
+        largo: { type: integer, minimum: 1, maximum: 150 }
+    ConexionCorreo:
+      type: object
+      required: [disponible, pideCredenciales, pruebas, conectada, propias]
+      properties:
+        disponible: { type: boolean, description: 'Hay clave de cifrado: se puede conectar' }
+        pideCredenciales: { type: boolean, description: 'Tu Local Web no tiene credenciales de API: la tienda trae las suyas' }
+        pruebas: { type: boolean, description: 'Ambiente apitest' }
+        conectada: { type: boolean }
+        email: { type: string }
+        cliente: { type: string, description: 'customerId de MiCorreo' }
+        propias: { type: boolean, description: 'Usa credenciales de API propias' }
+        desde: { type: string, format: date-time }
+        origen: { $ref: '#/components/schemas/OrigenCorreo' }
+        paquete: { $ref: '#/components/schemas/PaqueteCorreo' }
+    AltaCorreo:
+      type: object
+      required: [email, clave, origen, paquete]
+      properties:
+        email: { type: string }
+        clave: { type: string, description: 'Contraseña de MiCorreo: sólo para validar, no se guarda' }
+        api:
+          type: [object, 'null']
+          properties: { usuario: { type: string }, clave: { type: string } }
+        origen: { $ref: '#/components/schemas/OrigenCorreo' }
+        paquete: { $ref: '#/components/schemas/PaqueteCorreo' }
+    OpcionCorreo:
+      type: object
+      required: [precio, producto]
+      properties:
+        precio: { type: integer, description: 'Pesos enteros, redondeado para arriba' }
+        producto: { type: string, description: 'Paq.ar Clásico' }
+        diasMin: { type: string }
+        diasMax: { type: string }
+    CotizacionCorreo:
+      type: object
+      required: [domicilio, sucursal]
+      properties:
+        domicilio: { oneOf: [{ $ref: '#/components/schemas/OpcionCorreo' }, { type: 'null' }] }
+        sucursal: { oneOf: [{ $ref: '#/components/schemas/OpcionCorreo' }, { type: 'null' }] }
+    SucursalCorreo:
+      type: object
+      required: [codigo, nombre, direccion, localidad, cp, horario]
+      properties:
+        codigo: { type: string }
+        nombre: { type: string }
+        direccion: { type: string }
+        localidad: { type: string }
+        cp: { type: string }
+        horario: { type: string, description: 'Lun a Vie 10:00 a 18:00 (vacío si no lo informa)' }
+    EnvioCorreo:
+      type: object
+      required: [conectada, generado]
+      properties:
+        conectada: { type: boolean }
+        generado: { type: boolean, description: 'Ya se dio de alta en MiCorreo' }
+        tipo: { type: string, enum: [D, S] }
+        sucursal: { type: string }
+        importado: { type: string, format: date-time }
+        seguimiento: { type: string }
     ConexionMP:
       type: object
       required: [disponible, conectada, reautorizar, cajaQR]
@@ -4179,6 +4394,11 @@ components:
               properties:
                 direccion: { type: string }
                 cp: { type: string }
+                tipo: { type: string, enum: [D, S], description: 'Correo Argentino: domicilio o sucursal' }
+                provincia: { type: string }
+                localidad: { type: string }
+                sucursal: { type: string }
+                sucursalNombre: { type: string }
             historial:
               type: array
               items:

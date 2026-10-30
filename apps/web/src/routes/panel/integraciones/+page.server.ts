@@ -2,16 +2,18 @@ import { env } from 'cloudflare:workers';
 import { error } from '@sveltejs/kit';
 import { IAS, iaDe } from '#lib/panel/integraciones.ts';
 import { datosDe, usaSandbox } from '#lib/server/datos/index.ts';
+import { correoDe } from '#lib/server/correo-argentino.ts';
 import { panelApi } from '#lib/server/mcp/api.ts';
 import { conexionesDe } from '#lib/server/mcp/oauth.ts';
 import { dbSandbox } from '#lib/server/sandbox/sandbox.ts';
 import { BOT, habilitado, vinculoApi, vinculoDe } from '#lib/server/telegram.ts';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals, url }) => {
+export const load: PageServerLoad = async (event) => {
+	const { locals, url } = event;
 	const d = datosDe(locals);
 	const db = locals.sandbox ? dbSandbox(env.SANDBOX) : null;
-	const [estado, mp, ml, arca, tg, conexiones, medicion, tienda] = await Promise.all([
+	const [estado, mp, ml, arca, tg, conexiones, medicion, tienda, correo] = await Promise.all([
 		d.integraciones(),
 		d.mercadoPago(),
 		d.mercadoLibre(),
@@ -40,10 +42,20 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 					}));
 				}),
 		d.medicion(),
-		d.tienda()
+		d.tienda(),
+		// Correo Argentino vive en Go; la demo no tiene cuenta de MiCorreo.
+		!usaSandbox() && locals.token
+			? correoDe(event)
+					.estado(locals.token)
+					.catch((e) => {
+						console.error('correo', e instanceof Error ? e.message : e);
+						return null;
+					})
+			: null
 	]);
 	// Telegram (Tincho para la dueña) está conectado si hay un chat vinculado.
 	estado.conectadas.tg = !!tg;
+	estado.conectadas.correo = !!correo?.conectada;
 	// Manejá Tu Local Web desde tu IA: las conexiones reales por OAuth (servidor MCP).
 	const ias = conexiones.map((c) => ({
 		id: c.id,
@@ -63,6 +75,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		feed: `${url.origin}/t/${tienda.slug}/feed.xml`,
 		tienda: `${url.origin}/t/${tienda.slug}`,
 		arca,
+		correo,
 		telegram: {
 			disponible: habilitado() && (usaSandbox() ? !!locals.sandbox : !!locals.token),
 			nombre: tg?.nombre ?? null,

@@ -2818,7 +2818,8 @@ export class DatosSandbox implements Datos {
 								ejemplo: true
 							}
 			},
-			envios: { gratisDesde: 240_000, retiro: true, moto: true, correo: true },
+			// Correo Argentino: la demo no tiene cuenta de MiCorreo, y sin cotización real no se ofrece.
+			envios: { gratisDesde: 240_000, retiro: true, moto: true, correo: false },
 			turnos,
 			vitrina,
 			// La vitrina de una plantilla nunca mide: no es de nadie.

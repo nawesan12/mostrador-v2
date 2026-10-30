@@ -512,3 +512,29 @@ URL, para que no quede en el historial ni en logs.
   Tiendanube falso en localhost (`TIENDANUBE_LOCAL`, sólo se acepta `http://localhost|127.0.0.1`).
 - Las fuentes reales se registran en `importacion.Fuentes()` (Go) y `FUENTES` (TS); mientras falte la
   de una plataforma, crear responde 409 `sin_fuente`.
+
+## 30. Correo Argentino con la API MiCorreo (migración 00047)
+
+- **Cuenta de la tienda, credenciales de la plataforma.** Como el plugin oficial de WooCommerce: la
+  tienda conecta con el email y la contraseña de su MiCorreo (`/users/validate`) y se guarda sólo el
+  `customerId`; la contraseña no. El JWT sale de las credenciales de API de Tu Local Web
+  (`MOSTRADOR_CA_USUARIO`/`MOSTRADOR_CA_CLAVE`, por ambiente) o de las de la tienda, cifradas con
+  `plataforma/cifrado` (contexto `correo:<tienda>`). Detalle de la API en
+  `docs/integraciones/correo-argentino.md`.
+- **Nunca un precio inventado.** La tabla por región que cotizaba "Correo a sucursal" se borró (Go y
+  TS). Correo se ofrece sólo con la cuenta conectada (`envios.correo` = hay fila en `ca_conexiones`) y
+  con la cotización de `/rates` para ese CP; mientras no llega, o si falla, no aparece. Al confirmar,
+  Go vuelve a cotizar: el precio nunca viene del navegador, y si Correo no responde la compra falla
+  con 409 `sin_cotizacion`. La demo no tiene cuenta de MiCorreo: Correo no se ofrece ni se conecta.
+- **Dos opciones, un envío.** El checkout ofrece `correo-domicilio` y `correo-sucursal`; el pedido
+  queda con `envio = 'correo'` y la modalidad, provincia, localidad y sucursal en `pedidos.entrega`.
+  La sucursal se valida contra `/agencies` (activas y con retiro).
+- **Peso por unidad.** Los productos no tienen peso: la tienda carga un paquete típico (gramos por
+  unidad y la caja). Peso = unidades × peso, con el tope de 25 kg de MiCorreo.
+- **Alta idempotente, seguimiento a mano.** "Generar envío" manda `/shipping/import` con
+  `extOrderId = TLW-<tienda>-<pedido>`; si MiCorreo dice que ya fue importada, se toma como hecha
+  (como la recuperación de ARCA). MiCorreo no expone el seguimiento por API: el número llega al pagar
+  el rótulo allá y la tienda lo pega en el pedido (`ca_envios` y `pedidos.seguimiento`). El
+  seguimiento por API existe en Paq.ar, que pide acuerdo comercial.
+- **Sin verificar todavía contra la API real**: sólo contra el MiCorreo falso de los tests. Se cierra
+  con credenciales de apitest y una cuenta de MiCorreo de prueba.

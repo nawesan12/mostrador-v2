@@ -146,20 +146,20 @@ export const INTEGRACIONES: Integracion[] = [
 		demo: false
 	},
 	{
+		// Con la cuenta de MiCorreo de la tienda (API MiCorreo, docs/integraciones/correo-argentino.md).
 		id: 'correo',
-		// Sin conexión real todavía: no se ofrece como disponible.
-		pronto: true,
 		nombre: 'Correo Argentino',
 		detalle: 'Sucursal y domicilio',
 		categoria: 'envios',
 		marca: 'correo',
 		hace: [
-			'Cotiza el envío por código postal en el checkout',
-			'Imprime las etiquetas de todos los pedidos',
-			'El cliente recibe el seguimiento'
+			'Cotiza a domicilio y a sucursal en el checkout, con el precio de Correo',
+			'Carga el envío de cada pedido en tu MiCorreo',
+			'Quien compra ve el número de seguimiento'
 		],
 		opciones: [],
-		demo: true
+		// La demo no tiene cuenta de MiCorreo: no se muestra conectada.
+		demo: false
 	},
 	{
 		id: 'ga',

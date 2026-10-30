@@ -897,6 +897,97 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/integraciones/correo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Si la tienda conectó su cuenta de MiCorreo (Correo Argentino), con el origen y el paquete típico. */
+        get: operations["conexionCorreo"];
+        /** Cambia el origen y el paquete típico sin volver a pedir la contraseña (dueña o admin). */
+        put: operations["ajustarCorreo"];
+        /** Valida la cuenta de MiCorreo (/users/validate) y guarda el customerId; la contraseña no se guarda. Credenciales de API propias, cifradas (dueña o admin). */
+        post: operations["conectarCorreo"];
+        /** Borra la conexión (y las credenciales de API propias). Los envíos ya importados quedan. */
+        delete: operations["desconectarCorreo"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/pedidos/{numero}/correo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                numero: number;
+            };
+            cookie?: never;
+        };
+        /** El envío por Correo Argentino de un pedido (409 no_es_correo si va por otro lado). */
+        get: operations["envioCorreo"];
+        put?: never;
+        /** Da de alta el envío en MiCorreo (/shipping/import). Un segundo pedido no lo duplica. 409 correo_rechazo con el mensaje de Correo. */
+        post: operations["generarEnvioCorreo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/pedidos/{numero}/correo/seguimiento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Guarda el número de seguimiento que dio MiCorreo al pagar el rótulo (también en el pedido). */
+        put: operations["seguimientoCorreo"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/publico/tiendas/{slug}/correo/cotizacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Cotización real de Correo Argentino para el checkout (409 sin_correo si la tienda no lo conectó, 502 si Correo no cotizó). Tope por IP. */
+        get: operations["cotizarCorreo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/publico/tiendas/{slug}/correo/sucursales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sucursales de Correo de una provincia donde se puede retirar, las más cercanas al CP primero. */
+        get: operations["sucursalesCorreo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/integraciones/medicion": {
         parameters: {
             query?: never;
@@ -3688,6 +3779,85 @@ export interface components {
             emisor: string;
             homologacion: boolean;
         };
+        OrigenCorreo: {
+            /** @description 4 números */
+            cp: string;
+            calle: string;
+            altura: string;
+            piso?: string;
+            depto?: string;
+            localidad: string;
+            /** @description Código de MiCorreo (una letra) */
+            provincia: string;
+        };
+        PaqueteCorreo: {
+            /** @description Gramos por unidad */
+            peso: number;
+            alto: number;
+            ancho: number;
+            largo: number;
+        };
+        ConexionCorreo: {
+            /** @description Hay clave de cifrado: se puede conectar */
+            disponible: boolean;
+            /** @description Tu Local Web no tiene credenciales de API: la tienda trae las suyas */
+            pideCredenciales: boolean;
+            /** @description Ambiente apitest */
+            pruebas: boolean;
+            conectada: boolean;
+            email?: string;
+            /** @description customerId de MiCorreo */
+            cliente?: string;
+            /** @description Usa credenciales de API propias */
+            propias: boolean;
+            /** Format: date-time */
+            desde?: string;
+            origen?: components["schemas"]["OrigenCorreo"];
+            paquete?: components["schemas"]["PaqueteCorreo"];
+        };
+        AltaCorreo: {
+            email: string;
+            /** @description Contraseña de MiCorreo: sólo para validar, no se guarda */
+            clave: string;
+            api?: {
+                usuario?: string;
+                clave?: string;
+            } | null;
+            origen: components["schemas"]["OrigenCorreo"];
+            paquete: components["schemas"]["PaqueteCorreo"];
+        };
+        OpcionCorreo: {
+            /** @description Pesos enteros, redondeado para arriba */
+            precio: number;
+            /** @description Paq.ar Clásico */
+            producto: string;
+            diasMin?: string;
+            diasMax?: string;
+        };
+        CotizacionCorreo: {
+            domicilio: components["schemas"]["OpcionCorreo"] | null;
+            sucursal: components["schemas"]["OpcionCorreo"] | null;
+        };
+        SucursalCorreo: {
+            codigo: string;
+            nombre: string;
+            direccion: string;
+            localidad: string;
+            cp: string;
+            /** @description Lun a Vie 10:00 a 18:00 (vacío si no lo informa) */
+            horario: string;
+        };
+        EnvioCorreo: {
+            conectada: boolean;
+            /** @description Ya se dio de alta en MiCorreo */
+            generado: boolean;
+            /** @enum {string} */
+            tipo?: "D" | "S";
+            sucursal?: string;
+            /** Format: date-time */
+            importado?: string;
+            seguimiento?: string;
+        };
         ConexionMP: {
             /** @description La aplicación de Tu Local Web tiene credenciales */
             disponible: boolean;
@@ -3997,6 +4167,15 @@ export interface components {
             entrega: {
                 direccion: string;
                 cp: string;
+                /**
+                 * @description Correo Argentino: domicilio o sucursal
+                 * @enum {string}
+                 */
+                tipo?: "D" | "S";
+                provincia?: string;
+                localidad?: string;
+                sucursal?: string;
+                sucursalNombre?: string;
             } | null;
             historial: {
                 texto: string;
@@ -6230,6 +6409,235 @@ export interface operations {
             };
         };
     };
+    conexionCorreo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Estado */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConexionCorreo"];
+                };
+            };
+        };
+    };
+    ajustarCorreo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    origen: components["schemas"]["OrigenCorreo"];
+                    paquete: components["schemas"]["PaqueteCorreo"];
+                };
+            };
+        };
+        responses: {
+            /** @description Guardado */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConexionCorreo"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+        };
+    };
+    conectarCorreo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AltaCorreo"];
+            };
+        };
+        responses: {
+            /** @description Conectada */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConexionCorreo"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+            502: components["responses"]["Problema"];
+        };
+    };
+    desconectarCorreo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Desconectada */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    envioCorreo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                numero: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Envío */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvioCorreo"];
+                };
+            };
+            404: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+        };
+    };
+    generarEnvioCorreo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                numero: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Generado */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvioCorreo"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+            502: components["responses"]["Problema"];
+        };
+    };
+    seguimientoCorreo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                numero: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    seguimiento: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Guardado */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvioCorreo"];
+                };
+            };
+            400: components["responses"]["Problema"];
+        };
+    };
+    cotizarCorreo: {
+        parameters: {
+            query: {
+                cp: string;
+                unidades?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cotización */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CotizacionCorreo"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+            502: components["responses"]["Problema"];
+        };
+    };
+    sucursalesCorreo: {
+        parameters: {
+            query: {
+                provincia: string;
+                cp?: string;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sucursales */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SucursalCorreo"][];
+                };
+            };
+            400: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+            502: components["responses"]["Problema"];
+        };
+    };
     medicion: {
         parameters: {
             query?: never;
@@ -6321,10 +6729,19 @@ export interface operations {
                     dni?: string;
                     cp?: string;
                     direccion?: string;
-                    /** @enum {string} */
-                    envio: "andreani" | "correo" | "moto" | "retiro";
+                    /**
+                     * @description Correo Argentino: a domicilio o a sucursal (el pedido queda con envio correo y la modalidad en la entrega)
+                     * @enum {string}
+                     */
+                    envio: "moto" | "retiro" | "correo-domicilio" | "correo-sucursal";
                     /** @enum {string} */
                     pago: "transferencia" | "mercadopago";
+                    /** @description Correo Argentino: código de provincia de MiCorreo (una letra) */
+                    provincia?: string;
+                    /** @description Correo Argentino a domicilio */
+                    localidad?: string;
+                    /** @description Correo Argentino a sucursal: el código de /correo/sucursales */
+                    sucursal?: string;
                 };
             };
         };

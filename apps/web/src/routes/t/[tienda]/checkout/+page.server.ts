@@ -28,7 +28,14 @@ const Pedido = v.object({
 	dni: v.pipe(v.string(), v.trim(), v.maxLength(12)),
 	cp: v.pipe(v.string(), v.trim(), v.maxLength(4)),
 	direccion: v.pipe(v.string(), v.trim(), v.maxLength(160)),
-	envio: v.picklist(['andreani', 'correo', 'moto', 'retiro'], 'Elegí cómo te llega.'),
+	envio: v.picklist(
+		['andreani', 'correo-domicilio', 'correo-sucursal', 'moto', 'retiro'],
+		'Elegí cómo te llega.'
+	),
+	// Correo Argentino: la provincia (código de MiCorreo), la localidad (a domicilio) y la sucursal.
+	provincia: v.optional(v.pipe(v.string(), v.trim(), v.toUpperCase(), v.maxLength(1)), ''),
+	localidad: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(80)), ''),
+	sucursal: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(20)), ''),
 	pago: v.picklist(['transferencia', 'mercadopago']),
 	cupon: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(30)), '')
 });
@@ -53,6 +60,10 @@ export const actions: Actions = {
 			return fail(400, { error: 'Esta tienda no tiene transferencia: elegí otro medio de pago.' });
 		if (p.envio !== 'retiro' && (!cpValido(p.cp) || p.direccion.length < 4))
 			return fail(400, { error: 'Poné el código postal y la dirección de entrega.' });
+		if (p.envio === 'correo-domicilio' && (!p.provincia || !p.localidad))
+			return fail(400, { error: 'Poné la provincia y la localidad de la entrega.' });
+		if (p.envio === 'correo-sucursal' && (!p.provincia || !p.sucursal))
+			return fail(400, { error: 'Elegí la sucursal de Correo Argentino donde retirás.' });
 		// Con la API real, el pedido lo arma Go (precios, envío y Mercado Pago salen de ahí).
 		if (!r.datos || !r.sandboxId) {
 			const res = await fetch(
@@ -73,6 +84,9 @@ export const actions: Actions = {
 			if (g.url && /^https:\/\/(www\.)?mercadopago\.com(\.ar)?\//.test(g.url)) redirect(303, g.url);
 			redirect(303, `/t/${r.tienda.slug}/pedido/${g.codigo}`);
 		}
+		// La demo no tiene cuenta de MiCorreo: Correo Argentino no se ofrece (Go lo cotiza con la API).
+		if (p.envio === 'correo-domicilio' || p.envio === 'correo-sucursal')
+			return fail(400, { error: 'Esta tienda no envía por Correo Argentino.' });
 		// Los precios y el envío salen del servidor, nunca del navegador. Con opciones, la variante
 		// tiene que ser de ese producto, estar activa (las públicas lo están) y tener stock.
 		const porId = new Map(r.tienda.productos.map((x) => [x.id, x]));

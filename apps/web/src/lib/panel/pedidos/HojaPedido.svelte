@@ -4,6 +4,7 @@
 	import Hoja from '#lib/components/Hoja.svelte';
 	import Icon from '#lib/components/Icon.svelte';
 	import MarcaIcono from '#lib/components/MarcaIcono.svelte';
+	import EnvioCorreo from './EnvioCorreo.svelte';
 	import * as I from '#lib/icons.ts';
 	import { cara, unsplash } from '#lib/landing/formato.ts';
 	import type { components } from '@mostrador/contrato/esquema';
@@ -210,6 +211,13 @@
 					<button type="button" class="borde" onclick={() => imprimir(pedido!)}>Etiqueta</button>
 				{/if}
 			</div>
+
+			{#if pedido.envio === 'correo'}
+				<div class="tarjeta">
+					<div class="t">Correo Argentino</div>
+					<EnvioCorreo numero={pedido.numero} entrega={pedido.entrega ?? null} />
+				</div>
+			{/if}
 
 			<div class="tarjeta">
 				<div class="t">Historial</div>

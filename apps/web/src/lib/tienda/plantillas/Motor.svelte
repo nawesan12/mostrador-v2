@@ -9,7 +9,8 @@
 	import { carritoDe } from '../carrito.svelte.ts';
 	import CampoCupon from '../CampoCupon.svelte';
 	import { CuponCheckout, totales } from '../cupon.svelte.ts';
-	import { cotizar, cpValido } from '../envio.ts';
+	import EnvioCorreo from '../EnvioCorreo.svelte';
+	import { cotizar, cotizarYa, cpValido } from '../envio.svelte.ts';
 	import { Seleccion, tarjetaDe } from '../seleccion.svelte.ts';
 	import { partirTitulo } from '../titulo.ts';
 	import { page } from '$app/state';
@@ -394,8 +395,8 @@
 	const tachado = $derived(sel && !sel.desde ? sel.anterior : null);
 	let cp = $state('');
 	let cotizado = $state<OpcionEnvio[] | null>(null);
-	function calcular() {
-		if (cpValido(cp)) cotizado = cotizar(cp, sel?.precio ?? subtotal, tienda);
+	async function calcular() {
+		if (cpValido(cp)) cotizado = await cotizarYa(cp, sel?.precio ?? subtotal, tienda);
 	}
 	function agregar() {
 		if (!sel || tienda.vitrina || !sel.agregar(carrito)) return;
@@ -1766,6 +1767,7 @@
 										>Poné tu código postal para ver cómo te&nbsp;llega.</span
 									>{/each}
 							</div>
+							<EnvioCorreo {tienda} {cp} {envio} />
 						</div>
 						<div>
 							<div
