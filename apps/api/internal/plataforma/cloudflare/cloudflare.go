@@ -1,8 +1,7 @@
 // Package cloudflare: lo justo de la API de Cloudflare para servir una tienda en su dominio
 // propio. El dominio es una zona de la cuenta de Grupo Vimo (los nameservers que da Cloudflare se
-// cargan en NIC.ar); cuando la zona está activa, el dominio y su www apuntan al Worker de la web
-// con una route (no un custom domain: `wrangler deploy` borra los custom domains que no están en
-// su config, y las routes las deja).
+// cargan en NIC.ar); cuando la zona está activa, el dominio y su www apuntan al VPS con un registro
+// A con proxy, y Caddy hace el certificado de origen al primer pedido.
 package cloudflare
 
 import (
@@ -132,37 +131,49 @@ type route struct {
 	Script string `json:"script"`
 }
 
-// Apuntar deja `host` sirviéndose del Worker `script`: un AAAA a 100:: con proxy (no va a ningún
-// origen: lo atiende el Worker) y la route host/*. Se puede correr de nuevo: lo que ya está queda.
-func (c *Cliente) Apuntar(ctx context.Context, zona, host, script string) error {
+// Apuntar deja `host` sirviéndose desde el VPS: un registro A con proxy a `ip` (Caddy hace el
+// certificado al primer pedido, si la API confirma que es el dominio de una tienda). Borra lo que
+// haya quedado del esquema viejo (AAAA 100:: y la route del Worker). Se puede correr de nuevo.
+func (c *Cliente) Apuntar(ctx context.Context, zona, host, ip string) error {
+	if err := c.limpiarViejo(ctx, zona, host); err != nil {
+		return err
+	}
 	var rs []registro
 	if err := c.pedir(ctx, http.MethodGet, "/zones/"+zona+"/dns_records?"+url.Values{"name": {host}}.Encode(), nil, &rs); err != nil {
 		return err
 	}
-	if len(rs) == 0 {
-		if err := c.pedir(ctx, http.MethodPost, "/zones/"+zona+"/dns_records",
-			registro{Tipo: "AAAA", Nombre: host, Valor: "100::", Proxied: true}, nil); err != nil {
-			return err
+	for _, r := range rs {
+		if r.Tipo == "A" && r.Valor == ip && r.Proxied {
+			return nil
+		}
+		if r.Tipo == "A" || r.Tipo == "AAAA" || r.Tipo == "CNAME" {
+			return fmt.Errorf("%s ya apunta a otro lado (%s %s): sacalo a mano antes", host, r.Tipo, r.Valor)
 		}
 	}
-	var routes []route
-	if err := c.pedir(ctx, http.MethodGet, "/zones/"+zona+"/workers/routes", nil, &routes); err != nil {
-		return err
-	}
-	patron := host + "/*"
-	for _, r := range routes {
-		if r.Patron == patron {
-			if r.Script == script {
-				return nil
-			}
-			return c.pedir(ctx, http.MethodPut, "/zones/"+zona+"/workers/routes/"+r.ID, route{Patron: patron, Script: script}, nil)
-		}
-	}
-	return c.pedir(ctx, http.MethodPost, "/zones/"+zona+"/workers/routes", route{Patron: patron, Script: script}, nil)
+	return c.pedir(ctx, http.MethodPost, "/zones/"+zona+"/dns_records", registro{Tipo: "A", Nombre: host, Valor: ip, Proxied: true}, nil)
 }
 
-// Desapuntar saca la route y el registro que puso Apuntar (si están).
-func (c *Cliente) Desapuntar(ctx context.Context, zona, host string) error {
+// Desapuntar saca el registro que puso Apuntar (y lo del esquema viejo, si quedó).
+func (c *Cliente) Desapuntar(ctx context.Context, zona, host, ip string) error {
+	if err := c.limpiarViejo(ctx, zona, host); err != nil {
+		return err
+	}
+	var rs []registro
+	if err := c.pedir(ctx, http.MethodGet, "/zones/"+zona+"/dns_records?"+url.Values{"name": {host}, "type": {"A"}}.Encode(), nil, &rs); err != nil {
+		return err
+	}
+	for _, r := range rs {
+		if r.Valor == ip {
+			if err := c.pedir(ctx, http.MethodDelete, "/zones/"+zona+"/dns_records/"+r.ID, nil, nil); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// limpiarViejo borra la route del Worker y el AAAA 100:: de cuando la web corría en Cloudflare.
+func (c *Cliente) limpiarViejo(ctx context.Context, zona, host string) error {
 	var routes []route
 	if err := c.pedir(ctx, http.MethodGet, "/zones/"+zona+"/workers/routes", nil, &routes); err != nil {
 		return err
@@ -186,4 +197,10 @@ func (c *Cliente) Desapuntar(ctx context.Context, zona, host string) error {
 		}
 	}
 	return nil
+}
+
+// SSLCompleto deja la zona en SSL "full": Cloudflare cifra hasta el VPS y acepta el certificado que
+// Caddy emite solo (en "strict" exigiría uno de una autoridad pública o de origen de Cloudflare).
+func (c *Cliente) SSLCompleto(ctx context.Context, zona string) error {
+	return c.pedir(ctx, http.MethodPatch, "/zones/"+zona+"/settings/ssl", map[string]string{"value": "full"}, nil)
 }

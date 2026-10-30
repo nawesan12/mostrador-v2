@@ -120,17 +120,25 @@ func TestZonaRegistrosYRoutes(t *testing.T) {
 		t.Fatalf("sin zona: %+v %v", z, err)
 	}
 
+	// Lo del esquema viejo (la web en un Worker) se limpia al apuntar al VPS.
+	f.registros = append(f.registros, registro{ID: "viejo", Tipo: "AAAA", Nombre: "prueba.tengolibre.com.ar", Valor: "100::", Proxied: true})
+	f.routes = append(f.routes, route{ID: "wviejo", Patron: "prueba.tengolibre.com.ar/*", Script: "mostrador"})
 	for range 2 { // dos veces: no duplica nada
-		if err := c.Apuntar(ctx, "z1", "prueba.tengolibre.com.ar", "mostrador"); err != nil {
+		if err := c.Apuntar(ctx, "z1", "prueba.tengolibre.com.ar", "203.0.113.7"); err != nil {
 			t.Fatal(err)
 		}
 	}
-	if len(f.registros) != 1 || f.registros[0].Valor != "100::" || !f.registros[0].Proxied || len(f.routes) != 1 ||
-		f.routes[0].Patron != "prueba.tengolibre.com.ar/*" || f.routes[0].Script != "mostrador" {
+	if len(f.registros) != 1 || f.registros[0].Tipo != "A" || f.registros[0].Valor != "203.0.113.7" || !f.registros[0].Proxied || len(f.routes) != 0 {
 		t.Fatalf("apuntar: %+v %+v", f.registros, f.routes)
 	}
-	if err := c.Desapuntar(ctx, "z1", "prueba.tengolibre.com.ar"); err != nil || len(f.registros) != 0 || len(f.routes) != 0 {
-		t.Fatalf("desapuntar: %v %+v %+v", err, f.registros, f.routes)
+	// Si el host ya apunta a otro lado, no lo pisa.
+	f.registros = append(f.registros, registro{ID: "otro", Tipo: "CNAME", Nombre: "tienda.tengolibre.com.ar", Valor: "otro.example.com"})
+	if err := c.Apuntar(ctx, "z1", "tienda.tengolibre.com.ar", "203.0.113.7"); err == nil {
+		t.Fatal("tenía que avisar que ya apunta a otro lado")
+	}
+	f.registros = f.registros[:1]
+	if err := c.Desapuntar(ctx, "z1", "prueba.tengolibre.com.ar", "203.0.113.7"); err != nil || len(f.registros) != 0 {
+		t.Fatalf("desapuntar: %v %+v", err, f.registros)
 	}
 
 	c.Token = "otro"

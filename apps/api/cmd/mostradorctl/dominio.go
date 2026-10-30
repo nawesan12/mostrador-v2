@@ -14,10 +14,10 @@ import (
 
 // dominio: el dominio propio de una tienda (el .com.ar que regala Grupo Vimo, registrado a su
 // nombre en NIC.ar). Con el token de Cloudflare de MOSTRADOR_CLOUDFLARE_TOKEN y la cuenta de
-// MOSTRADOR_CLOUDFLARE_CUENTA; el Worker es MOSTRADOR_WORKER (por defecto "mostrador").
+// MOSTRADOR_CLOUDFLARE_CUENTA; la IP del VPS sale de MOSTRADOR_VPS_IP (por defecto 187.41.102.190).
 //
 //	regalar <slug> <dominio>  agrega la zona y el dominio a la tienda; dice qué nameservers cargar
-//	activar <dominio>         con la zona activa, apunta el dominio (y su www) al Worker y lo deja
+//	activar <dominio>         con la zona activa, apunta el dominio (y su www) al VPS y lo deja
 //	                          verificado y principal
 //	quitar <dominio>          lo desapunta y lo saca de la tienda (la zona queda)
 func dominio(ctx context.Context, base string, args []string) error {
@@ -28,9 +28,9 @@ func dominio(ctx context.Context, base string, args []string) error {
 	if token == "" || cuenta == "" {
 		return fmt.Errorf("faltan MOSTRADOR_CLOUDFLARE_TOKEN y MOSTRADOR_CLOUDFLARE_CUENTA")
 	}
-	worker := os.Getenv("MOSTRADOR_WORKER")
-	if worker == "" {
-		worker = "mostrador"
+	ip := os.Getenv("MOSTRADOR_VPS_IP")
+	if ip == "" {
+		ip = "187.41.102.190"
 	}
 	cf := cloudflare.Nuevo(token, cuenta)
 	conn, err := pgx.Connect(ctx, base)
@@ -90,9 +90,14 @@ func dominio(ctx context.Context, base string, args []string) error {
 		hosts := []string{nombre}
 		if nombre == zona.Nombre {
 			hosts = append(hosts, "www."+nombre)
+			// La zona es del dominio de la tienda: SSL "full" para que Cloudflare acepte el
+			// certificado que hace Caddy.
+			if err := cf.SSLCompleto(ctx, zona.ID); err != nil {
+				return err
+			}
 		}
 		for _, h := range hosts {
-			if err := cf.Apuntar(ctx, zona.ID, h, worker); err != nil {
+			if err := cf.Apuntar(ctx, zona.ID, h, ip); err != nil {
 				return fmt.Errorf("%s: %w", h, err)
 			}
 		}
@@ -107,7 +112,7 @@ func dominio(ctx context.Context, base string, args []string) error {
 		}); err != nil {
 			return err
 		}
-		fmt.Printf("Listo: %s muestra la tienda (en unos minutos, cuando Cloudflare emita el certificado).\n", strings.Join(hosts, " y "))
+		fmt.Printf("Listo: %s muestra la tienda (el certificado lo hace Caddy en el primer pedido).\n", strings.Join(hosts, " y "))
 	case "quitar":
 		zona, err := cf.ZonaDe(ctx, nombre)
 		if err != nil {
@@ -115,7 +120,7 @@ func dominio(ctx context.Context, base string, args []string) error {
 		}
 		if zona != nil {
 			for _, h := range []string{nombre, "www." + nombre} {
-				if err := cf.Desapuntar(ctx, zona.ID, h); err != nil {
+				if err := cf.Desapuntar(ctx, zona.ID, h, ip); err != nil {
 					return err
 				}
 			}
