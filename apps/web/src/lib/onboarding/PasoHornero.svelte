@@ -8,6 +8,12 @@
 	/** Paso 7, Tincho: el tono, dónde atiende y la vista previa de una respuesta. */
 	const o = getOnboarding();
 	const tonos = Object.entries(TONOS) as [Tono, (typeof TONOS)[Tono]][];
+	const CANALES = [
+		['wa', 'WhatsApp', I.logosWhatsappIcon],
+		['ig', 'Instagram', I.logosInstagramIcon],
+		['ml', 'Preguntas de ML', null],
+		['tg', 'Telegram', I.logosTelegram]
+	] as const;
 
 	// Se anima cada vez que cambia (como en el handoff).
 	let burbuja = $state<HTMLElement>();
@@ -42,30 +48,26 @@
 			{/each}
 		</div>
 		<div class="sub">Dónde atiende</div>
-		<div class="canales">
-			<span
-				><Icon icon={I.logosWhatsappIcon} size={16} />WhatsApp<Icon
-					icon={I.phCheckBold}
-					size={13}
-					style="color:#237550"
-				/></span
-			>
-			<span
-				><Icon icon={I.logosInstagramIcon} size={15} />Instagram<Icon
-					icon={I.phCheckBold}
-					size={13}
-					style="color:#237550"
-				/></span
-			>
-			<span
-				><span class="ml">ML</span>Preguntas de ML<Icon
-					icon={I.phCheckBold}
-					size={13}
-					style="color:#237550"
-				/></span
-			>
-			<span class="off"><Icon icon={I.logosTelegram} size={15} />Telegram</span>
-		</div>
+		<!-- El estado real de cada canal: tildado sólo si está conectado (antes, decorativo). -->
+		<ul class="canales" aria-label="Canales de Tincho">
+			{#each CANALES as [k, nombre, icono] (k)}
+				{@const on = k !== 'tg' && o.e.conexiones[k] === 'on'}
+				<li class:off={!on}>
+					{#if icono}<Icon icon={icono} size={15} />{:else}<span class="ml">ML</span>{/if}
+					{nombre}
+					{#if on}
+						<Icon icon={I.phCheckBold} size={13} style="color:#237550" /><span class="sr"
+							>conectado</span
+						>
+					{:else}
+						<span class="estado">Sin conectar</span>
+					{/if}
+				</li>
+			{/each}
+		</ul>
+		{#if !o.demo}
+			<div class="nota">Los conectás desde Integraciones cuando termines.</div>
+		{/if}
 		{#if o.demo}
 			<div class="regla">
 				<Icon icon={I.logosGoogleMaps} size={20} />
@@ -75,15 +77,15 @@
 					></span
 				>
 			</div>
+			<div class="regla">
+				<Icon icon={I.phSealPercentFill} size={20} style="color:#b0441d" />
+				<span
+					><b>Descuentos:</b> puede ofrecer hasta 10% sin preguntarte<br /><span class="r-d"
+						>Más que eso, te pide aprobación por WhatsApp.</span
+					></span
+				>
+			</div>
 		{/if}
-		<div class="regla">
-			<Icon icon={I.phSealPercentFill} size={20} style="color:#b0441d" />
-			<span
-				><b>Descuentos:</b> puede ofrecer hasta 10% sin preguntarte<br /><span class="r-d"
-					>Más que eso, te pide aprobación por WhatsApp.</span
-				></span
-			>
-		</div>
 	</div>
 	<div class="vista">
 		<div class="v-cab">
@@ -147,8 +149,11 @@
 		display: flex;
 		gap: 8px;
 		flex-wrap: wrap;
+		margin: 0;
+		padding: 0;
+		list-style: none;
 	}
-	.canales > span {
+	.canales > li {
 		display: flex;
 		align-items: center;
 		gap: 8px;
@@ -160,6 +165,24 @@
 		font-weight: 500;
 	}
 	.canales .off {
+		color: #7a6252;
+		background: transparent;
+		box-shadow: inset 0 0 0 1px rgba(58, 29, 18, 0.14);
+	}
+	.estado {
+		font-size: 12px;
+		color: #9a7f6c;
+	}
+	.sr {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+	}
+	.nota {
+		margin-top: 8px;
+		font-size: 13px;
 		color: #7a6252;
 	}
 	.ml {

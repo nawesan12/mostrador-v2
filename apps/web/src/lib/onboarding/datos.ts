@@ -16,7 +16,7 @@ export const PASOS = [
 	'Tincho',
 	'¡Listo!'
 ] as const;
-export const PORCENTAJE = [6, 28, 52, 71, 80, 88, 92, 94] as const;
+export const PORCENTAJE = [6, 28, 52, 71, 80, 88, 94, 100] as const;
 export const CONSEJOS = [
 	'Si entrás con Mercado Pago, me ahorro preguntarte la mitad de las cosas.',
 	'Saqué esto de ARCA, de tu Instagram y de Google Maps. Si algo está mal, tocalo y lo corregís.',
@@ -75,8 +75,8 @@ export const LOGOS: Record<string, Logo> = {
 
 export const TRAE_MP = [
 	[I.phIdentificationCardFill, 'Tu nombre, email y CUIT'],
-	[I.phUsersThreeFill, '1.920 clientes que ya te compraron'],
-	[I.phChartLineUpFill, '14 meses de ventas para tus informes'],
+	[I.phUsersThreeFill, 'Los clientes que ya te compraron'],
+	[I.phChartLineUpFill, 'Tus ventas, para los informes'],
 	[I.phWalletFill, 'Cobros, cuotas y tu alias para transferencias'],
 	[I.phQrCodeFill, 'Tu QR del local y el Point']
 ] as const;

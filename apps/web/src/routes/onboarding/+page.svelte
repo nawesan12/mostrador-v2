@@ -3,6 +3,8 @@
 	import Marca from '#lib/landing/Marca.svelte';
 	import { onMount, tick } from 'svelte';
 	import { enhance } from '$app/forms';
+	import { replaceState } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import Grano from '#lib/components/Grano.svelte';
 	import Icon from '#lib/components/Icon.svelte';
 	import Seo from '#lib/components/Seo.svelte';
@@ -47,6 +49,18 @@
 		else if (!data.demo && !data.conSesion) o.ir(0);
 		listo = true;
 		return () => o.detener();
+	});
+
+	// El paso queda en la dirección (?paso=N): al recargar se vuelve al mismo, no al que trajo el
+	// registro (antes quedaba fijo en ?paso=1 y recargar en el 6 mandaba al 2).
+	$effect(() => {
+		const n = paso;
+		if (!listo) return;
+		const u = new URL(location.href);
+		if (u.searchParams.get('paso') === String(n)) return;
+		u.searchParams.set('paso', String(n));
+		// eslint-disable-next-line svelte/no-navigation-without-resolve -- la ruta pasa por resolve(); sólo cambia la consulta
+		replaceState(`${resolve('/onboarding')}${u.search}`, page.state);
 	});
 
 	// Con la API, cada cambio de paso se guarda en la tienda.

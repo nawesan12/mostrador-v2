@@ -11,6 +11,7 @@
 	 */
 	let { terminar }: { terminar: () => void } = $props();
 	const o = getOnboarding();
+	const conSesion = $derived(!!page.data.conSesion);
 	// Con la API, la tienda de verdad; en la demo, la del handoff.
 	const real = $derived(page.data.tienda as { nombre: string; slug: string } | null);
 	const link = $derived(
@@ -74,13 +75,13 @@
 				stroke-width="10"
 				stroke-linecap="round"
 				stroke-dasharray="326.7"
-				stroke-dashoffset="19.6"
+				stroke-dashoffset="0"
 			></circle></svg
 		>
 		<div class="ave"><img src="/hornero/celebrando.webp" alt="Tincho celebrando" /></div>
 	</div>
 	{#if o.demo}
-		<h1>Tu Local Web está 94% listo.</h1>
+		<h1>Tu Local Web ya está listo.</h1>
 		<p class="bajada">
 			Y no tuviste que cargar nada a mano. Ya podés vender por todos tus canales.
 		</p>
@@ -105,8 +106,9 @@
 			<span class="corona"><Icon icon={I.phCrownSimpleFill} size={15} /></span><span class="f-x"
 				>Elegir tu plan <span>· te quedan 14 días gratis</span></span
 			>
-			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- ancla de la landing -->
-			<a class="f-link" href="/#planes">Ver planes</a>
+			<!-- Con sesión, los planes del panel; sin sesión (la demo), los de la landing. -->
+			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- rutas fijas -->
+			<a class="f-link" href={conSesion ? '/panel/plan-y-facturacion' : '/#precios'}>Ver planes</a>
 		</div>
 	</div>
 	<div class="dos">

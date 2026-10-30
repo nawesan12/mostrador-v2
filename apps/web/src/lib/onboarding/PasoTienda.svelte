@@ -74,7 +74,11 @@
 						<span style:background="#E0A595"></span><span style:background="#E7CB8F"></span><span
 							style:background="#A9CBA8"
 						></span>
-						<span class="url">{real ? `tulocalweb.com.ar/t/${real.slug}` : 'laesquina.com.ar'}</span
+						<!-- El dominio entero y el nombre recortado con "…" si no entra (no desborda). -->
+						<span class="url" title={real ? `tulocalweb.com.ar/t/${real.slug}` : undefined}
+							>{#if real}<span class="u-dom">tulocalweb.com.ar/t/</span><span class="u-slug"
+									>{real.slug}</span
+								>{:else}laesquina.com.ar{/if}</span
 						>
 					</div>
 				{/if}
@@ -249,13 +253,25 @@
 	}
 	.url {
 		flex: 1;
-		margin: 0 40px;
+		min-width: 0;
+		display: flex;
+		justify-content: center;
+		margin: 0 clamp(8px, 6%, 40px);
 		padding: 2px 10px;
 		border-radius: 999px;
 		background: #fff;
 		font-size: 10px;
 		color: #5c4536;
-		text-align: center;
+		white-space: nowrap;
+		overflow: hidden;
+	}
+	.u-dom {
+		flex: none;
+	}
+	.u-slug {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 	.zoom {
 		flex: 1;
