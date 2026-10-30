@@ -49,7 +49,8 @@ const QUE = [
 	'entrada',
 	'etiquetar',
 	'desetiquetar',
-	'mover'
+	'mover',
+	'cancelar-envio'
 ] as const;
 
 export const actions: Actions = {

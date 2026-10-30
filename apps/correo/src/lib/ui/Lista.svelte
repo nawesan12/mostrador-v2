@@ -71,7 +71,9 @@
 						<span class="esp"></span>
 						{#if f.adjuntos}<i class="icon-paperclip clip" aria-label="Con adjuntos"></i>{/if}
 						{#if f.destacado}<i class="icon-star clip" aria-label="Destacado"></i>{/if}
-						<span class="hora">{hora(f.fecha)}</span>
+						<span class="hora" class:sale={!!f.envio}
+							>{f.envio ? `Sale ${hora(f.fecha)}` : hora(f.fecha)}</span
+						>
 					</span>
 					<span class="asunto">{f.asunto}</span>
 					<span class="l3"
@@ -253,6 +255,10 @@
 		font-size: 14px;
 		line-height: 24px;
 		font-weight: 500;
+	}
+	.hora.sale {
+		color: var(--espT);
+		font-weight: 600;
 	}
 	.nueva .nom,
 	.nueva .hora {

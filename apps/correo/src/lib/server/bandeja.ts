@@ -3,7 +3,7 @@
  * Los ids que salen de acá llevan la cuenta adelante ("<cuenta>~<email>"), porque un correo de una
  * casilla compartida vive en otra cuenta JMAP.
  */
-import { Jmap, MAX_LLAMADAS, QUOTA, type Cuenta } from './jmap.ts';
+import { Jmap, MAX_LLAMADAS, QUOTA, SUBMISSION, type Cuenta } from './jmap.ts';
 import { sanear } from './html.ts';
 import { esEtiqueta } from '../etiquetas.ts';
 
@@ -68,6 +68,8 @@ export type Fila = {
 	adjuntos: boolean;
 	enHilo: number;
 	etiquetas: string[];
+	/** Programado: el envío pendiente (para cancelarlo) y cuándo sale. */
+	envio?: { id: string; sale: string };
 };
 
 export const SEP = '~';
@@ -106,6 +108,12 @@ async function buzones(j: Jmap, cuentas: Cuenta[]) {
 }
 
 const deRol = (bs: Buzon[], rol: string) => bs.find((b) => b.role === rol);
+
+/** Stalwart no deja ver los envíos de una casilla personal compartida: se toma como "sin envíos". */
+function sinEnvios(e: unknown): null {
+	if (e instanceof Error && e.message.includes('accountNotSupportedByMethod')) return null;
+	throw e;
+}
 
 /** El filtro de una carpeta en una cuenta (null: esa cuenta no tiene esa carpeta). */
 function filtroDe(carpeta: CarpetaId, bs: Buzon[], pestana: Pestana) {
@@ -157,6 +165,49 @@ export async function bandeja(
 	const porCuenta = await Promise.all(
 		elegidas.map(async (c) => {
 			const b = bs.get(c.id)!;
+			// Programados: los envíos que esperan su hora (EmailSubmission pendientes) y sus correos.
+			if (o.carpeta === 'programados') {
+				const r = await j
+					.llamar(
+						[
+							[
+								'EmailSubmission/query',
+								{ accountId: c.id, filter: { undoStatus: 'pending' } },
+								'sq'
+							],
+							[
+								'EmailSubmission/get',
+								{
+									accountId: c.id,
+									'#ids': { resultOf: 'sq', name: 'EmailSubmission/query', path: '/ids' }
+								},
+								'sg'
+							],
+							[
+								'Email/get',
+								{
+									accountId: c.id,
+									'#ids': { resultOf: 'sg', name: 'EmailSubmission/get', path: '/list/*/emailId' },
+									properties: [
+										'threadId',
+										'keywords',
+										'from',
+										'to',
+										'subject',
+										'preview',
+										'receivedAt',
+										'hasAttachment'
+									]
+								},
+								'g'
+							]
+						],
+						[SUBMISSION]
+					)
+					.catch(sinEnvios);
+				if (!r) return null;
+				return { c, r, programados: true };
+			}
 			const f = filtroDe(o.carpeta, b, o.pestana);
 			if (!f) return null;
 			const filtro = texto ? { operator: 'AND', conditions: [f, { text: texto }] } : f;
@@ -215,15 +266,64 @@ export async function bandeja(
 			// cuatro pedidos a la vez.
 			const propia = c.id === (todas.find((x) => x.personal) ?? todas[0]).id;
 			if (propia) llamadas.push(['Quota/get', { accountId: c.id, ids: null }, 'cuota']);
-			return { c, r: await j.llamar(llamadas, propia ? [QUOTA] : []) };
+			// Cuántos envíos esperan su hora (el número de la carpeta Programados).
+			llamadas.push([
+				'EmailSubmission/query',
+				{ accountId: c.id, filter: { undoStatus: 'pending' }, calculateTotal: true, limit: 0 },
+				'pend'
+			]);
+			const extra = propia ? [QUOTA, SUBMISSION] : [SUBMISSION];
+			// Una casilla personal compartida no deja ver sus envíos: va sin el contador.
+			const r = await j.llamar(llamadas, extra).catch((e) =>
+				sinEnvios(e) === null
+					? j.llamar(
+							llamadas.filter((x) => x[2] !== 'pend'),
+							extra
+						)
+					: null
+			);
+			return {
+				c,
+				r: r!,
+				programados: false
+			};
 		})
 	);
 
 	const filas: Fila[] = [];
 	const contadores = { sinleer: 0, esperan: 0 };
+	let pendientes = 0;
 	for (const x of porCuenta) {
 		if (!x) continue;
 		const { c, r } = x;
+		pendientes += Number(r.get('pend')?.total ?? 0);
+		if (x.programados) {
+			const envios = (r.get('sg')?.list ?? []) as { id: string; emailId: string; sendAt: string }[];
+			pendientes += envios.length;
+			const correos = new Map(((r.get('g')?.list ?? []) as EmailJmap[]).map((e) => [e.id, e]));
+			for (const s of envios) {
+				const e = correos.get(s.emailId);
+				if (!e) continue;
+				const para = e.to?.[0] ?? { name: null, email: '' };
+				filas.push({
+					id: idDe(c.id, e.id),
+					cuenta: c.id,
+					casilla: c.email,
+					nombre: para.name || para.email || '(sin destinatario)',
+					email: para.email,
+					asunto: e.subject || '(sin asunto)',
+					vista: e.preview,
+					fecha: s.sendAt,
+					leido: true,
+					destacado: false,
+					adjuntos: e.hasAttachment,
+					enHilo: 1,
+					etiquetas: [],
+					envio: { id: s.id, sale: s.sendAt }
+				});
+			}
+			continue;
+		}
 		const hilos = new Map(
 			((r.get('t')?.list ?? []) as { id: string; emailIds: string[] }[]).map((t) => [
 				t.id,
@@ -253,7 +353,10 @@ export async function bandeja(
 		contadores.sinleer += Number(r.get('s')?.total ?? 0);
 		contadores.esperan += Number(r.get('e')?.total ?? 0);
 	}
-	filas.sort((a, b) => b.fecha.localeCompare(a.fecha));
+	// Programados: el próximo en salir arriba; el resto, lo último que llegó arriba.
+	filas.sort((a, b) =>
+		o.carpeta === 'programados' ? a.fecha.localeCompare(b.fecha) : b.fecha.localeCompare(a.fecha)
+	);
 
 	const q = (
 		(porCuenta.find((x) => x?.r.has('cuota'))?.r.get('cuota')?.list ?? []) as {
@@ -275,7 +378,9 @@ export async function bandeja(
 						? suma('drafts', 'totalEmails')
 						: c.id === 'spam'
 							? suma('junk', 'unreadEmails')
-							: 0
+							: c.id === 'programados'
+								? pendientes
+								: 0
 		})),
 		filas: filas.slice(0, 80),
 		contadores,
@@ -451,7 +556,8 @@ export async function accion(
 		| 'entrada'
 		| 'etiquetar'
 		| 'desetiquetar'
-		| 'mover',
+		| 'mover'
+		| 'cancelar-envio',
 	/** La etiqueta (keyword) o la carpeta (id) de etiquetar y mover. */
 	valor = ''
 ) {
@@ -468,6 +574,38 @@ export async function accion(
 	for (const [cuenta, emails] of porCuenta) {
 		const b = bs.get(cuenta) ?? [];
 		let cambio: Record<string, unknown>;
+		if (que === 'cancelar-envio') {
+			// El envío programado se cancela y el correo vuelve a Borradores, para editarlo o mandarlo.
+			const borradores = deRol(b, 'drafts')?.id;
+			const r = await j.llamar(
+				[
+					[
+						'EmailSubmission/set',
+						{ accountId: cuenta, update: { [valor]: { undoStatus: 'canceled' } } },
+						's'
+					],
+					[
+						'Email/set',
+						{
+							accountId: cuenta,
+							update: Object.fromEntries(
+								emails.map((e) => [
+									e,
+									{
+										mailboxIds: borradores ? { [borradores]: true } : undefined,
+										'keywords/$draft': true
+									}
+								])
+							)
+						},
+						'e'
+					]
+				],
+				[SUBMISSION]
+			);
+			if (r.get('s')?.notUpdated) throw new Error('Ya salió o no se puede cancelar.');
+			continue;
+		}
 		if (que === 'etiquetar' || que === 'desetiquetar') {
 			if (!esEtiqueta(valor)) throw new Error('Etiqueta inválida.');
 			cambio = { [`keywords/${valor}`]: que === 'etiquetar' ? true : null };

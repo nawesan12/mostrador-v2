@@ -7,6 +7,7 @@
 
 	let {
 		m,
+		envio = null,
 		casillas,
 		contactos,
 		hrefImagenes,
@@ -15,6 +16,8 @@
 		onenviado
 	}: {
 		m: Mensaje;
+		/** Si es un envío programado: su id (para cancelarlo) y cuándo sale. */
+		envio?: { id: string; sale: string } | null;
 		casillas: Casilla[];
 		contactos: { nombre: string; email: string }[];
 		hrefImagenes: string;
@@ -207,6 +210,12 @@ body{padding:20px 22px}a{color:#1d5fd1}img{max-width:100%;height:auto}table{max-
 	</div>
 
 	<div class="cont">
+		{#if envio}
+			<div class="programado">
+				<i class="icon-clock"></i><span>Programado: sale {cuando(envio.sale).toLowerCase()}.</span>
+				<button onclick={() => onaccion('cancelar-envio', envio.id)}>Cancelar el envío</button>
+			</div>
+		{/if}
 		<h1>{m.asunto}</h1>
 		{#if m.etiquetas.length}
 			<div class="chips">
@@ -537,6 +546,27 @@ body{padding:20px 22px}a{color:#1d5fd1}img{max-width:100%;height:auto}table{max-
 		line-height: 1.3;
 		letter-spacing: -0.01em;
 		text-wrap: pretty;
+	}
+	.programado {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 10px;
+		padding: 12px 16px;
+		border-radius: 12px;
+		background: var(--espBg);
+		color: var(--espT);
+		font-size: 16px;
+	}
+	.programado i {
+		font-size: 19px;
+	}
+	.programado span {
+		flex: 1;
+	}
+	.programado button {
+		font-weight: 600;
+		color: inherit;
 	}
 	.hilo {
 		display: flex;

@@ -75,7 +75,15 @@
 		const res = deserialize(await r.text());
 		if (res.type === 'failure') return avisar(String(res.data?.error ?? 'No se pudo.'));
 		if (res.type === 'error') return avisar('No se pudo.');
-		const sale = ['archivar', 'borrar', 'spam', 'no-leido', 'mover', 'bloquear'].includes(que);
+		const sale = [
+			'archivar',
+			'borrar',
+			'spam',
+			'no-leido',
+			'mover',
+			'bloquear',
+			'cancelar-envio'
+		].includes(que);
 		avisar(
 			{
 				archivar: 'Archivado',
@@ -87,7 +95,8 @@
 				etiquetar: 'Etiqueta puesta',
 				desetiquetar: 'Etiqueta sacada',
 				mover: 'Movido',
-				bloquear: 'Bloqueado: lo que mande va a Spam'
+				bloquear: 'Bloqueado: lo que mande va a Spam',
+				'cancelar-envio': 'Envío cancelado: quedó en Borradores'
 			}[que] ?? 'Listo'
 		);
 		if (sale) await goto(href({}), { reset: false, refreshAll: true });
@@ -229,6 +238,7 @@
 					{#key data.leido.id}
 						<Lectura
 							m={data.leido}
+							envio={data.filas.find((f) => f.id === data.leido?.id)?.envio ?? null}
 							casillas={data.casillas}
 							{contactos}
 							hrefImagenes={href({ m: data.leido.id, img: true })}
