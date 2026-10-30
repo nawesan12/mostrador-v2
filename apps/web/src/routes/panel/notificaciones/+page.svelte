@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import { deslizable } from '#lib/panel/deslizable.ts';
 	import Icon from '#lib/components/Icon.svelte';
 	import Interruptor from '#lib/components/Interruptor.svelte';
@@ -12,6 +14,12 @@
 	let { data } = $props();
 	const ui = getUi();
 	let prefs = $derived({ ...data, matriz: { ...data.matriz } });
+	/**
+	 * Con la API real, el único aviso a la tienda que sale hoy es la venta nueva por Telegram. La
+	 * matriz se guarda, pero no se promete un resumen diario, un «no molestar» ni una prueba que no
+	 * mandan nada (la prueba era un toast con una venta inventada).
+	 */
+	const demo = $derived(!!page.data.demo);
 
 	const CANAL: Record<CanalAviso, [I.IconData, string, string]> = {
 		panel: [I.phBellFill, '#D2582F', 'Panel'],
@@ -61,11 +69,24 @@
 			<h1>Notificaciones</h1>
 			<div class="c-s">Elegí qué te avisamos y por dónde</div>
 		</div>
-		<div class="silencio">
-			<Icon icon={I.phMoonStarsFill} size={16} style="color:#6A4FA0" />No molestar de 23 a 8 h
-			<Interruptor checked={prefs.silencio} label="No molestar de 23 a 8 h" onchange={silencio} />
-		</div>
+		{#if demo}
+			<div class="silencio">
+				<Icon icon={I.phMoonStarsFill} size={16} style="color:#6A4FA0" />No molestar de 23 a 8 h
+				<Interruptor checked={prefs.silencio} label="No molestar de 23 a 8 h" onchange={silencio} />
+			</div>
+		{/if}
 	</div>
+
+	{#if !demo}
+		<div class="hoy" use:anim={{ t: 'rise', delay: 30 }}>
+			<img src="/hornero/hablando.webp" alt="" width="56" height="56" />
+			<p>
+				Hoy cada venta nueva te llega por <b>Telegram</b>, si lo vinculaste en
+				<a href={resolve('/panel/integraciones')}>Integraciones</a>. Por mail, WhatsApp, al celular
+				y en el panel todavía no salen: lo que marques acá queda guardado para cuando estén.
+			</p>
+		</div>
+	{/if}
 
 	<div class="tarjeta" use:anim={{ t: 'rise', delay: 50 }}>
 		<div class="desliza" use:deslizable>
@@ -102,39 +123,63 @@
 		</div>
 	</div>
 
-	<div class="dos" use:anim={{ t: 'rise', delay: 100 }}>
-		<div class="caja">
-			<div class="t">Resumen diario</div>
-			<div class="d2">
-				Tincho te manda a las 9 h cuánto vendiste ayer, qué pedidos esperan y qué se está quedando
-				sin stock.
+	{#if demo}
+		<div class="dos" use:anim={{ t: 'rise', delay: 100 }}>
+			<div class="caja">
+				<div class="t">Resumen diario</div>
+				<div class="d2">
+					Tincho te manda a las 9 h cuánto vendiste ayer, qué pedidos esperan y qué se está quedando
+					sin stock.
+				</div>
+				<div class="pills" role="group" aria-label="Resumen diario">
+					{#each [['whatsapp', 'Por WhatsApp'], ['email', 'Por email'], ['off', 'No quiero']] as const as [k, t] (k)}
+						<button type="button" aria-pressed={prefs.resumen === k} onclick={() => resumen(k)}
+							>{t}</button
+						>
+					{/each}
+				</div>
 			</div>
-			<div class="pills" role="group" aria-label="Resumen diario">
-				{#each [['whatsapp', 'Por WhatsApp'], ['email', 'Por email'], ['off', 'No quiero']] as const as [k, t] (k)}
-					<button type="button" aria-pressed={prefs.resumen === k} onclick={() => resumen(k)}
-						>{t}</button
-					>
-				{/each}
+			<div class="caja">
+				<div class="t">Probar avisos</div>
+				<div class="d2">Te mandamos un aviso de prueba para que veas cómo llega.</div>
+				<button
+					type="button"
+					class="probar"
+					onclick={() =>
+						ui.toast({
+							k: 'ok',
+							title: 'Nueva venta · $ 44.600',
+							desc: 'Aviso de prueba: así te llega cada venta al panel'
+						})}><Icon icon={I.phBellRingingBold} size={15} />Mandar prueba</button
+				>
 			</div>
 		</div>
-		<div class="caja">
-			<div class="t">Probar avisos</div>
-			<div class="d2">Te mandamos un aviso de prueba para que veas cómo llega.</div>
-			<button
-				type="button"
-				class="probar"
-				onclick={() =>
-					ui.toast({
-						k: 'ok',
-						title: 'Nueva venta · $ 44.600',
-						desc: 'Aviso de prueba: así te llega cada venta al panel'
-					})}><Icon icon={I.phBellRingingBold} size={15} />Mandar prueba</button
-			>
-		</div>
-	</div>
+	{/if}
 </div>
 
 <style>
+	.hoy {
+		display: flex;
+		align-items: center;
+		gap: 14px;
+		padding: 14px 18px;
+		border-radius: 20px;
+		background: var(--durazno);
+	}
+	.hoy img {
+		flex: none;
+		border-radius: 50%;
+	}
+	.hoy p {
+		margin: 0;
+		font-size: 14px;
+		line-height: 1.45;
+		text-wrap: pretty;
+	}
+	.hoy a {
+		color: var(--terracota);
+		font-weight: 600;
+	}
 	.pagina {
 		display: flex;
 		flex-direction: column;
