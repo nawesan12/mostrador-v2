@@ -163,14 +163,108 @@ func GuardarMeta(ctx context.Context, pool interface {
 }
 
 // ContextoHornero es lo que Hornero sabe de la tienda además del tablero (el panel y Telegram usan
-// el mismo). Se llena con cada dominio (pedidos, productos, clientes).
-func ContextoHornero(_ context.Context, _ interface {
+// el mismo): las ventas de los últimos 14 días, el catálogo con lo vendido, los clientes y los
+// canales del mes. Si algo falla, va vacío: Tincho dice que no sabe, no inventa.
+func ContextoHornero(ctx context.Context, pool interface {
 	EnTienda(context.Context, string, func(pgx.Tx) error) error
-}, _ string) map[string]any {
-	return map[string]any{
+}, tiendaID string) map[string]any {
+	vacio := map[string]any{
 		"ventasPorDia": []any{}, "productos": []any{}, "canales30d": []any{},
 		"clientes": map[string]int{"total": 0, "nuevos30d": 0, "conWhatsApp": 0, "sinVolver": 0},
 	}
+	c, err := contextoHornero(ctx, pool, tiendaID, time.Now())
+	if err != nil {
+		return vacio
+	}
+	return c
+}
+
+func contextoHornero(ctx context.Context, pool interface {
+	EnTienda(context.Context, string, func(pgx.Tx) error) error
+}, tiendaID string, ahora time.Time) (map[string]any, error) {
+	dias, productos, canales := []any{}, []any{}, []any{}
+	clientes := map[string]int{}
+	err := pool.EnTienda(ctx, tiendaID, func(tx pgx.Tx) error {
+		a := ahora.In(horaArgentina)
+		hoy := time.Date(a.Year(), a.Month(), a.Day(), 0, 0, 0, 0, horaArgentina)
+		desde := hoy.AddDate(0, 0, -13)
+		por := map[string][2]int64{}
+		filas, err := tx.Query(ctx, `SELECT to_char(creado_en AT TIME ZONE 'America/Argentina/Buenos_Aires', 'YYYY-MM-DD'),
+				sum(total), count(*)
+			FROM pedidos WHERE tienda_id = $1 AND creado_en >= $2 AND `+vendido+` GROUP BY 1`, tiendaID, desde)
+		if err != nil {
+			return err
+		}
+		for filas.Next() {
+			var f string
+			var v, n int64
+			if err := filas.Scan(&f, &v, &n); err != nil {
+				filas.Close()
+				return err
+			}
+			por[f] = [2]int64{v, n}
+		}
+		filas.Close()
+		for d := desde; !d.After(hoy); d = d.AddDate(0, 0, 1) {
+			f := d.Format("2006-01-02")
+			dias = append(dias, map[string]any{"fecha": f, "ventas": por[f][0], "pedidos": por[f][1]})
+		}
+
+		hace30 := ahora.Add(-30 * 24 * time.Hour)
+		filas, err = tx.Query(ctx, `WITH v AS (
+				SELECT i->>'nombre' AS nombre, sum((i->>'cantidad')::int) AS n
+				FROM pedidos, jsonb_array_elements(items) i
+				WHERE tienda_id = $1 AND creado_en >= $2 AND `+vendido+` GROUP BY 1)
+			SELECT p.nombre, p.categoria, p.precio, p.stock, coalesce(v.n, 0), coalesce((p.canales->>'ml')::boolean, false)
+			FROM productos p LEFT JOIN v ON v.nombre = p.nombre
+			WHERE p.tienda_id = $1 AND p.publicado ORDER BY coalesce(v.n, 0) DESC, p.nombre LIMIT 200`, tiendaID, hace30)
+		if err != nil {
+			return err
+		}
+		for filas.Next() {
+			var nombre string
+			var categoria *string
+			var precio int64
+			var stock, vendidos int
+			var enMl bool
+			if err := filas.Scan(&nombre, &categoria, &precio, &stock, &vendidos, &enMl); err != nil {
+				filas.Close()
+				return err
+			}
+			productos = append(productos, map[string]any{"nombre": nombre, "categoria": categoria, "precio": precio,
+				"stock": stock, "vendidos30d": vendidos, "enMl": enMl})
+		}
+		filas.Close()
+
+		var total, nuevos, conWa, sinVolver int
+		if err := tx.QueryRow(ctx, `WITH c AS (
+				SELECT lower(coalesce(comprador->>'email', comprador->>'nombre')) AS quien, min(creado_en) AS primero,
+					max(creado_en) AS ultimo, count(*) AS veces, bool_or(comprador->>'telefono' IS NOT NULL) AS tel
+				FROM pedidos WHERE tienda_id = $1 AND `+vendido+` GROUP BY 1)
+			SELECT count(*), count(*) FILTER (WHERE primero >= $2), count(*) FILTER (WHERE tel),
+				count(*) FILTER (WHERE veces > 1 AND ultimo < $2) FROM c`, tiendaID, hace30).
+			Scan(&total, &nuevos, &conWa, &sinVolver); err != nil {
+			return err
+		}
+		clientes = map[string]int{"total": total, "nuevos30d": nuevos, "conWhatsApp": conWa, "sinVolver": sinVolver}
+
+		filas, err = tx.Query(ctx, `SELECT canal, sum(total) FROM pedidos
+			WHERE tienda_id = $1 AND creado_en >= $2 AND `+vendido+` GROUP BY 1 ORDER BY 2 DESC`, tiendaID, hace30)
+		if err != nil {
+			return err
+		}
+		defer filas.Close()
+		for filas.Next() {
+			var canal string
+			var v int64
+			if err := filas.Scan(&canal, &v); err != nil {
+				return err
+			}
+			canales = append(canales, map[string]any{"canal": canal, "ventas": v})
+		}
+		return filas.Err()
+	})
+	return map[string]any{"ventasPorDia": dias, "productos": productos, "clientes": clientes, "canales30d": canales}, err
 }
 
 func rutasTablero(mux *http.ServeMux, pool interface {

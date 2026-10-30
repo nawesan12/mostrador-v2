@@ -90,4 +90,11 @@ func TestTableroConVentas(t *testing.T) {
 	if tb.ParaHacer.Preparar != 1 || tb.ParaHacer.Transferencias != 1 || tb.Meta.Actual < 15_000 {
 		t.Fatalf("para hacer %+v, meta %+v", tb.ParaHacer, tb.Meta)
 	}
+
+	// Tincho ve lo mismo: ventas por día, clientes y canales del mes.
+	c := tiendas.ContextoHornero(ctx, b.App, id)
+	dias := c["ventasPorDia"].([]any)
+	if len(dias) != 14 || c["clientes"].(map[string]int)["total"] != 1 || len(c["canales30d"].([]any)) != 2 {
+		t.Fatalf("contexto de Tincho: %+v", c)
+	}
 }
