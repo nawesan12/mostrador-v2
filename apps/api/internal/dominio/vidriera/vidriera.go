@@ -162,7 +162,7 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 		return Tienda{}, err
 	}
 	out := Tienda{Slug: slug, Secciones: []string{"hero", "cats", "prods", "revs", "ig", "wa"}, Resenas: []ResenaPublica{}, Preguntas: []PreguntaPublica{},
-		Envios: Envios{Retiro: true, Correo: true}, Fotos: []string{}, MasVendidos: []string{}}
+		Envios: Envios{Retiro: true}, Fotos: []string{}, MasVendidos: []string{}}
 	// Los más vendidos de los últimos 30 días (los ítems de los pedidos guardan el nombre).
 	vendidos := map[string]int{}
 	err = pool.EnTienda(ctx, id, func(t pgx.Tx) error {
@@ -173,6 +173,10 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 				EXISTS (SELECT 1 FROM mp_conexiones WHERE tienda_id = $1 AND NOT reautorizar), ga4, pixel_meta, automaticas
 			FROM tiendas WHERE id = $1`, id).Scan(&out.Nombre, &out.Plantilla, &diseno, &negocio, &mp,
 			&out.Medicion.GA4, &out.Medicion.Pixel, &autos); err != nil {
+			return err
+		}
+		// Correo Argentino se ofrece sólo con la cuenta de MiCorreo conectada (cotiza la API, nunca una tabla).
+		if err := t.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM ca_conexiones WHERE tienda_id = $1)`, id).Scan(&out.Envios.Correo); err != nil {
 			return err
 		}
 		if err := t.QueryRow(ctx, `SELECT nombre FROM dominios WHERE tienda_id = $1 AND principal AND verificado_en IS NOT NULL`,
@@ -381,6 +385,10 @@ type Compra struct {
 	Envio     string         `json:"envio"`
 	Pago      string         `json:"pago"`
 	Cupon     string         `json:"cupon"`
+	// Correo Argentino: provincia (código de MiCorreo), localidad (a domicilio) y sucursal elegida.
+	Provincia string `json:"provincia"`
+	Localidad string `json:"localidad"`
+	Sucursal  string `json:"sucursal"`
 }
 
 // Resultado de comprar: el pedido, su código público y (con Mercado Pago) adónde pagar.
@@ -393,8 +401,14 @@ type Resultado struct {
 
 var emailValido = regexp.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`)
 
-// Comprar arma el pedido de la tienda online.
+// Comprar arma el pedido de la tienda online (sin Correo Argentino).
 func Comprar(ctx context.Context, pool tx, mp Pagador, sitio, slug string, c Compra, hoy time.Time) (Resultado, error) {
+	return ComprarConCorreo(ctx, pool, mp, nil, sitio, slug, c, hoy)
+}
+
+// ComprarConCorreo arma el pedido; con Correo Argentino conectado, el envío por Correo se vuelve a
+// cotizar acá con la API.
+func ComprarConCorreo(ctx context.Context, pool tx, mp Pagador, correo Correo, sitio, slug string, c Compra, hoy time.Time) (Resultado, error) {
 	t, err := Publica(ctx, pool, slug)
 	if err != nil {
 		return Resultado{}, err
@@ -416,6 +430,7 @@ func Comprar(ctx context.Context, pool tx, mp Pagador, sitio, slug string, c Com
 		porID[p.ID] = p
 	}
 	var subtotal int64
+	var unidades int
 	var n pedidos.PedidoNuevo
 	for _, l := range c.Carrito {
 		p, ok := porID[l.ID]
@@ -427,20 +442,37 @@ func Comprar(ctx context.Context, pool tx, mp Pagador, sitio, slug string, c Com
 			return Resultado{}, ErrInvalido
 		}
 		subtotal += precio * int64(l.Cantidad)
+		unidades += l.Cantidad
 		n.Items = append(n.Items, pedidos.Linea{ProductoID: l.ID, VarianteID: l.VarianteID, Cantidad: l.Cantidad})
 	}
-	var opcion *Opcion
-	for _, o := range Cotizar(c.CP, subtotal, t.Envios, hoy) {
-		if o.ID == c.Envio {
-			o := o
-			opcion = &o
+	var costoEnvio int64
+	var entrega *pedidos.Entrega
+	n.Canal, n.Envio = "web", c.Envio
+	if esCorreo(c.Envio) {
+		if !t.Envios.Correo {
+			return Resultado{}, ErrInvalido
+		}
+		gratis := t.Envios.GratisDesde != nil && subtotal >= *t.Envios.GratisDesde
+		if costoEnvio, entrega, err = envioCorreo(ctx, correo, id, c, unidades, gratis); err != nil {
+			return Resultado{}, err
+		}
+		n.Envio = "correo"
+	} else {
+		var opcion *Opcion
+		for _, o := range Cotizar(c.CP, subtotal, t.Envios, hoy) {
+			if o.ID == c.Envio {
+				o := o
+				opcion = &o
+			}
+		}
+		if opcion == nil || (c.Envio != "retiro" && len(strings.TrimSpace(c.Direccion)) < 4) {
+			return Resultado{}, ErrInvalido
+		}
+		costoEnvio = opcion.Precio
+		if c.Envio != "retiro" {
+			entrega = &pedidos.Entrega{Direccion: strings.TrimSpace(c.Direccion), CP: strings.TrimSpace(c.CP)}
 		}
 	}
-	if opcion == nil || (c.Envio != "retiro" && len(strings.TrimSpace(c.Direccion)) < 4) {
-		return Resultado{}, ErrInvalido
-	}
-	n.Canal, n.Envio = "web", c.Envio
-	costoEnvio := opcion.Precio
 	// Cupón: se vuelve a evaluar acá con los precios y el historial del servidor.
 	var descCupon int64
 	combinable := true
@@ -469,9 +501,7 @@ func Comprar(ctx context.Context, pool tx, mp Pagador, sitio, slug string, c Com
 	n.Pagado = &f
 	n.Cliente, n.Telefono = &c.Nombre, &c.Telefono
 	n.Email, n.CostoEnvio, n.CiudadEnvio = c.Email, costoEnvio, strings.TrimSpace(c.CP)
-	if c.Envio != "retiro" {
-		n.Entrega = &pedidos.Entrega{Direccion: strings.TrimSpace(c.Direccion), CP: strings.TrimSpace(c.CP)}
-	}
+	n.Entrega = entrega
 	n.Nota = notaCompra(c)
 	b := make([]byte, 18)
 	_, _ = rand.Read(b)

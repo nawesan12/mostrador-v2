@@ -18,6 +18,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/formularios"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ia"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/importacion"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/correoargentino"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/telegram"
@@ -99,11 +100,12 @@ func correr() error {
 				cfg.MPSecretoWebhook, cfg.Sitio, cfg.ClaveCifrado, slog.Default()),
 			MercadoLibre: mercadolibre.DesdeConfig(app, cfg.OAuth["mercadolibre"][0], cfg.OAuth["mercadolibre"][1],
 				cfg.Sitio, cfg.ClaveCifrado, slog.Default()),
-			IA:          &ia.Servicio{Pool: app},
-			Facturacion: facturacionDe(app, cfg.ClaveCifrado),
-			Telegram:    &telegram.Servicio{Pool: app},
-			Equipo:      eq,
-			Importacion: importacionDe(app, cfg.ClaveCifrado, cfg.OAuth["tiendanube"]),
+			CorreoArgentino: correoargentino.DesdeConfig(app, cfg.CAUsuario, cfg.CAClave, cfg.CAPruebas, cfg.ClaveCifrado, slog.Default()),
+			IA:              &ia.Servicio{Pool: app},
+			Facturacion:     facturacionDe(app, cfg.ClaveCifrado),
+			Telegram:        &telegram.Servicio{Pool: app},
+			Equipo:          eq,
+			Importacion:     importacionDe(app, cfg.ClaveCifrado, cfg.OAuth["tiendanube"]),
 		}),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,

@@ -31,6 +31,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/turnos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ventas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/vidriera"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/correoargentino"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/telegram"
@@ -57,6 +58,8 @@ type Dependencias struct {
 	MercadoPago *mercadopago.Servicio
 	// Mercado Libre como canal: conexión, publicaciones, pedidos y preguntas.
 	MercadoLibre *mercadolibre.Servicio
+	// Correo Argentino (API MiCorreo): conexión, cotización del checkout, sucursales y envíos.
+	CorreoArgentino *correoargentino.Servicio
 	// IA conectadas por MCP (OAuth 2.1). Sin esto, los tokens de IA no entran.
 	IA *ia.Servicio
 	// Facturación con ARCA (comprobantes, certificado, factura manual).
@@ -175,7 +178,12 @@ func Nuevo(d Dependencias) http.Handler {
 		ip := func(r *http.Request) string { return cuentas.ClienteDe(r, d.ClaveBFF).IP }
 		dev := &devoluciones.Servicio{Pool: d.App, Correo: d.Correo}
 		dev.Rutas(mux, tienda)
-		vidriera.Rutas(mux, d.App, pagador, d.Sitio, dev, ip)
+		var correo vidriera.Correo
+		if d.CorreoArgentino != nil {
+			correo = d.CorreoArgentino
+			d.CorreoArgentino.Rutas(mux, d.App, ip)
+		}
+		vidriera.Rutas(mux, d.App, pagador, d.Sitio, dev, ip, correo)
 		if d.Arrepentimiento != nil {
 			d.Arrepentimiento.Rutas(mux, ip)
 		}

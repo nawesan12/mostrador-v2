@@ -53,7 +53,7 @@ func TestRutaDeRedireccion(t *testing.T) {
 		t.Fatal(err)
 	}
 	mux := http.NewServeMux()
-	vidriera.Rutas(mux, b.App, nil, "https://mostrador.test", nil, nil)
+	vidriera.Rutas(mux, b.App, nil, "https://mostrador.test", nil, nil, nil)
 	pedir := func(url string) *httptest.ResponseRecorder {
 		w := httptest.NewRecorder()
 		mux.ServeHTTP(w, httptest.NewRequest(http.MethodGet, url, nil))

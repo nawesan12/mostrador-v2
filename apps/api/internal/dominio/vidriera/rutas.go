@@ -21,7 +21,7 @@ func escribir(w http.ResponseWriter, estado int, v any) {
 }
 
 // Rutas públicas de la tienda online (sin sesión: las pide el BFF de /t/{slug}).
-func Rutas(mux *http.ServeMux, pool tx, mp Pagador, sitio string, dev *devoluciones.Servicio, ip func(*http.Request) string) {
+func Rutas(mux *http.ServeMux, pool tx, mp Pagador, sitio string, dev *devoluciones.Servicio, ip func(*http.Request) string, correo Correo) {
 	error404 := func(w http.ResponseWriter, err error) {
 		var ec ErrCupon
 		switch {
@@ -31,6 +31,8 @@ func Rutas(mux *http.ServeMux, pool tx, mp Pagador, sitio string, dev *devolucio
 			problema.Escribir(w, problema.NoEncontrado("Esta tienda no existe o no está publicada."))
 		case errors.Is(err, ErrInvalido):
 			problema.Escribir(w, problema.Invalido("Revisá los datos del pedido."))
+		case errors.Is(err, ErrCorreo):
+			problema.Escribir(w, problema.Conflicto("sin_cotizacion", "No pudimos cotizar el envío con Correo Argentino. Probá de nuevo o elegí otra forma de entrega."))
 		case errors.Is(err, ErrSinStock):
 			problema.Escribir(w, problema.Conflicto("sin_stock", "Algún producto se quedó sin stock."))
 		default:
@@ -60,7 +62,7 @@ func Rutas(mux *http.ServeMux, pool tx, mp Pagador, sitio string, dev *devolucio
 			error404(w, ErrInvalido)
 			return
 		}
-		res, err := Comprar(r.Context(), pool, mp, sitio, r.PathValue("slug"), c, time.Now())
+		res, err := ComprarConCorreo(r.Context(), pool, mp, correo, sitio, r.PathValue("slug"), c, time.Now())
 		if err != nil && res.Numero == 0 {
 			error404(w, err)
 			return

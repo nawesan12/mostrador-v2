@@ -38,6 +38,13 @@ type Linea struct {
 type Entrega struct {
 	Direccion string `json:"direccion"`
 	CP        string `json:"cp"`
+	// Correo Argentino: D (domicilio) o S (sucursal), la provincia (código de MiCorreo), la localidad y
+	// la sucursal elegida.
+	Tipo           string `json:"tipo,omitempty"`
+	Provincia      string `json:"provincia,omitempty"`
+	Localidad      string `json:"localidad,omitempty"`
+	Sucursal       string `json:"sucursal,omitempty"`
+	SucursalNombre string `json:"sucursalNombre,omitempty"`
 }
 
 type PedidoNuevo struct {

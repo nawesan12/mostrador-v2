@@ -25,7 +25,7 @@ func (m *mpFalso) PagarPedido(_ context.Context, _ string, numero int, vuelta st
 
 func compra(id string, cantidad int, pago string) vidriera.Compra {
 	c := vidriera.Compra{Email: "lucia@ejemplo.com", Nombre: "Lucía Pérez", Telefono: "11 5555-0101", CP: "1414",
-		Direccion: "Gorriti 4500", Envio: "correo", Pago: pago}
+		Direccion: "Gorriti 4500", Envio: "retiro", Pago: pago}
 	c.Carrito = append(c.Carrito, vidriera.LineaCarrito{ID: id, Cantidad: cantidad})
 	return c
 }
@@ -61,13 +61,14 @@ func TestTiendaOnline(t *testing.T) {
 	if err := cupones.FijarAutomatica(ctx, b.App, luna, "transf", true); err != nil {
 		t.Fatal(err)
 	}
-	// Transferencia: precio del servidor, envío por región, 15 % off y el código público.
+	// Transferencia: precio del servidor, 15 % off y el código público (Correo Argentino se prueba en
+	// integraciones/correoargentino, con la cotización de la API).
 	lunes := time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)
 	r, err := vidriera.Comprar(ctx, b.App, nil, "https://tulocalweb.com.ar", "luna", compra(p.ID, 2, "transferencia"), lunes)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := int64(20000 + 5500 - 3000); r.Total != want || r.URL != "" || len(r.Codigo) < 16 {
+	if want := int64(20000 - 3000); r.Total != want || r.URL != "" || len(r.Codigo) < 16 {
 		t.Fatalf("resultado: %+v (quería total %d)", r, want)
 	}
 	c, err := vidriera.VerPedido(ctx, b.App, "luna", r.Codigo)
@@ -112,12 +113,12 @@ func TestCotizar(t *testing.T) {
 	gratis := int64(100000)
 	e := vidriera.Envios{GratisDesde: &gratis, Retiro: true, Moto: true, Correo: true}
 	o := vidriera.Cotizar("1414", 5000, e, lunes)
-	// Correo a sucursal, moto (CABA) y retiro: Andreani no se ofrece.
-	if len(o) != 3 || o[0].ID != "correo" || o[0].Precio != 5500 || o[0].Detalle != "Llega el viernes 30" || o[1].ID != "moto" {
+	// Moto (CABA) y retiro. Correo Argentino no sale de una tabla: lo cotiza la API (integraciones/correoargentino).
+	if len(o) != 2 || o[0].ID != "moto" || o[1].ID != "retiro" {
 		t.Fatalf("CABA: %+v", o)
 	}
-	if o := vidriera.Cotizar("5000", 150000, e, lunes); o[0].Precio != 0 || len(o) != 2 {
-		t.Fatalf("Córdoba con envío gratis: %+v", o)
+	if o := vidriera.Cotizar("5000", 150000, e, lunes); len(o) != 1 || o[0].ID != "retiro" {
+		t.Fatalf("Córdoba: %+v", o)
 	}
 	if o := vidriera.Cotizar("x", 1, e, lunes); len(o) != 1 || o[0].ID != "retiro" {
 		t.Fatalf("CP inválido: %+v", o)
@@ -160,7 +161,7 @@ func TestCompraConCupon(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := int64(20000 + 5500 - 2000); r.Total != want {
+	if want := int64(20000 - 2000); r.Total != want {
 		t.Fatalf("total con cupón: %d, quería %d", r.Total, want)
 	}
 	// Una vez por cliente: el mismo email ya no puede.

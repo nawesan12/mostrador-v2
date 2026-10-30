@@ -38,6 +38,10 @@ type Config struct {
 	// Token del bot de Telegram (Hornero para la dueña): con él, el worker avisa cada venta al chat
 	// vinculado. Vacío: no se avisa. Es el mismo TELEGRAM_BOT_TOKEN que tiene el Worker.
 	TelegramToken string
+	// Correo Argentino (API MiCorreo): las credenciales de API de Tu Local Web para /token (las da
+	// Correo, una por ambiente). Vacías: cada tienda conecta con las suyas. CAPruebas usa apitest.
+	CAUsuario, CAClave string
+	CAPruebas          bool
 }
 
 // Desarrollo dice si se está corriendo en local.
@@ -73,6 +77,9 @@ func Leer() (Config, error) {
 		MPSecretoWebhook: os.Getenv("MOSTRADOR_MP_SECRETO_WEBHOOK"),
 		ClaveCifrado:     os.Getenv("MOSTRADOR_CLAVE_CIFRADO"),
 		TelegramToken:    os.Getenv("MOSTRADOR_TELEGRAM_BOT_TOKEN"),
+		CAUsuario:        os.Getenv("MOSTRADOR_CA_USUARIO"),
+		CAClave:          os.Getenv("MOSTRADOR_CA_CLAVE"),
+		CAPruebas:        os.Getenv("MOSTRADOR_CA_AMBIENTE") == "pruebas",
 	}
 	switch c.Entorno {
 	case "desarrollo", "staging", "produccion":

@@ -83,7 +83,7 @@ func TestCarritosAbandonados(t *testing.T) {
 
 	// Compra con el mismo email: el carrito queda recuperado y deja de aparecer.
 	c := vidriera.Compra{Email: "lucia@ejemplo.com", Nombre: "Lucía Pérez", Telefono: "11 5555-0101", CP: "1414",
-		Direccion: "Gorriti 4500", Envio: "correo", Pago: "transferencia"}
+		Direccion: "Gorriti 4500", Envio: "retiro", Pago: "transferencia"}
 	c.Carrito = append(c.Carrito, vidriera.LineaCarrito{ID: p.ID, Cantidad: 1})
 	if _, err := vidriera.Comprar(ctx, b.App, nil, "", "luna", c, ahora); err != nil {
 		t.Fatal(err)

@@ -15,10 +15,22 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/listas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/vidriera"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/correoargentino"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db/pruebadb"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/outbox"
 )
+
+// correoFijo cotiza siempre lo mismo (Correo Argentino de verdad se prueba en su paquete).
+type correoFijo struct{}
+
+func (correoFijo) Cotizar(context.Context, string, string, int) (correoargentino.Cotizacion, error) {
+	return correoargentino.Cotizacion{Domicilio: &correoargentino.Opcion{Precio: 5500, Producto: "Paq.ar Clásico"}}, nil
+}
+
+func (correoFijo) Sucursal(context.Context, string, string, string) (correoargentino.Sucursal, error) {
+	return correoargentino.Sucursal{}, correoargentino.ErrInvalido{Motivo: "sin sucursales"}
+}
 
 func TestMailsAQuienCompra(t *testing.T) {
 	ctx := context.Background()
@@ -33,11 +45,19 @@ func TestMailsAQuienCompra(t *testing.T) {
 		t.Fatal(err)
 	}
 	compra := vidriera.Compra{Email: "lucia@ejemplo.com", Nombre: "Lucía Pérez", Telefono: "11 5555-0101", CP: "1414",
-		Direccion: "Gorriti 4500", Envio: "correo", Pago: "transferencia"}
+		Direccion: "Gorriti 4500", Envio: vidriera.CorreoDomicilio, Provincia: "C", Localidad: "CABA", Pago: "transferencia"}
 	compra.Carrito = append(compra.Carrito, vidriera.LineaCarrito{ID: p.ID, Cantidad: 1})
 
 	// Sin datos de transferencia, la tienda no la ofrece.
-	if _, err := vidriera.Comprar(ctx, b.App, nil, "", "luna", compra, time.Now()); !errors.Is(err, vidriera.ErrInvalido) {
+	// La tienda despacha por Correo Argentino (conectado).
+	if err := b.App.EnTienda(ctx, luna, func(tx pgx.Tx) error {
+		_, err := tx.Exec(ctx, `INSERT INTO ca_conexiones (tienda_id, cliente, email, origen, paquete)
+			VALUES ($1, '0090000025', 'luna@ejemplo.com', '{"cp":"1414"}', '{"peso":500,"alto":10,"ancho":10,"largo":10}')`, luna)
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := vidriera.ComprarConCorreo(ctx, b.App, nil, correoFijo{}, "", "luna", compra, time.Now()); !errors.Is(err, vidriera.ErrInvalido) {
 		t.Fatalf("transferencia sin alias: %v", err)
 	}
 	// CBU con el dígito verificador mal: no se guarda.
@@ -51,7 +71,7 @@ func TestMailsAQuienCompra(t *testing.T) {
 	if err := cupones.FijarAutomatica(ctx, b.App, luna, "transf", true); err != nil {
 		t.Fatal(err)
 	}
-	r, err := vidriera.Comprar(ctx, b.App, nil, "", "luna", compra, time.Now())
+	r, err := vidriera.ComprarConCorreo(ctx, b.App, nil, correoFijo{}, "", "luna", compra, time.Now())
 	if err != nil {
 		t.Fatal(err)
 	}
