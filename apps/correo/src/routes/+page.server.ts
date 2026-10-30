@@ -8,6 +8,7 @@ import {
 	type Pestana
 } from '#lib/server/bandeja.ts';
 import { ErrorJmap, Jmap } from '#lib/server/jmap.ts';
+import { guardarFiltros, leerFiltros } from '#lib/server/ajustes.ts';
 import { marca } from '#lib/server/marca.ts';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -45,7 +46,10 @@ const QUE = [
 	'no-leido',
 	'leido',
 	'spam',
-	'entrada'
+	'entrada',
+	'etiquetar',
+	'desetiquetar',
+	'mover'
 ] as const;
 
 export const actions: Actions = {
@@ -55,10 +59,28 @@ export const actions: Actions = {
 		const ids = f.getAll('id').map(String).filter(Boolean);
 		if (!QUE.includes(que) || !ids.length) return fail(400, { error: 'Pedido inválido.' });
 		try {
-			await accion(new Jmap(locals.cred!), ids, que);
+			await accion(new Jmap(locals.cred!), ids, que, String(f.get('valor') ?? ''));
 		} catch (e) {
 			return fail(502, { error: e instanceof Error ? e.message : 'No se pudo.' });
 		}
 		return { ok: que };
+	},
+	/** Bloquear a un remitente: una regla más de la casilla propia que lo manda a Spam. */
+	bloquear: async ({ locals, request }) => {
+		const email = String((await request.formData()).get('email') ?? '')
+			.trim()
+			.toLowerCase();
+		if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+			return fail(400, { error: 'Remitente inválido.' });
+		const j = new Jmap(locals.cred!);
+		try {
+			const f = await leerFiltros(j);
+			if (!f.reglas.some((x) => x.si === 'de' && x.valor === email && x.accion === 'mover'))
+				f.reglas.push({ si: 'de', valor: email, accion: 'mover', destino: 'Junk Mail' });
+			await guardarFiltros(j, f);
+		} catch (e) {
+			return fail(502, { error: e instanceof Error ? e.message : 'No se pudo.' });
+		}
+		return { ok: 'bloquear' };
 	}
 };

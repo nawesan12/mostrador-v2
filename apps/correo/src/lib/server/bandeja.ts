@@ -5,6 +5,7 @@
  */
 import { Jmap, MAX_LLAMADAS, QUOTA, type Cuenta } from './jmap.ts';
 import { sanear } from './html.ts';
+import { esEtiqueta } from '../etiquetas.ts';
 
 export const CARPETAS = [
 	{ id: 'entrada', l: 'Entrada', rol: 'inbox' },
@@ -66,6 +67,7 @@ export type Fila = {
 	destacado: boolean;
 	adjuntos: boolean;
 	enHilo: number;
+	etiquetas: string[];
 };
 
 export const SEP = '~';
@@ -244,7 +246,8 @@ export async function bandeja(
 				leido: !!e.keywords.$seen,
 				destacado: !!e.keywords.$flagged,
 				adjuntos: e.hasAttachment,
-				enHilo: hilos.get(e.threadId) ?? 1
+				enHilo: hilos.get(e.threadId) ?? 1,
+				etiquetas: Object.keys(e.keywords).filter(esEtiqueta)
 			});
 		}
 		contadores.sinleer += Number(r.get('s')?.total ?? 0);
@@ -305,6 +308,9 @@ export type Mensaje = {
 	anteriores: { id: string; de: Direccion; fecha: string; vista: string }[];
 	messageId: string | null;
 	referencias: string[];
+	etiquetas: string[];
+	/** Las carpetas de su casilla, para «Mover a». */
+	carpetas: { id: string; nombre: string; rol: string | null }[];
 };
 
 type Parte = {
@@ -350,6 +356,7 @@ export async function mensaje(j: Jmap, id: string, conImagenes: boolean): Promis
 			},
 			'm'
 		],
+		['Mailbox/get', { accountId: cuenta, properties: ['name', 'role'] }, 'c'],
 		[
 			'Thread/get',
 			{ accountId: cuenta, '#ids': { resultOf: 'm', name: 'Email/get', path: '/list/*/threadId' } },
@@ -421,7 +428,11 @@ export async function mensaje(j: Jmap, id: string, conImagenes: boolean): Promis
 				vista: x.preview
 			})),
 		messageId: e.messageId?.[0] ?? null,
-		referencias: e.references ?? []
+		referencias: e.references ?? [],
+		etiquetas: Object.keys(e.keywords).filter(esEtiqueta),
+		carpetas: ((r.get('c')?.list ?? []) as { id: string; name: string; role: string | null }[])
+			.filter((b) => b.role !== 'drafts')
+			.map((b) => ({ id: b.id, nombre: b.name, rol: b.role }))
 	};
 }
 
@@ -438,6 +449,11 @@ export async function accion(
 		| 'leido'
 		| 'spam'
 		| 'entrada'
+		| 'etiquetar'
+		| 'desetiquetar'
+		| 'mover',
+	/** La etiqueta (keyword) o la carpeta (id) de etiquetar y mover. */
+	valor = ''
 ) {
 	const porCuenta = new Map<string, string[]>();
 	for (const id of ids) {
@@ -452,7 +468,13 @@ export async function accion(
 	for (const [cuenta, emails] of porCuenta) {
 		const b = bs.get(cuenta) ?? [];
 		let cambio: Record<string, unknown>;
-		if (que === 'destacar' || que === 'quitar-destacado')
+		if (que === 'etiquetar' || que === 'desetiquetar') {
+			if (!esEtiqueta(valor)) throw new Error('Etiqueta inválida.');
+			cambio = { [`keywords/${valor}`]: que === 'etiquetar' ? true : null };
+		} else if (que === 'mover') {
+			if (!b.some((x) => x.id === valor)) throw new Error('Esa carpeta no es de esta casilla.');
+			cambio = { mailboxIds: { [valor]: true } };
+		} else if (que === 'destacar' || que === 'quitar-destacado')
 			cambio = { 'keywords/$flagged': que === 'destacar' ? true : null };
 		else if (que === 'leido' || que === 'no-leido')
 			cambio = { 'keywords/$seen': que === 'leido' ? true : null };

@@ -3,6 +3,7 @@
 	import { cuando, iniciales, tamano, tipoAdjunto } from '#lib/formato.ts';
 	import { nuevo, type Borrador } from '#lib/redactar.svelte.ts';
 	import Editor from './Editor.svelte';
+	import { PROPUESTAS, familia, keyword, nombre as nombreEtiqueta } from '#lib/etiquetas.ts';
 
 	let {
 		m,
@@ -17,7 +18,7 @@
 		casillas: Casilla[];
 		contactos: { nombre: string; email: string }[];
 		hrefImagenes: string;
-		onaccion: (que: string) => void;
+		onaccion: (que: string, valor?: string) => void;
 		onvolver: () => void;
 		onenviado: (programado: boolean) => void;
 	} = $props();
@@ -27,6 +28,24 @@
 	let marco = $state<HTMLIFrameElement>();
 	let alto = $state(200);
 	let menu = $state(false);
+	let sub = $state<'etiquetas' | 'mover' | null>(null);
+	let nueva = $state('');
+	const todas = $derived([...new Set([...PROPUESTAS.map(([n]) => keyword(n)), ...m.etiquetas])]);
+	function cerrarMenu() {
+		menu = false;
+		sub = null;
+		nueva = '';
+	}
+	function alternar(k: string) {
+		onaccion(m.etiquetas.includes(k) ? 'desetiquetar' : 'etiquetar', k);
+	}
+	const CARPETA: Record<string, string> = {
+		inbox: 'Entrada',
+		archive: 'Archivo',
+		sent: 'Enviados',
+		junk: 'Spam',
+		trash: 'Papelera'
+	};
 
 	const nombre = (d: { name: string | null; email: string }) => d.name || d.email;
 	const urlAdj = (a: Mensaje['adjuntos'][number], ver = false) =>
@@ -113,22 +132,75 @@ body{padding:20px 22px}a{color:#1d5fd1}img{max-width:100%;height:auto}table{max-
 			>
 			{#if menu}
 				<div class="menu vidrio" role="menu">
-					<button role="menuitem" onclick={() => ((menu = false), onaccion('no-leido'))}
+					<button role="menuitem" onclick={() => (cerrarMenu(), onaccion('no-leido'))}
 						><i class="icon-mail"></i>Marcar como no leído</button
 					>
 					<button
 						role="menuitem"
-						onclick={() => (
-							(menu = false),
-							onaccion(m.destacado ? 'quitar-destacado' : 'destacar')
-						)}><i class="icon-star"></i>{m.destacado ? 'Quitar de destacados' : 'Destacar'}</button
+						onclick={() => (cerrarMenu(), onaccion(m.destacado ? 'quitar-destacado' : 'destacar'))}
+						><i class="icon-star"></i>{m.destacado ? 'Quitar de destacados' : 'Destacar'}</button
 					>
-					<button role="menuitem" onclick={() => ((menu = false), onaccion('spam'))}
-						><i class="icon-shield-alert"></i>Es spam</button
+					<button
+						role="menuitem"
+						class:act={sub === 'etiquetas'}
+						aria-expanded={sub === 'etiquetas'}
+						onclick={() => (sub = sub === 'etiquetas' ? null : 'etiquetas')}
+						><i class="icon-tag"></i>Etiquetar<i class="icon-chevron-right fl"></i></button
 					>
-					<button role="menuitem" onclick={() => ((menu = false), window.print())}
+					<button
+						role="menuitem"
+						class:act={sub === 'mover'}
+						aria-expanded={sub === 'mover'}
+						onclick={() => (sub = sub === 'mover' ? null : 'mover')}
+						><i class="icon-folder-input"></i>Mover a<i class="icon-chevron-right fl"></i></button
+					>
+					<button role="menuitem" onclick={() => (cerrarMenu(), window.print())}
 						><i class="icon-printer"></i>Imprimir</button
 					>
+					<button role="menuitem" onclick={() => (cerrarMenu(), onaccion('spam'))}
+						><i class="icon-shield-alert"></i>Es spam</button
+					>
+					<button role="menuitem" onclick={() => (cerrarMenu(), onaccion('bloquear'))}
+						><i class="icon-ban"></i>Bloquear a este remitente</button
+					>
+					{#if sub === 'etiquetas'}
+						<div class="submenu vidrio" role="menu">
+							{#each todas as k (k)}
+								{@const on = m.etiquetas.includes(k)}
+								<button role="menuitemcheckbox" aria-checked={on} onclick={() => alternar(k)}>
+									<span class="cb" class:on
+										>{#if on}<i class="icon-check"></i>{/if}</span
+									>
+									<span class="pt" style:background="var(--{familia(k)}T)"></span>{nombreEtiqueta(
+										k
+									)}
+								</button>
+							{/each}
+							<form
+								class="crear"
+								onsubmit={(e) => {
+									e.preventDefault();
+									const k = keyword(nueva);
+									if (k) onaccion('etiquetar', k);
+									nueva = '';
+								}}
+							>
+								<i class="icon-plus"></i><input
+									bind:value={nueva}
+									placeholder="Crear etiqueta…"
+									aria-label="Nueva etiqueta"
+								/>
+							</form>
+						</div>
+					{:else if sub === 'mover'}
+						<div class="submenu vidrio" role="menu">
+							{#each m.carpetas as c (c.id)}
+								<button role="menuitem" onclick={() => (cerrarMenu(), onaccion('mover', c.id))}
+									><i class="icon-folder"></i>{(c.rol && CARPETA[c.rol]) || c.nombre}</button
+								>
+							{/each}
+						</div>
+					{/if}
 				</div>
 			{/if}
 		</span>
@@ -136,6 +208,21 @@ body{padding:20px 22px}a{color:#1d5fd1}img{max-width:100%;height:auto}table{max-
 
 	<div class="cont">
 		<h1>{m.asunto}</h1>
+		{#if m.etiquetas.length}
+			<div class="chips">
+				{#each m.etiquetas as k (k)}
+					<span
+						class="chip"
+						style:background="var(--{familia(k)}Bg)"
+						style:color="var(--{familia(k)}T)"
+						>{nombreEtiqueta(k)}<button
+							aria-label="Sacar la etiqueta {nombreEtiqueta(k)}"
+							onclick={() => onaccion('desetiquetar', k)}><i class="icon-x"></i></button
+						></span
+					>
+				{/each}
+			</div>
+		{/if}
 		{#if m.anteriores.length}
 			<div class="hilo">
 				<span class="avs"
@@ -350,6 +437,89 @@ body{padding:20px 22px}a{color:#1d5fd1}img{max-width:100%;height:auto}table{max-
 	.menu i {
 		font-size: 19px;
 		color: var(--mut);
+	}
+	.menu button.act {
+		background: var(--sel);
+	}
+	.menu .fl {
+		margin-left: auto;
+		font-size: 16px;
+	}
+	.submenu {
+		position: absolute;
+		right: calc(100% + 8px);
+		top: 0;
+		width: 260px;
+		max-height: 60vh;
+		overflow-y: auto;
+		padding: 6px 0;
+		border-radius: 12px;
+		background: var(--pop);
+		box-shadow:
+			var(--popsh),
+			0 0 0 1px var(--ls);
+	}
+	.cb {
+		width: 20px;
+		height: 20px;
+		flex: none;
+		border-radius: 6px;
+		box-shadow: inset 0 0 0 1.5px var(--ln);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.cb.on {
+		background: var(--acc);
+		box-shadow: none;
+	}
+	.cb i {
+		font-size: 14px !important;
+		color: #fff !important;
+	}
+	.pt {
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		flex: none;
+	}
+	.crear {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 8px 16px;
+		border-top: 1px solid var(--ls);
+		margin-top: 4px;
+	}
+	.crear input {
+		flex: 1;
+		min-width: 0;
+		border: 0;
+		outline: 0;
+		background: transparent;
+		font-size: 16px;
+	}
+	.chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin-top: -6px;
+	}
+	.chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 0 6px 0 10px;
+		border-radius: 999px;
+		font-size: 14px;
+		line-height: 28px;
+		font-weight: 500;
+	}
+	.chip button {
+		display: inline-flex;
+		color: inherit;
+		opacity: 0.7;
+		font-size: 13px;
 	}
 	.cont {
 		flex: 1;
@@ -663,6 +833,10 @@ body{padding:20px 22px}a{color:#1d5fd1}img{max-width:100%;height:auto}table{max-
 		}
 	}
 	@media (max-width: 900px) {
+		.submenu {
+			right: 0;
+			top: calc(100% + 6px);
+		}
 		.volver {
 			display: inline-flex;
 		}

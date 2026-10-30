@@ -59,12 +59,15 @@
 		document.documentElement.dataset.tema = tema;
 		await fetch('/tema', { method: 'POST', body: JSON.stringify({ tema }) });
 	}
-	async function accion(que: string) {
+	async function accion(que: string, valor = '') {
 		if (!data.leido) return;
 		const fd = new FormData();
+		const bloquear = que === 'bloquear';
 		fd.set('que', que);
+		fd.set('valor', valor);
+		fd.set('email', data.leido.de.email);
 		fd.append('id', data.leido.id);
-		const r = await fetch('?/accion', {
+		const r = await fetch(bloquear ? '?/bloquear' : '?/accion', {
 			method: 'POST',
 			body: fd,
 			headers: { 'x-sveltekit-action': 'true' }
@@ -72,7 +75,7 @@
 		const res = deserialize(await r.text());
 		if (res.type === 'failure') return avisar(String(res.data?.error ?? 'No se pudo.'));
 		if (res.type === 'error') return avisar('No se pudo.');
-		const sale = ['archivar', 'borrar', 'spam', 'no-leido'].includes(que);
+		const sale = ['archivar', 'borrar', 'spam', 'no-leido', 'mover', 'bloquear'].includes(que);
 		avisar(
 			{
 				archivar: 'Archivado',
@@ -80,7 +83,11 @@
 				spam: 'Movido a spam',
 				'no-leido': 'Marcado como no leído',
 				destacar: 'Destacado',
-				'quitar-destacado': 'Sacado de destacados'
+				'quitar-destacado': 'Sacado de destacados',
+				etiquetar: 'Etiqueta puesta',
+				desetiquetar: 'Etiqueta sacada',
+				mover: 'Movido',
+				bloquear: 'Bloqueado: lo que mande va a Spam'
 			}[que] ?? 'Listo'
 		);
 		if (sale) await goto(href({}), { reset: false, refreshAll: true });

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Fila } from '#lib/server/bandeja.ts';
 	import { grupo, hora, iniciales } from '#lib/formato.ts';
+	import { familia, nombre } from '#lib/etiquetas.ts';
 
 	let {
 		filas,
@@ -73,7 +74,13 @@
 						<span class="hora">{hora(f.fecha)}</span>
 					</span>
 					<span class="asunto">{f.asunto}</span>
-					<span class="l3"><span class="prev">{f.vista}</span></span>
+					<span class="l3"
+						><span class="prev">{f.vista}</span>{#if f.etiquetas[0]}<span
+								class="tag"
+								style:background="var(--{familia(f.etiquetas[0])}Bg)"
+								style:color="var(--{familia(f.etiquetas[0])}T)">{nombre(f.etiquetas[0])}</span
+							>{/if}</span
+					>
 				</span>
 			</a>
 		{:else}
@@ -237,6 +244,15 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+	}
+	.tag {
+		flex: none;
+		white-space: nowrap;
+		padding: 0 9px;
+		border-radius: 999px;
+		font-size: 14px;
+		line-height: 24px;
+		font-weight: 500;
 	}
 	.nueva .nom,
 	.nueva .hora {
