@@ -17,6 +17,8 @@ export const GET: RequestHandler = () =>
 			'Disallow: /integraciones/',
 			'Disallow: /t/*/checkout',
 			'Disallow: /t/*/pedido/',
+			'',
+			'Sitemap: https://tulocalweb.com.ar/sitemap.xml',
 			''
 		].join('\n'),
 		{

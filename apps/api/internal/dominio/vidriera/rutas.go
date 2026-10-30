@@ -48,6 +48,16 @@ func Rutas(mux *http.ServeMux, pool tx, mp Pagador, sitio string, dev *devolucio
 		}
 		escribir(w, http.StatusOK, map[string]string{"slug": slug})
 	})
+	// Para el sitemap de la web: lo público de todas las tiendas.
+	mux.HandleFunc("GET /v1/publico/sitemap", func(w http.ResponseWriter, r *http.Request) {
+		e, err := Sitemap(r.Context(), pool)
+		if err != nil {
+			problema.Escribir(w, problema.Interno())
+			return
+		}
+		w.Header().Set("Cache-Control", "public, max-age=3600")
+		escribir(w, http.StatusOK, e)
+	})
 	mux.HandleFunc("GET /v1/publico/tiendas/{slug}", func(w http.ResponseWriter, r *http.Request) {
 		t, err := Publica(r.Context(), pool, r.PathValue("slug"))
 		if err != nil {
