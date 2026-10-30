@@ -1,6 +1,6 @@
 /** Envíos en el motor de listas (handoff PanelListas `CFG.Envíos`). */
 import * as I from '#lib/icons.ts';
-import { pesos, pesosCortos } from '../formato.ts';
+import { plural, pesos, pesosCortos } from '../formato.ts';
 import { hace } from './clientes.ts';
 import type { ConfigLista, Ctx } from './tipos.ts';
 
@@ -50,7 +50,7 @@ export function configEnvios(): ConfigLista<Envio> {
 		unidad: 'envíos',
 		buscar: 'Cliente, pedido, ciudad o seguimiento',
 		kpi: (l) =>
-			`${l.total.toLocaleString('es-AR')} envíos · ${pesosCortos(l.resumen.costos ?? 0)} en costos`,
+			`${plural(l.total, 'envío', 'envíos')} · ${pesosCortos(l.resumen.costos ?? 0)} en costos`,
 		primario: {
 			t: 'Imprimir etiquetas',
 			icon: I.phPrinterFill,

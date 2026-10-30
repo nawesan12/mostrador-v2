@@ -19,7 +19,9 @@
 	const ui = getUi();
 	const parte = $derived(objetivo ? Math.min(1, actual / objetivo) : 0);
 	const extra = $derived(
-		carritos ? ` Recuperar los ${carritos} carritos abandonados te deja más cerca.` : ''
+		carritos
+			? ` Recuperar ${carritos === 1 ? 'el carrito abandonado' : `los ${carritos} carritos abandonados`} te deja más cerca.`
+			: ''
 	);
 	let editar = $state(false);
 	let error = $state<string | null>(null);

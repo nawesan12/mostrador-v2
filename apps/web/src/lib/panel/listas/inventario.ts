@@ -1,7 +1,7 @@
 /** Inventario en el motor de listas (handoff PanelListas `CFG.Inventario`). */
 import * as I from '#lib/icons.ts';
 import { unsplash } from '#lib/landing/formato.ts';
-import { pesosCortos } from '../formato.ts';
+import { plural, pesosCortos } from '../formato.ts';
 import type { ConfigLista } from './tipos.ts';
 
 export type ItemInventario = {
@@ -46,7 +46,7 @@ export function configInventario(
 		unidad: 'SKU',
 		buscar: 'Producto, SKU o proveedor',
 		kpi: (l) =>
-			`${(l.resumen.unidades ?? 0).toLocaleString('es-AR')} unidades · ${pesosCortos(l.resumen.valor ?? 0)} en mercadería`,
+			`${plural(l.resumen.unidades ?? 0, 'unidad', 'unidades')} · ${pesosCortos(l.resumen.valor ?? 0)} en mercadería`,
 		primario: { t: 'Pedir mercadería', icon: I.phTruckFill, hacer: () => pedir(null) },
 		tip: (l) => {
 			const n = l.resumen.terminanSemana ?? 0;

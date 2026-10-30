@@ -591,8 +591,9 @@
 				<b class="naranja">{pesos(t.hornero.carritosMonto)}</b>. ¿Les mando un recordatorio por
 				WhatsApp? Cuesta {pesos(t.hornero.carritos * t.hornero.costoMensaje)}.
 			{:else if t.hornero.recordados}
-				Listo: les mandé el recordatorio a los {t.hornero.carritos} carritos por WhatsApp. Te aviso cuando
-				alguno compre.
+				Listo: les mandé el recordatorio a {t.hornero.carritos === 1
+					? 'el carrito'
+					: `los ${t.hornero.carritos} carritos`} por WhatsApp. Te aviso cuando alguno compre.
 			{:else}
 				Todo en orden por ahora. Cuando vea algo para vender más, te aviso acá.
 			{/if}

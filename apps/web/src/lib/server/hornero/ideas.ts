@@ -58,7 +58,7 @@ export function ideasDe(t: Tablero): IdeaHornero[] {
 		ideas.push({
 			id: 'promo',
 			titulo: 'Promo de fin de semana',
-			detalle: `${top.nombre} 10% off para tus ${audiencia} clientes de WhatsApp`,
+			detalle: `${top.nombre} 10% off para ${audiencia === 1 ? 'tu cliente' : `tus ${audiencia} clientes`} de WhatsApp`,
 			nota: `Costo ${pesos(audiencia * costoMensaje)} · sale el sábado a las 10 h`,
 			hecha: hechas.has('promo'),
 			listo: { titulo: 'Campaña programada', detalle: 'Sale el sábado a las 10 h' },

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { plural } from '#lib/panel/formato.ts';
 	import { resolve } from '$app/paths';
 	import { invalidateAll } from '$app/navigation';
 	import Icon from '#lib/components/Icon.svelte';
@@ -151,7 +152,8 @@
 					type="button"
 					class="enviar"
 					disabled={enviando || !aud.cantidad || mensaje.trim().length < 10}
-					onclick={() => enviar(false)}>Enviar a {aud.cantidad} personas</button
+					onclick={() => enviar(false)}
+					>Enviar a {plural(aud.cantidad, 'persona', 'personas')}</button
 				>
 			</div>
 		</div>

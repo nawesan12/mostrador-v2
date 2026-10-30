@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { plural } from '#lib/panel/formato.ts';
 	import { invalidateAll } from '$app/navigation';
 	import Hoja from '#lib/components/Hoja.svelte';
 	import Icon from '#lib/components/Icon.svelte';
@@ -159,7 +160,8 @@
 				>
 			</div>
 			<div class="kpi">
-				<span>Rotación</span><b style:color="#237550">{r.rotacion ?? 0} días</b><em>promedio</em>
+				<span>Rotación</span><b style:color="#237550">{plural(r.rotacion ?? 0, 'día', 'días')}</b
+				><em>promedio</em>
 			</div>
 		</div>
 	{/snippet}

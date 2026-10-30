@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { plural } from '#lib/panel/formato.ts';
 	import { deslizable } from '#lib/panel/deslizable.ts';
 	import { invalidateAll, replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -483,7 +484,9 @@
 				<div class="t-pie">
 					{#if i.id === 'arca' && on && venceArca !== null && venceArca < 30}
 						<span class="t-st vence"
-							>{venceArca > 0 ? `Vence en ${venceArca} días` : 'Certificado vencido'}</span
+							>{venceArca > 0
+								? `Vence en ${plural(venceArca, 'día', 'días')}`
+								: 'Certificado vencido'}</span
 						>
 					{:else}
 						<span class="t-st" class:on

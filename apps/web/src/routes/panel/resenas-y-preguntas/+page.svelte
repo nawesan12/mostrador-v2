@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { plural } from '#lib/panel/formato.ts';
 	import { invalidateAll } from '$app/navigation';
 	import Seo from '#lib/components/Seo.svelte';
 	import Icon from '#lib/components/Icon.svelte';
@@ -183,7 +184,9 @@
 						>{(data.promedio ?? 0).toLocaleString('es-AR', { minimumFractionDigits: 1 })}</span
 					><span class="estrellas">★★★★★</span>
 				</div>
-				<div class="r-s">{data.total} reseñas · {data.recomendaria}% recomendaría</div>
+				<div class="r-s">
+					{plural(data.total, 'reseña', 'reseñas')} · {data.recomendaria}% recomendaría
+				</div>
 				<div class="barras">
 					{#each data.porEstrellas as c, i (i)}
 						<div class="barra">

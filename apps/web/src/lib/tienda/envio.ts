@@ -20,7 +20,8 @@ export const esCorreo = (id: string | null | undefined) =>
 function detalleCorreo(o: OpcionCorreo, donde: string) {
 	const [a, b] = [o.diasMin?.trim(), o.diasMax?.trim()];
 	if (a && b && a !== b) return `${donde} · llega en ${a} a ${b} días hábiles`;
-	if (a || b) return `${donde} · llega en ${a || b} días hábiles`;
+	if (a || b)
+		return `${donde} · llega en ${a || b} ${String(a || b) === '1' ? 'día hábil' : 'días hábiles'}`;
 	return `${donde} · ${o.producto || 'Paq.ar'}`;
 }
 
