@@ -152,7 +152,7 @@
 			</div>
 			<div class="kpi">
 				<span>Sin stock</span><b style:color="#B83A2E">{r.sinStock ?? 0}</b><em
-					>{r.sinStockEnMl ? `${r.sinStockEnMl} publicados en ML` : 'ninguno en Mercado Libre'}</em
+					>{r.sinStockEnMl ? `${r.sinStockEnMl} publicados en ML` : 'productos agotados'}</em
 				>
 			</div>
 			<div class="kpi">
@@ -160,8 +160,9 @@
 				>
 			</div>
 			<div class="kpi">
-				<span>Rotación</span><b style:color="#237550">{plural(r.rotacion ?? 0, 'día', 'días')}</b
-				><em>promedio</em>
+				<span>Rotación</span><b style:color="#237550"
+					>{r.rotacion ? plural(r.rotacion, 'día', 'días') : '—'}</b
+				><em>{r.rotacion ? 'de stock, promedio' : 'sin ventas en 30 días'}</em>
 			</div>
 		</div>
 	{/snippet}

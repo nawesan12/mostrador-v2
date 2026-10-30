@@ -48,12 +48,19 @@ export function configInventario(
 		kpi: (l) =>
 			`${plural(l.resumen.unidades ?? 0, 'unidad', 'unidades')} · ${pesosCortos(l.resumen.valor ?? 0)} en mercadería`,
 		primario: { t: 'Pedir mercadería', icon: I.phTruckFill, hacer: () => pedir(null) },
+		vacio: {
+			hornero: 'caja',
+			titulo: 'Todavía no hay stock que mirar',
+			texto:
+				'El inventario sale de tus productos: cargá el primero con su stock y acá ves qué se termina.',
+			accion: { t: 'Cargar un producto', href: '/panel/productos' }
+		},
 		tip: (l) => {
 			const n = l.resumen.terminanSemana ?? 0;
 			if (!n) return null;
 			const p = l.resumen.proveedores ?? 1;
 			return {
-				texto: `${n} SKU se terminan esta semana. Armé el pedido para ${p === 1 ? 'tu proveedor' : `tus ${p} proveedores`} con lo que vendés por día.`,
+				texto: `${n === 1 ? 'Un producto está agotado o se termina' : `${n} productos están agotados o se terminan`} esta semana. Te armo el pedido ${p === 1 ? 'al proveedor' : `a tus ${p} proveedores`} con lo que vendés por día.`,
 				boton: 'Ver pedido',
 				hacer: async () => pedir(null)
 			};
@@ -117,7 +124,8 @@ export function configInventario(
 				iniFg: 'var(--mu)',
 				radio: '12px',
 				t: r.nombre,
-				sub: `${r.sku ? `${r.sku} · ` : ''}${r.loc} · ${r.proveedor}`,
+				// Sin depósitos ni proveedores cargados, la fila no inventa ninguno.
+				sub: `${r.sku ? `${r.sku} · ` : ''}${plural(r.vendidos30 ?? 0, 'vendido', 'vendidos')} en 30 días`,
 				medidor: { w: Math.min(100, (r.stock / tope) * 100), c, marca: (r.min / tope) * 100 },
 				vL:
 					r.stock === 0

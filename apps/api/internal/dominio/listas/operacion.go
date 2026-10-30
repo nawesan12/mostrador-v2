@@ -3,7 +3,6 @@ package listas
 import (
 	"context"
 	"fmt"
-	"hash/fnv"
 	"math"
 	"strings"
 	"time"
@@ -11,19 +10,14 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func semilla(s string) float64 {
-	h := fnv.New32a()
-	_, _ = h.Write([]byte(s))
-	return float64(h.Sum32()) / math.MaxUint32
-}
-
 // Inventario arma el stock de cada producto con lo que se vende por día (mismos cortes que el handoff).
 func Inventario(productos []Registro) []Registro {
 	regs := make([]Registro, 0, len(productos))
 	for _, p := range productos {
 		stock := int(numero(p["stock"]))
 		porDia := math.Max(0.1, math.Round(numero(p["vendidos30"])/30*10)/10)
-		minimo := max(5, int(math.Round(porDia*10+semilla(p["id"].(string))*10)))
+		// El mínimo es lo que se vende en 10 días (al menos 5): sale de las ventas, no de un número al azar.
+		minimo := max(5, int(math.Round(porDia*10)))
 		st := "ok"
 		switch {
 		case stock == 0:
@@ -76,9 +70,14 @@ var DefInventario = Def{
 			r["valor"] += numero(x["stock"]) * numero(x["costo"])
 		}
 		prov := map[any]bool{}
+		conVentas := 0
 		for _, x := range todos {
 			r["valorTotal"] += numero(x["stock"]) * numero(x["costo"])
-			r["rotacion"] += math.Min(120, numero(x["cover"]))
+			// La rotación sólo se promedia entre lo que se vendió: sin ventas no hay días que proyectar.
+			if numero(x["vendidos30"]) > 0 {
+				r["rotacion"] += math.Min(120, numero(x["cover"]))
+				conVentas++
+			}
 			switch x["st"] {
 			case "out":
 				r["sinStock"]++
@@ -96,8 +95,8 @@ var DefInventario = Def{
 				prov[x["proveedor"]] = true
 			}
 		}
-		if len(todos) > 0 {
-			r["rotacion"] = math.Round(r["rotacion"] / float64(len(todos)))
+		if conVentas > 0 {
+			r["rotacion"] = math.Round(r["rotacion"] / float64(conVentas))
 		}
 		r["proveedores"] = float64(len(prov))
 		return r
