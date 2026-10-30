@@ -41,8 +41,23 @@ export const load: PageServerLoad = async ({ locals, url, cookies }) => {
 					.then((t) => ({ nombre: t.nombre, slug: t.slug }))
 					.catch(() => null)
 			: null;
+	// Paso 3, Canales: si Mercado Pago y Mercado Libre ya están conectados (de verdad).
+	const conectadas =
+		!usaSandbox() && locals.token
+			? await Promise.all([
+					datosDe(locals)
+						.mercadoPago()
+						.then((c) => c.conectada)
+						.catch(() => false),
+					datosDe(locals)
+						.mercadoLibre()
+						.then((c) => c.conectada)
+						.catch(() => false)
+				]).then(([mp, ml]) => ({ mp, ml }))
+			: { mp: false, ml: false };
 	return {
 		demo: usaSandbox(),
+		conectadas,
 		// Google y Apple van por Clerk desde el navegador, como en /ingresar.
 		clerk: usaSandbox() ? null : fapiDe(env.CLERK_PUBLISHABLE_KEY),
 		conSesion: !!locals.token,

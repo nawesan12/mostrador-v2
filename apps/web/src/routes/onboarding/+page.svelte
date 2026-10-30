@@ -226,7 +226,7 @@
 				{:else if paso === 1}
 					<PasoNegocio />
 				{:else if paso === 2}
-					<PasoCanales />
+					<PasoCanales conectadas={data.conectadas} />
 				{:else if paso === 3}
 					<PasoImportacion />
 				{:else if paso === 4}
