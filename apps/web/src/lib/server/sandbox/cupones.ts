@@ -239,8 +239,9 @@ function automaticas(d: Demo, mes: number, prendidas: Map<string, boolean>): Aut
 		[
 			'transf',
 			'Descuento por transferencia',
-			'10 % si pagan con transferencia o efectivo',
-			'Carrito de $ 50.000 → paga $ 45.000',
+			// Lo mismo que aplica la tienda de la demo (cobros.transferencia = 15).
+			'15 % si pagan con transferencia',
+			'Carrito de $ 50.000 → paga $ 42.500',
 			'312 pedidos este mes',
 			0.23,
 			true

@@ -59,5 +59,8 @@ describe('pedidos de la demo', () => {
 		expect(transicionValida('Listo para despachar', 'Para preparar')).toBe(true);
 		expect(transicionValida('Para preparar', 'Entregado')).toBe(false);
 		expect(transicionValida('Entregado', 'Cancelado')).toBe(false);
+		// El retiro: Listo para retirar → Retirado, sin "En camino".
+		expect(transicionValida('Listo para despachar', 'En camino', 'retiro')).toBe(false);
+		expect(transicionValida('Listo para despachar', 'Entregado', 'retiro')).toBe(true);
 	});
 });

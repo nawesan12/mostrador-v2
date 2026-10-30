@@ -24,7 +24,7 @@ describe('tarjeta A6', () => {
 		expect(linkQr({ ...t, qr: 'cupon', cupon: 'LUCIA15' }, tienda)).toBe(
 			'https://tulocalweb.com.ar/t/mate-y-co/c/LUCIA15'
 		);
-		expect(linkQr({ ...t, qr: 'whatsapp' }, tienda)).toBe('https://wa.me/541155550101');
+		expect(linkQr({ ...t, qr: 'whatsapp' }, tienda)).toBe('https://wa.me/5491155550101');
 		expect(linkQr({ ...t, qr: 'whatsapp' }, { ...tienda, whatsapp: '' })).toBeNull();
 		expect(linkQr({ ...t, qr: 'instagram', instagram: 'mateyco' }, tienda)).toBe(
 			'https://instagram.com/mateyco'

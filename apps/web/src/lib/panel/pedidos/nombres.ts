@@ -76,3 +76,29 @@ export const PROXIMO: Partial<Record<EstadoPedido, EstadoPedido>> = {
 	'Listo para despachar': 'En camino',
 	'En camino': 'Entregado'
 };
+
+/**
+ * El retiro en el local no se despacha: Listo para retirar → Retirado, sin "En camino" (la API
+ * tampoco lo deja pasar por ahí ni manda el mail de despacho).
+ */
+const TEXTO_RETIRO: Partial<Record<EstadoPedido, string>> = {
+	'Listo para despachar': 'Listo para retirar',
+	Entregado: 'Retirado'
+};
+const SIGUIENTE_RETIRO: Partial<Record<EstadoPedido, string>> = {
+	'Sin pagar': 'Marcar como pagado',
+	'Para preparar': 'Marcar como listo para retirar',
+	'Listo para despachar': 'Marcar como retirado'
+};
+const PROXIMO_RETIRO: Partial<Record<EstadoPedido, EstadoPedido>> = {
+	'Sin pagar': 'Para preparar',
+	'Para preparar': 'Listo para despachar',
+	'Listo para despachar': 'Entregado'
+};
+type ConEnvio = { estado: EstadoPedido; envio: string };
+export const textoEstado = (p: ConEnvio) =>
+	(p.envio === 'retiro' && TEXTO_RETIRO[p.estado]) || etapaDe(p.estado).t;
+export const siguienteDe = (p: ConEnvio) =>
+	p.envio === 'retiro' ? SIGUIENTE_RETIRO[p.estado] : SIGUIENTE[p.estado];
+export const proximoDe = (p: ConEnvio) =>
+	p.envio === 'retiro' ? PROXIMO_RETIRO[p.estado] : PROXIMO[p.estado];

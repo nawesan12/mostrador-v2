@@ -8,7 +8,8 @@
 	import { cara, unsplash } from '#lib/landing/formato.ts';
 	import type { components } from '@mostrador/contrato/esquema';
 	import { pesos } from '../formato.ts';
-	import { NOMBRE_CANAL, NOMBRE_ENVIO, NOMBRE_PAGO, SIGUIENTE } from './nombres.ts';
+	import { linkWhatsapp } from '#lib/whatsapp.ts';
+	import { NOMBRE_CANAL, NOMBRE_ENVIO, NOMBRE_PAGO, siguienteDe, textoEstado } from './nombres.ts';
 
 	type Detalle = components['schemas']['PedidoDetalle'];
 
@@ -59,7 +60,8 @@
 			.map((w) => w[0])
 			.slice(0, 2)
 			.join('');
-	const telefonoWa = (t: string) => t.replace(/\D/g, '');
+	const wa = $derived(pedido?.comprador.telefono ? linkWhatsapp(pedido.comprador.telefono) : null);
+	const siguiente = $derived(pedido ? siguienteDe(pedido) : undefined);
 </script>
 
 <Hoja bind:open titulo={pedido ? `Pedido #${pedido.numero}` : 'Pedido'} ancho={520}>
@@ -68,7 +70,10 @@
 			<div class="cab">
 				<div class="c-txt">
 					<div class="c-fila">
-						<span class="c-n">Pedido #{pedido.numero}</span><ChipEstado estado={pedido.estado} />
+						<span class="c-n">Pedido #{pedido.numero}</span><ChipEstado
+							estado={pedido.estado}
+							texto={textoEstado(pedido)}
+						/>
 					</div>
 					<div class="c-s">
 						{cuando(pedido.creado)} · por {NOMBRE_CANAL[pedido.canal] ?? pedido.canal}
@@ -109,12 +114,10 @@
 						)}
 					</div>
 				</div>
-				{#if pedido.comprador.telefono}
-					<a
-						class="wa"
-						href="https://wa.me/{telefonoWa(pedido.comprador.telefono)}"
-						target="_blank"
-						rel="noopener noreferrer"><Icon icon={I.logosWhatsappIcon} size={14} />Escribir</a
+				{#if wa}
+					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- link externo a WhatsApp -->
+					<a class="wa" href={wa} target="_blank" rel="noopener noreferrer"
+						><Icon icon={I.logosWhatsappIcon} size={14} />Escribir</a
 					>
 				{/if}
 			</div>
@@ -122,7 +125,10 @@
 			{#if pedido.nota}
 				<div class="nota">
 					<Icon icon={I.phSparkleFill} size={16} style="color:#b0441d;margin-top:2px;flex:none" />
-					<div><b>Tincho:</b> {pedido.nota}</div>
+					<div>
+						{#if pedido.hornero}<b>Tincho:</b>
+						{/if}{pedido.nota}
+					</div>
 				</div>
 			{/if}
 
@@ -149,6 +155,9 @@
 							>Gratis</span
 						>{/if}
 				</div>
+				{#each pedido.descuentos as d, i (i)}
+					<div class="suma desc"><span>{d.concepto}</span><span>−{pesos(d.monto)}</span></div>
+				{/each}
 				<div class="total"><span>Total</span><span>{pesos(pedido.total)}</span></div>
 			</div>
 
@@ -222,10 +231,9 @@
 	{/if}
 
 	{#snippet pie()}
-		{#if pedido && SIGUIENTE[pedido.estado]}
+		{#if pedido && siguiente}
 			<div class="pie">
-				<button type="button" class="principal" onclick={() => avanzar(pedido!)}
-					>{SIGUIENTE[pedido.estado]}</button
+				<button type="button" class="principal" onclick={() => avanzar(pedido!)}>{siguiente}</button
 				>
 			</div>
 		{/if}
@@ -398,6 +406,9 @@
 	}
 	.suma + .suma {
 		padding-top: 4px;
+	}
+	.desc span:last-child {
+		color: #237550;
 	}
 	.gratis {
 		color: #237550;

@@ -1,5 +1,6 @@
 /** Turnos en el panel: nombres y colores de cada estado (los de los chips de pedidos). */
 import { ESTADOS } from '#lib/marcas.ts';
+import { linkWhatsapp } from '#lib/whatsapp.ts';
 import type { components } from '@mostrador/contrato/esquema';
 
 export type Turno = components['schemas']['Turno'];
@@ -22,8 +23,5 @@ export const HECHO: Record<EstadoTurno, string> = {
 	cancelado: 'Turno cancelado'
 };
 
-/** "wa.me" para el teléfono del cliente (con 54 adelante si falta). */
-export const waDe = (tel: string) => {
-	const d = tel.replace(/\D/g, '');
-	return d ? `https://wa.me/${d.startsWith('54') ? d : '54' + d}` : null;
-};
+/** "wa.me" para el teléfono del cliente (549 + característica + número). */
+export const waDe = (tel: string) => linkWhatsapp(tel);

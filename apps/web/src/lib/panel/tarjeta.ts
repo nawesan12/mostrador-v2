@@ -3,6 +3,8 @@
  * los textos con variables que se completan por pedido y el QR del dorso. Lógica pura: la usan la
  * página de la tarjeta, la impresión y el servidor (para validar lo que se guarda).
  */
+import { linkWhatsapp } from '#lib/whatsapp.ts';
+
 export type Modelo = 'arco' | 'sello' | 'carta';
 export type DestinoQr = 'resena' | 'cupon' | 'instagram' | 'whatsapp';
 
@@ -105,8 +107,7 @@ export function linkQr(t: Tarjeta, tienda: { url: string; whatsapp: string }) {
 	if (t.qr === 'cupon') return t.cupon ? `${tienda.url}/c/${t.cupon}` : null;
 	if (t.qr === 'instagram') return t.instagram ? `https://instagram.com/${t.instagram}` : null;
 	if (t.qr === 'whatsapp') {
-		const n = tienda.whatsapp.replace(/\D/g, '');
-		return n ? `https://wa.me/${n.startsWith('54') ? n : `54${n}`}` : null;
+		return linkWhatsapp(tienda.whatsapp);
 	}
 	return `${tienda.url}#resenas`;
 }

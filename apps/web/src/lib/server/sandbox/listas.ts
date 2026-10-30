@@ -363,7 +363,8 @@ export type RegProducto = {
 	categoria: string;
 	precio: number;
 	costo: number;
-	margen: number;
+	/** null: sin costo cargado. */
+	margen: number | null;
 	/** Con opciones, la suma de sus variantes activas. */
 	stock: number;
 	/** Unidades por semana, las últimas 8 (de la más vieja a la actual). */
@@ -486,7 +487,8 @@ export function registrosProductos(
 }
 
 function armar(p: Omit<RegProducto, 'margen' | 'estado' | 'lowm' | 'star'>): RegProducto {
-	const margen = p.precio ? Math.round(((p.precio - p.costo) / p.precio) * 100) : 0;
+	const margen =
+		p.precio && p.costo > 0 ? Math.round(((p.precio - p.costo) / p.precio) * 100) : null;
 	const estado: RegProducto['estado'] = !p.publicado
 		? p.foto
 			? 'paused'
@@ -494,7 +496,7 @@ function armar(p: Omit<RegProducto, 'margen' | 'estado' | 'lowm' | 'star'>): Reg
 		: p.stock === 0
 			? 'out'
 			: 'active';
-	return { ...p, margen, estado, lowm: margen < 25, star: p.vendidos30 > 60 };
+	return { ...p, margen, estado, lowm: margen !== null && margen < 25, star: p.vendidos30 > 60 };
 }
 
 export const DEF_PRODUCTOS: DefLista<RegProducto> = {
@@ -507,7 +509,11 @@ export const DEF_PRODUCTOS: DefLista<RegProducto> = {
 		sold: (a, b) => b.vendidos30 - a.vendidos30,
 		stock: (a, b) => a.stock - b.stock,
 		price: (a, b) => b.precio - a.precio,
-		margin: (a, b) => b.margen - a.margen
+		// Los que no tienen costo (margen sin dato) van al final.
+		margin: (a, b) =>
+			a.margen === null || b.margen === null
+				? (a.margen === null ? 1 : 0) - (b.margen === null ? 1 : 0)
+				: b.margen - a.margen
 	},
 	resumen: (todos, l) => ({
 		unidades30: l.reduce((s, r) => s + r.vendidos30, 0),

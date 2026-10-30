@@ -192,7 +192,11 @@
 						</div>
 					</button>
 				{:else}
-					<div class="vacio">Nada con «{buscar}».</div>
+					<div class="vacio">
+						{buscar.trim()
+							? `Nada con «${buscar.trim()}».`
+							: 'Todavía no tenés productos para vender.'}
+					</div>
 				{/each}
 			</div>
 		</div>

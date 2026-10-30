@@ -30,7 +30,8 @@
 		NOMBRE_CANAL,
 		NOMBRE_ENVIO,
 		NOMBRE_PAGO,
-		PROXIMO
+		proximoDe,
+		textoEstado
 	} from '#lib/panel/pedidos/nombres.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 	import type { components } from '@mostrador/contrato/esquema';
@@ -174,16 +175,24 @@
 			});
 			return;
 		}
-		const a = PROXIMO[p.estado];
+		const a = proximoDe(p);
 		if (!a || !(await cambiar(p.numero, a))) return;
 		await invalidateAll();
 		const deshacer = async () => {
 			if (await cambiar(p.numero, p.estado)) await invalidateAll();
 		};
-		if (p.estado === 'Para preparar')
+		if (p.envio === 'retiro' && a === 'Entregado')
 			ui.toast({
 				k: 'ok',
-				title: `#${p.numero} preparado`,
+				title: `#${p.numero} retirado`,
+				desc: `${nombre} ya pasó a buscarlo`,
+				action: 'Deshacer',
+				onAction: deshacer
+			});
+		else if (p.estado === 'Para preparar')
+			ui.toast({
+				k: 'ok',
+				title: `#${p.numero} ${p.envio === 'retiro' ? 'listo para retirar' : 'preparado'}`,
 				desc: `Le avisamos a ${nombre}`,
 				action: 'Deshacer',
 				onAction: deshacer
@@ -198,7 +207,12 @@
 			});
 	}
 
-	const ACCION: Partial<Record<EstadoPedido, [string, typeof I.phPackageFill, string, string]>> = {
+	type Accion = [string, typeof I.phPackageFill, string, string];
+	/** El retiro no lleva etiqueta: lo listo se marca como retirado. */
+	const RETIRADO: Accion = ['Retirado', I.phCheckCircleFill, 'rgba(47,143,99,.14)', '#237550'];
+	const accionDe = (p: Fila) =>
+		p.envio === 'retiro' && p.estado === 'Listo para despachar' ? RETIRADO : ACCION[p.estado];
+	const ACCION: Partial<Record<EstadoPedido, Accion>> = {
 		'Sin pagar': ['Reclamar pago', I.phWhatsappLogoFill, '#E9F8EE', '#1F6F4A'],
 		'Para preparar': ['Preparar', I.phPackageFill, '#2A140C', '#fff'],
 		'Listo para despachar': ['Etiqueta', I.phPrinterFill, 'rgba(210,88,47,.14)', '#C24E25'],
@@ -284,12 +298,12 @@
 		if (n) untrack(() => abrir(n));
 	});
 	async function avanzarDesdeHoja(p: Detalle) {
-		const a = PROXIMO[p.estado];
+		const a = proximoDe(p);
 		if (!a || !(await cambiar(p.numero, a))) return;
 		await Promise.all([invalidateAll(), abrir(p.numero)]);
 		ui.toast({
 			k: 'ok',
-			title: `#${p.numero}: ${a.toLowerCase()}`,
+			title: `#${p.numero}: ${textoEstado({ estado: a, envio: p.envio }).toLowerCase()}`,
 			desc: `Le avisamos a ${p.comprador.nombre.split(' ')[0]}`,
 			action: 'Deshacer',
 			onAction: async () => {
@@ -400,7 +414,9 @@
 		<div class="c-txt">
 			<h1>Pedidos</h1>
 			<div class="c-s">
-				<span class="nw"><b>{n}</b> pedidos</span> · <span class="nw">{pesos(lista.suma)}</span> ·
+				<span class="nw"><b>{n}</b> {lista.total === 1 ? 'pedido' : 'pedidos'}</span> ·
+				<span class="nw">{pesos(lista.suma)}</span>
+				·
 				<span class="nw">ticket promedio {pesos(lista.total ? lista.suma / lista.total : 0)}</span>
 			</div>
 		</div>
@@ -411,7 +427,7 @@
 			onclick={() =>
 				ui.toast({
 					k: 'ok',
-					title: `Exportando ${n} pedidos`,
+					title: `Exportando ${n} ${lista.total === 1 ? 'pedido' : 'pedidos'}`,
 					desc: 'Con los filtros aplicados · en CSV para Excel'
 				})}><Icon icon={I.phDownloadSimpleBold} size={14} />Exportar {n}</a
 		>
@@ -630,10 +646,6 @@
 				onclick={tildarVisibles}
 			></button>
 			<span class="l-r">{rango}</span>
-			<span class="l-v"
-				><Icon icon={I.phLightningFill} size={13} style="color:#b0441d" />Lista virtual · {n} filas, rápida
-				igual</span
-			>
 		</div>
 		<div
 			class="scroll"
@@ -653,7 +665,7 @@
 							{@const paso = ETAPAS.findIndex((x) => x.estado === p.estado)}
 							{@const sel = seleccion.has(p.numero)}
 							{@const u = urgencia(p)}
-							{@const a = ACCION[p.estado]}
+							{@const a = accionDe(p)}
 							<div class="f-in" class:sel>
 								<button
 									type="button"
@@ -703,7 +715,9 @@
 														style:background={paso > 0 && j < paso ? e.c : 'var(--sf3)'}
 													></span>{/each}</span
 											>
-											<span class="p-e" style:color={e.c}><Icon icon={e.i} size={13} />{e.t}</span>
+											<span class="p-e" style:color={e.c}
+												><Icon icon={e.i} size={13} />{textoEstado(p)}</span
+											>
 										</span>
 									{/if}
 									{#if u}<span class="urg" style:background={u[1]} style:color={u[2]}>{u[0]}</span
@@ -1120,11 +1134,6 @@
 	.l-r {
 		flex: 1;
 	}
-	.l-v {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-	}
 	.tilde {
 		width: 20px;
 		height: 20px;
@@ -1450,9 +1459,6 @@
 		}
 		.etapa {
 			flex: 1 0 120px;
-		}
-		.l-v {
-			display: none;
 		}
 		.lote {
 			bottom: 92px;

@@ -14,7 +14,8 @@ export type ProductoFila = {
 	categoria: string;
 	precio: number;
 	costo: number;
-	margen: number;
+	/** null: sin costo cargado, el margen no se sabe. */
+	margen: number | null;
 	stock: number;
 	ventas: number[];
 	vendidos30: number;
@@ -130,7 +131,7 @@ export function configProductos(
 				tags: p.canales
 					.filter((k) => ICONO_CANAL[k])
 					.map((k) => ({ icon: ICONO_CANAL[k][0], col: ICONO_CANAL[k][1], t: ICONO_CANAL[k][2] })),
-				sub: `${p.sku ? `${p.sku} · ` : ''}${p.stock} en stock · margen ${p.margen}%`,
+				sub: `${p.sku ? `${p.sku} · ` : ''}${p.stock} en stock · ${p.margen === null ? 'margen sin dato' : `margen ${p.margen} %`}`,
 				spark: p.ventas.map((x) => ({
 					h: Math.max(3, (x / mx) * 22),
 					c: x ? '#D2582F' : 'var(--sf3)'

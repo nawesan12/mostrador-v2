@@ -572,7 +572,7 @@ export class DatosSandbox implements Datos {
 		const cambios = await this.cambiosPedidos();
 		const p = pedidosVivos(d, cambios, Date.now()).find((x) => x.numero === numero);
 		if (!p) return 'no-existe';
-		if (!transicionValida(p.estado, estado)) return 'no-se-puede';
+		if (!transicionValida(p.estado, estado, p.envio)) return 'no-se-puede';
 		await guardarCambio(this.db, this.sb.id, 'pedido', String(numero), {
 			...p.cambio,
 			estado,
@@ -1726,7 +1726,7 @@ export class DatosSandbox implements Datos {
 		const productos = await this.regProductos();
 		const vendidos = productos.reduce((s, p) => s + p.vendidos30, 0);
 		const margen = vendidos
-			? Math.round(productos.reduce((s, p) => s + p.margen * p.vendidos30, 0) / vendidos)
+			? Math.round(productos.reduce((s, p) => s + (p.margen ?? 0) * p.vendidos30, 0) / vendidos)
 			: 38;
 		return informesDemo(d, Date.now(), margen);
 	}
@@ -1954,7 +1954,7 @@ export class DatosSandbox implements Datos {
 		]);
 		const vendidos = productos.reduce((s, p) => s + p.vendidos30, 0);
 		const margen = vendidos
-			? Math.round(productos.reduce((s, p) => s + p.margen * p.vendidos30, 0) / vendidos)
+			? Math.round(productos.reduce((s, p) => s + (p.margen ?? 0) * p.vendidos30, 0) / vendidos)
 			: 38;
 		return finanzasDemo(
 			d,

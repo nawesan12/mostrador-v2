@@ -272,7 +272,11 @@
 							<span class="mas"><Icon icon={I.phPlusBold} size={13} /></span>
 						</button>
 					{:else}
-						<div class="vacio">Nada con «{buscar}».</div>
+						<div class="vacio">
+							{buscar.trim()
+								? `Nada con «${buscar.trim()}».`
+								: 'Todavía no tenés productos para vender.'}
+						</div>
 					{/each}
 				</div>
 			</section>

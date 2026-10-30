@@ -2,6 +2,7 @@
 import * as I from '#lib/icons.ts';
 import { cara } from '#lib/landing/formato.ts';
 import { pesos, pesosCortos } from '../formato.ts';
+import { linkWhatsapp } from '#lib/whatsapp.ts';
 import { rutaDe } from '../navegacion.ts';
 import type { ConfigLista, Opcion } from './tipos.ts';
 
@@ -70,8 +71,9 @@ const perdido = (c: Cliente) => c.seg === 'risk' || c.seg === 'sleep';
 
 /** Abre WhatsApp con el cliente (hasta conectar WhatsApp Cloud, la conversación se abre en el teléfono). */
 export function escribir(c: { telefono: string | null; nombre: string }) {
-	if (!c.telefono) return false;
-	window.open(`https://wa.me/${c.telefono.replace(/\D/g, '')}`, '_blank', 'noopener');
+	const link = c.telefono ? linkWhatsapp(c.telefono) : null;
+	if (!link) return false;
+	window.open(link, '_blank', 'noopener');
 	return true;
 }
 

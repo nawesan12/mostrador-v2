@@ -47,12 +47,17 @@ export type FiltrosPedidos = {
 	cuantos?: number;
 };
 
-/** Se puede avanzar una etapa, volver una (deshacer) o cancelar (y deshacer la cancelación). */
-export function transicionValida(de: EstadoPedido, a: EstadoPedido) {
+/**
+ * Se puede avanzar una etapa, volver una (deshacer) o cancelar (y deshacer la cancelación). El
+ * retiro en el local no pasa por "En camino" (como pedidos.TransicionValida de la API).
+ */
+export function transicionValida(de: EstadoPedido, a: EstadoPedido, envio = '') {
 	if (de === a) return false;
 	if (a === 'Cancelado') return de !== 'Entregado';
 	if (de === 'Cancelado') return a !== 'Entregado';
-	return Math.abs(CIRCUITO.indexOf(a) - CIRCUITO.indexOf(de)) === 1;
+	const c = envio === 'retiro' ? CIRCUITO.filter((e) => e !== 'En camino') : CIRCUITO;
+	if (!c.includes(a)) return false;
+	return Math.abs(c.indexOf(a) - c.indexOf(de)) === 1;
 }
 
 /** El pedido con lo que cambió el visitante. */
@@ -299,6 +304,7 @@ export function detalleDemo(
 		})),
 		subtotal,
 		costoEnvio: p.total - subtotal,
+		descuentos: [],
 		comprador: {
 			nombre: c.nombre,
 			foto: c.foto,

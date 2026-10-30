@@ -124,7 +124,10 @@
 		error = null;
 	});
 
-	const margen = $derived(precio ? Math.round(((precio - costo) / precio) * 100) : 0);
+	// Sin costo cargado el margen no se sabe (no es 100 %).
+	const margen = $derived(
+		precio && costo > 0 ? Math.round(((precio - costo) / precio) * 100) : null
+	);
 	const slug = $derived(
 		nombre
 			.normalize('NFD')
@@ -427,7 +430,8 @@
 				{/each}
 			</div>
 			<div class="margen">
-				Margen <b class:bajo={margen < 25}>{margen}%</b> · costo
+				Margen {#if margen === null}<b>sin dato</b>{:else}<b class:bajo={margen < 25}>{margen} %</b
+					>{/if} · costo
 				<input
 					class="costo"
 					inputmode="numeric"

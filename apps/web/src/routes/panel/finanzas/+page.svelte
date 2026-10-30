@@ -8,7 +8,7 @@
 	import { pesos } from '#lib/panel/formato.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 
-	/** Finanzas (design/PanelOperacion.dc.html, sFin): todo lo que entra y sale, conciliado. */
+	/** Finanzas (design/PanelOperacion.dc.html, sFin): todo lo que entra y sale. */
 	let { data } = $props();
 	const ui = getUi();
 	type M = (typeof data.movimientos)[number];
@@ -23,9 +23,11 @@
 		[`Gastos de ${k.mes}`, pesos(k.gastos), k.gastosDetalle, '#C24E25'],
 		[
 			'Ganancia estimada',
-			millones(k.ganancia),
-			k.margen === null ? 'según tus costos' : `margen ${k.margen}% en ${k.mes}`,
-			'#2F8F63'
+			k.ganancia === null ? 'Sin dato' : millones(k.ganancia),
+			k.ganancia === null || k.margen === null
+				? k.gananciaDetalle || 'Cargá el costo de tus productos'
+				: `margen ${k.margen} % en 30 días`,
+			k.ganancia === null ? 'var(--mu)' : '#2F8F63'
 		]
 	] as const);
 	const maxEntra = $derived(Math.max(1, ...data.flujo.map((f) => f.entra)));
@@ -72,7 +74,7 @@
 	<div class="cab" use:anim={{ t: 'rise' }}>
 		<div class="c-txt">
 			<h1>Finanzas</h1>
-			<div class="c-s">Todo lo que entra y sale, conciliado solo</div>
+			<div class="c-s">Todo lo que entra y sale</div>
 		</div>
 		<button type="button" class="transferir" disabled={enviando} onclick={transferir}
 			><Icon icon={I.phArrowUpRightBold} size={15} />Transferir a mi banco</button

@@ -179,6 +179,7 @@ export function finanzasDemo(
 			gastos,
 			gastosDetalle: gastoCampanas ? 'Envíos y campañas' : 'Envíos que pagó la tienda',
 			ganancia,
+			gananciaDetalle: '',
 			margen,
 			mes: diaAr(ahora).toLocaleDateString('es-AR', { month: 'long', timeZone: 'UTC' })
 		},
