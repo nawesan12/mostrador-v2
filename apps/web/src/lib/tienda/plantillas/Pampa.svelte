@@ -313,7 +313,9 @@
 					{
 						id: 'transferencia' as const,
 						t: 'Transferencia',
-						d: `${tienda.cobros.transferencia}% off · alias al confirmar`,
+						d: tienda.cobros.transferencia
+							? `${tienda.cobros.transferencia}% off · alias al confirmar`
+							: 'Alias al confirmar',
 						i: I.phBankBold
 					}
 				]
@@ -1569,7 +1571,8 @@
 									target="_blank"
 									rel="noopener"
 									style="color:var(--acento, #E6FF4D)">por WhatsApp</a
-								>{/if}. Lo preparamos apenas se acredite.
+								>{:else}&nbsp;respondiendo el mail del pedido{/if}. Lo preparamos apenas se
+							acredite.
 						</p>
 					</div>
 				{/if}

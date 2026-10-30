@@ -437,7 +437,9 @@
 					{
 						id: 'transferencia' as const,
 						t: 'Transferencia',
-						d: `${tienda.cobros.transferencia}% off · te mandamos el alias al confirmar`,
+						d: tienda.cobros.transferencia
+							? `${tienda.cobros.transferencia}% off · te mandamos el alias al confirmar`
+							: 'Te mandamos el alias al confirmar',
 						i: I.phBankFill,
 						c: '#14894B',
 						p: fmt(subtotal * (1 - tienda.cobros.transferencia / 100))
@@ -2467,7 +2469,8 @@
 											target="_blank"
 											rel="noopener"
 											style="color:var(--acento, #2F6BFF)">por WhatsApp</a
-										>{/if}. Lo preparamos apenas se&nbsp;acredite.</span
+										>{:else}&nbsp;respondiendo el mail del pedido{/if}. Lo preparamos apenas
+									se&nbsp;acredite.</span
 								>
 							</div>
 						{/if}
