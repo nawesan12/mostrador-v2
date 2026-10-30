@@ -65,7 +65,7 @@
 		align-items: center;
 		justify-content: center;
 		gap: 28px;
-		padding: 24px 16px;
+		padding: calc(24px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));
 	}
 	.marca {
 		display: flex;

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="es-AR">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<meta name="theme-color" content="#040b18" />
+		<link rel="icon" type="image/svg+xml" href="/correo.svg" />
+		<title>Sin conexión · Correo</title>
+		<style>
+			body {
+				margin: 0;
+				min-height: 100dvh;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				padding: 24px 16px;
+				box-sizing: border-box;
+				background:
+					radial-gradient(55% 65% at 10% 15%, oklch(0.38 0.13 255) 0%, transparent 62%),
+					radial-gradient(50% 55% at 90% 8%, oklch(0.4 0.1 325) 0%, transparent 62%),
+					linear-gradient(160deg, oklch(0.17 0.03 255), oklch(0.12 0.03 295));
+				color: oklch(0.96 0.007 255);
+				font:
+					16px/1.5 Geist,
+					ui-sans-serif,
+					system-ui,
+					sans-serif;
+			}
+			.p {
+				width: min(100%, 420px);
+				padding: 28px;
+				border-radius: 16px;
+				background: oklch(1 0 0 / 0.06);
+				backdrop-filter: blur(24px) saturate(1.5);
+				-webkit-backdrop-filter: blur(24px) saturate(1.5);
+				box-shadow:
+					inset 0 1px 0 oklch(1 0 0 / 0.14),
+					0 0 0 1px oklch(1 0 0 / 0.1);
+				text-align: center;
+			}
+			img {
+				width: 64px;
+				height: 64px;
+				border-radius: 14px;
+			}
+			h1 {
+				margin: 16px 0 6px;
+				font-size: 22px;
+				font-weight: 600;
+			}
+			p {
+				margin: 0 0 20px;
+				color: oklch(0.72 0.014 255);
+			}
+			button {
+				height: 48px;
+				padding: 0 22px;
+				border: 0;
+				border-radius: 999px;
+				background: oklch(0.58 0.18 252);
+				color: #fff;
+				font:
+					600 16px Geist,
+					ui-sans-serif,
+					system-ui,
+					sans-serif;
+				cursor: pointer;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="p">
+			<img src="/icono-192.png" alt="" />
+			<h1>No hay conexión</h1>
+			<p>El correo vuelve a cargar apenas tengas internet.</p>
+			<button onclick="location.reload()">Probar de nuevo</button>
+		</div>
+	</body>
+</html>

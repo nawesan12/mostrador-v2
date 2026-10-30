@@ -30,6 +30,23 @@
 	let citaVisible = $state(false);
 
 	const casilla = $derived(casillas.find((c) => c.cuenta === b.cuenta));
+	// La firma de la casilla desde la que sale: se agrega al final y cambia si se cambia la casilla.
+	let firma = '';
+	$effect(() => {
+		const cuenta = b.cuenta;
+		fetch(`/firma?cuenta=${encodeURIComponent(cuenta)}`)
+			.then((r) => (r.ok ? r.json() : { firma: '' }))
+			.then(({ firma: nueva }: { firma: string }) => {
+				const sep = '\n\n-- \n';
+				const sin =
+					firma && b.texto.endsWith(sep + firma)
+						? b.texto.slice(0, -(sep + firma).length)
+						: b.texto;
+				firma = nueva;
+				b.texto = nueva ? sin + sep + nueva : sin;
+			})
+			.catch(() => {});
+	});
 	const color = (cuenta: string) =>
 		COLORES[
 			Math.max(
@@ -824,6 +841,11 @@
 		}
 		.cab {
 			border-radius: 0;
+			height: calc(52px + env(safe-area-inset-top));
+			padding-top: env(safe-area-inset-top);
+		}
+		.pie {
+			padding-bottom: calc(16px + env(safe-area-inset-bottom));
 		}
 		.pie {
 			flex-wrap: wrap;

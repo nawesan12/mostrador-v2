@@ -9,6 +9,10 @@
 	import Lectura from '#lib/ui/Lectura.svelte';
 	import Lista from '#lib/ui/Lista.svelte';
 	import Marca from '#lib/ui/Marca.svelte';
+	import Bienvenida from '#lib/ui/Bienvenida.svelte';
+	import { activarAvisos, app } from '#lib/avisos.svelte.ts';
+	import { onMount } from 'svelte';
+	import { page } from '$app/state';
 
 	let { data } = $props();
 
@@ -88,6 +92,18 @@
 			data.casilla ?? data.casillas.find((c) => c.personal)?.cuenta ?? data.casillas[0]?.cuenta;
 		if (cuenta) abrirVentana({ cuenta });
 	}
+	// El atajo «Redactar» del ícono instalado (manifest: /?redactar=1).
+	onMount(() => {
+		if (page.url.searchParams.get('redactar') === '1') {
+			redactar();
+			goto(href({}), { replace: true, reset: false });
+		}
+	});
+	async function avisos() {
+		usuario = false;
+		if (await activarAvisos()) avisar('Avisos activados en este dispositivo');
+		else if (app.error) avisar(app.error);
+	}
 	async function enviado(programado: boolean) {
 		avisar(programado ? 'Programado: sale a la hora elegida' : 'Enviado');
 		await invalidate('correo:bandeja');
@@ -151,6 +167,7 @@
 				aria-label={tema === 'oscuro' ? 'Tema claro' : 'Tema oscuro'}
 				onclick={cambiarTema}><i class={tema === 'oscuro' ? 'icon-sun' : 'icon-moon'}></i></button
 			>
+			<a class="ic" href="/ajustes" aria-label="Ajustes"><i class="icon-settings"></i></a>
 			<span class="usuario-w">
 				<button
 					class="av"
@@ -161,6 +178,9 @@
 				{#if usuario}
 					<div class="pop vidrio">
 						<div class="pe">{data.yo.email}</div>
+						{#if app.permiso !== 'granted' && app.permiso !== 'no-soportado'}
+							<button onclick={avisos}><i class="icon-bell"></i>Activar avisos</button>
+						{/if}
 						<form method="POST" action="/salir">
 							<button><i class="icon-log-out"></i>Salir</button>
 						</form>
@@ -236,16 +256,23 @@
 	</div>
 
 	{#if aviso}<div class="toast" role="status">{aviso}</div>{/if}
+	<Bienvenida />
 </div>
 
 <style>
+	/* La app instalada dibuja debajo de la barra de estado (black-translucent): se respetan las
+	   zonas seguras del teléfono. */
 	.app {
 		height: 100dvh;
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
+		padding-top: env(safe-area-inset-top);
+		padding-left: env(safe-area-inset-left);
+		padding-right: env(safe-area-inset-right);
 	}
 	.barra {
+		position: relative;
 		height: 72px;
 		flex: none;
 		display: flex;
@@ -453,7 +480,7 @@
 	.toast {
 		position: fixed;
 		left: 50%;
-		bottom: 28px;
+		bottom: calc(28px + env(safe-area-inset-bottom));
 		transform: translateX(-50%);
 		z-index: 40;
 		padding: 12px 18px;
@@ -524,7 +551,8 @@
 			transition: transform 0.2s ease;
 			background-color: var(--side);
 			background-image: var(--tex);
-			padding-top: 16px;
+			padding-top: calc(16px + env(safe-area-inset-top));
+			padding-bottom: env(safe-area-inset-bottom);
 			max-width: 86vw;
 		}
 		.lado.abierto {
@@ -558,7 +586,7 @@
 		.fab {
 			position: fixed;
 			right: 20px;
-			bottom: 24px;
+			bottom: calc(24px + env(safe-area-inset-bottom));
 			z-index: 20;
 			display: inline-flex;
 			align-items: center;

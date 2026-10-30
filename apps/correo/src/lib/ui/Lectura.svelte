@@ -667,7 +667,7 @@ body{padding:20px 22px}a{color:#1d5fd1}img{max-width:100%;height:auto}table{max-
 			display: inline-flex;
 		}
 		.cont {
-			padding: 18px 16px 24px;
+			padding: 18px 16px calc(24px + env(safe-area-inset-bottom));
 		}
 		h1 {
 			font-size: 22px;
