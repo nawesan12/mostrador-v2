@@ -90,13 +90,17 @@
 		['web', 'Otro']
 	] as const;
 	let canal = $state<(typeof CANALES)[number][0]>('wa');
-	const ENVIOS = [
-		['retiro', 'Retira', 0],
-		['andreani', 'Andreani', 4200],
-		['oca', 'OCA', 3900],
-		['moto', 'Moto', 2500]
-	] as const;
-	let envio = $state<(typeof ENVIOS)[number][0]>('retiro');
+	// Las formas de entrega que la tienda configuró, con su costo real (la moto, el de Envíos y
+	// retiro; Correo Argentino se cotiza aparte, así que no suma nada acá).
+	type Envio = 'retiro' | 'moto' | 'correo';
+	const ENVIOS = $derived([
+		['retiro', 'Retira', 0] as [Envio, string, number],
+		...(data.entregas.moto
+			? [['moto', 'Moto', data.entregas.motoCosto] as [Envio, string, number]]
+			: []),
+		...(data.entregas.correo ? [['correo', 'Correo', 0] as [Envio, string, number]] : [])
+	]);
+	let envio = $state<Envio>('retiro');
 	const COBROS = [
 		['link', 'Mandar link de pago'],
 		['pagado', 'Ya está pagado']
@@ -112,7 +116,7 @@
 	let nota = $state('');
 
 	const subtotal = $derived(renglones.reduce((s, x) => s + x.p.precio * x.q, 0));
-	const costoEnvio = $derived(ENVIOS.find((e) => e[0] === envio)![2]);
+	const costoEnvio = $derived(ENVIOS.find((e) => e[0] === envio)?.[2] ?? 0);
 	let creando = $state(false);
 
 	async function crear() {
