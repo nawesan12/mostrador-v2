@@ -15,6 +15,18 @@
 	const e = $derived(data.estado);
 	const caidos = $derived(e.componentes.filter((c) => c.ok === false));
 	const sinDatos = $derived(e.componentes.every((c) => c.ok === null));
+	// Días con chequeos: al principio son menos que el rango elegido, y se dice así.
+	const medidos = $derived(
+		Math.max(0, ...e.componentes.map((c) => c.barras.filter((b) => b.estado !== 'sin').length))
+	);
+	const periodo = $derived(
+		medidos < data.dias
+			? `en ${medidos === 1 ? 'el día' : `los ${medidos} días`} que llevamos midiendo`
+			: `en los últimos ${data.dias} días`
+	);
+	const conFallas = $derived(
+		e.componentes.some((c) => c.barras.some((b) => b.estado === 'falla' || b.estado === 'caida'))
+	);
 	const abiertos = $derived(e.incidentes.filter((i) => i.fin === null && i.tipo === 'incidente'));
 
 	const hace = (ms: number | null) => {
@@ -92,9 +104,8 @@
 					{/if}
 				</div>
 				<div class="g-d">
-					Actualizado {hace(e.actualizado)} · {porcentaje(e.disponibilidad)} de disponibilidad en los
-					últimos
-					{data.dias} días
+					Actualizado {hace(e.actualizado)} · {porcentaje(e.disponibilidad)} de disponibilidad
+					{periodo}
 				</div>
 			</div>
 			<nav class="rango" aria-label="Período">
@@ -165,8 +176,16 @@
 					<div class="inc vacio">
 						<Icon icon={I.phCheckCircleFill} size={22} style="color:#237550;flex:none" />
 						<div>
-							<div class="i-t">Sin incidentes en los últimos 90 días</div>
-							<p>Si algo falla, aparece acá con lo que pasó y cuándo se resolvió.</p>
+							{#if conFallas}
+								<div class="i-t">Sin incidentes informados</div>
+								<p>
+									Hubo chequeos fallidos aislados, marcados en las barras. Si algo se cae, aparece
+									acá con lo que pasó y cuándo se&nbsp;resolvió.
+								</p>
+							{:else}
+								<div class="i-t">Sin incidentes {periodo}</div>
+								<p>Si algo falla, aparece acá con lo que pasó y cuándo se&nbsp;resolvió.</p>
+							{/if}
 						</div>
 					</div>
 				{/each}
