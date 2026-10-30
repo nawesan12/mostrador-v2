@@ -232,7 +232,7 @@
 				{:else if paso === 4}
 					<PasoTienda />
 				{:else if paso === 5}
-					<PasoCobros />
+					<PasoCobros cobros={data.cobros} />
 				{:else if paso === 6}
 					<PasoHornero />
 				{:else}

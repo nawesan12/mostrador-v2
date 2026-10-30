@@ -8,6 +8,7 @@ import { COOKIE_ORIGEN, leerOrigen } from '#lib/server/origen.ts';
 import { RUBROS } from '#lib/server/sandbox/rubros.ts';
 import { esProveedor, irAlProveedor } from '#lib/server/auth/social.ts';
 import { fapiDe } from '#lib/clerk.ts';
+import { cbuValido } from '#lib/panel/cbu.ts';
 import { COOKIE, crear, DatosSandbox, dbSandbox, VIDA_MS } from '#lib/server/sandbox/sandbox.ts';
 import { descubrir } from '#lib/server/importar/fuentes.ts';
 import type { Actions, PageServerLoad } from './$types';
@@ -55,9 +56,26 @@ export const load: PageServerLoad = async ({ locals, url, cookies }) => {
 						.catch(() => false)
 				]).then(([mp, ml]) => ({ mp, ml }))
 			: { mp: false, ml: false };
+	// Paso 6, Cobros y envíos: lo que ya está guardado, para editarlo ahí mismo.
+	const cobros =
+		!usaSandbox() && locals.token
+			? await Promise.all([
+					datosDe(locals)
+						.configuracion()
+						.then((c) => c.negocio)
+						.catch(() => null),
+					datosDe(locals)
+						.entregas()
+						.catch(() => null),
+					datosDe(locals)
+						.arca()
+						.catch(() => null)
+				]).then(([negocio, entregas, arca]) => ({ negocio, entregas, arca }))
+			: null;
 	return {
 		demo: usaSandbox(),
 		conectadas,
+		cobros,
 		// Google y Apple van por Clerk desde el navegador, como en /ingresar.
 		clerk: usaSandbox() ? null : fapiDe(env.CLERK_PUBLISHABLE_KEY),
 		conSesion: !!locals.token,
@@ -124,7 +142,61 @@ async function arrancarImportacion(
 		: '/panel/productos?importar=1';
 }
 
+const campo = (f: FormData, k: string, max: number) =>
+	String(f.get(k) ?? '')
+		.trim()
+		.slice(0, max);
+
 export const actions: Actions = {
+	/** Paso 6: alias, CBU y titular para cobrar por transferencia (todo opcional). */
+	transferencia: async (event) => {
+		if (usaSandbox()) return { guardado: 'transferencia' as const };
+		const f = await event.request.formData();
+		const alias = campo(f, 'alias', 20);
+		const cbu = campo(f, 'cbu', 30).replace(/\D/g, '');
+		const titular = campo(f, 'titular', 80);
+		if (alias && !/^[a-zA-Z0-9.-]{6,20}$/.test(alias))
+			return fail(400, {
+				donde: 'transferencia',
+				error: 'El alias tiene de 6 a 20 letras, números o puntos.'
+			});
+		if (cbu && !cbuValido(cbu))
+			return fail(400, { donde: 'transferencia', error: 'Revisá el CBU o CVU: son 22 números.' });
+		const datos = datosDe(event.locals);
+		const actual = (await datos.configuracion()).negocio;
+		await datos.guardarNegocio({ ...actual, alias, cbu, titular });
+		return { guardado: 'transferencia' as const };
+	},
+	/** Paso 6: retiro en el local y envío en moto (todo opcional). */
+	entregas: async (event) => {
+		if (usaSandbox()) return { guardado: 'entregas' as const };
+		const f = await event.request.formData();
+		const moto = f.get('moto') === 'on';
+		const e = {
+			retiro: f.get('retiro') === 'on',
+			retiroDireccion: campo(f, 'retiroDireccion', 160),
+			retiroHorario: campo(f, 'retiroHorario', 80),
+			moto,
+			motoCosto: Math.max(
+				0,
+				Math.min(1_000_000, Number(campo(f, 'motoCosto', 9).replace(/\D/g, '')) || 0)
+			),
+			motoZona: campo(f, 'motoZona', 160),
+			motoDemora: campo(f, 'motoDemora', 60)
+		};
+		if (moto && !e.motoZona)
+			return fail(400, {
+				donde: 'entregas',
+				error: 'Contanos adónde llega la moto (barrios o localidades).'
+			});
+		try {
+			await datosDe(event.locals).guardarEntregas(e);
+		} catch (x) {
+			const m = x instanceof Error ? x.message : '';
+			return fail(400, { donde: 'entregas', error: m || 'No se pudo guardar. Probá de nuevo.' });
+		}
+		return { guardado: 'entregas' as const };
+	},
 	/** "Ir a mi panel": en la demo crea el sandbox con lo elegido; con la API lo guarda. */
 	terminar: async (event) => {
 		if (!usaSandbox()) {
