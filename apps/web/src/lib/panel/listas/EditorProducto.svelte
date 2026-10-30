@@ -246,7 +246,10 @@
 					descripcion = anterior;
 				}
 			});
-		}
+		} else
+			error =
+				((await r.json().catch(() => null)) as { error?: string } | null)?.error ??
+				'Tincho no pudo escribir ahora. Probá de nuevo en un rato.';
 	}
 
 	async function guardar() {

@@ -814,7 +814,7 @@
 						<div
 							style="position:relative;margin-top:50px;font-size:44px;line-height:1.35;color:#BDB2A8"
 						>
-							Copias restaurables de 30 días y verificación en dos pasos, en todos los&nbsp;planes.
+							Copia diaria de tus datos y aviso por mail de cada ingreso, en todos los&nbsp;planes.
 						</div>
 						<img
 							src="/hornero/seguridad.png"

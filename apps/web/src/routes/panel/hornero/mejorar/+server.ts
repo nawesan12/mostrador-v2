@@ -12,9 +12,15 @@ const Pedido = v.object({
 	descripcion: v.pipe(v.string(), v.maxLength(4000))
 });
 
-/** Texto armado sin modelo (pruebas, o pasado el tope de la demo). */
+/**
+ * Texto armado sin modelo, sólo para la demo y las pruebas: repite lo que hay, sin agregar promesas
+ * (envíos, cambios) que la tienda no dijo.
+ */
 const simulado = (nombre: string, d: string) =>
-	`${nombre}. ${d.trim() ? d.trim().replace(/\.?$/, '. ') : ''}Calidad para todos los días, con envío a todo el país y cambios sin vueltas.`;
+	d.trim() ? `${nombre}. ${d.trim().replace(/\.?$/, '.')}` : `${nombre}.`;
+/** Con una tienda real, si el modelo no está o falla, se avisa y la descripción queda como estaba. */
+const sinTincho = () =>
+	json({ error: 'Tincho no pudo escribir ahora. Probá de nuevo en un rato.' }, { status: 503 });
 
 /** "✦ Mejorar con Tincho": reescribe la descripción de un producto (cuenta en el mismo cupo que la charla). */
 export const POST: RequestHandler = async ({ locals, request }) => {
@@ -27,7 +33,8 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 		const n = await sumarUsoHornero(dbSandbox(env.SANDBOX), locals.sandbox.id, diaAr());
 		if (n > POR_VISITANTE || (conModelo && !(await cupoDemo()))) conModelo = false;
 	}
-	if (!conModelo || !env.AI) return json({ texto: simulado(nombre, descripcion) });
+	if (!conModelo || !env.AI)
+		return usaSandbox() ? json({ texto: simulado(nombre, descripcion) }) : sinTincho();
 	try {
 		const res = (await env.AI.run(
 			MODELO as Parameters<Ai['run']>[0],
@@ -48,9 +55,9 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 			} as never
 		)) as { response?: string; choices?: { message?: { content?: string } }[] };
 		const texto = (res.response ?? res.choices?.[0]?.message?.content ?? '').trim();
-		return json({ texto: texto || simulado(nombre, descripcion) });
+		return texto ? json({ texto }) : sinTincho();
 	} catch (e) {
 		console.error('mejorar', e);
-		return json({ texto: simulado(nombre, descripcion) });
+		return sinTincho();
 	}
 };

@@ -322,16 +322,10 @@ export const CMP = [
 	['Acciones masivas', 'Desde Pro', 'Desde Impulso', 1, 2],
 	['Usuarios con permisos', 'Desde Pro', 'Desde Escala', 1, 2],
 	['Migración asistida', 'Gratis en todos', 'En Evolución (a consultar)', 1, 2],
-	[
-		'Asistente de IA en WhatsApp e Instagram',
-		'En todos (según plan)',
-		'No figura en el plan',
-		1,
-		0
-	],
+	['Asistente de IA en tu panel', 'En todos (según plan)', 'No figura en el plan', 1, 0],
 	['Factura de ARCA automática', 'Desde Emprende', 'No figura en el plan', 1, 0],
 	['Punto de venta en el local', 'Desde Pro', 'No figura en el plan', 1, 0],
-	['Verificación en dos pasos y copias restaurables', 'En todos', 'No figura en el plan', 1, 0]
+	['Copia diaria de tus datos y aviso de cada ingreso', 'En todos', 'No figura en el plan', 1, 0]
 ] as const;
 
 export const CHAT = [
