@@ -747,6 +747,9 @@ export const LEGALES: Legal[] = [
 				cuerpo: [
 					{
 						p: 'Usamos proveedores para alojamiento en la nube, envío de emails y mensajes de WhatsApp, y procesamiento con IA sin retención. Publicamos la lista vigente y te avisamos con 30 días de anticipación si sumamos uno nuevo; podés oponerte por motivos fundados.'
+					},
+					{
+						p: 'Para mostrarte desde dónde está abierta cada sesión de tu cuenta, la ubicación aproximada sale de la dirección IP con la base IP Geolocation by DB-IP (db-ip.com, licencia CC BY 4.0), que corre en nuestros servidores: tu IP no se manda a nadie.'
 					}
 				]
 			},
