@@ -4,7 +4,7 @@
 	import Seo from '#lib/components/Seo.svelte';
 	import * as I from '#lib/icons.ts';
 	import { anim } from '#lib/panel/anim.ts';
-	import { pesos } from '#lib/panel/formato.ts';
+	import { pesos, plural } from '#lib/panel/formato.ts';
 	import { aumentar, type Redondeo } from '#lib/panel/precios.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 
@@ -36,7 +36,6 @@
 		})
 	);
 	let enviando = $state(false);
-	const cuantos = $derived(data.productos.toLocaleString('es-AR'));
 
 	async function aplicar(programar: boolean) {
 		if (enviando) return;
@@ -64,7 +63,7 @@
 		ui.toast({
 			k: 'ok',
 			title: `Precios actualizados +${pct}%`,
-			desc: `${productos.toLocaleString('es-AR')} productos en todos tus canales`,
+			desc: `${plural(productos, 'producto', 'productos')} en todos tus canales`,
 			action: 'Deshacer',
 			onAction: async () => {
 				await fetch('/panel/listas-de-precio/aumento', { method: 'DELETE' });
@@ -177,7 +176,8 @@
 				type="button"
 				class="aplicar"
 				disabled={!pct || enviando}
-				onclick={() => aplicar(false)}>Aplicar a {cuantos} productos</button
+				onclick={() => aplicar(false)}
+				>Aplicar a {plural(data.productos, 'producto', 'productos')}</button
 			>
 		</div>
 	</div>

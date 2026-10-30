@@ -546,6 +546,8 @@ export type RegInventario = {
 	min: number;
 	porDia: number;
 	cover: number;
+	/** Unidades vendidas en 30 días: con menos de 3 no se proyecta cuánto dura el stock. */
+	vendidos30: number;
 	st: 'out' | 'crit' | 'low' | 'ok' | 'over';
 	fast: boolean;
 	loc: string;
@@ -595,6 +597,7 @@ export function registrosInventario(productos: RegProducto[]): RegInventario[] {
 			min,
 			porDia,
 			cover: Math.floor(p.stock / porDia),
+			vendidos30: p.vendidos30,
 			st,
 			fast: porDia > 2,
 			loc: UBICACIONES[Math.floor(r * UBICACIONES.length)],

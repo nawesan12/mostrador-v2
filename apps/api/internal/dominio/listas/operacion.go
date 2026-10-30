@@ -49,7 +49,7 @@ func Inventario(productos []Registro) []Registro {
 		}
 		regs = append(regs, Registro{
 			"id": p["id"], "nombre": p["nombre"], "foto": p["foto"], "sku": p["sku"], "stock": stock, "min": minimo, "variantes": porVariante,
-			"porDia": porDia, "cover": int(float64(stock) / porDia), "st": st, "fast": porDia > 2, "loc": "Local",
+			"porDia": porDia, "cover": int(float64(stock) / porDia), "vendidos30": numero(p["vendidos30"]), "st": st, "fast": porDia > 2, "loc": "Local",
 			"proveedor": "Sin proveedor", "costo": p["costo"], "publicadoEnMl": enMl && p["publicado"] == true,
 		})
 	}

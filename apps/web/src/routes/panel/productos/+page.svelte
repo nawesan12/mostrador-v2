@@ -273,7 +273,7 @@
 			k: 'ok',
 			title: `${creados} ${creados === 1 ? 'producto importado' : 'productos importados'}`,
 			desc: errores.length
-				? `${errores.length} filas sin nombre quedaron afuera.`
+				? `${errores.length === 1 ? 'Una fila sin nombre quedó' : `${errores.length} filas sin nombre quedaron`} afuera.`
 				: 'Ya están publicados en tu tienda.'
 		});
 	}

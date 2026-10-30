@@ -84,6 +84,10 @@
 							<span><b>{f.t}</b><span class="d">{f.d}</span></span>
 							{#each CANALES_AVISO as c (c)}
 								<span class="celda"
+									><span class="c-mob" aria-hidden="true"
+										><Icon icon={CANAL[c][0]} size={15} style="color:{CANAL[c][1]}" />{CANAL[
+											c
+										][2]}</span
 									><Interruptor
 										checked={activo(prefs.matriz, f.id, c)}
 										label="{f.t} por {CANAL[c][2]}"
@@ -223,6 +227,45 @@
 	.celda {
 		display: grid;
 		place-items: center;
+	}
+	.c-mob {
+		display: none;
+	}
+	/* Celular: cada aviso es una tarjeta con sus cuatro canales debajo, con nombre e ícono (sin
+	   tabla ancha ni scroll escondido). */
+	@media (max-width: 760px) {
+		.desliza {
+			overflow: visible;
+		}
+		.tabla {
+			min-width: 0;
+		}
+		.cab-t {
+			display: none;
+		}
+		.grupo {
+			padding: 14px 16px 6px;
+		}
+		.fila {
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+			row-gap: 10px;
+			padding: 12px 16px 14px;
+		}
+		.fila > span:first-child {
+			grid-column: 1 / -1;
+		}
+		.celda {
+			gap: 6px;
+		}
+		.c-mob {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 2px;
+			font-size: 11.5px;
+			font-weight: 600;
+			color: var(--mu);
+		}
 	}
 	.dos {
 		display: grid;

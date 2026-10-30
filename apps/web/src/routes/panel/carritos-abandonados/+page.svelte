@@ -96,7 +96,7 @@
 			<div class="t-t">Recuperado este mes</div>
 			<div class="t-v">{pesos(k.recuperado)}</div>
 			<div class="barra"><div style:width="{k.tasa}%"></div></div>
-			<div class="t-s">{k.tasa}% de recuperación · el promedio es 12%</div>
+			<div class="t-s">{k.tasa}% de recuperación</div>
 		</div>
 		<div class="tarjeta autos">
 			<div class="a-t">Automático</div>

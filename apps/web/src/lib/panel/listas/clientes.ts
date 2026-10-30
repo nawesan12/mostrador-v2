@@ -1,7 +1,7 @@
 /** Clientes en el motor de listas (handoff PanelListas `CFG.Clientes`). */
 import * as I from '#lib/icons.ts';
 import { cara } from '#lib/landing/formato.ts';
-import { pesos, pesosCortos } from '../formato.ts';
+import { pesos, pesosCortos, plural } from '../formato.ts';
 import { linkWhatsapp } from '#lib/whatsapp.ts';
 import { rutaDe } from '../navegacion.ts';
 import type { ConfigLista, Opcion } from './tipos.ts';
@@ -87,7 +87,7 @@ export function configClientes(
 		unidad: 'clientes',
 		buscar: 'Nombre, ciudad, teléfono o etiqueta',
 		kpi: (l) =>
-			`${l.total.toLocaleString('es-AR')} clientes · ${pesosCortos(l.resumen.gastado ?? 0)} en compras`,
+			`${plural(l.total, 'cliente', 'clientes')} · ${pesosCortos(l.resumen.gastado ?? 0)} en compras`,
 		primario: { t: 'Nuevo cliente', icon: I.phUserPlusFill, hacer: abrirAlta },
 		tip: (l) => {
 			const n = l.resumen.enRiesgo ?? 0;

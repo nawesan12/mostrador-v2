@@ -13,12 +13,19 @@ export type ItemInventario = {
 	min: number;
 	porDia: number;
 	cover: number;
+	vendidos30?: number;
 	st: 'out' | 'crit' | 'low' | 'ok' | 'over';
 	fast: boolean;
 	loc: string;
 	proveedor: string;
 	costo: number;
 };
+
+/**
+ * Cuánto dura el stock sólo se calcula con ventas que lo justifiquen (3 unidades o más en 30
+ * días); si no, "Alcanza para 500 días" sale de un ritmo inventado.
+ */
+export const proyecta = (r: Pick<ItemInventario, 'vendidos30'>) => (r.vendidos30 ?? 3) >= 3;
 
 export const COLOR_ST = {
 	out: '#B83A2E',
@@ -112,7 +119,14 @@ export function configInventario(
 				t: r.nombre,
 				sub: `${r.sku ? `${r.sku} · ` : ''}${r.loc} · ${r.proveedor}`,
 				medidor: { w: Math.min(100, (r.stock / tope) * 100), c, marca: (r.min / tope) * 100 },
-				vL: r.stock === 0 ? 'Agotado' : `Alcanza para ${r.cover} ${r.cover === 1 ? 'día' : 'días'}`,
+				vL:
+					r.stock === 0
+						? 'Agotado'
+						: !proyecta(r)
+							? (r.vendidos30 ?? 0) === 0
+								? 'Sin ventas en 30 días'
+								: 'Pocas ventas para proyectar'
+							: `Alcanza para ${r.cover} ${r.cover === 1 ? 'día' : 'días'}`,
 				vC: c,
 				vI: r.st === 'out' || r.st === 'crit' ? I.phWarningFill : undefined,
 				v: `${r.stock} u.`,

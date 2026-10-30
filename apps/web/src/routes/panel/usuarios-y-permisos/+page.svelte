@@ -182,6 +182,7 @@
 						{#each ROLES as r (r)}
 							{@const on = p.roles[r]}
 							<span class="celda">
+								<span class="c-mob" aria-hidden="true">{NOMBRE_ROL[r]}</span>
 								<button
 									type="button"
 									class:on
@@ -489,6 +490,59 @@
 	}
 	.celda button.fijo {
 		cursor: not-allowed;
+	}
+	.c-mob {
+		display: none;
+	}
+	/* Celular: el rol de cada persona ocupa su propia fila con los cuatro a la vista (antes se
+	   cortaba en "Admin" con un scroll escondido). */
+	@media (max-width: 760px) {
+		.roles {
+			flex: 1 1 100%;
+			order: 5;
+			display: grid;
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+			overflow: visible;
+		}
+		.roles button {
+			min-height: 40px;
+			padding: 6px 4px;
+		}
+	}
+	/* Celular: cada permiso es una tarjeta con los cuatro roles debajo, cada uno con su nombre
+	   (sin tabla ancha ni scroll escondido). */
+	@media (max-width: 760px) {
+		.desliza {
+			overflow: visible;
+		}
+		.tabla {
+			min-width: 0;
+		}
+		.cab-t {
+			display: none;
+		}
+		.fila {
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+			row-gap: 10px;
+			padding: 12px 16px 14px;
+		}
+		.fila > span:first-child {
+			grid-column: 1 / -1;
+		}
+		.celda {
+			gap: 4px;
+		}
+		.c-mob {
+			display: block;
+			font-size: 11.5px;
+			font-weight: 600;
+			color: var(--mu);
+		}
+		.celda button {
+			width: 44px;
+			height: 44px;
+			border-radius: 12px;
+		}
 	}
 	.doble {
 		display: flex;
