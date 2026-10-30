@@ -15,6 +15,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/geoip"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
@@ -27,7 +28,6 @@ var (
 	ErrRepetido    = errors.New("ya está en el equipo")
 	ErrNoSePuede   = errors.New("no se puede")
 	ErrInvalido    = errors.New("inválido")
-	seguridadDef   = map[string]bool{"dobleFactor": true, "otroPais": true, "alertas": true, "inactivas": false}
 	avisosDef      = map[string]bool{"venta": true, "chats": true, "stock": true, "diario": true, "ideas": true, "novedades": false}
 	planes         = []string{"gratis", "emprende", "pro", "negocio"}
 	contactoValido = regexp.MustCompile(`^([^\s@]+@[^\s@]+\.[^\s@]+|\+?[\d\s-]{8,20})$`)
@@ -87,11 +87,19 @@ type Miembro struct {
 	DobleFactor bool       `json:"dobleFactor"`
 }
 
+// Sesion es una sesión vigente de la persona que mira (components/schemas/Configuracion.sesiones).
 type Sesion struct {
-	ID     string    `json:"id"`
-	Tipo   string    `json:"tipo"`
-	Nombre string    `json:"nombre"`
-	Donde  string    `json:"donde"`
+	ID string `json:"id"`
+	// Tipo: compu, celu o tablet (el ícono).
+	Tipo string `json:"tipo"`
+	// Nombre: navegador y sistema («Chrome en Mac»).
+	Nombre string `json:"nombre"`
+	// Ubicacion: «Ciudad, Provincia» o el país, según la IP. Vacía si no se sabe.
+	Ubicacion string `json:"ubicacion"`
+	// IP abreviada (vacía si no hay).
+	IP string `json:"ip"`
+	// Creada: cuándo se abrió; Cuando: la última vez que se usó (se anota como mucho una vez por hora).
+	Creada time.Time `json:"creada"`
 	Cuando time.Time `json:"cuando"`
 	Actual bool      `json:"actual"`
 }
@@ -110,47 +118,55 @@ func conDefecto(def, v map[string]bool) map[string]bool {
 	return out
 }
 
-// dispositivo: un nombre legible a partir del navegador.
-func dispositivo(agente string) (string, string) {
-	a := strings.ToLower(agente)
-	tipo := "compu"
-	if strings.Contains(a, "iphone") || strings.Contains(a, "android") || strings.Contains(a, "mobile") {
-		tipo = "celu"
+// sesiones: todas las vigentes de la persona, la actual primero. Con «Cerrar sesiones inactivas»
+// prendido no aparecen las que ya no valen (cuentas.Sesion las borra al próximo uso).
+func sesiones(ctx context.Context, t pgx.Tx, geo geoip.Ubicador, q Quien) ([]Sesion, error) {
+	out := []Sesion{}
+	filas, err := t.Query(ctx, `SELECT left(s.token_hash, 16), coalesce(s.agente, ''), coalesce(host(s.ip), ''), s.creada_en, s.visto_en
+		FROM auth.sesiones s JOIN auth.usuarios u ON u.id = s.usuario_id
+		WHERE s.usuario_id::text = $1 AND s.vence_en > now()
+			AND NOT (coalesce((u.seguridad->>'inactivas')::boolean, false) AND s.visto_en < now() - $2::interval)
+		ORDER BY s.visto_en DESC`, q.UsuarioID, cuentas.Inactividad.String())
+	if err != nil {
+		return nil, err
 	}
-	nav := "Navegador"
-	switch {
-	case strings.Contains(a, "edg/"):
-		nav = "Edge"
-	case strings.Contains(a, "chrome"):
-		nav = "Chrome"
-	case strings.Contains(a, "firefox"):
-		nav = "Firefox"
-	case strings.Contains(a, "safari"):
-		nav = "Safari"
+	defer filas.Close()
+	for filas.Next() {
+		var s Sesion
+		var agente, ip string
+		if err := filas.Scan(&s.ID, &agente, &ip, &s.Creada, &s.Cuando); err != nil {
+			return nil, err
+		}
+		a := cuentas.Dispositivo(agente)
+		s.Tipo, s.Nombre, s.IP, s.Actual = a.Tipo, a.Nombre(), cuentas.IPCorta(ip), s.ID == q.SesionID
+		if geo != nil {
+			s.Ubicacion = geo.Ubicar(ip)
+		}
+		out = append(out, s)
 	}
-	so := ""
-	switch {
-	case strings.Contains(a, "iphone"):
-		so = " en iPhone"
-	case strings.Contains(a, "android"):
-		so = " en Android"
-	case strings.Contains(a, "mac os"):
-		so = " en Mac"
-	case strings.Contains(a, "windows"):
-		so = " en Windows"
+	if err := filas.Err(); err != nil {
+		return nil, err
 	}
-	return tipo, nav + so
+	slices.SortStableFunc(out, func(a, b Sesion) int {
+		switch {
+		case a.Actual == b.Actual:
+			return 0
+		case a.Actual:
+			return -1
+		}
+		return 1
+	})
+	return out, nil
 }
 
-// Leer arma toda la configuración.
-func Leer(ctx context.Context, pool tx, tiendaID string, q Quien, ahora time.Time) (map[string]any, error) {
+// Leer arma toda la configuración. geo ubica las sesiones (nil: sin lugar).
+func Leer(ctx context.Context, pool tx, geo geoip.Ubicador, tiendaID string, q Quien, ahora time.Time) (map[string]any, error) {
 	var res map[string]any
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
 		var nombre, plan, ciclo string
 		var negocio Negocio
 		var prefs struct {
-			Seguridad map[string]bool `json:"seguridad"`
-			Avisos    map[string]bool `json:"avisos"`
+			Avisos map[string]bool `json:"avisos"`
 		}
 		var creada time.Time
 		if err := t.QueryRow(ctx, `SELECT nombre, negocio, preferencias, plan, plan_ciclo, creada_en FROM tiendas WHERE id = $1`, tiendaID).
@@ -192,36 +208,26 @@ func Leer(ctx context.Context, pool tx, tiendaID string, q Quien, ahora time.Tim
 		if err := inv.Err(); err != nil {
 			return err
 		}
-		sesiones := []Sesion{}
-		ss, err := t.Query(ctx, `SELECT left(token_hash, 16), coalesce(agente, ''), visto_en FROM auth.sesiones
-			WHERE usuario_id::text = $1 AND vence_en > now() ORDER BY visto_en DESC LIMIT 20`, q.UsuarioID)
-		if err != nil {
+		var seguridad map[string]bool
+		if err := t.QueryRow(ctx, `SELECT seguridad FROM auth.usuarios WHERE id::text = $1`, q.UsuarioID).Scan(&seguridad); err != nil &&
+			!errors.Is(err, pgx.ErrNoRows) {
 			return err
 		}
-		for ss.Next() {
-			var s Sesion
-			var agente string
-			if err := ss.Scan(&s.ID, &agente, &s.Cuando); err != nil {
-				return err
-			}
-			s.Tipo, s.Nombre = dispositivo(agente)
-			s.Donde, s.Actual = "Argentina", s.ID == q.SesionID
-			sesiones = append(sesiones, s)
-		}
-		if err := ss.Err(); err != nil {
+		ses, err := sesiones(ctx, t, geo, q)
+		if err != nil {
 			return err
 		}
 		prueba := creada.Add(14 * 24 * time.Hour)
 		res = map[string]any{
 			"negocio":   negocio,
 			"equipo":    equipo,
-			"seguridad": conDefecto(seguridadDef, prefs.Seguridad),
-			"sesiones":  sesiones,
+			"seguridad": conDefecto(cuentas.SeguridadDef, seguridad),
+			"sesiones":  ses,
 			"avisos":    conDefecto(avisosDef, prefs.Avisos),
 			"plan": map[string]any{"actual": plan, "ciclo": ciclo, "enPrueba": ahora.Before(prueba),
 				"diasPrueba": max(0, int(prueba.Sub(ahora).Hours()/24))},
 		}
-		return ss.Err()
+		return nil
 	})
 	return res, err
 }
@@ -242,11 +248,26 @@ func GuardarNegocio(ctx context.Context, pool tx, tiendaID string, n Negocio) er
 	})
 }
 
-// FijarOpcion prende o apaga una opción de seguridad o un aviso.
-func FijarOpcion(ctx context.Context, pool tx, tiendaID, grupo, clave string, activo bool) error {
-	def := map[string]map[string]bool{"seguridad": seguridadDef, "avisos": avisosDef}[grupo]
+// FijarOpcion prende o apaga una opción de seguridad (de la persona: cuentas.SeguridadDef) o un
+// aviso (de la tienda). Prender «inactivas» cierra en el momento las sesiones que ya no valdrían.
+func FijarOpcion(ctx context.Context, pool tx, tiendaID string, q Quien, grupo, clave string, activo bool) error {
+	def := map[string]map[string]bool{"seguridad": cuentas.SeguridadDef, "avisos": avisosDef}[grupo]
 	if _, ok := def[clave]; !ok {
 		return ErrNoExiste
+	}
+	if grupo == "seguridad" {
+		return pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+			if _, err := t.Exec(ctx, `UPDATE auth.usuarios SET seguridad = seguridad || jsonb_build_object($2::text, $3::boolean)
+				WHERE id::text = $1`, q.UsuarioID, clave, activo); err != nil {
+				return err
+			}
+			if clave == "inactivas" && activo {
+				_, err := t.Exec(ctx, `DELETE FROM auth.sesiones WHERE usuario_id::text = $1 AND left(token_hash, 16) <> $2
+					AND visto_en < now() - $3::interval`, q.UsuarioID, q.SesionID, cuentas.Inactividad.String())
+				return err
+			}
+			return nil
+		})
 	}
 	return pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
 		_, err := t.Exec(ctx, `UPDATE tiendas SET preferencias = jsonb_set(preferencias, ARRAY[$2::text],
@@ -267,6 +288,20 @@ func CerrarSesion(ctx context.Context, pool tx, tiendaID string, q Quien, id str
 		}
 		return err
 	})
+}
+
+// CerrarOtras cierra todas las sesiones de la persona menos la actual. Devuelve cuántas cerró.
+func CerrarOtras(ctx context.Context, pool tx, tiendaID string, q Quien) (int64, error) {
+	if q.SesionID == "" || q.UsuarioID == "" {
+		return 0, ErrNoSePuede // sólo desde una sesión de la persona (no una IA ni una mirada del equipo)
+	}
+	var n int64
+	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		tag, err := t.Exec(ctx, `DELETE FROM auth.sesiones WHERE usuario_id::text = $1 AND left(token_hash, 16) <> $2`, q.UsuarioID, q.SesionID)
+		n = tag.RowsAffected()
+		return err
+	})
+	return n, err
 }
 
 // Invitar suma una invitación pendiente. Mandarla por email o WhatsApp llega con esos servicios.
@@ -308,7 +343,7 @@ func CambiarPlan(ctx context.Context, pool tx, tiendaID, plan, ciclo string) err
 
 // Rutas del panel. cobraAbono: con Mercado Pago activo, un plan pago sólo se activa por la
 // suscripción (POST /v1/panel/cuenta/suscripcion); acá sólo se puede bajar al gratis.
-func Rutas(mux *http.ServeMux, pool tx, sitio string, cobraAbono bool) {
+func Rutas(mux *http.ServeMux, pool tx, geo geoip.Ubicador, sitio string, cobraAbono bool) {
 	con := func(h func(http.ResponseWriter, *http.Request, string, Quien)) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			d, ok := cuentas.SesionDe(r)
@@ -347,7 +382,7 @@ func Rutas(mux *http.ServeMux, pool tx, sitio string, cobraAbono bool) {
 	rutasMedicion(mux, pool, con, errorDe, leer)
 	rutasEntregas(mux, pool, con, errorDe, leer)
 	mux.HandleFunc("GET /v1/panel/configuracion", con(func(w http.ResponseWriter, r *http.Request, id string, q Quien) {
-		v, err := Leer(r.Context(), pool, id, q, time.Now())
+		v, err := Leer(r.Context(), pool, geo, id, q, time.Now())
 		if err != nil {
 			errorDe(w, err)
 			return
@@ -361,16 +396,25 @@ func Rutas(mux *http.ServeMux, pool tx, sitio string, cobraAbono bool) {
 			errorDe(w, GuardarNegocio(r.Context(), pool, id, n))
 		}
 	}))
-	mux.HandleFunc("PUT /v1/panel/configuracion/{grupo}/{clave}", con(func(w http.ResponseWriter, r *http.Request, id string, _ Quien) {
+	mux.HandleFunc("PUT /v1/panel/configuracion/{grupo}/{clave}", con(func(w http.ResponseWriter, r *http.Request, id string, q Quien) {
 		var b struct {
 			Activo bool `json:"activo"`
 		}
 		if leer(w, r, &b) {
-			errorDe(w, FijarOpcion(r.Context(), pool, id, r.PathValue("grupo"), r.PathValue("clave"), b.Activo))
+			errorDe(w, FijarOpcion(r.Context(), pool, id, q, r.PathValue("grupo"), r.PathValue("clave"), b.Activo))
 		}
 	}))
 	mux.HandleFunc("DELETE /v1/panel/sesiones/{id}", con(func(w http.ResponseWriter, r *http.Request, id string, q Quien) {
 		errorDe(w, CerrarSesion(r.Context(), pool, id, q, r.PathValue("id")))
+	}))
+	mux.HandleFunc("DELETE /v1/panel/sesiones", con(func(w http.ResponseWriter, r *http.Request, id string, q Quien) {
+		n, err := CerrarOtras(r.Context(), pool, id, q)
+		if err != nil {
+			errorDe(w, err)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]int64{"cerradas": n})
 	}))
 	mux.HandleFunc("POST /v1/panel/equipo", con(func(w http.ResponseWriter, r *http.Request, id string, _ Quien) {
 		var b struct{ Contacto, Rol string }

@@ -10,7 +10,7 @@
 	import * as I from '#lib/icons.ts';
 	import { unsplash } from '#lib/landing/formato.ts';
 	import { anim } from '#lib/panel/anim.ts';
-	import { pesos } from '#lib/panel/formato.ts';
+	import { diaDeMes, haceCorto, pesos } from '#lib/panel/formato.ts';
 	import { PLANES } from '#lib/panel/planes.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 
@@ -30,7 +30,10 @@
 		['avisos', I.phBellRingingFill, 'Notificaciones'],
 		['plan', I.phCrownSimpleFill, 'Plan']
 	] as const;
-	let tab = $state<(typeof TABS)[number][0]>('negocio');
+	type Tab = (typeof TABS)[number][0];
+	// ?tab=seguridad: el link del mail «Entraron a tu cuenta» abre directo en las sesiones.
+	const pedida = page.url.searchParams.get('tab');
+	let tab = $state<Tab>(TABS.find(([k]) => k === pedida)?.[0] ?? 'negocio');
 
 	async function pedir(url: string, method: string, cuerpo?: unknown) {
 		const r = await fetch(url, {
@@ -93,24 +96,18 @@
 	}
 
 	// ---- Seguridad y avisos ----
+	// Opciones de la persona (no de la tienda): las dos funcionan de verdad en la API.
 	const SEGURIDAD = [
 		[
-			'dobleFactor',
-			I.phDeviceMobileFill,
-			'Doble verificación para todo el equipo',
-			'Obligatoria · con app o SMS'
+			'avisoIngreso',
+			I.phEnvelopeSimpleFill,
+			'Avisarme por mail cuando entren a mi cuenta',
+			'Con el dispositivo, el lugar y la hora'
 		],
-		[
-			'otroPais',
-			I.phMapPinFill,
-			'Avisarme si entran desde otro país',
-			'Bloquea y te pregunta por WhatsApp'
-		],
-		['alertas', I.phBellRingingFill, 'Alertas de cambios sensibles', 'Precios, CBU y permisos'],
 		[
 			'inactivas',
 			I.phClockCounterClockwiseFill,
-			'Cerrar sesiones inactivas a los 7 días',
+			'Cerrar sesiones inactivas a los 7\u00a0días',
 			'Recomendado para cajas compartidas'
 		]
 	] as const;
@@ -129,16 +126,31 @@
 	const SESION = {
 		compu: I.phDesktopFill,
 		celu: I.phDeviceMobileFill,
+		tablet: I.phDeviceTabletFill,
 		caja: I.phDesktopTowerFill
 	} as const;
-	const hace = (iso: string) => {
-		const min = Math.round((Date.now() - Date.parse(iso)) / 60_000);
-		return min < 1 ? 'ahora' : min < 60 ? `hace ${min} min` : `hace ${Math.round(min / 60)} h`;
+	const ultimaVez = (iso: string) => {
+		const h = haceCorto(iso);
+		return h === 'ayer' ? 'Última vez ayer' : `Última vez hace ${h}`;
 	};
+	// Cada dato entero en su renglón: sólo se corta en el «·».
+	const duro = (t: string) => t.replaceAll(' ', '\u00a0');
+	const otras = $derived(data.sesiones.filter((s) => !s.actual).length);
 	async function cerrar(id: string, nombre: string) {
 		if (!(await pedir(`/panel/sesiones/${id}`, 'DELETE'))) return;
 		await invalidateAll();
 		ui.toast({ k: 'ok', title: 'Sesión cerrada', desc: nombre });
+	}
+	async function cerrarOtras() {
+		const r = await pedir('/panel/sesiones', 'DELETE');
+		if (!r) return;
+		const { cerradas } = (await r.json()) as { cerradas: number };
+		await invalidateAll();
+		ui.toast({
+			k: 'ok',
+			title: cerradas === 1 ? 'Cerramos 1 sesión' : `Cerramos ${cerradas} sesiones`,
+			desc: 'Sólo queda abierta esta'
+		});
 	}
 
 	// ---- Plan ----
@@ -279,13 +291,28 @@
 							/>
 						</div>
 					{/each}
-					<div class="sesiones-t">Sesiones activas</div>
+					<div class="sesiones-cab">
+						<div class="sesiones-t">Sesiones activas</div>
+						{#if otras > 0}<button type="button" class="s-btn" onclick={cerrarOtras}
+								>Cerrar todas las demás</button
+							>{/if}
+					</div>
 					{#each data.sesiones as s (s.id)}
+						{@const donde = [s.ubicacion, s.ip].filter(Boolean).join(' · ')}
 						<div class="sesion">
 							<Icon icon={SESION[s.tipo]} size={18} style="color:var(--mu)" />
-							<span class="s-t">{s.nombre} <span>· {s.donde} · {hace(s.cuando)}</span></span>
+							<span class="s-t">
+								<span class="o-t">{s.nombre}</span>
+								{#if donde}<span class="o-d">{donde}</span>{/if}
+								<span class="o-d"
+									>{duro(`Abierta el ${diaDeMes(new Date(s.creada))}`)} · {duro(
+										s.actual ? 'En uso ahora' : ultimaVez(s.cuando)
+									)}</span
+								>
+							</span>
 							{#if s.actual}<span class="esta">Esta</span>{:else}<button
 									type="button"
+									class="s-btn"
 									onclick={() => cerrar(s.id, s.nombre)}>Cerrar</button
 								>{/if}
 						</div>
@@ -621,8 +648,15 @@
 		color: var(--terracota);
 		font-weight: 600;
 	}
-	.sesiones-t {
+	.sesiones-cab {
 		margin-top: 10px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 10px;
+		flex-wrap: wrap;
+	}
+	.sesiones-t {
 		font-size: 14px;
 		font-weight: 600;
 	}
@@ -632,19 +666,25 @@
 		gap: 10px;
 		padding: 9px 0;
 		font-size: 13.5px;
+		border-bottom: 1px solid var(--ln);
+	}
+	.sesion:last-child {
+		border-bottom: 0;
 	}
 	.s-t {
 		flex: 1;
-	}
-	.s-t span {
-		color: var(--mu);
+		min-width: 0;
+		overflow-wrap: anywhere;
 	}
 	.esta {
 		font-size: 12px;
 		font-weight: 600;
 		color: #237550;
 	}
-	.sesion button {
+	.s-btn {
+		min-height: 44px;
+		padding: 0 4px;
+		white-space: nowrap;
 		border: 0;
 		background: transparent;
 		font:

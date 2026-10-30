@@ -2045,6 +2045,14 @@ export class DatosSandbox implements Datos {
 		return 'ok';
 	}
 
+	async cerrarOtrasSesiones(): Promise<number> {
+		const otras = (await this.configuracion()).sesiones.filter((s) => !s.actual).map((s) => s.id);
+		if (!otras.length) return 0;
+		const e = await this.estadoCuenta();
+		await guardarCambio(this.db, this.sb.id, 'cuenta', 'cerradas', [...e.cerradas, ...otras]);
+		return otras.length;
+	}
+
 	async invitar(contacto: string, rol: Miembro['rol']): Promise<Miembro | 'repetido'> {
 		const c = await this.configuracion();
 		const v = contacto.trim().toLowerCase();

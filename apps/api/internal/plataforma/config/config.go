@@ -47,6 +47,8 @@ type Config struct {
 	// Correo, una por ambiente). Vacías: cada tienda conecta con las suyas. CAPruebas usa apitest.
 	CAUsuario, CAClave string
 	CAPruebas          bool
+	// Base DB-IP City Lite (mmdb) para ubicar la IP de cada sesión. Vacía: las sesiones van sin lugar.
+	GeoIP string
 }
 
 // Desarrollo dice si se está corriendo en local.
@@ -87,6 +89,7 @@ func Leer() (Config, error) {
 		CAUsuario:        os.Getenv("MOSTRADOR_CA_USUARIO"),
 		CAClave:          os.Getenv("MOSTRADOR_CA_CLAVE"),
 		CAPruebas:        os.Getenv("MOSTRADOR_CA_AMBIENTE") == "pruebas",
+		GeoIP:            os.Getenv("MOSTRADOR_GEOIP"),
 	}
 	switch c.Entorno {
 	case "desarrollo", "staging", "produccion":

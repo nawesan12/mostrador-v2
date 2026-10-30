@@ -37,6 +37,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/telegram"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/geoip"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/limite"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
@@ -145,7 +146,11 @@ func Nuevo(d Dependencias) http.Handler {
 		finanzas.Rutas(mux, d.App, tienda)
 		mitienda.Rutas(mux, d.App, tienda, d.Sitio)
 		partners.Rutas(mux, d.App, d.ClaveBFF, nil)
-		configuracion.Rutas(mux, d.App, d.Sitio, d.MercadoPago != nil && d.MercadoPago.Config.TokenPlataforma != "")
+		var geo geoip.Ubicador
+		if d.Cuentas != nil {
+			geo = d.Cuentas.Geo
+		}
+		configuracion.Rutas(mux, d.App, geo, d.Sitio, d.MercadoPago != nil && d.MercadoPago.Config.TokenPlataforma != "")
 		if d.MercadoPago != nil {
 			d.MercadoPago.Rutas(mux)
 		}

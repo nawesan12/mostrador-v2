@@ -457,6 +457,9 @@ export class DatosApi implements Datos {
 	async cerrarSesion(id: string) {
 		return resultado(await this.intentar(`/v1/panel/sesiones/${encodeURIComponent(id)}`, 'DELETE'));
 	}
+	async cerrarOtrasSesiones() {
+		return (await this.pedir<{ cerradas: number }>('/v1/panel/sesiones', 'DELETE')).cerradas;
+	}
 	async invitar(contacto: string, rol: Miembro['rol']) {
 		const r = await this.intentar('/v1/panel/equipo', 'POST', { contacto, rol });
 		if (r.status === 409) return 'repetido' as const;

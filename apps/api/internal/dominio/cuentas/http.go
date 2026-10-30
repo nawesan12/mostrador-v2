@@ -68,7 +68,10 @@ func EsBFF(r *http.Request, claveBFF string) bool {
 }
 
 // ClienteDe arma IP y agente. La IP del visitante la manda el BFF en X-Cliente-IP, y sólo se le cree
-// si el pedido trae la clave compartida del BFF; si no, vale la IP de la conexión.
+// si el pedido trae la clave compartida del BFF. Lo que llega directo (la app de iPhone contra
+// api.tulocalweb.com.ar) entra por Cloudflare y Caddy: la conexión es la de Caddy (loopback o la red
+// de Docker) y la IP de la persona es la de Cf-Connecting-Ip, que Cloudflare pisa siempre (el VPS
+// sólo acepta 80/443 desde Cloudflare). Sin eso, vale la IP de la conexión.
 func ClienteDe(r *http.Request, claveBFF string) Cliente {
 	ip, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
@@ -76,6 +79,10 @@ func ClienteDe(r *http.Request, claveBFF string) Cliente {
 	}
 	if EsBFF(r, claveBFF) {
 		if v := net.ParseIP(r.Header.Get("X-Cliente-IP")); v != nil {
+			ip = v.String()
+		}
+	} else if c := net.ParseIP(ip); c != nil && (c.IsLoopback() || c.IsPrivate()) {
+		if v := net.ParseIP(strings.TrimSpace(r.Header.Get("Cf-Connecting-Ip"))); v != nil {
 			ip = v.String()
 		}
 	}

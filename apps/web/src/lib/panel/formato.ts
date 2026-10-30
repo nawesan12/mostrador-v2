@@ -66,6 +66,13 @@ export const fechaLarga = (d: Date) =>
 		`${parte(d, { weekday: 'long' }, 'weekday')} ${parte(d, { day: 'numeric' }, 'day')} de ${parte(d, { month: 'long' }, 'month')}`
 	);
 
+/** "12 de octubre" (con el año si no es el de `ahora`): "12 de octubre de 2025". */
+export function diaDeMes(d: Date, ahora = new Date()) {
+	const anio = parte(d, { year: 'numeric' }, 'year');
+	const base = `${parte(d, { day: 'numeric' }, 'day')} de ${parte(d, { month: 'long' }, 'month')}`;
+	return anio === parte(ahora, { year: 'numeric' }, 'year') ? base : `${base} de ${anio}`;
+}
+
 /** "octubre". */
 export const mes = (d: Date) => parte(d, { month: 'long' }, 'month');
 

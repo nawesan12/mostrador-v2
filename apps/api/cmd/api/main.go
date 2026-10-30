@@ -28,6 +28,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/config"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/geoip"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/servidor"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/whatsapp"
 )
@@ -86,12 +87,22 @@ func correr() error {
 		eq = &equipo.Servicio{Staff: staff, App: app, Sitio: cfg.Sitio, ClaveBFF: cfg.ClaveBFF}
 	}
 
+	// Ubicación de las sesiones: la base se abre una sola vez. Sin base o si no abre, las sesiones
+	// van sin lugar (nunca uno inventado) y la API arranca igual.
+	cs := &cuentas.Servicio{Pool: app, Correo: mails, Sitio: cfg.Sitio,
+		OAuth: cuentas.Proveedores(cfg.OAuth), WhatsApp: wa, Clerk: clerkDe(cfg)}
+	if geo, err := geoip.Abrir(cfg.GeoIP); err != nil {
+		slog.Error("geoip: no abrió la base, las sesiones van sin lugar", "ruta", cfg.GeoIP, "error", err)
+	} else if geo != nil {
+		defer geo.Cerrar()
+		cs.Geo = geo
+	}
+
 	srv := &http.Server{
 		Addr: cfg.Direccion,
 		Handler: servidor.Nuevo(servidor.Dependencias{
-			App: app,
-			Cuentas: &cuentas.Servicio{Pool: app, Correo: mails, Sitio: cfg.Sitio,
-				OAuth: cuentas.Proveedores(cfg.OAuth), WhatsApp: wa, Clerk: clerkDe(cfg)},
+			App:             app,
+			Cuentas:         cs,
 			Arrepentimiento: &arrepentimiento.Servicio{Pool: app, Correo: mails, Equipo: cfg.CorreoEquipo},
 			Formularios:     &formularios.Servicio{Pool: app, Correo: mails, Sitio: cfg.Sitio, Equipo: cfg.CorreoEquipo},
 			ClaveBFF:        cfg.ClaveBFF,

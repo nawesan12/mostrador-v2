@@ -1903,7 +1903,10 @@ paths:
   /v1/panel/configuracion/{grupo}/{clave}:
     put:
       operationId: fijarOpcion
-      summary: Prende o apaga una opción de seguridad o un aviso.
+      summary: Prende o apaga una opción de seguridad (de la persona) o un aviso (de la tienda).
+      description: |
+        Seguridad: `avisoIngreso` (mail «Entraron a tu cuenta» con cada sesión nueva) e `inactivas`
+        (una sesión sin usar hace 7 días deja de valer; al prenderla se cierran las que ya cumplen).
       parameters:
         - { name: grupo, in: path, required: true, schema: { type: string, enum: [seguridad, avisos] } }
         - { name: clave, in: path, required: true, schema: { type: string } }
@@ -1919,6 +1922,20 @@ paths:
       responses:
         '204': { description: Guardado }
         '404': { $ref: '#/components/responses/Problema' }
+  /v1/panel/sesiones:
+    delete:
+      operationId: cerrarOtrasSesiones
+      summary: Cierra todas las sesiones de la persona menos la actual.
+      responses:
+        '200':
+          description: Cerradas
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [cerradas]
+                properties:
+                  cerradas: { type: integer }
   /v1/panel/sesiones/{id}:
     delete:
       operationId: cerrarSesion
@@ -3838,23 +3855,25 @@ components:
         equipo: { type: array, items: { $ref: '#/components/schemas/Miembro' } }
         seguridad:
           type: object
-          required: [dobleFactor, otroPais, alertas, inactivas]
+          description: Opciones de la persona que mira (no de la tienda).
+          required: [avisoIngreso, inactivas]
           properties:
-            dobleFactor: { type: boolean }
-            otroPais: { type: boolean }
-            alertas: { type: boolean }
-            inactivas: { type: boolean }
+            avisoIngreso: { type: boolean, description: 'Mail «Entraron a tu cuenta» con cada sesión nueva' }
+            inactivas: { type: boolean, description: 'Una sesión sin usar hace 7 días deja de valer' }
         sesiones:
           type: array
+          description: Todas las sesiones vigentes de la persona, la actual primero.
           items:
             type: object
-            required: [id, tipo, nombre, donde, cuando, actual]
+            required: [id, tipo, nombre, ubicacion, ip, creada, cuando, actual]
             properties:
               id: { type: string }
-              tipo: { type: string, enum: [compu, celu, caja] }
-              nombre: { type: string }
-              donde: { type: string }
-              cuando: { type: string, format: date-time }
+              tipo: { type: string, enum: [compu, celu, tablet, caja] }
+              nombre: { type: string, description: 'Navegador y sistema: «Chrome en Mac»' }
+              ubicacion: { type: string, description: '«Ciudad, Provincia» o el país, según la IP. Vacía si no se sabe.' }
+              ip: { type: string, description: IP abreviada; vacía si no hay }
+              creada: { type: string, format: date-time }
+              cuando: { type: string, format: date-time, description: Última vez que se usó }
               actual: { type: boolean }
         avisos:
           type: object

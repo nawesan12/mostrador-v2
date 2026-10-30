@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/avisos"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/equipo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/facturacion"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ia"
@@ -94,7 +95,8 @@ func correr() error {
 	if c, err := cifrado.Nuevo(cfg.ClaveCifrado); err == nil && cfg.ClaveCifrado != "" {
 		imp.Cifra = c
 	}
-	for _, ms := range []map[string]outbox.Manejador{mp.Manejadores(), ml.Manejadores(), av.Manejadores(), mc.Manejadores(), tg.Manejadores(), equipo.Manejadores(mails), imp.Manejadores()} {
+	for _, ms := range []map[string]outbox.Manejador{mp.Manejadores(), ml.Manejadores(), av.Manejadores(), mc.Manejadores(), tg.Manejadores(), equipo.Manejadores(mails), imp.Manejadores(),
+		cuentas.Manejadores(mails, cfg.Sitio)} {
 		for tipo, m := range ms {
 			w.Manejadores[tipo] = m
 		}

@@ -4,6 +4,7 @@ go 1.27.2
 
 require (
 	github.com/jackc/pgx/v5 v5.11.0
+	github.com/oschwald/maxminddb-golang/v2 v2.8.0
 	github.com/pressly/goose/v3 v3.29.0
 	golang.org/x/crypto v0.58.0
 	golang.org/x/text v0.43.0

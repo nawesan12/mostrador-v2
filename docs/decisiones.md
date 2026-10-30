@@ -578,3 +578,29 @@ URL, para que no quede en el historial ni en logs.
   16 h» de las plantillas; la portada muestra el costo y la zona reales y el pie, «Envío en moto».
 - Pantalla en `/panel/envios/configurar` (desde Envíos, Configuración y el onboarding). En la demo,
   el envío gratis sale de la automática (40.000, como en Go) y la moto arranca apagada.
+
+## 33. Sesiones: dónde está abierta la cuenta, aviso de ingreso e inactivas (migración 00051)
+
+- **Lugar real o nada**: la IP de cada sesión se ubica con DB-IP City Lite (mmdb, CC BY 4.0;
+  `MOSTRADOR_GEOIP`, abierta una vez al arrancar, `plataforma/geoip`). En Argentina «Ciudad,
+  Provincia» (sin el barrio entre paréntesis, que no es confiable; CABA como «Ciudad de Buenos
+  Aires»); afuera, el país en castellano. Sin base, o con una IP privada o de loopback, el lugar
+  queda vacío y la pantalla no lo muestra.
+- **La IP de lo que llega directo**: la app de iPhone le pega a `api.tulocalweb.com.ar` sin pasar por
+  el BFF, y Go veía la conexión de Caddy (`::1`). Si la conexión viene de loopback o de una red
+  privada (Caddy, Docker), Go toma `Cf-Connecting-Ip`, que Cloudflare pisa siempre (el VPS sólo
+  acepta 80/443 desde Cloudflare). Lo del BFF sigue igual: `X-Cliente-IP` sólo con la clave.
+- **Opciones de la persona, no de la tienda**: las sesiones son de la persona, así que la seguridad
+  vive en `auth.usuarios.seguridad`: `avisoIngreso` (prendido por defecto) e `inactivas`. Se
+  sacaron «doble verificación», «otro país» y «alertas de cambios sensibles»: no existían.
+- **«Entraron a tu cuenta»**: todo ingreso a una cuenta que ya existe (clave, Google y Apple por
+  Clerk, Mercado Pago, link por WhatsApp) pasa por `sesionDeUsuario`, que encola `cuenta.ingreso`
+  en la misma transacción. El registro y la cuenta nueva por un proveedor no avisan (ya sale la
+  bienvenida). El evento va sin tienda (ninguna tienda ve las IP de quien entra; la app sólo puede
+  insertar `cuenta.*` sin tienda) y el worker manda el mail con la plantilla de cuentas: dispositivo,
+  lugar e IP si se saben, hora de Argentina y link a Configuración › Seguridad.
+- **Inactivas de verdad**: con la opción prendida, una sesión cuyo `visto_en` tiene más de 7 días
+  no vale y se borra al usarla; al prender la opción se cierran en el momento las que ya cumplen.
+  Importa porque «Recordarme» ahora dura un año.
+- La lista muestra todas las sesiones vigentes (la actual primero), con «Cerrar» y «Cerrar todas
+  las demás» (`DELETE /v1/panel/sesiones`).

@@ -1907,10 +1907,31 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Prende o apaga una opción de seguridad o un aviso. */
+        /**
+         * Prende o apaga una opción de seguridad (de la persona) o un aviso (de la tienda).
+         * @description Seguridad: `avisoIngreso` (mail «Entraron a tu cuenta» con cada sesión nueva) e `inactivas`
+         *     (una sesión sin usar hace 7 días deja de valer; al prenderla se cierran las que ya cumplen).
+         */
         put: operations["fijarOpcion"];
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/sesiones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Cierra todas las sesiones de la persona menos la actual. */
+        delete: operations["cerrarOtrasSesiones"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3701,19 +3722,30 @@ export interface components {
         Configuracion: {
             negocio: components["schemas"]["Negocio"];
             equipo: components["schemas"]["Miembro"][];
+            /** @description Opciones de la persona que mira (no de la tienda). */
             seguridad: {
-                dobleFactor: boolean;
-                otroPais: boolean;
-                alertas: boolean;
+                /** @description Mail «Entraron a tu cuenta» con cada sesión nueva */
+                avisoIngreso: boolean;
+                /** @description Una sesión sin usar hace 7 días deja de valer */
                 inactivas: boolean;
             };
+            /** @description Todas las sesiones vigentes de la persona, la actual primero. */
             sesiones: {
                 id: string;
                 /** @enum {string} */
-                tipo: "compu" | "celu" | "caja";
+                tipo: "compu" | "celu" | "tablet" | "caja";
+                /** @description Navegador y sistema: «Chrome en Mac» */
                 nombre: string;
-                donde: string;
+                /** @description «Ciudad, Provincia» o el país, según la IP. Vacía si no se sabe. */
+                ubicacion: string;
+                /** @description IP abreviada; vacía si no hay */
+                ip: string;
                 /** Format: date-time */
+                creada: string;
+                /**
+                 * Format: date-time
+                 * @description Última vez que se usó
+                 */
                 cuando: string;
                 actual: boolean;
             }[];
@@ -8299,6 +8331,28 @@ export interface operations {
                 content?: never;
             };
             404: components["responses"]["Problema"];
+        };
+    };
+    cerrarOtrasSesiones: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cerradas */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        cerradas: number;
+                    };
+                };
+            };
         };
     };
     cerrarSesion: {

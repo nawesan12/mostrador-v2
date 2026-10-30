@@ -119,29 +119,36 @@ export function configuracionDemo(
 			dobleFactor: false
 		}))
 	];
+	// En la demo no hay IP: las sesiones de ejemplo van sin ella.
 	const sesiones = [
 		{
 			id: 's1',
 			tipo: 'compu' as const,
 			nombre: 'Este navegador',
-			donde: d.catalogo.ciudad,
+			ubicacion: d.catalogo.ciudad,
+			ip: '',
+			creada: iso(ahora - 3 * 24 * 60 * MIN),
 			cuando: iso(ahora),
 			actual: true
-		},
-		{
-			id: 's2',
-			tipo: 'celu' as const,
-			nombre: 'App en iPhone',
-			donde: d.catalogo.ciudad,
-			cuando: iso(ahora - 120 * MIN),
-			actual: false
 		},
 		{
 			id: 's3',
 			tipo: 'caja' as const,
 			nombre: 'Caja del local',
-			donde: d.catalogo.ciudad,
+			ubicacion: d.catalogo.ciudad,
+			ip: '',
+			creada: iso(ahora - 20 * 24 * 60 * MIN),
 			cuando: iso(ahora - 10 * MIN),
+			actual: false
+		},
+		{
+			id: 's2',
+			tipo: 'celu' as const,
+			nombre: 'App de Tu Local Web en iPhone',
+			ubicacion: d.catalogo.ciudad,
+			ip: '',
+			creada: iso(ahora - 9 * 24 * 60 * MIN),
+			cuando: iso(ahora - 120 * MIN),
 			actual: false
 		}
 	].filter((s) => !e.cerradas.has(s.id));
@@ -149,9 +156,7 @@ export function configuracionDemo(
 		negocio,
 		equipo,
 		seguridad: {
-			dobleFactor: true,
-			otroPais: true,
-			alertas: true,
+			avisoIngreso: true,
 			inactivas: false,
 			...e.seguridad
 		},

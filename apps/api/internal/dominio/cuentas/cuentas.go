@@ -25,6 +25,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/clerk"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/geoip"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/limite"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/whatsapp"
 )
@@ -70,6 +71,8 @@ type Servicio struct {
 	// SesionEquipo resuelve los tokens de "ver la tienda" del backoffice (paquete equipo): una
 	// sesión de sólo lectura del panel de esa tienda. nil: no se aceptan.
 	SesionEquipo func(ctx context.Context, token string) (Datos, error)
+	// Geo ubica la IP de cada sesión (lista de sesiones y mail de ingreso). nil: sin lugar.
+	Geo geoip.Ubicador
 }
 
 // Cliente es de dónde viene el pedido (para la sesión y los límites).
@@ -283,7 +286,9 @@ func (s *Servicio) Ingresar(ctx context.Context, email, clave string, recordarme
 	return s.sesionDeUsuario(ctx, usuario, vida, cl)
 }
 
-// sesionDeUsuario abre una sesión de la persona en su primera tienda.
+// sesionDeUsuario abre una sesión de la persona en su primera tienda. Es el camino de todo ingreso a
+// una cuenta que ya existe (clave, Google y Apple por Clerk, Mercado Pago, link por WhatsApp): en la
+// misma transacción encola el mail «Entraron a tu cuenta». El registro no pasa por acá.
 func (s *Servicio) sesionDeUsuario(ctx context.Context, usuario string, vida time.Duration, cl Cliente) (Sesion, error) {
 	var ses Sesion
 	err := s.Pool.EnTx(ctx, func(tx pgx.Tx) error {
@@ -297,7 +302,10 @@ func (s *Servicio) sesionDeUsuario(ctx context.Context, usuario string, vida tim
 			t = *tienda
 		}
 		ses, err = crearSesion(ctx, tx, usuario, t, vida, cl)
-		return err
+		if err != nil {
+			return err
+		}
+		return s.avisarIngreso(ctx, tx, usuario, cl)
 	})
 	return ses, err
 }
@@ -325,7 +333,8 @@ type Datos struct {
 }
 
 // Sesion resuelve el token. Actualiza "visto" como mucho una vez por hora (como en Caja: no escribir
-// en cada pedido).
+// en cada pedido). Con «Cerrar sesiones inactivas» prendido, una sesión sin usar hace más de
+// Inactividad ya no vale y se borra.
 func (s *Servicio) Sesion(ctx context.Context, token string) (Datos, error) {
 	var d Datos
 	if token == "" {
@@ -333,18 +342,24 @@ func (s *Servicio) Sesion(ctx context.Context, token string) (Datos, error) {
 	}
 	var tienda, rol *string
 	var visto time.Time
+	var cerrarInactivas bool
 	err := s.Pool.QueryRow(ctx, `
-		SELECT u.id, u.nombre, u.email, coalesce(u.foto, ''), s.tienda_id, m.rol, s.vence_en, s.visto_en
+		SELECT u.id, u.nombre, u.email, coalesce(u.foto, ''), s.tienda_id, m.rol, s.vence_en, s.visto_en,
+			coalesce((u.seguridad->>'inactivas')::boolean, false)
 		FROM auth.sesiones s
 		JOIN auth.usuarios u ON u.id = s.usuario_id
 		LEFT JOIN auth.membresias m ON m.usuario_id = s.usuario_id AND m.tienda_id = s.tienda_id
 		WHERE s.token_hash = $1 AND s.vence_en > now()`, hashToken(token)).
-		Scan(&d.Usuario.ID, &d.Usuario.Nombre, &d.Usuario.Email, &d.Usuario.Foto, &tienda, &rol, &d.VenceEn, &visto)
+		Scan(&d.Usuario.ID, &d.Usuario.Nombre, &d.Usuario.Email, &d.Usuario.Foto, &tienda, &rol, &d.VenceEn, &visto, &cerrarInactivas)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return d, ErrSinSesion
 	}
 	if err != nil {
 		return d, err
+	}
+	if cerrarInactivas && time.Since(visto) > Inactividad {
+		_, _ = s.Pool.Exec(ctx, `DELETE FROM auth.sesiones WHERE token_hash = $1`, hashToken(token))
+		return Datos{}, ErrSinSesion
 	}
 	// Sin membresía (se la quitaron) no hay tienda: la sesión sigue, pero sin acceso a datos.
 	if tienda != nil && rol != nil {

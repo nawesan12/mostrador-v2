@@ -33,6 +33,8 @@ const files = readdirSync(design).filter(
 );
 // Íconos que no aparecen en el handoff pero se usan (reemplazos de logos que no existen en Iconify).
 const EXTRA = [
+	// Sesiones abiertas desde una tablet (Configuración › Seguridad).
+	'ph:device-tablet-fill',
 	// Salir del backoffice del equipo.
 	'ph:sign-out-bold',
 	'simple-icons:googlesheets',

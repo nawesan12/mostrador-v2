@@ -35,10 +35,13 @@ test('configuración: negocio, equipo, seguridad y plan', async ({ page, isMobil
 	await nav.getByRole('button', { name: 'Seguridad' }).click();
 	await page
 		.locator('.sesion')
-		.filter({ hasText: 'App en iPhone' })
+		.filter({ hasText: 'App de Tu Local Web en iPhone' })
 		.getByRole('button', { name: 'Cerrar' })
 		.click();
 	await expect(page.locator('.sesion')).toHaveCount(2);
+	await page.getByRole('button', { name: 'Cerrar todas las demás' }).click();
+	await expect(page.locator('.sesion')).toHaveCount(1);
+	await expect(page.locator('.sesion')).toContainText('Esta');
 
 	await nav.getByRole('button', { name: 'Plan' }).click();
 	await page.getByRole('button', { name: 'Elegir Emprende' }).click();

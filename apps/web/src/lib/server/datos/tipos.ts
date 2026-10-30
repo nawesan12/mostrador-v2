@@ -239,6 +239,8 @@ export interface Datos {
 	guardarNegocio(n: Negocio): Promise<void>;
 	fijarOpcion(grupo: 'seguridad' | 'avisos', clave: string, activo: boolean): Promise<Resultado>;
 	cerrarSesion(id: string): Promise<Resultado>;
+	/** Cierra todas las sesiones de la persona menos la actual; devuelve cuántas cerró. */
+	cerrarOtrasSesiones(): Promise<number>;
 	invitar(contacto: string, rol: Miembro['rol']): Promise<Miembro | 'repetido'>;
 	/** Con el abono por Mercado Pago, un plan pago devuelve adónde ir a cargar la tarjeta. */
 	cambiarPlan(plan: IdPlan, ciclo?: 'mes' | 'anio'): Promise<void | { url: string }>;
