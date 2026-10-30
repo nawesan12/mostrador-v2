@@ -23,7 +23,6 @@
 		image?:
 			| 'home'
 			| 'general'
-			| 'caja'
 			| 'hornero'
 			| 'migrar'
 			| 'partners'
