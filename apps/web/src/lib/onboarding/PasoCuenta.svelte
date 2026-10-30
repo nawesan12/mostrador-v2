@@ -1,5 +1,7 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import Icon from '#lib/components/Icon.svelte';
+	import { ErrorClerk, iniciar, type ProveedorClerk } from '#lib/clerk.ts';
 	import * as I from '#lib/icons.ts';
 	import { TRAE_MP } from './datos.ts';
 	import Etiqueta from './Etiqueta.svelte';
@@ -8,8 +10,38 @@
 	 * Paso 1, Cuenta. Los botones mandan al ingreso con ese proveedor y el email al registro; en la
 	 * demo no hay cuentas y siguen directo al paso 2 (docs/decisiones.md §12).
 	 */
-	let { demo, seguir, error }: { demo: boolean; seguir: () => void; error?: string } = $props();
+	let {
+		demo,
+		clerk = null,
+		seguir,
+		error
+	}: { demo: boolean; clerk?: string | null; seguir: () => void; error?: string } = $props();
 	let email = $state('');
+	let yendo = $state(false);
+	let errClerk = $state('');
+
+	/** Google y Apple: se arranca el ingreso con Clerk y se va al proveedor (como en /ingresar). */
+	async function conClerk(e: MouseEvent, proveedor: ProveedorClerk) {
+		e.preventDefault();
+		if (demo) return seguir();
+		if (!clerk) {
+			errClerk = 'Ahora no podemos conectar con Google o Apple. Entrá con tu email.';
+			return;
+		}
+		yendo = true;
+		errClerk = '';
+		try {
+			location.assign(
+				await iniciar(clerk, proveedor, `${location.origin}${resolve('/ingresar/clerk')}`)
+			);
+		} catch (x) {
+			yendo = false;
+			errClerk =
+				x instanceof ErrorClerk && x.codigo === 'too_many_requests'
+					? 'Hubo demasiados intentos. Probá de nuevo en unos minutos.'
+					: 'No pudimos conectar. Probá de nuevo o entrá con tu email.';
+		}
+	}
 </script>
 
 <div class="dos">
@@ -41,17 +73,16 @@
 			>
 				<span class="ico ml-ico">ML</span><span class="txt">Continuar con Mercado Libre</span>
 			</button>
-			<button
-				class="g"
-				name="proveedor"
-				value="google"
-				type={demo ? 'button' : 'submit'}
-				onclick={demo ? seguir : undefined}
-			>
+			<button class="g" type="button" disabled={yendo} onclick={(e) => conClerk(e, 'google')}>
 				<span class="ico beige"><Icon icon={I.logosGoogleIcon} size={16} /></span>
 				<span class="txt">Continuar con Google</span>
 			</button>
+			<button class="g" type="button" disabled={yendo} onclick={(e) => conClerk(e, 'apple')}>
+				<span class="ico beige"><Icon icon={I.logosApple} size={16} /></span>
+				<span class="txt">Continuar con Apple</span>
+			</button>
 		</form>
+		{#if errClerk}<p class="err-clerk" role="alert">{errClerk}</p>{/if}
 		<div class="o"><span></span>o con tu email<span></span></div>
 		<form
 			class="email"
@@ -278,5 +309,10 @@
 		font-size: 13px;
 		line-height: 1.45;
 		color: #5c4536;
+	}
+	.err-clerk {
+		margin: 8px 0 0;
+		font-size: 13.5px;
+		color: #b83a2e;
 	}
 </style>

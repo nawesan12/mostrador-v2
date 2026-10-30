@@ -7,6 +7,7 @@ import { datosDe, usaSandbox } from '#lib/server/datos/index.ts';
 import { COOKIE_ORIGEN, leerOrigen } from '#lib/server/origen.ts';
 import { RUBROS } from '#lib/server/sandbox/rubros.ts';
 import { esProveedor, irAlProveedor } from '#lib/server/auth/social.ts';
+import { fapiDe } from '#lib/clerk.ts';
 import { COOKIE, crear, DatosSandbox, dbSandbox, VIDA_MS } from '#lib/server/sandbox/sandbox.ts';
 import { descubrir } from '#lib/server/importar/fuentes.ts';
 import type { Actions, PageServerLoad } from './$types';
@@ -42,6 +43,8 @@ export const load: PageServerLoad = async ({ locals, url, cookies }) => {
 			: null;
 	return {
 		demo: usaSandbox(),
+		// Google y Apple van por Clerk desde el navegador, como en /ingresar.
+		clerk: usaSandbox() ? null : fapiDe(env.CLERK_PUBLISHABLE_KEY),
 		conSesion: !!locals.token,
 		tienda,
 		paso: Number.isInteger(paso) && paso >= 0 && paso <= 7 ? paso : null

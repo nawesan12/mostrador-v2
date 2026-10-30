@@ -222,7 +222,7 @@
 		<div class="contenido">
 			<div class="paso" bind:this={caja}>
 				{#if paso === 0}
-					<PasoCuenta demo={data.demo} seguir={siguiente} />
+					<PasoCuenta demo={data.demo} clerk={data.clerk} seguir={siguiente} />
 				{:else if paso === 1}
 					<PasoNegocio />
 				{:else if paso === 2}
