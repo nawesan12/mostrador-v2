@@ -23,6 +23,26 @@ const mesDe = (t: number, f: 'long' | 'short' = 'long') =>
 		.toLocaleDateString('es-AR', { month: f, timeZone: 'America/Argentina/Buenos_Aires' })
 		.replace('.', '');
 
+/**
+ * Los 12 meses calendario que terminan en el de `ahora` (hora de Argentina): "nov" … "oct". Restar
+ * tramos de 30 días repetía un mes y salteaba otro cuando hoy es 31.
+ */
+export function mesesCalendario(ahora: number, f: 'long' | 'short' = 'short') {
+	const [y, m] = new Intl.DateTimeFormat('en-CA', {
+		timeZone: 'America/Argentina/Buenos_Aires',
+		year: 'numeric',
+		month: '2-digit'
+	})
+		.format(ahora)
+		.split('-')
+		.map(Number);
+	return Array.from({ length: 12 }, (_, i) =>
+		new Date(Date.UTC(y, m - 12 + i, 15))
+			.toLocaleDateString('es-AR', { month: f, timeZone: 'UTC' })
+			.replace('.', '')
+	);
+}
+
 const vivos = (d: Demo, desde: number, hasta: number) =>
 	d.pedidos.filter((p) => p.estado !== 'Cancelado' && p.creado > desde && p.creado <= hasta);
 
@@ -245,7 +265,7 @@ export function informesDemo(d: Demo, ahora: number, margen: number): Informes {
 		const escala = reales[k][1] / c[11];
 		return [...c.slice(0, 10).map((v) => Math.round(v * escala)), ...reales[k]];
 	};
-	const meses = Array.from({ length: 12 }, (_, i) => mesDe(ahora - (11 - i) * 30 * DIA, 'short'));
+	const meses = mesesCalendario(ahora);
 	const ticket = (ps: typeof actual) => (ps.length ? Math.round(ventas(ps) / ps.length) : 0);
 	const vs = (a: number, b: number) => (b ? Math.round(((a - b) / b) * 1000) / 10 : null);
 	const sabados = actual.filter(
@@ -278,7 +298,7 @@ export function informesDemo(d: Demo, ahora: number, margen: number): Informes {
 			margenVs: 1,
 			// Lo que habría pagado en una plataforma que cobra comisión por venta (2 %).
 			ahorro: Math.round((ventas(actual) * 0.021) / 1000) * 1000,
-			mesAnterior: mesDe(ahora - 30 * DIA)
+			mesAnterior: mesesCalendario(ahora, 'long')[10]
 		},
 		historia: 14,
 		insights: [

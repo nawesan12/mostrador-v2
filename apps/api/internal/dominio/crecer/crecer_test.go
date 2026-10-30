@@ -3,6 +3,7 @@ package crecer_test
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -64,6 +65,19 @@ func TestCanalesEInformesSalenDeLosPedidos(t *testing.T) {
 	}
 	if u := s["productos"].([]int64); u[11] != 3 {
 		t.Fatalf("unidades: %v", u)
+	}
+	if inf["historia"] != 1 {
+		t.Fatalf("historia: %v", inf["historia"])
+	}
+	// El 31 de octubre a la noche (ya 1 de noviembre en UTC): doce meses calendario sin repetir.
+	fin := time.Date(2026, 11, 1, 2, 30, 0, 0, time.UTC)
+	inf, _ = crecer.Informes(ctx, b.App, id, fin)
+	want := []string{"nov", "dic", "ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sept", "oct"}
+	if got := inf["meses"].([]string); strings.Join(got, ",") != strings.Join(want, ",") {
+		t.Fatalf("meses: %v", got)
+	}
+	if k := inf["kpis"].(map[string]any); k["mesAnterior"] != "septiembre" {
+		t.Fatalf("mes anterior: %v", k["mesAnterior"])
 	}
 	m, err := crecer.Marketing(ctx, b.App, id)
 	if err != nil || m["audiencias"].([]map[string]any)[0]["cantidad"] != 1 {

@@ -120,20 +120,25 @@ func Informes(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (m
 	pedidos := make([]int64, 12)
 	margen := make([]*int, 12)
 	var primero *time.Time
+	// Meses calendario en hora de Argentina: el 11 es el mes en curso. (Antes eran tramos de 30
+	// días desde hoy, y un mes podía repetirse y otro faltar en el eje.)
+	local := ahora.In(argentina)
+	mesActual := time.Date(local.Year(), local.Month(), 1, 0, 0, 0, 0, argentina)
+	inicio := mesActual.AddDate(0, -11, 0)
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		desde := ahora.Add(-360 * 24 * time.Hour)
 		filas, err := t.Query(ctx, `
 			WITH p AS (
-				SELECT 11 - floor(extract(epoch FROM $2::timestamptz - creado_en) / 2592000)::int AS k, total, items,
-					comprador->>'nombre' AS quien, creado_en
-				FROM pedidos WHERE tienda_id = $1 AND estado <> 'Cancelado' AND creado_en > $3 AND creado_en <= $2
+				SELECT (extract(year FROM creado_en AT TIME ZONE 'America/Argentina/Buenos_Aires')::int * 12
+					+ extract(month FROM creado_en AT TIME ZONE 'America/Argentina/Buenos_Aires')::int) - $4::int AS k,
+					total, items, comprador->>'nombre' AS quien, creado_en
+				FROM pedidos WHERE tienda_id = $1 AND estado <> 'Cancelado' AND creado_en >= $3 AND creado_en <= $2
 			), primeras AS (
 				SELECT comprador->>'nombre' AS quien, min(creado_en) AS en FROM pedidos WHERE tienda_id = $1 AND estado <> 'Cancelado' GROUP BY 1
 			)
 			SELECT k, sum(total), sum((SELECT coalesce(sum((i->>'cantidad')::int), 0) FROM jsonb_array_elements(items) i)),
 				count(DISTINCT quien) FILTER (WHERE (SELECT en FROM primeras f WHERE f.quien = p.quien) = p.creado_en),
 				count(*)
-			FROM p GROUP BY k`, tiendaID, ahora, desde)
+			FROM p GROUP BY k`, tiendaID, ahora, inicio, inicio.Year()*12+int(inicio.Month()))
 		if err != nil {
 			return err
 		}
@@ -157,7 +162,7 @@ func Informes(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (m
 	}
 	nombres := make([]string, 12)
 	for i := range 12 {
-		nombres[i] = meses[ahora.Add(-time.Duration(11-i)*30*24*time.Hour).In(argentina).Month()-1]
+		nombres[i] = meses[inicio.AddDate(0, i, 0).Month()-1]
 	}
 	vs := func(a, b int64) *float64 {
 		if b == 0 {
@@ -172,9 +177,11 @@ func Informes(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (m
 		}
 		return ventas[k] / pedidos[k]
 	}
+	// Meses calendario con ventas desde el primer pedido (el mes del primero cuenta).
 	historia := 0
 	if primero != nil {
-		historia = int(ahora.Sub(*primero).Hours()/24/30) + 1
+		p := primero.In(argentina)
+		historia = (local.Year()-p.Year())*12 + int(local.Month()-p.Month()) + 1
 	}
 	return map[string]any{
 		"meses":  nombres,
@@ -185,7 +192,7 @@ func Informes(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (m
 			"margen": nil, "margenVs": nil,
 			// Contra una plataforma que cobra 2,1 % por venta.
 			"ahorro":      ventas[11] * 21 / 1000 / 1000 * 1000,
-			"mesAnterior": mesesLargos[ahora.Add(-30*24*time.Hour).In(argentina).Month()-1],
+			"mesAnterior": mesesLargos[mesActual.AddDate(0, -1, 0).Month()-1],
 		},
 		"historia": historia,
 		"insights": []string{},

@@ -5,7 +5,7 @@
 	import Seo from '#lib/components/Seo.svelte';
 	import * as I from '#lib/icons.ts';
 	import { anim } from '#lib/panel/anim.ts';
-	import { pesos } from '#lib/panel/formato.ts';
+	import { pesos, pesosCortos, plural } from '#lib/panel/formato.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 
 	/** Informes (design/PanelCrecer.dc.html, sRep): 12 meses, KPIs y lo que notó Tincho. */
@@ -22,9 +22,14 @@
 	const s = $derived(SERIES[serie]);
 	const valores = $derived(data.series[s[0]].map((v) => v ?? 0));
 	const max = $derived(Math.max(1, ...valores));
+	/** Etiqueta de cada barra: "1,2 M", "15,2 mil" o "850" (antes, todo en millones: "0"). */
 	const etiqueta = (v: number) =>
 		s[0] === 'ventas'
-			? (v / 1e6).toLocaleString('es-AR', { maximumFractionDigits: 1 })
+			? v >= 1e6
+				? `${(v / 1e6).toLocaleString('es-AR', { maximumFractionDigits: 1 })}\u00a0M`
+				: v >= 1e3
+					? `${(v / 1e3).toLocaleString('es-AR', { maximumFractionDigits: 1 })}\u00a0mil`
+					: v.toLocaleString('es-AR')
 			: s[0] === 'margen'
 				? `${v}%`
 				: v.toLocaleString('es-AR');
@@ -33,13 +38,11 @@
 		n === null
 			? ''
 			: `${n > 0 ? '+' : ''}${n.toLocaleString('es-AR', { maximumFractionDigits: 1 })}${suf}`;
-	const millones = (n: number) =>
-		'$ ' + (n / 1e6).toLocaleString('es-AR', { maximumFractionDigits: 1 }) + ' M';
 	const KPIS = $derived([
 		[
 			'Ventas del mes',
-			millones(k.ventas),
-			`${signo(k.ventasVs)} vs. ${k.mesAnterior}`,
+			pesosCortos(k.ventas),
+			k.ventasVs === null ? '' : `${signo(k.ventasVs)} vs. ${k.mesAnterior}`,
 			(k.ventasVs ?? 0) >= 0 ? '#2F8F63' : '#B83A2E'
 		],
 		[
@@ -67,13 +70,18 @@
 	<div class="cab" use:anim={{ t: 'rise' }}>
 		<div class="c-txt">
 			<h1>Informes</h1>
-			<div class="c-s">Con {data.historia} meses de historia importada de Mercado Pago</div>
+			<div class="c-s">
+				{data.historia
+					? `Con ${plural(data.historia, 'mes', 'meses')} de ventas en Tu\u00a0Local\u00a0Web`
+					: 'Cuando entren ventas, acá vas a ver cómo\u00a0crecen'}
+			</div>
 		</div>
 		<a
 			class="exportar"
-			href={resolve('/panel/informes/exportar')}
+			href="{resolve('/panel/informes/exportar')}?serie={s[0]}"
 			download
-			onclick={() => ui.toast({ k: 'ok', title: 'Informe exportado', desc: 'Excel con 12 meses' })}
+			onclick={() =>
+				ui.toast({ k: 'ok', title: 'Informe exportado', desc: `${s[2]}: últimos 12 meses` })}
 			><Icon icon={I.phDownloadSimpleBold} size={14} />Exportar</a
 		>
 	</div>
