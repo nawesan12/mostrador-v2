@@ -69,7 +69,9 @@ test('productos: pausar, editar, crear y exportar', async ({ page }) => {
 	await editor.getByLabel('Nombre').fill(`${nombre} edición especial`);
 	await editor.getByRole('button', { name: '✦ Mejorar con Tincho' }).click();
 	// En la demo, sin modelo, la descripción arranca con el nombre (sin promesas inventadas).
-	await expect(editor.locator('#desc-prod')).toHaveValue(new RegExp(`^${nombre} edición especial\\.`));
+	await expect(editor.locator('#desc-prod')).toHaveValue(
+		new RegExp(`^${nombre} edición especial\\.`)
+	);
 	await editor.getByRole('button', { name: 'Guardar y publicar' }).click();
 	await expect(page.getByText('Producto guardado')).toBeVisible();
 
