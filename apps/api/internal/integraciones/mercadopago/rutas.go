@@ -33,7 +33,7 @@ func (s *Servicio) Problema(w http.ResponseWriter, err error) {
 	case errors.Is(err, ErrInvalido), errors.Is(err, ErrPlanInvalido):
 		problema.Escribir(w, problema.Invalido("Revisá los datos."))
 	case errors.As(err, &emp):
-		s.log().Warn("mercadopago: la API respondió con error", "estado", emp.Estado)
+		s.log().Warn("mercadopago: la API respondió con error", "estado", emp.Estado, "cuerpo", recortar(emp.Cuerpo, 300))
 		problema.Escribir(w, &problema.Problema{Estado: http.StatusBadGateway, Codigo: "mercadopago",
 			Titulo: "Mercado Pago no respondió", Detalle: "Probá de nuevo en un rato."})
 	default:
@@ -193,3 +193,4 @@ func (s *Servicio) Rutas(mux *http.ServeMux) {
 		w.WriteHeader(http.StatusOK)
 	})
 }
+

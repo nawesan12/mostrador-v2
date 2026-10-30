@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -83,7 +84,7 @@ func (s *Servicio) Suscribir(ctx context.Context, tiendaID, usuarioID, plan, cic
 	if err := s.cliente().JSON(ctx, http.MethodPost, "/preapproval", s.Config.TokenPlataforma, "", map[string]any{
 		"reason":             "Tu Local Web " + nombres[plan] + " (" + nombreCiclo + ")",
 		"external_reference": tiendaID,
-		"payer_email":        email,
+		"payer_email":        sinEtiqueta(email),
 		"auto_recurring":     recurrencia,
 		"back_url":           s.Config.Sitio + "/panel/plan-y-facturacion?suscripcion=vuelta",
 		"status":             "pending",
@@ -100,6 +101,19 @@ func (s *Servicio) Suscribir(ctx context.Context, tiendaID, usuarioID, plan, cic
 		return err
 	})
 	return p.InitPoint, err
+}
+
+// sinEtiqueta saca la parte "+algo" del mail ("ana+tienda@x.com" → "ana@x.com"): Mercado Pago
+// rechaza esos mails con "User bad request", y es la misma casilla.
+func sinEtiqueta(email string) string {
+	local, dominio, ok := strings.Cut(email, "@")
+	if !ok {
+		return email
+	}
+	if base, _, ok := strings.Cut(local, "+"); ok && base != "" {
+		return base + "@" + dominio
+	}
+	return email
 }
 
 var esUUID = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
