@@ -70,7 +70,8 @@
 		error?: string | null;
 	} = $props();
 
-	const base = $derived(`/t/${tienda.slug}`);
+	// En el dominio propio de la tienda los links no llevan /t/<slug> (tienda.base = '').
+	const base = $derived(tienda.base ?? `/t/${tienda.slug}`);
 	const carrito = $derived(carritoDe(tienda.slug));
 	let ancho = $state(page.data.movil ? 390 : 1200);
 	const nar = $derived(ancho < 820);
@@ -482,7 +483,7 @@
 					style="display:grid;flex:none;color:#2B2520"><Icon icon={I.phList} size={22} /></a
 				>{/if}
 			<a
-				href={base}
+				href={base || '/'}
 				style="text-decoration:none;color:#2B2520;font-family:'Newsreader',serif;font-size:28px;font-style:italic;letter-spacing:-.02em;line-height:1;white-space:nowrap;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis"
 				>{tienda.nombre}</a
 			>
@@ -897,7 +898,7 @@
 				</div>
 				<div style="position:sticky;top:90px;min-width:0">
 					<div style="font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:#6F6358">
-						<a href={base} style="color:inherit;text-decoration:none">Inicio</a
+						<a href={base || '/'} style="color:inherit;text-decoration:none">Inicio</a
 						>{#if producto.categoria}&nbsp;·&nbsp;<a
 								href={enlaceCat(producto.categoria)}
 								style="color:inherit;text-decoration:none">{producto.categoria}</a
@@ -1545,7 +1546,7 @@
 					</div>
 				{/if}
 				<a
-					href={base}
+					href={base || '/'}
 					style="display:inline-block;margin-top:26px;text-decoration:none;padding:15px 24px;background:#2B2520;color:#EFE9E1;font:600 14px 'Familjen Grotesk';letter-spacing:.04em"
 					>Volver a la tienda</a
 				>
@@ -1955,7 +1956,7 @@
 							>Reservar otro</a
 						>{/if}
 					<a
-						href={base}
+						href={base || '/'}
 						style="display:inline-block;padding:15px 24px;border:0;background:#2B2520;color:#EFE9E1;font:600 14px 'Familjen Grotesk';letter-spacing:.04em;text-decoration:none;cursor:pointer"
 						>Volver a la tienda</a
 					>

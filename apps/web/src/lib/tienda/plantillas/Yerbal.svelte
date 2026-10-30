@@ -71,7 +71,8 @@
 		error?: string | null;
 	} = $props();
 
-	const base = $derived(`/t/${tienda.slug}`);
+	// En el dominio propio de la tienda los links no llevan /t/<slug> (tienda.base = '').
+	const base = $derived(tienda.base ?? `/t/${tienda.slug}`);
 	const carrito = $derived(carritoDe(tienda.slug));
 	let ancho = $state(page.data.movil ? 390 : 1200);
 	const nar = $derived(ancho < 820);
@@ -574,7 +575,7 @@
 		>
 			<div style="display:flex;align-items:center;gap:14px;padding:12px clamp(12px,3cqw,32px)">
 				<a
-					href={base}
+					href={base || '/'}
 					style="display:flex;align-items:center;gap:8px;min-width:0;flex:{nar
 						? '0 1 auto'
 						: 'none'};color:#1E2B22;text-decoration:none"
@@ -955,7 +956,7 @@
 				{/if}
 				<div style="flex:1;min-width:0">
 					<div style="font-size:12.5px;color:#6B7A6E">
-						<a href={base} style="color:inherit;text-decoration:none">Inicio</a> /
+						<a href={base || '/'} style="color:inherit;text-decoration:none">Inicio</a> /
 						<span style="color:#1E2B22">{categoria ?? 'Todo'}</span>
 					</div>
 					<div
@@ -1153,7 +1154,7 @@
 		{#if pagina === 'producto' && producto && sel}
 			<section style="padding:16px clamp(12px,3cqw,32px) 0">
 				<div style="font-size:12.5px;color:#6B7A6E">
-					<a href={base} style="color:inherit;text-decoration:none">Inicio</a> / {#if producto.categoria}<a
+					<a href={base || '/'} style="color:inherit;text-decoration:none">Inicio</a> / {#if producto.categoria}<a
 							href={enlaceCat(producto.categoria)}
 							style="color:inherit;text-decoration:none">{producto.categoria}</a
 						> /
@@ -1876,7 +1877,7 @@
 					</div>
 				{/if}
 				<a
-					href={base}
+					href={base || '/'}
 					style="padding:15px;border-radius:10px;background:#1E2B22;color:#EEF1E8;font:800 15px 'Schibsted Grotesk';text-align:center;text-decoration:none"
 					>Volver a la tienda</a
 				>
@@ -2295,7 +2296,7 @@
 							>Reservar otro</a
 						>{/if}
 					<a
-						href={base}
+						href={base || '/'}
 						style="display:inline-block;padding:15px 20px;border:0;border-radius:10px;background:#1E2B22;color:#EEF1E8;font:800 15px 'Schibsted Grotesk';text-align:center;text-decoration:none;cursor:pointer"
 						>Volver a la tienda</a
 					>

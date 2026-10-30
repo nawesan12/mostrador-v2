@@ -1,12 +1,28 @@
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import { resolverTienda } from '#lib/server/tienda/publica.ts';
 import { COOKIE } from '#lib/server/sandbox/sandbox.ts';
 import type { LayoutServerLoad } from './$types';
 
 /** La tienda online de /t/[tienda] (la del visitante en la demo, o la vitrina de la plantilla). */
-export const load: LayoutServerLoad = async ({ params, cookies, setHeaders, url, request }) => {
+export const load: LayoutServerLoad = async ({
+	params,
+	cookies,
+	setHeaders,
+	url,
+	request,
+	locals
+}) => {
 	const r = await resolverTienda(params.tienda, cookies.get(COOKIE));
 	if (!r) error(404, 'Esta tienda no existe o todavía no está publicada.');
+	// Con dominio propio principal, /t/<slug>/… vive allá: 301 con el mismo camino (Google y los
+	// links compartidos pasan al dominio). En el dominio, los links van sin /t/<slug>.
+	const base = `/t/${r.tienda.slug}`;
+	if (!locals.dominio && r.tienda.dominio && !r.tienda.vitrina && request.method === 'GET')
+		redirect(
+			301,
+			`https://${r.tienda.dominio}${url.pathname.slice(base.length) || '/'}${url.search}`
+		);
+	if (locals.dominio) r.tienda.base = '';
 	// La vitrina se cachea un minuto; la tienda del visitante, los turnos y su confirmación, nunca.
 	const fija = r.tienda.vitrina && !/\/turnos?(\/|$)/.test(url.pathname);
 	setHeaders({

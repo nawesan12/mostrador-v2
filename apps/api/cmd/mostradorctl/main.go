@@ -8,6 +8,8 @@
 //	mostradorctl equipo-alta <email> <nombre> <rol>
 //	                         da de alta (o actualiza) a alguien del equipo para /staff; la clave sale de
 //	                         MOSTRADOR_CLAVE_NUEVA y el rol es soporte, administracion o duenio
+//	mostradorctl dominio regalar|activar|quitar …
+//	                         el dominio propio de una tienda en Cloudflare (ver dominio.go)
 //
 // Las claves de los roles salen de MOSTRADOR_CLAVE_<ROL> (vacías en desarrollo).
 package main
@@ -106,6 +108,11 @@ func correr(cmd string) error {
 			return err
 		}
 		return altaEquipo(ctx, cfg.BaseMigrador, os.Args[2], os.Args[3], os.Args[4], os.Getenv("MOSTRADOR_CLAVE_NUEVA"))
+	case "dominio":
+		if err := cfg.Exigir("BaseMigrador"); err != nil {
+			return err
+		}
+		return dominio(ctx, cfg.BaseMigrador, os.Args[2:])
 	default:
 		return fmt.Errorf("comando desconocido %q", cmd)
 	}

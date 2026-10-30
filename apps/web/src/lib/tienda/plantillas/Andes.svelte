@@ -70,7 +70,8 @@
 		error?: string | null;
 	} = $props();
 
-	const base = $derived(`/t/${tienda.slug}`);
+	// En el dominio propio de la tienda los links no llevan /t/<slug> (tienda.base = '').
+	const base = $derived(tienda.base ?? `/t/${tienda.slug}`);
 	const carrito = $derived(carritoDe(tienda.slug));
 	let ancho = $state(page.data.movil ? 390 : 1200);
 	const nar = $derived(ancho < 820);
@@ -606,7 +607,7 @@
 					style="display:grid;flex:none;color:#0E1116"><Icon icon={I.phList} size={22} /></a
 				>{/if}
 			<a
-				href={base}
+				href={base || '/'}
 				style="display:flex;align-items:center;gap:9px;white-space:nowrap;flex:0 1 auto;min-width:0;text-decoration:none;color:#0E1116"
 				><span
 					style="width:32px;height:32px;border-radius:10px;background:#0E1116;display:grid;place-items:center;flex:none"
@@ -1089,7 +1090,7 @@
 			{#if pagina === 'catalogo'}
 				<section style="padding:22px clamp(14px,3cqw,36px) clamp(48px,7cqw,90px)">
 					<div style="font-size:12.5px;color:#69717E">
-						<a href={base} style="color:inherit;text-decoration:none">Inicio</a> /
+						<a href={base || '/'} style="color:inherit;text-decoration:none">Inicio</a> /
 						<span style="color:#0E1116">{categoria ?? 'Todo'}</span>
 					</div>
 					<div
@@ -1224,7 +1225,7 @@
 			{#if pagina === 'producto' && producto && sel}
 				<section style="padding:22px clamp(14px,3cqw,36px) 0">
 					<div style="font-size:12.5px;color:#69717E">
-						<a href={base} style="color:inherit;text-decoration:none">Inicio</a> / {#if producto.categoria}<a
+						<a href={base || '/'} style="color:inherit;text-decoration:none">Inicio</a> / {#if producto.categoria}<a
 								href={enlaceCat(producto.categoria)}
 								style="color:inherit;text-decoration:none">{producto.categoria}</a
 							> /
@@ -2378,7 +2379,7 @@
 									><Icon icon={I.phCalendarPlusBold} size={17} />Reservar otro</a
 								>{/if}
 							<a
-								href={base}
+								href={base || '/'}
 								style="text-decoration:none;padding:15px 24px;border:0;border-radius:14px;background:#fff;box-shadow:inset 0 0 0 1px rgba(14,17,22,.08);color:#0E1116;font:700 14.5px 'Instrument Sans'"
 								>Volver a la tienda</a
 							>
@@ -2436,7 +2437,7 @@
 							</div>
 						{/if}
 						<a
-							href={base}
+							href={base || '/'}
 							style="display:inline-block;margin-top:22px;text-decoration:none;padding:15px 24px;border-radius:14px;background:#0E1116;color:#fff;font:700 14.5px 'Instrument Sans'"
 							>Volver a la tienda</a
 						>

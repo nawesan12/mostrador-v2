@@ -360,3 +360,45 @@ func TestSlugDeProductos(t *testing.T) {
 		t.Fatalf("sol: %v", s)
 	}
 }
+
+// Un dominio propio muestra su tienda sólo verificado ("www." incluido); otro, o uno sin
+// verificar, no muestra ninguna.
+func TestSlugDeDominio(t *testing.T) {
+	ctx := context.Background()
+	b := pruebadb.Nueva(t)
+	luna := pruebadb.CrearTienda(t, b.App, "luna")
+	for _, d := range []string{"lunamates.com.ar", "pendiente.com.ar"} {
+		if err := configuracion.ConectarDominio(ctx, b.App, luna, d); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := vidriera.SlugDeDominio(ctx, b.App, "lunamates.com.ar"); !errors.Is(err, vidriera.ErrNoExiste) {
+		t.Fatalf("sin verificar: %v", err)
+	}
+	if err := b.App.EnTienda(ctx, luna, func(tx pgx.Tx) error {
+		_, err := tx.Exec(ctx, `UPDATE dominios SET verificado_en = now() WHERE nombre = 'lunamates.com.ar'`)
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+	for _, d := range []string{"lunamates.com.ar", "www.lunamates.com.ar", "LunaMates.com.ar"} {
+		if s, err := vidriera.SlugDeDominio(ctx, b.App, d); err != nil || s != "luna" {
+			t.Fatalf("%s: %q %v", d, s, err)
+		}
+	}
+	// Elegido como principal, la tienda pública lo trae (para redirigir y para el canonical).
+	if ti, err := vidriera.Publica(ctx, b.App, "luna"); err != nil || ti.Dominio != nil {
+		t.Fatalf("sin principal: %v %v", ti.Dominio, err)
+	}
+	if err := configuracion.DominioPrincipal(ctx, b.App, luna, "lunamates.com.ar", "https://tulocalweb.com.ar"); err != nil {
+		t.Fatal(err)
+	}
+	if ti, err := vidriera.Publica(ctx, b.App, "luna"); err != nil || ti.Dominio == nil || *ti.Dominio != "lunamates.com.ar" {
+		t.Fatalf("principal: %v %v", ti.Dominio, err)
+	}
+	for _, d := range []string{"pendiente.com.ar", "otro.com.ar", "", "../x"} {
+		if _, err := vidriera.SlugDeDominio(ctx, b.App, d); !errors.Is(err, vidriera.ErrNoExiste) {
+			t.Fatalf("%q: %v", d, err)
+		}
+	}
+}

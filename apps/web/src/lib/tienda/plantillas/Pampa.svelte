@@ -70,7 +70,8 @@
 		error?: string | null;
 	} = $props();
 
-	const base = $derived(`/t/${tienda.slug}`);
+	// En el dominio propio de la tienda los links no llevan /t/<slug> (tienda.base = '').
+	const base = $derived(tienda.base ?? `/t/${tienda.slug}`);
 	const carrito = $derived(carritoDe(tienda.slug));
 	let ancho = $state(page.data.movil ? 390 : 1200);
 	const nar = $derived(ancho < 820);
@@ -488,7 +489,7 @@
 			style="position:sticky;top:0;z-index:20;display:flex;align-items:stretch;background:#111;border-bottom:2px solid #2A2A2A;height:58px"
 		>
 			<a
-				href={base}
+				href={base || '/'}
 				style="display:flex;align-items:center;min-width:0;border-right:2px solid #2A2A2A;padding:0 clamp(14px,2.4cqw,28px);color:#F2F2F2;text-decoration:none;font-family:'Archivo Black',sans-serif;font-size:{nar
 					? 19
 					: 24}px;letter-spacing:-.02em;text-transform:uppercase"
@@ -1521,7 +1522,7 @@
 					</p>
 					<div>
 						<a
-							href={base}
+							href={base || '/'}
 							style="display:inline-block;padding:18px 28px;background:#E6FF4D;color:#111;font:800 14px 'Archivo';letter-spacing:.12em;text-transform:uppercase;text-decoration:none"
 							>Volver a la tienda</a
 						>
@@ -1991,7 +1992,7 @@
 							>Reservar otro</a
 						>{/if}
 					<a
-						href={base}
+						href={base || '/'}
 						style="display:inline-block;padding:16px 26px;border:2px solid #2A2A2A;background:transparent;color:#F2F2F2;font:800 14px 'Archivo';letter-spacing:.12em;text-transform:uppercase;text-decoration:none;cursor:pointer"
 						>Volver a la tienda</a
 					>

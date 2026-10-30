@@ -9,6 +9,8 @@ declare global {
 			equipo: string | null;
 			/** El panel abierto por alguien del equipo en sólo lectura ("ver la tienda"). */
 			mirada: boolean;
+			/** En el dominio propio de una tienda (mitienda.com.ar): el slug de esa tienda; si no, null. */
+			dominio: string | null;
 		}
 		interface Error {
 			message: string;

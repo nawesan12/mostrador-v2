@@ -90,6 +90,10 @@ export type TiendaPublica = {
 	turnos: TurnosTienda | null;
 	/** Sólo mirar: la vitrina de una plantilla (nadie la administra, no se compra). */
 	vitrina: boolean;
+	/** El dominio propio principal y verificado (mitienda.com.ar), o null: sólo /t/<slug>. */
+	dominio?: string | null;
+	/** Prefijo de los links: '' en el dominio propio; si falta, /t/<slug>. Lo pone el layout. */
+	base?: string;
 	/**
 	 * Los IDs de GA4 y del píxel de Meta de la tienda (lib/tienda/medicion.ts). Se cargan sólo con
 	 * el consentimiento de quien compra; la vitrina nunca los tiene.

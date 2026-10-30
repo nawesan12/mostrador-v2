@@ -70,7 +70,8 @@
 		error?: string | null;
 	} = $props();
 
-	const base = $derived(`/t/${tienda.slug}`);
+	// En el dominio propio de la tienda los links no llevan /t/<slug> (tienda.base = '').
+	const base = $derived(tienda.base ?? `/t/${tienda.slug}`);
 	const carrito = $derived(carritoDe(tienda.slug));
 	let ancho = $state(page.data.movil ? 390 : 1200);
 	const nar = $derived(ancho < 820);
@@ -485,7 +486,7 @@
 			style="position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:18px;padding:14px clamp(14px,3.5cqw,44px);background:rgba(251,241,230,.92);backdrop-filter:blur(10px);border-bottom:1px solid rgba(58,36,20,.1)"
 		>
 			<a
-				href={base}
+				href={base || '/'}
 				style="display:flex;align-items:center;gap:10px;min-width:0;text-decoration:none;color:#3A2414"
 				><span
 					style="width:40px;height:40px;flex:none;border-radius:50%;background:#B5651D;color:#FBF1E6;display:grid;place-items:center;font-family:'Young Serif',serif;font-size:20px"
@@ -918,7 +919,7 @@
 				</div>
 				<div style="position:sticky;top:90px;min-width:0">
 					<div style="font-size:13px;font-weight:700;color:#B5651D">
-						<a href={base} style="color:inherit;text-decoration:none">Inicio</a
+						<a href={base || '/'} style="color:inherit;text-decoration:none">Inicio</a
 						>{#if producto.categoria}&nbsp;·&nbsp;<a
 								href={enlaceCat(producto.categoria)}
 								style="color:inherit;text-decoration:none">{producto.categoria}</a
@@ -1576,7 +1577,7 @@
 					</div>
 				{/if}
 				<a
-					href={base}
+					href={base || '/'}
 					style="display:inline-block;margin-top:28px;padding:15px 22px;border-radius:14px;background:#3A2414;color:#FBF1E6;font:700 15px 'Instrument Sans';text-decoration:none"
 					>Volver a la tienda</a
 				>
@@ -1988,7 +1989,7 @@
 							>Reservar otro</a
 						>{/if}
 					<a
-						href={base}
+						href={base || '/'}
 						style="padding:15px 20px;border:2px solid #3A2414;border-radius:14px;background:transparent;color:#3A2414;font:700 15px 'Instrument Sans';text-decoration:none"
 						>Volver a la tienda</a
 					>

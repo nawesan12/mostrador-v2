@@ -217,7 +217,8 @@
 	const isGrid = $derived(fam === 'grid');
 	const isCat = $derived(fam === 'cat');
 
-	const base = $derived(`/t/${tienda.slug}`);
+	// En el dominio propio de la tienda los links no llevan /t/<slug> (tienda.base = '').
+	const base = $derived(tienda.base ?? `/t/${tienda.slug}`);
 	const carrito = $derived(carritoDe(tienda.slug));
 	let ancho = $state(page.data.movil ? 390 : 1200);
 	const nar = $derived(ancho < 820);
@@ -652,7 +653,7 @@
 					><Icon icon={I.phList} size={22} /></a
 				>{/if}
 			<a
-				href={base}
+				href={base || '/'}
 				style="text-decoration:none;color:{T.ink};font-family:{T.f};font-weight:{T.fw};font-size:{T.logoSz};letter-spacing:{T.ls};text-transform:{T.tt};line-height:1;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis"
 				>{tienda.nombre}</a
 			>
@@ -1072,7 +1073,7 @@
 		{#if pagina === 'catalogo'}
 			<section style="padding:24px clamp(14px,3.5cqw,44px) clamp(48px,7cqw,90px)">
 				<div style="font-size:12.5px;color:{T.mu}">
-					<a href={base} style="color:inherit;text-decoration:none">Inicio</a> /
+					<a href={base || '/'} style="color:inherit;text-decoration:none">Inicio</a> /
 					<span style="color:{T.ink}">{categoria ?? 'Todo'}</span>
 				</div>
 				<div
@@ -1203,7 +1204,7 @@
 		{#if pagina === 'producto' && producto && pd && sel}
 			<section style="padding:22px clamp(14px,3.5cqw,44px) 0">
 				<div style="font-size:12.5px;color:{T.mu}">
-					<a href={base} style="color:inherit;text-decoration:none">Inicio</a> / {#if producto.categoria}<a
+					<a href={base || '/'} style="color:inherit;text-decoration:none">Inicio</a> / {#if producto.categoria}<a
 							href={enlaceCat(producto.categoria)}
 							style="color:inherit;text-decoration:none">{producto.categoria}</a
 						> /
@@ -2335,7 +2336,7 @@
 							><Icon icon={I.phCalendarPlusBold} size={17} />Reservar otro</a
 						>{/if}
 					<a
-						href={base}
+						href={base || '/'}
 						style="text-decoration:none;padding:15px 26px;border:1.5px solid {T.ink};border-radius:{T.rb};background:transparent;color:{T.ink};font:700 15px 'Instrument Sans'"
 						>Volver a la tienda</a
 					>
@@ -2387,7 +2388,7 @@
 					</div>
 				{/if}
 				<a
-					href={base}
+					href={base || '/'}
 					style="display:inline-block;margin-top:28px;text-decoration:none;padding:15px 26px;border-radius:{T.rb};background:{T.ink};color:{T.bg};font:700 15px 'Instrument Sans'"
 					>Volver a la tienda</a
 				>

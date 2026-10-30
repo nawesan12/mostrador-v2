@@ -70,7 +70,8 @@
 		error?: string | null;
 	} = $props();
 
-	const base = $derived(`/t/${tienda.slug}`);
+	// En el dominio propio de la tienda los links no llevan /t/<slug> (tienda.base = '').
+	const base = $derived(tienda.base ?? `/t/${tienda.slug}`);
 	const carrito = $derived(carritoDe(tienda.slug));
 	let ancho = $state(page.data.movil ? 390 : 1200);
 	const nar = $derived(ancho < 820);
@@ -481,7 +482,7 @@
 			style="position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:16px;padding:12px clamp(14px,3.5cqw,40px);background:rgba(251,243,228,.92);backdrop-filter:blur(10px)"
 		>
 			<a
-				href={base}
+				href={base || '/'}
 				style="display:flex;align-items:center;gap:9px;min-width:0;text-decoration:none;color:#3B2416"
 				><span
 					style="width:38px;height:38px;border-radius:50%;background:#3B2416;color:#F5C26B;display:grid;place-items:center;flex:none"
@@ -825,7 +826,7 @@
 		{#if pagina === 'catalogo'}
 			<section style="padding:clamp(18px,3cqw,32px) clamp(14px,3.5cqw,40px) clamp(48px,7cqw,90px)">
 				<div style="font-size:13px;color:#7A5A44">
-					<a href={base} style="color:inherit;text-decoration:none">Inicio</a> /
+					<a href={base || '/'} style="color:inherit;text-decoration:none">Inicio</a> /
 					<span style="color:#3B2416">{categoria ?? 'Menú'}</span>
 				</div>
 				<div
@@ -1058,7 +1059,7 @@
 				</div>
 				<div style="position:sticky;top:80px;min-width:0">
 					<div style="font-size:13px;color:#7A5A44">
-						<a href={base} style="color:inherit;text-decoration:none">Inicio</a> /
+						<a href={base || '/'} style="color:inherit;text-decoration:none">Inicio</a> /
 						<a href="{base}/catalogo" style="color:inherit;text-decoration:none">Menú</a>
 					</div>
 					{#if producto.categoria}<a
@@ -1706,7 +1707,7 @@
 					</div>
 				{/if}
 				<a
-					href={base}
+					href={base || '/'}
 					style="margin-top:6px;padding:15px 24px;border-radius:999px;background:#3B2416;color:#FBF3E4;font:700 15px 'Instrument Sans';text-decoration:none"
 					>Volver a la tienda</a
 				>
@@ -2119,7 +2120,7 @@
 							>Reservar otro</a
 						>{/if}
 					<a
-						href={base}
+						href={base || '/'}
 						style="padding:15px 24px;border-radius:999px;border:1.5px solid rgba(59,36,22,.12);background:transparent;color:#3B2416;font:700 15px 'Instrument Sans';text-decoration:none"
 						>Volver a la tienda</a
 					>

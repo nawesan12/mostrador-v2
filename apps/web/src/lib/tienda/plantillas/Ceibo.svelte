@@ -69,7 +69,8 @@
 		error?: string | null;
 	} = $props();
 
-	const base = $derived(`/t/${tienda.slug}`);
+	// En el dominio propio de la tienda los links no llevan /t/<slug> (tienda.base = '').
+	const base = $derived(tienda.base ?? `/t/${tienda.slug}`);
 	const carrito = $derived(carritoDe(tienda.slug));
 	let ancho = $state(page.data.movil ? 390 : 1200);
 	const nar = $derived(ancho < 820);
@@ -406,7 +407,7 @@
 					><Icon icon={I.phList} size={22} /></a
 				>{/if}
 			<a
-				href={base}
+				href={base || '/'}
 				style="text-decoration:none;font-family:'Instrument Serif',serif;font-size:28px;letter-spacing:-.01em;color:#1C1A17;line-height:1"
 				>{tienda.nombre}</a
 			>
@@ -679,7 +680,7 @@
 		{#if pagina === 'catalogo'}
 			<section style="padding:28px clamp(16px,4cqw,48px) clamp(56px,8cqw,96px)">
 				<div style="font-size:12.5px;color:#6E655C">
-					<a href={base} style="color:inherit;text-decoration:none">Inicio</a> /
+					<a href={base || '/'} style="color:inherit;text-decoration:none">Inicio</a> /
 					<span style="color:#1C1A17">{categoria ?? 'Todo'}</span>
 				</div>
 				<div
@@ -780,7 +781,7 @@
 		{#if pagina === 'producto' && producto && sel}
 			<section style="padding:24px clamp(16px,4cqw,48px) 0">
 				<div style="font-size:12.5px;color:#6E655C">
-					<a href={base} style="color:inherit;text-decoration:none">Inicio</a> / {#if producto.categoria}<a
+					<a href={base || '/'} style="color:inherit;text-decoration:none">Inicio</a> / {#if producto.categoria}<a
 							href={enlaceCat(producto.categoria)}
 							style="color:inherit;text-decoration:none">{producto.categoria}</a
 						> /
@@ -1855,7 +1856,7 @@
 							><Icon icon={I.phCalendarPlusBold} size={17} />Reservar otro</a
 						>{/if}
 					<a
-						href={base}
+						href={base || '/'}
 						style="text-decoration:none;padding:15px 26px;border:1px solid #1C1A17;border-radius:2px;background:transparent;color:#1C1A17;font:600 14px 'Instrument Sans';letter-spacing:.04em"
 						>Volver a la tienda</a
 					>
@@ -1906,7 +1907,7 @@
 					</div>
 				{/if}
 				<a
-					href={base}
+					href={base || '/'}
 					style="display:inline-block;margin-top:28px;text-decoration:none;padding:15px 26px;border-radius:2px;background:#1C1A17;color:#F4EFEA;font:600 14px 'Instrument Sans';letter-spacing:.04em"
 					>Volver a la tienda</a
 				>

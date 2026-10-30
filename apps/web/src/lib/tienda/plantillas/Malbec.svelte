@@ -70,7 +70,8 @@
 		error?: string | null;
 	} = $props();
 
-	const base = $derived(`/t/${tienda.slug}`);
+	// En el dominio propio de la tienda los links no llevan /t/<slug> (tienda.base = '').
+	const base = $derived(tienda.base ?? `/t/${tienda.slug}`);
 	const carrito = $derived(carritoDe(tienda.slug));
 	let ancho = $state(page.data.movil ? 390 : 1200);
 	const nar = $derived(ancho < 820);
@@ -512,7 +513,7 @@
 						>{/each}{/if}
 			</div>
 			<a
-				href={base}
+				href={base || '/'}
 				style="text-decoration:none;color:#F4E9E1;text-align:center;line-height:1;min-width:0"
 				><span
 					style="display:block;font-family:'Cormorant Garamond',serif;font-weight:600;font-size:clamp(24px,2.6cqw,32px);letter-spacing:.04em"
@@ -806,7 +807,7 @@
 		{#if pagina === 'catalogo'}
 			<section style="padding:28px clamp(16px,4cqw,48px) clamp(56px,8cqw,100px)">
 				<div style="font-size:12.5px;color:#BFA9A3">
-					<a href={base} style="color:inherit;text-decoration:none">Inicio</a> /
+					<a href={base || '/'} style="color:inherit;text-decoration:none">Inicio</a> /
 					<span style="color:#F4E9E1">{categoria ?? 'Todo'}</span>
 				</div>
 				<div
@@ -975,7 +976,7 @@
 		{#if pagina === 'producto' && producto && sel}
 			<section style="padding:24px clamp(16px,4cqw,48px) 0">
 				<div style="font-size:12.5px;color:#BFA9A3">
-					<a href={base} style="color:inherit;text-decoration:none">Inicio</a> / {#if producto.categoria}<a
+					<a href={base || '/'} style="color:inherit;text-decoration:none">Inicio</a> / {#if producto.categoria}<a
 							href={enlaceCat(producto.categoria)}
 							style="color:inherit;text-decoration:none">{producto.categoria}</a
 						> /
@@ -1663,7 +1664,7 @@
 					</div>
 				{/if}
 				<a
-					href={base}
+					href={base || '/'}
 					style="display:inline-block;margin-top:28px;padding:16px 28px;background:#E8B86A;color:#1E0E12;font:700 14px 'Instrument Sans';letter-spacing:.08em;text-transform:uppercase;text-decoration:none"
 					>Volver a la tienda</a
 				>
@@ -2089,7 +2090,7 @@
 							>Reservar otro</a
 						>{/if}
 					<a
-						href={base}
+						href={base || '/'}
 						style="padding:16px 24px;border:1px solid rgba(244,233,225,.45);background:transparent;color:#F4E9E1;font:600 14px 'Instrument Sans';letter-spacing:.08em;text-transform:uppercase;text-decoration:none"
 						>Volver a la tienda</a
 					>

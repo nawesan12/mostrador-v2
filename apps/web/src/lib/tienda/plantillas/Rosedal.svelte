@@ -70,7 +70,8 @@
 		error?: string | null;
 	} = $props();
 
-	const base = $derived(`/t/${tienda.slug}`);
+	// En el dominio propio de la tienda los links no llevan /t/<slug> (tienda.base = '').
+	const base = $derived(tienda.base ?? `/t/${tienda.slug}`);
 	const carrito = $derived(carritoDe(tienda.slug));
 	let ancho = $state(page.data.movil ? 390 : 1200);
 	const nar = $derived(ancho < 820);
@@ -492,7 +493,7 @@
 					><Icon icon={I.phList} size={22} /></a
 				>{/if}
 			<a
-				href={base}
+				href={base || '/'}
 				style="text-decoration:none;color:#3A1F25;display:flex;align-items:baseline;gap:6px;min-width:0"
 				><span style="font-family:'Gloock',serif;font-size:25px;line-height:1">{logo[0]}</span
 				>{#if logo[1]}<span
@@ -1678,7 +1679,7 @@
 					</div>
 				{/if}
 				<a
-					href={base}
+					href={base || '/'}
 					style="display:inline-block;margin-top:26px;padding:16px 26px;border-radius:999px;background:#3A1F25;color:#fff;font:800 15px 'Hanken Grotesk';text-decoration:none"
 					>Volver a la tienda</a
 				>
@@ -2094,7 +2095,7 @@
 							>Reservar otro</a
 						>{/if}
 					<a
-						href={base}
+						href={base || '/'}
 						style="display:inline-block;padding:16px 26px;border:0;border-radius:999px;background:#3A1F25;color:#fff;font:800 15px 'Hanken Grotesk';text-decoration:none;cursor:pointer"
 						>Volver a la tienda</a
 					>

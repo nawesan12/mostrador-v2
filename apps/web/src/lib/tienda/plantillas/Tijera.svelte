@@ -81,7 +81,8 @@
 		error?: string | null;
 	} = $props();
 
-	const base = $derived(`/t/${tienda.slug}`);
+	// En el dominio propio de la tienda los links no llevan /t/<slug> (tienda.base = '').
+	const base = $derived(tienda.base ?? `/t/${tienda.slug}`);
 	const carrito = $derived(carritoDe(tienda.slug));
 	let ancho = $state(page.data.movil ? 390 : 1200);
 	const nar = $derived(ancho < 820);
@@ -525,7 +526,7 @@
 				: 16}px;padding:14px clamp(14px,3.5cqw,44px);background:rgba(246,244,241,.92);backdrop-filter:blur(10px);border-bottom:1px solid rgba(30,27,46,.08)"
 		>
 			<a
-				href={base}
+				href={base || '/'}
 				style="display:flex;align-items:center;gap:10px;min-width:0;text-decoration:none;color:#1E1B2E"
 				><span
 					style="width:36px;height:36px;border-radius:11px;background:#5B3FD6;color:#fff;display:grid;place-items:center;flex:none"
@@ -1349,7 +1350,7 @@
 							><Icon icon={I.phCalendarPlusBold} size={17} />Reservar otro</a
 						>{/if}
 					<a
-						href={base}
+						href={base || '/'}
 						style="padding:16px 22px;border:1.5px solid rgba(30,27,46,.18);border-radius:999px;color:#1E1B2E;font:700 15px 'Instrument Sans';text-decoration:none"
 						>Volver a la tienda</a
 					>
@@ -2133,7 +2134,7 @@
 					</div>
 				{/if}
 				<a
-					href={base}
+					href={base || '/'}
 					style="display:inline-block;margin-top:28px;padding:16px 26px;border-radius:999px;background:#1E1B2E;color:#fff;font:700 15px 'Instrument Sans';text-decoration:none"
 					>Volver a la tienda</a
 				>

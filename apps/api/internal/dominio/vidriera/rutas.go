@@ -37,6 +37,15 @@ func Rutas(mux *http.ServeMux, pool tx, mp Pagador, sitio string, dev *devolucio
 			problema.Escribir(w, problema.Interno())
 		}
 	}
+	// La tienda de un dominio propio: la web la pide al recibir mitienda.com.ar.
+	mux.HandleFunc("GET /v1/publico/dominios/{dominio}", func(w http.ResponseWriter, r *http.Request) {
+		slug, err := SlugDeDominio(r.Context(), pool, r.PathValue("dominio"))
+		if err != nil {
+			error404(w, err)
+			return
+		}
+		escribir(w, http.StatusOK, map[string]string{"slug": slug})
+	})
 	mux.HandleFunc("GET /v1/publico/tiendas/{slug}", func(w http.ResponseWriter, r *http.Request) {
 		t, err := Publica(r.Context(), pool, r.PathValue("slug"))
 		if err != nil {

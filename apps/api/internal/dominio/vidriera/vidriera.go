@@ -97,6 +97,8 @@ type Tienda struct {
 	// Turnos: servicios, profesionales, seña y horario; null si la tienda no toma turnos.
 	Turnos   *turnos.Resumen `json:"turnos"`
 	Medicion Medicion        `json:"medicion"`
+	// Dominio: el propio que eligió como principal, ya verificado (null: sólo /t/<slug>).
+	Dominio *string `json:"dominio"`
 }
 
 // Medicion son los IDs de GA4 y del píxel de Meta de la tienda (la tienda online los carga sólo con
@@ -171,6 +173,10 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 				EXISTS (SELECT 1 FROM mp_conexiones WHERE tienda_id = $1 AND NOT reautorizar), ga4, pixel_meta
 			FROM tiendas WHERE id = $1`, id).Scan(&out.Nombre, &out.Plantilla, &diseno, &negocio, &mp,
 			&out.Medicion.GA4, &out.Medicion.Pixel); err != nil {
+			return err
+		}
+		if err := t.QueryRow(ctx, `SELECT nombre FROM dominios WHERE tienda_id = $1 AND principal AND verificado_en IS NOT NULL`,
+			id).Scan(&out.Dominio); err != nil && !errors.Is(err, pgx.ErrNoRows) {
 			return err
 		}
 		var d struct {

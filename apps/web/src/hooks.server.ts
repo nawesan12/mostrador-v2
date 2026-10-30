@@ -6,6 +6,8 @@ import { COOKIE, dbSandbox, leer } from '#lib/server/sandbox/sandbox.ts';
 import { COOKIE_SESION } from '#lib/server/auth/sesion.ts';
 import { COOKIE_EQUIPO, COOKIE_MIRADA } from '#lib/server/staff/index.ts';
 import { redireccionTienda } from '#lib/server/tienda/redireccion.ts';
+import { slugDeDominio } from '#lib/server/tienda/dominio.ts';
+import { esDominioPropio, GLOBALES_EN_DOMINIO } from '#lib/tienda/dominio.ts';
 
 /**
  * Rutas que usan el sandbox de la demo: sólo ahí se lee D1 (la landing no gasta lecturas).
@@ -61,6 +63,30 @@ export const handle: Handle = async ({ event, resolve }) => {
 		u.hostname = u.hostname.slice(4);
 		return secure(new Response(null, { status: 301, headers: { location: u.href } }));
 	}
+	// El dominio propio de una tienda sólo muestra esa tienda (reroute la llevó a /t/<slug>): ni el
+	// panel, ni la landing, ni otra tienda.
+	event.locals.dominio = null;
+	if (esDominioPropio(event.url.hostname)) {
+		const slug = await slugDeDominio(event.url.hostname).catch(() => undefined);
+		if (slug === undefined)
+			return secure(new Response('Probá de nuevo en un momento.', { status: 503 }));
+		const suya =
+			slug &&
+			(GLOBALES_EN_DOMINIO.test(event.url.pathname) ||
+				!event.route.id ||
+				(event.route.id.startsWith('/t/[tienda]') && event.params.tienda === slug));
+		if (!slug || !suya)
+			return secure(
+				new Response(
+					slug ? 'No encontramos esta página.' : 'Este dominio todavía no tiene una tienda.',
+					{
+						status: 404,
+						headers: { 'content-type': 'text/plain; charset=utf-8' }
+					}
+				)
+			);
+		event.locals.dominio = slug;
+	}
 	// La demo (demo.tulocalweb.com.ar) no se indexa: el sitio que cuenta para Google es el de producción.
 	const demo = event.url.hostname.startsWith('demo.');
 	if (!dev && csrfForbidden(event.request, event.url))
@@ -93,20 +119,24 @@ export const handle: Handle = async ({ event, resolve }) => {
 	if (demo) res.headers.set('X-Robots-Tag', 'noindex');
 	// Un link de la tienda vieja (importada): si el path de la tienda no existe y había una dirección
 	// guardada, 301 a la nueva. Sólo ante un 404, así las páginas que existen no consultan nada.
+	// En el dominio propio el path no lleva /t/<slug>: se consulta con él y se responde sin él.
+	const dom = event.locals.dominio;
 	if (
 		res.status === 404 &&
 		event.request.method === 'GET' &&
-		event.url.pathname.startsWith('/t/')
+		(dom || event.url.pathname.startsWith('/t/'))
 	) {
-		const hacia = await redireccionTienda(event.url.pathname, event.cookies.get(COOKIE)).catch(
+		const base = dom ? `/t/${dom}` : '';
+		let hacia = await redireccionTienda(base + event.url.pathname, event.cookies.get(COOKIE)).catch(
 			() => null
 		);
+		if (hacia && dom) hacia = hacia.slice(base.length) || '/';
 		if (hacia) res = secure(new Response(null, { status: 301, headers: { location: hacia } }));
 	}
 	try {
 		res.headers.set('Server-Timing', `app;dur=${Date.now() - started}`);
 		// En desarrollo, Vite inyecta scripts y un websocket propios: la CSP va sólo en el build.
-		if (!dev && event.url.pathname.startsWith('/t/'))
+		if (!dev && (dom || event.url.pathname.startsWith('/t/')))
 			res.headers.set('Content-Security-Policy', CSP_TIENDA);
 	} catch {
 		// Respuesta inmutable: el diagnóstico no vale una copia.

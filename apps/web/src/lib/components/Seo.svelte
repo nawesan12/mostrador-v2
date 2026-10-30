@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { SITE } from '#lib/site.ts';
 	/**
 	 * Título, descripción, canonical, Open Graph y Twitter de una página pública, más JSON-LD opcional
@@ -34,7 +35,16 @@
 		jsonLd?: Record<string, unknown>;
 	} = $props();
 
-	const url = $derived(SITE + path);
+	// Una tienda con dominio propio: el canonical es el de su dominio, sin /t/<slug>.
+	const tienda = $derived(
+		page.data.tienda as { slug: string; dominio?: string | null } | undefined
+	);
+	const url = $derived.by(() => {
+		const base = tienda?.dominio ? `/t/${tienda.slug}` : null;
+		if (base && (path === base || path.startsWith(`${base}/`)))
+			return `https://${tienda!.dominio}${path.slice(base.length) || '/'}`;
+		return SITE + path;
+	});
 	const img = $derived(`${SITE}/og/${image}.jpg`);
 	// Un cierre de etiqueta dentro del JSON terminaría el bloque antes de tiempo: se escapa `<`.
 	const ld = $derived(
