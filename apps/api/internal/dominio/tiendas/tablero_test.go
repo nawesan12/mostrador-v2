@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/tiendas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db/pruebadb"
 )
@@ -48,5 +49,45 @@ func TestMetaPorTienda(t *testing.T) {
 	}
 	if len(tu.Serie.Actual) != 14 || tu.UltimosPedidos == nil || tu.Avisos.CertificadoDias != nil {
 		t.Fatalf("tablero vacío mal armado: %+v", tu)
+	}
+}
+
+// El Inicio cuenta las ventas de verdad: un pedido pagado entra, uno sin pagar o cancelado no.
+func TestTableroConVentas(t *testing.T) {
+	ctx := context.Background()
+	b := pruebadb.Nueva(t)
+	id, _ := tiendas.Crear(ctx, b.App, "almacen", "Almacén", "almacen")
+	ahora := time.Now()
+	mail := "ana@ejemplo.com"
+	pedido := func(estado, canal string, total int64, hace time.Duration) {
+		t.Helper()
+		if _, err := pedidos.Crear(ctx, b.App, id, pedidos.Nuevo{
+			Comprador: pedidos.Comprador{Nombre: "Ana", Email: &mail}, Canal: canal, Pago: "transf", Envio: "retiro",
+			Estado: estado, Creado: ahora.Add(-hace),
+			Items: []pedidos.Item{{Nombre: "Yerba 1 kg", Cantidad: 2, Precio: total / 2}},
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	pedido("Entregado", "web", 15_000, time.Hour)
+	pedido("Para preparar", "wa", 5_000, 2*time.Hour)
+	pedido("Sin pagar", "web", 99_000, 3*time.Hour)
+	pedido("Cancelado", "web", 77_000, 4*time.Hour)
+
+	tb, err := tiendas.ObtenerTablero(ctx, b.App, id, "7d", ahora)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tb.Ventas.Actual != 20_000 || tb.Kpis.Pedidos.Actual != 2 || tb.Kpis.Ticket.Actual != 10_000 {
+		t.Fatalf("ventas %v, pedidos %v, ticket %v", tb.Ventas.Actual, tb.Kpis.Pedidos.Actual, tb.Kpis.Ticket.Actual)
+	}
+	if tb.Kpis.ClientesNuevos.Actual != 1 || tb.Serie.Actual[13] != 20_000 {
+		t.Fatalf("clientes nuevos %v, serie %v", tb.Kpis.ClientesNuevos.Actual, tb.Serie.Actual)
+	}
+	if len(tb.Canales) != 2 || len(tb.UltimosPedidos) != 4 || len(tb.MasVendidos) != 1 {
+		t.Fatalf("canales %v, últimos %d, más vendidos %v", tb.Canales, len(tb.UltimosPedidos), tb.MasVendidos)
+	}
+	if tb.ParaHacer.Preparar != 1 || tb.ParaHacer.Transferencias != 1 || tb.Meta.Actual < 15_000 {
+		t.Fatalf("para hacer %+v, meta %+v", tb.ParaHacer, tb.Meta)
 	}
 }

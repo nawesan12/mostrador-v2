@@ -27,9 +27,9 @@ type comparado struct {
 	Anterior float64 `json:"anterior"`
 }
 
-// Tablero es el Resumen del panel (components/schemas/Tablero). Los números de ventas, pedidos,
-// caja, envíos, bandeja y reseñas se llenan a medida que llegan esos dominios; hasta entonces van
-// en cero y vacíos, nunca inventados. La meta del mes ya es real.
+// Tablero es el Resumen del panel (components/schemas/Tablero). Ventas, pedidos, canales, meta,
+// para hacer y más vendidos salen de los pedidos (tablero_ventas.go); lo que todavía no se mide
+// (visitas, caja, bandeja) va en cero y vacío, nunca inventado.
 type Tablero struct {
 	Periodo string    `json:"periodo"`
 	Desde   time.Time `json:"desde"`
@@ -136,6 +136,9 @@ func ObtenerTablero(ctx context.Context, pool interface {
 	t.Hornero.CostoMensaje, t.Hornero.IdeasHechas = 120, []string{}
 	err = pool.EnTienda(ctx, tiendaID, func(tx pgx.Tx) error {
 		if err := tx.QueryRow(ctx, `SELECT meta_mensual FROM tiendas WHERE id = $1`, tiendaID).Scan(&t.Meta.Objetivo); err != nil {
+			return err
+		}
+		if err := llenarVentas(ctx, tx, tiendaID, &t, desde, hasta, ahora); err != nil {
 			return err
 		}
 		// Carritos abandonados de la semana para recordar (Hornero los ofrece en el tablero).
