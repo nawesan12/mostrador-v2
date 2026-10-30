@@ -6,80 +6,79 @@
 	import Faq from '#lib/sitio/Faq.svelte';
 	import Titulo from '#lib/sitio/Titulo.svelte';
 
-	/** Seguridad (design/Mostrador Seguridad.dc.html). */
+	/**
+	 * Seguridad (design/Mostrador Seguridad.dc.html). Sólo lo que la plataforma hace hoy: sin cifras
+	 * de disponibilidad, certificaciones ni funciones que todavía no existen.
+	 */
 	const DATOS = [
-		['99,98 %', 'disponibilidad 12 meses'],
-		['30 días', 'de copias restaurables'],
+		['Cada hora', 'chequeamos que todo ande'],
+		['Todos los días', 'hacemos una copia'],
 		['0', 'datos de tarjeta guardados']
 	] as const;
 	const CAPAS = [
 		[
 			I.phLockKeyFill,
-			'Cifrado de punta a punta',
-			'TLS 1.3 en cada conexión y AES-256 para los datos guardados. Certificado SSL gratis en tu dominio.'
+			'Conexión cifrada',
+			'HTTPS en cada página y certificado SSL gratis en tu dominio propio, que se renueva solo.'
 		],
 		[
 			I.phPasswordFill,
-			'Verificación en dos pasos',
-			'Con app de autenticación o WhatsApp, incluida en todos los planes. Obligatoria para dueños de tienda.'
+			'Claves bien guardadas',
+			'Las contraseñas se guardan con argon2id: ni nosotros podemos leerlas.'
+		],
+		[
+			I.phStackFill,
+			'Cada tienda, separada',
+			'La base de datos aísla cada tienda: una cuenta nunca ve los datos de otra.'
 		],
 		[
 			I.phClockCounterClockwiseFill,
 			'Copias de seguridad diarias',
-			'Guardamos 30 días de historia. Restaurás un producto borrado o toda la tienda vos mismo, en un clic.'
-		],
-		[
-			I.phShieldWarningFill,
-			'Antifraude en cada venta',
-			'Detectamos compras sospechosas antes de despachar y te avisamos con el motivo.'
+			'Copiamos la base todos los días y guardamos las últimas 14.'
 		],
 		[
 			I.phCreditCardFill,
-			'Pagos certificados PCI',
-			'Los datos de tarjeta nunca pasan por Tu Local Web: los procesan Mercado Pago y Payway.'
+			'Las tarjetas, en Mercado Pago',
+			'Los datos de tarjeta nunca pasan por Tu Local Web: los procesa Mercado Pago.'
 		],
 		[
 			I.phPulseFill,
-			'Monitoreo 24/7',
-			'Un equipo de guardia y alertas automáticas. El 99,98 % de disponibilidad en los últimos 12 meses.'
+			'Monitoreo cada hora',
+			'Chequeamos la tienda, el panel y los pagos, y lo publicamos en Estado del sistema.'
 		]
 	] as const;
-	const COMPARADO = [
-		['Verificación en dos pasos', 'Incluida', 'Depende del plan'],
-		['Restaurar copias vos mismo', 'Sí, 30 días', 'Por soporte'],
-		['Alertas de inicio de sesión', 'Email y WhatsApp', 'Solo email'],
-		['Roles y permisos por persona', 'Ilimitados', 'Limitados'],
-		['Registro de actividad', '12 meses', '30 días o nada'],
-		['Antifraude en pedidos', 'Incluido', 'Pago aparte']
-	] as const;
 	const CUMPLIMIENTO = [
-		[I.phSealCheckFill, '#2F8F63', 'Ley 25.326 de Datos Personales', 'Base inscripta ante la AAIP'],
-		[I.phCreditCardFill, '#2F8F63', 'PCI DSS', 'A través de nuestros procesadores de pago'],
-		[I.phCertificateFill, '#9A6A10', 'ISO 27001', 'Certificación en proceso · previsto para 2027']
+		[
+			I.phSealCheckFill,
+			'#2F8F63',
+			'Ley 25.326 de Datos Personales',
+			'Cómo tratamos los datos, en la política de privacidad'
+		],
+		[I.phCreditCardFill, '#2F8F63', 'PCI DSS', 'A través de Mercado Pago, que procesa los pagos']
 	] as const;
 	const FAQ = [
 		[
-			'¿Qué pasa si se cae Tu Local Web en pleno Hot Sale?',
-			'Tenemos servidores en dos zonas distintas y escalamos solos con el tráfico. Si aun así hay una caída, lo ves en Estado del sistema y te acreditamos parte del plan según la política de Reembolsos.'
+			'¿Qué pasa si se cae Tu Local Web?',
+			'Lo ves en Estado del sistema, que se actualiza cada hora, con lo que pasó y cuándo se resolvió.'
 		],
 		[
 			'¿Pueden ver los datos de mis clientes?',
-			'Solo el personal de soporte que vos autorices desde el panel, por un tiempo limitado y con registro de cada acceso.'
+			'Los datos son tuyos. Sólo los miramos si nos pedís ayuda con algo puntual, y nunca los vendemos ni los compartimos.'
 		],
 		[
 			'¿Me puedo llevar todo si me voy?',
 			'Sí. Exportás productos, clientes, pedidos y facturas en CSV o Excel desde Configuración › Mis datos, cuando quieras.'
 		],
 		[
-			'¿Cómo me protegen de compras fraudulentas?',
-			'Analizamos cada pedido con más de 40 señales (IP, dirección, historial, monto) y te marcamos los riesgosos antes de despachar.'
+			'¿Cómo pago con tarjeta sin riesgo?',
+			'Tus clientes pagan en Mercado Pago, que guarda y procesa la tarjeta. Tu Local Web sólo recibe el aviso del pago.'
 		]
 	] as const;
 </script>
 
 <Seo
 	title="Seguridad · Tu Local Web"
-	description="Cifrado, verificación en dos pasos, copias diarias y antifraude incluidos en todos los planes."
+	description="Conexión cifrada, claves bien guardadas, cada tienda separada, copias diarias y monitoreo cada hora, en todos los planes."
 	path="/seguridad"
 	image="seguridad"
 />
@@ -89,10 +88,10 @@
 		<div class="hero-in">
 			<div class="hero-txt">
 				<Etiqueta texto="Seguridad" color="#F0A58A" />
-				<h1>Tu negocio no se cae. Y nada se pierde.</h1>
+				<h1>Tu negocio, cuidado desde el primer día.</h1>
 				<p>
-					Lo que en otras plataformas es opcional o cuesta extra, en Tu Local Web viene activado
-					desde el primer día.
+					Lo básico para que tu tienda y tus datos estén seguros viene activado en todos los planes,
+					sin pagar&nbsp;extra.
 				</p>
 				<div class="datos">
 					{#each DATOS as [v, t] (t)}<div>
@@ -108,7 +107,7 @@
 
 <section class="bloque">
 	<div class="ancho">
-		<Titulo etiqueta="Qué incluye" titulo="Seis capas, todas incluidas" />
+		<Titulo etiqueta="Qué incluye" titulo="Seis cosas, todas incluidas" />
 		<div class="capas">
 			{#each CAPAS as [ico, t, d] (t)}
 				<div class="capa">
@@ -117,32 +116,6 @@
 					<p>{d}</p>
 				</div>
 			{/each}
-		</div>
-	</div>
-</section>
-
-<section class="bloque beige">
-	<div class="ancho">
-		<Titulo etiqueta="Comparado" titulo="Lo que otras cobran aparte" />
-		<div class="tabla" role="table" aria-label="Seguridad: Tu Local Web contra otras plataformas">
-			<div class="fila cab" role="row">
-				<span role="columnheader">Función</span>
-				<span role="columnheader" class="t-m"
-					><img src="/mark.svg" alt="" width="16" />Tu Local Web</span
-				>
-				<span role="columnheader" class="t-o">Otras plataformas</span>
-			</div>
-			{#each COMPARADO as [f, m, o] (f)}
-				<div class="fila" role="row">
-					<span role="cell" class="t-f">{f}</span>
-					<span role="cell" class="t-si"><Icon icon={I.phCheckCircleFill} size={16} />{m}</span>
-					<span role="cell" class="t-no">{o}</span>
-				</div>
-			{/each}
-		</div>
-		<div class="nota">
-			Comparación orientativa con planes básicos de plataformas de e-commerce en Argentina, octubre
-			de 2026.
 		</div>
 	</div>
 </section>
@@ -167,12 +140,12 @@
 			<div class="tarjeta oscura">
 				<Etiqueta texto="Reportá una vulnerabilidad" color="#F0A58A" />
 				<p>
-					Si encontrás un problema de seguridad, escribinos a <b>seguridad@tulocalweb.com.ar</b>.
-					Respondemos en 24 horas, no tomamos acciones legales contra investigaciones de buena fe y
-					reconocemos los hallazgos válidos con recompensas de hasta USD 2.000.
+					Si encontrás un problema de seguridad, escribinos a <b>soporte@tulocalweb.com.ar</b> con los
+					detalles. Lo lee una persona del equipo y te respondemos&nbsp;personalmente.
 				</p>
-				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- página pública -->
-				<a href="/contacto">Ver el programa<Icon icon={I.phArrowRightBold} size={13} /></a>
+				<a href="mailto:soporte@tulocalweb.com.ar"
+					>Escribir a soporte<Icon icon={I.phArrowRightBold} size={13} /></a
+				>
 			</div>
 		</div>
 		<div class="preguntas">
@@ -282,55 +255,6 @@
 		line-height: 1.55;
 		color: #5c4536;
 	}
-	.tabla {
-		margin-top: 28px;
-		border-radius: 24px;
-		background: #fff;
-		box-shadow: 0 1px 2px rgba(58, 29, 18, 0.06);
-		overflow: hidden;
-	}
-	.fila {
-		display: grid;
-		grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr);
-		gap: 12px;
-		padding: 14px 20px;
-		border-top: 1px solid rgba(58, 29, 18, 0.07);
-		font-size: 14.5px;
-		align-items: center;
-	}
-	.fila.cab {
-		background: #2a140c;
-		color: #fff;
-		font-size: 13px;
-		font-weight: 600;
-		border-top: 0;
-	}
-	.t-m {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-	}
-	.t-o {
-		opacity: 0.7;
-	}
-	.t-f {
-		font-weight: 500;
-	}
-	.t-si {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		font-weight: 600;
-		color: #237550;
-	}
-	.t-no {
-		color: #7a6252;
-	}
-	.nota {
-		margin-top: 8px;
-		font-size: 12.5px;
-		color: #7a6252;
-	}
 	.dos {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
@@ -394,17 +318,6 @@
 	}
 	/* Celular: la tabla de tres columnas se apila (la función arriba, las dos respuestas abajo). */
 	@media (max-width: 640px) {
-		.fila {
-			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-			gap: 4px 12px;
-			padding: 13px 16px;
-		}
-		.fila .t-f {
-			grid-column: 1 / -1;
-		}
-		.fila.cab > :first-child {
-			display: none;
-		}
 		.hero-in > img {
 			width: 160px;
 		}

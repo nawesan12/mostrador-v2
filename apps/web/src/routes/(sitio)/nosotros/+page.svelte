@@ -5,62 +5,37 @@
 	import Etiqueta from '#lib/sitio/Etiqueta.svelte';
 	import Titulo from '#lib/sitio/Titulo.svelte';
 
-	/** Sobre nosotros (design/Mostrador Nosotros.dc.html). Personas y cifras de ejemplo del diseño. */
+	/**
+	 * Sobre nosotros (design/Mostrador Nosotros.dc.html). Sólo lo que es cierto: quién lo hace y lo
+	 * que la plataforma hace hoy. Sin cifras, historia ni personas de ejemplo.
+	 */
 	const foto = (id: string, extra: string) =>
 		`https://images.unsplash.com/photo-${id}?auto=format&fit=crop&q=72&${extra}`;
 	const HITOS = [
-		[
-			'2023',
-			'Arrancamos en un garage de Rosario',
-			'Tres amigos que vendían yerba online cansados de pagar comisiones.'
-		],
-		[
-			'2024',
-			'Las primeras 1.000 tiendas',
-			'Sumamos WhatsApp y facturación electrónica, lo que más nos pedían.'
-		],
-		[
-			'2025',
-			'Llega Tincho',
-			'El asistente de IA que responde, vende y avisa cuando algo se traba.'
-		],
-		[
-			'2026',
-			'Más de 40.000 tiendas',
-			'Con oficinas en Buenos Aires, Córdoba y Rosario, y un equipo de 80 personas.'
-		]
+		['01', 'Tu tienda, con tu dominio', 'Tu marca y tu dirección, sin comisiones por venta.'],
+		['02', 'Cobrás y facturás desde el panel', 'Mercado Pago para cobrar y ARCA para facturar.'],
+		['03', 'Tincho te da una mano', 'Responde lo de todos los días con los datos de tu negocio.'],
+		['04', 'Tus datos son tuyos', 'Los exportás cuando quieras, en CSV o Excel.']
 	] as const;
 	const VALORES = [
 		[
 			I.phCurrencyCircleDollarFill,
-			'Precio justo',
-			'Sin comisiones escondidas ni apps que se pagan aparte.'
+			'Precio claro',
+			'Un abono por mes, sin comisiones escondidas ni apps que se pagan aparte.'
 		],
 		[I.phShieldCheckFill, 'Seguridad de serie', 'Lo que protege tu negocio no es un extra.'],
-		[I.phHandHeartFill, 'Gente que atiende', 'Respondemos personas, por WhatsApp, en minutos.'],
+		[I.phHandHeartFill, 'Gente que atiende', 'Te responde una persona del equipo, no un bot.'],
 		[
 			I.phMapTrifoldFill,
 			'Hecho para Argentina',
-			'Cuotas, ARCA, Correo Argentino y el CP de cada pueblo.'
+			'Pesos, cuotas, Mercado Pago, ARCA y la forma en que se vende acá.'
 		]
-	] as const;
-	const EQUIPO = [
-		['1531058240690-006c446962d8', 'Martina Ruiz', 'Cofundadora · Producto'],
-		['1520333789090-1afc82db536a', 'Julián Pereyra', 'Cofundador · Tecnología'],
-		['1687422811062-a966b55cb217', 'Camila Ríos', 'Atención a comercios'],
-		['1545262722-9e0d80a0bc01', 'Federico Luna', 'Pagos y seguridad']
-	] as const;
-	const BUSQUEDAS = [
-		['Ingeniero/a backend sénior', 'Tecnología · Remoto · Argentina'],
-		['Diseñador/a de producto', 'Producto · Híbrido · CABA'],
-		['Especialista en migraciones', 'Atención · Híbrido · Córdoba'],
-		['Ejecutivo/a de cuentas', 'Ventas · Híbrido · Rosario']
 	] as const;
 </script>
 
 <Seo
 	title="Sobre nosotros · Tu Local Web"
-	description="Hacemos que vender sea más barato y más simple para el que empieza. Nuestra historia, lo que nos importa y el equipo."
+	description="Hacemos que vender sea más barato y más simple para el que empieza. Por qué existe Tu Local Web, lo que nos importa y quién lo hace."
 	path="/nosotros"
 />
 
@@ -76,8 +51,8 @@
 		<div class="costado">
 			<div class="chica"><img src={foto('1556761175-5973dc0f32e7', 'w=700')} alt="" /></div>
 			<div class="cifra">
-				<div class="c-v">40.000+</div>
-				<div class="c-t">tiendas que venden con Tu Local Web</div>
+				<div class="c-v">Grupo Vimo</div>
+				<div class="c-t">hace Tu Local Web, desde Argentina</div>
 			</div>
 		</div>
 	</div>
@@ -87,11 +62,11 @@
 	<div class="ancho">
 		<div class="historia">
 			<div>
-				<Titulo etiqueta="Nuestra historia" titulo="Nació de un problema propio" />
+				<Titulo etiqueta="Por qué existe" titulo="Vender no debería costar tanto" />
 				<p class="h-txt">
-					Vendíamos yerba por internet y cada mes pagábamos más en comisiones, apps y planes que en
-					envíos. Armamos Tu Local Web para que cualquier emprendedor tenga todo lo que necesita, en
-					un solo lugar y por un precio justo.
+					Para vender online hoy se pagan comisiones, apps sueltas y planes que no conversan entre
+					sí. Armamos Tu Local Web para que un comercio tenga todo en un solo lugar: tienda, cobros,
+					facturas, pedidos y stock, por un abono&nbsp;claro.
 				</p>
 			</div>
 			<div class="hitos">
@@ -126,35 +101,27 @@
 
 <section class="bloque">
 	<div class="ancho">
-		<Titulo etiqueta="El equipo" titulo="Algunas de las caras de Tu Local Web" />
-		<div class="equipo">
-			{#each EQUIPO as [id, n, r] (n)}
-				<div>
-					<div class="cara">
-						<img src={foto(id, 'w=400&h=480&crop=faces')} alt="" loading="lazy" />
-					</div>
-					<div class="e-n">{n}</div>
-					<div class="e-r">{r}</div>
-				</div>
-			{/each}
-		</div>
 		<div class="trabaja">
 			<div>
-				<Etiqueta texto="Trabajá con nosotros" color="#F0A58A" />
-				<div class="t-t">Buscamos gente que quiera que a los emprendedores les vaya bien.</div>
+				<Etiqueta texto="Quiénes somos" color="#F0A58A" />
+				<div class="t-t">Tu Local Web es un producto de Grupo Vimo.</div>
 				<p>
-					Sueldo en pesos ajustado por inflación, prepaga, 4 semanas de vacaciones y equipo para
-					trabajar desde tu casa.
+					Somos un equipo chico que hace productos digitales en Argentina. Si querés escribirnos,
+					hablar de tu negocio o trabajar con nosotros, estamos en&nbsp;contacto.
 				</p>
 			</div>
 			<div class="busquedas">
-				{#each BUSQUEDAS as [t, d] (t)}
-					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- página pública -->
-					<a href="/contacto">
-						<span class="b-txt"><b>{t}</b><span>{d}</span></span>
-						<Icon icon={I.phArrowUpRightBold} size={15} />
-					</a>
-				{/each}
+				<!-- eslint-disable svelte/no-navigation-without-resolve -- páginas públicas -->
+				<a href="/contacto">
+					<span class="b-txt"><b>Escribinos</b><span>Te responde una persona del equipo</span></span
+					>
+					<Icon icon={I.phArrowUpRightBold} size={15} />
+				</a>
+				<a href="https://grupovimo.com.ar" rel="noopener">
+					<span class="b-txt"><b>Grupo Vimo</b><span>grupovimo.com.ar</span></span>
+					<Icon icon={I.phArrowUpRightBold} size={15} />
+				</a>
+				<!-- eslint-enable svelte/no-navigation-without-resolve -->
 			</div>
 		</div>
 	</div>
@@ -295,35 +262,7 @@
 		line-height: 1.55;
 		color: #5c4536;
 	}
-	.equipo {
-		margin-top: 28px;
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(min(46%, 220px), 1fr));
-		gap: 12px;
-	}
-	.cara {
-		aspect-ratio: 5 / 6;
-		border-radius: 24px;
-		overflow: hidden;
-		background: #e9ddcf;
-	}
-	.cara img {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		display: block;
-	}
-	.e-n {
-		margin-top: 10px;
-		font-size: 16px;
-		font-weight: 600;
-	}
-	.e-r {
-		font-size: 13.5px;
-		color: #7a6252;
-	}
 	.trabaja {
-		margin-top: clamp(48px, 7vw, 80px);
 		padding: clamp(22px, 4vw, 40px);
 		border-radius: 32px;
 		background: #2a140c;
