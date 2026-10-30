@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { unsplash } from '#lib/landing/formato.ts';
 	import { page } from '$app/state';
 	import { SITE } from '#lib/site.ts';
 	/**
@@ -13,6 +14,7 @@
 		image = 'general',
 		imageAlt = 'Tu Local Web: tu tienda online, WhatsApp, Mercado Libre y el local en un solo panel.',
 		noindex = false,
+		foto = null,
 		jsonLd
 	}: {
 		title: string;
@@ -30,6 +32,8 @@
 			| 'precios'
 			| 'seguridad';
 		imageAlt?: string;
+		/** Foto propia (id de Unsplash o https), p. ej. la portada de una tienda: reemplaza a `image`. */
+		foto?: string | null;
 		noindex?: boolean;
 		jsonLd?: Record<string, unknown>;
 	} = $props();
@@ -44,7 +48,14 @@
 			return `https://${tienda!.dominio}${path.slice(base.length) || '/'}`;
 		return SITE + path;
 	});
-	const img = $derived(`${SITE}/og/${image}.jpg`);
+	// Con foto propia, recortada a 1200 × 630 como pide la vista previa al compartir.
+	const img = $derived(
+		foto
+			? foto.startsWith('/')
+				? SITE + foto
+				: unsplash(foto, 1200, '&h=630')
+			: `${SITE}/og/${image}.jpg`
+	);
 	// Un cierre de etiqueta dentro del JSON terminaría el bloque antes de tiempo: se escapa `<`.
 	const ld = $derived(
 		jsonLd
@@ -68,9 +79,11 @@
 	<meta property="og:title" content={title} />
 	<meta property="og:description" content={description} />
 	<meta property="og:image" content={img} />
-	<meta property="og:image:type" content="image/jpeg" />
-	<meta property="og:image:width" content="1200" />
-	<meta property="og:image:height" content="630" />
+	{#if !foto}
+		<meta property="og:image:type" content="image/jpeg" />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+	{/if}
 	<meta property="og:image:alt" content={imageAlt} />
 	<meta name="twitter:card" content="summary_large_image" />
 	<meta name="twitter:title" content={title} />
