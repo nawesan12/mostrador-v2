@@ -1,0 +1,21 @@
+console.log('cookies before', (await context.cookies()).map(c => c.name + '=' + c.value.slice(0,20)).join('; '));
+await page.goto(BASE + '/ingresar?m=registro&email=nahuel%2Bqa1%40grupovimo.com.ar', { waitUntil: 'networkidle' });
+console.log('banner visible?', await page.getByRole('button', { name: 'Aceptar todas' }).isVisible());
+console.log('email prefilled', await page.inputValue('input[name=email]'));
+await shot('m_registro_0');
+console.log(await cookies());
+console.log('cookies after', (await context.cookies()).map(c => c.name).join('; '));
+// submit empty to see validation
+await page.getByRole('button', { name: 'Crear mi tienda' }).click(); await sleep(800);
+await shot('m_registro_empty', false);
+await page.fill('input[name=nombre]', 'Nahuel QA');
+await page.fill('input[name=tienda]', 'Almacén QA Pruebas');
+await page.fill('input[name=clave]', '123');
+await page.getByRole('button', { name: 'Crear mi tienda' }).click(); await sleep(1500);
+console.log('short pw msg:', await txt('main'));
+await page.fill('input[name=clave]', 'QaPruebas#2026tlw');
+const t = page.locator('input[name=terminos]'); if (!(await t.isChecked())) await t.check({ force: true });
+await page.getByRole('button', { name: 'Crear mi tienda' }).click(); await sleep(5000);
+await shot('m_registro_after');
+console.log(page.url()); console.log(await txt('main'));
+console.log(await ctrls());

@@ -7,6 +7,7 @@ import { cupoDemo, diaAr, POR_VISITANTE } from '#lib/server/hornero/cupo.ts';
 import { ideasDe } from '#lib/server/hornero/ideas.ts';
 import { responderConIa, type Mensaje } from '#lib/server/hornero/modelo.ts';
 import { responderSimulado } from '#lib/server/hornero/simulado.ts';
+import { ayuda, responderSinIa } from '#lib/server/hornero/motor.ts';
 import { dbSandbox, sumarUsoHornero } from '#lib/server/sandbox/sandbox.ts';
 import type { RequestHandler } from './$types';
 
@@ -65,9 +66,13 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	]);
 	const d: DatosHornero = { tienda, hola: hoy.hola, hoy, semana, contexto };
 	const mensajes = cuerpo.output.mensajes;
+	const pregunta = mensajes[mensajes.length - 1].texto;
 
+	// Primero el motor propio: las preguntas de todos los días salen de los datos, sin IA.
+	const directa = responderSinIa(pregunta, d);
+	if (directa) return texto(directa);
 	if (!conModelo || !env.AI)
-		return texto(responderSimulado(mensajes[mensajes.length - 1].texto, d));
+		return texto(env.HORNERO === 'simulado' ? responderSimulado(pregunta, d) : ayuda());
 
 	const conversacion: Mensaje[] = [
 		{ role: 'system', content: sistema(d) },

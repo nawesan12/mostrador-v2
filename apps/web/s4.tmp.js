@@ -1,0 +1,10 @@
+await page.goto(BASE + '/onboarding?paso=1', { waitUntil: 'networkidle' });
+await shot('m_onb_p1');
+console.log('OF', JSON.stringify(await overflow()));
+await page.getByText('Vender online por primera vez').click();
+await page.getByText('Ordenar los pedidos de WhatsApp').click();
+await page.getByRole('button', { name: 'Continuar' }).click(); await sleep(2500);
+console.log(page.url()); console.log(await txt('body'));
+console.log(await ctrls());
+await shot('m_onb_p2');
+console.log('OF', JSON.stringify(await overflow()));

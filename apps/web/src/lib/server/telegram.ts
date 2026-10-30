@@ -14,6 +14,7 @@ import { usaSandbox } from './datos/index.ts';
 import { cupoDemo, diaAr, POR_VISITANTE } from './hornero/cupo.ts';
 import { responderConIa, type Mensaje } from './hornero/modelo.ts';
 import { responderSimulado } from './hornero/simulado.ts';
+import { responderSinIa } from './hornero/motor.ts';
 import {
 	borrarCambio,
 	buscarCambio,
@@ -247,6 +248,9 @@ async function responderHornero(
 	if (usos > POR_VISITANTE) return responder(BASTA);
 	let conModelo = env.HORNERO === 'workers-ai' && !!env.AI;
 	if (conModelo && !(await cupoDemo())) conModelo = false;
+	// El motor propio primero; Telegram va en texto plano, sin las negritas del panel.
+	const directa = responderSinIa(texto, d);
+	if (directa) return responder(directa.replace(/\*\*/g, ''));
 	if (!conModelo || !env.AI) return responder(responderSimulado(texto, d));
 	const conversacion: Mensaje[] = [
 		{
