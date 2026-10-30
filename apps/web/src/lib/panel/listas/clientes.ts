@@ -89,6 +89,13 @@ export function configClientes(
 		kpi: (l) =>
 			`${plural(l.total, 'cliente', 'clientes')} · ${pesosCortos(l.resumen.gastado ?? 0)} en compras`,
 		primario: { t: 'Nuevo cliente', icon: I.phUserPlusFill, hacer: abrirAlta },
+		vacio: {
+			hornero: 'saludo',
+			titulo: 'Todavía no hay clientes',
+			texto:
+				'Cada persona que te compra queda acá con su historial. También podés cargar a los que ya tenés.',
+			accion: { t: 'Cargar un cliente', hacer: abrirAlta }
+		},
 		tip: (l) => {
 			const n = l.resumen.enRiesgo ?? 0;
 			if (!n) return null;

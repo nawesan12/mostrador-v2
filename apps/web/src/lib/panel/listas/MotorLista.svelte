@@ -201,7 +201,9 @@
 	const rangoTxt = $derived(
 		lista.total
 			? `Mostrando ${(inicio + 1).toLocaleString('es-AR')}–${Math.min(lista.total, inicio + Math.ceil(alto / FILA)).toLocaleString('es-AR')} de ${n}`
-			: 'Sin resultados'
+			: sinFiltros
+				? ''
+				: 'Sin resultados'
 	);
 </script>
 
@@ -552,20 +554,36 @@
 			</div>
 			{#if !lista.total}
 				<div class="vacio">
-					<div>
-						<img src="/hornero/lupa.webp" alt="" width="110" height="110" />
-						{#if sinFiltros}
-							<!-- Lista vacía de verdad: no hay filtros que limpiar; va la primera acción. -->
-							<div class="v-t">Todavía no hay {config.unidad}</div>
-							{#if config.primario}
+					{#if sinFiltros}
+						{@const v = config.vacio}
+						<div>
+							<img
+								src="/hornero/{v?.hornero ?? 'horno-vacio'}.webp"
+								alt=""
+								width="110"
+								height="110"
+							/>
+							<div class="v-t">{v?.titulo ?? `Todavía no hay ${config.unidad}`}</div>
+							{#if v?.texto}<p class="v-x">{v.texto}</p>{/if}
+							{#if v?.accion?.href}
+								<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta interna del panel -->
+								<a class="v-b" href={v.accion.href}>{v.accion.t}</a>
+							{:else if v?.accion?.hacer}
+								{@const hacer = v.accion.hacer}
+								<button type="button" class="v-b" onclick={() => hacer(ctx)}>{v.accion.t}</button>
+							{:else if !v && config.primario}
+								<!-- Sin un vacío propio, la acción principal de la lista. -->
 								{@const p = config.primario}
 								<button type="button" class="v-b" onclick={() => p.hacer(ctx)}>{p.t}</button>
 							{/if}
-						{:else}
+						</div>
+					{:else}
+						<div>
+							<img src="/hornero/lupa.webp" alt="" width="110" height="110" />
 							<div class="v-t">Nada con esos filtros</div>
 							<button type="button" class="v-b" onclick={limpiar}>Limpiar filtros</button>
-						{/if}
-					</div>
+						</div>
+					{/if}
 				</div>
 			{/if}
 		</div>
@@ -1236,7 +1254,17 @@
 		font-weight: 600;
 		margin-top: 6px;
 	}
+	.v-x {
+		max-width: 340px;
+		margin: 6px auto 0;
+		font-size: 13px;
+		line-height: 1.45;
+		color: var(--fa);
+		text-wrap: pretty;
+	}
 	.v-b {
+		display: inline-block;
+		text-decoration: none;
 		margin-top: 10px;
 		padding: 9px 16px;
 		border-radius: 999px;

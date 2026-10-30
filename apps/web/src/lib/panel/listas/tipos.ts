@@ -70,6 +70,13 @@ export type ConfigLista<R extends { id: string }> = {
 	alternar?: (r: R, on: boolean, ctx: Ctx) => Promise<void>;
 	ajustar?: (r: R, delta: number, ctx: Ctx) => Promise<void>;
 	lote: { t: string; icon: IconData; hacer: (ids: string[], ctx: Ctx) => Promise<void> }[];
+	/** Lo que se ve cuando no hay nada de verdad (sin filtros puestos): qué es y por dónde empezar. */
+	vacio?: {
+		hornero?: string;
+		titulo: string;
+		texto: string;
+		accion?: { t: string; href?: string; hacer?: (ctx: Ctx) => void | Promise<void> };
+	};
 };
 
 export type FiltrosUrl = {

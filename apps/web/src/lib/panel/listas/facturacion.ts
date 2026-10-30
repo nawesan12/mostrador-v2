@@ -1,6 +1,6 @@
 /** Facturación en el motor de listas (handoff PanelListas `CFG.Facturación`). */
 import * as I from '#lib/icons.ts';
-import { pesos, pesosCortos } from '../formato.ts';
+import { pesos, pesosCortos, plural } from '../formato.ts';
 import { rutaDe } from '../navegacion.ts';
 import { CANALES, hace } from './clientes.ts';
 import type { ConfigLista } from './tipos.ts';
@@ -66,15 +66,26 @@ export function configFacturacion(emitir: () => void): ConfigLista<Comprobante> 
 		unidad: 'comprobantes',
 		buscar: 'Cliente, número o pedido',
 		kpi: (l) =>
-			`${l.total.toLocaleString('es-AR')} comprobantes · ${pesosCortos(l.resumen.facturado ?? 0)} facturado`,
+			`${plural(l.total, 'comprobante', 'comprobantes')} · ${pesosCortos(l.resumen.facturado ?? 0)} facturado`,
 		primario: { t: 'Emitir factura', icon: I.phReceiptFill, hacer: emitir },
-		tip: (l) => ({
-			texto: `Facturaste ${pesosCortos(l.resumen.ultimos30 ?? 0)} en los últimos 30 días. En Finanzas ves cuánto te falta para el tope de tu categoría.`,
-			boton: 'Ver en Finanzas',
-			async hacer() {
-				location.href = rutaDe('Finanzas');
-			}
-		}),
+		// Finanzas no calcula el tope de la categoría del monotributo: el consejo no lo promete.
+		tip: (l) =>
+			l.resumen.ultimos30
+				? {
+						texto: `Facturaste ${pesosCortos(l.resumen.ultimos30)} en los últimos 30 días. En Finanzas ves lo que entró y lo que salió.`,
+						boton: 'Ver en Finanzas',
+						async hacer() {
+							location.href = rutaDe('Finanzas');
+						}
+					}
+				: null,
+		vacio: {
+			hornero: 'ticket',
+			titulo: 'Todavía no hay comprobantes',
+			texto:
+				'Con ARCA conectada, cada venta cobrada se factura sola y aparece acá. Si no, queda como no facturada con su motivo.',
+			accion: { t: 'Ver la conexión con ARCA', href: '/panel/integraciones?arca' }
+		},
 		vistas: [
 			{ id: 'todas', t: 'Todas', icon: I.phFilesFill, color: 'var(--mu)', filtros: {} },
 			{

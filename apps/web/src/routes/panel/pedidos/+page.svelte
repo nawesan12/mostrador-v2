@@ -374,7 +374,9 @@
 	const rango = $derived(
 		lista.total
 			? `Mostrando ${(inicio + 1).toLocaleString('es-AR')}–${Math.min(lista.total, inicio + Math.ceil(alto / FILA)).toLocaleString('es-AR')} de ${n}`
-			: 'Sin resultados'
+			: chips.length
+				? 'Sin resultados'
+				: ''
 	);
 	const ahora = Date.now();
 	function hace(iso: string) {
@@ -753,11 +755,32 @@
 			</div>
 			{#if !lista.total}
 				<div class="vacio">
-					<div>
-						<img src="/hornero/lupa.webp" alt="" width="110" height="110" />
-						<div class="v-t">Ningún pedido con esos filtros</div>
-						<button type="button" class="v-b" onclick={limpiar}>Limpiar filtros</button>
-					</div>
+					{#if chips.length}
+						<div>
+							<img src="/hornero/lupa.webp" alt="" width="110" height="110" />
+							<div class="v-t">Ningún pedido con esos filtros</div>
+							<button type="button" class="v-b" onclick={limpiar}>Limpiar filtros</button>
+						</div>
+					{:else}
+						<!-- Sin filtros: todavía no entró ninguno. Qué hacer para que entre el primero. -->
+						<div>
+							<img src="/hornero/horno-vacio.webp" alt="" width="110" height="110" />
+							<div class="v-t">Todavía no entró ningún pedido</div>
+							<p class="v-x">
+								Los de la tienda online, Mercado Libre y el local aparecen acá. Compartí tu tienda o
+								cargá una venta a mano.
+							</p>
+							<div class="v-bs">
+								<a class="v-b" href={resolve('/panel/pedidos/nuevo')}>Cargar un pedido</a>
+								<a
+									class="v-b v-b2"
+									href={resolve('/t/[tienda]', { tienda: page.data.tienda.slug })}
+									target="_blank"
+									rel="noopener">Ver mi tienda</a
+								>
+							</div>
+						</div>
+					{/if}
 				</div>
 			{/if}
 		</div>
@@ -1370,6 +1393,8 @@
 		margin-top: 6px;
 	}
 	.v-b {
+		display: inline-block;
+		text-decoration: none;
 		margin-top: 10px;
 		padding: 9px 16px;
 		border-radius: 999px;
@@ -1378,6 +1403,24 @@
 		color: var(--sf);
 		font-size: 13px;
 		font-weight: 600;
+	}
+	.v-b2 {
+		background: var(--sf3);
+		color: var(--tx);
+	}
+	.v-bs {
+		display: flex;
+		gap: 8px;
+		justify-content: center;
+		flex-wrap: wrap;
+	}
+	.v-x {
+		max-width: 340px;
+		margin: 6px auto 0;
+		font-size: 13px;
+		line-height: 1.45;
+		color: var(--fa);
+		text-wrap: pretty;
 	}
 	.arriba {
 		position: absolute;

@@ -58,6 +58,13 @@ export function configEnvios(): ConfigLista<Envio> {
 				await etiquetas([], ctx);
 			}
 		},
+		vacio: {
+			hornero: 'envio',
+			titulo: 'Todavía no hay envíos',
+			texto:
+				'Cuando un pedido salga por moto o por Correo Argentino, lo seguís desde acá. Primero elegí cómo entregás.',
+			accion: { t: 'Configurar envíos y retiro', href: '/panel/envios/configurar' }
+		},
 		tip: (l) => {
 			const n = l.resumen.demorados ?? 0;
 			if (!n) return null;
