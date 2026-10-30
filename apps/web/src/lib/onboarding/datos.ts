@@ -309,6 +309,8 @@ export const DE_INSTAGRAM = {
 	tag: 'El mate de cada mañana'
 };
 export const RECOMENDADAS = ['litoral', 'mostaza', 'yerbal'] as const;
+/** Para una tienda real sin rubro conocido: moda, gastronomía y almacén, tres estilos distintos. */
+export const PARA_EMPEZAR = ['ceibo', 'mostaza', 'yerbal'] as const;
 export const SECCIONES = [
 	['dest', I.phStar, 'Destacados'],
 	['cat', I.phSquaresFour, 'Categorías'],

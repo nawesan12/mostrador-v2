@@ -46,7 +46,7 @@ func (e ErrInvalido) Error() string { return e.Campo + ": " + e.Mensaje }
 // Duraciones.
 const (
 	SesionCorta     = 12 * time.Hour
-	SesionLarga     = 30 * 24 * time.Hour
+	SesionLarga     = 365 * 24 * time.Hour
 	VidaRestablecer = 30 * time.Minute
 )
 

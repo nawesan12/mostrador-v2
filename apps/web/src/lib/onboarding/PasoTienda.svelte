@@ -5,7 +5,7 @@
 	import TplMini from '#lib/components/TplMini.svelte';
 	import * as I from '#lib/icons.ts';
 	import { PLANTILLAS, plantilla } from '#lib/plantillas.ts';
-	import { DE_INSTAGRAM, RECOMENDADAS, SECCIONES } from './datos.ts';
+	import { DE_INSTAGRAM, PARA_EMPEZAR, RECOMENDADAS, SECCIONES } from './datos.ts';
 	import Etiqueta from './Etiqueta.svelte';
 	import { getOnboarding } from './estado.svelte.ts';
 	import Galeria from './Galeria.svelte';
@@ -30,7 +30,11 @@
 	const paleta = $derived(
 		o.e.instagram ? { bg: DE_INSTAGRAM.bg, tx: DE_INSTAGRAM.ink, ac: DE_INSTAGRAM.acc } : null
 	);
-	const recomendadas = RECOMENDADAS.map((id) => plantilla(id)).filter((t) => !!t);
+	// En la demo, las del rubro del handoff; en una tienda real todavía no sabemos el rubro (el registro
+	// no lo pregunta): tres estilos bien distintos para empezar, sin decir que son de su rubro.
+	const recomendadas = $derived(
+		(o.demo ? RECOMENDADAS : PARA_EMPEZAR).map((id) => plantilla(id)).filter((t) => !!t)
+	);
 	const mob = $derived(o.dispositivo === 'mob');
 
 	// Se anima cada vez que cambia (como en el handoff).
@@ -90,7 +94,7 @@
 		<div class="caja">
 			<div class="c-cab">
 				<Icon icon={I.phSparkleFill} size={15} style="color:#b0441d" /><span
-					>Recomendadas para tu rubro</span
+					>{o.demo ? 'Recomendadas para tu rubro' : 'Para empezar'}</span
 				>
 			</div>
 			<div class="recos">

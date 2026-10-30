@@ -406,7 +406,7 @@ export const LEGALES: Legal[] = [
 						color: '#2F8F63',
 						tipo: 'Necesaria',
 						para: 'Mantiene tu sesión iniciada',
-						dura: '30 días'
+						dura: '12 meses'
 					},
 					{
 						nombre: 'tlw-cookies',
