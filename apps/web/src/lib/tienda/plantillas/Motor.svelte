@@ -777,50 +777,51 @@
 											>{/if}
 									</div>
 								</div>
-								<div
-									style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:clamp(10px,1.6cqw,20px);min-height:min(560px,110cqw)"
-								>
-									<div
-										style="grid-row:span 2;position:relative;border-radius:{T.rL};overflow:hidden;background:{T.sf2}"
+								<!-- El mosaico, sólo con algo adentro: sin fotos ni reseñas serían recuadros vacíos. -->
+								{#if tienda.portada.foto || heroImg2 || best[0] || tienda.promedio}<div
+										style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:clamp(10px,1.6cqw,20px);min-height:min(560px,110cqw)"
 									>
-										{#if tienda.portada.foto}<img
-												src={img(tienda.portada.foto, 1600)}
-												alt=""
-												style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
-											/>{/if}{#if best[0]}<a
-												href={best[0].href}
-												style="position:absolute;left:12px;bottom:12px;right:12px;width:fit-content;padding:8px 12px;border-radius:{T.r};background:{T.sf};color:{T.ink};font-size:13px;font-weight:700;text-decoration:none"
-												>{best[0].n} · {best[0].price}</a
-											>{/if}
-									</div>
-									<div
-										style="position:relative;border-radius:{T.rL};overflow:hidden;background:{T.sf2};grid-row:span {tienda.promedio
-											? 1
-											: 2}"
-									>
-										{#if heroImg2}<img
-												src={heroImg2}
-												alt=""
-												style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
-											/>{/if}
-									</div>
-									{#if tienda.promedio}<div
-											style="border-radius:{T.rL};background:{T.acc};color:{T.ai};padding:18px;display:flex;flex-direction:column;justify-content:space-between"
+										<div
+											style="grid-row:span 2;position:relative;border-radius:{T.rL};overflow:hidden;background:{T.sf2}"
 										>
-											<Icon icon={I.phStarFill} size={22} />
-											<div>
-												<div
-													style="font-family:{T.f};font-weight:{T.fw};font-size:clamp(32px,4cqw,46px);line-height:1"
-												>
-													{tienda.promedio.toLocaleString('es-AR')}
+											{#if tienda.portada.foto}<img
+													src={img(tienda.portada.foto, 1600)}
+													alt=""
+													style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
+												/>{/if}{#if best[0]}<a
+													href={best[0].href}
+													style="position:absolute;left:12px;bottom:12px;right:12px;width:fit-content;padding:8px 12px;border-radius:{T.r};background:{T.sf};color:{T.ink};font-size:13px;font-weight:700;text-decoration:none"
+													>{best[0].n} · {best[0].price}</a
+												>{/if}
+										</div>
+										<div
+											style="position:relative;border-radius:{T.rL};overflow:hidden;background:{T.sf2};grid-row:span {tienda.promedio
+												? 1
+												: 2}"
+										>
+											{#if heroImg2}<img
+													src={heroImg2}
+													alt=""
+													style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
+												/>{/if}
+										</div>
+										{#if tienda.promedio}<div
+												style="border-radius:{T.rL};background:{T.acc};color:{T.ai};padding:18px;display:flex;flex-direction:column;justify-content:space-between"
+											>
+												<Icon icon={I.phStarFill} size={22} />
+												<div>
+													<div
+														style="font-family:{T.f};font-weight:{T.fw};font-size:clamp(32px,4cqw,46px);line-height:1"
+													>
+														{tienda.promedio.toLocaleString('es-AR')}
+													</div>
+													<div style="font-size:13px;font-weight:600;margin-top:4px">
+														{tienda.resenas.length}
+														{tienda.resenas.length === 1 ? 'reseña' : 'reseñas'}
+													</div>
 												</div>
-												<div style="font-size:13px;font-weight:600;margin-top:4px">
-													{tienda.resenas.length}
-													{tienda.resenas.length === 1 ? 'reseña' : 'reseñas'}
-												</div>
-											</div>
-										</div>{/if}
-								</div>
+											</div>{/if}
+									</div>{/if}
 							</section>
 						{/if}
 						{#if isCat}

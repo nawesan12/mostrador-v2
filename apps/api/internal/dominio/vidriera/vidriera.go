@@ -237,7 +237,8 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 				out.Cobros["transferencia"] = cupones.TransferenciaPct
 			}
 		}
-		if autos["envio"] {
+		// El envío gratis sólo si la tienda envía (moto o Correo): con sólo retiro no hay envío que regalar.
+		if autos["envio"] && (out.Envios.Moto || out.Envios.Correo) {
 			g := int64(cupones.EnvioGratisDesde)
 			out.Envios.GratisDesde = &g
 		}
