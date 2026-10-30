@@ -15,6 +15,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/configuracion"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/outbox"
@@ -52,7 +53,10 @@ type pedido struct {
 	tienda, slug                  string
 	alias, cbu, titular, whatsapp string
 	direccion                     string
-	descuentos                    []pedidos.Descuento
+	// La tienda: a dónde responde quien compró (el email de Configuración › Negocio o el de la cuenta).
+	responderA string
+	horario    string
+	descuentos []pedidos.Descuento
 }
 
 func pesos(n int64) string {
@@ -83,10 +87,13 @@ func (s *Servicio) manejar(ctx context.Context, ev outbox.Evento) error {
 	err := s.Pool.EnTienda(ctx, ev.TiendaID, func(t pgx.Tx) error {
 		var items, comprador, negocio []byte
 		err := t.QueryRow(ctx, `SELECT p.numero, p.comprador, p.pago, p.envio, p.estado_pago, p.codigo_publico, p.seguimiento,
-				p.items, p.subtotal, p.costo_envio, p.total, p.avisos ? $2, t.nombre, t.slug, t.negocio, p.descuentos
+				p.items, p.subtotal, p.costo_envio, p.total, p.avisos ? $2, t.nombre, t.slug, t.negocio, p.descuentos,
+				coalesce(nullif(t.negocio->>'email', ''), (SELECT u.email::text FROM auth.membresias m
+					JOIN auth.usuarios u ON u.id = m.usuario_id WHERE m.tienda_id = t.id AND m.rol = 'duenio'
+					ORDER BY m.creada_en LIMIT 1), '')
 			FROM pedidos p JOIN tiendas t ON t.id = p.tienda_id WHERE p.numero = $1`, d.Numero, d.Aviso).
 			Scan(&p.numero, &comprador, &p.pago, &p.envio, &p.estadoPago, &p.codigo, &p.seguimiento, &items,
-				&p.subtotal, &p.envioCosto, &p.total, &ya, &p.tienda, &p.slug, &negocio, &p.descuentos)
+				&p.subtotal, &p.envioCosto, &p.total, &ya, &p.tienda, &p.slug, &negocio, &p.descuentos, &p.responderA)
 		if err != nil {
 			return err
 		}
@@ -98,6 +105,10 @@ func (s *Servicio) manejar(ctx context.Context, ev outbox.Evento) error {
 		var n struct{ Alias, CBU, Titular, Whatsapp, Direccion string }
 		_ = json.Unmarshal(negocio, &n)
 		p.alias, p.cbu, p.titular, p.whatsapp, p.direccion = n.Alias, n.CBU, n.Titular, n.Whatsapp, n.Direccion
+		// Dónde se retira: lo de Envíos y retiro manda sobre la dirección del negocio.
+		if ent, err := configuracion.EntregasEnTx(ctx, t, ev.TiendaID); err == nil && ent.RetiroDireccion != "" {
+			p.direccion, p.horario = ent.RetiroDireccion, ent.RetiroHorario
+		}
 		return nil
 	})
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -152,6 +163,9 @@ func (s *Servicio) mail(p pedido, aviso string) (correo.Mensaje, bool) {
 			}
 			parrafos = append(parrafos, fmt.Sprintf("Para confirmarlo, transferí %s. %s.", pesos(p.total), strings.Join(datos, " · ")),
 				"Cuando se acredite te avisamos y empezamos a prepararlo.")
+			if p.responderA != "" {
+				parrafos = append(parrafos, "Mandanos el comprobante respondiendo este mail.")
+			}
 		} else if p.estadoPago == "Pendiente" {
 			parrafos = append(parrafos, "Cuando se acredite el pago te avisamos y empezamos a prepararlo.")
 		}
@@ -170,7 +184,9 @@ func (s *Servicio) mail(p pedido, aviso string) (correo.Mensaje, bool) {
 		asunto = fmt.Sprintf("Tu pedido #%d está listo para retirar", p.numero)
 		titulo = "Ya podés pasar a buscarlo"
 		parrafos = append(parrafos, fmt.Sprintf("Hola, %s. Tu pedido #%d está listo.", p.nombre, p.numero))
-		if p.direccion != "" {
+		if p.direccion != "" && p.horario != "" {
+			parrafos = append(parrafos, "Retiralo en "+p.direccion+" ("+strings.TrimSuffix(p.horario, ".")+").")
+		} else if p.direccion != "" {
 			parrafos = append(parrafos, "Retiralo en "+p.direccion+".")
 		}
 	default:
@@ -232,5 +248,10 @@ func (s *Servicio) mail(p pedido, aviso string) (correo.Mensaje, bool) {
 		fmt.Fprintf(&b, `<p style="margin:18px 0 0;font-size:13.5px;color:#7A6252">%s</p>`, html.EscapeString(contacto))
 	}
 	b.WriteString(`<p style="margin:28px 0 0;font-size:12px;color:#9C8676">Tienda creada con Tu Local Web.</p></div></body></html>`)
-	return correo.Mensaje{Para: p.email, Asunto: asunto, Texto: texto, HTML: b.String()}, true
+	// La respuesta (el comprobante de la transferencia, una duda) le llega a la tienda, no a Tu Local Web.
+	responder := ""
+	if !strings.ContainsAny(p.responderA, "\r\n<>,; ") && strings.Contains(p.responderA, "@") {
+		responder = p.responderA
+	}
+	return correo.Mensaje{Para: p.email, Asunto: asunto, Texto: texto, HTML: b.String(), ResponderA: responder}, true
 }

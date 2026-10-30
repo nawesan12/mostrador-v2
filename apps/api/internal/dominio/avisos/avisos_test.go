@@ -64,7 +64,7 @@ func TestMailsAQuienCompra(t *testing.T) {
 	if err := configuracion.GuardarNegocio(ctx, b.App, luna, configuracion.Negocio{Nombre: "Luna", CBU: "2850590940090418135209"}); err == nil {
 		t.Fatal("aceptó un CBU inválido")
 	}
-	if err := configuracion.GuardarNegocio(ctx, b.App, luna, configuracion.Negocio{Nombre: "Luna", Alias: "luna.mates", CBU: "2850590940090418135201", Titular: "Luna SRL"}); err != nil {
+	if err := configuracion.GuardarNegocio(ctx, b.App, luna, configuracion.Negocio{Nombre: "Luna", Alias: "luna.mates", CBU: "2850590940090418135201", Titular: "Luna SRL", Email: "hola@lunamates.com.ar"}); err != nil {
 		t.Fatal(err)
 	}
 	// El 15 % por transferencia lo prende la tienda (arranca apagado).
@@ -83,6 +83,10 @@ func TestMailsAQuienCompra(t *testing.T) {
 	m, ok := mails.Ultimo("lucia@ejemplo.com")
 	if !ok || !strings.Contains(m.Asunto, "Tu pedido #") {
 		t.Fatalf("confirmación: %+v", m)
+	}
+	// Quien compra responde (con el comprobante) a la tienda, no a Tu Local Web.
+	if m.ResponderA != "hola@lunamates.com.ar" {
+		t.Errorf("responder a %q", m.ResponderA)
 	}
 	for _, want := range []string{"luna.mates", "2850590940090418135201", "Luna SRL", "1 × Mate", "Descuento por transferencia — −$ 1.500", "/t/luna/pedido/" + r.Codigo} {
 		if !strings.Contains(m.Texto, want) {
@@ -121,6 +125,11 @@ func TestMailsAQuienCompra(t *testing.T) {
 
 	// Retiro en el local: Listo para retirar → Retirado, sin "En camino" ni su mail.
 	compra.Envio, compra.Email = "retiro", "tomas@ejemplo.com"
+	// Se retira donde dice Envíos y retiro (no en la dirección del negocio, que acá ni está cargada).
+	if err := configuracion.GuardarEntregas(ctx, b.App, luna, configuracion.Entregas{Retiro: true,
+		RetiroDireccion: "Gorriti 4500, Palermo", RetiroHorario: "Lunes a viernes de 10 a 18"}); err != nil {
+		t.Fatal(err)
+	}
 	r2, err := vidriera.Comprar(ctx, b.App, nil, "", "luna", compra, time.Now())
 	if err != nil {
 		t.Fatal(err)
@@ -142,7 +151,8 @@ func TestMailsAQuienCompra(t *testing.T) {
 			t.Fatal("al que retira le llegó «en camino»")
 		}
 	}
-	if m, _ := mails.Ultimo("tomas@ejemplo.com"); !strings.Contains(m.Asunto, "listo para retirar") {
+	if m, _ := mails.Ultimo("tomas@ejemplo.com"); !strings.Contains(m.Asunto, "listo para retirar") ||
+		!strings.Contains(m.Texto, "Retiralo en Gorriti 4500, Palermo (Lunes a viernes de 10 a 18).") {
 		t.Fatalf("retiro: %+v", m)
 	}
 	d, err := pedidos.Obtener(ctx, b.App, luna, r2.Numero)

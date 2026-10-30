@@ -21,8 +21,10 @@ import (
 )
 
 // Mensaje es un mail. HTML y Texto van los dos (los clientes que no muestran HTML usan el texto).
+// ResponderA (opcional): a dónde va la respuesta, p. ej. la tienda en los mails a quien le compró.
 type Mensaje struct {
 	Para, Asunto, HTML, Texto string
+	ResponderA                string
 }
 
 // Correo manda un mensaje.
@@ -42,7 +44,11 @@ func (r *Resend) Enviar(ctx context.Context, m Mensaje) error {
 	if url == "" {
 		url = "https://api.resend.com/emails"
 	}
-	cuerpo, _ := json.Marshal(map[string]any{"from": r.De, "to": []string{m.Para}, "subject": m.Asunto, "html": m.HTML, "text": m.Texto})
+	datos := map[string]any{"from": r.De, "to": []string{m.Para}, "subject": m.Asunto, "html": m.HTML, "text": m.Texto}
+	if m.ResponderA != "" {
+		datos["reply_to"] = m.ResponderA
+	}
+	cuerpo, _ := json.Marshal(datos)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(cuerpo))
 	if err != nil {
 		return err
@@ -81,14 +87,17 @@ func Elegir(resendClave, smtpDireccion, usuario, clave, de string) Correo {
 
 func (s *SMTP) Enviar(_ context.Context, m Mensaje) error {
 	// Para y Asunto van en los encabezados: un salto de línea metería encabezados ajenos.
-	if strings.ContainsAny(m.Para+m.Asunto, "\r\n") {
-		return fmt.Errorf("correo: salto de línea en Para o Asunto")
+	if strings.ContainsAny(m.Para+m.Asunto+m.ResponderA, "\r\n") {
+		return fmt.Errorf("correo: salto de línea en Para, Asunto o ResponderA")
 	}
 	frontera := "mostrador-frontera"
 	var b strings.Builder
 	// El asunto va codificado (RFC 2047): con tildes en crudo, varios clientes lo muestran roto.
 	fmt.Fprintf(&b, "From: %s\r\nTo: %s\r\nSubject: %s\r\nDate: %s\r\nMessage-ID: %s\r\nMIME-Version: 1.0\r\n",
 		de(s.De), m.Para, mime.QEncoding.Encode("utf-8", m.Asunto), time.Now().Format(time.RFC1123Z), idMensaje(s.De))
+	if m.ResponderA != "" {
+		fmt.Fprintf(&b, "Reply-To: %s\r\n", m.ResponderA)
+	}
 	fmt.Fprintf(&b, "Content-Type: multipart/alternative; boundary=%s\r\n\r\n", frontera)
 	fmt.Fprintf(&b, "--%s\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n%s\r\n", frontera, m.Texto)
 	fmt.Fprintf(&b, "--%s\r\nContent-Type: text/html; charset=utf-8\r\n\r\n%s\r\n--%s--\r\n", frontera, m.HTML, frontera)
