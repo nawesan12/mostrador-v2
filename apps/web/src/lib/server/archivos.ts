@@ -1,7 +1,9 @@
 /**
  * Fotos de productos en R2, como `storage.ts` de Caja: topes duros porque la cuenta es de pago por
- * uso y el plan es quedar en el gratis (10 GB de R2 para toda la cuenta, compartidos con Caja). La
- * foto llega ya comprimida a WebP desde el navegador; acá se valida el formato por sus bytes.
+ * uso y el plan es quedar en el gratis. Toda foto que llega (JPG, PNG o WebP, aunque sea una grande
+ * de iPhone) se pasa a WebP de 1600 px como máximo, calidad 80, girada según la cámara y sin
+ * metadatos, con vips en el VPS: todas quedan iguales y livianas. Sin vips (pruebas locales), se
+ * guarda como llegó.
  */
 import { env } from 'cloudflare:workers';
 import { error } from '@sveltejs/kit';
@@ -11,7 +13,9 @@ import type { DbSandbox } from './sandbox/sandbox.ts';
 import { archivos } from './sandbox/schema.ts';
 
 export const LIMITES = {
-	/** Por foto (llega a ~1600 px en WebP, que pesa bastante menos). */
+	/** Lo que se acepta subir (una foto grande de iPhone); se guarda ya optimizada. */
+	subida: 15 * 1024 * 1024,
+	/** Por foto, ya optimizada (1600 px en WebP pesa bastante menos). */
 	archivo: 1024 * 1024,
 	/** Por dueño: la tienda (o el visitante de la demo). */
 	porDuenio: 15 * 1024 * 1024,
@@ -34,6 +38,39 @@ const EXT: Record<string, string> = {
 	'image/png': 'png'
 };
 
+/**
+ * La foto, en WebP de hasta 1600 × 1600 (sin agrandar), calidad 80, girada según la cámara y sin
+ * metadatos (ubicación incluida). Si vips no está o falla, vuelve la foto como llegó.
+ */
+export async function optimizar(bytes: Uint8Array): Promise<Uint8Array> {
+	try {
+		const [{ execFile }, { promisify }, fs, os, path] = await Promise.all([
+			import('node:child_process'),
+			import('node:util'),
+			import('node:fs/promises'),
+			import('node:os'),
+			import('node:path')
+		]);
+		const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'foto-'));
+		try {
+			const entra = path.join(dir, 'entra');
+			const sale = path.join(dir, 'sale.webp');
+			await fs.writeFile(entra, bytes);
+			await promisify(execFile)(
+				'vips',
+				['thumbnail', entra, `${sale}[Q=80,keep=none]`, '1600', '--size', 'down'],
+				{ timeout: 20_000 }
+			);
+			const out = new Uint8Array(await fs.readFile(sale));
+			return tipoDe(out) === 'image/webp' ? out : bytes;
+		} finally {
+			await fs.rm(dir, { recursive: true, force: true });
+		}
+	} catch {
+		return bytes;
+	}
+}
+
 /** La clave pública de un archivo: `fotos/{dueño}/{uuid}.{ext}`. */
 export const CLAVE = /^fotos\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(webp|jpg|png)$/;
 
@@ -47,8 +84,10 @@ export async function subirFoto(
 	bytes: Uint8Array,
 	sandbox: string | null = null
 ) {
-	const tipo = tipoDe(bytes);
-	if (!tipo) error(415, 'Subí una foto en JPG, PNG o WebP.');
+	if (!tipoDe(bytes)) error(415, 'Subí una foto en JPG, PNG o WebP.');
+	if (bytes.byteLength > LIMITES.subida) error(413, 'La foto pesa más de 15 MB.');
+	bytes = await optimizar(bytes);
+	const tipo = tipoDe(bytes)!;
 	if (bytes.byteLength > LIMITES.archivo) error(413, 'La foto pesa más de 1 MB.');
 	const [uso] = await db
 		.select({

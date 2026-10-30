@@ -1,9 +1,11 @@
 /**
- * Subir fotos de productos: se achican y pasan a WebP en el navegador (lado mayor 1600 px) antes de
- * mandarlas, así pesan poco y entran en los topes de R2 (lib/server/archivos.ts: 1 MB por foto).
+ * Subir fotos de productos: se achican en el navegador (lado mayor 1600 px) para que suban rápido
+ * con datos del celular, y el servidor las deja todas en WebP de 1600 px (lib/server/archivos.ts).
  */
 const LADO = 1600;
-const TOPE = 1024 * 1024;
+const TOPE = 8 * 1024 * 1024;
+/** Lo que acepta el servidor sin achicar (una foto grande de iPhone). */
+const MAXIMO = 15 * 1024 * 1024;
 
 /**
  * La foto lista para subir: WebP de hasta 1600 px y menos de 1 MB (baja la calidad si hace falta).
@@ -32,12 +34,22 @@ export async function comprimir(archivo: Blob): Promise<Blob> {
 	throw new Error('La foto es demasiado pesada. Probá con otra.');
 }
 
+/** Achica si se puede; si el navegador no puede leerla, va como está y la optimiza el servidor. */
+async function paraSubir(archivo: Blob): Promise<Blob> {
+	try {
+		return await comprimir(archivo);
+	} catch {
+		if (archivo.size <= MAXIMO) return archivo;
+		throw new Error('La foto pesa más de 15 MB. Probá con otra.');
+	}
+}
+
 /** Sube una foto y devuelve su URL. Los errores vienen con el mensaje para mostrar. */
 export async function subir(archivo: Blob): Promise<string> {
 	const r = await fetch('/panel/fotos', {
 		method: 'POST',
 		headers: { 'content-type': 'application/octet-stream' },
-		body: await comprimir(archivo)
+		body: await paraSubir(archivo)
 	});
 	if (!r.ok)
 		throw new Error(

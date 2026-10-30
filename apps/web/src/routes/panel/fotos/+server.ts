@@ -7,13 +7,14 @@ import { dbSandbox } from '#lib/server/sandbox/sandbox.ts';
 import type { RequestHandler } from './$types';
 
 /**
- * Subir una foto de producto: el cuerpo es la imagen (ya comprimida a WebP en el navegador).
+ * Subir una foto de producto: el cuerpo es la imagen (achicada en el navegador si se pudo). El
+ * servidor la deja en WebP de 1600 px (lib/server/archivos.ts).
  * Devuelve su ruta en /f/ (con el origen, una URL https que sirve también para Mercado Libre).
  */
 export const POST: RequestHandler = async (event) => {
 	datosDe(event.locals); // sin sesión, a ingresar
 	const largo = Number(event.request.headers.get('content-length') ?? 0);
-	if (largo > LIMITES.archivo) error(413, 'La foto pesa más de 1 MB.');
+	if (largo > LIMITES.subida) error(413, 'La foto pesa más de 15 MB.');
 	const bytes = new Uint8Array(await event.request.arrayBuffer());
 	const db = dbSandbox(env.SANDBOX);
 	// La tienda es la dueña (su id va en la URL). El id del sandbox es la cookie del visitante: no se
