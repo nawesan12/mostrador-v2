@@ -5,6 +5,7 @@
 	import { untrack } from 'svelte';
 	import Icon from '#lib/components/Icon.svelte';
 	import LogoTienda from '../LogoTienda.svelte';
+	import { enOrden } from '../secciones.ts';
 	import * as I from '#lib/icons.ts';
 	import FormResena from '../FormResena.svelte';
 	import PreguntasProducto from '../PreguntasProducto.svelte';
@@ -584,331 +585,339 @@
 
 		<!-- ============ INICIO ============ -->
 		{#if pagina === 'inicio'}
-			{#if ver('hero')}
-				<section
-					style="padding:clamp(18px,3cqw,40px) clamp(14px,3.5cqw,44px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:clamp(14px,2cqw,24px)"
-				>
-					<div
-						style="display:flex;flex-direction:column;justify-content:center;gap:22px;padding:clamp(8px,2cqw,24px) 0;min-width:0"
-					>
-						{#if tienda.promedio && tienda.resenas.length}<span
-								style="align-self:flex-start;display:flex;align-items:center;gap:8px;padding:7px 12px 7px 10px;border-radius:999px;background:#fff;box-shadow:0 1px 2px rgba(30,27,46,.08);font-size:13px;font-weight:600"
-								><Icon
-									icon={I.phStarFill}
-									size={15}
-									style="color:#E3A93B"
-								/>{tienda.promedio.toLocaleString('es-AR')} · {tienda.resenas.length}
-								{tienda.resenas.length === 1 ? 'reseña' : 'reseñas'}</span
-							>{/if}
-						<h1
-							style="margin:0;font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(42px,5.6cqw,92px);line-height:.92;letter-spacing:-.04em;overflow-wrap:anywhere"
+			<!-- Las secciones en el orden que eligió la tienda en Mi tienda. -->
+			{#each enOrden( tienda.secciones, ['hero', 'cats', 'prods', 'revs', 'ig'] ) as seccion (seccion)}
+				{#if seccion === 'hero'}
+					{#if ver('hero')}
+						<section
+							style="padding:clamp(18px,3cqw,40px) clamp(14px,3.5cqw,44px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:clamp(14px,2cqw,24px)"
 						>
-							{titulo[0]}{#if titulo[1]}<br /><span style="color:#5B3FD6">{titulo[1]}</span>{/if}
-						</h1>
-						{#if tienda.portada.lema}<p
-								style="margin:0;font-size:17px;line-height:1.5;color:#5A566B;max-width:460px"
-							>
-								{tienda.portada.lema}
-							</p>{/if}
-						<div style="display:flex;gap:10px;flex-wrap:wrap">
-							{#if T}<a
-									href="{base}/turnos"
-									style="display:flex;align-items:center;gap:8px;padding:16px 26px;border:0;border-radius:999px;background:#5B3FD6;color:#fff;font:700 15px 'Instrument Sans';text-decoration:none;box-shadow:0 14px 30px -12px rgba(91,63,214,.7)"
-									><Icon icon={I.phCalendarCheckBold} size={17} />Reservar turno</a
-								><a
-									href="{base}/catalogo"
-									style="padding:16px 22px;border:1.5px solid rgba(30,27,46,.18);border-radius:999px;background:transparent;color:#1E1B2E;font:700 15px 'Instrument Sans';text-decoration:none"
-									>Ver productos</a
-								>{:else}<a
-									href="{base}/catalogo"
-									style="display:flex;align-items:center;gap:8px;padding:16px 26px;border:0;border-radius:999px;background:#5B3FD6;color:#fff;font:700 15px 'Instrument Sans';text-decoration:none;box-shadow:0 14px 30px -12px rgba(91,63,214,.7)"
-									><Icon icon={I.phShoppingBagFill} size={17} />Ver productos</a
-								>{/if}{#if whatsapp && !T}<a
-									href={wa('¡Hola!')}
-									target="_blank"
-									rel="noopener"
-									style="padding:16px 22px;border:1.5px solid rgba(30,27,46,.18);border-radius:999px;background:transparent;color:#1E1B2E;font:700 15px 'Instrument Sans';text-decoration:none"
-									>Escribinos</a
-								>{/if}
-						</div>
-					</div>
-					<div
-						style="position:relative;min-height:min(560px,120cqw);border-radius:32px;overflow:hidden;background:#CFC8DA"
-					>
-						{#if tienda.portada.foto}<img
-								src={img(tienda.portada.foto, 1100)}
-								alt=""
-								style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
-							/>{/if}
-						{#if heroSlots.length}
 							<div
-								style="position:absolute;left:16px;right:16px;bottom:16px;padding:16px;border-radius:22px;background:rgba(246,244,241,.95);backdrop-filter:blur(8px);box-shadow:0 20px 40px -16px rgba(30,27,46,.4)"
+								style="display:flex;flex-direction:column;justify-content:center;gap:22px;padding:clamp(8px,2cqw,24px) 0;min-width:0"
 							>
-								<div
-									style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"
+								{#if tienda.promedio && tienda.resenas.length}<span
+										style="align-self:flex-start;display:flex;align-items:center;gap:8px;padding:7px 12px 7px 10px;border-radius:999px;background:#fff;box-shadow:0 1px 2px rgba(30,27,46,.08);font-size:13px;font-weight:600"
+										><Icon
+											icon={I.phStarFill}
+											size={15}
+											style="color:#E3A93B"
+										/>{tienda.promedio.toLocaleString('es-AR')} · {tienda.resenas.length}
+										{tienda.resenas.length === 1 ? 'reseña' : 'reseñas'}</span
+									>{/if}
+								<h1
+									style="margin:0;font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(42px,5.6cqw,92px);line-height:.92;letter-spacing:-.04em;overflow-wrap:anywhere"
 								>
-									<b style="font-size:14px">Próximos turnos libres hoy</b><span
-										style="font-size:12.5px;color:#2F7D4F;font-weight:700"
-										>● {proximos?.hoy.length}
-										{proximos?.hoy.length === 1 ? 'disponible' : 'disponibles'}</span
+									{titulo[0]}{#if titulo[1]}<br /><span style="color:#5B3FD6">{titulo[1]}</span
+										>{/if}
+								</h1>
+								{#if tienda.portada.lema}<p
+										style="margin:0;font-size:17px;line-height:1.5;color:#5A566B;max-width:460px"
 									>
-								</div>
-								<div
-									style="margin-top:10px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none"
-								>
-									{#each heroSlots as h (h.inicio)}{@const st = slot(h.on ? 'on' : '')}<a
-											href={h.href}
-											style="flex:none;padding:9px 13px;border-radius:12px;border:1.5px solid {st.bd};background:{st.bg};color:{st.fg};font:700 13.5px 'Instrument Sans';text-decoration:none"
-											>{h.t}</a
-										>{/each}
+										{tienda.portada.lema}
+									</p>{/if}
+								<div style="display:flex;gap:10px;flex-wrap:wrap">
+									{#if T}<a
+											href="{base}/turnos"
+											style="display:flex;align-items:center;gap:8px;padding:16px 26px;border:0;border-radius:999px;background:#5B3FD6;color:#fff;font:700 15px 'Instrument Sans';text-decoration:none;box-shadow:0 14px 30px -12px rgba(91,63,214,.7)"
+											><Icon icon={I.phCalendarCheckBold} size={17} />Reservar turno</a
+										><a
+											href="{base}/catalogo"
+											style="padding:16px 22px;border:1.5px solid rgba(30,27,46,.18);border-radius:999px;background:transparent;color:#1E1B2E;font:700 15px 'Instrument Sans';text-decoration:none"
+											>Ver productos</a
+										>{:else}<a
+											href="{base}/catalogo"
+											style="display:flex;align-items:center;gap:8px;padding:16px 26px;border:0;border-radius:999px;background:#5B3FD6;color:#fff;font:700 15px 'Instrument Sans';text-decoration:none;box-shadow:0 14px 30px -12px rgba(91,63,214,.7)"
+											><Icon icon={I.phShoppingBagFill} size={17} />Ver productos</a
+										>{/if}{#if whatsapp && !T}<a
+											href={wa('¡Hola!')}
+											target="_blank"
+											rel="noopener"
+											style="padding:16px 22px;border:1.5px solid rgba(30,27,46,.18);border-radius:999px;background:transparent;color:#1E1B2E;font:700 15px 'Instrument Sans';text-decoration:none"
+											>Escribinos</a
+										>{/if}
 								</div>
 							</div>
-						{/if}
-					</div>
-				</section>
-			{/if}
-
-			{#if T && T.servicios.length}
-				<section style="padding:clamp(48px,7cqw,96px) clamp(14px,3.5cqw,44px) 0">
-					<div
-						style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap"
-					>
-						<h2
-							style="margin:0;font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(34px,4.6cqw,58px);line-height:.95;letter-spacing:-.035em"
-						>
-							Servicios
-						</h2>
-						<span style="font-size:14px;color:#5A566B"
-							>{T.sena
-								? 'Precios finales · pagás en el local o seña online'
-								: 'Precios finales · pagás en el local'}</span
-						>
-					</div>
-					<div
-						style="margin-top:22px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:12px"
-					>
-						{#each T.servicios as s (s.id)}<a
-								href={reservaUrl({ servicio: s.id })}
-								class="sube"
-								style="display:flex;gap:14px;align-items:center;padding:14px;border-radius:22px;background:#fff;text-align:left;text-decoration:none;color:#1E1B2E;box-shadow:0 1px 2px rgba(30,27,46,.06);transition:transform .2s"
-								>{#if s.foto}<img
-										src={img(s.foto, 200, 200)}
-										alt=""
-										style="width:76px;height:76px;border-radius:16px;object-fit:cover;flex:none;background:#E4E1EA"
-									/>{:else}<span
-										style="width:76px;height:76px;border-radius:16px;flex:none;background:#E4E1EA"
-									></span>{/if}<span style="flex:1;min-width:0"
-									><span style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"
-										><span style="font-size:16px;font-weight:700">{s.nombre}</span
-										>{#if s.etiqueta}<span
-												style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:#EEE9FF;color:#5B3FD6"
-												>{s.etiqueta}</span
-											>{/if}</span
-									>{#if s.descripcion}<span
-											style="display:block;font-size:13px;color:#5A566B;margin-top:3px"
-											>{s.descripcion}</span
-										>{/if}<span style="display:flex;gap:10px;margin-top:8px;font-size:13px"
-										><b>{fmt(s.precio)}</b><span
-											style="color:#8B879A;display:flex;align-items:center;gap:4px"
-											><Icon icon={I.phClock} size={13} />{duracion(s.duracion)}</span
-										></span
-									></span
-								><Icon icon={I.phPlusCircleFill} size={28} style="color:#5B3FD6;flex:none" /></a
-							>{/each}
-					</div>
-				</section>
-			{/if}
-
-			{#if T && T.profesionales.length}
-				<section style="padding:clamp(48px,7cqw,96px) clamp(14px,3.5cqw,44px) 0">
-					<h2
-						style="margin:0;font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(34px,4.6cqw,58px);line-height:.95;letter-spacing:-.035em"
-					>
-						El equipo
-					</h2>
-					<div
-						style="margin-top:22px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(46%,220px),1fr));gap:12px"
-					>
-						{#each T.profesionales as p (p.id)}
-							{@const prox = proximos?.porProfesional[p.id]}
-							<a
-								href={reservaUrl({ profesional: p.id })}
-								style="display:block;border-radius:24px;overflow:hidden;background:#fff;box-shadow:0 1px 2px rgba(30,27,46,.06);text-decoration:none;color:#1E1B2E;min-width:0"
-							>
-								<div style="aspect-ratio:4/5;background:#E4E1EA">
-									{#if p.foto}<img
-											src={cara(p.foto, 500, 620)}
-											alt=""
-											style="width:100%;height:100%;object-fit:cover;display:block"
-										/>{/if}
-								</div>
-								<div style="padding:14px">
-									<div style="font-size:16px;font-weight:700">{p.nombre}</div>
-									{#if p.rol}<div style="font-size:13px;color:#5A566B;margin-top:2px">
-											{p.rol}
-										</div>{/if}
-									{#if prox}<div
-											style="margin-top:10px;display:flex;justify-content:flex-end;align-items:center;font-size:12.5px"
-										>
-											<span style="color:#2F7D4F;font-weight:700">{cuandoCorto(prox)}</span>
-										</div>{/if}
-								</div>
-							</a>
-						{/each}
-					</div>
-				</section>
-			{/if}
-
-			{#if ver('cats') && cats.length}
-				<section style="padding:clamp(48px,7cqw,96px) clamp(14px,3.5cqw,44px) 0">
-					<div
-						style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap"
-					>
-						<h2
-							style="margin:0;font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(34px,4.6cqw,58px);line-height:.95;letter-spacing:-.035em"
-						>
-							Categorías
-						</h2>
-						{#if tienda.cobros.cuotas > 1}<span style="font-size:14px;color:#5A566B"
-								>{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}&nbsp;·
-									{tienda.cobros.transferencia}% off por transferencia{/if}</span
-							>{:else if tienda.cobros.transferencia > 0}<span style="font-size:14px;color:#5A566B"
-								>{tienda.cobros.transferencia}% off por transferencia</span
-							>{/if}
-					</div>
-					<div
-						style="margin-top:22px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:12px"
-					>
-						{#each cats as c (c.nombre)}<a
-								href={enlaceCat(c.nombre)}
-								class="sube"
-								style="display:flex;gap:14px;align-items:center;padding:14px;border-radius:22px;background:#fff;text-align:left;text-decoration:none;color:#1E1B2E;box-shadow:0 1px 2px rgba(30,27,46,.06);transition:transform .2s"
-								>{#if c.foto}<img
-										src={img(c.foto, 200, 200)}
-										alt=""
-										style="width:76px;height:76px;border-radius:16px;object-fit:cover;flex:none;background:#E4E1EA"
-									/>{:else}<span
-										style="width:76px;height:76px;border-radius:16px;flex:none;background:#E4E1EA"
-									></span>{/if}<span style="flex:1;min-width:0"
-									><span style="display:block;font-size:16px;font-weight:700">{c.nombre}</span><span
-										style="display:block;font-size:13px;color:#5A566B;margin-top:3px"
-										>{c.cantidad} {c.cantidad === 1 ? 'producto' : 'productos'}</span
-									></span
-								><Icon icon={I.phPlusCircleFill} size={28} style="color:#5B3FD6;flex:none" /></a
-							>{/each}
-					</div>
-				</section>
-			{/if}
-
-			{#if ver('prods') && best.length}
-				<section style="padding:clamp(48px,7cqw,96px) clamp(14px,3.5cqw,44px) 0">
-					<div
-						style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap"
-					>
-						<h2
-							style="margin:0;font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(34px,4.6cqw,58px);line-height:.95;letter-spacing:-.035em"
-						>
-							Lo más elegido
-						</h2>
-						<a
-							href="{base}/catalogo"
-							style="display:flex;align-items:center;gap:8px;padding:11px 16px;border-radius:999px;background:#fff;font-size:13.5px;font-weight:700;color:#1E1B2E;text-decoration:none;box-shadow:0 1px 2px rgba(30,27,46,.08)"
-							>Ver todo</a
-						>
-					</div>
-					<div
-						style="margin-top:22px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(46%,220px),1fr));gap:12px"
-					>
-						{#each best as p (p.id)}{@render card(p)}{/each}
-					</div>
-				</section>
-			{/if}
-
-			{#if ver('revs') && tienda.resenas.length}
-				<section style="padding:clamp(48px,7cqw,96px) clamp(14px,3.5cqw,44px) 0">
-					<div
-						style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap"
-					>
-						<h2
-							style="margin:0;font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(34px,4.6cqw,58px);line-height:.95;letter-spacing:-.035em"
-						>
-							Lo que dicen
-						</h2>
-						{#if tienda.promedio}<span
-								style="display:flex;align-items:center;gap:6px;font-size:14px"
-								><Icon icon={I.phStarFill} size={16} style="color:#E3A93B" /><b
-									>{tienda.promedio.toLocaleString('es-AR')}</b
-								><span style="color:#5A566B"
-									>· {tienda.resenas.length}
-									{tienda.resenas.length === 1 ? 'reseña' : 'reseñas'}</span
-								></span
-							>{/if}
-					</div>
-					<div
-						style="margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:12px"
-					>
-						{#each tienda.resenas.slice(0, 3) as r, i (i)}
-							{@const pr = tienda.productos.find((p) => p.nombre === r.producto)}
 							<div
-								style="padding:12px;border-radius:24px;background:#fff;box-shadow:0 1px 2px rgba(30,27,46,.06)"
+								style="position:relative;min-height:min(560px,120cqw);border-radius:32px;overflow:hidden;background:#CFC8DA"
 							>
-								{#if pr?.foto}<div
-										style="aspect-ratio:4/3;border-radius:16px;overflow:hidden;background:#E4E1EA"
+								{#if tienda.portada.foto}<img
+										src={img(tienda.portada.foto, 1100)}
+										alt=""
+										style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
+									/>{/if}
+								{#if heroSlots.length}
+									<div
+										style="position:absolute;left:16px;right:16px;bottom:16px;padding:16px;border-radius:22px;background:rgba(246,244,241,.95);backdrop-filter:blur(8px);box-shadow:0 20px 40px -16px rgba(30,27,46,.4)"
+									>
+										<div
+											style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"
+										>
+											<b style="font-size:14px">Próximos turnos libres hoy</b><span
+												style="font-size:12.5px;color:#2F7D4F;font-weight:700"
+												>● {proximos?.hoy.length}
+												{proximos?.hoy.length === 1 ? 'disponible' : 'disponibles'}</span
+											>
+										</div>
+										<div
+											style="margin-top:10px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none"
+										>
+											{#each heroSlots as h (h.inicio)}{@const st = slot(h.on ? 'on' : '')}<a
+													href={h.href}
+													style="flex:none;padding:9px 13px;border-radius:12px;border:1.5px solid {st.bd};background:{st.bg};color:{st.fg};font:700 13.5px 'Instrument Sans';text-decoration:none"
+													>{h.t}</a
+												>{/each}
+										</div>
+									</div>
+								{/if}
+							</div>
+						</section>
+					{/if}
+
+					{#if T && T.servicios.length}
+						<section style="padding:clamp(48px,7cqw,96px) clamp(14px,3.5cqw,44px) 0">
+							<div
+								style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap"
+							>
+								<h2
+									style="margin:0;font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(34px,4.6cqw,58px);line-height:.95;letter-spacing:-.035em"
+								>
+									Servicios
+								</h2>
+								<span style="font-size:14px;color:#5A566B"
+									>{T.sena
+										? 'Precios finales · pagás en el local o seña online'
+										: 'Precios finales · pagás en el local'}</span
+								>
+							</div>
+							<div
+								style="margin-top:22px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:12px"
+							>
+								{#each T.servicios as s (s.id)}<a
+										href={reservaUrl({ servicio: s.id })}
+										class="sube"
+										style="display:flex;gap:14px;align-items:center;padding:14px;border-radius:22px;background:#fff;text-align:left;text-decoration:none;color:#1E1B2E;box-shadow:0 1px 2px rgba(30,27,46,.06);transition:transform .2s"
+										>{#if s.foto}<img
+												src={img(s.foto, 200, 200)}
+												alt=""
+												style="width:76px;height:76px;border-radius:16px;object-fit:cover;flex:none;background:#E4E1EA"
+											/>{:else}<span
+												style="width:76px;height:76px;border-radius:16px;flex:none;background:#E4E1EA"
+											></span>{/if}<span style="flex:1;min-width:0"
+											><span style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"
+												><span style="font-size:16px;font-weight:700">{s.nombre}</span
+												>{#if s.etiqueta}<span
+														style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:#EEE9FF;color:#5B3FD6"
+														>{s.etiqueta}</span
+													>{/if}</span
+											>{#if s.descripcion}<span
+													style="display:block;font-size:13px;color:#5A566B;margin-top:3px"
+													>{s.descripcion}</span
+												>{/if}<span style="display:flex;gap:10px;margin-top:8px;font-size:13px"
+												><b>{fmt(s.precio)}</b><span
+													style="color:#8B879A;display:flex;align-items:center;gap:4px"
+													><Icon icon={I.phClock} size={13} />{duracion(s.duracion)}</span
+												></span
+											></span
+										><Icon icon={I.phPlusCircleFill} size={28} style="color:#5B3FD6;flex:none" /></a
+									>{/each}
+							</div>
+						</section>
+					{/if}
+
+					{#if T && T.profesionales.length}
+						<section style="padding:clamp(48px,7cqw,96px) clamp(14px,3.5cqw,44px) 0">
+							<h2
+								style="margin:0;font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(34px,4.6cqw,58px);line-height:.95;letter-spacing:-.035em"
+							>
+								El equipo
+							</h2>
+							<div
+								style="margin-top:22px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(46%,220px),1fr));gap:12px"
+							>
+								{#each T.profesionales as p (p.id)}
+									{@const prox = proximos?.porProfesional[p.id]}
+									<a
+										href={reservaUrl({ profesional: p.id })}
+										style="display:block;border-radius:24px;overflow:hidden;background:#fff;box-shadow:0 1px 2px rgba(30,27,46,.06);text-decoration:none;color:#1E1B2E;min-width:0"
+									>
+										<div style="aspect-ratio:4/5;background:#E4E1EA">
+											{#if p.foto}<img
+													src={cara(p.foto, 500, 620)}
+													alt=""
+													style="width:100%;height:100%;object-fit:cover;display:block"
+												/>{/if}
+										</div>
+										<div style="padding:14px">
+											<div style="font-size:16px;font-weight:700">{p.nombre}</div>
+											{#if p.rol}<div style="font-size:13px;color:#5A566B;margin-top:2px">
+													{p.rol}
+												</div>{/if}
+											{#if prox}<div
+													style="margin-top:10px;display:flex;justify-content:flex-end;align-items:center;font-size:12.5px"
+												>
+													<span style="color:#2F7D4F;font-weight:700">{cuandoCorto(prox)}</span>
+												</div>{/if}
+										</div>
+									</a>
+								{/each}
+							</div>
+						</section>
+					{/if}
+				{:else if seccion === 'cats'}
+					{#if ver('cats') && cats.length}
+						<section style="padding:clamp(48px,7cqw,96px) clamp(14px,3.5cqw,44px) 0">
+							<div
+								style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap"
+							>
+								<h2
+									style="margin:0;font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(34px,4.6cqw,58px);line-height:.95;letter-spacing:-.035em"
+								>
+									Categorías
+								</h2>
+								{#if tienda.cobros.cuotas > 1}<span style="font-size:14px;color:#5A566B"
+										>{tienda.cobros.cuotas} cuotas sin interés{#if tienda.cobros.transferencia > 0}&nbsp;·
+											{tienda.cobros.transferencia}% off por transferencia{/if}</span
+									>{:else if tienda.cobros.transferencia > 0}<span
+										style="font-size:14px;color:#5A566B"
+										>{tienda.cobros.transferencia}% off por transferencia</span
+									>{/if}
+							</div>
+							<div
+								style="margin-top:22px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:12px"
+							>
+								{#each cats as c (c.nombre)}<a
+										href={enlaceCat(c.nombre)}
+										class="sube"
+										style="display:flex;gap:14px;align-items:center;padding:14px;border-radius:22px;background:#fff;text-align:left;text-decoration:none;color:#1E1B2E;box-shadow:0 1px 2px rgba(30,27,46,.06);transition:transform .2s"
+										>{#if c.foto}<img
+												src={img(c.foto, 200, 200)}
+												alt=""
+												style="width:76px;height:76px;border-radius:16px;object-fit:cover;flex:none;background:#E4E1EA"
+											/>{:else}<span
+												style="width:76px;height:76px;border-radius:16px;flex:none;background:#E4E1EA"
+											></span>{/if}<span style="flex:1;min-width:0"
+											><span style="display:block;font-size:16px;font-weight:700">{c.nombre}</span
+											><span style="display:block;font-size:13px;color:#5A566B;margin-top:3px"
+												>{c.cantidad} {c.cantidad === 1 ? 'producto' : 'productos'}</span
+											></span
+										><Icon icon={I.phPlusCircleFill} size={28} style="color:#5B3FD6;flex:none" /></a
+									>{/each}
+							</div>
+						</section>
+					{/if}
+				{:else if seccion === 'prods'}
+					{#if ver('prods') && best.length}
+						<section style="padding:clamp(48px,7cqw,96px) clamp(14px,3.5cqw,44px) 0">
+							<div
+								style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap"
+							>
+								<h2
+									style="margin:0;font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(34px,4.6cqw,58px);line-height:.95;letter-spacing:-.035em"
+								>
+									Lo más elegido
+								</h2>
+								<a
+									href="{base}/catalogo"
+									style="display:flex;align-items:center;gap:8px;padding:11px 16px;border-radius:999px;background:#fff;font-size:13.5px;font-weight:700;color:#1E1B2E;text-decoration:none;box-shadow:0 1px 2px rgba(30,27,46,.08)"
+									>Ver todo</a
+								>
+							</div>
+							<div
+								style="margin-top:22px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(46%,220px),1fr));gap:12px"
+							>
+								{#each best as p (p.id)}{@render card(p)}{/each}
+							</div>
+						</section>
+					{/if}
+				{:else if seccion === 'revs'}
+					{#if ver('revs') && tienda.resenas.length}
+						<section style="padding:clamp(48px,7cqw,96px) clamp(14px,3.5cqw,44px) 0">
+							<div
+								style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap"
+							>
+								<h2
+									style="margin:0;font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(34px,4.6cqw,58px);line-height:.95;letter-spacing:-.035em"
+								>
+									Lo que dicen
+								</h2>
+								{#if tienda.promedio}<span
+										style="display:flex;align-items:center;gap:6px;font-size:14px"
+										><Icon icon={I.phStarFill} size={16} style="color:#E3A93B" /><b
+											>{tienda.promedio.toLocaleString('es-AR')}</b
+										><span style="color:#5A566B"
+											>· {tienda.resenas.length}
+											{tienda.resenas.length === 1 ? 'reseña' : 'reseñas'}</span
+										></span
+									>{/if}
+							</div>
+							<div
+								style="margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:12px"
+							>
+								{#each tienda.resenas.slice(0, 3) as r, i (i)}
+									{@const pr = tienda.productos.find((p) => p.nombre === r.producto)}
+									<div
+										style="padding:12px;border-radius:24px;background:#fff;box-shadow:0 1px 2px rgba(30,27,46,.06)"
+									>
+										{#if pr?.foto}<div
+												style="aspect-ratio:4/3;border-radius:16px;overflow:hidden;background:#E4E1EA"
+											>
+												<img
+													src={img(pr.foto, 600, 450)}
+													alt=""
+													style="width:100%;height:100%;object-fit:cover"
+												/>
+											</div>{/if}
+										<div style="padding:12px 4px 4px">
+											<div style="display:flex;gap:1px;color:#E3A93B">
+												{#each estrellas(r.estrellas) as e, j (j)}<Icon icon={e} size={14} />{/each}
+											</div>
+											<p style="margin:8px 0 0;font-size:15px;line-height:1.45">“{r.texto}”</p>
+											<div style="margin-top:8px;font-size:12.5px;color:#5A566B">
+												{r.autor}{#if r.producto}
+													· {r.conCompra ? 'compró' : 'sobre'} {r.producto}{/if}
+											</div>
+											{#if r.conCompra}<span
+													style="margin-top:8px;display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;background:#EEEAFE;color:#5B3FD6;font-size:11.5px;font-weight:700"
+													><Icon icon={I.phSealCheckFill} size={13} />Compra verificada</span
+												>{/if}
+											{#if r.respuesta}<div
+													style="margin-top:10px;padding:12px 14px;border-radius:16px;background:#F6F4F1;font-size:13px;line-height:1.5;color:#4A4659"
+												>
+													<b style="display:block;color:#1E1B2E">Respuesta de {tienda.nombre}</b
+													>{r.respuesta}
+												</div>{/if}
+										</div>
+									</div>
+								{/each}
+							</div>
+						</section>
+					{/if}
+				{:else if seccion === 'ig'}
+					{#if ver('ig') && tienda.fotos.length >= 3}
+						<section style="padding:clamp(48px,7cqw,96px) clamp(14px,3.5cqw,44px)">
+							<h2
+								style="margin:0;font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(34px,4.6cqw,58px);line-height:.95;letter-spacing:-.035em"
+							>
+								Así trabajamos
+							</h2>
+							<div
+								style="margin-top:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(30%,160px),1fr));gap:8px"
+							>
+								{#each tienda.fotos as g (g)}<div
+										style="aspect-ratio:1;border-radius:16px;overflow:hidden;background:#E4E1EA"
 									>
 										<img
-											src={img(pr.foto, 600, 450)}
+											src={img(g, 400, 400)}
 											alt=""
 											style="width:100%;height:100%;object-fit:cover"
 										/>
-									</div>{/if}
-								<div style="padding:12px 4px 4px">
-									<div style="display:flex;gap:1px;color:#E3A93B">
-										{#each estrellas(r.estrellas) as e, j (j)}<Icon icon={e} size={14} />{/each}
-									</div>
-									<p style="margin:8px 0 0;font-size:15px;line-height:1.45">“{r.texto}”</p>
-									<div style="margin-top:8px;font-size:12.5px;color:#5A566B">
-										{r.autor}{#if r.producto}
-											· {r.conCompra ? 'compró' : 'sobre'} {r.producto}{/if}
-									</div>
-									{#if r.conCompra}<span
-											style="margin-top:8px;display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;background:#EEEAFE;color:#5B3FD6;font-size:11.5px;font-weight:700"
-											><Icon icon={I.phSealCheckFill} size={13} />Compra verificada</span
-										>{/if}
-									{#if r.respuesta}<div
-											style="margin-top:10px;padding:12px 14px;border-radius:16px;background:#F6F4F1;font-size:13px;line-height:1.5;color:#4A4659"
-										>
-											<b style="display:block;color:#1E1B2E">Respuesta de {tienda.nombre}</b
-											>{r.respuesta}
-										</div>{/if}
-								</div>
+									</div>{/each}
 							</div>
-						{/each}
-					</div>
-				</section>
-			{/if}
-
-			{#if ver('ig') && tienda.fotos.length >= 3}
-				<section style="padding:clamp(48px,7cqw,96px) clamp(14px,3.5cqw,44px)">
-					<h2
-						style="margin:0;font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(34px,4.6cqw,58px);line-height:.95;letter-spacing:-.035em"
-					>
-						Así trabajamos
-					</h2>
-					<div
-						style="margin-top:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(30%,160px),1fr));gap:8px"
-					>
-						{#each tienda.fotos as g (g)}<div
-								style="aspect-ratio:1;border-radius:16px;overflow:hidden;background:#E4E1EA"
-							>
-								<img
-									src={img(g, 400, 400)}
-									alt=""
-									style="width:100%;height:100%;object-fit:cover"
-								/>
-							</div>{/each}
-					</div>
-				</section>
-			{:else}
+						</section>
+					{/if}
+				{/if}
+			{/each}
+			{#if !(ver('ig') && tienda.fotos.length >= 3)}
 				<div style="height:clamp(48px,7cqw,96px)"></div>
 			{/if}
 		{/if}

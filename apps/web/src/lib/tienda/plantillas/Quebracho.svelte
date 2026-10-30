@@ -5,6 +5,7 @@
 	import { goto } from '$app/navigation';
 	import Icon from '#lib/components/Icon.svelte';
 	import LogoTienda from '../LogoTienda.svelte';
+	import { enOrden } from '../secciones.ts';
 	import * as I from '#lib/icons.ts';
 	import FormResena from '../FormResena.svelte';
 	import PreguntasProducto from '../PreguntasProducto.svelte';
@@ -529,253 +530,262 @@
 
 		<!-- ============ INICIO ============ -->
 		{#if pagina === 'inicio'}
-			{#if ver('hero')}
-				<section style="padding:clamp(22px,3.4cqw,44px) clamp(16px,4cqw,52px) 0">
-					{#if tienda.portada.lema || tienda.ciudad}<div
-							style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;padding-bottom:clamp(16px,2.4cqw,28px);border-bottom:1px solid rgba(43,37,32,.2)"
-						>
-							<div
-								style="font-size:12.5px;letter-spacing:.18em;text-transform:uppercase;color:#6F6358"
-							>
-								{tienda.portada.lema}
-							</div>
-							{#if tienda.ciudad && !tienda.portada.lema.includes(tienda.ciudad)}<div
-									style="font-size:12.5px;letter-spacing:.18em;text-transform:uppercase;color:#6F6358"
+			<!-- Las secciones en el orden que eligió la tienda en Mi tienda. -->
+			{#each enOrden(tienda.secciones, ['hero', 'prods', 'revs', 'ig']) as seccion (seccion)}
+				{#if seccion === 'hero'}
+					{#if ver('hero')}
+						<section style="padding:clamp(22px,3.4cqw,44px) clamp(16px,4cqw,52px) 0">
+							{#if tienda.portada.lema || tienda.ciudad}<div
+									style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;padding-bottom:clamp(16px,2.4cqw,28px);border-bottom:1px solid rgba(43,37,32,.2)"
 								>
-									{tienda.ciudad}
+									<div
+										style="font-size:12.5px;letter-spacing:.18em;text-transform:uppercase;color:#6F6358"
+									>
+										{tienda.portada.lema}
+									</div>
+									{#if tienda.ciudad && !tienda.portada.lema.includes(tienda.ciudad)}<div
+											style="font-size:12.5px;letter-spacing:.18em;text-transform:uppercase;color:#6F6358"
+										>
+											{tienda.ciudad}
+										</div>{/if}
 								</div>{/if}
-						</div>{/if}
-					<h1
-						style="margin:clamp(16px,2.4cqw,28px) 0 clamp(18px,2.6cqw,30px);font-family:'Newsreader',serif;font-weight:400;font-size:clamp(52px,9.6cqw,150px);line-height:.86;letter-spacing:-.045em;overflow-wrap:anywhere"
-					>
-						{titulo[1] ? `${titulo[0]} ` : titulo[0]}{#if titulo[1]}
-							<i style="color:#4F5B3A">{titulo[1]}</i>{/if}
-					</h1>
-					{#if tienda.portada.foto}<div
-							style="position:relative;aspect-ratio:{nar
-								? '4/5'
-								: '21/9'};overflow:hidden;background:#D8CCBC"
-						>
-							<img
-								src={img(tienda.portada.foto, 1900)}
-								alt=""
-								style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
-							/>
-						</div>{/if}
-					{#if ver('prods') && lista.length}<div
-							style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));border-bottom:1px solid rgba(43,37,32,.2)"
-						>
-							{#each lista as p, k (p.id)}<a
-									href="{base}/producto/{p.slug ?? p.id}"
-									style="display:flex;align-items:center;gap:12px;padding:16px 4px;border-right:1px solid rgba(43,37,32,.1);text-decoration:none;text-align:left;color:#2B2520"
-									><span
-										style="width:26px;height:26px;border-radius:50%;background:{k === 0
-											? '#2B2520'
-											: 'transparent'};color:{k === 0
-											? '#EFE9E1'
-											: '#2B2520'};box-shadow:inset 0 0 0 1px #2B2520;display:grid;place-items:center;font-size:12px;font-weight:700;flex:none"
-										>{k + 1}</span
-									><span style="flex:1;min-width:0;font-size:14.5px">{p.nombre}</span><b
-										style="font-size:14px;white-space:nowrap"
-										>{tarjetaDe(p).desde ? 'Desde ' : ''}{fmt(tarjetaDe(p).precio)}</b
-									></a
-								>{/each}
-						</div>{/if}
-					<div
-						style="margin-top:16px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap"
-					>
-						{#if tienda.cobros.cuotas > 1 || tienda.cobros.transferencia > 0}<span
-								style="font-size:15px"
-								>{#if tienda.cobros.cuotas > 1}{tienda.cobros.cuotas} cuotas sin interés{/if}{#if tienda.cobros.transferencia > 0}
-									{#if tienda.cobros.cuotas > 1}·{/if}
-									<span style="color:#4F5B3A;font-weight:600"
-										>{tienda.cobros.transferencia}% off por transferencia</span
-									>{/if}</span
-							>{/if}<a
-							href="{base}/catalogo"
-							style="text-decoration:none;padding:15px 24px;border:0;background:#2B2520;color:#EFE9E1;font:600 14px 'Familjen Grotesk';letter-spacing:.04em"
-							>Ver todas las piezas</a
-						>
-					</div>
-				</section>
-			{/if}
-
-			<section
-				style="margin-top:clamp(56px,8cqw,110px);padding:clamp(36px,5cqw,64px) clamp(16px,4cqw,52px);background:#2B2520;color:#EFE9E1"
-			>
-				<div
-					style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap"
-				>
-					<h2
-						style="margin:0;font-family:'Newsreader',serif;font-weight:400;font-size:clamp(38px,5.4cqw,72px);line-height:.95;letter-spacing:-.03em"
-					>
-						Comprar, <i style="color:#C9B98F">sin vueltas.</i>
-					</h2>
-					<span style="font-size:14px;color:#BDB2A6;max-width:340px"
-						>Comprás online y te lo mandamos a todo el país{tienda.envios.retiro
-							? ', o lo retirás en el local'
-							: ''}.</span
-					>
-				</div>
-				<div
-					style="margin-top:28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:1px;background:rgba(239,233,225,.14)"
-				>
-					{#each process as s (s.t)}<div style="padding:18px 16px 20px;background:#2B2520">
-							<div style="display:flex;justify-content:space-between;align-items:baseline">
-								<span
-									style="font-family:'Newsreader',serif;font-size:40px;line-height:1;color:#C9B98F"
-									>{s.d}</span
-								><Icon icon={s.i} size={22} style="color:#BDB2A6" />
+							<h1
+								style="margin:clamp(16px,2.4cqw,28px) 0 clamp(18px,2.6cqw,30px);font-family:'Newsreader',serif;font-weight:400;font-size:clamp(52px,9.6cqw,150px);line-height:.86;letter-spacing:-.045em;overflow-wrap:anywhere"
+							>
+								{titulo[1] ? `${titulo[0]} ` : titulo[0]}{#if titulo[1]}
+									<i style="color:#4F5B3A">{titulo[1]}</i>{/if}
+							</h1>
+							{#if tienda.portada.foto}<div
+									style="position:relative;aspect-ratio:{nar
+										? '4/5'
+										: '21/9'};overflow:hidden;background:#D8CCBC"
+								>
+									<img
+										src={img(tienda.portada.foto, 1900)}
+										alt=""
+										style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
+									/>
+								</div>{/if}
+							{#if ver('prods') && lista.length}<div
+									style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));border-bottom:1px solid rgba(43,37,32,.2)"
+								>
+									{#each lista as p, k (p.id)}<a
+											href="{base}/producto/{p.slug ?? p.id}"
+											style="display:flex;align-items:center;gap:12px;padding:16px 4px;border-right:1px solid rgba(43,37,32,.1);text-decoration:none;text-align:left;color:#2B2520"
+											><span
+												style="width:26px;height:26px;border-radius:50%;background:{k === 0
+													? '#2B2520'
+													: 'transparent'};color:{k === 0
+													? '#EFE9E1'
+													: '#2B2520'};box-shadow:inset 0 0 0 1px #2B2520;display:grid;place-items:center;font-size:12px;font-weight:700;flex:none"
+												>{k + 1}</span
+											><span style="flex:1;min-width:0;font-size:14.5px">{p.nombre}</span><b
+												style="font-size:14px;white-space:nowrap"
+												>{tarjetaDe(p).desde ? 'Desde ' : ''}{fmt(tarjetaDe(p).precio)}</b
+											></a
+										>{/each}
+								</div>{/if}
+							<div
+								style="margin-top:16px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap"
+							>
+								{#if tienda.cobros.cuotas > 1 || tienda.cobros.transferencia > 0}<span
+										style="font-size:15px"
+										>{#if tienda.cobros.cuotas > 1}{tienda.cobros.cuotas} cuotas sin interés{/if}{#if tienda.cobros.transferencia > 0}
+											{#if tienda.cobros.cuotas > 1}·{/if}
+											<span style="color:#4F5B3A;font-weight:600"
+												>{tienda.cobros.transferencia}% off por transferencia</span
+											>{/if}</span
+									>{/if}<a
+									href="{base}/catalogo"
+									style="text-decoration:none;padding:15px 24px;border:0;background:#2B2520;color:#EFE9E1;font:600 14px 'Familjen Grotesk';letter-spacing:.04em"
+									>Ver todas las piezas</a
+								>
 							</div>
-							<div style="margin-top:14px;font-size:15.5px;font-weight:600">{s.t}</div>
-							<div style="margin-top:4px;font-size:13.5px;line-height:1.45;color:#BDB2A6">
-								{s.x}
-							</div>
-						</div>{/each}
-				</div>
-			</section>
+						</section>
+					{/if}
 
-			{#if ver('prods') && feat.length}
-				<section style="padding:clamp(56px,8cqw,110px) clamp(16px,4cqw,52px) 0">
-					<div
-						style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap"
+					<section
+						style="margin-top:clamp(56px,8cqw,110px);padding:clamp(36px,5cqw,64px) clamp(16px,4cqw,52px);background:#2B2520;color:#EFE9E1"
 					>
-						<h2
-							style="margin:0;font-family:'Newsreader',serif;font-weight:400;font-size:clamp(38px,5.4cqw,72px);line-height:.95;letter-spacing:-.03em"
+						<div
+							style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap"
 						>
-							Las más elegidas
-						</h2>
-						<a
-							href="{base}/catalogo"
-							style="text-decoration:none;padding:0;font:600 14px 'Familjen Grotesk';color:#2B2520;border-bottom:1px solid #2B2520"
-							>Ver las {tienda.productos.length} piezas</a
+							<h2
+								style="margin:0;font-family:'Newsreader',serif;font-weight:400;font-size:clamp(38px,5.4cqw,72px);line-height:.95;letter-spacing:-.03em"
+							>
+								Comprar, <i style="color:#C9B98F">sin vueltas.</i>
+							</h2>
+							<span style="font-size:14px;color:#BDB2A6;max-width:340px"
+								>Comprás online y te lo mandamos a todo el país{tienda.envios.retiro
+									? ', o lo retirás en el local'
+									: ''}.</span
+							>
+						</div>
+						<div
+							style="margin-top:28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:1px;background:rgba(239,233,225,.14)"
 						>
-					</div>
-					<div
-						style="margin-top:28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:clamp(14px,2cqw,26px)"
-					>
-						{#each feat as p (p.id)}<a
-								href={p.href}
-								class="zoom"
-								style="display:block;text-decoration:none;text-align:left;color:#2B2520;font-family:inherit;margin-top:{p.mt}"
-								><span
-									style="position:relative;display:block;aspect-ratio:{p.ar};overflow:hidden;background:#D8CCBC"
-									>{#if p.img}<img
-											src={p.img}
+							{#each process as s (s.t)}<div style="padding:18px 16px 20px;background:#2B2520">
+									<div style="display:flex;justify-content:space-between;align-items:baseline">
+										<span
+											style="font-family:'Newsreader',serif;font-size:40px;line-height:1;color:#C9B98F"
+											>{s.d}</span
+										><Icon icon={s.i} size={22} style="color:#BDB2A6" />
+									</div>
+									<div style="margin-top:14px;font-size:15.5px;font-weight:600">{s.t}</div>
+									<div style="margin-top:4px;font-size:13.5px;line-height:1.45;color:#BDB2A6">
+										{s.x}
+									</div>
+								</div>{/each}
+						</div>
+					</section>
+				{:else if seccion === 'prods'}
+					{#if ver('prods') && feat.length}
+						<section style="padding:clamp(56px,8cqw,110px) clamp(16px,4cqw,52px) 0">
+							<div
+								style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap"
+							>
+								<h2
+									style="margin:0;font-family:'Newsreader',serif;font-weight:400;font-size:clamp(38px,5.4cqw,72px);line-height:.95;letter-spacing:-.03em"
+								>
+									Las más elegidas
+								</h2>
+								<a
+									href="{base}/catalogo"
+									style="text-decoration:none;padding:0;font:600 14px 'Familjen Grotesk';color:#2B2520;border-bottom:1px solid #2B2520"
+									>Ver las {tienda.productos.length} piezas</a
+								>
+							</div>
+							<div
+								style="margin-top:28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:clamp(14px,2cqw,26px)"
+							>
+								{#each feat as p (p.id)}<a
+										href={p.href}
+										class="zoom"
+										style="display:block;text-decoration:none;text-align:left;color:#2B2520;font-family:inherit;margin-top:{p.mt}"
+										><span
+											style="position:relative;display:block;aspect-ratio:{p.ar};overflow:hidden;background:#D8CCBC"
+											>{#if p.img}<img
+													src={p.img}
+													alt=""
+													style="width:100%;height:100%;object-fit:cover"
+												/>{/if}{#if p.tag}<span
+													style="position:absolute;top:10px;left:10px;padding:4px 9px;background:#EFE9E1;font-size:11.5px;font-weight:600"
+													>{p.tag}</span
+												>{/if}</span
+										><span
+											style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:14px"
+											><span style="font-family:'Newsreader',serif;font-size:24px;line-height:1.05"
+												>{p.n}</span
+											><b style="font-size:15px;white-space:nowrap">{p.price}</b></span
+										>{#if p.w || p.cuota || p.old}<span
+												style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;font-size:13px;color:#6F6358"
+												>{#if p.w}<span>{p.w}</span>{#if p.cuota}<span>·</span
+														>{/if}{/if}{#if p.cuota}<span
+														>{tienda.cobros.cuotas} × {p.cuota} sin interés</span
+													>{/if}{#if p.old}{#if p.w || p.cuota}<span>·</span>{/if}<s>{p.old}</s
+													>{/if}</span
+											>{/if}</a
+									>{/each}
+							</div>
+						</section>
+					{/if}
+				{:else if seccion === 'revs'}
+					{#if ver('revs') && tienda.resenas.length}
+						<section style="padding:clamp(56px,8cqw,110px) clamp(16px,4cqw,52px) 0">
+							<div
+								style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:clamp(18px,3cqw,40px);align-items:start"
+							>
+								<div>
+									<h2
+										style="margin:0;font-family:'Newsreader',serif;font-weight:400;font-size:clamp(38px,5cqw,64px);line-height:.95;letter-spacing:-.03em"
+									>
+										Lo que dicen <i>quienes compraron</i>
+									</h2>
+									{#if tienda.promedio}<div
+											style="margin-top:14px;display:flex;align-items:center;gap:8px;font-size:14px"
+										>
+											<span style="display:flex;color:#2B2520"
+												>{#each estrellas(tienda.promedio) as e, i (i)}<Icon
+														icon={e}
+														size={15}
+													/>{/each}</span
+											><b>{tienda.promedio.toLocaleString('es-AR')}</b><span style="color:#6F6358"
+												>· {tienda.resenas.length}
+												{tienda.resenas.length === 1 ? 'reseña' : 'reseñas'}</span
+											>
+										</div>{/if}
+								</div>
+								<div style="display:flex;flex-direction:column;gap:12px">
+									{#each tienda.resenas.slice(0, 3) as r, i (i)}
+										{@const pr = tienda.productos.find((p) => p.nombre === r.producto)}
+										<div
+											style="display:grid;grid-template-columns:{pr?.foto
+												? '120px 1fr'
+												: '1fr'};gap:16px;padding-bottom:12px;border-bottom:1px solid rgba(43,37,32,.14)"
+										>
+											{#if pr?.foto}<div
+													style="aspect-ratio:4/5;overflow:hidden;background:#D8CCBC"
+												>
+													<img
+														src={img(pr.foto, 240, 300)}
+														alt=""
+														style="width:100%;height:100%;object-fit:cover"
+													/>
+												</div>{/if}
+											<div style="min-width:0">
+												<p
+													style="margin:0;font-family:'Newsreader',serif;font-size:20px;line-height:1.3;font-style:italic"
+												>
+													“{r.texto}”
+												</p>
+												<div style="margin-top:10px;font-size:13px;color:#6F6358">
+													{r.autor}{#if r.producto}
+														· {r.conCompra ? 'compró' : 'sobre'} {r.producto}{/if}
+												</div>
+												{#if r.conCompra}<div
+														style="margin-top:6px;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;letter-spacing:.04em;color:#4F5B3A"
+													>
+														<Icon icon={I.phSealCheckFill} size={13} />Compra verificada
+													</div>{/if}
+												{#if r.respuesta}<div
+														style="margin-top:10px;padding:12px 14px;background:#E6DED2;font-size:13.5px;line-height:1.55;color:#6F6358"
+													>
+														<b style="color:#2B2520">Respuesta de {tienda.nombre}</b><br
+														/>{r.respuesta}
+													</div>{/if}
+											</div>
+										</div>
+									{/each}
+								</div>
+							</div>
+						</section>
+					{/if}
+				{:else if seccion === 'ig'}
+					{#if ver('ig') && tienda.fotos.length >= 3}
+						<section style="padding:clamp(56px,8cqw,110px) clamp(16px,4cqw,52px)">
+							<h2
+								style="margin:0;font-family:'Newsreader',serif;font-weight:400;font-size:clamp(38px,5cqw,64px);line-height:.95"
+							>
+								En casa
+							</h2>
+							<div
+								style="margin-top:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(30%,170px),1fr));gap:6px"
+							>
+								{#each tienda.fotos as g (g)}<div
+										style="aspect-ratio:1;overflow:hidden;background:#D8CCBC"
+									>
+										<img
+											src={img(g, 400, 400)}
 											alt=""
 											style="width:100%;height:100%;object-fit:cover"
-										/>{/if}{#if p.tag}<span
-											style="position:absolute;top:10px;left:10px;padding:4px 9px;background:#EFE9E1;font-size:11.5px;font-weight:600"
-											>{p.tag}</span
-										>{/if}</span
-								><span
-									style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:14px"
-									><span style="font-family:'Newsreader',serif;font-size:24px;line-height:1.05"
-										>{p.n}</span
-									><b style="font-size:15px;white-space:nowrap">{p.price}</b></span
-								>{#if p.w || p.cuota || p.old}<span
-										style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;font-size:13px;color:#6F6358"
-										>{#if p.w}<span>{p.w}</span>{#if p.cuota}<span>·</span
-												>{/if}{/if}{#if p.cuota}<span
-												>{tienda.cobros.cuotas} × {p.cuota} sin interés</span
-											>{/if}{#if p.old}{#if p.w || p.cuota}<span>·</span>{/if}<s>{p.old}</s
-											>{/if}</span
-									>{/if}</a
-							>{/each}
-					</div>
-				</section>
-			{/if}
-
-			{#if ver('revs') && tienda.resenas.length}
-				<section style="padding:clamp(56px,8cqw,110px) clamp(16px,4cqw,52px) 0">
-					<div
-						style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:clamp(18px,3cqw,40px);align-items:start"
-					>
-						<div>
-							<h2
-								style="margin:0;font-family:'Newsreader',serif;font-weight:400;font-size:clamp(38px,5cqw,64px);line-height:.95;letter-spacing:-.03em"
-							>
-								Lo que dicen <i>quienes compraron</i>
-							</h2>
-							{#if tienda.promedio}<div
-									style="margin-top:14px;display:flex;align-items:center;gap:8px;font-size:14px"
-								>
-									<span style="display:flex;color:#2B2520"
-										>{#each estrellas(tienda.promedio) as e, i (i)}<Icon
-												icon={e}
-												size={15}
-											/>{/each}</span
-									><b>{tienda.promedio.toLocaleString('es-AR')}</b><span style="color:#6F6358"
-										>· {tienda.resenas.length}
-										{tienda.resenas.length === 1 ? 'reseña' : 'reseñas'}</span
-									>
-								</div>{/if}
-						</div>
-						<div style="display:flex;flex-direction:column;gap:12px">
-							{#each tienda.resenas.slice(0, 3) as r, i (i)}
-								{@const pr = tienda.productos.find((p) => p.nombre === r.producto)}
-								<div
-									style="display:grid;grid-template-columns:{pr?.foto
-										? '120px 1fr'
-										: '1fr'};gap:16px;padding-bottom:12px;border-bottom:1px solid rgba(43,37,32,.14)"
-								>
-									{#if pr?.foto}<div style="aspect-ratio:4/5;overflow:hidden;background:#D8CCBC">
-											<img
-												src={img(pr.foto, 240, 300)}
-												alt=""
-												style="width:100%;height:100%;object-fit:cover"
-											/>
-										</div>{/if}
-									<div style="min-width:0">
-										<p
-											style="margin:0;font-family:'Newsreader',serif;font-size:20px;line-height:1.3;font-style:italic"
-										>
-											“{r.texto}”
-										</p>
-										<div style="margin-top:10px;font-size:13px;color:#6F6358">
-											{r.autor}{#if r.producto}
-												· {r.conCompra ? 'compró' : 'sobre'} {r.producto}{/if}
-										</div>
-										{#if r.conCompra}<div
-												style="margin-top:6px;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;letter-spacing:.04em;color:#4F5B3A"
-											>
-												<Icon icon={I.phSealCheckFill} size={13} />Compra verificada
-											</div>{/if}
-										{#if r.respuesta}<div
-												style="margin-top:10px;padding:12px 14px;background:#E6DED2;font-size:13.5px;line-height:1.55;color:#6F6358"
-											>
-												<b style="color:#2B2520">Respuesta de {tienda.nombre}</b><br />{r.respuesta}
-											</div>{/if}
-									</div>
-								</div>
-							{/each}
-						</div>
-					</div>
-				</section>
-			{/if}
-
-			{#if ver('ig') && tienda.fotos.length >= 3}
-				<section style="padding:clamp(56px,8cqw,110px) clamp(16px,4cqw,52px)">
-					<h2
-						style="margin:0;font-family:'Newsreader',serif;font-weight:400;font-size:clamp(38px,5cqw,64px);line-height:.95"
-					>
-						En casa
-					</h2>
-					<div
-						style="margin-top:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(30%,170px),1fr));gap:6px"
-					>
-						{#each tienda.fotos as g (g)}<div
-								style="aspect-ratio:1;overflow:hidden;background:#D8CCBC"
-							>
-								<img
-									src={img(g, 400, 400)}
-									alt=""
-									style="width:100%;height:100%;object-fit:cover"
-								/>
-							</div>{/each}
-					</div>
-				</section>
-			{:else}
+										/>
+									</div>{/each}
+							</div>
+						</section>
+					{/if}
+				{/if}
+			{/each}
+			{#if !(ver('ig') && tienda.fotos.length >= 3)}
 				<div style="height:clamp(56px,8cqw,110px)"></div>
 			{/if}
 		{/if}

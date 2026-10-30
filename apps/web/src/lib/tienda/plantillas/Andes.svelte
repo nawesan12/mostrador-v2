@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	import Icon from '#lib/components/Icon.svelte';
 	import LogoTienda from '../LogoTienda.svelte';
+	import { enOrden } from '../secciones.ts';
 	import * as I from '#lib/icons.ts';
 	import FormResena from '../FormResena.svelte';
 	import PreguntasProducto from '../PreguntasProducto.svelte';
@@ -783,309 +784,316 @@
 		{:else}
 			<!-- ============ INICIO ============ -->
 			{#if pagina === 'inicio'}
-				{#if ver('hero')}
-					<section style="padding:clamp(12px,2cqw,24px) clamp(14px,3cqw,36px) 0">
-						<div
-							style="position:relative;border-radius:30px;overflow:hidden;background:radial-gradient(80% 90% at 70% 40%,#1D2A4A 0%,#0E1116 62%);color:#fff;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));min-height:min(640px,130cqw)"
-						>
-							<div
-								style="position:relative;z-index:1;padding:clamp(24px,4.4cqw,60px);display:flex;flex-direction:column;justify-content:space-between;gap:24px;min-width:0"
-							>
-								{#if destacado}<div style="display:flex;gap:6px;flex-wrap:wrap">
-										<span
-											style="padding:6px 11px;border-radius:999px;background:rgba(47,107,255,.2);color:#9DB8FF;font-size:12.5px;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
-											>{destacado.etiqueta ?? 'Más vendido'} · {destacado.nombre}</span
-										>{#if tienda.envios.gratisDesde}<span
-												style="padding:6px 11px;border-radius:999px;background:rgba(255,255,255,.08);font-size:12.5px;font-weight:600;white-space:nowrap"
-												>Envío gratis desde {fmt(tienda.envios.gratisDesde)}</span
-											>{/if}
-									</div>{/if}
-								<div style="min-width:0">
-									<h1
-										style="margin:0;font-family:'Sora',sans-serif;font-weight:700;font-size:clamp(48px,7.6cqw,110px);line-height:.92;letter-spacing:-.06em;overflow-wrap:anywhere"
+				<!-- Las secciones en el orden que eligió la tienda en Mi tienda. -->
+				{#each enOrden( tienda.secciones, ['hero', 'cats', 'prods', 'revs', 'ig'] ) as seccion (seccion)}
+					{#if seccion === 'hero'}
+						{#if ver('hero')}
+							<section style="padding:clamp(12px,2cqw,24px) clamp(14px,3cqw,36px) 0">
+								<div
+									style="position:relative;border-radius:30px;overflow:hidden;background:radial-gradient(80% 90% at 70% 40%,#1D2A4A 0%,#0E1116 62%);color:#fff;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));min-height:min(640px,130cqw)"
+								>
+									<div
+										style="position:relative;z-index:1;padding:clamp(24px,4.4cqw,60px);display:flex;flex-direction:column;justify-content:space-between;gap:24px;min-width:0"
 									>
-										{titulo[0]}{#if titulo[1]}<br /><span
-												style="background:linear-gradient(90deg,#9DB8FF,#2F6BFF);-webkit-background-clip:text;background-clip:text;color:transparent"
-												>{titulo[1]}</span
-											>{/if}
-									</h1>
-									{#if tienda.portada.lema}<p
-											style="margin:16px 0 0;font-size:16.5px;line-height:1.55;color:#B4BCCB;max-width:420px"
-										>
-											{tienda.portada.lema}
-										</p>{/if}
-								</div>
-								{#if destacado}{@const dt = tarjetaDe(destacado)}
-									<div>
-										<div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
-											<b
-												style="font-family:'Sora',sans-serif;font-size:clamp(30px,3.4cqw,42px);letter-spacing:-.04em"
-												>{dt.desde ? 'Desde ' : ''}{fmt(dt.precio)}</b
-											>{#if destacado.anterior && !dt.desde}<s style="color:#7C8494"
-													>{fmt(destacado.anterior)}</s
-												><span
-													style="padding:4px 9px;border-radius:999px;background:#2F6BFF;font-size:12px;font-weight:700"
-													>−{off(destacado)}%</span
-												>{/if}
-										</div>
-										{#if tienda.cobros.cuotas > 1 || tienda.cobros.transferencia > 0}<div
-												style="margin-top:4px;font-size:13.5px;color:#B4BCCB"
-											>
-												{#if tienda.cobros.cuotas > 1}{tienda.cobros.cuotas} cuotas sin interés de
-													<b style="color:#fff">{fmt(dt.precio / tienda.cobros.cuotas)}</b
-													>{/if}{#if tienda.cobros.transferencia > 0}
-													{#if tienda.cobros.cuotas > 1}·{/if}
-													<b style="color:#7EE2A8"
-														>{fmt(dt.precio * (1 - tienda.cobros.transferencia / 100))} por transferencia</b
+										{#if destacado}<div style="display:flex;gap:6px;flex-wrap:wrap">
+												<span
+													style="padding:6px 11px;border-radius:999px;background:rgba(47,107,255,.2);color:#9DB8FF;font-size:12.5px;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+													>{destacado.etiqueta ?? 'Más vendido'} · {destacado.nombre}</span
+												>{#if tienda.envios.gratisDesde}<span
+														style="padding:6px 11px;border-radius:999px;background:rgba(255,255,255,.08);font-size:12.5px;font-weight:600;white-space:nowrap"
+														>Envío gratis desde {fmt(tienda.envios.gratisDesde)}</span
 													>{/if}
 											</div>{/if}
-										<div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap">
-											<a
-												href="{base}/producto/{destacado.slug ?? destacado.id}"
-												style="text-decoration:none;padding:15px 24px;border:0;border-radius:14px;background:#fff;color:#0E1116;font:700 14.5px 'Instrument Sans';cursor:pointer"
-												>Comprar</a
-											><button
-												type="button"
-												onclick={() => abrirCmp(destacado!.id)}
-												style="display:flex;align-items:center;gap:7px;padding:15px 20px;border:1px solid rgba(255,255,255,.22);border-radius:14px;background:transparent;color:#fff;font:700 14.5px 'Instrument Sans';cursor:pointer"
-												><Icon icon={I.phColumnsBold} size={16} />Comparar con otros</button
+										<div style="min-width:0">
+											<h1
+												style="margin:0;font-family:'Sora',sans-serif;font-weight:700;font-size:clamp(48px,7.6cqw,110px);line-height:.92;letter-spacing:-.06em;overflow-wrap:anywhere"
 											>
-										</div>
-									</div>
-								{:else}
-									<div style="display:flex;gap:8px;flex-wrap:wrap">
-										<a
-											href="{base}/catalogo"
-											style="text-decoration:none;padding:15px 24px;border-radius:14px;background:#fff;color:#0E1116;font:700 14.5px 'Instrument Sans'"
-											>Ver los productos</a
-										>
-									</div>
-								{/if}
-							</div>
-							<div style="position:relative;min-height:380px">
-								<div
-									style="position:absolute;left:50%;top:50%;width:78%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(closest-side,rgba(47,107,255,.45),rgba(47,107,255,0))"
-								></div>
-								{#if tienda.portada.foto || destacado?.foto}<img
-										src={img(tienda.portada.foto ?? destacado?.foto ?? null, 1100)}
-										alt=""
-										style="position:absolute;left:50%;top:50%;width:min(86%,560px);aspect-ratio:1;object-fit:cover;transform:translate(-50%,-50%);border-radius:40px;mix-blend-mode:screen;opacity:.92"
-									/>{/if}
-							</div>
-						</div>
-					</section>
-				{/if}
-
-				<section
-					style="padding:12px clamp(14px,3cqw,36px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px"
-				>
-					{#each perks as p (p.t)}<div
-							style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:18px;background:#fff"
-						>
-							<span
-								style="width:40px;height:40px;border-radius:12px;background:#EAF0FF;display:grid;place-items:center;flex:none"
-								><Icon icon={p.i} size={20} style="color:#2F6BFF" /></span
-							>
-							<div>
-								<div style="font-size:14px;font-weight:700">{p.t}</div>
-								<div style="font-size:12.5px;color:#69717E">{p.d}</div>
-							</div>
-						</div>{/each}
-				</section>
-
-				{#if ver('cats') && cats.length}
-					<section style="padding:clamp(44px,6cqw,84px) clamp(14px,3cqw,36px) 0">
-						<h2
-							style="margin:0;font-family:'Sora',sans-serif;font-weight:700;font-size:clamp(30px,4cqw,50px);line-height:1;letter-spacing:-.05em"
-						>
-							¿Qué estás buscando?
-						</h2>
-						<div
-							style="margin-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(46%,200px),1fr));gap:10px"
-						>
-							{#each cats as u (u.nombre)}<a
-									href={enlaceCat(u.nombre)}
-									style="position:relative;border:0;padding:16px;border-radius:22px;background:{u.bg};color:{u.fg};cursor:pointer;text-align:left;font-family:inherit;min-height:200px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;text-decoration:none"
-									><Icon icon={I.phSquaresFourFill} size={28} /><span
-										><span
-											style="display:block;font-family:'Sora',sans-serif;font-size:21px;font-weight:700;letter-spacing:-.04em;overflow-wrap:anywhere"
-											>{u.nombre}</span
-										><span style="display:block;margin-top:3px;font-size:13px;opacity:.75"
-											>{u.cantidad} {u.cantidad === 1 ? 'producto' : 'productos'}</span
-										></span
-									></a
-								>{/each}
-						</div>
-					</section>
-				{/if}
-
-				{#if ver('prods') && best.length}
-					<section style="padding:clamp(44px,6cqw,84px) clamp(14px,3cqw,36px) 0">
-						<div
-							style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap"
-						>
-							<h2
-								style="margin:0;font-family:'Sora',sans-serif;font-weight:700;font-size:clamp(30px,4cqw,50px);line-height:1;letter-spacing:-.05em"
-							>
-								Más vendidos
-							</h2>
-							<a
-								href="{base}/catalogo"
-								style="text-decoration:none;padding:10px 16px;border-radius:12px;background:#fff;color:#0E1116;font:700 13.5px 'Instrument Sans'"
-								>Ver los {tienda.productos.length} productos</a
-							>
-						</div>
-						<div
-							style="margin-top:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(46%,230px),1fr));gap:12px"
-						>
-							{#each best as p (p.id)}<div
-									class="tarj"
-									style="position:relative;padding:10px;border-radius:22px;background:#fff;color:#0E1116;display:flex;flex-direction:column;transition:box-shadow .25s;min-width:0"
-								>
-									<a
-										href={p.href}
-										style="display:flex;flex-direction:column;text-decoration:none;color:#0E1116"
-										><span
-											style="position:relative;display:block;aspect-ratio:1;border-radius:16px;overflow:hidden;background:#EEF1F5"
-											>{#if p.img}<img
-													src={p.img}
-													alt=""
-													style="width:100%;height:100%;object-fit:cover"
-												/>{/if}{#if p.tag}<span
-													style="position:absolute;top:8px;left:8px;padding:4px 9px;border-radius:999px;background:{p.tbg};color:#fff;font-size:11px;font-weight:700"
-													>{p.tag}</span
-												>{/if}</span
-										><span style="display:block;padding:12px 4px 4px"
-											>{#if p.cat}<span
-													style="display:block;font-size:12px;color:#69717E;font-weight:600"
-													>{p.cat}</span
-												>{/if}<span
-												style="display:block;margin-top:2px;font-size:15px;font-weight:700;line-height:1.25"
-												>{p.n}</span
-											><span style="display:flex;gap:8px;align-items:baseline;margin-top:10px"
-												><b style="font-size:17px;letter-spacing:-.02em">{p.price}</b>{#if p.old}<s
-														style="font-size:13px;color:#8A919D">{p.old}</s
-													>{/if}</span
-											>{#if p.cuotas}<span style="display:block;font-size:12.5px;color:#69717E"
-													>{p.cuotas}</span
-												>{/if}{#if tienda.cobros.transferencia > 0}<span
-													style="display:flex;align-items:center;gap:5px;margin-top:6px;font-size:12px;font-weight:700;color:#14894B"
-													><Icon icon={I.phBank} size={13} />{p.transf} por transferencia</span
-												>{/if}</span
-										></a
-									>
-									<button
-										type="button"
-										onclick={() => alternar(p.id)}
-										aria-pressed={enCmp(p.id)}
-										aria-label="Comparar {p.n}"
-										style="position:absolute;top:18px;right:18px;display:flex;align-items:center;gap:5px;padding:5px 9px;border:0;border-radius:999px;background:#fff;font:700 11.5px 'Instrument Sans';color:#0E1116;cursor:pointer"
-										><span
-											style="width:12px;height:12px;border-radius:4px;border:1.5px solid {enCmp(
-												p.id
-											)
-												? '#2F6BFF'
-												: '#C5CCD6'};background:{enCmp(p.id) ? '#2F6BFF' : '#fff'}"
-										></span>{#if wide}Comparar{/if}</button
-									>
-								</div>{/each}
-						</div>
-					</section>
-				{/if}
-
-				{#if ver('revs') && tienda.resenas.length}
-					<section style="padding:clamp(44px,6cqw,84px) clamp(14px,3cqw,36px) 0">
-						<div
-							style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap"
-						>
-							<h2
-								style="margin:0;font-family:'Sora',sans-serif;font-weight:700;font-size:clamp(30px,4cqw,50px);line-height:1;letter-spacing:-.05em"
-							>
-								Reseñas
-							</h2>
-							{#if tienda.promedio}<span
-									style="display:flex;align-items:center;gap:8px;font-size:14px"
-									><b style="font-family:'Sora',sans-serif;font-size:26px"
-										>{tienda.promedio.toLocaleString('es-AR')}</b
-									><span style="display:flex;color:#F5A524"
-										>{#each estrellas(tienda.promedio) as e, i (i)}<Icon
-												icon={e}
-												size={15}
-											/>{/each}</span
-									><span style="color:#69717E"
-										>{tienda.resenas.length}
-										{tienda.resenas.length === 1 ? 'reseña' : 'reseñas'}</span
-									></span
-								>{/if}
-						</div>
-						<div
-							style="margin-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:12px"
-						>
-							{#each tienda.resenas.slice(0, 3) as r, i (i)}
-								{@const pr = tienda.productos.find((p) => p.nombre === r.producto)}
-								<div
-									style="padding:16px;border-radius:22px;background:#fff;display:flex;flex-direction:column;gap:12px"
-								>
-									<div style="display:flex;align-items:center;gap:10px">
-										<div style="flex:1;min-width:0">
-											<div style="font-size:14px;font-weight:700">{r.autor}</div>
-											{#if r.conCompra}<div
-													style="font-size:12px;color:#14894B;font-weight:600;display:flex;align-items:center;gap:4px"
+												{titulo[0]}{#if titulo[1]}<br /><span
+														style="background:linear-gradient(90deg,#9DB8FF,#2F6BFF);-webkit-background-clip:text;background-clip:text;color:transparent"
+														>{titulo[1]}</span
+													>{/if}
+											</h1>
+											{#if tienda.portada.lema}<p
+													style="margin:16px 0 0;font-size:16.5px;line-height:1.55;color:#B4BCCB;max-width:420px"
 												>
-													<Icon icon={I.phSealCheckFill} size={13} />Compra verificada{#if r.producto}
-														· {r.producto}{/if}
-												</div>{:else if r.producto}<div style="font-size:12px;color:#69717E">
-													Sobre {r.producto}
+													{tienda.portada.lema}
+												</p>{/if}
+										</div>
+										{#if destacado}{@const dt = tarjetaDe(destacado)}
+											<div>
+												<div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+													<b
+														style="font-family:'Sora',sans-serif;font-size:clamp(30px,3.4cqw,42px);letter-spacing:-.04em"
+														>{dt.desde ? 'Desde ' : ''}{fmt(dt.precio)}</b
+													>{#if destacado.anterior && !dt.desde}<s style="color:#7C8494"
+															>{fmt(destacado.anterior)}</s
+														><span
+															style="padding:4px 9px;border-radius:999px;background:#2F6BFF;font-size:12px;font-weight:700"
+															>−{off(destacado)}%</span
+														>{/if}
+												</div>
+												{#if tienda.cobros.cuotas > 1 || tienda.cobros.transferencia > 0}<div
+														style="margin-top:4px;font-size:13.5px;color:#B4BCCB"
+													>
+														{#if tienda.cobros.cuotas > 1}{tienda.cobros.cuotas} cuotas sin interés de
+															<b style="color:#fff">{fmt(dt.precio / tienda.cobros.cuotas)}</b
+															>{/if}{#if tienda.cobros.transferencia > 0}
+															{#if tienda.cobros.cuotas > 1}·{/if}
+															<b style="color:#7EE2A8"
+																>{fmt(dt.precio * (1 - tienda.cobros.transferencia / 100))} por transferencia</b
+															>{/if}
+													</div>{/if}
+												<div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap">
+													<a
+														href="{base}/producto/{destacado.slug ?? destacado.id}"
+														style="text-decoration:none;padding:15px 24px;border:0;border-radius:14px;background:#fff;color:#0E1116;font:700 14.5px 'Instrument Sans';cursor:pointer"
+														>Comprar</a
+													><button
+														type="button"
+														onclick={() => abrirCmp(destacado!.id)}
+														style="display:flex;align-items:center;gap:7px;padding:15px 20px;border:1px solid rgba(255,255,255,.22);border-radius:14px;background:transparent;color:#fff;font:700 14.5px 'Instrument Sans';cursor:pointer"
+														><Icon icon={I.phColumnsBold} size={16} />Comparar con otros</button
+													>
+												</div>
+											</div>
+										{:else}
+											<div style="display:flex;gap:8px;flex-wrap:wrap">
+												<a
+													href="{base}/catalogo"
+													style="text-decoration:none;padding:15px 24px;border-radius:14px;background:#fff;color:#0E1116;font:700 14.5px 'Instrument Sans'"
+													>Ver los productos</a
+												>
+											</div>
+										{/if}
+									</div>
+									<div style="position:relative;min-height:380px">
+										<div
+											style="position:absolute;left:50%;top:50%;width:78%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(closest-side,rgba(47,107,255,.45),rgba(47,107,255,0))"
+										></div>
+										{#if tienda.portada.foto || destacado?.foto}<img
+												src={img(tienda.portada.foto ?? destacado?.foto ?? null, 1100)}
+												alt=""
+												style="position:absolute;left:50%;top:50%;width:min(86%,560px);aspect-ratio:1;object-fit:cover;transform:translate(-50%,-50%);border-radius:40px;mix-blend-mode:screen;opacity:.92"
+											/>{/if}
+									</div>
+								</div>
+							</section>
+						{/if}
+
+						<section
+							style="padding:12px clamp(14px,3cqw,36px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px"
+						>
+							{#each perks as p (p.t)}<div
+									style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:18px;background:#fff"
+								>
+									<span
+										style="width:40px;height:40px;border-radius:12px;background:#EAF0FF;display:grid;place-items:center;flex:none"
+										><Icon icon={p.i} size={20} style="color:#2F6BFF" /></span
+									>
+									<div>
+										<div style="font-size:14px;font-weight:700">{p.t}</div>
+										<div style="font-size:12.5px;color:#69717E">{p.d}</div>
+									</div>
+								</div>{/each}
+						</section>
+					{:else if seccion === 'cats'}
+						{#if ver('cats') && cats.length}
+							<section style="padding:clamp(44px,6cqw,84px) clamp(14px,3cqw,36px) 0">
+								<h2
+									style="margin:0;font-family:'Sora',sans-serif;font-weight:700;font-size:clamp(30px,4cqw,50px);line-height:1;letter-spacing:-.05em"
+								>
+									¿Qué estás buscando?
+								</h2>
+								<div
+									style="margin-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(46%,200px),1fr));gap:10px"
+								>
+									{#each cats as u (u.nombre)}<a
+											href={enlaceCat(u.nombre)}
+											style="position:relative;border:0;padding:16px;border-radius:22px;background:{u.bg};color:{u.fg};cursor:pointer;text-align:left;font-family:inherit;min-height:200px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;text-decoration:none"
+											><Icon icon={I.phSquaresFourFill} size={28} /><span
+												><span
+													style="display:block;font-family:'Sora',sans-serif;font-size:21px;font-weight:700;letter-spacing:-.04em;overflow-wrap:anywhere"
+													>{u.nombre}</span
+												><span style="display:block;margin-top:3px;font-size:13px;opacity:.75"
+													>{u.cantidad} {u.cantidad === 1 ? 'producto' : 'productos'}</span
+												></span
+											></a
+										>{/each}
+								</div>
+							</section>
+						{/if}
+					{:else if seccion === 'prods'}
+						{#if ver('prods') && best.length}
+							<section style="padding:clamp(44px,6cqw,84px) clamp(14px,3cqw,36px) 0">
+								<div
+									style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap"
+								>
+									<h2
+										style="margin:0;font-family:'Sora',sans-serif;font-weight:700;font-size:clamp(30px,4cqw,50px);line-height:1;letter-spacing:-.05em"
+									>
+										Más vendidos
+									</h2>
+									<a
+										href="{base}/catalogo"
+										style="text-decoration:none;padding:10px 16px;border-radius:12px;background:#fff;color:#0E1116;font:700 13.5px 'Instrument Sans'"
+										>Ver los {tienda.productos.length} productos</a
+									>
+								</div>
+								<div
+									style="margin-top:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(46%,230px),1fr));gap:12px"
+								>
+									{#each best as p (p.id)}<div
+											class="tarj"
+											style="position:relative;padding:10px;border-radius:22px;background:#fff;color:#0E1116;display:flex;flex-direction:column;transition:box-shadow .25s;min-width:0"
+										>
+											<a
+												href={p.href}
+												style="display:flex;flex-direction:column;text-decoration:none;color:#0E1116"
+												><span
+													style="position:relative;display:block;aspect-ratio:1;border-radius:16px;overflow:hidden;background:#EEF1F5"
+													>{#if p.img}<img
+															src={p.img}
+															alt=""
+															style="width:100%;height:100%;object-fit:cover"
+														/>{/if}{#if p.tag}<span
+															style="position:absolute;top:8px;left:8px;padding:4px 9px;border-radius:999px;background:{p.tbg};color:#fff;font-size:11px;font-weight:700"
+															>{p.tag}</span
+														>{/if}</span
+												><span style="display:block;padding:12px 4px 4px"
+													>{#if p.cat}<span
+															style="display:block;font-size:12px;color:#69717E;font-weight:600"
+															>{p.cat}</span
+														>{/if}<span
+														style="display:block;margin-top:2px;font-size:15px;font-weight:700;line-height:1.25"
+														>{p.n}</span
+													><span style="display:flex;gap:8px;align-items:baseline;margin-top:10px"
+														><b style="font-size:17px;letter-spacing:-.02em">{p.price}</b
+														>{#if p.old}<s style="font-size:13px;color:#8A919D">{p.old}</s
+															>{/if}</span
+													>{#if p.cuotas}<span style="display:block;font-size:12.5px;color:#69717E"
+															>{p.cuotas}</span
+														>{/if}{#if tienda.cobros.transferencia > 0}<span
+															style="display:flex;align-items:center;gap:5px;margin-top:6px;font-size:12px;font-weight:700;color:#14894B"
+															><Icon icon={I.phBank} size={13} />{p.transf} por transferencia</span
+														>{/if}</span
+												></a
+											>
+											<button
+												type="button"
+												onclick={() => alternar(p.id)}
+												aria-pressed={enCmp(p.id)}
+												aria-label="Comparar {p.n}"
+												style="position:absolute;top:18px;right:18px;display:flex;align-items:center;gap:5px;padding:5px 9px;border:0;border-radius:999px;background:#fff;font:700 11.5px 'Instrument Sans';color:#0E1116;cursor:pointer"
+												><span
+													style="width:12px;height:12px;border-radius:4px;border:1.5px solid {enCmp(
+														p.id
+													)
+														? '#2F6BFF'
+														: '#C5CCD6'};background:{enCmp(p.id) ? '#2F6BFF' : '#fff'}"
+												></span>{#if wide}Comparar{/if}</button
+											>
+										</div>{/each}
+								</div>
+							</section>
+						{/if}
+					{:else if seccion === 'revs'}
+						{#if ver('revs') && tienda.resenas.length}
+							<section style="padding:clamp(44px,6cqw,84px) clamp(14px,3cqw,36px) 0">
+								<div
+									style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap"
+								>
+									<h2
+										style="margin:0;font-family:'Sora',sans-serif;font-weight:700;font-size:clamp(30px,4cqw,50px);line-height:1;letter-spacing:-.05em"
+									>
+										Reseñas
+									</h2>
+									{#if tienda.promedio}<span
+											style="display:flex;align-items:center;gap:8px;font-size:14px"
+											><b style="font-family:'Sora',sans-serif;font-size:26px"
+												>{tienda.promedio.toLocaleString('es-AR')}</b
+											><span style="display:flex;color:#F5A524"
+												>{#each estrellas(tienda.promedio) as e, i (i)}<Icon
+														icon={e}
+														size={15}
+													/>{/each}</span
+											><span style="color:#69717E"
+												>{tienda.resenas.length}
+												{tienda.resenas.length === 1 ? 'reseña' : 'reseñas'}</span
+											></span
+										>{/if}
+								</div>
+								<div
+									style="margin-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:12px"
+								>
+									{#each tienda.resenas.slice(0, 3) as r, i (i)}
+										{@const pr = tienda.productos.find((p) => p.nombre === r.producto)}
+										<div
+											style="padding:16px;border-radius:22px;background:#fff;display:flex;flex-direction:column;gap:12px"
+										>
+											<div style="display:flex;align-items:center;gap:10px">
+												<div style="flex:1;min-width:0">
+													<div style="font-size:14px;font-weight:700">{r.autor}</div>
+													{#if r.conCompra}<div
+															style="font-size:12px;color:#14894B;font-weight:600;display:flex;align-items:center;gap:4px"
+														>
+															<Icon icon={I.phSealCheckFill} size={13} />Compra verificada{#if r.producto}
+																· {r.producto}{/if}
+														</div>{:else if r.producto}<div style="font-size:12px;color:#69717E">
+															Sobre {r.producto}
+														</div>{/if}
+												</div>
+												<span style="display:flex;color:#F5A524;flex:none"
+													>{#each estrellas(r.estrellas) as e, j (j)}<Icon
+															icon={e}
+															size={13}
+														/>{/each}</span
+												>
+											</div>
+											<p style="margin:0;font-size:15px;line-height:1.5">{r.texto}</p>
+											{#if r.respuesta}<div
+													style="padding:12px;border-radius:14px;background:#F3F5F8;font-size:13.5px;line-height:1.5;color:#3B4250"
+												>
+													<b style="color:#0E1116">Respuesta de {tienda.nombre}</b><br
+													/>{r.respuesta}
+												</div>{/if}
+											{#if pr?.foto}<div style="display:flex;gap:6px">
+													<img
+														src={img(pr.foto, 140, 140)}
+														alt=""
+														style="width:64px;height:64px;border-radius:12px;object-fit:cover;background:#EEF1F5"
+													/>
 												</div>{/if}
 										</div>
-										<span style="display:flex;color:#F5A524;flex:none"
-											>{#each estrellas(r.estrellas) as e, j (j)}<Icon
-													icon={e}
-													size={13}
-												/>{/each}</span
-										>
-									</div>
-									<p style="margin:0;font-size:15px;line-height:1.5">{r.texto}</p>
-									{#if r.respuesta}<div
-											style="padding:12px;border-radius:14px;background:#F3F5F8;font-size:13.5px;line-height:1.5;color:#3B4250"
-										>
-											<b style="color:#0E1116">Respuesta de {tienda.nombre}</b><br />{r.respuesta}
-										</div>{/if}
-									{#if pr?.foto}<div style="display:flex;gap:6px">
-											<img
-												src={img(pr.foto, 140, 140)}
-												alt=""
-												style="width:64px;height:64px;border-radius:12px;object-fit:cover;background:#EEF1F5"
-											/>
-										</div>{/if}
+									{/each}
 								</div>
-							{/each}
-						</div>
-					</section>
-				{/if}
-
-				{#if ver('ig') && tienda.fotos.length >= 3}
-					<section style="padding:clamp(44px,6cqw,84px) clamp(14px,3cqw,36px)">
-						<h2
-							style="margin:0;font-family:'Sora',sans-serif;font-weight:700;font-size:clamp(30px,4cqw,50px);line-height:1;letter-spacing:-.05em"
-						>
-							En uso
-						</h2>
-						<div
-							style="margin-top:18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(30%,160px),1fr));gap:8px"
-						>
-							{#each tienda.fotos as g (g)}<div
-									style="aspect-ratio:1;border-radius:18px;overflow:hidden;background:#EEF1F5"
+							</section>
+						{/if}
+					{:else if seccion === 'ig'}
+						{#if ver('ig') && tienda.fotos.length >= 3}
+							<section style="padding:clamp(44px,6cqw,84px) clamp(14px,3cqw,36px)">
+								<h2
+									style="margin:0;font-family:'Sora',sans-serif;font-weight:700;font-size:clamp(30px,4cqw,50px);line-height:1;letter-spacing:-.05em"
 								>
-									<img
-										src={img(g, 400, 400)}
-										alt=""
-										style="width:100%;height:100%;object-fit:cover"
-									/>
-								</div>{/each}
-						</div>
-					</section>
-				{:else}
+									En uso
+								</h2>
+								<div
+									style="margin-top:18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(30%,160px),1fr));gap:8px"
+								>
+									{#each tienda.fotos as g (g)}<div
+											style="aspect-ratio:1;border-radius:18px;overflow:hidden;background:#EEF1F5"
+										>
+											<img
+												src={img(g, 400, 400)}
+												alt=""
+												style="width:100%;height:100%;object-fit:cover"
+											/>
+										</div>{/each}
+								</div>
+							</section>
+						{/if}
+					{/if}
+				{/each}
+				{#if !(ver('ig') && tienda.fotos.length >= 3)}
 					<div style="height:clamp(44px,6cqw,84px)"></div>
 				{/if}
 			{/if}

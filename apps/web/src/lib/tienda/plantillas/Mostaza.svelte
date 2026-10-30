@@ -7,6 +7,7 @@
 	import { cuandoLargo, duracion } from '#lib/turnos/formato.ts';
 	import Icon from '#lib/components/Icon.svelte';
 	import LogoTienda from '../LogoTienda.svelte';
+	import { enOrden } from '../secciones.ts';
 	import * as I from '#lib/icons.ts';
 	import FormResena from '../FormResena.svelte';
 	import PreguntasProducto from '../PreguntasProducto.svelte';
@@ -540,290 +541,301 @@
 
 		<!-- ============ INICIO ============ -->
 		{#if pagina === 'inicio'}
-			{#if ver('hero')}
-				<section
-					style="padding:clamp(16px,3cqw,40px) clamp(14px,3.5cqw,40px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:clamp(12px,2cqw,24px)"
-				>
-					<div
-						style="padding:clamp(26px,4.5cqw,60px);border-radius:28px;background:#3B2416;color:#FBF3E4;display:flex;flex-direction:column;justify-content:space-between;gap:30px;min-height:min(560px,120cqw);min-width:0"
-					>
-						{#if tienda.ciudad}<span
-								style="align-self:flex-start;display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;background:rgba(245,194,107,.16);color:#F5C26B;font-size:13px;font-weight:700"
-								><Icon icon={I.phMapPinFill} size={15} />{tienda.ciudad}</span
-							>{/if}
-						<div>
-							<h1
-								style="margin:0;{B};font-weight:800;font-size:clamp(52px,8.4cqw,112px);line-height:.88;letter-spacing:-.05em;overflow-wrap:break-word"
-							>
-								{titulo[0]}{#if titulo[1]}<br /><span style="color:#F5C26B">{titulo[1]}</span>{/if}
-							</h1>
-							{#if tienda.portada.lema}<p
-									style="margin:18px 0 0;font-size:17px;line-height:1.5;color:#E6D3BC;max-width:440px"
-								>
-									{tienda.portada.lema}
-								</p>{/if}
-						</div>
-						<div style="display:flex;gap:10px;flex-wrap:wrap">
-							<a
-								href="{base}/catalogo"
-								style="display:flex;align-items:center;gap:8px;padding:15px 24px;border-radius:999px;background:#F5C26B;color:#2A170C;font:700 15px 'Instrument Sans';text-decoration:none"
-								><Icon icon={I.phHandTapFill} size={17} />Pedir ahora</a
-							>{#if tienda.categorias[0]}<a
-									href={enlaceCat(tienda.categorias[0].nombre)}
-									style="padding:15px 22px;border:1.5px solid rgba(251,243,228,.35);border-radius:999px;color:#FBF3E4;font:700 15px 'Instrument Sans';text-decoration:none"
-									>{tienda.categorias[0].nombre}</a
-								>{/if}
-						</div>
-					</div>
-					<div
-						style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:clamp(10px,1.4cqw,16px);min-height:min(560px,110cqw)"
-					>
-						<div
-							style="grid-row:span 2;border-radius:28px;overflow:hidden;background:#D9B98C;position:relative"
+			<!-- Las secciones en el orden que eligió la tienda en Mi tienda. -->
+			{#each enOrden(tienda.secciones, ['hero', 'prods', 'revs', 'ig']) as seccion (seccion)}
+				{#if seccion === 'hero'}
+					{#if ver('hero')}
+						<section
+							style="padding:clamp(16px,3cqw,40px) clamp(14px,3.5cqw,40px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:clamp(12px,2cqw,24px)"
 						>
-							{#if fotoGrande}<img
-									src={fotoGrande}
-									alt=""
-									style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
-								/>{/if}{#if !tienda.portada.foto && best[0]}<a
-									href={best[0].href}
-									style="position:absolute;left:14px;bottom:14px;max-width:calc(100% - 28px);padding:8px 12px;border-radius:14px;background:#FBF3E4;font-size:13px;font-weight:700;color:#3B2416;text-decoration:none"
-									>{best[0].n} · {best[0].price}</a
-								>{/if}
-						</div>
-						<div
-							style="border-radius:28px;overflow:hidden;background:#D9B98C;position:relative;grid-row:{tienda.promedio
-								? 'auto'
-								: 'span 2'}"
-						>
-							{#if fotoChica}<img
-									src={fotoChica}
-									alt=""
-									style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
-								/>{/if}
-						</div>
-						{#if tienda.promedio}
 							<div
-								style="border-radius:28px;background:#C9821A;color:#2A170C;padding:18px;display:flex;flex-direction:column;justify-content:space-between"
+								style="padding:clamp(26px,4.5cqw,60px);border-radius:28px;background:#3B2416;color:#FBF3E4;display:flex;flex-direction:column;justify-content:space-between;gap:30px;min-height:min(560px,120cqw);min-width:0"
 							>
-								<Icon icon={I.phStarFill} size={24} />
+								{#if tienda.ciudad}<span
+										style="align-self:flex-start;display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;background:rgba(245,194,107,.16);color:#F5C26B;font-size:13px;font-weight:700"
+										><Icon icon={I.phMapPinFill} size={15} />{tienda.ciudad}</span
+									>{/if}
+								<div>
+									<h1
+										style="margin:0;{B};font-weight:800;font-size:clamp(52px,8.4cqw,112px);line-height:.88;letter-spacing:-.05em;overflow-wrap:break-word"
+									>
+										{titulo[0]}{#if titulo[1]}<br /><span style="color:#F5C26B">{titulo[1]}</span
+											>{/if}
+									</h1>
+									{#if tienda.portada.lema}<p
+											style="margin:18px 0 0;font-size:17px;line-height:1.5;color:#E6D3BC;max-width:440px"
+										>
+											{tienda.portada.lema}
+										</p>{/if}
+								</div>
+								<div style="display:flex;gap:10px;flex-wrap:wrap">
+									<a
+										href="{base}/catalogo"
+										style="display:flex;align-items:center;gap:8px;padding:15px 24px;border-radius:999px;background:#F5C26B;color:#2A170C;font:700 15px 'Instrument Sans';text-decoration:none"
+										><Icon icon={I.phHandTapFill} size={17} />Pedir ahora</a
+									>{#if tienda.categorias[0]}<a
+											href={enlaceCat(tienda.categorias[0].nombre)}
+											style="padding:15px 22px;border:1.5px solid rgba(251,243,228,.35);border-radius:999px;color:#FBF3E4;font:700 15px 'Instrument Sans';text-decoration:none"
+											>{tienda.categorias[0].nombre}</a
+										>{/if}
+								</div>
+							</div>
+							<div
+								style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:clamp(10px,1.4cqw,16px);min-height:min(560px,110cqw)"
+							>
+								<div
+									style="grid-row:span 2;border-radius:28px;overflow:hidden;background:#D9B98C;position:relative"
+								>
+									{#if fotoGrande}<img
+											src={fotoGrande}
+											alt=""
+											style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
+										/>{/if}{#if !tienda.portada.foto && best[0]}<a
+											href={best[0].href}
+											style="position:absolute;left:14px;bottom:14px;max-width:calc(100% - 28px);padding:8px 12px;border-radius:14px;background:#FBF3E4;font-size:13px;font-weight:700;color:#3B2416;text-decoration:none"
+											>{best[0].n} · {best[0].price}</a
+										>{/if}
+								</div>
+								<div
+									style="border-radius:28px;overflow:hidden;background:#D9B98C;position:relative;grid-row:{tienda.promedio
+										? 'auto'
+										: 'span 2'}"
+								>
+									{#if fotoChica}<img
+											src={fotoChica}
+											alt=""
+											style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
+										/>{/if}
+								</div>
+								{#if tienda.promedio}
+									<div
+										style="border-radius:28px;background:#C9821A;color:#2A170C;padding:18px;display:flex;flex-direction:column;justify-content:space-between"
+									>
+										<Icon icon={I.phStarFill} size={24} />
+										<div>
+											<div
+												style="{B};font-weight:800;font-size:clamp(34px,4cqw,48px);line-height:1;letter-spacing:-.04em"
+											>
+												{tienda.promedio.toLocaleString('es-AR')}
+											</div>
+											<div style="font-size:13px;font-weight:600;margin-top:4px">
+												de promedio en reseñas
+											</div>
+										</div>
+									</div>
+								{/if}
+							</div>
+						</section>
+					{/if}
+
+					<section
+						style="padding:clamp(12px,2cqw,24px) clamp(14px,3.5cqw,40px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:clamp(10px,1.4cqw,16px)"
+					>
+						{#each modes as m (m.t)}<a
+								href="{base}/catalogo"
+								style="display:flex;align-items:center;gap:14px;padding:18px;border-radius:22px;background:{m.bg};color:#3B2416;text-align:left;text-decoration:none;font-family:inherit"
+								><span
+									style="width:48px;height:48px;border-radius:16px;background:#FBF3E4;display:grid;place-items:center;flex:none"
+									><Icon icon={m.i} size={24} style="color:#C9821A" /></span
+								><span style="flex:1;min-width:0"
+									><span
+										style="display:block;{B};font-size:19px;font-weight:700;letter-spacing:-.02em"
+										>{m.t}</span
+									><span style="display:block;font-size:13px;color:#7A5A44;margin-top:2px"
+										>{m.d}</span
+									></span
+								><Icon icon={I.phArrowRightBold} size={17} /></a
+							>{/each}
+					</section>
+				{:else if seccion === 'prods'}
+					{#if ver('prods') && best.length}
+						<section style="padding:clamp(48px,7cqw,90px) clamp(14px,3.5cqw,40px) 0">
+							<div
+								style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap"
+							>
+								<h2
+									style="margin:0;{B};font-weight:800;font-size:clamp(36px,5cqw,64px);line-height:.95;letter-spacing:-.045em"
+								>
+									Lo que más sale
+								</h2>
+								<a
+									href="{base}/catalogo"
+									style="text-decoration:none;padding:11px 18px;border-radius:999px;background:#F1E2C8;color:#3B2416;font:700 14px 'Instrument Sans'"
+									>Ver menú completo</a
+								>
+							</div>
+							<div
+								style="margin-top:24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(46%,230px),1fr));gap:clamp(10px,1.4cqw,16px)"
+							>
+								{#each best as p (p.id)}<div
+										style="padding:10px;border-radius:24px;background:#fff;box-shadow:0 1px 2px rgba(59,36,22,.06);min-width:0"
+									>
+										<a
+											href={p.href}
+											class="zoom"
+											style="position:relative;display:block;aspect-ratio:1;border-radius:18px;overflow:hidden;background:#E9D6B8"
+											>{#if p.img}<img
+													src={p.img}
+													alt=""
+													style="width:100%;height:100%;object-fit:cover"
+												/>{/if}{#if p.tag}<span
+													style="position:absolute;top:8px;left:8px;padding:4px 9px;border-radius:999px;background:#FBF3E4;color:#3B2416;font-size:11.5px;font-weight:700"
+													>{p.tag}</span
+												>{/if}</a
+										>
+										<div style="padding:12px 6px 4px">
+											<a
+												href={p.href}
+												style="display:block;{B};font-size:18px;font-weight:700;letter-spacing:-.02em;color:#3B2416;text-decoration:none"
+												>{p.n}</a
+											>
+											{#if p.d}<div
+													class="dos"
+													style="font-size:12.5px;color:#7A5A44;margin-top:2px;line-height:1.4"
+												>
+													{p.d}
+												</div>{/if}
+											<div
+												style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;gap:8px"
+											>
+												<span
+													><b style="font-size:16px">{p.price}</b>{#if p.old}
+														<s style="font-size:13px;color:#9C8270">{p.old}</s>{/if}</span
+												><button
+													type="button"
+													onclick={() => sumar(p.id)}
+													disabled={p.agotado || tienda.vitrina}
+													aria-label="Sumar {p.n}"
+													style="width:36px;height:36px;flex:none;border:0;border-radius:50%;background:#3B2416;color:#FBF3E4;display:grid;place-items:center;cursor:pointer"
+													><Icon icon={I.phPlusBold} size={15} /></button
+												>
+											</div>
+										</div>
+									</div>{/each}
+							</div>
+						</section>
+
+						{#if oferta}
+							<section
+								style="margin:clamp(48px,7cqw,90px) clamp(14px,3.5cqw,40px) 0;padding:clamp(24px,4cqw,48px);border-radius:28px;background:#F5C26B;color:#2A170C;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:28px;align-items:center"
+							>
 								<div>
 									<div
-										style="{B};font-weight:800;font-size:clamp(34px,4cqw,48px);line-height:1;letter-spacing:-.04em"
+										style="font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase"
 									>
-										{tienda.promedio.toLocaleString('es-AR')}
+										Oferta · −{Math.round((1 - oferta.precio / oferta.anterior!) * 100)}%
 									</div>
-									<div style="font-size:13px;font-weight:600;margin-top:4px">
-										de promedio en reseñas
-									</div>
-								</div>
-							</div>
-						{/if}
-					</div>
-				</section>
-			{/if}
-
-			<section
-				style="padding:clamp(12px,2cqw,24px) clamp(14px,3.5cqw,40px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:clamp(10px,1.4cqw,16px)"
-			>
-				{#each modes as m (m.t)}<a
-						href="{base}/catalogo"
-						style="display:flex;align-items:center;gap:14px;padding:18px;border-radius:22px;background:{m.bg};color:#3B2416;text-align:left;text-decoration:none;font-family:inherit"
-						><span
-							style="width:48px;height:48px;border-radius:16px;background:#FBF3E4;display:grid;place-items:center;flex:none"
-							><Icon icon={m.i} size={24} style="color:#C9821A" /></span
-						><span style="flex:1;min-width:0"
-							><span style="display:block;{B};font-size:19px;font-weight:700;letter-spacing:-.02em"
-								>{m.t}</span
-							><span style="display:block;font-size:13px;color:#7A5A44;margin-top:2px">{m.d}</span
-							></span
-						><Icon icon={I.phArrowRightBold} size={17} /></a
-					>{/each}
-			</section>
-
-			{#if ver('prods') && best.length}
-				<section style="padding:clamp(48px,7cqw,90px) clamp(14px,3.5cqw,40px) 0">
-					<div
-						style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap"
-					>
-						<h2
-							style="margin:0;{B};font-weight:800;font-size:clamp(36px,5cqw,64px);line-height:.95;letter-spacing:-.045em"
-						>
-							Lo que más sale
-						</h2>
-						<a
-							href="{base}/catalogo"
-							style="text-decoration:none;padding:11px 18px;border-radius:999px;background:#F1E2C8;color:#3B2416;font:700 14px 'Instrument Sans'"
-							>Ver menú completo</a
-						>
-					</div>
-					<div
-						style="margin-top:24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(46%,230px),1fr));gap:clamp(10px,1.4cqw,16px)"
-					>
-						{#each best as p (p.id)}<div
-								style="padding:10px;border-radius:24px;background:#fff;box-shadow:0 1px 2px rgba(59,36,22,.06);min-width:0"
-							>
-								<a
-									href={p.href}
-									class="zoom"
-									style="position:relative;display:block;aspect-ratio:1;border-radius:18px;overflow:hidden;background:#E9D6B8"
-									>{#if p.img}<img
-											src={p.img}
-											alt=""
-											style="width:100%;height:100%;object-fit:cover"
-										/>{/if}{#if p.tag}<span
-											style="position:absolute;top:8px;left:8px;padding:4px 9px;border-radius:999px;background:#FBF3E4;color:#3B2416;font-size:11.5px;font-weight:700"
-											>{p.tag}</span
-										>{/if}</a
-								>
-								<div style="padding:12px 6px 4px">
-									<a
-										href={p.href}
-										style="display:block;{B};font-size:18px;font-weight:700;letter-spacing:-.02em;color:#3B2416;text-decoration:none"
-										>{p.n}</a
+									<h2
+										style="margin:10px 0 0;{B};font-weight:800;font-size:clamp(38px,5.4cqw,70px);line-height:.92;letter-spacing:-.045em;overflow-wrap:break-word"
 									>
-									{#if p.d}<div
-											class="dos"
-											style="font-size:12.5px;color:#7A5A44;margin-top:2px;line-height:1.4"
-										>
-											{p.d}
-										</div>{/if}
+										{oferta.nombre}
+									</h2>
 									<div
-										style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;gap:8px"
+										style="margin-top:16px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"
 									>
-										<span
-											><b style="font-size:16px">{p.price}</b>{#if p.old}
-												<s style="font-size:13px;color:#9C8270">{p.old}</s>{/if}</span
-										><button
-											type="button"
-											onclick={() => sumar(p.id)}
-											disabled={p.agotado || tienda.vitrina}
-											aria-label="Sumar {p.n}"
-											style="width:36px;height:36px;flex:none;border:0;border-radius:50%;background:#3B2416;color:#FBF3E4;display:grid;place-items:center;cursor:pointer"
-											><Icon icon={I.phPlusBold} size={15} /></button
-										>
+										<b style="{B};font-size:40px;font-weight:800;letter-spacing:-.03em"
+											>{fmt(oferta.precio)}</b
+										><s style="font-size:17px;opacity:.6">{fmt(oferta.anterior!)}</s>
 									</div>
+									<button
+										type="button"
+										onclick={sumarOferta}
+										disabled={tienda.vitrina}
+										style="margin-top:18px;padding:15px 24px;border:0;border-radius:999px;background:#2A170C;color:#FBF3E4;font:700 15px 'Instrument Sans';cursor:pointer"
+										>Sumar al pedido</button
+									>
 								</div>
-							</div>{/each}
-					</div>
-				</section>
-
-				{#if oferta}
-					<section
-						style="margin:clamp(48px,7cqw,90px) clamp(14px,3.5cqw,40px) 0;padding:clamp(24px,4cqw,48px);border-radius:28px;background:#F5C26B;color:#2A170C;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:28px;align-items:center"
-					>
-						<div>
-							<div
-								style="font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase"
-							>
-								Oferta · −{Math.round((1 - oferta.precio / oferta.anterior!) * 100)}%
-							</div>
+								<div
+									style="display:grid;grid-template-columns:repeat({ofertas.length},1fr);gap:10px"
+								>
+									{#each ofertas as o (o.id)}<a
+											href="{base}/producto/{o.slug ?? o.id}"
+											class="zoom"
+											aria-label={o.nombre}
+											style="display:block;aspect-ratio:3/4;border-radius:20px;overflow:hidden;background:#E3A94F"
+											>{#if o.foto}<img
+													src={img(o.foto, 300, 400)}
+													alt=""
+													style="width:100%;height:100%;object-fit:cover"
+												/>{/if}</a
+										>{/each}
+								</div>
+							</section>
+						{/if}
+					{/if}
+				{:else if seccion === 'revs'}
+					{#if ver('revs') && tienda.resenas.length}
+						<section style="padding:clamp(48px,7cqw,90px) clamp(14px,3.5cqw,40px) 0">
 							<h2
-								style="margin:10px 0 0;{B};font-weight:800;font-size:clamp(38px,5.4cqw,70px);line-height:.92;letter-spacing:-.045em;overflow-wrap:break-word"
+								style="margin:0;{B};font-weight:800;font-size:clamp(36px,5cqw,64px);line-height:.95;letter-spacing:-.045em"
 							>
-								{oferta.nombre}
+								Dicen en el barrio
 							</h2>
 							<div
-								style="margin-top:16px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"
+								style="margin-top:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:14px"
 							>
-								<b style="{B};font-size:40px;font-weight:800;letter-spacing:-.03em"
-									>{fmt(oferta.precio)}</b
-								><s style="font-size:17px;opacity:.6">{fmt(oferta.anterior!)}</s>
+								{#each tienda.resenas.slice(0, 3) as r, i (i)}
+									{@const pr = tienda.productos.find((p) => p.nombre === r.producto)}
+									<div
+										style="padding:14px;border-radius:24px;background:#fff;display:flex;flex-direction:column;gap:12px"
+									>
+										{#if pr?.foto}<div
+												style="aspect-ratio:16/10;border-radius:16px;overflow:hidden;background:#E9D6B8"
+											>
+												<img
+													src={img(pr.foto, 600, 375)}
+													alt=""
+													style="width:100%;height:100%;object-fit:cover"
+												/>
+											</div>{/if}
+										<div style="display:flex;gap:2px;color:#C9821A">
+											{#each estrellas(r.estrellas) as e, j (j)}<Icon icon={e} size={15} />{/each}
+										</div>
+										<p style="margin:0;font-size:15px;line-height:1.5">“{r.texto}”</p>
+										<span style="font-size:13px;color:#7A5A44;font-weight:600"
+											>{r.autor}{#if r.producto}
+												· {r.conCompra ? 'compró' : 'sobre'} {r.producto}{/if}</span
+										>
+										{#if r.conCompra}<span
+												style="align-self:flex-start;display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;background:#E7F0DF;font-size:12px;font-weight:700;color:#2F6B3A"
+												><Icon icon={I.phSealCheckFill} size={13} />Compra verificada</span
+											>{/if}
+										{#if r.respuesta}<div
+												style="padding:10px 12px;border-radius:14px;background:#F1E2C8;font-size:13.5px;line-height:1.5;color:#5E4332"
+											>
+												<b style="color:#3B2416">Respuesta de {tienda.nombre}</b><br />{r.respuesta}
+											</div>{/if}
+									</div>
+								{/each}
 							</div>
-							<button
-								type="button"
-								onclick={sumarOferta}
-								disabled={tienda.vitrina}
-								style="margin-top:18px;padding:15px 24px;border:0;border-radius:999px;background:#2A170C;color:#FBF3E4;font:700 15px 'Instrument Sans';cursor:pointer"
-								>Sumar al pedido</button
+						</section>
+					{/if}
+				{:else if seccion === 'ig'}
+					{#if ver('ig') && tienda.fotos.length >= 3}
+						<section style="padding:clamp(48px,7cqw,90px) clamp(14px,3.5cqw,40px)">
+							<h2
+								style="margin:0;{B};font-weight:800;font-size:clamp(36px,5cqw,64px);line-height:.95;letter-spacing:-.045em"
 							>
-						</div>
-						<div style="display:grid;grid-template-columns:repeat({ofertas.length},1fr);gap:10px">
-							{#each ofertas as o (o.id)}<a
-									href="{base}/producto/{o.slug ?? o.id}"
-									class="zoom"
-									aria-label={o.nombre}
-									style="display:block;aspect-ratio:3/4;border-radius:20px;overflow:hidden;background:#E3A94F"
-									>{#if o.foto}<img
-											src={img(o.foto, 300, 400)}
-											alt=""
-											style="width:100%;height:100%;object-fit:cover"
-										/>{/if}</a
-								>{/each}
-						</div>
-					</section>
-				{/if}
-			{/if}
-
-			{#if ver('revs') && tienda.resenas.length}
-				<section style="padding:clamp(48px,7cqw,90px) clamp(14px,3.5cqw,40px) 0">
-					<h2
-						style="margin:0;{B};font-weight:800;font-size:clamp(36px,5cqw,64px);line-height:.95;letter-spacing:-.045em"
-					>
-						Dicen en el barrio
-					</h2>
-					<div
-						style="margin-top:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:14px"
-					>
-						{#each tienda.resenas.slice(0, 3) as r, i (i)}
-							{@const pr = tienda.productos.find((p) => p.nombre === r.producto)}
+								De cerca
+							</h2>
 							<div
-								style="padding:14px;border-radius:24px;background:#fff;display:flex;flex-direction:column;gap:12px"
+								style="margin-top:22px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(30%,170px),1fr));gap:8px"
 							>
-								{#if pr?.foto}<div
-										style="aspect-ratio:16/10;border-radius:16px;overflow:hidden;background:#E9D6B8"
+								{#each tienda.fotos as g (g)}<div
+										style="aspect-ratio:1;border-radius:18px;overflow:hidden;background:#E9D6B8"
 									>
 										<img
-											src={img(pr.foto, 600, 375)}
+											src={img(g, 400, 400)}
 											alt=""
 											style="width:100%;height:100%;object-fit:cover"
 										/>
-									</div>{/if}
-								<div style="display:flex;gap:2px;color:#C9821A">
-									{#each estrellas(r.estrellas) as e, j (j)}<Icon icon={e} size={15} />{/each}
-								</div>
-								<p style="margin:0;font-size:15px;line-height:1.5">“{r.texto}”</p>
-								<span style="font-size:13px;color:#7A5A44;font-weight:600"
-									>{r.autor}{#if r.producto}
-										· {r.conCompra ? 'compró' : 'sobre'} {r.producto}{/if}</span
-								>
-								{#if r.conCompra}<span
-										style="align-self:flex-start;display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;background:#E7F0DF;font-size:12px;font-weight:700;color:#2F6B3A"
-										><Icon icon={I.phSealCheckFill} size={13} />Compra verificada</span
-									>{/if}
-								{#if r.respuesta}<div
-										style="padding:10px 12px;border-radius:14px;background:#F1E2C8;font-size:13.5px;line-height:1.5;color:#5E4332"
-									>
-										<b style="color:#3B2416">Respuesta de {tienda.nombre}</b><br />{r.respuesta}
-									</div>{/if}
+									</div>{/each}
 							</div>
-						{/each}
-					</div>
-				</section>
-			{/if}
-
-			{#if ver('ig') && tienda.fotos.length >= 3}
-				<section style="padding:clamp(48px,7cqw,90px) clamp(14px,3.5cqw,40px)">
-					<h2
-						style="margin:0;{B};font-weight:800;font-size:clamp(36px,5cqw,64px);line-height:.95;letter-spacing:-.045em"
-					>
-						De cerca
-					</h2>
-					<div
-						style="margin-top:22px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(30%,170px),1fr));gap:8px"
-					>
-						{#each tienda.fotos as g (g)}<div
-								style="aspect-ratio:1;border-radius:18px;overflow:hidden;background:#E9D6B8"
-							>
-								<img
-									src={img(g, 400, 400)}
-									alt=""
-									style="width:100%;height:100%;object-fit:cover"
-								/>
-							</div>{/each}
-					</div>
-				</section>
-			{:else}
+						</section>
+					{/if}
+				{/if}
+			{/each}
+			{#if !(ver('ig') && tienda.fotos.length >= 3)}
 				<div style="height:clamp(48px,7cqw,90px)"></div>
 			{/if}
 		{/if}

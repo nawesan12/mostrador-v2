@@ -5,6 +5,7 @@
 	import { page } from '$app/state';
 	import Icon from '#lib/components/Icon.svelte';
 	import LogoTienda from '../LogoTienda.svelte';
+	import { enOrden } from '../secciones.ts';
 	import * as I from '#lib/icons.ts';
 	import FormResena from '../FormResena.svelte';
 	import PreguntasProducto from '../PreguntasProducto.svelte';
@@ -662,258 +663,269 @@
 
 		<!-- ============ INICIO ============ -->
 		{#if pagina === 'inicio'}
-			{#if ver('hero')}
-				<section
-					style="padding:clamp(12px,2cqw,24px) clamp(12px,3cqw,32px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:10px"
-				>
-					<div
-						style="grid-column:span {nar
-							? 1
-							: 2};position:relative;min-height:min(440px,100cqw);border-radius:16px;overflow:hidden;background:#2F5D50;color:#EEF1E8;padding:clamp(22px,4cqw,48px);display:flex;flex-direction:column;justify-content:flex-end"
-					>
-						{#if tienda.portada.foto}<img
-								src={img(tienda.portada.foto, 1400)}
-								alt=""
-								style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.55"
-							/>{/if}
-						<div
-							style="position:absolute;inset:0;background:linear-gradient(0deg,rgba(20,40,32,.9),rgba(20,40,32,.1) 70%)"
-						></div>
-						<div style="position:relative;max-width:560px;min-width:0">
-							{#if maxOff}<span
-									style="display:inline-flex;padding:5px 10px;border-radius:6px;background:#E8C547;color:#1E2B22;font-size:12.5px;font-weight:800"
-									>OFERTAS · HASTA {maxOff}% OFF</span
-								>{/if}
-							<h1
-								style="margin:14px 0 0;font-weight:800;font-size:clamp(40px,6.4cqw,80px);line-height:.92;letter-spacing:-.045em;overflow-wrap:break-word"
+			<!-- Las secciones en el orden que eligió la tienda en Mi tienda. -->
+			{#each enOrden(tienda.secciones, ['hero', 'cats', 'prods', 'revs']) as seccion (seccion)}
+				{#if seccion === 'hero'}
+					{#if ver('hero')}
+						<section
+							style="padding:clamp(12px,2cqw,24px) clamp(12px,3cqw,32px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:10px"
+						>
+							<div
+								style="grid-column:span {nar
+									? 1
+									: 2};position:relative;min-height:min(440px,100cqw);border-radius:16px;overflow:hidden;background:#2F5D50;color:#EEF1E8;padding:clamp(22px,4cqw,48px);display:flex;flex-direction:column;justify-content:flex-end"
 							>
-								{titulo[0]}{#if titulo[1]}<br />{titulo[1]}{/if}
-							</h1>
-							{#if tienda.portada.lema}<p
-									style="margin:14px 0 0;font-size:16px;line-height:1.5;color:#D6E0D4"
-								>
-									{tienda.portada.lema}
-								</p>{/if}
-							<div style="margin-top:20px;display:flex;gap:8px;flex-wrap:wrap">
-								<a
-									href={ofertas.length ? enlaceCat(null, 'vendidos', true) : `${base}/catalogo`}
-									style="padding:14px 22px;border-radius:10px;background:#E8C547;color:#1E2B22;font:800 15px 'Schibsted Grotesk';text-decoration:none"
-									>{ofertas.length ? 'Ver ofertas' : 'Ver productos'}</a
-								>{#if tienda.categorias[0]}<a
-										href={enlaceCat(tienda.categorias[0].nombre)}
-										style="padding:14px 20px;border:1.5px solid rgba(238,241,232,.4);border-radius:10px;color:#EEF1E8;font:700 15px 'Schibsted Grotesk';text-decoration:none"
-										>{tienda.categorias[0].nombre}</a
-									>{/if}
-							</div>
-						</div>
-					</div>
-					<div
-						style="display:grid;grid-template-rows:{oferta
-							? '1fr 1fr'
-							: '1fr'};gap:10px;min-width:0"
-					>
-						{#if oferta}
-							<a
-								href="{base}/producto/{oferta.slug ?? oferta.id}"
-								style="padding:20px;border-radius:16px;background:#E8C547;color:#1E2B22;text-decoration:none;display:flex;flex-direction:column;justify-content:space-between;gap:10px"
-								><span style="display:flex;justify-content:space-between;align-items:start"
-									><b style="font-size:13px;letter-spacing:.04em">OFERTA</b><span
-										style="padding:3px 6px;border-radius:5px;background:#1E2B22;color:#E8C547;font-size:12.5px;font-weight:700"
-										>−{maxOff}%</span
-									></span
-								><span style="display:flex;gap:12px;align-items:center;min-width:0"
-									>{#if oferta.foto}<img
-											src={img(oferta.foto, 200, 200)}
-											alt=""
-											style="width:76px;height:76px;border-radius:12px;object-fit:cover;flex:none"
-										/>{/if}<span style="min-width:0"
-										><b style="display:block;font-size:17px;letter-spacing:-.02em"
-											>{oferta.nombre}</b
-										><span style="margin-top:4px;display:flex;align-items:baseline;gap:8px"
-											><b style="font-size:24px;letter-spacing:-.02em">{fmt(oferta.precio)}</b><s
-												style="font-size:13px;opacity:.6">{fmt(oferta.anterior!)}</s
-											></span
-										></span
-									></span
-								></a
-							>
-						{/if}
-						{#if tienda.cobros.transferencia > 0}<div
-								style="padding:20px;border-radius:16px;background:#fff;display:flex;align-items:center;gap:14px;flex-wrap:wrap"
-							>
-								<Icon icon={I.phBankBold} size={34} style="color:#2F5D50;flex:none" />
-								<div style="flex:1;min-width:160px">
-									<b style="font-size:17px;letter-spacing:-.02em"
-										>{tienda.cobros.transferencia}% off por transferencia</b
+								{#if tienda.portada.foto}<img
+										src={img(tienda.portada.foto, 1400)}
+										alt=""
+										style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.55"
+									/>{/if}
+								<div
+									style="position:absolute;inset:0;background:linear-gradient(0deg,rgba(20,40,32,.9),rgba(20,40,32,.1) 70%)"
+								></div>
+								<div style="position:relative;max-width:560px;min-width:0">
+									{#if maxOff}<span
+											style="display:inline-flex;padding:5px 10px;border-radius:6px;background:#E8C547;color:#1E2B22;font-size:12.5px;font-weight:800"
+											>OFERTAS · HASTA {maxOff}% OFF</span
+										>{/if}
+									<h1
+										style="margin:14px 0 0;font-weight:800;font-size:clamp(40px,6.4cqw,80px);line-height:.92;letter-spacing:-.045em;overflow-wrap:break-word"
 									>
-									{#if tienda.cobros.cuotas > 1}<div
-											style="font-size:13.5px;color:#56645A;margin-top:2px"
+										{titulo[0]}{#if titulo[1]}<br />{titulo[1]}{/if}
+									</h1>
+									{#if tienda.portada.lema}<p
+											style="margin:14px 0 0;font-size:16px;line-height:1.5;color:#D6E0D4"
 										>
-											O hasta {tienda.cobros.cuotas} cuotas sin interés con&nbsp;tarjeta
-										</div>{/if}
+											{tienda.portada.lema}
+										</p>{/if}
+									<div style="margin-top:20px;display:flex;gap:8px;flex-wrap:wrap">
+										<a
+											href={ofertas.length ? enlaceCat(null, 'vendidos', true) : `${base}/catalogo`}
+											style="padding:14px 22px;border-radius:10px;background:#E8C547;color:#1E2B22;font:800 15px 'Schibsted Grotesk';text-decoration:none"
+											>{ofertas.length ? 'Ver ofertas' : 'Ver productos'}</a
+										>{#if tienda.categorias[0]}<a
+												href={enlaceCat(tienda.categorias[0].nombre)}
+												style="padding:14px 20px;border:1.5px solid rgba(238,241,232,.4);border-radius:10px;color:#EEF1E8;font:700 15px 'Schibsted Grotesk';text-decoration:none"
+												>{tienda.categorias[0].nombre}</a
+											>{/if}
+									</div>
 								</div>
+							</div>
+							<div
+								style="display:grid;grid-template-rows:{oferta
+									? '1fr 1fr'
+									: '1fr'};gap:10px;min-width:0"
+							>
+								{#if oferta}
+									<a
+										href="{base}/producto/{oferta.slug ?? oferta.id}"
+										style="padding:20px;border-radius:16px;background:#E8C547;color:#1E2B22;text-decoration:none;display:flex;flex-direction:column;justify-content:space-between;gap:10px"
+										><span style="display:flex;justify-content:space-between;align-items:start"
+											><b style="font-size:13px;letter-spacing:.04em">OFERTA</b><span
+												style="padding:3px 6px;border-radius:5px;background:#1E2B22;color:#E8C547;font-size:12.5px;font-weight:700"
+												>−{maxOff}%</span
+											></span
+										><span style="display:flex;gap:12px;align-items:center;min-width:0"
+											>{#if oferta.foto}<img
+													src={img(oferta.foto, 200, 200)}
+													alt=""
+													style="width:76px;height:76px;border-radius:12px;object-fit:cover;flex:none"
+												/>{/if}<span style="min-width:0"
+												><b style="display:block;font-size:17px;letter-spacing:-.02em"
+													>{oferta.nombre}</b
+												><span style="margin-top:4px;display:flex;align-items:baseline;gap:8px"
+													><b style="font-size:24px;letter-spacing:-.02em">{fmt(oferta.precio)}</b
+													><s style="font-size:13px;opacity:.6">{fmt(oferta.anterior!)}</s></span
+												></span
+											></span
+										></a
+									>
+								{/if}
+								{#if tienda.cobros.transferencia > 0}<div
+										style="padding:20px;border-radius:16px;background:#fff;display:flex;align-items:center;gap:14px;flex-wrap:wrap"
+									>
+										<Icon icon={I.phBankBold} size={34} style="color:#2F5D50;flex:none" />
+										<div style="flex:1;min-width:160px">
+											<b style="font-size:17px;letter-spacing:-.02em"
+												>{tienda.cobros.transferencia}% off por transferencia</b
+											>
+											{#if tienda.cobros.cuotas > 1}<div
+													style="font-size:13.5px;color:#56645A;margin-top:2px"
+												>
+													O hasta {tienda.cobros.cuotas} cuotas sin interés con&nbsp;tarjeta
+												</div>{/if}
+										</div>
+										<a
+											href="{base}/catalogo"
+											style="padding:11px 14px;border-radius:10px;background:#1E2B22;color:#EEF1E8;font:700 13.5px 'Schibsted Grotesk';white-space:nowrap;text-decoration:none"
+											>Comprar</a
+										>
+									</div>{/if}
+							</div>
+						</section>
+					{/if}
+				{:else if seccion === 'cats'}
+					{#if ver('cats') && tienda.categorias.length}
+						<section
+							style="padding:12px clamp(12px,3cqw,32px) 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(30%,120px),1fr));gap:8px"
+						>
+							{#each tienda.categorias as c, i (c.nombre)}<a
+									href={enlaceCat(c.nombre)}
+									style="padding:14px 8px;border-radius:14px;background:#fff;color:#1E2B22;text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0"
+									><span
+										style="width:48px;height:48px;border-radius:50%;overflow:hidden;background:{TILE_BG[
+											i % TILE_BG.length
+										]};display:grid;place-items:center"
+										>{#if c.foto}<img
+												src={img(c.foto, 120, 120)}
+												alt=""
+												style="width:100%;height:100%;object-fit:cover"
+											/>{:else}<Icon
+												icon={I.phPackageFill}
+												size={24}
+												style="color:#2F5D50"
+											/>{/if}</span
+									><span
+										style="font-size:13px;font-weight:700;text-align:center;line-height:1.2;overflow-wrap:anywhere"
+										>{c.nombre}</span
+									></a
+								>{/each}
+						</section>
+					{/if}
+				{:else if seccion === 'prods'}
+					{#if ver('prods') && best.length}
+						<section style="padding:clamp(32px,5cqw,56px) clamp(12px,3cqw,32px) 0">
+							<div
+								style="display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap"
+							>
+								<h2
+									style="margin:0;font-weight:800;font-size:clamp(28px,3.6cqw,42px);letter-spacing:-.04em"
+								>
+									Los más vendidos
+								</h2>
 								<a
 									href="{base}/catalogo"
-									style="padding:11px 14px;border-radius:10px;background:#1E2B22;color:#EEF1E8;font:700 13.5px 'Schibsted Grotesk';white-space:nowrap;text-decoration:none"
-									>Comprar</a
+									style="font:700 14px 'Schibsted Grotesk';color:#2F5D50;display:flex;align-items:center;gap:6px;text-decoration:none"
+									>Ver todos<Icon icon={I.phArrowRightBold} size={14} /></a
 								>
-							</div>{/if}
-					</div>
-				</section>
-			{/if}
-
-			{#if ver('cats') && tienda.categorias.length}
-				<section
-					style="padding:12px clamp(12px,3cqw,32px) 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(30%,120px),1fr));gap:8px"
-				>
-					{#each tienda.categorias as c, i (c.nombre)}<a
-							href={enlaceCat(c.nombre)}
-							style="padding:14px 8px;border-radius:14px;background:#fff;color:#1E2B22;text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0"
-							><span
-								style="width:48px;height:48px;border-radius:50%;overflow:hidden;background:{TILE_BG[
-									i % TILE_BG.length
-								]};display:grid;place-items:center"
-								>{#if c.foto}<img
-										src={img(c.foto, 120, 120)}
-										alt=""
-										style="width:100%;height:100%;object-fit:cover"
-									/>{:else}<Icon
-										icon={I.phPackageFill}
-										size={24}
-										style="color:#2F5D50"
-									/>{/if}</span
-							><span
-								style="font-size:13px;font-weight:700;text-align:center;line-height:1.2;overflow-wrap:anywhere"
-								>{c.nombre}</span
-							></a
-						>{/each}
-				</section>
-			{/if}
-
-			{#if ver('prods') && best.length}
-				<section style="padding:clamp(32px,5cqw,56px) clamp(12px,3cqw,32px) 0">
-					<div
-						style="display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap"
-					>
-						<h2
-							style="margin:0;font-weight:800;font-size:clamp(28px,3.6cqw,42px);letter-spacing:-.04em"
-						>
-							Los más vendidos
-						</h2>
-						<a
-							href="{base}/catalogo"
-							style="font:700 14px 'Schibsted Grotesk';color:#2F5D50;display:flex;align-items:center;gap:6px;text-decoration:none"
-							>Ver todos<Icon icon={I.phArrowRightBold} size={14} /></a
-						>
-					</div>
-					<div
-						style="margin-top:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(46%,190px),1fr));gap:8px"
-					>
-						{#each best as p (p.id)}{@render tarjetaGrilla(p)}{/each}
-					</div>
-				</section>
-			{/if}
-
-			<section style="padding:clamp(32px,5cqw,56px) clamp(12px,3cqw,32px) 0">
-				<div
-					style="padding:clamp(18px,3cqw,32px);border-radius:16px;background:#fff;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:20px;align-items:center"
-				>
-					<div>
-						<h2
-							style="margin:0;font-weight:800;font-size:clamp(26px,3.2cqw,36px);letter-spacing:-.04em"
-						>
-							¿Cuándo te llega?
-						</h2>
-						<p style="margin:6px 0 0;font-size:14.5px;color:#56645A">
-							Poné tu código postal y te decimos cuándo y&nbsp;cuánto.
-						</p>
-						<div style="margin-top:14px;display:flex;gap:6px;max-width:380px">
-							<input
-								bind:value={cpInicio}
-								inputmode="numeric"
-								maxlength="4"
-								placeholder="Código postal"
-								aria-label="Código postal"
-								onkeydown={(e) =>
-									e.key === 'Enter' &&
-									cpValido(cpInicio) &&
-									cotizarYa(cpInicio, subtotal, tienda).then((o) => (cotizadoInicio = o))}
-								style="flex:1;min-width:0;padding:12px 14px;border-radius:10px;border:1.5px solid #1E2B22;background:transparent;font:600 15px 'Schibsted Grotesk';color:#1E2B22"
-							/><button
-								type="button"
-								onclick={() =>
-									cpValido(cpInicio) &&
-									cotizarYa(cpInicio, subtotal, tienda).then((o) => (cotizadoInicio = o))}
-								style="padding:12px 18px;border:0;border-radius:10px;background:#1E2B22;color:#EEF1E8;font:700 14px 'Schibsted Grotesk';cursor:pointer"
-								>Calcular</button
+							</div>
+							<div
+								style="margin-top:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(46%,190px),1fr));gap:8px"
 							>
-						</div>
-					</div>
-					{#if cotizadoInicio}
-						<div style="display:flex;flex-direction:column;gap:6px">
-							{#each cotizadoInicio as s (s.id)}<div
-									style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:#F2F4EE"
-								>
-									<Icon icon={iconoEnvio(s.id)} size={20} style="color:#2F5D50;flex:none" /><span
-										style="flex:1;min-width:0;font-size:14px"><b>{s.nombre}</b> · {s.detalle}</span
-									><b
-										style="font-size:14px;white-space:nowrap;color:{s.precio
-											? '#1E2B22'
-											: '#2F5D50'}">{s.precio ? fmt(s.precio) : 'Gratis'}</b
-									>
-								</div>{:else}<span style="font-size:14px;color:#56645A"
-									>No llegamos a ese código postal&nbsp;todavía.</span
-								>{/each}
-						</div>
+								{#each best as p (p.id)}{@render tarjetaGrilla(p)}{/each}
+							</div>
+						</section>
 					{/if}
-				</div>
-			</section>
 
-			{#if ver('revs') && tienda.resenas.length}
-				<section style="padding:clamp(32px,5cqw,56px) clamp(12px,3cqw,32px) 0">
-					<h2
-						style="margin:0;font-weight:800;font-size:clamp(28px,3.6cqw,42px);letter-spacing:-.04em"
-					>
-						{tienda.promedio
-							? `${tienda.promedio.toLocaleString('es-AR')} de promedio en reseñas`
-							: 'Lo que dicen'}
-					</h2>
-					<div
-						style="margin-top:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:8px"
-					>
-						{#each tienda.resenas.slice(0, 4) as r, i (i)}
-							{@const pr = tienda.productos.find((p) => p.nombre === r.producto)}
-							<div style="display:flex;gap:12px;padding:12px;border-radius:14px;background:#fff">
-								{#if pr?.foto}<img
-										src={img(pr.foto, 160, 160)}
-										alt=""
-										style="width:76px;height:76px;border-radius:10px;object-fit:cover;flex:none"
-									/>{/if}
-								<div style="min-width:0">
-									<div style="display:flex;gap:1px;color:#D9A400">
-										{#each estrellas(r.estrellas) as e, j (j)}<Icon icon={e} size={13} />{/each}
-									</div>
-									<p style="margin:5px 0 0;font-size:13.5px;line-height:1.4">{r.texto}</p>
-									<div style="margin-top:4px;font-size:12px;color:#6B7A6E">
-										{r.autor}{#if r.producto}
-											· {r.conCompra ? 'compró' : 'sobre'} {r.producto}{/if}
-									</div>
-									{#if r.conCompra}<div
-											style="margin-top:5px;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#2F5D50"
-										>
-											<Icon icon={I.phSealCheckFill} size={13} />Compra verificada
-										</div>{/if}
-									{#if r.respuesta}<div
-											style="margin-top:8px;padding:8px 10px;border-radius:10px;background:#EEF1E8;font-size:12.5px;line-height:1.45;color:#56645A"
-										>
-											<b style="color:#1E2B22">Respuesta de {tienda.nombre}</b><br />{r.respuesta}
-										</div>{/if}
+					<section style="padding:clamp(32px,5cqw,56px) clamp(12px,3cqw,32px) 0">
+						<div
+							style="padding:clamp(18px,3cqw,32px);border-radius:16px;background:#fff;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:20px;align-items:center"
+						>
+							<div>
+								<h2
+									style="margin:0;font-weight:800;font-size:clamp(26px,3.2cqw,36px);letter-spacing:-.04em"
+								>
+									¿Cuándo te llega?
+								</h2>
+								<p style="margin:6px 0 0;font-size:14.5px;color:#56645A">
+									Poné tu código postal y te decimos cuándo y&nbsp;cuánto.
+								</p>
+								<div style="margin-top:14px;display:flex;gap:6px;max-width:380px">
+									<input
+										bind:value={cpInicio}
+										inputmode="numeric"
+										maxlength="4"
+										placeholder="Código postal"
+										aria-label="Código postal"
+										onkeydown={(e) =>
+											e.key === 'Enter' &&
+											cpValido(cpInicio) &&
+											cotizarYa(cpInicio, subtotal, tienda).then((o) => (cotizadoInicio = o))}
+										style="flex:1;min-width:0;padding:12px 14px;border-radius:10px;border:1.5px solid #1E2B22;background:transparent;font:600 15px 'Schibsted Grotesk';color:#1E2B22"
+									/><button
+										type="button"
+										onclick={() =>
+											cpValido(cpInicio) &&
+											cotizarYa(cpInicio, subtotal, tienda).then((o) => (cotizadoInicio = o))}
+										style="padding:12px 18px;border:0;border-radius:10px;background:#1E2B22;color:#EEF1E8;font:700 14px 'Schibsted Grotesk';cursor:pointer"
+										>Calcular</button
+									>
 								</div>
 							</div>
-						{/each}
-					</div>
-				</section>
-			{/if}
+							{#if cotizadoInicio}
+								<div style="display:flex;flex-direction:column;gap:6px">
+									{#each cotizadoInicio as s (s.id)}<div
+											style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:#F2F4EE"
+										>
+											<Icon
+												icon={iconoEnvio(s.id)}
+												size={20}
+												style="color:#2F5D50;flex:none"
+											/><span style="flex:1;min-width:0;font-size:14px"
+												><b>{s.nombre}</b> · {s.detalle}</span
+											><b
+												style="font-size:14px;white-space:nowrap;color:{s.precio
+													? '#1E2B22'
+													: '#2F5D50'}">{s.precio ? fmt(s.precio) : 'Gratis'}</b
+											>
+										</div>{:else}<span style="font-size:14px;color:#56645A"
+											>No llegamos a ese código postal&nbsp;todavía.</span
+										>{/each}
+								</div>
+							{/if}
+						</div>
+					</section>
+				{:else if seccion === 'revs'}
+					{#if ver('revs') && tienda.resenas.length}
+						<section style="padding:clamp(32px,5cqw,56px) clamp(12px,3cqw,32px) 0">
+							<h2
+								style="margin:0;font-weight:800;font-size:clamp(28px,3.6cqw,42px);letter-spacing:-.04em"
+							>
+								{tienda.promedio
+									? `${tienda.promedio.toLocaleString('es-AR')} de promedio en reseñas`
+									: 'Lo que dicen'}
+							</h2>
+							<div
+								style="margin-top:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:8px"
+							>
+								{#each tienda.resenas.slice(0, 4) as r, i (i)}
+									{@const pr = tienda.productos.find((p) => p.nombre === r.producto)}
+									<div
+										style="display:flex;gap:12px;padding:12px;border-radius:14px;background:#fff"
+									>
+										{#if pr?.foto}<img
+												src={img(pr.foto, 160, 160)}
+												alt=""
+												style="width:76px;height:76px;border-radius:10px;object-fit:cover;flex:none"
+											/>{/if}
+										<div style="min-width:0">
+											<div style="display:flex;gap:1px;color:#D9A400">
+												{#each estrellas(r.estrellas) as e, j (j)}<Icon icon={e} size={13} />{/each}
+											</div>
+											<p style="margin:5px 0 0;font-size:13.5px;line-height:1.4">{r.texto}</p>
+											<div style="margin-top:4px;font-size:12px;color:#6B7A6E">
+												{r.autor}{#if r.producto}
+													· {r.conCompra ? 'compró' : 'sobre'} {r.producto}{/if}
+											</div>
+											{#if r.conCompra}<div
+													style="margin-top:5px;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#2F5D50"
+												>
+													<Icon icon={I.phSealCheckFill} size={13} />Compra verificada
+												</div>{/if}
+											{#if r.respuesta}<div
+													style="margin-top:8px;padding:8px 10px;border-radius:10px;background:#EEF1E8;font-size:12.5px;line-height:1.45;color:#56645A"
+												>
+													<b style="color:#1E2B22">Respuesta de {tienda.nombre}</b><br
+													/>{r.respuesta}
+												</div>{/if}
+										</div>
+									</div>
+								{/each}
+							</div>
+						</section>
+					{/if}
+				{/if}
+			{/each}
 			<div style="height:clamp(32px,5cqw,56px)"></div>
 		{/if}
 
