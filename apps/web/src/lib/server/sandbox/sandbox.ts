@@ -2234,7 +2234,7 @@ export class DatosSandbox implements Datos {
 			],
 			registros: [
 				{ tipo: 'CNAME', nombre: 'www', valor: `tiendas.${SITE.replace(/^https?:\/\//, '')}` },
-				{ tipo: 'TXT', nombre: '_mostrador', valor: `mostrador-verificacion=${t.slug}` }
+				{ tipo: 'TXT', nombre: '_tulocalweb', valor: `tulocalweb-verificacion=${t.slug}` }
 			]
 		};
 	}

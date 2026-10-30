@@ -42,7 +42,7 @@ func TestDominiosYDatos(t *testing.T) {
 	if err := configuracion.DominioPrincipal(ctx, b.App, luna, "luna.com.ar", sitio); !errors.Is(err, configuracion.ErrNoSePuede) {
 		t.Fatalf("hizo principal uno sin verificar: %v", err)
 	}
-	configuracion.Resolver = dnsFalso{cname: "tiendas.tulocalweb.com.ar.", txt: []string{"mostrador-verificacion=luna"}}
+	configuracion.Resolver = dnsFalso{cname: "tiendas.tulocalweb.com.ar.", txt: []string{"tulocalweb-verificacion=luna"}}
 	d, _ = configuracion.Dominios(ctx, b.App, luna, sitio)
 	if ds = d["dominios"].([]configuracion.Dominio); ds[1].Estado != "activo" {
 		t.Fatalf("con el DNS bien: %+v", ds)

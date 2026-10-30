@@ -45,10 +45,10 @@ func verificar(ctx context.Context, nombre, sitio, slug string) []Chequeo {
 	defer cancel()
 	cname, _ := Resolver.LookupCNAME(ctx, "www."+nombre)
 	okCname := strings.TrimSuffix(cname, ".") == "tiendas."+host(sitio)
-	txts, _ := Resolver.LookupTXT(ctx, "_mostrador."+nombre)
+	txts, _ := Resolver.LookupTXT(ctx, "_tulocalweb."+nombre)
 	okTxt := false
 	for _, t := range txts {
-		okTxt = okTxt || t == "mostrador-verificacion="+slug
+		okTxt = okTxt || t == "tulocalweb-verificacion="+slug
 	}
 	est := func(ok bool) string {
 		if ok {
@@ -114,7 +114,7 @@ func Dominios(ctx context.Context, pool tx, tiendaID, sitio string) (map[string]
 			"dominios": append([]Dominio{{Nombre: gratis, Detalle: "La dirección gratis de tu tienda", Estado: "activo", Principal: !hayPrincipal}}, lista...),
 			"registros": []map[string]string{
 				{"tipo": "CNAME", "nombre": "www", "valor": "tiendas." + host(sitio)},
-				{"tipo": "TXT", "nombre": "_mostrador", "valor": "mostrador-verificacion=" + slug},
+				{"tipo": "TXT", "nombre": "_tulocalweb", "valor": "tulocalweb-verificacion=" + slug},
 			},
 		}
 		return nil
