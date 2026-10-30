@@ -247,6 +247,9 @@ func (s *Servicio) entrarConPerfil(ctx context.Context, proveedor string, perfil
 		ses, err = crearSesion(ctx, tx, u, tiendaID, SesionLarga, cl)
 		return err
 	})
+	if err == nil {
+		s.bienvenida(ctx, email, nombre, "La tienda de "+strings.Fields(nombre)[0])
+	}
 	return IngresoSocial{Sesion: ses, Nueva: err == nil}, err
 }
 

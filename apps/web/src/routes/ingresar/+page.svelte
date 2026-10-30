@@ -65,6 +65,14 @@
 				: {}) as Record<string, string>
 	);
 
+	// Desde el onboarding ("Seguir" con el email): /ingresar?m=registro&email=…
+	const emailUrl = $derived(page.url.searchParams.get('email') ?? '');
+	// Se mantiene si el registro vuelve con un error.
+	let terminos = $state(false);
+	$effect(() => {
+		if (form && 'terminos' in form) terminos = !!form.terminos;
+	});
+
 	let verClave = $state(false);
 	let clave = $state('');
 	const f = $derived(fuerza(clave));
@@ -164,7 +172,7 @@
 									type="email"
 									autocomplete="email"
 									placeholder="lucia@laesquina.com.ar"
-									defaultValue={form?.email ?? ''}
+									defaultValue={form?.email ?? emailUrl}
 									aria-invalid={!!err.email}
 									aria-describedby={err.email ? 'err-email' : undefined}
 								/></span
@@ -262,7 +270,7 @@
 									type="email"
 									autocomplete="email"
 									placeholder="lucia@laesquina.com.ar"
-									defaultValue={form?.email ?? ''}
+									defaultValue={form?.email ?? emailUrl}
 									aria-invalid={!!err.email}
 									aria-describedby={err.email ? 'err-email' : undefined}
 								/></span
@@ -296,6 +304,7 @@
 							><input
 								type="checkbox"
 								name="terminos"
+								bind:checked={terminos}
 								aria-invalid={!!err.terminos}
 								aria-describedby={err.terminos ? 'err-terminos' : undefined}
 							/><span class="caja-check"><Icon icon={phCheckBold} size={11} /></span><span
@@ -323,7 +332,8 @@
 						<div>
 							<h1>¿Te olvidaste la contraseña?</h1>
 							<p class="bajada">
-								Pasa. Te mandamos un link para crear una nueva, por email o por WhatsApp.
+								A cualquiera le pasa. Te mandamos un link para crear una nueva, por email o
+								por&nbsp;WhatsApp.
 							</p>
 						</div>
 						<input type="hidden" name="canal" value={canal} />
@@ -370,6 +380,23 @@
 						{/if}
 						<button type="submit" class="cta" disabled={enviando}>Mandame el link</button>
 					</form>
+				{:else if modo === 'restablecer' && data.linkVencido && !form}
+					<div class="col">
+						<img src="/hornero/pensando.webp" alt="" class="ave-chica" />
+						<div>
+							<h1>El link venció o ya se&nbsp;usó</h1>
+							<p class="bajada">
+								Los links para crear una contraseña nueva sirven una sola vez y duran 30 minutos.
+								Pedí uno nuevo y te llega en un&nbsp;momento.
+							</p>
+						</div>
+						<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- otro modo de esta misma pantalla (aModo usa resolve) -->
+						<a class="cta" href={aModo('recuperar')}>Pedir un link nuevo</a>
+						<div class="pie-form">
+							<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- otro modo de esta misma pantalla (aModo usa resolve) -->
+							¿Te acordaste? <a class="link" href={aModo('login')}>Ingresá</a>
+						</div>
+					</div>
 				{:else if modo === 'restablecer'}
 					<!-- No está en el handoff: se arma con las piezas del modo "recuperar" y el medidor del registro. -->
 					<form method="POST" action="?/restablecer" class="col" use:enhance={conEnvio} novalidate>
@@ -814,6 +841,7 @@
 		color: #b0441d;
 	}
 	.cta {
+		text-decoration: none;
 		display: flex;
 		justify-content: center;
 		align-items: center;

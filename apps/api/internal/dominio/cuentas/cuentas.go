@@ -11,6 +11,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/mail"
 	"strings"
@@ -149,7 +150,40 @@ func (s *Servicio) Registrar(ctx context.Context, a Alta, cl Cliente) (Sesion, e
 		ses, err = crearSesion(ctx, tx, usuario, tiendaID, SesionLarga, cl)
 		return err
 	})
+	if err == nil {
+		s.bienvenida(ctx, email, nombre, tienda)
+	}
 	return ses, err
+}
+
+// bienvenida manda el mail de cuenta nueva. Si el correo falla, la cuenta igual queda creada: se
+// anota y se sigue (no vale la pena frenar el registro por eso).
+func (s *Servicio) bienvenida(ctx context.Context, email, nombre, tienda string) {
+	if s.Correo == nil {
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 8*time.Second)
+	defer cancel()
+	if err := s.Correo.Enviar(ctx, mailBienvenida(email, nombre, tienda, s.Sitio+"/onboarding")); err != nil {
+		slog.Warn("cuentas: no salió el mail de bienvenida", "error", err)
+	}
+}
+
+// VerificarRestablecer dice si el link de contraseña nueva todavía sirve, sin usarlo: la pantalla
+// avisa que venció o que ya se usó antes de pedir la contraseña.
+func (s *Servicio) VerificarRestablecer(ctx context.Context, token string) error {
+	if token == "" {
+		return ErrTokenInvalido
+	}
+	var ok bool
+	if err := s.Pool.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM auth.restablecimientos
+		WHERE token_hash = $1 AND usado_en IS NULL AND vence_en > now())`, hashToken(token)).Scan(&ok); err != nil {
+		return err
+	}
+	if !ok {
+		return ErrTokenInvalido
+	}
+	return nil
 }
 
 // crearCuenta da de alta a la persona, su tienda (rubro y plantilla por defecto: los ajusta el

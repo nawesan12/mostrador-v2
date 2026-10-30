@@ -133,11 +133,15 @@ var linkRe = regexp.MustCompile(`https://tulocalweb\.com\.ar/ingresar\?m=restabl
 func TestRecuperarYRestablecer(t *testing.T) {
 	s, m, _ := nuevo(t)
 	ses, _ := s.Registrar(ctx, alta("lucia@laesquina.com.ar"), cl)
+	if b, ok := m.Ultimo("lucia@laesquina.com.ar"); !ok || !strings.Contains(b.Asunto, "Bienvenida") ||
+		!strings.Contains(b.Texto, "/onboarding") {
+		t.Fatalf("al registrarse sale el mail de bienvenida: %+v", b)
+	}
 
 	if err := s.Recuperar(ctx, "nadie@laesquina.com.ar", cl); err != nil {
 		t.Fatalf("un email sin cuenta responde igual: %v", err)
 	}
-	if len(m.Enviados) != 0 {
+	if _, ok := m.Ultimo("nadie@laesquina.com.ar"); ok {
 		t.Fatal("no se manda nada a un email sin cuenta")
 	}
 
@@ -154,6 +158,12 @@ func TestRecuperarYRestablecer(t *testing.T) {
 	}
 	tok, _ := url.QueryUnescape(g[1])
 
+	if err := s.VerificarRestablecer(ctx, tok); err != nil {
+		t.Fatalf("un link sin usar tiene que servir: %v", err)
+	}
+	if err := s.VerificarRestablecer(ctx, "otro"); !errors.Is(err, cuentas.ErrTokenInvalido) {
+		t.Fatalf("un link inventado: %v", err)
+	}
 	if err := s.Restablecer(ctx, tok, "Nuevaclave123"); err != nil {
 		t.Fatal(err)
 	}
@@ -165,6 +175,9 @@ func TestRecuperarYRestablecer(t *testing.T) {
 	}
 	if err := s.Restablecer(ctx, tok, "Otraclave1234"); !errors.Is(err, cuentas.ErrTokenInvalido) {
 		t.Fatalf("el link se usa una sola vez: %v", err)
+	}
+	if err := s.VerificarRestablecer(ctx, tok); !errors.Is(err, cuentas.ErrTokenInvalido) {
+		t.Fatalf("un link usado ya no sirve al abrirlo: %v", err)
 	}
 }
 

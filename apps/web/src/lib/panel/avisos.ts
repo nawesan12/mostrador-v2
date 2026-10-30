@@ -7,7 +7,7 @@ export const AVISOS: readonly { grupo: string; filas: readonly Fila[] }[] = [
 	{
 		grupo: 'Ventas',
 		filas: [
-			{ id: 'venta', t: 'Venta nueva', d: 'Cada pedido pagado', def: [1, 1, 0, 1] },
+			{ id: 'venta', t: 'Venta nueva', d: 'Cada pedido pagado', def: [1, 1, 1, 1] },
 			{
 				id: 'pago',
 				t: 'Pago pendiente o rechazado',

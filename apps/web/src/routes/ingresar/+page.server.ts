@@ -22,13 +22,28 @@ const VOLVER = 'mostrador-volver';
 const volverValido = (v: string | null | undefined) =>
 	!!v && v.startsWith('/oauth/autorizar?') && v.length < 2000;
 
-export const load: PageServerLoad = ({ url, cookies }) => {
+export const load: PageServerLoad = async (event) => {
+	const { url, cookies } = event;
 	const v = url.searchParams.get('volver');
 	if (volverValido(v))
 		cookies.set(VOLVER, v!, { path: '/', httpOnly: true, sameSite: 'lax', maxAge: 600 });
+	// El link de contraseña nueva se mira al abrirlo: si venció o ya se usó, se avisa de entrada en
+	// vez de pedir la contraseña y recién ahí decirlo. Si la API no contesta, se muestra el
+	// formulario (al enviarlo, Go vuelve a validar).
+	let linkVencido = false;
+	const token = url.searchParams.get('token');
+	if (url.searchParams.get('m') === 'restablecer' && !usaSandbox()) {
+		if (!token) linkVencido = true;
+		else
+			try {
+				await cuentasDe(event).verificarRestablecer(token);
+			} catch (e) {
+				linkVencido = e instanceof ErrorCuenta && e.estado >= 400 && e.estado < 500;
+			}
+	}
 	// Google y WhatsApp sólo en la demo: en producción el ingreso social va a ser con Clerk, y hasta
 	// entonces no se ofrece un botón que no anda.
-	return { sociales: usaSandbox() };
+	return { sociales: usaSandbox(), linkVencido };
 };
 
 function destino(cookies: RequestEvent['cookies']) {
@@ -78,7 +93,9 @@ export const actions: Actions = {
 			modo: 'registro',
 			nombre: String(f.nombre ?? ''),
 			tienda: String(f.tienda ?? ''),
-			email: String(f.email ?? '')
+			email: String(f.email ?? ''),
+			// Si el registro falla, "Acepto los términos" sigue como estaba.
+			terminos: f.terminos === 'on'
 		};
 		if (!r.success) return fail(400, { ...previo, errores: errores(r.issues) });
 		// El registro sigue en el onboarding (decisión: el onboarding es el registro). En la demo no

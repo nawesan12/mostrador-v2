@@ -103,6 +103,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/auth/restablecer/verificar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Si el link de contraseña nueva sigue sirviendo (no lo usa). Va por POST para que el token no quede en logs. */
+        post: operations["verificarRestablecer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/restablecer": {
         parameters: {
             query?: never;
@@ -4831,6 +4848,31 @@ export interface operations {
                 content?: never;
             };
             429: components["responses"]["Problema"];
+        };
+    };
+    verificarRestablecer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    token: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Sirve */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            422: components["responses"]["Problema"];
         };
     };
     restablecer: {

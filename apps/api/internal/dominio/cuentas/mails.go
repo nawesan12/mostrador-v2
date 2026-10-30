@@ -27,3 +27,25 @@ func mailRecuperar(para, nombre, link string) correo.Mensaje {
 </div></body></html>`, n, l),
 	}
 }
+
+// mailBienvenida sale al crear la cuenta (con email y contraseña o con un proveedor). Misma plantilla
+// y remitente que el de la contraseña.
+func mailBienvenida(para, nombre, tienda, link string) correo.Mensaje {
+	n := html.EscapeString(nombre)
+	t := html.EscapeString(tienda)
+	l := html.EscapeString(link)
+	return correo.Mensaje{
+		Para:   para,
+		Asunto: "Bienvenida a Tu Local Web",
+		Texto: fmt.Sprintf("Hola, %s.\n\nYa creaste %s en Tu Local Web. Tenés 14 días gratis para probar todo, sin tarjeta.\n\n"+
+			"Seguí armando tu tienda desde acá:\n%s\n\nSi no fuiste vos, respondé este mail y lo revisamos.\n\nTu Local Web", nombre, tienda, link),
+		HTML: fmt.Sprintf(`<!doctype html><html lang="es-AR"><body style="margin:0;background:#FBF7F2;font-family:'Instrument Sans',Helvetica,Arial,sans-serif;color:#2A140C">
+<div style="max-width:560px;margin:0 auto;padding:32px 24px">
+<div style="font-size:22px;font-weight:700;letter-spacing:-.03em">Tu Local Web</div>
+<h1 style="margin:28px 0 0;font-size:28px;line-height:1.1;letter-spacing:-.03em;font-weight:600">¡Te damos la bienvenida!</h1>
+<p style="margin:12px 0 0;font-size:15.5px;line-height:1.5;color:#5C4536">Hola, %s. Ya creaste <b>%s</b> en Tu Local Web. Tenés 14 días gratis para probar todo, sin&nbsp;tarjeta.</p>
+<p style="margin:24px 0"><a href="%s" style="display:inline-block;padding:14px 22px;border-radius:999px;background:#D2582F;color:#fff;font-weight:600;text-decoration:none">Seguir armando mi tienda</a></p>
+<p style="margin:0;font-size:13.5px;line-height:1.5;color:#7A6252">Si no fuiste vos, respondé este mail y lo&nbsp;revisamos.</p>
+</div></body></html>`, n, t, l),
+	}
+}

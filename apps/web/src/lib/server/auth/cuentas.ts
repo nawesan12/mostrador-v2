@@ -52,6 +52,10 @@ export class CuentasApi extends ClienteBff {
 	usarEnlace(token: string) {
 		return this.pedir<Sesion>('POST', '/v1/auth/enlace/usar', { token });
 	}
+	/** Si el link de contraseña nueva sirve todavía (sin usarlo). */
+	verificarRestablecer(token: string) {
+		return this.pedir<void>('POST', '/v1/auth/restablecer/verificar', { token });
+	}
 	restablecer(token: string, clave: string) {
 		return this.pedir<void>('POST', '/v1/auth/restablecer', { token, clave });
 	}

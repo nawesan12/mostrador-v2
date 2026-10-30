@@ -154,6 +154,17 @@ func (s *Servicio) Rutas(mux *http.ServeMux, claveBFF string) {
 		}
 		w.WriteHeader(http.StatusAccepted)
 	})
+	mux.HandleFunc("POST /v1/auth/restablecer/verificar", func(w http.ResponseWriter, r *http.Request) {
+		var a struct{ Token string }
+		if !leer(w, r, &a) {
+			return
+		}
+		if err := s.VerificarRestablecer(r.Context(), a.Token); err != nil {
+			escribirError(w, err)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	})
 	mux.HandleFunc("POST /v1/auth/restablecer", func(w http.ResponseWriter, r *http.Request) {
 		var a struct{ Token, Clave string }
 		if !leer(w, r, &a) {

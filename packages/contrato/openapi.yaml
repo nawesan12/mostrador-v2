@@ -75,6 +75,18 @@ paths:
       responses:
         '202': { description: Recibido }
         '429': { $ref: '#/components/responses/Problema' }
+  /v1/auth/restablecer/verificar:
+    post:
+      operationId: verificarRestablecer
+      summary: Si el link de contraseña nueva sigue sirviendo (no lo usa). Va por POST para que el token no quede en logs.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [token], properties: { token: { type: string } } }
+      responses:
+        '204': { description: Sirve }
+        '422': { $ref: '#/components/responses/Problema' }
   /v1/auth/restablecer:
     post:
       operationId: restablecer
