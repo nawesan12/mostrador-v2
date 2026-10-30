@@ -1953,6 +1953,22 @@ paths:
                   filas:
                     type: array
                     items: { type: array, items: { type: [string, number, 'null'] } }
+  /v1/panel/datos/exportaciones:
+    post:
+      operationId: registrarExportacion
+      summary: Anota una descarga en "Exportaciones recientes" (guarda las últimas 5).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tipo, formato]
+              properties:
+                tipo: { type: string, enum: [productos, clientes, pedidos, facturas, resenas, conversaciones, todo] }
+                formato: { type: string, enum: [csv, excel] }
+      responses:
+        '204': { description: Anotada }
   /v1/panel/datos/inactivos:
     delete:
       operationId: borrarInactivos

@@ -391,6 +391,9 @@ export class DatosApi implements Datos {
 		return (await this.pedir<{ filas: (string | number | null)[][] }>(`/v1/panel/datos/${tipo}`))
 			.filas;
 	}
+	async registrarExportacion(tipo: TipoExport | 'todo', formato: 'csv' | 'excel') {
+		await this.pedir<void>('/v1/panel/datos/exportaciones', 'POST', { tipo, formato });
+	}
 	async borrarInactivos() {
 		return (await this.pedir<{ clientes: number }>('/v1/panel/datos/inactivos', 'DELETE')).clientes;
 	}

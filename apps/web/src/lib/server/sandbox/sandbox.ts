@@ -2549,11 +2549,6 @@ export class DatosSandbox implements Datos {
 	/** Filas de cada exportación. */
 	async exportar(tipo: TipoExport): Promise<(string | number | null)[][]> {
 		const fecha = (t: number) => new Date(t).toISOString().slice(0, 10);
-		await guardarCambio(this.db, this.sb.id, 'exportacion', String(Date.now()), {
-			tipo,
-			formato: '',
-			en: Date.now()
-		});
 		if (tipo === 'productos')
 			return [
 				['SKU', 'Nombre', 'Categoría', 'Precio', 'Costo', 'Stock', 'Publicado'],
@@ -2628,6 +2623,11 @@ export class DatosSandbox implements Datos {
 				if (m.texto) filas.push([c.id, c.nombre, m.de, m.texto, m.en.slice(0, 16)]);
 		}
 		return filas;
+	}
+
+	async registrarExportacion(tipo: TipoExport | 'todo', formato: 'csv' | 'excel') {
+		const en = Date.now();
+		await guardarCambio(this.db, this.sb.id, 'exportacion', String(en), { tipo, formato, en });
 	}
 
 	async borrarInactivos(): Promise<number> {

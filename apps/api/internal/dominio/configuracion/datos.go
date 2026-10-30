@@ -191,14 +191,27 @@ func Exportar(ctx context.Context, pool tx, tiendaID, tipo string) ([][]any, err
 		"pedidos": {[]any{"Número", "Fecha", "Cliente", "Canal", "Pago", "Envío", "Estado", "Total"},
 			`SELECT numero, to_char(creado_en, 'YYYY-MM-DD'), comprador->>'nombre', canal, pago, envio, estado, total
 			 FROM pedidos WHERE tienda_id = $1 ORDER BY numero DESC`},
-		"facturas": {[]any{"Pedido", "Comprobante", "Total"},
-			`SELECT numero, coalesce(factura->>'numero', ''), total FROM pedidos WHERE tienda_id = $1 AND facturado ORDER BY numero DESC`},
+		// Los comprobantes de Facturación (pedidos.factura es texto, no un objeto). Sin ninguno,
+		// sale sólo el encabezado.
+		"facturas": {[]any{"Fecha", "Comprobante", "Cliente", "Pedido", "Total", "Estado", "CAE"},
+			`SELECT to_char(c.creado_en AT TIME ZONE 'America/Argentina/Buenos_Aires', 'YYYY-MM-DD'),
+				CASE WHEN c.tipo IN (3, 8, 13) THEN 'NC ' ELSE '' END ||
+				CASE WHEN c.tipo IN (1, 3) THEN 'A' WHEN c.tipo IN (6, 8) THEN 'B' ELSE 'C' END ||
+				CASE WHEN c.numero IS NULL THEN '' ELSE ' ' || lpad(coalesce(c.punto_venta, 0)::text, 4, '0') || '-' || lpad(c.numero::text, 8, '0') END,
+				coalesce(c.receptor->>'nombre', 'Consumidor final'), c.pedido_numero, c.total,
+				CASE WHEN EXISTS (SELECT 1 FROM comprobantes n WHERE n.asociado = c.id AND n.estado = 'emitido') THEN 'void' ELSE c.estado END,
+				coalesce(c.cae, '')
+			 FROM comprobantes c WHERE c.tienda_id = $1 ORDER BY c.creado_en DESC`},
 	}
 	q, ok := consultas[tipo]
 	if !ok {
 		// Reseñas y conversaciones llegan con la tienda online y WhatsApp.
-		if tipo == "resenas" || tipo == "conversaciones" {
-			return [][]any{{"Sin datos todavía"}}, nil
+		// Mientras tanto sale el encabezado solo, como cualquier exportación vacía.
+		switch tipo {
+		case "resenas":
+			return [][]any{{"Fecha", "Cliente", "Producto", "Estrellas", "Reseña"}}, nil
+		case "conversaciones":
+			return [][]any{{"Conversación", "Cliente", "De", "Mensaje", "Fecha"}}, nil
 		}
 		return nil, ErrNoExiste
 	}
@@ -223,18 +236,51 @@ func Exportar(ctx context.Context, pool tx, tiendaID, tipo string) ([][]any, err
 // MisDatos: cuánto hay de cada cosa.
 func MisDatos(ctx context.Context, pool tx, tiendaID string) (map[string]any, error) {
 	c := map[string]int{}
+	var recientes []Exportacion
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
 		var p, cl, pe, f int
 		if err := t.QueryRow(ctx, `SELECT (SELECT count(*) FROM productos WHERE tienda_id = $1),
 				(SELECT count(DISTINCT comprador->>'nombre') FROM pedidos WHERE tienda_id = $1),
 				(SELECT count(*) FROM pedidos WHERE tienda_id = $1),
-				(SELECT count(*) FROM pedidos WHERE tienda_id = $1 AND facturado)`, tiendaID).Scan(&p, &cl, &pe, &f); err != nil {
+				(SELECT count(*) FROM comprobantes WHERE tienda_id = $1)`, tiendaID).Scan(&p, &cl, &pe, &f); err != nil {
 			return err
 		}
 		c = map[string]int{"productos": p, "clientes": cl, "pedidos": pe, "facturas": f, "resenas": 0, "conversaciones": 0}
-		return nil
+		return t.QueryRow(ctx, `SELECT coalesce(preferencias->'exportaciones', '[]') FROM tiendas WHERE id = $1`, tiendaID).Scan(&recientes)
 	})
-	return map[string]any{"conteos": c, "recientes": []any{}, "inactivos": 0, "borrado": nil}, err
+	if recientes == nil {
+		recientes = []Exportacion{}
+	}
+	return map[string]any{"conteos": c, "recientes": recientes, "inactivos": 0, "borrado": nil}, err
+}
+
+// Exportacion es una descarga de Mis datos ("Exportaciones recientes").
+type Exportacion struct {
+	Tipo    string    `json:"tipo"`
+	Formato string    `json:"formato"`
+	En      time.Time `json:"en"`
+}
+
+var tiposExport = map[string]bool{"productos": true, "clientes": true, "pedidos": true, "facturas": true,
+	"resenas": true, "conversaciones": true, "todo": true}
+
+// RegistrarExportacion guarda la descarga en las preferencias de la tienda (las últimas 5).
+func RegistrarExportacion(ctx context.Context, pool tx, tiendaID, tipo, formato string, ahora time.Time) error {
+	if !tiposExport[tipo] || (formato != "csv" && formato != "excel") {
+		return ErrInvalido
+	}
+	return pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		var antes []Exportacion
+		if err := t.QueryRow(ctx, `SELECT coalesce(preferencias->'exportaciones', '[]') FROM tiendas WHERE id = $1 FOR UPDATE`, tiendaID).Scan(&antes); err != nil {
+			return err
+		}
+		lista := append([]Exportacion{{Tipo: tipo, Formato: formato, En: ahora.UTC()}}, antes...)
+		if len(lista) > 5 {
+			lista = lista[:5]
+		}
+		_, err := t.Exec(ctx, `UPDATE tiendas SET preferencias = jsonb_set(preferencias, '{exportaciones}', $2) WHERE id = $1`, tiendaID, lista)
+		return err
+	})
 }
 
 // CerrarCuenta: con el nombre de la tienda como confirmación. Queda offline y se borra a los 90 días.
@@ -315,6 +361,17 @@ func rutasDatos(mux *http.ServeMux, pool tx, sitio string, con func(func(http.Re
 	mux.HandleFunc("GET /v1/panel/datos/{tipo}", con(func(w http.ResponseWriter, r *http.Request, id string, _ Quien) {
 		v, err := Exportar(r.Context(), pool, id, r.PathValue("tipo"))
 		escribir(w, map[string]any{"filas": v}, err)
+	}))
+	mux.HandleFunc("POST /v1/panel/datos/exportaciones", con(func(w http.ResponseWriter, r *http.Request, id string, _ Quien) {
+		var b struct{ Tipo, Formato string }
+		if !leer(w, r, &b) {
+			return
+		}
+		if err := RegistrarExportacion(r.Context(), pool, id, b.Tipo, b.Formato, time.Now()); err != nil {
+			errorDe(w, err)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
 	}))
 	// Borrar inactivos: el job que borra de verdad llega con el worker de mantenimiento.
 	mux.HandleFunc("DELETE /v1/panel/datos/inactivos", con(func(w http.ResponseWriter, _ *http.Request, _ string, _ Quien) {

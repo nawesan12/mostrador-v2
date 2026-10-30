@@ -2,6 +2,7 @@ import { error } from '@sveltejs/kit';
 import { datosDe } from '#lib/server/datos/index.ts';
 import type { NombreLista } from '#lib/server/datos/tipos.ts';
 import { leer } from '#lib/panel/listas/filtros.ts';
+import { enCastellano } from '#lib/panel/textos-export.ts';
 import type { RequestHandler } from './$types';
 
 /** Columnas de cada lista: título y campo del registro. */
@@ -71,10 +72,12 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
 		filas.push(...(l.filas as Record<string, unknown>[]));
 		if (desde + 200 >= l.total) break;
 	}
-	const cuerpo = [
-		cols.map((c) => c[0]).join(';'),
-		...filas.map((r) => cols.map((c) => celda(r[c[1]])).join(';'))
-	];
+	// Los códigos internos (estado, segmento, transporte) salen en castellano.
+	const tabla = enCastellano<unknown>([
+		cols.map((c) => c[0]),
+		...filas.map((r) => cols.map((c) => r[c[1]]))
+	]);
+	const cuerpo = tabla.map((f, i) => (i ? f.map(celda) : f).join(';'));
 	return new Response('﻿' + cuerpo.join('\r\n'), {
 		headers: {
 			'content-type': 'text/csv; charset=utf-8',

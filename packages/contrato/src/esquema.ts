@@ -1986,6 +1986,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/datos/exportaciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Anota una descarga en "Exportaciones recientes" (guarda las últimas 5). */
+        post: operations["registrarExportacion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/datos/inactivos": {
         parameters: {
             query?: never;
@@ -8095,6 +8112,33 @@ export interface operations {
                         filas: (string | number | null)[][];
                     };
                 };
+            };
+        };
+    };
+    registrarExportacion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    tipo: "productos" | "clientes" | "pedidos" | "facturas" | "resenas" | "conversaciones" | "todo";
+                    /** @enum {string} */
+                    formato: "csv" | "excel";
+                };
+            };
+        };
+        responses: {
+            /** @description Anotada */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

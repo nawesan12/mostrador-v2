@@ -213,6 +213,8 @@ export interface Datos {
 	guardarPreferenciasAvisos(p: PreferenciasAvisos): Promise<void>;
 	misDatos(): Promise<MisDatos>;
 	exportar(tipo: TipoExport): Promise<(string | number | null)[][]>;
+	/** Anota una descarga en "Exportaciones recientes" ("todo" es la exportación completa). */
+	registrarExportacion(tipo: TipoExport | 'todo', formato: 'csv' | 'excel'): Promise<void>;
 	borrarInactivos(): Promise<number>;
 	frenarBorrado(): Promise<void>;
 	cerrarCuenta(confirmacion: string): Promise<Resultado>;

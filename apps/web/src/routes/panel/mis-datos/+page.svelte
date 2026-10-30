@@ -6,19 +6,24 @@
 	import Seo from '#lib/components/Seo.svelte';
 	import * as I from '#lib/icons.ts';
 	import { anim } from '#lib/panel/anim.ts';
+	import { plural } from '#lib/panel/formato.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 
 	/** Mis datos (design/PanelCuenta.dc.html, sData): exportar, borrar inactivos y cerrar la cuenta. */
 	let { data } = $props();
 	const ui = getUi();
 
-	const n = (x: number) => x.toLocaleString('es-AR');
 	const EXPORTS = $derived([
-		['productos', I.phTag, 'Productos', `${n(data.conteos.productos)} productos`],
-		['clientes', I.phUsersThree, 'Clientes', `${n(data.conteos.clientes)} clientes`],
-		['pedidos', I.phPackage, 'Pedidos', `${n(data.conteos.pedidos)} pedidos`],
-		['facturas', I.phReceipt, 'Facturas', `${n(data.conteos.facturas)} comprobantes`],
-		['resenas', I.phStar, 'Reseñas', `${n(data.conteos.resenas)} reseñas`],
+		['productos', I.phTag, 'Productos', plural(data.conteos.productos, 'producto', 'productos')],
+		['clientes', I.phUsersThree, 'Clientes', plural(data.conteos.clientes, 'cliente', 'clientes')],
+		['pedidos', I.phPackage, 'Pedidos', plural(data.conteos.pedidos, 'pedido', 'pedidos')],
+		[
+			'facturas',
+			I.phReceipt,
+			'Facturas',
+			plural(data.conteos.facturas, 'comprobante', 'comprobantes')
+		],
+		['resenas', I.phStar, 'Reseñas', plural(data.conteos.resenas, 'reseña', 'reseñas')],
 		['conversaciones', I.phChatsCircle, 'Conversaciones', 'WhatsApp e Instagram']
 	] as const);
 	const NOMBRES: Record<string, string> = {
@@ -38,23 +43,46 @@
 			minute: '2-digit',
 			timeZone: 'America/Argentina/Buenos_Aires'
 		});
-	/** Baja el archivo con un link y después refresca "Exportaciones recientes". */
-	function bajar(tipo: string, formato: 'csv' | 'excel') {
-		const a = document.createElement('a');
-		a.href = `/panel/mis-datos/exportar/${tipo}?formato=${formato}`;
-		a.download = '';
-		document.body.appendChild(a);
-		a.click();
-		a.remove();
-		ui.toast({
-			k: 'ok',
-			title:
-				tipo === 'todo'
-					? 'Exportación completa'
-					: `Exportando ${NOMBRES[tipo].toLowerCase()} en ${formato === 'csv' ? 'CSV' : 'Excel'}`,
-			desc: tipo === 'todo' ? 'Un ZIP con todo en CSV' : 'Se descarga en un momento'
-		});
-		setTimeout(() => void invalidateAll(), 1500);
+	/**
+	 * Pide el archivo y lo baja recién si salió bien: si la exportación falla, avisa en vez de bajar
+	 * la página de error como .html. Después refresca "Exportaciones recientes".
+	 */
+	let bajando = $state('');
+	async function bajar(tipo: string, formato: 'csv' | 'excel') {
+		if (bajando) return;
+		bajando = `${tipo}-${formato}`;
+		try {
+			const r = await fetch(`/panel/mis-datos/exportar/${tipo}?formato=${formato}`);
+			if (!r.ok) throw new Error(String(r.status));
+			const nombre =
+				/filename="([^"]+)"/.exec(r.headers.get('content-disposition') ?? '')?.[1] ??
+				`${tipo}.${formato === 'excel' ? 'xlsx' : 'csv'}`;
+			const url = URL.createObjectURL(await r.blob());
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = nombre;
+			document.body.appendChild(a);
+			a.click();
+			a.remove();
+			setTimeout(() => URL.revokeObjectURL(url), 10_000);
+			ui.toast({
+				k: 'ok',
+				title:
+					tipo === 'todo'
+						? 'Exportación completa'
+						: `${NOMBRES[tipo]} en ${formato === 'csv' ? 'CSV' : 'Excel'}`,
+				desc: tipo === 'todo' ? 'Un ZIP con todo en CSV' : `Se bajó ${nombre}`
+			});
+			await invalidateAll();
+		} catch {
+			ui.toast({
+				k: 'err',
+				title: 'No se pudo exportar',
+				desc: 'Probá de nuevo en un rato. Si sigue, escribinos.'
+			});
+		} finally {
+			bajando = '';
+		}
 	}
 	async function borrarInactivos() {
 		const r = await fetch('/panel/mis-datos/inactivos', { method: 'DELETE' });
@@ -62,7 +90,7 @@
 		await invalidateAll();
 		ui.toast({
 			k: 'warn',
-			title: `${n(clientes)} clientes se borran en 7 días`,
+			title: `${plural(clientes, 'cliente se borra', 'clientes se borran')} en 7 días`,
 			desc: 'Podés frenarlo hasta entonces',
 			action: 'Deshacer',
 			onAction: async () => {
@@ -106,7 +134,12 @@
 				Todo lo que guardaste en Tu Local Web es tuyo. Llevátelo cuando quieras.
 			</div>
 		</div>
-		<button type="button" class="todo" onclick={() => bajar('todo', 'csv')}
+		<button
+			type="button"
+			class="todo"
+			disabled={!!bajando}
+			aria-busy={bajando === 'todo-csv'}
+			onclick={() => bajar('todo', 'csv')}
 			><Icon icon={I.phArchiveBold} size={15} />Exportar todo</button
 		>
 	</div>
@@ -122,8 +155,18 @@
 					</div>
 				</div>
 				<div class="e-acc">
-					<button type="button" onclick={() => bajar(id, 'csv')}>CSV</button>
-					<button type="button" onclick={() => bajar(id, 'excel')}>Excel</button>
+					<button
+						type="button"
+						disabled={!!bajando}
+						aria-busy={bajando === `${id}-csv`}
+						onclick={() => bajar(id, 'csv')}>CSV</button
+					>
+					<button
+						type="button"
+						disabled={!!bajando}
+						aria-busy={bajando === `${id}-excel`}
+						onclick={() => bajar(id, 'excel')}>Excel</button
+					>
 				</div>
 			</div>
 		{/each}
@@ -136,7 +179,9 @@
 				{#each data.recientes as r (r.en)}
 					<div>
 						<Icon icon={I.phCheckCircleFill} size={18} style="color:#237550" /><span
-							>{NOMBRES[r.tipo] ?? r.tipo}<span class="rd">{cuando(r.en)}</span></span
+							>{NOMBRES[r.tipo] ?? r.tipo}{r.tipo !== 'todo' && r.formato
+								? ` · ${r.formato === 'excel' ? 'Excel' : 'CSV'}`
+								: ''}<span class="rd">{cuando(r.en)}</span></span
 						>
 					</div>
 				{:else}
@@ -170,9 +215,9 @@
 					<b>Borrar clientes inactivos</b>
 					<div>
 						{data.borrado
-							? `${n(data.borrado.clientes)} clientes se borran el ${cuando(data.borrado.el)}`
+							? `${plural(data.borrado.clientes, 'cliente se borra', 'clientes se borran')} el ${cuando(data.borrado.el)}`
 							: data.inactivos
-								? `Elimina los datos de ${n(data.inactivos)} clientes sin compras en 3 años`
+								? `Elimina los datos de ${plural(data.inactivos, 'cliente', 'clientes')} sin compras en 3 años`
 								: 'No hay clientes sin compras en 3 años'}
 					</div>
 				</div>
@@ -302,6 +347,10 @@
 	.e-acc {
 		display: flex;
 		gap: 6px;
+	}
+	.e-acc button:disabled,
+	.todo:disabled {
+		opacity: 0.6;
 	}
 	.e-acc button {
 		flex: 1;

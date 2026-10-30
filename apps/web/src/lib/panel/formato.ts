@@ -11,6 +11,10 @@ export const pesosCortos = (n: number) =>
 		? '$' + NB + (n / 1_000_000).toLocaleString('es-AR', { maximumFractionDigits: 1 }) + NB + 'M'
 		: pesos(n);
 
+/** "1 producto", "12 productos" (con separador de miles). */
+export const plural = (n: number, uno: string, varios: string) =>
+	`${n.toLocaleString('es-AR')}${NB}${n === 1 ? uno : varios}`;
+
 const signo = (n: number) => (n < 0 ? '−' : n > 0 ? '+' : '');
 
 /** "+21" / "−3": diferencia de cantidades. */
