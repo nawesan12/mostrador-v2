@@ -45,7 +45,6 @@
 			d: 'Desde 5 tiendas activas',
 			f: [
 				'25 % de comisión recurrente',
-				'Aparecés en el directorio',
 				'Soporte prioritario por WhatsApp',
 				'Acceso anticipado a novedades'
 			],
@@ -57,24 +56,12 @@
 			d: 'Desde 20 tiendas activas',
 			f: [
 				'30 % de comisión recurrente',
-				'Destacado en el directorio y la landing',
 				'Gerente de cuenta dedicado',
 				'Co-marketing y leads derivados'
 			],
 			req: '20 tiendas',
 			tono: 'terracota'
 		}
-	] as const;
-	const DIRECTORIO = [
-		['1522202176988-66273c2fd55f', 'Estudio Brote', 'Partner Oro', 'Diseño y branding · CABA', 38],
-		['1552664730-d307ca884978', 'Nodo Digital', 'Partner Oro', 'Migraciones y SEO · Córdoba', 38],
-		[
-			'1517245386807-bb43f82c33c4',
-			'Pampa Code',
-			'Partner Plata',
-			'Desarrollo e integraciones · Rosario',
-			14
-		]
 	] as const;
 </script>
 
@@ -97,7 +84,6 @@
 				</p>
 				<div class="ctas">
 					<a class="pri" href="#sumate">Quiero ser partner</a>
-					<a class="sec" href="#directorio">Buscar un partner</a>
 				</div>
 			</div>
 			<img src="/hornero/celebrando.webp" alt="" width="300" height="300" />
@@ -134,36 +120,6 @@
 				<div class="v">$&nbsp;149.700</div>
 				<div class="d">por mes, mientras sigan activas</div>
 			</div>
-		</div>
-	</div>
-</section>
-
-<section id="directorio" class="bloque beige">
-	<div class="ancho">
-		<Titulo etiqueta="Directorio" titulo="¿Necesitás ayuda? Contratá un partner" />
-		<div class="directorio">
-			{#each DIRECTORIO as [img, n, nivel, d, tiendas] (n)}
-				<div class="partner">
-					<div class="foto">
-						<img
-							src="https://images.unsplash.com/photo-{img}?auto=format&fit=crop&w=700&h=394&q=72"
-							alt=""
-							loading="lazy"
-						/>
-					</div>
-					<div class="p-in">
-						<div class="p-cab">
-							<b>{n}</b><span class="nivel-chip" class:oro={nivel === 'Partner Oro'}>{nivel}</span>
-						</div>
-						<div class="p-d">{d}</div>
-						<div class="p-val">
-							<Icon icon={I.phStarFill} size={14} style="color:#b0441d" /><b>4,9</b><span
-								>· {tiendas} tiendas armadas</span
-							>
-						</div>
-					</div>
-				</div>
-			{/each}
 		</div>
 	</div>
 </section>
@@ -408,68 +364,6 @@
 	}
 	.ej-v .d {
 		font-size: 12.5px;
-		color: #7a6252;
-	}
-	.directorio {
-		margin-top: 28px;
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
-		gap: 12px;
-	}
-	.partner {
-		border-radius: 24px;
-		background: #fff;
-		box-shadow: 0 1px 2px rgba(58, 29, 18, 0.06);
-		overflow: hidden;
-	}
-	.foto {
-		aspect-ratio: 16 / 9;
-		background: #e9ddcf;
-	}
-	.foto img {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		display: block;
-	}
-	.p-in {
-		padding: 18px;
-	}
-	.p-cab {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		gap: 10px;
-	}
-	.p-cab b {
-		font-size: 17px;
-	}
-	.nivel-chip {
-		padding: 4px 10px;
-		border-radius: 999px;
-		background: #efeae4;
-		color: #5c4536;
-		font-size: 12px;
-		font-weight: 700;
-		white-space: nowrap;
-	}
-	.nivel-chip.oro {
-		background: #fcede5;
-		color: #b0441d;
-	}
-	.p-d {
-		font-size: 14px;
-		color: #7a6252;
-		margin-top: 4px;
-	}
-	.p-val {
-		margin-top: 12px;
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		font-size: 13.5px;
-	}
-	.p-val span {
 		color: #7a6252;
 	}
 	.sumate {
