@@ -215,7 +215,8 @@
 		top: 0;
 		height: 100vh;
 		height: 100dvh;
-		z-index: 75;
+		/* En escritorio, debajo de los modales (70/71); encima del contenido. */
+		z-index: 50;
 		background: var(--sf2);
 		border-right: 1px solid var(--ln);
 		display: flex;
@@ -457,6 +458,7 @@
 	/* Menos de 1100 px: se abre encima, a la derecha del rail. */
 	@media (max-width: 1099px) {
 		.barra {
+			z-index: 75;
 			position: fixed;
 			left: 76px;
 			width: 280px;

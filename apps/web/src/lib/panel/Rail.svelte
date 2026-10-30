@@ -73,7 +73,8 @@
 		top: 0;
 		height: 100vh;
 		height: 100dvh;
-		z-index: 76;
+		/* Debajo de los modales (70/71) y encima de la barra (su menú de la cuenta se abre sobre ella). */
+		z-index: 51;
 		background: #2a140c;
 		display: flex;
 		flex-direction: column;
@@ -162,6 +163,11 @@
 		to {
 			transform: scale(1.35);
 			opacity: 0;
+		}
+	}
+	@media (max-width: 1099px) {
+		.rail {
+			z-index: 76;
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {
