@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import Icon from '#lib/components/Icon.svelte';
 	import Modal from '#lib/components/Modal.svelte';
 	import Seo from '#lib/components/Seo.svelte';
@@ -74,12 +76,25 @@
 
 	// ---- Uso ----
 	const tope = $derived(vigente.hornero + data.uso.packs * 2000);
-	const USO = $derived([
-		['Productos', data.uso.productos, null],
-		['Personas en el equipo', data.uso.personas, vigente.personas],
-		['Respuestas de Tincho con IA', data.uso.hornero, tope],
-		['Respuestas automáticas sin IA', data.uso.sinIa, null]
-	] as const);
+	/**
+	 * Con la API real las respuestas de Tincho todavía no se cuentan (Go devuelve 0) y el pack de
+	 * respuestas no se cobra en ninguna factura: no se muestra un medidor en cero ni se vende algo
+	 * que no se cobra. En la demo siguen como en el handoff.
+	 */
+	const demo = $derived(!!page.data.demo);
+	const USO = $derived(
+		demo
+			? ([
+					['Productos', data.uso.productos, null],
+					['Personas en el equipo', data.uso.personas, vigente.personas],
+					['Respuestas de Tincho con IA', data.uso.hornero, tope],
+					['Respuestas automáticas sin IA', data.uso.sinIa, null]
+				] as const)
+			: ([
+					['Productos', data.uso.productos, null],
+					['Personas en el equipo', data.uso.personas, vigente.personas]
+				] as const)
+	);
 	async function pack() {
 		if (!(await pedir('/panel/cuenta/pack', 'POST'))) return;
 		await invalidateAll();
@@ -266,13 +281,15 @@
 		<div class="tarjeta uso">
 			<div class="u-cab">
 				<span>Uso de este mes</span>
-				<button type="button" onclick={pack}
-					><Icon icon={I.phSparkleFill} size={13} style="color:#b0441d" />+2.000 respuestas · $
-					4.900</button
-				>
+				{#if demo}
+					<button type="button" onclick={pack}
+						><Icon icon={I.phSparkleFill} size={13} style="color:#b0441d" />+2.000 respuestas · $
+						4.900</button
+					>
+				{/if}
 			</div>
 			{#each USO as [t, v, max] (t)}
-				{@const w = max ? Math.min(100, (v / max) * 100) : 18}
+				{@const w = max ? Math.min(100, (v / max) * 100) : v ? 18 : 0}
 				<div>
 					<div class="u-f">
 						<span>{t}</span><span
@@ -293,16 +310,6 @@
 		<div class="tarjeta medio">
 			<div class="u-cab">
 				<span>Medio de pago</span>
-				<button
-					type="button"
-					class="link"
-					onclick={() =>
-						ui.toast({
-							k: 'info',
-							title: 'Cambiar medio de pago',
-							desc: 'Se hace en Mercado Pago cuando se conecte el cobro del abono'
-						})}>Cambiar</button
-				>
 			</div>
 			{#if data.medio}
 				<div class="tarjeta-credito">
@@ -312,14 +319,26 @@
 						<div class="t-v">Vence {data.medio.vence} · débito automático</div>
 					</div>
 				</div>
+			{:else}
+				<!-- El «Cambiar» de antes sólo decía que no se podía: sin medio, se explica cuándo se pide. -->
+				<p class="sin-dato">
+					Todavía no cargaste ninguno. Te lo pedimos con Mercado Pago cuando elijas un plan pago.
+				</p>
 			{/if}
 			<div class="fact">
 				<span>Datos de facturación</span>
-				<span
-					><b>{data.facturacion.razonSocial}</b><br /><span
-						>CUIT {data.facturacion.cuit} · {data.facturacion.tipo}</span
-					></span
-				>
+				{#if data.facturacion.cuit}
+					<span
+						><b>{data.facturacion.razonSocial}</b><br /><span
+							>CUIT {data.facturacion.cuit} · {data.facturacion.tipo}</span
+						></span
+					>
+				{:else}
+					<span
+						>Sin CUIT cargado. <a href={resolve('/panel/configuracion')}>Cargalo en Configuración</a
+						></span
+					>
+				{/if}
 			</div>
 		</div>
 	</div>
@@ -639,12 +658,6 @@
 			sans-serif;
 		white-space: nowrap;
 	}
-	.u-cab button.link {
-		border: 0;
-		padding: 0;
-		font-size: 13px;
-		color: #b0441d;
-	}
 	.u-f {
 		display: flex;
 		justify-content: space-between;
@@ -693,6 +706,16 @@
 	.t-v {
 		font-size: 12.5px;
 		opacity: 0.75;
+	}
+	.sin-dato {
+		margin: 0;
+		font-size: 13px;
+		line-height: 1.45;
+		color: var(--fa);
+	}
+	.fact a {
+		color: var(--terracota);
+		font-weight: 600;
 	}
 	.fact {
 		display: flex;
