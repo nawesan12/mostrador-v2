@@ -1,17 +1,19 @@
 <script lang="ts">
-	import { goto, invalidateAll } from '$app/navigation';
 	import Icon from '#lib/components/Icon.svelte';
-	import Interruptor from '#lib/components/Interruptor.svelte';
 	import Seo from '#lib/components/Seo.svelte';
 	import * as I from '#lib/icons.ts';
 	import { anim } from '#lib/panel/anim.ts';
 	import { rutaDe } from '#lib/panel/navegacion.ts';
-	import { getUi } from '#lib/ui.svelte.ts';
 
-	/** Canales de venta (design/PanelCrecer.dc.html, sCan): cuánto deja cada uno. */
+	/**
+	 * Canales de venta (design/PanelCrecer.dc.html, sCan): cuánto vendió cada uno en 30 días.
+	 * El interruptor de pausar se sacó: pausar un canal no ocultaba nada en ningún lado. Lo que se
+	 * puede conectar lleva a Integraciones.
+	 */
 	let { data } = $props();
-	const ui = getUi();
 	type C = (typeof data.canales)[number];
+	/** Los que tienen integración para conectar hoy. */
+	const CONECTABLES = new Set(['ml', 'gg']);
 
 	const ESTILO: Record<
 		C['id'],
@@ -34,34 +36,6 @@
 			: n
 				? '$ ' + Math.round(n).toLocaleString('es-AR')
 				: '—';
-
-	async function alternar(c: C) {
-		if (!c.conectado)
-			return ui.toast({
-				k: 'info',
-				title: `Conectá ${c.nombre}`,
-				desc: 'Se hace desde Integraciones en un minuto',
-				action: 'Ir',
-				onAction: () => {
-					// eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta del panel
-					void goto(rutaDe('Integraciones'));
-				}
-			});
-		const r = await fetch(`/panel/canales/${c.id}`, {
-			method: 'PUT',
-			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({ activo: !c.activo })
-		});
-		if (!r.ok) return ui.toast({ k: 'err', title: 'No se pudo', desc: 'Probá de nuevo.' });
-		await invalidateAll();
-		ui.toast({
-			k: c.activo ? 'warn' : 'ok',
-			title: `${c.nombre} ${c.activo ? 'pausado' : 'activado'}`,
-			desc: c.activo
-				? 'Tus publicaciones quedan ocultas, no se borra nada'
-				: 'Sincronizando productos y stock…'
-		});
-	}
 </script>
 
 <Seo title="Canales · Panel" description="Canales de venta" path="/panel/canales" noindex />
@@ -69,11 +43,11 @@
 <div class="pagina">
 	<div class="cab" use:anim={{ t: 'rise' }}>
 		<h1>Canales de venta</h1>
-		<div class="c-s">Dónde vendés y cuánto deja cada uno, ya descontadas las comisiones</div>
+		<div class="c-s">Dónde vendés y cuánto vendió cada canal en los últimos 30 días</div>
 	</div>
 
 	<div class="tarjeta reparto" use:anim={{ t: 'rise', delay: 60 }}>
-		<div class="r-t">Ventas de {data.mes} por canal</div>
+		<div class="r-t">Ventas de los últimos 30 días por canal</div>
 		<div class="barra">
 			{#each data.canales as c (c.id)}
 				{#if parte(c)}<span style:width="{parte(c)}%" style:background={ESTILO[c.id].barra}
@@ -114,7 +88,10 @@
 							><span class="punto"></span>{estado}</span
 						></span
 					>
-					<Interruptor checked={c.activo} label="Activar {c.nombre}" onchange={() => alternar(c)} />
+					{#if !c.conectado && CONECTABLES.has(c.id)}
+						<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta del panel armada con rutaDe -->
+						<a class="conectar" href={rutaDe('Integraciones')}>Conectar</a>
+					{/if}
 				</div>
 				<div class="cifras">
 					<div>
@@ -127,8 +104,8 @@
 					</div>
 					<div>
 						<div class="k">Comisión</div>
-						<div class="v" style:color={c.comision ? '#9A6A10' : '#2F8F63'}>
-							{Math.round(c.comision * 100)}%
+						<div class="v" style:color={c.comision || c.id === 'ml' ? '#9A6A10' : '#2F8F63'}>
+							{c.id === 'ml' && !c.comision ? 'Variable' : `${Math.round(c.comision * 100)}%`}
 						</div>
 					</div>
 				</div>
@@ -259,6 +236,16 @@
 	.v {
 		font-size: 16px;
 		font-weight: 600;
+	}
+	.conectar {
+		flex: none;
+		padding: 7px 14px;
+		border-radius: 999px;
+		background: var(--tx);
+		color: var(--sf);
+		font-size: 13px;
+		font-weight: 600;
+		text-decoration: none;
 	}
 	.nota {
 		font-size: 12.5px;

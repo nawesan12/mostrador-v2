@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -164,19 +163,16 @@ func Leer(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (Lista
 		default:
 			l.Programado = &p
 		}
-		var mayoristas int
-		if err := t.QueryRow(ctx, `SELECT count(DISTINCT comprador->>'nombre') FROM pedidos WHERE tienda_id = $1 AND mayorista`, tiendaID).Scan(&mayoristas); err != nil {
+		// El precio de cada producto es el de la tienda y el local; Mercado Libre, si está conectado, le
+		// suma su recargo (el que se eligió al conectar). Las listas para mayoristas o revendedoras no se
+		// aplican en ningún lado, así que no se muestran (antes eran cuatro listas fijas inventadas).
+		l.Listas = []Lista{{"minorista", "Precio de cada producto", "Tienda y local", 0, "Precio de referencia"}}
+		var recargo int
+		switch err := t.QueryRow(ctx, `SELECT recargo FROM ml_conexiones WHERE tienda_id = $1`, tiendaID).Scan(&recargo); {
+		case err == nil:
+			l.Listas = append(l.Listas, Lista{"ml", "Mercado Libre", "Tus publicaciones", recargo, "Recargo para cubrir la comisión"})
+		case !errors.Is(err, pgx.ErrNoRows):
 			return err
-		}
-		detalle := "clientes mayoristas"
-		if mayoristas == 1 {
-			detalle = "cliente mayorista"
-		}
-		l.Listas = []Lista{
-			{"minorista", "Minorista", "Tienda y local", 0, "Precio de referencia"},
-			{"mayorista", "Mayorista", "Desde 10 unidades", -25, itoa(mayoristas) + " " + detalle},
-			{"ml", "Mercado Libre", "Cubre la comisión", 10, "Se actualiza solo"},
-			{"revendedoras", "Revendedoras", "Para quienes revenden", -15, "Con link propio"},
 		}
 		if err := t.QueryRow(ctx, `SELECT count(*) FROM productos WHERE tienda_id = $1`, tiendaID).Scan(&l.Productos); err != nil {
 			return err
@@ -190,8 +186,6 @@ func Leer(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (Lista
 	})
 	return l, err
 }
-
-func itoa(n int) string { return strconv.Itoa(n) }
 
 // Rutas del panel.
 func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string) {

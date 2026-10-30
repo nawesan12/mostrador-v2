@@ -48,13 +48,13 @@ var canales = []struct {
 	comision         float64
 }{
 	{"web", "Tienda online", "Sin comisión", 0},
-	{"wa", "WhatsApp", "Conectá WhatsApp Business para vender por chat", 0},
-	{"ml", "Mercado Libre", "Comisión 14%", 0.14},
 	{"pos", "Local", "Punto de venta", 0},
-	{"ig", "Instagram", "Conectá Instagram Shopping", 0},
-	{"tg", "Telegram", "Conectá tu bot de Telegram", 0},
-	{"gg", "Google Shopping", "Gratis · conectá Merchant Center", 0},
-	{"tk", "TikTok Shop", "Conectalo para vender en videos", 0},
+	// La comisión de Mercado Libre depende de la categoría y del tipo de publicación: no se inventa un
+	// porcentaje fijo (antes decía 14 % para todo).
+	{"ml", "Mercado Libre", "La comisión la cobra Mercado Libre según la categoría", 0},
+	{"gg", "Google Shopping", "Gratis · con el feed cargado en Merchant Center", 0},
+	{"wa", "WhatsApp", "Todavía no se puede conectar WhatsApp Business", 0},
+	{"ig", "Instagram", "Todavía no se puede conectar Instagram", 0},
 }
 
 // Canales: lo vendido en los últimos 30 días por canal.
@@ -62,7 +62,9 @@ func Canales(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (ma
 	lista := []Canal{}
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
 		var pausados map[string]bool
-		if err := t.QueryRow(ctx, `SELECT canales_pausados FROM tiendas WHERE id = $1`, tiendaID).Scan(&pausados); err != nil {
+		var ml, gg bool
+		if err := t.QueryRow(ctx, `SELECT canales_pausados, EXISTS (SELECT 1 FROM ml_conexiones WHERE tienda_id = $1),
+			'gm' = ANY (feeds_cargados) FROM tiendas WHERE id = $1`, tiendaID).Scan(&pausados, &ml, &gg); err != nil {
 			return err
 		}
 		filas, err := t.Query(ctx, `SELECT canal, coalesce(sum(total), 0), count(*) FROM pedidos
@@ -83,7 +85,9 @@ func Canales(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (ma
 			return err
 		}
 		for _, c := range canales {
-			conectado := slices.Contains(conectadosSiempre, c.id)
+			// Conectado de verdad: la tienda y el local siempre; Mercado Libre con su cuenta conectada y
+			// Google Shopping con el feed cargado (lo que la tienda marcó en Integraciones).
+			conectado := slices.Contains(conectadosSiempre, c.id) || (c.id == "ml" && ml) || (c.id == "gg" && gg)
 			lista = append(lista, Canal{ID: c.id, Nombre: c.nombre, Vendido: ventas[c.id][0], Pedidos: int(ventas[c.id][1]),
 				Comision: c.comision, Nota: c.nota, Conectado: conectado, Activo: conectado && !pausados[c.id]})
 		}

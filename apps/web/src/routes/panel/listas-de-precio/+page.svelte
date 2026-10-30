@@ -97,7 +97,11 @@
 	<div class="cab" use:anim={{ t: 'rise' }}>
 		<div class="c-txt">
 			<h1>Listas de precio</h1>
-			<div class="c-s">Un precio base y reglas para cada canal y tipo de cliente</div>
+			<div class="c-s">
+				{data.listas.some((l) => l.id === 'mayorista')
+					? 'Un precio base y reglas para cada canal y tipo de cliente'
+					: 'El precio de cada producto y cómo actualizarlo de una'}
+			</div>
 		</div>
 	</div>
 
@@ -117,6 +121,15 @@
 				<div class="l-d">{l.detalle}</div>
 			</button>
 		{/each}
+		{#if !data.listas.some((l) => l.id === 'mayorista')}
+			<!-- Las listas por tipo de cliente todavía no existen: se dice, no se dibujan de mentira. -->
+			<div class="pronto">
+				<div class="l-t">Listas para mayoristas y revendedoras</div>
+				<div class="l-d">
+					Todavía no están: hoy cada producto tiene un solo precio, el mismo en todos tus canales.
+				</div>
+			</div>
+		{/if}
 	</div>
 
 	<div class="inflacion" use:anim={{ t: 'rise', delay: 120 }}>
@@ -213,6 +226,16 @@
 		background: var(--sf);
 		box-shadow: var(--shd);
 		color: var(--tx);
+	}
+	.pronto {
+		padding: 16px;
+		border-radius: 20px;
+		border: 1.5px dashed var(--ln);
+		color: var(--mu);
+		display: grid;
+		gap: 4px;
+		align-content: center;
+		text-wrap: pretty;
 	}
 	.lista[aria-pressed='true'] {
 		border-color: #d2582f;

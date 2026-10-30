@@ -52,7 +52,7 @@ func TestAumentoRedondeaYSeDeshace(t *testing.T) {
 		t.Fatalf("lunes: %v", para)
 	}
 	l, _ := precios.Leer(ctx, b.App, id, jueves)
-	if l.Programado == nil || l.Programado.Pct != 10 || len(l.Listas) != 4 || l.Productos != 1 {
+	if l.Programado == nil || l.Programado.Pct != 10 || len(l.Listas) != 1 || l.Listas[0].ID != "minorista" || l.Productos != 1 {
 		t.Fatalf("listas: %+v", l)
 	}
 	l, _ = precios.Leer(ctx, b.App, id, jueves.Add(5*24*time.Hour))

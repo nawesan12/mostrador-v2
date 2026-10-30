@@ -2,6 +2,8 @@
 	import { plural } from '#lib/panel/formato.ts';
 	import { resolve } from '$app/paths';
 	import { invalidateAll } from '$app/navigation';
+	import { page } from '$app/state';
+	import Vacio from '#lib/components/Vacio.svelte';
 	import Icon from '#lib/components/Icon.svelte';
 	import Seo from '#lib/components/Seo.svelte';
 	import * as I from '#lib/icons.ts';
@@ -13,6 +15,12 @@
 	/** Marketing (design/PanelCrecer.dc.html, sMkt): campaña por WhatsApp con el costo exacto. */
 	let { data } = $props();
 	const ui = getUi();
+	/**
+	 * Las campañas salen por WhatsApp Business, que con la API real todavía no se conecta (Go responde
+	 * 409 sin_whatsapp). Ahí no se muestra un armador con costos y "ventas estimadas" que no se puede
+	 * usar: se dice qué falta y se ofrece lo que sí anda, los cupones.
+	 */
+	const demo = $derived(!!page.data.demo);
 
 	let audiencia = $state(0);
 	let iMensaje = $state(0);
@@ -85,109 +93,128 @@
 		<div class="c-txt">
 			<h1>Marketing</h1>
 			<div class="c-s">
-				Campañas por WhatsApp, email y cupones, con el costo exacto antes de enviar
+				{demo
+					? 'Campañas por WhatsApp, email y cupones, con el costo exacto antes de enviar'
+					: 'Cupones para traer ventas; las campañas por WhatsApp llegan pronto'}
 			</div>
 		</div>
 	</div>
 
-	<div class="arriba" use:anim={{ t: 'rise', delay: 60 }}>
-		<div class="tarjeta nueva">
-			<div class="n-cab">
-				<span class="n-ico"><Icon icon={I.logosWhatsappIcon} size={20} /></span><span
-					>Nueva campaña</span
+	{#if !demo}
+		<div use:anim={{ t: 'rise', delay: 60 }}>
+			<Vacio
+				hornero="whatsapp"
+				titulo="Las campañas por WhatsApp todavía no están"
+				texto="Salen por WhatsApp Business, que todavía no se puede conectar. Mientras, armá un cupón y compartí su link por donde quieras."
+			>
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta del panel con query -->
+				<a class="btn btn-primary btn-sm" href="{resolve('/panel/cupones')}?nuevo">Crear un cupón</a
 				>
-			</div>
-			<div>
-				<div class="et">¿A quién?</div>
-				<div class="pills" role="group" aria-label="¿A quién?">
-					{#each data.audiencias as a, i (a.id)}
+			</Vacio>
+		</div>
+	{:else}
+		<div class="arriba" use:anim={{ t: 'rise', delay: 60 }}>
+			<div class="tarjeta nueva">
+				<div class="n-cab">
+					<span class="n-ico"><Icon icon={I.logosWhatsappIcon} size={20} /></span><span
+						>Nueva campaña</span
+					>
+				</div>
+				<div>
+					<div class="et">¿A quién?</div>
+					<div class="pills" role="group" aria-label="¿A quién?">
+						{#each data.audiencias as a, i (a.id)}
+							<button
+								type="button"
+								class="pill"
+								aria-pressed={audiencia === i}
+								onclick={() => (audiencia = i)}>{a.nombre} <span>{a.cantidad}</span></button
+							>
+						{/each}
+					</div>
+				</div>
+				<div>
+					<div class="et fila">
+						Mensaje<button type="button" class="reescribir" onclick={() => iMensaje++}
+							>✦ Reescribir con Tincho</button
+						>
+					</div>
+					<textarea bind:value={mensaje} maxlength="1000" aria-label="Mensaje"></textarea>
+				</div>
+				<div class="pills">
+					{#each ADJUNTOS as [k, icono, t] (k)}
 						<button
 							type="button"
-							class="pill"
-							aria-pressed={audiencia === i}
-							onclick={() => (audiencia = i)}>{a.nombre} <span>{a.cantidad}</span></button
+							class="pill chica"
+							aria-pressed={adjunto(k)}
+							onclick={() => alternar(k)}
+							><Icon icon={icono} size={14} style="color:#b0441d" />{t}</button
 						>
 					{/each}
 				</div>
-			</div>
-			<div>
-				<div class="et fila">
-					Mensaje<button type="button" class="reescribir" onclick={() => iMensaje++}
-						>✦ Reescribir con Tincho</button
+				<div class="numeros">
+					<span
+						><span class="nu-t">Costo exacto</span><span class="nu-v">{pesos(costo)}</span><span
+							class="nu-d">{aud.cantidad} mensajes de marketing × {pesos(data.costoMensaje)}</span
+						></span
+					>
+					<span
+						><span class="nu-t">Ventas estimadas</span><span class="nu-v verde"
+							>{data.retorno ? pesos(costo * data.retorno) : '—'}</span
+						><span class="nu-d">según tus campañas anteriores</span></span
 					>
 				</div>
-				<textarea bind:value={mensaje} maxlength="1000" aria-label="Mensaje"></textarea>
-			</div>
-			<div class="pills">
-				{#each ADJUNTOS as [k, icono, t] (k)}
+				<div class="acc">
 					<button
 						type="button"
-						class="pill chica"
-						aria-pressed={adjunto(k)}
-						onclick={() => alternar(k)}
-						><Icon icon={icono} size={14} style="color:#b0441d" />{t}</button
+						class="programar"
+						disabled={enviando || !aud.cantidad}
+						onclick={() => enviar(true)}>Programar</button
 					>
-				{/each}
-			</div>
-			<div class="numeros">
-				<span
-					><span class="nu-t">Costo exacto</span><span class="nu-v">{pesos(costo)}</span><span
-						class="nu-d">{aud.cantidad} mensajes de marketing × {pesos(data.costoMensaje)}</span
-					></span
-				>
-				<span
-					><span class="nu-t">Ventas estimadas</span><span class="nu-v verde"
-						>{data.retorno ? pesos(costo * data.retorno) : '—'}</span
-					><span class="nu-d">según tus campañas anteriores</span></span
-				>
-			</div>
-			<div class="acc">
-				<button
-					type="button"
-					class="programar"
-					disabled={enviando || !aud.cantidad}
-					onclick={() => enviar(true)}>Programar</button
-				>
-				<button
-					type="button"
-					class="enviar"
-					disabled={enviando || !aud.cantidad || mensaje.trim().length < 10}
-					onclick={() => enviar(false)}
-					>Enviar a {plural(aud.cantidad, 'persona', 'personas')}</button
-				>
-			</div>
-		</div>
-
-		<div class="tel-col">
-			<div class="tel">
-				<div class="pantalla">
-					<div class="t-cab">
-						{#if data.tienda.foto}<img src={unsplash(data.tienda.foto, 80, '&h=80')} alt="" />{/if}
-						<span>{data.tienda.nombre}</span><Icon
-							icon={I.phSealCheckFill}
-							size={14}
-							style="color:#237550"
-						/>
-					</div>
-					<div class="chat">
-						{#key iMensaje}
-							<div class="burbuja" use:anim={{ t: 'rise' }}>
-								{#if foto && data.producto?.foto}<img
-										src={unsplash(data.producto.foto, 480, '&h=260')}
-										alt=""
-									/>{/if}
-								<div class="b-txt">{vista}</div>
-								{#if boton && data.producto}<div class="b-btn">
-										🛍️ Ver {data.producto.nombre.toLowerCase()}
-									</div>{/if}
-							</div>
-						{/key}
-					</div>
+					<button
+						type="button"
+						class="enviar"
+						disabled={enviando || !aud.cantidad || mensaje.trim().length < 10}
+						onclick={() => enviar(false)}
+						>Enviar a {plural(aud.cantidad, 'persona', 'personas')}</button
+					>
 				</div>
 			</div>
-			<span class="t-pie">Vista previa en WhatsApp</span>
+
+			<div class="tel-col">
+				<div class="tel">
+					<div class="pantalla">
+						<div class="t-cab">
+							{#if data.tienda.foto}<img
+									src={unsplash(data.tienda.foto, 80, '&h=80')}
+									alt=""
+								/>{/if}
+							<span>{data.tienda.nombre}</span><Icon
+								icon={I.phSealCheckFill}
+								size={14}
+								style="color:#237550"
+							/>
+						</div>
+						<div class="chat">
+							{#key iMensaje}
+								<div class="burbuja" use:anim={{ t: 'rise' }}>
+									{#if foto && data.producto?.foto}<img
+											src={unsplash(data.producto.foto, 480, '&h=260')}
+											alt=""
+										/>{/if}
+									<div class="b-txt">{vista}</div>
+									{#if boton && data.producto}<div class="b-btn">
+											🛍️ Ver {data.producto.nombre.toLowerCase()}
+										</div>{/if}
+								</div>
+							{/key}
+						</div>
+					</div>
+				</div>
+				<span class="t-pie">Vista previa en WhatsApp</span>
+			</div>
 		</div>
-	</div>
+	{/if}
 
 	<div class="campanas" use:anim={{ t: 'rise', delay: 120 }}>
 		{#each data.campanas as c (c.id)}
