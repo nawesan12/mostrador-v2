@@ -59,7 +59,13 @@
 				: `${signo(k.margenVs, '')} ${Math.abs(k.margenVs) === 1 ? 'punto' : 'puntos'}`,
 			'#2F8F63'
 		],
-		['Comisiones ahorradas', pesos(k.ahorro), 'vs. plataformas con comisión', '#C24E25']
+		[
+			'Comisiones ahorradas',
+			pesos(k.ahorro),
+			// Es una cuenta, no un dato: lo que se iría con una plataforma que cobra 2,1 % por venta.
+			'si pagaras 2,1 % por venta',
+			'#C24E25'
+		]
 	] as const);
 	const ICONOS = [I.phTrendUpBold, I.phCoffeeFill, I.phTagBold];
 </script>

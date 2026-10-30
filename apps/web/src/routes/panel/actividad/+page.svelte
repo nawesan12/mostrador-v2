@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
+	import { page } from '$app/state';
 	import Icon from '#lib/components/Icon.svelte';
 	import Seo from '#lib/components/Seo.svelte';
 	import * as I from '#lib/icons.ts';
@@ -9,6 +10,11 @@
 
 	/** Actividad (design/PanelCrecer.dc.html, sAct): quién hizo qué y desde dónde, con deshacer. */
 	let { data } = $props();
+	/**
+	 * Con la API, la auditoría sólo la escriben las acciones del equipo de soporte (Go no anota
+	 * todavía los cambios de cada sección): no se promete «todo lo que pasó».
+	 */
+	const demo = $derived(!!page.data.demo);
 	const ui = getUi();
 
 	const FILTROS = [
@@ -68,7 +74,11 @@
 	<div class="cab" use:anim={{ t: 'rise' }}>
 		<div class="c-txt">
 			<h1>Actividad</h1>
-			<div class="c-s">Todo lo que pasó en tu cuenta, quién lo hizo y desde dónde</div>
+			<div class="c-s">
+				{demo
+					? 'Todo lo que pasó en tu cuenta, quién lo hizo y desde dónde'
+					: 'Los cambios que quedan registrados en tu cuenta'}
+			</div>
 		</div>
 		<div class="tabs" role="group" aria-label="Ver">
 			{#each FILTROS as [id, t] (id)}
@@ -100,7 +110,11 @@
 				{/if}
 			</div>
 		{:else}
-			<div class="vacio">Nada por acá todavía.</div>
+			<div class="vacio">
+				{demo
+					? 'Nada por acá todavía.'
+					: 'Todavía no hay nada registrado. Por ahora acá quedan los cambios que hace el equipo de soporte de Tu Local Web; tus ventas y productos los ves en cada sección.'}
+			</div>
 		{/each}
 	</div>
 </div>
