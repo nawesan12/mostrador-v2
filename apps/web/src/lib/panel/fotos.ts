@@ -10,7 +10,8 @@ const MAXIMO = 15 * 1024 * 1024;
 /**
  * La foto lista para subir: WebP de hasta 1600 px y menos de 1 MB (baja la calidad si hace falta).
  * Safari no sabe codificar WebP: devuelve un PNG sin comprimir que casi nunca entra en 1 MB y la foto
- * se rechazaba en el iPhone. Ahí va el PNG si entra (un logo conserva su transparencia) y si no, JPEG.
+ * se rechazaba en el iPhone. Ahí va en JPEG, salvo que el original sea PNG y entre (un logo conserva
+ * su transparencia; una foto en PNG pesaría diez veces más que en JPEG).
  */
 export async function comprimir(archivo: Blob): Promise<Blob> {
 	const bmp = await createImageBitmap(archivo);
@@ -24,7 +25,7 @@ export async function comprimir(archivo: Blob): Promise<Blob> {
 		lienzo.getContext('2d')!.drawImage(bmp, 0, 0, w, h);
 		let b = await lienzo.convertToBlob({ type: tipo, quality: calidad });
 		if (b.type !== tipo) {
-			if (b.type === 'image/png' && b.size <= TOPE) return b;
+			if (archivo.type === 'image/png' && b.type === 'image/png' && b.size <= TOPE) return b;
 			tipo = 'image/jpeg';
 			b = await lienzo.convertToBlob({ type: tipo, quality: calidad });
 		}
