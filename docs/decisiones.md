@@ -626,3 +626,18 @@ URL, para que no quede en el historial ni en logs.
   plantilla o una foto propia, recortada a 1200 × 630). Va en el diseño (`compartirTitulo`,
   `compartirDescripcion`, `compartirFoto` en `diseno_borrador`/`diseno_publicado`): sin migración, y
   se ve al publicar. La vista previa del editor usa el borrador (`/panel/mi-tienda/compartir`).
+
+## 35. «Nueva venta #N» por mail a la dueña (migración 00052)
+
+- **Cuándo**: el trigger `app.avisar_venta_tienda` encola `tienda.venta` en la misma transacción que
+  el pedido, sólo para la tienda online (`canal = 'web'`). Por transferencia, al crearse (el mail dice
+  que falta el comprobante); por Mercado Pago, cuando `estado_pago` pasa a acreditado, nunca antes.
+  Marcar pagada una transferencia no manda otro: lo hace la misma dueña.
+- **Una sola vez**: `pedidos.avisos->'tienda_venta'`, como los mails a quien compra.
+- **A quién**: el email de Configuración › Negocio o, si no hay, el de la cuenta dueña (lo mismo que el
+  Reply-To de los mails a quien compra). La respuesta le llega a quien compró.
+- **Qué**: lo vendido, subtotal/envío/descuentos/total, medio de pago con su estado, la entrega,
+  nombre, email, teléfono y nota de quien compró, y «Ver el pedido» al panel. Plantilla de los mails
+  de pedidos.
+- **Interruptor**: Notificaciones › Venta nueva › Email (`preferencias.canales.matriz["venta:email"]`),
+  prendido por defecto; el worker lo mira al mandar. Sin columna nueva.

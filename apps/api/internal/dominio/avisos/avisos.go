@@ -1,4 +1,4 @@
-// Package avisos: los mails a quien compra en la tienda online. El trigger app.avisar_comprador
+// Package avisos: los mails a quien compra en la tienda online (y «Nueva venta #N» a la dueña, venta.go). El trigger app.avisar_comprador
 // encola "comprador.aviso" en el outbox con el pedido y el tipo (confirmacion, pago, en_camino,
 // retiro); acá se arma el mail con los datos del pedido y de la tienda y se manda una sola vez
 // (pedidos.avisos guarda cuáles salieron: el outbox entrega al menos una vez).
@@ -33,7 +33,8 @@ type Servicio struct {
 }
 
 func (s *Servicio) Manejadores() map[string]outbox.Manejador {
-	return map[string]outbox.Manejador{"comprador.aviso": s.manejar, "pregunta.respondida": s.preguntaRespondida}
+	return map[string]outbox.Manejador{"comprador.aviso": s.manejar, "pregunta.respondida": s.preguntaRespondida,
+		"tienda.venta": s.ventaNueva}
 }
 
 type item struct {

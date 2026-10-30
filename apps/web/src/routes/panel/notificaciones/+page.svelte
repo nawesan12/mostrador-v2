@@ -15,9 +15,10 @@
 	const ui = getUi();
 	let prefs = $derived({ ...data, matriz: { ...data.matriz } });
 	/**
-	 * Con la API real, el único aviso a la tienda que sale hoy es la venta nueva por Telegram. La
-	 * matriz se guarda, pero no se promete un resumen diario, un «no molestar» ni una prueba que no
-	 * mandan nada (la prueba era un toast con una venta inventada).
+	 * Con la API real, a la tienda le salen hoy dos avisos de venta nueva: el mail (Venta nueva ›
+	 * Email, prendido por defecto) y Telegram si lo vinculó. La matriz se guarda, pero no se promete
+	 * un resumen diario, un «no molestar» ni una prueba que no mandan nada (la prueba era un toast
+	 * con una venta inventada).
 	 */
 	const demo = $derived(!!page.data.demo);
 
@@ -81,9 +82,12 @@
 		<div class="hoy" use:anim={{ t: 'rise', delay: 30 }}>
 			<img src="/hornero/hablando.webp" alt="" width="56" height="56" />
 			<p>
-				Hoy cada venta nueva te llega por <b>Telegram</b>, si lo vinculaste en
-				<a href={resolve('/panel/integraciones')}>Integraciones</a>. Por mail, WhatsApp, al celular
-				y en el panel todavía no salen: lo que marques acá queda guardado para cuando estén.
+				Cada venta de tu tienda online te llega por <b>email</b> (al de
+				<a href={resolve('/panel/configuracion')}>Configuración › Negocio</a> o, si no hay, al de tu
+				cuenta): por transferencia apenas entra el pedido, por Mercado Pago cuando se acredita. Se
+				apaga en «Venta nueva › Email». También por <b>Telegram</b>, si lo vinculaste en
+				<a href={resolve('/panel/integraciones')}>Integraciones</a>. Los demás avisos todavía no
+				salen: lo que marques acá queda guardado para cuando&nbsp;estén.
 			</p>
 		</div>
 	{/if}
