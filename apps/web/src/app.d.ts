@@ -33,7 +33,7 @@ declare global {
 			ENCRYPTION_KEY: string;
 			/** Clave que comparte el BFF con la API Go (X-Mostrador-BFF). Secreto. */
 			CLAVE_BFF?: string;
-			/** Secreto compartido con mostrador-jobs para /api/internal/*. */
+			/** Secreto del timer tulocalweb-cron del VPS para /api/internal/*. */
 			INTERNAL_SECRET: string;
 			/** Workers AI (Tincho). */
 			AI?: Ai;

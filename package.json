@@ -5,7 +5,6 @@
 	"workspaces": [
 		"apps/web",
 		"apps/correo",
-		"apps/jobs",
 		"packages/*"
 	],
 	"scripts": {

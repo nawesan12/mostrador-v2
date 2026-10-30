@@ -23,7 +23,7 @@ export function datosDe(locals: App.Locals): Datos {
 		return new DatosApi(String(env.API_URL), locals.token);
 	}
 	// Sin sandbox (cookie vencida o primera visita) se elige rubro de nuevo.
-	if (!locals.sandbox) redirect(303, '/demo');
+	if (!locals.sandbox) redirect(303, '/prueba');
 	return new DatosSandbox(dbSandbox(env.SANDBOX), locals.sandbox, extrasSandbox());
 }
 

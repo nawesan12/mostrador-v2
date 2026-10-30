@@ -58,7 +58,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 		};
 	}
 	if (!locals.sandbox)
-		redirect(303, `/demo?volver=${encodeURIComponent(url.pathname + url.search)}`);
+		redirect(303, `/prueba?volver=${encodeURIComponent(url.pathname + url.search)}`);
 	const sb = locals.sandbox;
 	const t = plantilla(sb.plantilla ?? RUBROS.find((r) => r.id === sb.rubro)?.plantilla ?? '');
 	return {
@@ -72,7 +72,7 @@ export const actions: Actions = {
 	default: async ({ request, url, locals }) => {
 		const { p, c } = await validar(url);
 		if (usaSandbox() && !locals.sandbox)
-			redirect(303, `/demo?volver=${encodeURIComponent(url.pathname + url.search)}`);
+			redirect(303, `/prueba?volver=${encodeURIComponent(url.pathname + url.search)}`);
 		if (!usaSandbox() && !locals.token) ingresar(url);
 		const f = await request.formData();
 		if (f.get('decision') !== 'permitir')

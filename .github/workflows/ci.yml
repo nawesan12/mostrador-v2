@@ -118,42 +118,4 @@ jobs:
           name: playwright-integracion
           path: apps/web/test-results
 
-  jobs-worker:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-      - run: bun install --frozen-lockfile
-      - run: bunx tsc -p apps/jobs
-
-  # Deploy a tulocalweb.com.ar en cada push a main, sólo si ya están los secretos de Cloudflare.
-  deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [web, api, jobs-worker, integracion]
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-    steps:
-      - name: ¿Hay credenciales de Cloudflare?
-        id: cf
-        run: echo "ok=${{ env.CLOUDFLARE_API_TOKEN != '' }}" >> "$GITHUB_OUTPUT"
-      - if: steps.cf.outputs.ok == 'true'
-        uses: actions/checkout@v4
-      - if: steps.cf.outputs.ok == 'true'
-        uses: oven-sh/setup-bun@v2
-      - if: steps.cf.outputs.ok == 'true'
-        run: bun install --frozen-lockfile
-      - if: steps.cf.outputs.ok == 'true'
-        working-directory: apps/web
-        run: bun run db:migrar
-      - if: steps.cf.outputs.ok == 'true'
-        working-directory: apps/web
-        run: bun run build && bunx wrangler deploy
-      - if: steps.cf.outputs.ok == 'true'
-        working-directory: apps/jobs
-        run: bunx wrangler deploy
-      - if: steps.cf.outputs.ok != 'true'
-        run: echo "::warning::Sin CLOUDFLARE_API_TOKEN todavía; no se despliega. Ver CREDENCIALES.md §1."
+  # El deploy es al VPS (scripts/desplegar-vps.sh), no desde el CI: nada se publica en Cloudflare.

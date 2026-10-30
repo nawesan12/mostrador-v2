@@ -10,5 +10,5 @@ export const POST: RequestHandler = async (event) => {
 			.salir(event.locals.equipo)
 			.catch(() => {});
 	borrarSesionEquipo(event.cookies);
-	redirect(303, usaSandbox() ? '/demo' : '/staff/ingresar');
+	redirect(303, usaSandbox() ? '/prueba' : '/staff/ingresar');
 };

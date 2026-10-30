@@ -7,7 +7,7 @@
 	import type { PageProps } from './$types';
 
 	/**
-	 * Estado del sistema (design/Mostrador Estado.dc.html) con los datos del monitor de mostrador-jobs.
+	 * Estado del sistema (design/Mostrador Estado.dc.html) con los datos del monitor horario del VPS.
 	 * Lo que el diseño no contempla (algo caído, días sin datos, sin incidentes) se arma con sus
 	 * mismas piezas y colores.
 	 */

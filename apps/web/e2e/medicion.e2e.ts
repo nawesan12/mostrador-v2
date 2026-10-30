@@ -28,7 +28,7 @@ async function sinInternet(page: Page) {
 
 async function demo(page: Page) {
 	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
-	await page.goto('/demo');
+	await page.goto('/prueba');
 	await listo(page);
 	await page.getByRole('button', { name: /^Litoral/ }).click();
 	await expect(page).toHaveURL(/\/panel$/);

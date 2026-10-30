@@ -57,7 +57,7 @@ export const actions: Actions = {
 		const r = v.safeParse(Ingreso, f);
 		if (!r.success)
 			return fail(400, { modo: 'login', email: String(f.email ?? ''), errores: errores(r.issues) });
-		if (usaSandbox()) redirect(303, '/demo');
+		if (usaSandbox()) redirect(303, '/prueba');
 		try {
 			const s = await cuentasDe(event).ingresar(
 				r.output.email,
@@ -100,14 +100,14 @@ export const actions: Actions = {
 		if (proveedor === 'whatsapp') return { modo: 'whatsapp' as const };
 		if (!esProveedor(proveedor))
 			return fail(400, { modo: 'login', errores: { form: 'Elegí cómo querés ingresar.' } });
-		return irAlProveedor(event, proveedor, '/demo', 'login');
+		return irAlProveedor(event, proveedor, '/prueba', 'login');
 	},
 	/** Pide el link para entrar al WhatsApp de la cuenta. */
 	enlace: async (event) => {
 		const f = await datos(event.request);
 		const r = v.safeParse(Enlace, f);
 		if (!r.success) return fail(400, { modo: 'whatsapp', errores: errores(r.issues) });
-		if (usaSandbox()) redirect(303, '/demo');
+		if (usaSandbox()) redirect(303, '/prueba');
 		try {
 			await cuentasDe(event).pedirEnlace(r.output.telefono);
 		} catch (e) {
@@ -124,7 +124,7 @@ export const actions: Actions = {
 	/** Entra con el link del WhatsApp (un clic: así la vista previa del link no lo consume). */
 	entrar: async (event) => {
 		const token = String((await event.request.formData()).get('token') ?? '');
-		if (usaSandbox()) redirect(303, '/demo');
+		if (usaSandbox()) redirect(303, '/prueba');
 		try {
 			const s = await cuentasDe(event).usarEnlace(token);
 			guardarSesion(event.cookies, s.token, s.venceEn);
@@ -162,7 +162,7 @@ export const actions: Actions = {
 		const r = v.safeParse(Restablecer, f);
 		if (!r.success) return fail(400, { modo: 'restablecer', errores: errores(r.issues) });
 		// En la demo no hay cuentas ni links reales.
-		if (usaSandbox()) redirect(303, '/demo');
+		if (usaSandbox()) redirect(303, '/prueba');
 		try {
 			await cuentasDe(event).restablecer(r.output.token, r.output.clave);
 		} catch (e) {

@@ -5,7 +5,7 @@ describe('dominio propio', () => {
 	it('distingue los hosts de Tu Local Web de los de las tiendas', () => {
 		for (const h of [
 			'tulocalweb.com.ar',
-			'demo.tulocalweb.com.ar',
+			'panel.tulocalweb.com.ar',
 			'WWW.tulocalweb.com.ar',
 			'localhost',
 			'127.0.0.1',

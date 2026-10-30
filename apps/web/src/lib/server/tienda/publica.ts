@@ -52,7 +52,8 @@ export async function resolverTienda(
 	if (!/^[a-z0-9-]{2,60}$/.test(slug)) return null;
 	if (!usaSandbox()) {
 		const r = await fetch(`${String(env.API_URL)}/v1/publico/tiendas/${slug}`);
-		if (r.status === 404) return null;
+		// Las vitrinas de las plantillas (tiendas de ejemplo) no están en la API: salen de sus datos.
+		if (r.status === 404) return vitrina(slug);
 		if (!r.ok) throw new Error(`API ${r.status}`);
 		const tienda = (await r.json()) as TiendaPublica;
 		// Una API sin variantes todavía: los productos se ven como sin opciones.
@@ -77,8 +78,13 @@ export async function resolverTienda(
 		if ((await datos.tienda()).slug === slug)
 			return { tienda: await datos.tiendaPublica(false), datos, sandboxId: propio.id };
 	}
+	return vitrina(slug);
+}
+
+/** La vitrina de una plantilla: sus datos de ejemplo, sólo para mirar (no se compra). */
+async function vitrina(slug: string): Promise<TiendaResuelta | null> {
 	const v = vitrinaDe(slug);
 	if (!v) return null;
-	const datos = new DatosSandbox(db, v);
+	const datos = new DatosSandbox(dbSandbox(env.SANDBOX), v);
 	return { tienda: await datos.tiendaPublica(true), datos, sandboxId: null };
 }

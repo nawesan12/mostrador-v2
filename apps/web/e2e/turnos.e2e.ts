@@ -7,7 +7,7 @@ const sinDesborde = (page: Page) =>
 /** Una demo de peluquería (plantilla Tijera): la tienda es Navaja. */
 async function demo(page: Page) {
 	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
-	await page.goto('/demo');
+	await page.goto('/prueba');
 	await listo(page);
 	await page.getByRole('button', { name: /^Tijera/ }).click();
 	await expect(page).toHaveURL(/\/panel$/);

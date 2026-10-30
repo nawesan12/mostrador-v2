@@ -38,7 +38,7 @@
 <Seo
 	title="Probá Tu Local Web · Elegí una tienda"
 	description="Elegí una tienda de ejemplo y recorré el panel completo con sus productos, pedidos y clientes."
-	path="/demo"
+	path="/prueba"
 	image="plantillas"
 />
 

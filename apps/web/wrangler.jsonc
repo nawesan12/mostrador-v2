@@ -1,10 +1,10 @@
 {
 	"$schema": "./node_modules/wrangler/config-schema.json",
-	// Dos despliegues de la misma app. Esta configuración (la de arriba) es la demo pública con sandbox
-	// en D1, en demo.tulocalweb.com.ar, y la que usan el desarrollo y los e2e: `wrangler deploy`.
+	// La configuración de arriba es sólo para el desarrollo local y los e2e (`wrangler dev --local`, con
+	// el motor de prueba en D1 local): no tiene dominio ni se despliega. Ya no hay demo pública.
 	// Producción (tulocalweb.com.ar, la API Go del VPS) es el entorno `produccion`, que conserva el
 	// Worker "mostrador" con sus secretos: `wrangler deploy --env produccion`.
-	"name": "mostrador-demo",
+	"name": "mostrador-pruebas",
 	"account_id": "ce736d18d9f37624e453e7b3f9aa96a2",
 	"compatibility_date": "2026-10-18",
 	"compatibility_flags": ["nodejs_als", "nodejs_compat"],
@@ -13,11 +13,10 @@
 		"binding": "ASSETS",
 		"directory": ".svelte-kit/cloudflare"
 	},
-	"routes": [{ "pattern": "demo.tulocalweb.com.ar", "custom_domain": true }],
 	"workers_dev": false,
 	"preview_urls": false,
 	"observability": { "enabled": true },
-	// Sandbox de la demo (DATA_SOURCE=sandbox). En desarrollo se usa la D1 local (sin "remote"):
+	// El motor de prueba (DATA_SOURCE=sandbox). En desarrollo se usa la D1 local (sin "remote"):
 	// las pruebas nunca tocan la base real.
 	"d1_databases": [
 		{
@@ -39,10 +38,10 @@
 	// corre con --local y HORNERO=simulado.
 	"ai": { "binding": "AI", "remote": true },
 	"vars": {
-		"PUBLIC_SITE_URL": "https://demo.tulocalweb.com.ar",
-		// sandbox: la demo pública con datos por visitante en D1. api: la API Go del VPS.
+		"PUBLIC_SITE_URL": "http://localhost:4173",
+		// sandbox: el motor de prueba (datos por visitante en D1 local). api: la API Go del VPS.
 		"DATA_SOURCE": "sandbox",
-		// URL de la API Go cuando DATA_SOURCE=api (VPS). Vacía en la demo.
+		// URL de la API Go cuando DATA_SOURCE=api (VPS). Vacía en pruebas.
 		"API_URL": "",
 		// Hornero: workers-ai (el modelo) o simulado (respuestas armadas, sin llamar al modelo).
 		"HORNERO": "workers-ai"
@@ -54,7 +53,7 @@
 				{ "pattern": "tulocalweb.com.ar", "custom_domain": true },
 				{ "pattern": "www.tulocalweb.com.ar", "custom_domain": true }
 			],
-			// Los bindings no se heredan entre entornos: son los mismos recursos que la demo.
+			// Los bindings no se heredan entre entornos: los mismos recursos que las pruebas.
 			"d1_databases": [
 				{
 					"binding": "SANDBOX",

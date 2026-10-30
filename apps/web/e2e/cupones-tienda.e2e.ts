@@ -5,7 +5,7 @@ const pesos = (s: string) => Number(s.replace(/\D/g, ''));
 
 test('tienda: un cupón se valida, descuenta y suma un uso en el panel', async ({ page }) => {
 	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
-	await page.goto('/demo');
+	await page.goto('/prueba');
 	await listo(page);
 	await page.getByRole('button', { name: /^Litoral/ }).click();
 	await expect(page).toHaveURL(/\/panel$/);
@@ -57,7 +57,7 @@ test('tienda: un cupón se valida, descuenta y suma un uso en el panel', async (
 
 test('tienda: el link de un cupón lo deja aplicado en el checkout', async ({ page }) => {
 	await page.addInitScript(() => localStorage.setItem('mostrador-cookies', 'nec'));
-	await page.goto('/demo');
+	await page.goto('/prueba');
 	await listo(page);
 	await page.getByRole('button', { name: /^Litoral/ }).click();
 	await expect(page).toHaveURL(/\/panel$/);

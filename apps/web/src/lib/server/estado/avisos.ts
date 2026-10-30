@@ -1,6 +1,6 @@
 /**
  * Avisos de /estado a los suscriptos cuando el monitor abre o cierra un incidente. Por email con
- * Resend (si mostrador-jobs tiene RESEND_API_KEY); por WhatsApp quedan para cuando esté WhatsApp
+ * Resend (si hay RESEND_API_KEY); por WhatsApp quedan para cuando esté WhatsApp
  * Cloud (por ahora se registran en el log). Van de a 50 por pasada para acotar el cron.
  */
 import type { Cambio } from './monitor.ts';

@@ -12,7 +12,7 @@ test('sin demo, el panel manda a elegir rubro', async ({ page }) => {
 });
 
 test('elegir un rubro arma la tienda y la recuerda', async ({ page, context }) => {
-	await page.goto('/demo');
+	await page.goto('/prueba');
 	await page.locator('html[data-listo]').waitFor({ state: 'attached' });
 	await page.getByRole('button', { name: /^Mostaza/ }).click();
 	await expect(page).toHaveURL(/\/panel$/);
@@ -23,7 +23,7 @@ test('elegir un rubro arma la tienda y la recuerda', async ({ page, context }) =
 	expect(cookie?.sameSite).toBe('Lax');
 
 	// Volver a /demo marca el rubro actual; elegir otro cambia la tienda.
-	await page.goto('/demo');
+	await page.goto('/prueba');
 	await page.locator('html[data-listo]').waitFor({ state: 'attached' });
 	await expect(page.getByRole('button', { name: /^Mostaza/ })).toContainText('Elegida');
 	// Filtrar por rubro y buscar.
@@ -31,7 +31,7 @@ test('elegir un rubro arma la tienda y la recuerda', async ({ page, context }) =
 	await expect(page.getByRole('button', { name: /^Mostaza/ })).toHaveCount(0);
 	await page.getByRole('button', { name: /^Pampa/ }).click();
 	await expect(page.locator('.barra .t-n')).toHaveText('PMPA Store');
-	await page.goto('/demo');
+	await page.goto('/prueba');
 	await page.locator('html[data-listo]').waitFor({ state: 'attached' });
 	await page.getByRole('textbox', { name: 'Buscar estilo o rubro' }).fill('zzz');
 	await expect(page.getByText('No hay plantillas con «zzz».')).toBeVisible();

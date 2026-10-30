@@ -1,5 +1,5 @@
 /**
- * Monitor de /estado. Lo corre mostrador-jobs en su cron horario: un chequeo por componente, todos
+ * Monitor de /estado. Lo corre /api/internal/cron, que el VPS llama cada hora: un chequeo por componente, todos
  * en paralelo y con 10 s de tope (unos 170 pedidos por día en total). Guarda un resumen por día,
  * el último resultado de cada uno y abre o cierra incidentes solo.
  *
@@ -23,7 +23,7 @@ type Chequeo = { componente: Componente; url: string; sitio?: boolean; exige200?
 
 export function chequeos(sitio: string, apiUrl: string): Chequeo[] {
 	const lista: Chequeo[] = [
-		{ componente: 'tiendas', url: `${sitio}/demo`, sitio: true, exige200: true },
+		{ componente: 'tiendas', url: `${sitio}/t/tienda-lumbre`, sitio: true, exige200: true },
 		{ componente: 'panel', url: `${sitio}/ingresar`, sitio: true, exige200: true },
 		{ componente: 'pagos', url: 'https://api.mercadopago.com/v1/payment_methods' },
 		{ componente: 'whatsapp', url: 'https://graph.facebook.com/v21.0/' },
