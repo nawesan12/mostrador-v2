@@ -412,7 +412,10 @@
 			></button>
 			<span class="l-r">{rangoTxt}</span>
 			<span class="l-v"
-				><Icon icon={I.phLightningFill} size={13} style="color:#b0441d" />{n} {config.unidad}</span
+				><Icon icon={I.phLightningFill} size={13} style="color:#b0441d" />{n}
+				{lista.total === 1 && config.unidad.endsWith('s')
+					? config.unidad.slice(0, -1)
+					: config.unidad}</span
 			>
 		</div>
 		<div

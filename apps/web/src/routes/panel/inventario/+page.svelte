@@ -162,7 +162,7 @@
 			<div class="kpi">
 				<span>Rotación</span><b style:color="#237550"
 					>{r.rotacion ? plural(r.rotacion, 'día', 'días') : '—'}</b
-				><em>{r.rotacion ? 'de stock, promedio' : 'sin ventas en 30 días'}</em>
+				><em>{r.rotacion ? 'de stock, promedio' : 'pocas ventas para proyectar'}</em>
 			</div>
 		</div>
 	{/snippet}

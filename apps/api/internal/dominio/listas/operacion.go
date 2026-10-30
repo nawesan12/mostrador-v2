@@ -73,8 +73,8 @@ var DefInventario = Def{
 		conVentas := 0
 		for _, x := range todos {
 			r["valorTotal"] += numero(x["stock"]) * numero(x["costo"])
-			// La rotación sólo se promedia entre lo que se vendió: sin ventas no hay días que proyectar.
-			if numero(x["vendidos30"]) > 0 {
+			// La rotación sólo promedia lo que tiene ventas para proyectar (3 o más en 30 días, como el panel).
+			if numero(x["vendidos30"]) >= 3 {
 				r["rotacion"] += math.Min(120, numero(x["cover"]))
 				conVentas++
 			}
