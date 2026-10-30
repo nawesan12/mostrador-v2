@@ -43,7 +43,7 @@ function item(p: ProductoPublico, t: TiendaPublica, base: string): string {
 		['g:id', p.id],
 		['g:title', corto(p.nombre, 150)],
 		['g:description', corto(p.descripcion.trim() || p.nombre, 5000)],
-		['g:link', `${base}/producto/${encodeURIComponent(p.id)}`],
+		['g:link', `${base}/producto/${encodeURIComponent(p.slug ?? p.id)}`],
 		['g:image_link', foto!],
 		['g:availability', p.stock > 0 ? 'in_stock' : 'out_of_stock'],
 		['g:price', precioFeed(enOferta ? p.anterior! : p.precio)],

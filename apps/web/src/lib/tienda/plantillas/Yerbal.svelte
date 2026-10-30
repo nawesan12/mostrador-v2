@@ -100,7 +100,7 @@
 			transf: fmt(t.precio * (1 - tienda.cobros.transferencia / 100)),
 			stock: p.stock,
 			agotado: t.agotado,
-			href: `${base}/producto/${p.id}`
+			href: `${base}/producto/${p.slug ?? p.id}`
 		};
 	};
 	type Tarjeta = ReturnType<typeof tarjeta>;
@@ -118,7 +118,7 @@
 		const p = porId.get(id);
 		if (!p || tienda.vitrina) return;
 		// eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta de la tienda con su slug
-		if (!carrito.sumarProducto(p)) goto(`${base}/producto/${p.id}`);
+		if (!carrito.sumarProducto(p)) goto(`${base}/producto/${p.slug ?? p.id}`);
 	};
 
 	// Título de la portada, en dos renglones como en el diseño.
@@ -613,7 +613,7 @@
 					style="position:absolute;top:100%;left:clamp(12px,3cqw,32px);right:clamp(12px,3cqw,32px);z-index:30;padding:6px;border-radius:14px;background:#fff;box-shadow:0 18px 40px -16px rgba(30,43,34,.45);display:flex;flex-direction:column;gap:2px"
 				>
 					{#each encontrados as p (p.id)}<a
-							href="{base}/producto/{p.id}"
+							href="{base}/producto/{p.slug ?? p.id}"
 							onclick={() => (busca = '')}
 							style="display:flex;align-items:center;gap:12px;padding:8px;border-radius:10px;color:#1E2B22;text-decoration:none"
 							>{#if p.foto}<img
@@ -709,7 +709,7 @@
 					>
 						{#if oferta}
 							<a
-								href="{base}/producto/{oferta.id}"
+								href="{base}/producto/{oferta.slug ?? oferta.id}"
 								style="padding:20px;border-radius:16px;background:#E8C547;color:#1E2B22;text-decoration:none;display:flex;flex-direction:column;justify-content:space-between;gap:10px"
 								><span style="display:flex;justify-content:space-between;align-items:start"
 									><b style="font-size:13px;letter-spacing:.04em">OFERTA</b><span
@@ -1423,7 +1423,7 @@
 						style="margin-top:14px;padding:14px;border-radius:14px;background:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap"
 					>
 						{#each juntos as t, i (t.id)}<a
-								href="{base}/producto/{t.id}"
+								href="{base}/producto/{t.slug ?? t.id}"
 								style="display:flex;align-items:center;gap:10px;min-width:0;color:#1E2B22;text-decoration:none"
 								>{#if t.foto}<img
 										src={img(t.foto, 140, 140)}
@@ -1521,7 +1521,7 @@
 										/>{/if}
 									<div style="flex:1;min-width:0">
 										<a
-											href="{base}/producto/{c.id}"
+											href="{base}/producto/{c.producto.slug ?? c.id}"
 											style="display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1E2B22;text-decoration:none"
 											>{c.producto.nombre}</a
 										>

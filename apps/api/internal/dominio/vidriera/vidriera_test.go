@@ -318,3 +318,45 @@ func TestTiendaConVariantes(t *testing.T) {
 		t.Fatalf("sin stock: %v", err)
 	}
 }
+
+// El link de cada producto sale del nombre (sin tildes ni signos), no se repite en la tienda y no
+// cambia si el producto se renombra; otra tienda puede usar el mismo.
+func TestSlugDeProductos(t *testing.T) {
+	ctx := context.Background()
+	b := pruebadb.Nueva(t)
+	luna := pruebadb.CrearTienda(t, b.App, "luna")
+	sol := pruebadb.CrearTienda(t, b.App, "sol")
+	stock := 1
+	nuevo := func(tienda, nombre string) listas.Producto {
+		t.Helper()
+		p, err := listas.Guardar(ctx, b.App, tienda, "", listas.Editable{Nombre: nombre, Precio: 1000, Stock: &stock})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return p
+	}
+	primero := nuevo(luna, "Mate de Calabaza & Bombilla ¡Ñandú!")
+	nuevo(luna, "Mate de calabaza y bombilla ñandú")
+	nuevo(sol, "Mate de calabaza y bombilla ñandú")
+	if _, err := listas.Guardar(ctx, b.App, luna, primero.ID, listas.Editable{Nombre: "Otro nombre", Precio: 1000, Stock: &stock}); err != nil {
+		t.Fatal(err)
+	}
+	slugs := func(tienda string) map[string]bool {
+		t.Helper()
+		ti, err := vidriera.Publica(ctx, b.App, tienda)
+		if err != nil {
+			t.Fatal(err)
+		}
+		out := map[string]bool{}
+		for _, p := range ti.Productos {
+			out[p.Slug] = true
+		}
+		return out
+	}
+	if s := slugs("luna"); !s["mate-de-calabaza-y-bombilla-nandu"] || !s["mate-de-calabaza-y-bombilla-nandu-2"] || len(s) != 2 {
+		t.Fatalf("luna: %v", s)
+	}
+	if s := slugs("sol"); !s["mate-de-calabaza-y-bombilla-nandu"] {
+		t.Fatalf("sol: %v", s)
+	}
+}

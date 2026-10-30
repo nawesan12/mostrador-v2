@@ -11,6 +11,8 @@ export type HorarioLibre = components['schemas']['HorarioLibre'];
  */
 export type ProductoPublico = {
 	id: string;
+	/** El link (/producto/<slug>), fijo desde que se creó. En la demo no viene: el id ya es legible. */
+	slug?: string;
 	nombre: string;
 	descripcion: string;
 	categoria: string | null;

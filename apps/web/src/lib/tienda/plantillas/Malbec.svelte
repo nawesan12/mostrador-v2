@@ -122,7 +122,7 @@
 				: rebaja
 					? `−${Math.round((1 - p.precio / rebaja) * 100)}%`
 					: p.etiqueta,
-			href: `${base}/producto/${p.id}`
+			href: `${base}/producto/${p.slug ?? p.id}`
 		};
 	};
 	const agotado = (p: ProductoPublico) => tarjetaDe(p).agotado;
@@ -237,7 +237,7 @@
 	function sumar(p: ProductoPublico) {
 		if (tienda.vitrina) return;
 		// eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta de la tienda con su slug
-		if (!carrito.sumarProducto(p)) goto(`${base}/producto/${p.id}`);
+		if (!carrito.sumarProducto(p)) goto(`${base}/producto/${p.slug ?? p.id}`);
 	}
 
 	// Carrito.
@@ -1278,7 +1278,7 @@
 									<div style="flex:1;min-width:0;display:flex;flex-direction:column">
 										<div style="display:flex;justify-content:space-between;gap:10px">
 											<a
-												href="{base}/producto/{c.id}"
+												href="{base}/producto/{c.producto.slug ?? c.id}"
 												style="font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:600;line-height:1.05;color:#F4E9E1;text-decoration:none"
 												>{c.producto.nombre}</a
 											><b style="white-space:nowrap">{fmt(c.subtotal)}</b>
@@ -1325,7 +1325,7 @@
 								>
 									{#each upsell as p (p.id)}<div style="flex:none;width:150px">
 											<a
-												href="{base}/producto/{p.id}"
+												href="{base}/producto/{p.slug ?? p.id}"
 												style="display:block;aspect-ratio:3/4;overflow:hidden;background:#3A2026"
 												>{#if p.foto}<img
 														src={img(p.foto, 300, 400)}

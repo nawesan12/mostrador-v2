@@ -106,7 +106,7 @@
 			tagFg: tagColor(p)[1],
 			stock: p.stock,
 			agotado: t.agotado,
-			href: `${base}/producto/${p.id}`
+			href: `${base}/producto/${p.slug ?? p.id}`
 		};
 	};
 	type Tarjeta = ReturnType<typeof tarjeta>;
@@ -122,7 +122,7 @@
 		const p = porId.get(id);
 		if (!p || tienda.vitrina) return;
 		// eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta de la tienda con su slug
-		if (!carrito.sumarProducto(p)) goto(`${base}/producto/${p.id}`);
+		if (!carrito.sumarProducto(p)) goto(`${base}/producto/${p.slug ?? p.id}`);
 	};
 
 	// Título de la portada: el último tramo va en mostaza, como en el diseño ("Café rico, / sin vueltas.").
@@ -269,8 +269,11 @@
 	function sumarOferta() {
 		if (!oferta || tienda.vitrina) return;
 		// Con opciones, la oferta lleva a la ficha para elegir.
+		const a = carrito.sumarProducto(oferta)
+			? `${base}/carrito`
+			: `${base}/producto/${oferta.slug ?? oferta.id}`;
 		// eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta de la tienda con su slug
-		goto(carrito.sumarProducto(oferta) ? `${base}/carrito` : `${base}/producto/${oferta.id}`);
+		goto(a);
 	}
 
 	// Carrito.
@@ -730,7 +733,7 @@
 						</div>
 						<div style="display:grid;grid-template-columns:repeat({ofertas.length},1fr);gap:10px">
 							{#each ofertas as o (o.id)}<a
-									href="{base}/producto/{o.id}"
+									href="{base}/producto/{o.slug ?? o.id}"
 									class="zoom"
 									aria-label={o.nombre}
 									style="display:block;aspect-ratio:3/4;border-radius:20px;overflow:hidden;background:#E3A94F"
@@ -1340,7 +1343,7 @@
 										/>{/if}
 									<div style="flex:1;min-width:0">
 										<a
-											href="{base}/producto/{o.id}"
+											href="{base}/producto/{o.producto.slug ?? o.id}"
 											style="font-size:15px;font-weight:700;color:#3B2416;text-decoration:none"
 											>{o.producto.nombre}</a
 										>
@@ -1391,7 +1394,7 @@
 												/>{/if}
 											<div>
 												<a
-													href="{base}/producto/{u.id}"
+													href="{base}/producto/{u.slug ?? u.id}"
 													style="display:block;font-size:13.5px;font-weight:700;white-space:nowrap;color:#3B2416;text-decoration:none"
 													>{u.nombre}</a
 												>

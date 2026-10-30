@@ -112,7 +112,7 @@
 					: tienda.cobros.cuotas > 1
 						? `${tienda.cobros.cuotas} × ${fmt(t.precio / tienda.cobros.cuotas)} sin interés`
 						: '',
-			href: `${base}/producto/${p.id}`
+			href: `${base}/producto/${p.slug ?? p.id}`
 		};
 	};
 	type Tarjeta = ReturnType<typeof tarjeta>;
@@ -246,7 +246,7 @@
 	/** Sumar desde "Sumale": con opciones, primero se elige en la ficha. */
 	function sumarRapido(p: ProductoPublico) {
 		// eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta de la tienda con su slug
-		if (!carrito.sumarProducto(p)) goto(`${base}/producto/${p.id}`);
+		if (!carrito.sumarProducto(p)) goto(`${base}/producto/${p.slug ?? p.id}`);
 	}
 
 	// Carrito.
@@ -615,7 +615,7 @@
 											: 'El más vendido'}</span
 									></span
 								><a
-									href="{base}/producto/{destacado.id}"
+									href="{base}/producto/{destacado.slug ?? destacado.id}"
 									style="padding:10px 14px;border:0;background:#F2F2F2;color:#111;font:800 12px 'Archivo';letter-spacing:.1em;text-transform:uppercase;text-decoration:none;white-space:nowrap"
 									>{destacadoPrecio?.desde ? 'Desde ' : ''}{fmt(
 										destacadoPrecio?.precio ?? destacado.precio
@@ -1122,7 +1122,7 @@
 									<div style="flex:1;min-width:0;display:flex;flex-direction:column">
 										<div style="display:flex;justify-content:space-between;gap:10px">
 											<a
-												href="{base}/producto/{c.id}"
+												href="{base}/producto/{c.producto.slug ?? c.id}"
 												style="font-size:14px;font-weight:800;text-transform:uppercase;color:#F2F2F2;text-decoration:none"
 												>{c.producto.nombre}</a
 											><b style="white-space:nowrap">{fmt(c.subtotal)}</b>

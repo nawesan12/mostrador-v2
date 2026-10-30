@@ -290,7 +290,12 @@ func guardarProducto(ctx context.Context, t pgx.Tx, tienda, origen string, x Pro
 		prog.Recortados++
 	}
 	if desde != "" {
-		n, err := redirigir(ctx, t, tienda, origen, desde, "/producto/"+id)
+		// Al link del producto (el slug que le puso la base), no al uuid: así no son dos 301.
+		var slug string
+		if err := t.QueryRow(ctx, `SELECT slug FROM productos WHERE tienda_id = $1 AND id = $2`, tienda, id).Scan(&slug); err != nil {
+			return err
+		}
+		n, err := redirigir(ctx, t, tienda, origen, desde, "/producto/"+slug)
 		prog.Redirecciones += n
 		return err
 	}

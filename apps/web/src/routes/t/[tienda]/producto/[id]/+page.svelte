@@ -14,6 +14,6 @@
 <Seo
 	title="{data.producto.nombre} · {data.tienda.nombre}"
 	description={data.producto.descripcion || data.producto.nombre}
-	path="/t/{data.tienda.slug}/producto/{data.producto.id}"
+	path="/t/{data.tienda.slug}/producto/{data.producto.slug ?? data.producto.id}"
 />
 <Plantilla tienda={data.tienda} pagina="producto" producto={data.producto} />

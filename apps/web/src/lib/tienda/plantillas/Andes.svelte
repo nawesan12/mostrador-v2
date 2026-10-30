@@ -104,7 +104,7 @@
 					? `${tienda.cobros.cuotas} × ${fmt(t.precio / tienda.cobros.cuotas)} sin interés`
 					: '',
 			transf: fmt(t.precio * (1 - tienda.cobros.transferencia / 100)),
-			href: `${base}/producto/${p.id}`
+			href: `${base}/producto/${p.slug ?? p.id}`
 		};
 	};
 	const agotado = (p: ProductoPublico) => tarjetaDe(p).agotado;
@@ -366,7 +366,7 @@
 	function sumar(p: ProductoPublico, alCarrito = false) {
 		if (tienda.vitrina) return;
 		// eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta de la tienda con su slug
-		if (!carrito.sumarProducto(p)) goto(`${base}/producto/${p.id}`);
+		if (!carrito.sumarProducto(p)) goto(`${base}/producto/${p.slug ?? p.id}`);
 		// eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta de la tienda con su slug
 		else if (alCarrito) goto(`${base}/carrito`);
 	}
@@ -695,7 +695,7 @@
 										>El más vendido</span
 									>{/if}
 								<a
-									href="{base}/producto/{c.p.id}"
+									href="{base}/producto/{c.p.slug ?? c.p.id}"
 									style="display:block;aspect-ratio:4/3;border-radius:16px;overflow:hidden;background:#EEF1F5"
 									>{#if c.img}<img
 											src={c.img}
@@ -836,7 +836,7 @@
 											</div>{/if}
 										<div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap">
 											<a
-												href="{base}/producto/{destacado.id}"
+												href="{base}/producto/{destacado.slug ?? destacado.id}"
 												style="text-decoration:none;padding:15px 24px;border:0;border-radius:14px;background:#fff;color:#0E1116;font:700 14.5px 'Instrument Sans';cursor:pointer"
 												>Comprar</a
 											><button
@@ -1548,7 +1548,7 @@
 										<div style="flex:1;min-width:0;display:flex;flex-direction:column">
 											<div style="display:flex;justify-content:space-between;gap:10px">
 												<a
-													href="{base}/producto/{c.id}"
+													href="{base}/producto/{c.producto.slug ?? c.id}"
 													style="font-size:15px;font-weight:700;color:#0E1116;text-decoration:none"
 													>{c.producto.nombre}</a
 												><b style="white-space:nowrap">{fmt(c.subtotal)}</b>
@@ -1600,7 +1600,7 @@
 															alt=""
 															style="width:46px;height:46px;border-radius:10px;object-fit:cover;background:#EEF1F5;flex:none"
 														/>{/if}<a
-														href="{base}/producto/{a.id}"
+														href="{base}/producto/{a.slug ?? a.id}"
 														style="flex:1;min-width:0;font-size:13.5px;font-weight:600;color:#0E1116;text-decoration:none"
 														>{a.nombre}</a
 													><b style="font-size:13.5px;white-space:nowrap">{tarjeta(a).price}</b

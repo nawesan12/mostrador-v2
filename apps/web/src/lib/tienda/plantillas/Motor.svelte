@@ -254,7 +254,7 @@
 					: '',
 			transf: fmt(t.precio * (1 - tienda.cobros.transferencia / 100)),
 			agotado: t.agotado,
-			href: `${base}/producto/${p.id}`
+			href: `${base}/producto/${p.slug ?? p.id}`
 		};
 	};
 	type Tarjeta = ReturnType<typeof tarjeta>;
@@ -404,7 +404,7 @@
 		const p = porId.get(id);
 		if (!p || tienda.vitrina) return;
 		// eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta de la tienda con su slug
-		if (!carrito.sumarProducto(p)) goto(`${base}/producto/${p.id}`);
+		if (!carrito.sumarProducto(p)) goto(`${base}/producto/${p.slug ?? p.id}`);
 	};
 
 	// Carrito.
@@ -1498,7 +1498,7 @@
 									<div style="flex:1;min-width:0;display:flex;flex-direction:column">
 										<div style="display:flex;justify-content:space-between;gap:10px">
 											<a
-												href="{base}/producto/{c.id}"
+												href="{base}/producto/{c.producto.slug ?? c.id}"
 												style="font-size:15px;font-weight:500;color:{T.ink};text-decoration:none"
 												>{c.producto.nombre}</a
 											><b style="white-space:nowrap">{fmt(c.subtotal)}</b>
@@ -1546,7 +1546,7 @@
 								>
 									{#each upsell as p (p.id)}<div style="flex:none;width:150px">
 											<a
-												href="{base}/producto/{p.id}"
+												href="{base}/producto/{p.slug ?? p.id}"
 												style="display:block;aspect-ratio:1;border-radius:{T.r};overflow:hidden;background:{T.sf2}"
 												>{#if p.foto}<img
 														src={img(p.foto, 300, 300)}

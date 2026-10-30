@@ -40,7 +40,9 @@ type Pagador interface {
 }
 
 type ProductoPublico struct {
-	ID          string  `json:"id"`
+	ID string `json:"id"`
+	// Slug: el link de la tienda (/producto/<slug>), del nombre y fijo desde que se creó.
+	Slug        string  `json:"slug"`
 	Nombre      string  `json:"nombre"`
 	Descripcion string  `json:"descripcion"`
 	Categoria   *string `json:"categoria"`
@@ -221,14 +223,14 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 		if err := vs.Err(); err != nil {
 			return err
 		}
-		filas, err := t.Query(ctx, `SELECT id::text, nombre, descripcion, categoria, precio, foto, stock, fotos, opciones FROM productos
+		filas, err := t.Query(ctx, `SELECT id::text, slug, nombre, descripcion, categoria, precio, foto, stock, fotos, opciones FROM productos
 			WHERE tienda_id = $1 AND publicado AND coalesce((canales->>'web')::boolean, true) ORDER BY creado_en DESC LIMIT 500`, id)
 		if err != nil {
 			return err
 		}
 		for filas.Next() {
 			var p ProductoPublico
-			if err := filas.Scan(&p.ID, &p.Nombre, &p.Descripcion, &p.Categoria, &p.Precio, &p.Foto, &p.Stock, &p.Fotos, &p.Opciones); err != nil {
+			if err := filas.Scan(&p.ID, &p.Slug, &p.Nombre, &p.Descripcion, &p.Categoria, &p.Precio, &p.Foto, &p.Stock, &p.Fotos, &p.Opciones); err != nil {
 				return err
 			}
 			p.Variantes = []VariantePublica{}

@@ -108,7 +108,7 @@
 			tag: t.agotado ? 'Sin stock' : p.etiqueta,
 			transf: fmt(t.precio * (1 - tienda.cobros.transferencia / 100)),
 			agotado: t.agotado,
-			href: `${base}/producto/${p.id}`
+			href: `${base}/producto/${p.slug ?? p.id}`
 		};
 	};
 	type Tarjeta = ReturnType<typeof tarjeta>;
@@ -370,7 +370,7 @@
 		const p = porId.get(id);
 		if (!p || tienda.vitrina) return;
 		// eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta de la tienda con su slug
-		if (!carrito.sumarProducto(p)) goto(`${base}/producto/${p.id}`);
+		if (!carrito.sumarProducto(p)) goto(`${base}/producto/${p.slug ?? p.id}`);
 	};
 
 	// ---- Turnos (pTurnos del diseño) ----
@@ -1727,7 +1727,7 @@
 									<div style="flex:1;min-width:0;display:flex;flex-direction:column">
 										<div style="display:flex;justify-content:space-between;gap:10px">
 											<a
-												href="{base}/producto/{c.id}"
+												href="{base}/producto/{c.producto.slug ?? c.id}"
 												style="font-size:15px;font-weight:600;color:#1E1B2E;text-decoration:none"
 												>{c.producto.nombre}</a
 											><b style="white-space:nowrap">{fmt(c.subtotal)}</b>
@@ -1794,7 +1794,7 @@
 											style="flex:none;width:160px;padding:8px;border-radius:20px;background:#fff;box-shadow:0 1px 2px rgba(30,27,46,.06)"
 										>
 											<a
-												href="{base}/producto/{p.id}"
+												href="{base}/producto/{p.slug ?? p.id}"
 												style="display:block;aspect-ratio:1;border-radius:14px;overflow:hidden;background:#EAE6EF"
 												>{#if p.foto}<img
 														src={img(p.foto, 300, 300)}

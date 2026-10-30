@@ -128,7 +128,7 @@ func TestSalirCierraLaSesion(t *testing.T) {
 	}
 }
 
-var linkRe = regexp.MustCompile(`https://mostrador\.iamnaw\.dev/ingresar\?m=restablecer&token=([A-Za-z0-9_-]+)`)
+var linkRe = regexp.MustCompile(`https://tulocalweb\.com\.ar/ingresar\?m=restablecer&token=([A-Za-z0-9_-]+)`)
 
 func TestRecuperarYRestablecer(t *testing.T) {
 	s, m, _ := nuevo(t)

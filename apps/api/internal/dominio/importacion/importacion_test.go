@@ -209,7 +209,7 @@ func TestImportacionCompletaPorElOutbox(t *testing.T) {
 	if len(mate.Fotos) != 2 || mate.Stock != 4 || len(remera.Variantes) != 2 || remera.Stock != 3 || len([]rune(remera.Nombre)) != 120 {
 		t.Fatalf("productos: %+v / %+v", mate, remera)
 	}
-	if h, err := vidriera.Redireccion(ctx, b.App, "luna", "/productos/Mate-Imperial?ref=ig"); err != nil || h != "/producto/"+mate.ID {
+	if h, err := vidriera.Redireccion(ctx, b.App, "luna", "/productos/Mate-Imperial?ref=ig"); err != nil || h != "/producto/mate-imperial" {
 		t.Fatalf("redirección del producto: %q %v", h, err)
 	}
 	if h, _ := vidriera.Redireccion(ctx, b.App, "luna", "/categorias/mates"); h != "/catalogo?categoria=Mates" {

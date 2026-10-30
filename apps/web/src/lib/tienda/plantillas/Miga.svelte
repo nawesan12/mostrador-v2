@@ -109,7 +109,7 @@
 			old: p.anterior && !t.desde ? fmt(p.anterior) : null,
 			img: img(p.foto, 500, 500),
 			tag: pastilla(p),
-			href: `${base}/producto/${p.id}`
+			href: `${base}/producto/${p.slug ?? p.id}`
 		};
 	};
 	const ver = (s: string) => tienda.secciones.includes(s as TiendaPublica['secciones'][number]);
@@ -290,7 +290,7 @@
 	const sumar = (p: ProductoPublico) => {
 		if (tienda.vitrina) return;
 		// eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta de la tienda con su slug
-		if (!carrito.sumarProducto(p)) goto(`${base}/producto/${p.id}`);
+		if (!carrito.sumarProducto(p)) goto(`${base}/producto/${p.slug ?? p.id}`);
 	};
 
 	// Checkout.
@@ -1181,7 +1181,7 @@
 									<div style="flex:1;min-width:0;display:flex;flex-direction:column">
 										<div style="display:flex;justify-content:space-between;gap:10px">
 											<a
-												href="{base}/producto/{c.id}"
+												href="{base}/producto/{c.producto.slug ?? c.id}"
 												style="min-width:0;font-family:'Schibsted Grotesk',sans-serif;font-weight:800;letter-spacing:-.03em;font-size:18px;color:#2A1C12;text-decoration:none;overflow-wrap:anywhere"
 												>{c.producto.nombre}</a
 											><b style="white-space:nowrap">{fmt(c.subtotal)}</b>

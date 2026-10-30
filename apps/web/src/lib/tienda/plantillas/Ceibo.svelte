@@ -100,7 +100,7 @@
 					? `${tienda.cobros.cuotas} × ${fmt(t.precio / tienda.cobros.cuotas)} sin interés`
 					: '',
 			transf: fmt(t.precio * (1 - tienda.cobros.transferencia / 100)),
-			href: `${base}/producto/${p.id}`
+			href: `${base}/producto/${p.slug ?? p.id}`
 		};
 	};
 	const ver = (s: string) => tienda.secciones.includes(s as TiendaPublica['secciones'][number]);
@@ -211,7 +211,7 @@
 	/** Sumar desde "Te puede gustar": con opciones, primero se elige en la ficha. */
 	function sumarRapido(p: ProductoPublico) {
 		// eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta de la tienda con su slug
-		if (!carrito.sumarProducto(p)) goto(`${base}/producto/${p.id}`);
+		if (!carrito.sumarProducto(p)) goto(`${base}/producto/${p.slug ?? p.id}`);
 	}
 
 	// Carrito.
@@ -1070,7 +1070,7 @@
 									<div style="flex:1;min-width:0;display:flex;flex-direction:column">
 										<div style="display:flex;justify-content:space-between;gap:10px">
 											<a
-												href="{base}/producto/{c.id}"
+												href="{base}/producto/{c.producto.slug ?? c.id}"
 												style="font-size:15px;font-weight:500;color:#1C1A17;text-decoration:none"
 												>{c.producto.nombre}</a
 											><b style="font-size:15px;font-weight:600;white-space:nowrap"
@@ -1122,7 +1122,7 @@
 									>
 										{#each upsell as p (p.id)}<div style="flex:none;width:150px">
 												<a
-													href="{base}/producto/{p.id}"
+													href="{base}/producto/{p.slug ?? p.id}"
 													style="display:block;aspect-ratio:4/5;border-radius:2px;overflow:hidden;background:#E2D9CF"
 													>{#if p.foto}<img
 															src={img(p.foto, 300, 375)}

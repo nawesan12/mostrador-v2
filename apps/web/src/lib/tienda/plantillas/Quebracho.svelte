@@ -99,7 +99,7 @@
 			w: p.categoria,
 			cuota: tienda.cobros.cuotas > 1 ? fmt(t.precio / tienda.cobros.cuotas) : '',
 			tag: t.agotado ? 'Sin stock' : sale ? `−${off(p)}%` : p.etiqueta,
-			href: `${base}/producto/${p.id}`
+			href: `${base}/producto/${p.slug ?? p.id}`
 		};
 	};
 	const ver = (s: string) => tienda.secciones.includes(s as TiendaPublica['secciones'][number]);
@@ -269,7 +269,7 @@
 	/** Sumar desde "Va bien con": con opciones, primero se elige en la ficha. */
 	function sumarRapido(p: ProductoPublico) {
 		// eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta de la tienda con su slug
-		if (!carrito.sumarProducto(p)) goto(`${base}/producto/${p.id}`);
+		if (!carrito.sumarProducto(p)) goto(`${base}/producto/${p.slug ?? p.id}`);
 	}
 
 	// Carrito.
@@ -560,7 +560,7 @@
 							style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));border-bottom:1px solid rgba(43,37,32,.2)"
 						>
 							{#each lista as p, k (p.id)}<a
-									href="{base}/producto/{p.id}"
+									href="{base}/producto/{p.slug ?? p.id}"
 									style="display:flex;align-items:center;gap:12px;padding:16px 4px;border-right:1px solid rgba(43,37,32,.1);text-decoration:none;text-align:left;color:#2B2520"
 									><span
 										style="width:26px;height:26px;border-radius:50%;background:{k === 0
@@ -1163,7 +1163,7 @@
 									<div style="flex:1;min-width:0;display:flex;flex-direction:column">
 										<div style="display:flex;justify-content:space-between;gap:10px">
 											<a
-												href="{base}/producto/{c.id}"
+												href="{base}/producto/{c.producto.slug ?? c.id}"
 												style="font-family:'Newsreader',serif;font-size:23px;line-height:1.05;color:#2B2520;text-decoration:none"
 												>{c.producto.nombre}</a
 											><b style="white-space:nowrap">{fmt(c.subtotal)}</b>
@@ -1215,7 +1215,7 @@
 														alt=""
 														style="width:48px;height:56px;object-fit:cover;background:#D8CCBC;flex:none"
 													/>{/if}<a
-													href="{base}/producto/{p.id}"
+													href="{base}/producto/{p.slug ?? p.id}"
 													style="flex:1;min-width:0;font-size:14.5px;color:#2B2520;text-decoration:none"
 													>{p.nombre}</a
 												><b style="font-size:14px;white-space:nowrap"
