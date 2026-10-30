@@ -1879,6 +1879,27 @@ paths:
       responses:
         '204': { description: Guardado }
         '400': { $ref: '#/components/responses/Problema' }
+  /v1/panel/configuracion/entregas:
+    get:
+      operationId: entregas
+      summary: Envíos y retiro de la tienda (sin configurar, retiro con la dirección del negocio y sin moto), con el estado de Correo Argentino y del envío gratis.
+      responses:
+        '200':
+          description: Entregas
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EstadoEntregas' }
+    put:
+      operationId: guardarEntregas
+      summary: Guarda retiro y moto. Tiene que quedar al menos una forma de entrega (retiro, moto o Correo conectado).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Entregas' }
+      responses:
+        '204': { description: Guardado }
+        '400': { $ref: '#/components/responses/Problema' }
   /v1/panel/configuracion/{grupo}/{clave}:
     put:
       operationId: fijarOpcion
@@ -3916,6 +3937,25 @@ components:
       required: [url]
       properties:
         url: { type: string, format: uri }
+    Entregas:
+      type: object
+      required: [retiro, retiroDireccion, retiroHorario, moto, motoCosto, motoZona, motoDemora]
+      properties:
+        retiro: { type: boolean, description: 'Se puede retirar en el local' }
+        retiroDireccion: { type: string, maxLength: 160, description: 'Dónde se retira; vacío: la dirección del negocio' }
+        retiroHorario: { type: string, maxLength: 80, description: 'Cuándo se retira; vacío: el horario del negocio' }
+        moto: { type: boolean, description: 'Envío propio en moto' }
+        motoCosto: { type: integer, minimum: 0, maximum: 1000000, description: 'Costo fijo de la moto, en pesos' }
+        motoZona: { type: string, maxLength: 160, description: 'Barrios o localidades adonde llega (obligatoria con moto)' }
+        motoDemora: { type: string, maxLength: 60, description: 'Cuánto tarda, en texto (En el día, 24 a 48 h)' }
+    EstadoEntregas:
+      allOf:
+        - { $ref: '#/components/schemas/Entregas' }
+        - type: object
+          required: [correo, gratisDesde]
+          properties:
+            correo: { type: boolean, description: 'La cuenta de MiCorreo está conectada (se configura en Integraciones)' }
+            gratisDesde: { type: [integer, 'null'], description: 'Envío gratis desde este monto (promoción automática prendida en Cupones)' }
     Medicion:
       type: object
       required: [ga4, pixel, feeds]

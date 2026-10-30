@@ -17,6 +17,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/configuracion"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cupones"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/listas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
@@ -124,11 +125,18 @@ type PreguntaPublica struct {
 	Respuesta  string `json:"respuesta"`
 }
 
+// Envios: lo que la tienda configuró en Envíos y retiro (configuracion.Entregas) más Correo y el
+// envío gratis. Sin retiro, la dirección y el horario van vacíos; sin moto, su costo, zona y demora.
 type Envios struct {
-	GratisDesde *int64 `json:"gratisDesde"`
-	Retiro      bool   `json:"retiro"`
-	Moto        bool   `json:"moto"`
-	Correo      bool   `json:"correo"`
+	GratisDesde     *int64 `json:"gratisDesde"`
+	Retiro          bool   `json:"retiro"`
+	RetiroDireccion string `json:"retiroDireccion"`
+	RetiroHorario   string `json:"retiroHorario"`
+	Moto            bool   `json:"moto"`
+	MotoCosto       int64  `json:"motoCosto"`
+	MotoZona        string `json:"motoZona"`
+	MotoDemora      string `json:"motoDemora"`
+	Correo          bool   `json:"correo"`
 }
 
 // Cuotas sin interés: ninguna (0), porque las absorbe la tienda y no se le promete al que compra lo
@@ -162,7 +170,7 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 		return Tienda{}, err
 	}
 	out := Tienda{Slug: slug, Secciones: []string{"hero", "cats", "prods", "revs", "ig", "wa"}, Resenas: []ResenaPublica{}, Preguntas: []PreguntaPublica{},
-		Envios: Envios{Retiro: true}, Fotos: []string{}, MasVendidos: []string{}}
+		Fotos: []string{}, MasVendidos: []string{}}
 	// Los más vendidos de los últimos 30 días (los ítems de los pedidos guardan el nombre).
 	vendidos := map[string]int{}
 	err = pool.EnTienda(ctx, id, func(t pgx.Tx) error {
@@ -178,6 +186,17 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 		// Correo Argentino se ofrece sólo con la cuenta de MiCorreo conectada (cotiza la API, nunca una tabla).
 		if err := t.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM ca_conexiones WHERE tienda_id = $1)`, id).Scan(&out.Envios.Correo); err != nil {
 			return err
+		}
+		// Retiro y moto: lo que configuró la tienda (sin configurar, retiro en el local con la dirección del negocio).
+		ent, err := configuracion.EntregasEnTx(ctx, t, id)
+		if err != nil {
+			return err
+		}
+		if ent.Retiro {
+			out.Envios.Retiro, out.Envios.RetiroDireccion, out.Envios.RetiroHorario = true, ent.RetiroDireccion, ent.RetiroHorario
+		}
+		if ent.Moto {
+			out.Envios.Moto, out.Envios.MotoCosto, out.Envios.MotoZona, out.Envios.MotoDemora = true, ent.MotoCosto, ent.MotoZona, ent.MotoDemora
 		}
 		if err := t.QueryRow(ctx, `SELECT nombre FROM dominios WHERE tienda_id = $1 AND principal AND verificado_en IS NOT NULL`,
 			id).Scan(&out.Dominio); err != nil && !errors.Is(err, pgx.ErrNoRows) {
@@ -214,7 +233,6 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 			g := int64(cupones.EnvioGratisDesde)
 			out.Envios.GratisDesde = &g
 		}
-		var err error
 		if out.Turnos, err = turnos.ResumenDe(ctx, t, id, mp); err != nil {
 			return err
 		}

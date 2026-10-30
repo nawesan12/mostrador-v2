@@ -111,17 +111,86 @@ func TestTiendaOnline(t *testing.T) {
 func TestCotizar(t *testing.T) {
 	lunes := time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)
 	gratis := int64(100000)
-	e := vidriera.Envios{GratisDesde: &gratis, Retiro: true, Moto: true, Correo: true}
+	e := vidriera.Envios{GratisDesde: &gratis, Retiro: true, RetiroDireccion: "Gorriti 4500", RetiroHorario: "Lun a vie de 10 a 19",
+		Moto: true, MotoCosto: 3500, MotoZona: "Palermo y Villa Crespo", MotoDemora: "En el día", Correo: true}
 	o := vidriera.Cotizar("1414", 5000, e, lunes)
-	// Moto (CABA) y retiro. Correo Argentino no sale de una tabla: lo cotiza la API (integraciones/correoargentino).
-	if len(o) != 2 || o[0].ID != "moto" || o[1].ID != "retiro" {
-		t.Fatalf("CABA: %+v", o)
+	// Moto (con el costo y la zona de la tienda) y retiro. Correo Argentino no sale de una tabla: lo
+	// cotiza la API (integraciones/correoargentino).
+	if len(o) != 2 || o[0].ID != "moto" || o[0].Precio != 3500 || o[0].Detalle != "Llega a Palermo y Villa Crespo · En el día" ||
+		o[1].ID != "retiro" || o[1].Detalle != "Gorriti 4500 · Lun a vie de 10 a 19" {
+		t.Fatalf("con CP: %+v", o)
 	}
-	if o := vidriera.Cotizar("5000", 150000, e, lunes); len(o) != 1 || o[0].ID != "retiro" {
-		t.Fatalf("Córdoba: %+v", o)
+	// Desde el monto del envío gratis, la moto también es gratis.
+	if o := vidriera.Cotizar("5000", 150000, e, lunes); len(o) != 2 || o[0].Precio != 0 {
+		t.Fatalf("envío gratis: %+v", o)
 	}
+	// Sin CP no hay adónde mandar la moto: sólo retiro.
 	if o := vidriera.Cotizar("x", 1, e, lunes); len(o) != 1 || o[0].ID != "retiro" {
 		t.Fatalf("CP inválido: %+v", o)
+	}
+	// Sin retiro ni moto prendidos, nada.
+	if o := vidriera.Cotizar("1414", 1, vidriera.Envios{Correo: true}, lunes); len(o) != 0 {
+		t.Fatalf("todo apagado: %+v", o)
+	}
+	if o := vidriera.Cotizar("", 1, vidriera.Envios{Retiro: true}, lunes); len(o) != 1 || o[0].Detalle != "Te avisamos cuando esté listo" {
+		t.Fatalf("retiro sin dirección: %+v", o)
+	}
+}
+
+// Lo de Envíos y retiro llega a la tienda y al pedido: sin retiro no se puede retirar, y la moto
+// cobra su costo y queda como envío (con la dirección de entrega).
+func TestEntregasConfiguradas(t *testing.T) {
+	ctx := context.Background()
+	b := pruebadb.Nueva(t)
+	luna := pruebadb.CrearTienda(t, b.App, "luna")
+	if err := configuracion.GuardarNegocio(ctx, b.App, luna, configuracion.Negocio{Nombre: "Luna", Alias: "luna.tienda",
+		Direccion: "Gorriti 4500", Horario: "Lun a vie de 10 a 19"}); err != nil {
+		t.Fatal(err)
+	}
+	stock := 10
+	p, err := listas.Guardar(ctx, b.App, luna, "", listas.Editable{Nombre: "Mate", Precio: 10000, Stock: &stock})
+	if err != nil {
+		t.Fatal(err)
+	}
+	lunes := time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)
+
+	// Sin configurar: retiro con la dirección y el horario del negocio, sin moto.
+	tienda, err := vidriera.Publica(ctx, b.App, "luna")
+	if err != nil || !tienda.Envios.Retiro || tienda.Envios.RetiroDireccion != "Gorriti 4500" ||
+		tienda.Envios.RetiroHorario != "Lun a vie de 10 a 19" || tienda.Envios.Moto {
+		t.Fatalf("de entrada: %+v %v", tienda.Envios, err)
+	}
+	moto := compra(p.ID, 1, "transferencia")
+	moto.Envio = "moto"
+	if _, err := vidriera.Comprar(ctx, b.App, nil, "", "luna", moto, lunes); !errors.Is(err, vidriera.ErrInvalido) {
+		t.Fatalf("moto sin prender: %v", err)
+	}
+
+	// Sólo moto: el retiro deja de ofrecerse y la moto cobra lo que puso la tienda.
+	if err := configuracion.GuardarEntregas(ctx, b.App, luna, configuracion.Entregas{Moto: true, MotoCosto: 3500,
+		MotoZona: "Palermo", MotoDemora: "En el día"}); err != nil {
+		t.Fatal(err)
+	}
+	tienda, _ = vidriera.Publica(ctx, b.App, "luna")
+	if tienda.Envios.Retiro || tienda.Envios.RetiroDireccion != "" || !tienda.Envios.Moto || tienda.Envios.MotoCosto != 3500 ||
+		tienda.Envios.MotoZona != "Palermo" {
+		t.Fatalf("sólo moto: %+v", tienda.Envios)
+	}
+	if _, err := vidriera.Comprar(ctx, b.App, nil, "", "luna", compra(p.ID, 1, "transferencia"), lunes); !errors.Is(err, vidriera.ErrInvalido) {
+		t.Fatalf("retiro apagado: %v", err)
+	}
+	r, err := vidriera.Comprar(ctx, b.App, nil, "", "luna", moto, lunes)
+	if err != nil || r.Total != 10000+3500 {
+		t.Fatalf("moto: %+v %v", r, err)
+	}
+	var envio, direccion string
+	var costo int64
+	_ = b.App.EnTienda(ctx, luna, func(tx pgx.Tx) error {
+		return tx.QueryRow(ctx, `SELECT envio, costo_envio, coalesce(entrega->>'direccion', '') FROM pedidos WHERE numero = $1`, r.Numero).
+			Scan(&envio, &costo, &direccion)
+	})
+	if envio != "moto" || costo != 3500 || direccion != "Gorriti 4500" {
+		t.Fatalf("pedido con moto: %s %d %q", envio, costo, direccion)
 	}
 }
 

@@ -1881,6 +1881,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/configuracion/entregas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Envíos y retiro de la tienda (sin configurar, retiro con la dirección del negocio y sin moto), con el estado de Correo Argentino y del envío gratis. */
+        get: operations["entregas"];
+        /** Guarda retiro y moto. Tiene que quedar al menos una forma de entrega (retiro, moto o Correo conectado). */
+        put: operations["guardarEntregas"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/configuracion/{grupo}/{clave}": {
         parameters: {
             query?: never;
@@ -3753,6 +3771,28 @@ export interface components {
         UrlExterna: {
             /** Format: uri */
             url: string;
+        };
+        Entregas: {
+            /** @description Se puede retirar en el local */
+            retiro: boolean;
+            /** @description Dónde se retira; vacío: la dirección del negocio */
+            retiroDireccion: string;
+            /** @description Cuándo se retira; vacío: el horario del negocio */
+            retiroHorario: string;
+            /** @description Envío propio en moto */
+            moto: boolean;
+            /** @description Costo fijo de la moto, en pesos */
+            motoCosto: number;
+            /** @description Barrios o localidades adonde llega (obligatoria con moto) */
+            motoZona: string;
+            /** @description Cuánto tarda, en texto (En el día, 24 a 48 h) */
+            motoDemora: string;
+        };
+        EstadoEntregas: components["schemas"]["Entregas"] & {
+            /** @description La cuenta de MiCorreo está conectada (se configura en Integraciones) */
+            correo: boolean;
+            /** @description Envío gratis desde este monto (promoción automática prendida en Cupones) */
+            gratisDesde: number | null;
         };
         Medicion: {
             /** @description ID de medición de GA4 */
@@ -8161,6 +8201,49 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["Negocio"];
+            };
+        };
+        responses: {
+            /** @description Guardado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
+        };
+    };
+    entregas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Entregas */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EstadoEntregas"];
+                };
+            };
+        };
+    };
+    guardarEntregas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Entregas"];
             };
         };
         responses: {
