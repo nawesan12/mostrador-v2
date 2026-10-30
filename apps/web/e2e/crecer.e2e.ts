@@ -34,15 +34,11 @@ test('marketing: el costo sigue a la audiencia, Tincho reescribe y la campaña s
 	await expect(page.getByText('Para qué es')).toBeVisible();
 });
 
-test('canales: pausar uno saca su parte del reparto; TikTok pide conectar', async ({ page }) => {
+test('canales: el reparto de ventas y sin interruptores que no hacían nada', async ({ page }) => {
 	await demo(page, '/panel/canales');
-	const ml = page.locator('.canal').filter({ hasText: 'Mercado Libre' });
-	await ml.getByRole('switch').click();
-	await expect(page.getByText('Mercado Libre pausado')).toBeVisible();
-	await expect(ml).toContainText('Pausado');
-	await expect(page.locator('.leyenda')).toContainText('Mercado Libre 0%');
-	await page.locator('.canal').filter({ hasText: 'TikTok Shop' }).getByRole('switch').click();
-	await expect(page.getByText('Conectá TikTok Shop')).toBeVisible();
+	await expect(page.locator('.leyenda')).toContainText('Tienda online');
+	// Pausar un canal no ocultaba nada en ningún lado: ya no hay interruptor.
+	await expect(page.locator('.canal').getByRole('switch')).toHaveCount(0);
 });
 
 test('informes: cambia la serie y exporta el CSV', async ({ page }) => {

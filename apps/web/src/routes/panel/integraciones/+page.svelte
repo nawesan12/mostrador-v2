@@ -400,7 +400,7 @@
 		</div>
 		<div class="perms">
 			<!-- «Responder mensajes» no tiene ninguna herramienta detrás (no hay WhatsApp ni Instagram). -->
-			{#each PERMISOS_IA.filter((g) => g.id !== 'responder') as g (g.id)}
+			{#each PERMISOS_IA.filter((g) => data.demo || g.id !== 'responder') as g (g.id)}
 				{@const on = data.estado.permisosIa[g.id]}
 				<button
 					type="button"
