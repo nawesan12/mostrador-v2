@@ -26,6 +26,22 @@ export const load: PageServerLoad = async ({ params, cookies, url }) => {
 			cbu: string | null;
 			titular: string | null;
 		};
+		// Vuelve de Mercado Pago con el pago aprobado y el pedido todavía sin pagar: se le pide a la API
+		// que lo confirme (la API lo consulta en Mercado Pago; no confía en lo que dice la URL).
+		const idPago = url.searchParams.get('payment_id') ?? url.searchParams.get('collection_id');
+		const aprobado =
+			(url.searchParams.get('status') ?? url.searchParams.get('collection_status')) === 'approved';
+		if (
+			c.pago === 'mercadopago' &&
+			c.estado === 'Sin pagar' &&
+			aprobado &&
+			idPago &&
+			/^\d{1,20}$/.test(idPago)
+		)
+			await fetch(`${String(env.API_URL)}/v1/publico/tiendas/${r.tienda.slug}/pagos/${idPago}`, {
+				method: 'POST',
+				signal: AbortSignal.timeout(5000)
+			}).catch(() => null);
 		// Los datos para transferir son los que cargó la tienda (nunca inventados). Sin alias, el CBU/CVU.
 		const tr = c.pago === 'transferencia';
 		return {

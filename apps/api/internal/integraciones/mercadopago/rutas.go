@@ -6,8 +6,10 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/limite"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
@@ -166,6 +168,21 @@ func (s *Servicio) Rutas(mux *http.ServeMux) {
 	}))
 
 	// Webhook: primero la firma, después todo lo demás. Sin firma válida, 401 y nada se procesa.
+	// Quien compra vuelve de Mercado Pago: el pago se confirma sin esperar el webhook.
+	mux.HandleFunc("POST /v1/publico/tiendas/{slug}/pagos/{pago}", func(w http.ResponseWriter, r *http.Request) {
+		// Tope por tienda: nadie llena la cola de consultas a Mercado Pago con ids inventados.
+		if c, ok := s.Pool.(limite.Consultor); ok {
+			if ok, err := limite.Permitido(r.Context(), c, "mp:vuelta:"+r.PathValue("slug"), 120, time.Hour); err == nil && !ok {
+				w.WriteHeader(http.StatusTooManyRequests)
+				return
+			}
+		}
+		if err := s.AvisarVuelta(r.Context(), r.PathValue("slug"), r.PathValue("pago")); err != nil {
+			s.Problema(w, err)
+			return
+		}
+		w.WriteHeader(http.StatusAccepted)
+	})
 	mux.HandleFunc("POST /v1/webhooks/mercadopago", func(w http.ResponseWriter, r *http.Request) {
 		b, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 64<<10))
 		if err != nil {
