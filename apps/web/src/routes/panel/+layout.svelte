@@ -72,7 +72,7 @@
 	</form>
 {/if}
 <div class="panel" data-theme={shell.tema}>
-	<Rail area={donde.area} foto={data.demo ? '1545262722-9e0d80a0bc01' : null} {iniciales} />
+	<Rail area={donde.area} {iniciales} />
 	<BarraLateral
 		area={donde.area}
 		seccion={donde.seccion}

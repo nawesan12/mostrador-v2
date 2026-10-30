@@ -181,6 +181,10 @@
 				</div>
 			</div>
 		{/if}
+		<!-- Un POST: un link no puede sacar a nadie de su cuenta. -->
+		<form method="POST" action="/salir" data-sveltekit-reload>
+			<button class="salir"><Icon icon={I.phSignOutBold} size={17} />Cerrar sesión</button>
+		</form>
 	</div>
 </aside>
 
@@ -370,6 +374,22 @@
 	}
 	.abajo {
 		padding: 14px;
+	}
+	.salir {
+		margin-top: 10px;
+		width: 100%;
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 10px 12px;
+		border-radius: 12px;
+		font-size: 14px;
+		font-weight: 500;
+		color: var(--mu);
+	}
+	.salir:hover {
+		background: var(--sf);
+		color: var(--tx);
 	}
 	.prueba {
 		position: relative;

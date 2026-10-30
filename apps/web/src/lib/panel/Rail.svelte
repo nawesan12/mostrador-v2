@@ -1,11 +1,13 @@
 <script lang="ts">
 	import Marca from '#lib/landing/Marca.svelte';
 	import Icon from '#lib/components/Icon.svelte';
+	import * as I from '#lib/icons.ts';
 	import { AREAS, rutaDe, type Area } from './navegacion.ts';
 	import { getShell } from './shell.svelte.ts';
 
 	/** Rail de áreas (handoff): marca, áreas, Tincho y la persona. No se muestra en el celular. */
-	let { area, foto, iniciales }: { area: Area; foto: string | null; iniciales: string } = $props();
+	let { area, iniciales }: { area: Area; iniciales: string } = $props();
+	let menu = $state(false);
 	const shell = getShell();
 	const areas = $derived(shell.modo === 'simple' ? AREAS.slice(0, 1) : AREAS);
 </script>
@@ -40,16 +42,24 @@
 		<span class="pulso"></span>
 		<span class="av"><img src="/hornero/avatar.webp" alt="" /></span>
 	</button>
-	{#if foto}
-		<img
-			class="yo"
-			src="https://images.unsplash.com/photo-{foto}?auto=format&fit=crop&w=96&h=96&q=70&crop=faces"
-			alt="Tu cuenta"
-			width="38"
-			height="38"
-		/>
-	{:else}
-		<span class="yo ini" aria-label="Tu cuenta">{iniciales}</span>
+	<button
+		type="button"
+		class="cuenta"
+		aria-label="Tu cuenta"
+		aria-expanded={menu}
+		onclick={() => (menu = !menu)}
+	>
+		<span class="yo ini">{iniciales}</span>
+	</button>
+	{#if menu}
+		<div class="menu" role="menu">
+			<a role="menuitem" href="/panel/configuracion" onclick={() => (menu = false)}
+				><Icon icon={I.phGearSix} size={17} />Configuración</a
+			>
+			<form method="POST" action="/salir" data-sveltekit-reload>
+				<button role="menuitem"><Icon icon={I.phSignOutBold} size={17} />Cerrar sesión</button>
+			</form>
+		</div>
 	{/if}
 </aside>
 
@@ -179,6 +189,44 @@
 		object-fit: cover;
 		margin-top: 12px;
 		border: 2px solid rgba(251, 247, 242, 0.25);
+	}
+	.cuenta {
+		margin-top: 12px;
+		border-radius: 50%;
+	}
+	.cuenta .yo {
+		margin-top: 0;
+	}
+	.menu {
+		position: absolute;
+		left: 70px;
+		bottom: 14px;
+		z-index: 30;
+		min-width: 200px;
+		padding: 6px;
+		border-radius: 14px;
+		background: var(--bg, #fff);
+		color: var(--tx, #2a140c);
+		box-shadow:
+			0 14px 40px -12px rgba(0, 0, 0, 0.35),
+			0 0 0 1px rgba(0, 0, 0, 0.06);
+	}
+	.menu a,
+	.menu button {
+		width: 100%;
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 10px 12px;
+		border-radius: 10px;
+		font-size: 14px;
+		font-weight: 500;
+		color: inherit;
+		text-decoration: none;
+	}
+	.menu a:hover,
+	.menu button:hover {
+		background: var(--sf, rgba(0, 0, 0, 0.05));
 	}
 	.ini {
 		display: grid;
