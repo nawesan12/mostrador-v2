@@ -30,4 +30,4 @@ playwright-report
 .claude/*.local.md
 
 # Scripts de prueba a mano (Playwright): nunca al repo.
-*.tmp.mjs
+*.tmp.*
