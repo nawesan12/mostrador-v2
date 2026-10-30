@@ -16,8 +16,11 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
 			'content-type': seguro ? tipo : 'application/octet-stream',
 			'content-disposition': `${ver || tipo.startsWith('image/') ? 'inline' : 'attachment'}; filename*=UTF-8''${encodeURIComponent(nombre)}`,
 			'cache-control': 'private, max-age=3600',
+			// El PDF se lee en el visor (un iframe del mismo sitio): Chrome no abre PDF con sandbox.
 			'content-security-policy':
-				"default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox"
+				ver && tipo === 'application/pdf'
+					? "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; frame-ancestors 'self'"
+					: "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox"
 		}
 	});
 };

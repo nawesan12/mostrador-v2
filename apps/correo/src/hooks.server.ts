@@ -18,7 +18,7 @@ const CSP = [
 	"object-src 'none'",
 	"base-uri 'self'",
 	"form-action 'self'",
-	"frame-ancestors 'none'"
+	"frame-ancestors 'self'"
 ].join('; ');
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -29,10 +29,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const res = await resolve(event, {
 		transformPageChunk: ({ html }) => html.replace('%correo.tema%', tema)
 	});
-	res.headers.set('Content-Security-Policy', CSP);
+	// /adjunto trae la suya (más estricta): no se pisa.
+	if (!res.headers.has('Content-Security-Policy')) res.headers.set('Content-Security-Policy', CSP);
 	res.headers.set('X-Content-Type-Options', 'nosniff');
 	res.headers.set('Referrer-Policy', 'no-referrer');
-	res.headers.set('X-Frame-Options', 'DENY');
+	// El visor muestra los PDF en un iframe del mismo sitio; de afuera nadie lo puede enmarcar.
+	res.headers.set('X-Frame-Options', 'SAMEORIGIN');
 	res.headers.set('Strict-Transport-Security', 'max-age=31536000');
 	res.headers.set('X-Robots-Tag', 'noindex, nofollow');
 	return res;

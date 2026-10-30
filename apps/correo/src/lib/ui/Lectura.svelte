@@ -3,6 +3,7 @@
 	import { cuando, iniciales, tamano, tipoAdjunto } from '#lib/formato.ts';
 	import { nuevo, type Borrador } from '#lib/redactar.svelte.ts';
 	import Editor from './Editor.svelte';
+	import Visor from './Visor.svelte';
 	import { PROPUESTAS, familia, keyword, nombre as nombreEtiqueta } from '#lib/etiquetas.ts';
 
 	let {
@@ -31,6 +32,8 @@
 	let marco = $state<HTMLIFrameElement>();
 	let alto = $state(200);
 	let menu = $state(false);
+	/** El adjunto abierto en el visor (índice), o null. */
+	let visor = $state<number | null>(null);
 	let sub = $state<'etiquetas' | 'mover' | null>(null);
 	let nueva = $state('');
 	const todas = $derived([...new Set([...PROPUESTAS.map(([n]) => keyword(n)), ...m.etiquetas])]);
@@ -314,18 +317,28 @@ body{padding:20px 22px}a{color:#1d5fd1}img{max-width:100%;height:auto}table{max-
 					{#each m.adjuntos as a (a.blob + a.parte)}
 						{@const t = tipoAdjunto(a.tipo, a.nombre)}
 						<div class="adj">
-							<div class="vp">
+							<!-- Tocar la vista previa abre el visor (en el teléfono no hay "hover" para el botón Ver). -->
+							<div
+								class="vp"
+								role="button"
+								tabindex="0"
+								aria-label="Ver {a.nombre}"
+								onclick={() => (visor = m.adjuntos.indexOf(a))}
+								onkeydown={(e) =>
+									(e.key === 'Enter' || e.key === ' ') && (visor = m.adjuntos.indexOf(a))}
+							>
 								{#if a.tipo.startsWith('image/')}
 									<img src={urlAdj(a)} alt="" loading="lazy" />
 								{:else}
 									<i class={t.ic} style:color={t.c}></i>
 								{/if}
 								<div class="hov">
-									<a class="b-ver" href={urlAdj(a, true)} target="_blank" rel="noopener"
-										><i class="icon-eye"></i>Ver</a
+									<button class="b-ver" onclick={() => (visor = m.adjuntos.indexOf(a))}
+										><i class="icon-eye"></i>Ver</button
 									>
 									<a
 										class="b-dl"
+										onclick={(e) => e.stopPropagation()}
 										href={urlAdj(a)}
 										download={a.nombre}
 										aria-label="Descargar {a.nombre}"><i class="icon-download"></i></a
@@ -362,6 +375,10 @@ body{padding:20px 22px}a{color:#1d5fd1}img{max-width:100%;height:auto}table{max-
 		{/if}
 	</div>
 </section>
+
+{#if visor !== null}
+	<Visor {m} inicio={visor} oncerrar={() => (visor = null)} />
+{/if}
 
 <style>
 	.leer {
@@ -759,6 +776,7 @@ body{padding:20px 22px}a{color:#1d5fd1}img{max-width:100%;height:auto}table{max-
 		box-shadow: 0 6px 18px -8px rgb(40 30 20 / 0.35);
 	}
 	.vp {
+		cursor: pointer;
 		position: relative;
 		height: 96px;
 		background: repeating-linear-gradient(135deg, var(--hun) 0 8px, var(--mu) 8px 16px);
@@ -782,6 +800,11 @@ body{padding:20px 22px}a{color:#1d5fd1}img{max-width:100%;height:auto}table{max-
 		gap: 10px;
 		opacity: 0;
 		transition: opacity 0.15s;
+	}
+	@media (hover: none) {
+		.hov {
+			display: none;
+		}
 	}
 	.adj:hover .hov,
 	.adj:focus-within .hov {
