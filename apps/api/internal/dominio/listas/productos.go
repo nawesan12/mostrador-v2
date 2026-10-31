@@ -4,11 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
+
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 )
 
 // ErrNoExiste: el producto no es de esta tienda.
@@ -127,9 +130,11 @@ func GuardarEnTx(ctx context.Context, t pgx.Tx, tiendaID, id string, e Editable)
 		}
 	}
 	opciones, fotos := []Opcion{}, []string{}
+	var antes antesProducto
 	if id != "" {
-		err := t.QueryRow(ctx, `SELECT opciones, fotos FROM productos WHERE tienda_id = $1 AND id::text = $2 FOR UPDATE`,
-			tiendaID, id).Scan(&opciones, &fotos)
+		err := t.QueryRow(ctx, `SELECT opciones, fotos, nombre, precio, costo, stock, publicado
+			FROM productos WHERE tienda_id = $1 AND id::text = $2 FOR UPDATE`,
+			tiendaID, id).Scan(&opciones, &fotos, &antes.nombre, &antes.precio, &antes.costo, &antes.stock, &antes.publicado)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return "", ErrNoExiste
 		}
@@ -173,6 +178,12 @@ func GuardarEnTx(ctx context.Context, t pgx.Tx, tiendaID, id string, e Editable)
 			valor(e.SKU, ""), valor(stock, 0), foto, canales, fotos, opciones).Scan(&id); err != nil {
 			return "", err
 		}
+		nombre := strings.TrimSpace(e.Nombre)
+		if err := auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "producto.crear", Entidad: "producto",
+			EntidadID: id, Texto: fmt.Sprintf("creó el producto %s a %s", nombre, auditoria.Pesos(e.Precio)),
+			Despues: map[string]any{"nombre": nombre, "precio": e.Precio}}); err != nil {
+			return "", err
+		}
 	} else if _, err := t.Exec(ctx, `UPDATE productos SET nombre = $3, descripcion = coalesce($4, descripcion),
 			categoria = $5, precio = CASE WHEN $14 THEN precio ELSE $6 END,
 			costo = CASE WHEN $14 THEN costo ELSE coalesce($7, costo) END, sku = coalesce($8, sku),
@@ -180,6 +191,8 @@ func GuardarEnTx(ctx context.Context, t pgx.Tx, tiendaID, id string, e Editable)
 		WHERE tienda_id = $1 AND id::text = $2`,
 		tiendaID, id, strings.TrimSpace(e.Nombre), e.Descripcion, e.Categoria, e.Precio, e.Costo, e.SKU, stock, foto, canales,
 		fotos, opciones, e.SinPrecios); err != nil {
+		return "", err
+	} else if err := registrarEdicion(ctx, t, tiendaID, id, antes, e, len(opciones) == 0); err != nil {
 		return "", err
 	}
 	if err := sincronizarVariantes(ctx, t, tiendaID, id, opciones, fotos, e.Variantes, e.SinPrecios); err != nil {
@@ -349,9 +362,29 @@ var DefProductos = Def{
 func Publicar(ctx context.Context, pool tx, tiendaID string, ids []string, on bool) (int, error) {
 	var n int64
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		tag, err := t.Exec(ctx, `UPDATE productos SET publicado = $3 WHERE tienda_id = $1 AND id::text = ANY($2)`, tiendaID, ids, on)
-		n = tag.RowsAffected()
-		return err
+		filas, err := t.Query(ctx, `UPDATE productos p SET publicado = $3
+			FROM productos v WHERE p.tienda_id = $1 AND p.id::text = ANY($2) AND v.tienda_id = p.tienda_id AND v.id = p.id
+			RETURNING p.id::text, p.nombre, v.publicado`, tiendaID, ids, on)
+		if err != nil {
+			return err
+		}
+		tocados, err := pgx.CollectRows(filas, pgx.RowToStructByPos[publicacion])
+		if err != nil {
+			return err
+		}
+		n = int64(len(tocados))
+		accion, verbo := "producto.pausar", "pausó "
+		if on {
+			accion, verbo = "producto.publicar", "publicó "
+		}
+		rs := make([]auditoria.Registro, 0, len(tocados))
+		for _, c := range tocados {
+			if c.Antes != on {
+				rs = append(rs, auditoria.Registro{Accion: accion, Entidad: "producto", EntidadID: c.ID, Texto: verbo + c.Nombre,
+					Antes: map[string]bool{"publicado": !on}, Despues: map[string]bool{"publicado": on}})
+			}
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, rs...)
 	})
 	return int(n), err
 }
@@ -363,10 +396,26 @@ func Precio(ctx context.Context, pool tx, tiendaID string, ids []string, pct flo
 	}
 	var n int64
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		tag, err := t.Exec(ctx, `UPDATE productos SET precio = greatest(0, round(precio * (1 + $3 / 100.0) / 10) * 10)
-			WHERE tienda_id = $1 AND id::text = ANY($2)`, tiendaID, ids, pct)
-		n = tag.RowsAffected()
+		filas, err := t.Query(ctx, `UPDATE productos p SET precio = greatest(0, round(p.precio * (1 + $3 / 100.0) / 10) * 10)
+			FROM productos v WHERE p.tienda_id = $1 AND p.id::text = ANY($2) AND v.tienda_id = p.tienda_id AND v.id = p.id
+			RETURNING p.id::text, p.nombre, v.precio, p.precio`, tiendaID, ids, pct)
 		if err != nil {
+			return err
+		}
+		cambios, err := pgx.CollectRows(filas, pgx.RowToStructByPos[cambioPrecio])
+		if err != nil {
+			return err
+		}
+		n = int64(len(cambios))
+		rs := make([]auditoria.Registro, 0, len(cambios))
+		for _, c := range cambios {
+			if c.Antes != c.Despues {
+				rs = append(rs, auditoria.Registro{Accion: "producto.precio", Entidad: "producto", EntidadID: c.ID,
+					Texto: fmt.Sprintf("cambió el precio de %s de %s a %s", c.Nombre, auditoria.Pesos(c.Antes), auditoria.Pesos(c.Despues)),
+					Antes: map[string]int64{"precio": c.Antes}, Despues: map[string]int64{"precio": c.Despues}})
+			}
+		}
+		if err := auditoria.Registrar(ctx, t, tiendaID, rs...); err != nil {
 			return err
 		}
 		// Las variantes con precio propio suben (o bajan) igual.

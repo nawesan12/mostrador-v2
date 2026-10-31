@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 )
 
 // Circuito es el orden de las etapas (Cancelado va aparte).
@@ -471,8 +473,27 @@ func CambiarEstado(ctx context.Context, pool tx, tiendaID string, numero int, es
 						THEN 'Pendiente'
 					ELSE estado_pago END
 			WHERE tienda_id = $1 AND numero = $2`, tiendaID, numero, estado, de)
-		return err
+		if err != nil {
+			return err
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, registroEstado(numero, de, estado))
 	})
+}
+
+// registroEstado: cómo se lee en la Actividad un cambio de etapa.
+func registroEstado(numero int, de, a string) auditoria.Registro {
+	r := auditoria.Registro{Accion: "pedido.estado", Entidad: "pedido", EntidadID: fmt.Sprint(numero),
+		Texto: fmt.Sprintf("pasó el pedido #%d de %s a %s", numero, strings.ToLower(de), strings.ToLower(a)),
+		Antes: map[string]string{"estado": de}, Despues: map[string]string{"estado": a}}
+	switch {
+	case a == "Cancelado":
+		r.Accion, r.Texto = "pedido.cancelar", fmt.Sprintf("canceló el pedido #%d", numero)
+	case de == "Sin pagar" && a == "Para preparar":
+		r.Accion, r.Texto = "pedido.pagado", fmt.Sprintf("marcó como pagado el pedido #%d", numero)
+	case de == "Para preparar" && a == "Sin pagar":
+		r.Accion, r.Texto = "pedido.pagado_deshecho", fmt.Sprintf("deshizo el pago del pedido #%d (volvió a sin pagar)", numero)
+	}
+	return r
 }
 
 // Cambio es lo que deja una acción en lote (para deshacer).
@@ -508,7 +529,14 @@ func EnLote(ctx context.Context, pool tx, tiendaID string, numeros []int, accion
 			}
 			cambios = append(cambios, Cambio{Numero: n, Antes: de})
 		}
-		return r.Err()
+		if err := r.Err(); err != nil {
+			return err
+		}
+		rs := make([]auditoria.Registro, 0, len(cambios))
+		for _, c := range cambios {
+			rs = append(rs, registroEstado(c.Numero, de, a))
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, rs...)
 	})
 	return cambios, err
 }

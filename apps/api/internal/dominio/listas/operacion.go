@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 )
 
 // Inventario arma el stock de cada producto con lo que se vende por día (mismos cortes que el handoff).
@@ -250,19 +252,34 @@ func AjustarStock(ctx context.Context, pool tx, tiendaID string, ids []string, q
 	prods, vars := separarIDs(ids)
 	var n int64
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		tag, err := t.Exec(ctx, `UPDATE productos SET stock = greatest(0, stock + $3)
-			WHERE tienda_id = $1 AND id::text = ANY($2) AND opciones = '[]'::jsonb`, tiendaID, prods, q)
+		filas, err := t.Query(ctx, `UPDATE productos p SET stock = greatest(0, p.stock + $3)
+			FROM productos a WHERE p.tienda_id = $1 AND p.id::text = ANY($2) AND p.opciones = '[]'::jsonb
+				AND a.tienda_id = p.tienda_id AND a.id = p.id
+			RETURNING p.id::text, p.nombre, a.stock, p.stock`, tiendaID, prods, q)
 		if err != nil {
 			return err
 		}
-		n = tag.RowsAffected()
-		if len(vars) == 0 {
-			return nil
+		tocados, err := pgx.CollectRows(filas, pgx.RowToStructByPos[stockTocado])
+		if err != nil {
+			return err
 		}
-		tag, err = t.Exec(ctx, `UPDATE variantes SET stock = greatest(0, stock + $3)
-			WHERE tienda_id = $1 AND producto_id::text || ':' || id::text = ANY($2)`, tiendaID, vars, q)
-		n += tag.RowsAffected()
-		return err
+		n = int64(len(tocados))
+		if len(vars) > 0 {
+			filas, err = t.Query(ctx, `UPDATE variantes v SET stock = greatest(0, v.stock + $3)
+				FROM variantes a, productos p WHERE v.tienda_id = $1 AND v.producto_id::text || ':' || v.id::text = ANY($2)
+					AND a.tienda_id = v.tienda_id AND a.id = v.id AND p.tienda_id = v.tienda_id AND p.id = v.producto_id
+				RETURNING v.producto_id::text, 'una variante de ' || p.nombre, a.stock, v.stock`, tiendaID, vars, q)
+			if err != nil {
+				return err
+			}
+			deVariantes, err := pgx.CollectRows(filas, pgx.RowToStructByPos[stockTocado])
+			if err != nil {
+				return err
+			}
+			n += int64(len(deVariantes))
+			tocados = append(tocados, deVariantes...)
+		}
+		return registrarStock(ctx, t, tiendaID, tocados)
 	})
 	return int(n), err
 }
@@ -272,15 +289,27 @@ func FijarStock(ctx context.Context, pool tx, tiendaID, id string, cantidad int)
 	if cantidad < 0 || cantidad > 1000000 {
 		return 0, fmt.Errorf("cantidad fuera de rango")
 	}
-	consulta := `UPDATE productos SET stock = $3 WHERE tienda_id = $1 AND id::text = $2 AND stock <> $3 AND opciones = '[]'::jsonb`
+	consulta := `UPDATE productos p SET stock = $3 FROM productos a
+		WHERE p.tienda_id = $1 AND p.id::text = $2 AND p.stock <> $3 AND p.opciones = '[]'::jsonb AND a.tienda_id = p.tienda_id AND a.id = p.id
+		RETURNING p.id::text, p.nombre, a.stock, p.stock`
 	if strings.Contains(id, ":") {
-		consulta = `UPDATE variantes SET stock = $3 WHERE tienda_id = $1 AND producto_id::text || ':' || id::text = $2 AND stock <> $3`
+		consulta = `UPDATE variantes v SET stock = $3 FROM variantes a, productos p
+			WHERE v.tienda_id = $1 AND v.producto_id::text || ':' || v.id::text = $2 AND v.stock <> $3
+				AND a.tienda_id = v.tienda_id AND a.id = v.id AND p.tienda_id = v.tienda_id AND p.id = v.producto_id
+			RETURNING v.producto_id::text, 'una variante de ' || p.nombre, a.stock, v.stock`
 	}
 	var n int64
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		tag, err := t.Exec(ctx, consulta, tiendaID, id, cantidad)
-		n = tag.RowsAffected()
-		return err
+		filas, err := t.Query(ctx, consulta, tiendaID, id, cantidad)
+		if err != nil {
+			return err
+		}
+		tocados, err := pgx.CollectRows(filas, pgx.RowToStructByPos[stockTocado])
+		if err != nil {
+			return err
+		}
+		n = int64(len(tocados))
+		return registrarStock(ctx, t, tiendaID, tocados)
 	})
 	return int(n), err
 }
@@ -293,11 +322,24 @@ func Etiquetas(ctx context.Context, pool tx, tiendaID string, ids []string, pone
 	}
 	var n int64
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		tag, err := t.Exec(ctx, `UPDATE pedidos SET estado = $4, estados_en = estados_en || jsonb_build_object($4::text, now())
-			WHERE tienda_id = $1 AND estado = $3 AND envio <> 'retiro' AND (coalesce(cardinality($2::text[]), 0) = 0 OR numero::text = ANY($2))`,
-			tiendaID, ids, de, a)
-		n = tag.RowsAffected()
-		return err
+		filas, err := t.Query(ctx, `UPDATE pedidos SET estado = $4, estados_en = estados_en || jsonb_build_object($4::text, now())
+			WHERE tienda_id = $1 AND estado = $3 AND envio <> 'retiro' AND (coalesce(cardinality($2::text[]), 0) = 0 OR numero::text = ANY($2))
+			RETURNING numero`, tiendaID, ids, de, a)
+		if err != nil {
+			return err
+		}
+		numeros, err := pgx.CollectRows(filas, pgx.RowTo[int])
+		if err != nil {
+			return err
+		}
+		n = int64(len(numeros))
+		rs := make([]auditoria.Registro, 0, len(numeros))
+		for _, num := range numeros {
+			rs = append(rs, auditoria.Registro{Accion: "pedido.estado", Entidad: "pedido", EntidadID: fmt.Sprint(num),
+				Texto: fmt.Sprintf("pasó el pedido #%d de %s a %s", num, strings.ToLower(de), strings.ToLower(a)),
+				Antes: map[string]string{"estado": de}, Despues: map[string]string{"estado": a}})
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, rs...)
 	})
 	return int(n), err
 }

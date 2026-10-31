@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"slices"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/listas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
@@ -191,7 +193,7 @@ func CrearDesdeProductos(ctx context.Context, pool tx, tiendaID string, n Pedido
 				}
 			}
 		}
-		return t.QueryRow(ctx, `
+		if err := t.QueryRow(ctx, `
 			INSERT INTO pedidos (tienda_id, numero, comprador, canal, pago, estado_pago, envio, estado, facturado,
 				items, subtotal, costo_envio, total, nota, estados_en, ciudad_envio, codigo_publico, cupon, entrega, descuentos)
 			SELECT $1, coalesce(max(numero), 1000) + 1, $2, $3, $4, $5, $6, $7, false, $8, $9, $11::bigint, $9::bigint + $11::bigint - $12::bigint, $10,
@@ -199,7 +201,22 @@ func CrearDesdeProductos(ctx context.Context, pool tx, tiendaID string, n Pedido
 			FROM pedidos WHERE tienda_id = $1
 			RETURNING numero`,
 			tiendaID, comprador, n.Canal, n.Pago, estadoPago, n.Envio, estado, js, total, n.Nota,
-			n.CostoEnvio, n.Descuento, n.CiudadEnvio, codigo, cupon, n.Entrega, desc).Scan(&numero)
+			n.CostoEnvio, n.Descuento, n.CiudadEnvio, codigo, cupon, n.Entrega, desc).Scan(&numero); err != nil {
+			return err
+		}
+		// Lo que carga alguien del equipo (el panel o una IA): la compra en la tienda online no tiene autor.
+		final := total + n.CostoEnvio - n.Descuento
+		r := auditoria.Registro{Accion: "pedido.crear", Entidad: "pedido", EntidadID: fmt.Sprint(numero),
+			Texto:   fmt.Sprintf("cargó a mano el pedido #%d de %s por %s", numero, nombre, auditoria.Pesos(final)),
+			Despues: map[string]any{"total": final, "pago": n.Pago, "canal": n.Canal, "estado": estado}}
+		if n.Canal == "pos" {
+			r.Accion = "venta.cobro"
+			r.Texto = fmt.Sprintf("cobró %s en el punto de venta (venta #%d, %s)", auditoria.Pesos(final), numero, nombrePago[n.Pago])
+			if estado == "Sin pagar" {
+				r.Texto = fmt.Sprintf("cargó una venta del local por %s sin cobrar (venta #%d)", auditoria.Pesos(final), numero)
+			}
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, r)
 	})
 	return numero, total + n.CostoEnvio - n.Descuento, err
 }

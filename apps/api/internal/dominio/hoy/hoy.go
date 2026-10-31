@@ -1,5 +1,5 @@
 // Package hoy: Actividad y Para hacer hoy (design/PanelCrecer.dc.html). La actividad es la
-// auditoría de la tienda; las tareas salen de pedidos y productos. Chats, carritos y el certificado
+// auditoría de la tienda (actividad.go); las tareas salen de pedidos y productos. Chats, carritos y el certificado
 // de ARCA se suman cuando esas integraciones existan.
 package hoy
 
@@ -15,6 +15,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
@@ -27,60 +28,6 @@ var (
 	argentina   = time.FixedZone("ART", -3*3600)
 	tareas      = []string{"preparar", "chats", "carritos", "transferencias", "certificado", "reponer"}
 )
-
-// Evento es components/schemas/Evento.
-type Evento struct {
-	ID       string    `json:"id"`
-	Tipo     string    `json:"tipo"`
-	Quien    string    `json:"quien"`
-	Foto     *string   `json:"foto"`
-	Texto    string    `json:"texto"`
-	Cuando   time.Time `json:"cuando"`
-	Donde    string    `json:"donde"`
-	Deshacer bool      `json:"deshacer"`
-	Deshecho bool      `json:"deshecho"`
-}
-
-// Actividad: los últimos 200 registros de la auditoría.
-func Actividad(ctx context.Context, pool tx, tiendaID string) ([]Evento, error) {
-	lista := []Evento{}
-	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		filas, err := t.Query(ctx, `SELECT id, actor_tipo, coalesce(actor_id, ''), accion, entidad, coalesce(entidad_id, ''),
-				coalesce(agente, ''), creado_en, deshecho_en IS NOT NULL
-			FROM auditoria WHERE tienda_id = $1 ORDER BY creado_en DESC, id DESC LIMIT 200`, tiendaID)
-		if err != nil {
-			return err
-		}
-		for filas.Next() {
-			var id int64
-			var actor, actorID, accion, entidad, entidadID, agente string
-			var e Evento
-			if err := filas.Scan(&id, &actor, &actorID, &accion, &entidad, &entidadID, &agente, &e.Cuando, &e.Deshecho); err != nil {
-				return err
-			}
-			e.ID = fmt.Sprint(id)
-			switch actor {
-			case "hornero":
-				e.Tipo, e.Quien = "hornero", "Tincho"
-			case "persona", "staff":
-				e.Tipo, e.Quien = "equipo", "Vos"
-			default:
-				e.Tipo, e.Quien = "sistema", "Sistema"
-			}
-			e.Texto = strings.TrimSpace(accion + " " + entidad + " " + entidadID)
-			e.Donde = "Panel"
-			if agente != "" {
-				e.Donde = agente
-			}
-			if e.Deshecho {
-				e.Texto += " — deshecho"
-			}
-			lista = append(lista, e)
-		}
-		return filas.Err()
-	})
-	return lista, err
-}
 
 type Tarea struct {
 	ID         string `json:"id"`
@@ -198,9 +145,26 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string) {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(v)
 	}
+	filtro := func(r *http.Request) FiltroActividad {
+		q := r.URL.Query()
+		return FiltroActividad{Persona: q.Get("persona"), Categoria: q.Get("tipo"), Desde: q.Get("desde"),
+			Hasta: q.Get("hasta"), Cursor: q.Get("cursor")}
+	}
+	conFiltro := func(w http.ResponseWriter, v any, err error) {
+		if errors.Is(err, ErrFiltro) {
+			problema.Escribir(w, problema.Invalido("Revisá los filtros: la persona, el tipo o las fechas no son válidos."))
+			return
+		}
+		escribir(w, v, err)
+	}
 	mux.HandleFunc("GET /v1/panel/actividad", con(func(w http.ResponseWriter, r *http.Request, id string) {
-		l, err := Actividad(r.Context(), pool, id)
-		escribir(w, map[string]any{"items": l}, err)
+		s, _ := cuentas.SesionDe(r)
+		p, err := Actividad(r.Context(), pool, id, s.Usuario.ID, filtro(r))
+		conFiltro(w, p, err)
+	}))
+	mux.HandleFunc("GET /v1/panel/actividad/exportar", con(func(w http.ResponseWriter, r *http.Request, id string) {
+		f, err := ExportarActividad(r.Context(), pool, id, filtro(r))
+		conFiltro(w, map[string]any{"filas": f}, err)
 	}))
 	// El deshacer genérico llega con cada dominio anotando su antes y después.
 	mux.HandleFunc("POST /v1/panel/actividad/{id}/deshacer", con(func(w http.ResponseWriter, _ *http.Request, _ string) {

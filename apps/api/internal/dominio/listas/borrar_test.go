@@ -17,8 +17,8 @@ func TestDuplicarYBorrar(t *testing.T) {
 	id, _ := tiendas.Crear(ctx, b.App, "kiosco", "Kiosco", "almacen")
 	otra, _ := tiendas.Crear(ctx, b.App, "otra", "Otra", "almacen")
 	p, err := listas.Guardar(ctx, b.App, id, "", listas.Editable{Nombre: "Remera", Precio: 9000,
-		Canales:  map[string]bool{"web": true},
-		Opciones: []listas.Opcion{{Nombre: "Talle", Valores: []string{"S", "M"}}},
+		Canales:   map[string]bool{"web": true},
+		Opciones:  []listas.Opcion{{Nombre: "Talle", Valores: []string{"S", "M"}}},
 		Variantes: []listas.VarianteEditable{{Valores: map[string]string{"Talle": "M"}, Stock: ptr(4)}}})
 	if err != nil {
 		t.Fatal(err)

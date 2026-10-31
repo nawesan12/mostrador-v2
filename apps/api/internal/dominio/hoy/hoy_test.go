@@ -67,7 +67,8 @@ func TestTareasYActividad(t *testing.T) {
 		_, err := auditoria.Anotar(ctx, tx, id, auditoria.Actor{Tipo: "persona", ID: "x"}, auditoria.Registro{Accion: "pausó", Entidad: "el cupón", EntidadID: "FINDE10"})
 		return err
 	})
-	a, err := hoy.Actividad(ctx, b.App, id)
+	pag, err := hoy.Actividad(ctx, b.App, id, "x", hoy.FiltroActividad{})
+	a := pag.Items
 	if err != nil || len(a) != 1 || a[0].Texto != "pausó el cupón FINDE10" || a[0].Quien != "Vos" {
 		t.Fatalf("actividad: %+v %v", a, err)
 	}

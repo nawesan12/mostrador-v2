@@ -20,6 +20,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/telegram"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/cifrado"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/config"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
@@ -126,6 +127,21 @@ func correr() error {
 		for {
 			if _, err := visitas.Purgar(ctx, app); err != nil && ctx.Err() == nil {
 				slog.Error("visitas: purgar", "error", err)
+			}
+			select {
+			case <-ctx.Done():
+				return
+			case <-t.C:
+			}
+		}
+	}()
+	// Actividad de las tiendas: se guarda un año; una vez por día se borra lo más viejo.
+	go func() {
+		t := time.NewTicker(24 * time.Hour)
+		defer t.Stop()
+		for {
+			if _, err := auditoria.Purgar(ctx, app); err != nil && ctx.Err() == nil {
+				slog.Error("actividad: purgar", "error", err)
 			}
 			select {
 			case <-ctx.Done():

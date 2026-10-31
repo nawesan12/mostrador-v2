@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 )
 
 var esID = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
@@ -28,14 +30,18 @@ func Borrar(ctx context.Context, pool tx, tiendaID, id string) error {
 		if enMl {
 			return ErrEnMercadoLibre
 		}
-		r, err := t.Exec(ctx, `DELETE FROM productos WHERE tienda_id = $1 AND id = $2`, tiendaID, id)
+		var nombre string
+		var precio int64
+		err := t.QueryRow(ctx, `DELETE FROM productos WHERE tienda_id = $1 AND id = $2 RETURNING nombre, precio`, tiendaID, id).
+			Scan(&nombre, &precio)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrNoExiste
+		}
 		if err != nil {
 			return err
 		}
-		if r.RowsAffected() == 0 {
-			return ErrNoExiste
-		}
-		return nil
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "producto.borrar", Entidad: "producto",
+			EntidadID: id, Texto: "borró el producto " + nombre, Antes: map[string]any{"nombre": nombre, "precio": precio}})
 	})
 }
 
@@ -58,13 +64,17 @@ func Duplicar(ctx context.Context, pool tx, tiendaID, id string, ahora time.Time
 		e.Variantes = append(e.Variantes, VarianteEditable{Valores: v.Valores, SKU: &vacio, Precio: v.Precio, Stock: &cero,
 			Foto: v.Foto, Activa: &v.Activa})
 	}
-	c, err := Guardar(ctx, pool, tiendaID, "", e)
+	// La copia no se anota como «creó»: se anota que se duplicó.
+	c, err := Guardar(auditoria.Silenciar(ctx), pool, tiendaID, "", e)
 	if err != nil {
 		return Producto{}, err
 	}
 	err = pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		_, err := t.Exec(ctx, `UPDATE productos SET publicado = false WHERE tienda_id = $1 AND id = $2`, tiendaID, c.ID)
-		return err
+		if _, err := t.Exec(ctx, `UPDATE productos SET publicado = false WHERE tienda_id = $1 AND id = $2`, tiendaID, c.ID); err != nil {
+			return err
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "producto.duplicar", Entidad: "producto",
+			EntidadID: c.ID, Texto: "duplicó " + p.Nombre + " (la copia quedó pausada)", Antes: map[string]string{"original": p.ID}})
 	})
 	c.Publicado = false
 	return c, err

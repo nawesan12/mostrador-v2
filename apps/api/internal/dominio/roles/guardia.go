@@ -15,7 +15,6 @@ var Rutas = map[string]Permiso{
 	"GET /v1/panel/tienda":                          Panel,
 	"GET /v1/panel/resumen":                         Panel,
 	"GET /v1/panel/tablero":                         Panel,
-	"GET /v1/panel/actividad":                       Panel,
 	"POST /v1/panel/avisos/{aviso}/ocultar":         Panel,
 	"POST /v1/panel/notificaciones/leidas":          Panel,
 	"GET /v1/panel/para-hacer":                      Panel,
@@ -119,6 +118,8 @@ var Rutas = map[string]Permiso{
 	"PUT /v1/panel/tienda/origen":                        Tienda,
 	"GET /v1/panel/tienda/direccion":                     Tienda,
 	"PUT /v1/panel/tienda/direccion":                     Tienda,
+	"GET /v1/panel/actividad":                            Tienda, // quién hizo qué: dueña y administración
+	"GET /v1/panel/actividad/exportar":                   Tienda,
 	"POST /v1/panel/actividad/{id}/deshacer":             Tienda,
 	"GET /v1/panel/datos":                                Tienda,
 	"GET /v1/panel/datos/{tipo}":                         Tienda,

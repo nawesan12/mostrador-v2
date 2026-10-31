@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/arrepentimiento"
@@ -37,6 +38,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/telegram"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/geoip"
@@ -126,7 +128,7 @@ func Nuevo(d Dependencias) http.Handler {
 				s, ok := cuentas.SesionDe(r)
 				return s.Rol, ok && s.TiendaID != ""
 			}, conGuardia)
-			h = d.Cuentas.Autenticar(conGuardia)
+			h = d.Cuentas.Autenticar(conActor(d.ClaveBFF, conGuardia))
 		}
 		tiendas.Rutas(mux, d.App, tienda)
 		pedidos.Rutas(mux, d.App, tienda)
@@ -209,6 +211,28 @@ func Nuevo(d Dependencias) http.Handler {
 		}
 	}
 	return recuperar(d.Log, h)
+}
+
+// conActor deja en el contexto quién hace el pedido, para que cada dominio lo anote en la Actividad
+// donde hace la acción (auditoria.Registrar). Una persona del equipo de Tu Local Web mirando la
+// tienda (sólo lectura) no escribe nada, así que no lleva autor.
+func conActor(claveBFF string, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Sólo el panel: lo que hace la dueña como compradora en la tienda pública no es «del equipo».
+		s, ok := cuentas.SesionDe(r)
+		if ok && s.TiendaID != "" && !s.Mirada && strings.HasPrefix(r.URL.Path, "/v1/panel/") {
+			c := cuentas.ClienteDe(r, claveBFF)
+			a := auditoria.Actor{Tipo: "persona", ID: s.Usuario.ID, Nombre: s.Usuario.Nombre, Rol: s.Rol, IP: c.IP, Agente: c.Agente}
+			if s.IA != "" {
+				a.Tipo, a.IA = "ia", s.IANombre
+				if a.IA == "" {
+					a.IA = "Una IA"
+				}
+			}
+			r = r.WithContext(auditoria.ConActor(r.Context(), a))
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // recuperar convierte un panic en un 500 con problem+json y lo registra, sin tirar el proceso.

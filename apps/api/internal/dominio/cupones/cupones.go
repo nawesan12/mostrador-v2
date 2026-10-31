@@ -16,6 +16,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
@@ -225,7 +226,11 @@ func Crear(ctx context.Context, pool tx, tiendaID string, n Nuevo, ahora time.Ti
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING `+columnas,
 			tiendaID, n.Codigo, n.Tipo, n.Valor, desc, n.Limite, n.Canales, empieza, termina, n.Minimo, n.Quien, n.PorCliente,
 			alcance, opciones), ahora)
-		return err
+		if err != nil {
+			return err
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "promocion.cupon_crear", Entidad: "cupon",
+			EntidadID: c.ID, Texto: fmt.Sprintf("creó el cupón %s (%s)", c.Codigo, desc)})
 	})
 	return c, err
 }
@@ -243,6 +248,7 @@ func Accion(ctx context.Context, pool tx, tiendaID, id, accion string, minimo in
 			return err
 		}
 		sinMinimo := regexp.MustCompile(` · mín\. .*$`).ReplaceAllString(c.Descripcion, "")
+		original, minimoAntes := c.Codigo, c.Minimo
 		var q string
 		var args []any
 		switch accion {
@@ -255,7 +261,11 @@ func Accion(ctx context.Context, pool tx, tiendaID, id, accion string, minimo in
 					canales, minimo, quien, por_cliente, alcance, opciones)
 				SELECT tienda_id, $3, tipo, valor, descripcion, true, limite, canales, minimo, quien, por_cliente, alcance, opciones
 				FROM cupones WHERE tienda_id = $1 AND id::text = $2 RETURNING `+columnas, tiendaID, id, codigo), ahora)
-			return err
+			if err != nil {
+				return err
+			}
+			return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "promocion.cupon_duplicar", Entidad: "cupon",
+				EntidadID: c.ID, Texto: fmt.Sprintf("duplicó el cupón %s como %s (quedó pausado)", original, c.Codigo)})
 		case "pausar", "activar":
 			q, args = `UPDATE cupones SET pausado = $3`, []any{accion == "pausar"}
 		case "minimo":
@@ -273,7 +283,18 @@ func Accion(ctx context.Context, pool tx, tiendaID, id, accion string, minimo in
 		}
 		c, err = escanear(t.QueryRow(ctx, q+` WHERE tienda_id = $1 AND id::text = $2 RETURNING `+columnas,
 			append([]any{tiendaID, id}, args...)...), ahora)
-		return err
+		if err != nil {
+			return err
+		}
+		texto := map[string]string{
+			"pausar":          "pausó el cupón " + c.Codigo,
+			"activar":         "activó el cupón " + c.Codigo,
+			"minimo":          fmt.Sprintf("le puso un mínimo de compra de %s al cupón %s", pesos(minimo), c.Codigo),
+			"deshacer-minimo": "le sacó el mínimo de compra al cupón " + c.Codigo,
+		}[accion]
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "promocion.cupon_" + strings.ReplaceAll(accion, "-", "_"),
+			Entidad: "cupon", EntidadID: c.ID, Texto: texto,
+			Antes: map[string]int64{"minimo": minimoAntes}, Despues: map[string]int64{"minimo": c.Minimo}})
 	})
 	return c, err
 }
@@ -391,13 +412,29 @@ func Leer(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (map[s
 
 // FijarAutomatica prende o apaga una promoción automática.
 func FijarAutomatica(ctx context.Context, pool tx, tiendaID, id string, activa bool) error {
-	if !slices.ContainsFunc(automaticas, func(a automatica) bool { return a.ID == id }) {
+	i := slices.IndexFunc(automaticas, func(a automatica) bool { return a.ID == id })
+	if i < 0 {
 		return ErrNoExiste
 	}
 	return pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		_, err := t.Exec(ctx, `UPDATE tiendas SET automaticas = automaticas || jsonb_build_object($2::text, $3::boolean) WHERE id = $1`,
-			tiendaID, id, activa)
-		return err
+		var antes *bool
+		if err := t.QueryRow(ctx, `SELECT (automaticas->>$2)::boolean FROM tiendas WHERE id = $1 FOR UPDATE`, tiendaID, id).Scan(&antes); err != nil {
+			return err
+		}
+		if _, err := t.Exec(ctx, `UPDATE tiendas SET automaticas = automaticas || jsonb_build_object($2::text, $3::boolean) WHERE id = $1`,
+			tiendaID, id, activa); err != nil {
+			return err
+		}
+		if antes != nil && *antes == activa {
+			return nil
+		}
+		verbo := "apagó"
+		if activa {
+			verbo = "prendió"
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "promocion.automatica", Entidad: "promocion",
+			EntidadID: id, Texto: fmt.Sprintf("%s la promoción «%s»", verbo, automaticas[i].Titulo),
+			Despues: map[string]bool{"activa": activa}})
 	})
 }
 

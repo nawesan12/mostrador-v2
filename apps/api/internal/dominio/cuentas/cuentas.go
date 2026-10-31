@@ -330,6 +330,8 @@ type Datos struct {
 	// si esa conexión puede escribir. Las sesiones de personas los dejan vacíos.
 	IA         string `json:"-"`
 	IAAcciones bool   `json:"-"`
+	// IANombre: el nombre de la IA conectada (Claude, ChatGPT…), para la Actividad.
+	IANombre string `json:"-"`
 	// Mirada: una persona del equipo viendo el panel como la dueña. Sólo lectura (equipo.SoloLectura).
 	Mirada bool `json:"-"`
 }

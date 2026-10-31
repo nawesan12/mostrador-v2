@@ -7,11 +7,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
@@ -92,8 +94,12 @@ func Aplicar(ctx context.Context, pool tx, tiendaID string, pct int, redondeo st
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
 		if !programar {
 			var err error
-			n, err = aplicar(ctx, t, tiendaID, pct, redondeo)
-			return err
+			if n, err = aplicar(ctx, t, tiendaID, pct, redondeo); err != nil {
+				return err
+			}
+			return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "producto.aumento", Entidad: "precios",
+				Texto:   fmt.Sprintf("subió un %d %% los precios de todo el catálogo (%d productos)", pct, n),
+				Despues: map[string]any{"pct": pct, "redondeo": redondeo}})
 		}
 		p := ProximoLunes(ahora)
 		para = &p
@@ -103,7 +109,12 @@ func Aplicar(ctx context.Context, pool tx, tiendaID string, pct int, redondeo st
 		if _, err := t.Exec(ctx, `INSERT INTO aumentos (tienda_id, pct, redondeo, para) VALUES ($1, $2, $3, $4)`, tiendaID, pct, redondeo, p); err != nil {
 			return err
 		}
-		return t.QueryRow(ctx, `SELECT count(*) FROM productos WHERE tienda_id = $1`, tiendaID).Scan(&n)
+		if err := t.QueryRow(ctx, `SELECT count(*) FROM productos WHERE tienda_id = $1`, tiendaID).Scan(&n); err != nil {
+			return err
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "producto.aumento_programado", Entidad: "precios",
+			Texto:   fmt.Sprintf("programó un aumento del %d %% en todo el catálogo para el %s", pct, p.In(time.FixedZone("ART", -3*3600)).Format("02/01")),
+			Despues: map[string]any{"pct": pct, "redondeo": redondeo, "para": p}})
 	})
 	return n, para, err
 }
@@ -125,8 +136,11 @@ func Deshacer(ctx context.Context, pool tx, tiendaID string) error {
 			FROM jsonb_each_text($2::jsonb) a WHERE p.tienda_id = $1 AND p.id::text = a.key`, tiendaID, antes); err != nil {
 			return err
 		}
-		_, err = t.Exec(ctx, `UPDATE aumentos SET deshecho_en = now() WHERE id = $1`, id)
-		return err
+		if _, err = t.Exec(ctx, `UPDATE aumentos SET deshecho_en = now() WHERE id = $1`, id); err != nil {
+			return err
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "producto.aumento_deshecho", Entidad: "precios",
+			Texto: "deshizo el último aumento de precios (volvieron a como estaban)"})
 	})
 }
 
@@ -137,7 +151,11 @@ func Cancelar(ctx context.Context, pool tx, tiendaID string) error {
 		if err == nil && tag.RowsAffected() == 0 {
 			return ErrNoExiste
 		}
-		return err
+		if err != nil {
+			return err
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "producto.aumento_cancelado", Entidad: "precios",
+			Texto: "canceló el aumento de precios programado"})
 	})
 }
 

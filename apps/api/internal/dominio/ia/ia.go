@@ -69,8 +69,10 @@ type Conexion struct {
 // Sesion es lo que resuelve un token de acceso.
 type Sesion struct {
 	Conexion, UsuarioID, Nombre, Email, TiendaID, Rol string
-	Acciones                                          bool
-	VenceEn                                           time.Time
+	// Cliente es el nombre de la IA (Claude, ChatGPT…), para la Actividad.
+	Cliente  string
+	Acciones bool
+	VenceEn  time.Time
 }
 
 func nuevoSecreto(n int) string {
@@ -244,12 +246,13 @@ func (s *Servicio) SesionDe(ctx context.Context, token string) (Sesion, error) {
 	var se Sesion
 	var usada time.Time
 	err := s.Pool.QueryRow(ctx, `
-		SELECT c.id::text, u.id::text, u.nombre, u.email, c.tienda_id::text, m.rol, c.acciones, c.acceso_vence, c.usada_en
+		SELECT c.id::text, u.id::text, u.nombre, u.email, c.tienda_id::text, m.rol, cl.nombre, c.acciones, c.acceso_vence, c.usada_en
 		FROM auth.ia_conexiones c
+		JOIN auth.ia_clientes cl ON cl.id = c.cliente_id
 		JOIN auth.usuarios u ON u.id = c.usuario_id
 		JOIN auth.membresias m ON m.usuario_id = c.usuario_id AND m.tienda_id = c.tienda_id
 		WHERE c.acceso_hash = $1 AND c.acceso_vence > now()`, hash(token)).
-		Scan(&se.Conexion, &se.UsuarioID, &se.Nombre, &se.Email, &se.TiendaID, &se.Rol, &se.Acciones, &se.VenceEn, &usada)
+		Scan(&se.Conexion, &se.UsuarioID, &se.Nombre, &se.Email, &se.TiendaID, &se.Rol, &se.Cliente, &se.Acciones, &se.VenceEn, &usada)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return se, ErrNoExiste
 	}
@@ -346,7 +349,7 @@ func (s *Servicio) ParaCuentas(ctx context.Context, token string) (cuentas.Datos
 	}
 	d.Usuario.ID, d.Usuario.Nombre, d.Usuario.Email = se.UsuarioID, se.Nombre, se.Email
 	d.TiendaID, d.Rol, d.VenceEn = se.TiendaID, se.Rol, se.VenceEn
-	d.IA, d.IAAcciones = se.Conexion, se.Acciones
+	d.IA, d.IAAcciones, d.IANombre = se.Conexion, se.Acciones, se.Cliente
 	d.SesionID = "ia-" + se.Conexion[:8]
 	return d, nil
 }
