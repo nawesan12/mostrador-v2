@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"regexp"
 	"slices"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/roles"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/geoip"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/limite"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
@@ -260,9 +262,44 @@ func GuardarNegocio(ctx context.Context, pool tx, tiendaID string, n Negocio) er
 	resto := n
 	resto.Nombre = ""
 	return pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		_, err := t.Exec(ctx, `UPDATE tiendas SET nombre = $2, negocio = $3 WHERE id = $1`, tiendaID, n.Nombre, resto)
-		return err
+		var antes Negocio
+		if err := t.QueryRow(ctx, `SELECT nombre, coalesce(negocio->>'alias', ''), coalesce(negocio->>'cbu', ''),
+				coalesce(negocio->>'titular', '') FROM tiendas WHERE id = $1 FOR UPDATE`, tiendaID).
+			Scan(&antes.Nombre, &antes.Alias, &antes.CBU, &antes.Titular); err != nil {
+			return err
+		}
+		if _, err := t.Exec(ctx, `UPDATE tiendas SET nombre = $2, negocio = $3 WHERE id = $1`, tiendaID, n.Nombre, resto); err != nil {
+			return err
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, registrosNegocio(tiendaID, antes, n)...)
 	})
+}
+
+// registrosNegocio: lo que se anota en la Actividad al guardar el negocio. El CBU nunca va entero:
+// sólo sus últimos 4 números.
+func registrosNegocio(tiendaID string, a, n Negocio) []auditoria.Registro {
+	var rs []auditoria.Registro
+	reg := func(accion, texto string) {
+		rs = append(rs, auditoria.Registro{Accion: accion, Entidad: "tienda", EntidadID: tiendaID, Texto: texto})
+	}
+	if a.Nombre != n.Nombre {
+		reg("negocio.nombre", fmt.Sprintf("cambió el nombre de la tienda de «%s» a «%s»", a.Nombre, n.Nombre))
+	}
+	cambio := func(campo, antes, despues, mostrarAntes, mostrarDespues string) {
+		switch {
+		case antes == despues:
+		case despues == "":
+			reg("cobros."+strings.ToLower(campo), "sacó el "+campo+" para cobrar por transferencia (era "+mostrarAntes+")")
+		case antes == "":
+			reg("cobros."+strings.ToLower(campo), "cargó el "+campo+" para cobrar por transferencia: "+mostrarDespues)
+		default:
+			reg("cobros."+strings.ToLower(campo), "cambió el "+campo+" para cobrar por transferencia de "+mostrarAntes+" a "+mostrarDespues)
+		}
+	}
+	cambio("alias", a.Alias, n.Alias, a.Alias, n.Alias)
+	cambio("CBU", a.CBU, n.CBU, "uno "+auditoria.Final(a.CBU), "uno "+auditoria.Final(n.CBU))
+	cambio("titular", a.Titular, n.Titular, a.Titular, n.Titular)
+	return rs
 }
 
 // FijarOpcion prende o apaga una opción de seguridad (de la persona: cuentas.SeguridadDef) o un
@@ -303,7 +340,11 @@ func CerrarSesion(ctx context.Context, pool tx, tiendaID string, q Quien, id str
 		if err == nil && tag.RowsAffected() == 0 {
 			return ErrNoExiste
 		}
-		return err
+		if err != nil {
+			return err
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "sesion.cerrar", Entidad: "sesion",
+			Texto: "cerró una de sus sesiones abiertas en otro dispositivo"})
 	})
 }
 
@@ -316,7 +357,11 @@ func CerrarOtras(ctx context.Context, pool tx, tiendaID string, q Quien) (int64,
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
 		tag, err := t.Exec(ctx, `DELETE FROM auth.sesiones WHERE usuario_id::text = $1 AND left(token_hash, 16) <> $2`, q.UsuarioID, q.SesionID)
 		n = tag.RowsAffected()
-		return err
+		if err != nil || n == 0 {
+			return err
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "sesion.cerrar_otras", Entidad: "sesion",
+			Texto: fmt.Sprintf("cerró sus otras sesiones abiertas (%d)", n)})
 	})
 	return n, err
 }
@@ -347,8 +392,12 @@ func Invitar(ctx context.Context, pool tx, sitio, tiendaID string, q Quien, cont
 		if err != nil {
 			return err
 		}
-		m.Vence, err = mandar(ctx, t, sitio, tiendaID, m.ID, contacto, rol, q)
-		return err
+		if m.Vence, err = mandar(ctx, t, sitio, tiendaID, m.ID, contacto, rol, q); err != nil {
+			return err
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "personas.invitar", Entidad: "invitacion",
+			EntidadID: m.ID, Texto: fmt.Sprintf("invitó a %s al equipo como %s", contacto, roles.Nombre[rol]),
+			Despues: map[string]string{"rol": rol}})
 	})
 	return m, err
 }
@@ -384,8 +433,11 @@ func Reenviar(ctx context.Context, pool tx, sitio, tiendaID string, q Quien, id 
 		if !emailValido.MatchString(contacto) {
 			return ErrSinEmail // una invitación vieja a un WhatsApp: no hay a dónde mandarla
 		}
-		_, err = mandar(ctx, t, sitio, tiendaID, id, strings.ToLower(contacto), rol, q)
-		return err
+		if _, err = mandar(ctx, t, sitio, tiendaID, id, strings.ToLower(contacto), rol, q); err != nil {
+			return err
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "personas.reenviar", Entidad: "invitacion",
+			EntidadID: id, Texto: "le volvió a mandar la invitación a " + strings.ToLower(contacto)})
 	})
 }
 
@@ -411,9 +463,27 @@ func CambiarPlan(ctx context.Context, pool tx, tiendaID, plan, ciclo string) err
 		return ErrInvalido
 	}
 	return pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		_, err := t.Exec(ctx, `UPDATE tiendas SET plan = $2, plan_ciclo = coalesce(nullif($3, ''), plan_ciclo) WHERE id = $1`, tiendaID, plan, ciclo)
-		return err
+		var antes string
+		if err := t.QueryRow(ctx, `SELECT plan FROM tiendas WHERE id = $1 FOR UPDATE`, tiendaID).Scan(&antes); err != nil {
+			return err
+		}
+		if _, err := t.Exec(ctx, `UPDATE tiendas SET plan = $2, plan_ciclo = coalesce(nullif($3, ''), plan_ciclo) WHERE id = $1`, tiendaID, plan, ciclo); err != nil {
+			return err
+		}
+		if antes == plan {
+			return nil
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "plan.cambiar", Entidad: "tienda", EntidadID: tiendaID,
+			Texto: fmt.Sprintf("cambió el plan de %s a %s", nombrePlan(antes), nombrePlan(plan)),
+			Antes: map[string]string{"plan": antes}, Despues: map[string]string{"plan": plan}})
 	})
+}
+
+func nombrePlan(p string) string {
+	if p == "" {
+		return p
+	}
+	return strings.ToUpper(p[:1]) + p[1:]
 }
 
 // Rutas del panel. cobraAbono: con Mercado Pago activo, un plan pago sólo se activa por la

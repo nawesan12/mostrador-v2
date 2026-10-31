@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"unicode/utf8"
@@ -11,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cupones"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
@@ -137,13 +139,50 @@ func GuardarEntregas(ctx context.Context, pool tx, tiendaID string, e Entregas) 
 		if e.Retiro && e.RetiroDireccion == "" && strings.TrimSpace(n.Direccion) == "" {
 			return ErrEntrega{Motivo: "Poné la dirección donde retiran."}
 		}
-		_, err := t.Exec(ctx, `INSERT INTO entregas (tienda_id, retiro, retiro_direccion, retiro_horario, moto, moto_costo, moto_zona, moto_demora)
+		antes, err := EntregasEnTx(ctx, t, tiendaID)
+		if err != nil {
+			return err
+		}
+		if _, err := t.Exec(ctx, `INSERT INTO entregas (tienda_id, retiro, retiro_direccion, retiro_horario, moto, moto_costo, moto_zona, moto_demora)
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 			ON CONFLICT (tienda_id) DO UPDATE SET retiro = $2, retiro_direccion = $3, retiro_horario = $4, moto = $5,
 				moto_costo = $6, moto_zona = $7, moto_demora = $8, actualizada_en = now()`,
-			tiendaID, e.Retiro, e.RetiroDireccion, e.RetiroHorario, e.Moto, e.MotoCosto, e.MotoZona, e.MotoDemora)
-		return err
+			tiendaID, e.Retiro, e.RetiroDireccion, e.RetiroHorario, e.Moto, e.MotoCosto, e.MotoZona, e.MotoDemora); err != nil {
+			return err
+		}
+		despues, err := EntregasEnTx(ctx, t, tiendaID)
+		if err != nil {
+			return err
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, registrosEntregas(antes, despues)...)
 	})
+}
+
+// registrosEntregas: lo que cambió de Envíos y retiro, como se lee en la Actividad.
+func registrosEntregas(a, d Entregas) []auditoria.Registro {
+	var rs []auditoria.Registro
+	reg := func(texto string) {
+		rs = append(rs, auditoria.Registro{Accion: "envios.configurar", Entidad: "entregas", Texto: texto, Antes: a, Despues: d})
+	}
+	switch {
+	case a.Retiro && !d.Retiro:
+		reg("apagó el retiro en el local")
+	case !a.Retiro && d.Retiro:
+		reg("prendió el retiro en el local")
+	case d.Retiro && (a.RetiroDireccion != d.RetiroDireccion || a.RetiroHorario != d.RetiroHorario):
+		reg("cambió la dirección o el horario de retiro")
+	}
+	switch {
+	case a.Moto && !d.Moto:
+		reg("apagó el envío en moto")
+	case !a.Moto && d.Moto:
+		reg(fmt.Sprintf("prendió el envío en moto a %s", auditoria.Pesos(d.MotoCosto)))
+	case d.Moto && a.MotoCosto != d.MotoCosto:
+		reg(fmt.Sprintf("cambió el costo del envío en moto de %s a %s", auditoria.Pesos(a.MotoCosto), auditoria.Pesos(d.MotoCosto)))
+	case d.Moto && (a.MotoZona != d.MotoZona || a.MotoDemora != d.MotoDemora):
+		reg("cambió la zona o la demora del envío en moto")
+	}
+	return rs
 }
 
 func rutasEntregas(mux *http.ServeMux, pool tx, con func(func(http.ResponseWriter, *http.Request, string, Quien)) http.HandlerFunc,

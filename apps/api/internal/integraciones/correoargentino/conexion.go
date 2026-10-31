@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 )
 
 // Estado es lo que ve el panel (components/schemas/ConexionCorreo).
@@ -112,7 +114,11 @@ func (s *Servicio) Conectar(ctx context.Context, tiendaID string, a Alta) (Estad
 			VALUES ($1, $2, $3, $4, $5, $6)
 			ON CONFLICT (tienda_id) DO UPDATE SET cliente = $2, email = $3, credencial = $4, origen = $5, paquete = $6,
 				conectada_en = now()`, tiendaID, cliente, a.Email, cifrada, a.Origen, a.Paquete)
-		return err
+		if err != nil {
+			return err
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "integracion.correo_conectar",
+			Entidad: "integracion", EntidadID: "correo", Texto: "conectó Correo Argentino (MiCorreo de " + a.Email + ")"})
 	})
 	if err != nil {
 		return Estado{}, err
@@ -147,8 +153,12 @@ func (s *Servicio) Ajustar(ctx context.Context, tiendaID string, o Origen, p Paq
 // importados quedan en MiCorreo y en ca_envios.
 func (s *Servicio) Desconectar(ctx context.Context, tiendaID string) error {
 	err := s.Pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		_, err := t.Exec(ctx, `DELETE FROM ca_conexiones WHERE tienda_id = $1`, tiendaID)
-		return err
+		tag, err := t.Exec(ctx, `DELETE FROM ca_conexiones WHERE tienda_id = $1`, tiendaID)
+		if err != nil || tag.RowsAffected() == 0 {
+			return err
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "integracion.correo_desconectar",
+			Entidad: "integracion", EntidadID: "correo", Texto: "desconectó Correo Argentino"})
 	})
 	s.olvidarTienda(tiendaID)
 	return err

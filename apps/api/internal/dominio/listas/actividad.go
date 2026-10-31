@@ -38,6 +38,10 @@ func registrarEdicion(ctx context.Context, t pgx.Tx, tiendaID, id string, a ante
 		return auditoria.Registro{Accion: accion, Entidad: "producto", EntidadID: id, Texto: texto, Antes: antes, Despues: despues}
 	}
 	var rs []auditoria.Registro
+	if nombre != a.nombre {
+		rs = append(rs, reg("producto.editar", fmt.Sprintf("le cambió el nombre a %s: ahora es %s", a.nombre, nombre),
+			map[string]string{"nombre": a.nombre}, map[string]string{"nombre": nombre}))
+	}
 	if !e.SinPrecios && e.Precio != a.precio {
 		rs = append(rs, reg("producto.precio", fmt.Sprintf("cambió el precio de %s de %s a %s", nombre,
 			auditoria.Pesos(a.precio), auditoria.Pesos(e.Precio)), map[string]int64{"precio": a.precio}, map[string]int64{"precio": e.Precio}))
@@ -54,11 +58,7 @@ func registrarEdicion(ctx context.Context, t pgx.Tx, tiendaID, id string, a ante
 		rs = append(rs, reg("producto.publicar", "publicó "+nombre, map[string]bool{"publicado": false}, map[string]bool{"publicado": true}))
 	}
 	if len(rs) == 0 {
-		texto := "editó " + nombre
-		if nombre != a.nombre {
-			texto = fmt.Sprintf("le cambió el nombre a %s: ahora es %s", a.nombre, nombre)
-		}
-		rs = append(rs, reg("producto.editar", texto, nil, nil))
+		rs = append(rs, reg("producto.editar", "editó "+nombre, nil, nil))
 	}
 	return auditoria.Registrar(ctx, t, tiendaID, rs...)
 }

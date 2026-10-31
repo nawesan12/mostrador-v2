@@ -3,12 +3,15 @@ package configuracion
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/roles"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 )
 
 func mes(t time.Time) string { return t.In(time.FixedZone("ART", -3*3600)).Format("2006-01") }
@@ -39,19 +42,25 @@ func CambiarRol(ctx context.Context, pool tx, tiendaID string, q Quien, id, rol 
 		if err := esDuenia(ctx, t, tiendaID, id); err != nil {
 			return err
 		}
-		tag, err := t.Exec(ctx, `UPDATE auth.membresias SET rol = $3 WHERE tienda_id = $1 AND usuario_id::text = $2 AND rol <> 'duenio'`,
-			tiendaID, id, rol)
-		if err != nil {
+		var quien, antes string
+		err := t.QueryRow(ctx, `UPDATE auth.membresias m SET rol = $3 FROM auth.membresias a, auth.usuarios u
+			WHERE m.tienda_id = $1 AND m.usuario_id::text = $2 AND m.rol <> 'duenio'
+				AND a.tienda_id = m.tienda_id AND a.usuario_id = m.usuario_id AND u.id = m.usuario_id
+			RETURNING coalesce(nullif(u.nombre, ''), u.email), a.rol`, tiendaID, id, rol).Scan(&quien, &antes)
+		if errors.Is(err, pgx.ErrNoRows) {
+			err = t.QueryRow(ctx, `UPDATE invitaciones i SET rol = $3 FROM invitaciones a
+				WHERE i.tienda_id = $1 AND i.id::text = $2 AND a.tienda_id = i.tienda_id AND a.id = i.id
+				RETURNING 'la invitación de ' || i.contacto, a.rol`, tiendaID, id, rol).Scan(&quien, &antes)
+			if errors.Is(err, pgx.ErrNoRows) {
+				return ErrNoExiste
+			}
+		}
+		if err != nil || antes == rol {
 			return err
 		}
-		if tag.RowsAffected() == 1 {
-			return nil
-		}
-		tag, err = t.Exec(ctx, `UPDATE invitaciones SET rol = $3 WHERE tienda_id = $1 AND id::text = $2`, tiendaID, id, rol)
-		if err == nil && tag.RowsAffected() == 0 {
-			return ErrNoExiste
-		}
-		return err
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "personas.rol", Entidad: "persona", EntidadID: id,
+			Texto: fmt.Sprintf("le cambió el rol a %s de %s a %s", quien, roles.Nombre[antes], roles.Nombre[rol]),
+			Antes: map[string]string{"rol": antes}, Despues: map[string]string{"rol": rol}})
 	})
 }
 
@@ -65,19 +74,30 @@ func Quitar(ctx context.Context, pool tx, tiendaID string, q Quien, id string) e
 		if err := esDuenia(ctx, t, tiendaID, id); err != nil {
 			return err
 		}
-		tag, err := t.Exec(ctx, `DELETE FROM auth.membresias WHERE tienda_id = $1 AND usuario_id::text = $2 AND rol <> 'duenio'`, tiendaID, id)
+		var quien, rol string
+		err := t.QueryRow(ctx, `DELETE FROM auth.membresias m USING auth.usuarios u
+			WHERE m.tienda_id = $1 AND m.usuario_id::text = $2 AND m.rol <> 'duenio' AND u.id = m.usuario_id
+			RETURNING coalesce(nullif(u.nombre, ''), u.email), m.rol`, tiendaID, id).Scan(&quien, &rol)
+		if err == nil {
+			if _, err := t.Exec(ctx, `DELETE FROM auth.sesiones WHERE usuario_id::text = $1 AND tienda_id = $2`, id, tiendaID); err != nil {
+				return err
+			}
+			return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "personas.quitar", Entidad: "persona", EntidadID: id,
+				Texto: fmt.Sprintf("sacó a %s (%s) del equipo", quien, roles.Nombre[rol]), Antes: map[string]string{"rol": rol}})
+		}
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return err
+		}
+		err = t.QueryRow(ctx, `DELETE FROM invitaciones WHERE tienda_id = $1 AND id::text = $2 RETURNING contacto, rol`, tiendaID, id).
+			Scan(&quien, &rol)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrNoExiste
+		}
 		if err != nil {
 			return err
 		}
-		if tag.RowsAffected() == 1 {
-			_, err = t.Exec(ctx, `DELETE FROM auth.sesiones WHERE usuario_id::text = $1 AND tienda_id = $2`, id, tiendaID)
-			return err
-		}
-		tag, err = t.Exec(ctx, `DELETE FROM invitaciones WHERE tienda_id = $1 AND id::text = $2`, tiendaID, id)
-		if err == nil && tag.RowsAffected() == 0 {
-			return ErrNoExiste
-		}
-		return err
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "personas.cancelar", Entidad: "invitacion", EntidadID: id,
+			Texto: fmt.Sprintf("canceló la invitación de %s (%s)", quien, roles.Nombre[rol])})
 	})
 }
 
@@ -141,8 +161,11 @@ func rutasCuenta(mux *http.ServeMux, pool tx, con func(func(http.ResponseWriter,
 	}))
 	mux.HandleFunc("POST /v1/panel/cuenta/pack", con(func(w http.ResponseWriter, r *http.Request, id string, _ Quien) {
 		errorDe(w, pool.EnTienda(r.Context(), id, func(t pgx.Tx) error {
-			_, err := t.Exec(r.Context(), `UPDATE tiendas SET packs = packs || jsonb_build_object($2::text, coalesce((packs->>$2)::int, 0) + 1) WHERE id = $1`, id, mes(time.Now()))
-			return err
+			if _, err := t.Exec(r.Context(), `UPDATE tiendas SET packs = packs || jsonb_build_object($2::text, coalesce((packs->>$2)::int, 0) + 1) WHERE id = $1`, id, mes(time.Now())); err != nil {
+				return err
+			}
+			return auditoria.Registrar(r.Context(), t, id, auditoria.Registro{Accion: "plan.pack", Entidad: "tienda", EntidadID: id,
+				Texto: "sumó un pack extra este mes"})
 		}))
 	}))
 	mux.HandleFunc("DELETE /v1/panel/cuenta/pack", con(func(w http.ResponseWriter, r *http.Request, id string, _ Quien) {
@@ -152,7 +175,11 @@ func rutasCuenta(mux *http.ServeMux, pool tx, con func(func(http.ResponseWriter,
 			if err == nil && tag.RowsAffected() == 0 {
 				return ErrNoExiste
 			}
-			return err
+			if err != nil {
+				return err
+			}
+			return auditoria.Registrar(r.Context(), t, id, auditoria.Registro{Accion: "plan.pack_quitar", Entidad: "tienda", EntidadID: id,
+				Texto: "sacó un pack extra de este mes"})
 		}))
 	}))
 	mux.HandleFunc("POST /v1/panel/cuenta/cancelacion", con(func(w http.ResponseWriter, r *http.Request, id string, _ Quien) {
@@ -165,8 +192,11 @@ func rutasCuenta(mux *http.ServeMux, pool tx, con func(func(http.ResponseWriter,
 		}
 		if b.Accion == "cancelar" {
 			if err := pool.EnTienda(r.Context(), id, func(t pgx.Tx) error {
-				_, err := t.Exec(r.Context(), `UPDATE tiendas SET cancelada_en = now() WHERE id = $1`, id)
-				return err
+				if _, err := t.Exec(r.Context(), `UPDATE tiendas SET cancelada_en = now() WHERE id = $1`, id); err != nil {
+					return err
+				}
+				return auditoria.Registrar(r.Context(), t, id, auditoria.Registro{Accion: "plan.cancelar", Entidad: "tienda", EntidadID: id,
+					Texto: "canceló el plan (sigue hasta el próximo cobro)"})
 			}); err != nil {
 				errorDe(w, err)
 				return
@@ -181,8 +211,13 @@ func rutasCuenta(mux *http.ServeMux, pool tx, con func(func(http.ResponseWriter,
 	}))
 	mux.HandleFunc("DELETE /v1/panel/cuenta/cancelacion", con(func(w http.ResponseWriter, r *http.Request, id string, _ Quien) {
 		errorDe(w, pool.EnTienda(r.Context(), id, func(t pgx.Tx) error {
-			_, err := t.Exec(r.Context(), `UPDATE tiendas SET cancelada_en = NULL WHERE id = $1`, id)
-			return err
+			tag, err := t.Exec(r.Context(), `UPDATE tiendas SET cancelada_en = NULL WHERE id = $1 AND cancelada_en IS NOT NULL`, id)
+			if err != nil || tag.RowsAffected() == 0 {
+				return err
+			}
+			return auditoria.Registrar(r.Context(), t, id, auditoria.Registro{Accion: "plan.reactivar", Entidad: "tienda", EntidadID: id,
+				Texto: "deshizo la cancelación del plan"})
+
 		}))
 	}))
 	mux.HandleFunc("PUT /v1/panel/equipo/{id}", con(func(w http.ResponseWriter, r *http.Request, id string, q Quien) {

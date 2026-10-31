@@ -102,6 +102,9 @@ func TestPermisosPorRol(t *testing.T) {
 		{"GET", "/v1/panel/configuracion", "", []string{"duenio", "admin", "ventas", "local"}, false},
 		{"PUT", "/v1/panel/configuracion/seguridad/avisoIngreso", `{"activo":true}`, []string{"duenio", "admin", "ventas", "local"}, false},
 		{"PUT", "/v1/panel/configuracion/avisos/venta", `{"activo":true}`, []string{"duenio", "admin"}, false},
+		// Actividad: quién hizo qué, sólo la dueña y administración (docs/decisiones.md §38).
+		{"GET", "/v1/panel/actividad", "", []string{"duenio", "admin"}, false},
+		{"GET", "/v1/panel/actividad/exportar", "", []string{"duenio", "admin"}, false},
 	}
 	for _, c := range casos {
 		for _, rol := range []string{"duenio", "admin", "ventas", "local"} {
@@ -144,6 +147,40 @@ func TestPermisosPorRol(t *testing.T) {
 		_ = json.Unmarshal(pedir("local", "GET", "/v1/panel/productos/"+prod.ID, "").Body.Bytes(), &v)
 		if v.Costo != 0 {
 			t.Fatalf("local ve el costo: %+v", v)
+		}
+	})
+
+	t.Run("la actividad dice quién fue, con su rol, desde la sesión", func(t *testing.T) {
+		rec := pedir("admin", "GET", "/v1/panel/actividad?tipo=producto", "")
+		if rec.Code != http.StatusOK {
+			t.Fatalf("actividad: %d %s", rec.Code, rec.Body)
+		}
+		var pag struct {
+			Items []struct {
+				Quien, Texto string
+				Rol          *string
+			}
+			Personas []struct{ ID, Nombre string }
+		}
+		_ = json.Unmarshal(rec.Body.Bytes(), &pag)
+		var ventas, duenia bool
+		for _, x := range pag.Items {
+			ventas = ventas || (x.Quien == "Persona ventas" && x.Rol != nil && *x.Rol == "Ventas" &&
+				x.Texto == "le cambió el nombre a Mate: ahora es Mate de calabaza")
+			duenia = duenia || (x.Quien == "Ana" && x.Texto == "creó el producto Mate a $ 1.000.000")
+		}
+		if !ventas || !duenia {
+			t.Fatalf("actividad: %s", rec.Body)
+		}
+		// Lo que ventas no pudo tocar (el precio) no aparece como cambiado.
+		if strings.Contains(rec.Body.String(), "cambió el precio de Mate de calabaza") {
+			t.Fatalf("anotó un precio que no cambió: %s", rec.Body)
+		}
+		if rec := pedir("duenio", "GET", "/v1/panel/actividad?persona=nada", ""); rec.Code != http.StatusBadRequest {
+			t.Fatalf("filtro inválido: %d", rec.Code)
+		}
+		if rec := pedir("duenio", "GET", "/v1/panel/actividad", ""); !strings.Contains(rec.Body.String(), `"quien":"Vos"`) {
+			t.Fatalf("lo propio dice Vos: %s", rec.Body)
 		}
 	})
 

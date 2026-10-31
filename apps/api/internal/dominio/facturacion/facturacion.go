@@ -16,6 +16,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/arca"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/cifrado"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
 )
@@ -127,7 +128,11 @@ func (s *Servicio) GenerarPedido(ctx context.Context, tienda, rol string, a Alta
 			ON CONFLICT (tienda_id) DO UPDATE SET cuit = $2, razon_social = $3, condicion = $4, punto_venta = $5,
 				ambiente = $6, clave = $7, certificado = NULL, certificado_vence = NULL, actualizada_en = now()`,
 			tienda, a.CUIT, strings.TrimSpace(a.RazonSocial), a.Condicion, a.PuntoVenta, a.Ambiente, cif)
-		return err
+		if err != nil {
+			return err
+		}
+		return auditoria.Registrar(ctx, t, tienda, auditoria.Registro{Accion: "integracion.arca_pedido", Entidad: "integracion",
+			EntidadID: "arca", Texto: fmt.Sprintf("empezó a conectar ARCA (CUIT %s, punto de venta %d)", auditoria.Final(a.CUIT), a.PuntoVenta)})
 	})
 	return csr, err
 }
@@ -170,7 +175,11 @@ func (s *Servicio) GuardarCertificado(ctx context.Context, tienda, rol, certPEM 
 		}
 		_, err = t.Exec(ctx, `UPDATE arca_config SET certificado = $2, certificado_vence = $3, actualizada_en = now() WHERE tienda_id = $1`,
 			tienda, strings.TrimSpace(certPEM), d.Vence)
-		return err
+		if err != nil {
+			return err
+		}
+		return auditoria.Registrar(ctx, t, tienda, auditoria.Registro{Accion: "integracion.arca_conectar", Entidad: "integracion",
+			EntidadID: "arca", Texto: "conectó ARCA: subió el certificado (vence el " + d.Vence.Format("02/01/2006") + ")"})
 	})
 	return d, err
 }
@@ -195,7 +204,21 @@ func (s *Servicio) Ajustar(ctx context.Context, tienda, rol string, a Ajustes) e
 		if err == nil && tag.RowsAffected() == 0 {
 			return ErrSinARCA
 		}
-		return err
+		if err != nil {
+			return err
+		}
+		var cambios []string
+		if a.PuntoVenta != nil {
+			cambios = append(cambios, fmt.Sprintf("punto de venta %d", *a.PuntoVenta))
+		}
+		if a.FacturarAlCobrar != nil {
+			cambios = append(cambios, map[bool]string{true: "factura al cobrar", false: "no factura al cobrar"}[*a.FacturarAlCobrar])
+		}
+		if len(cambios) == 0 {
+			return nil
+		}
+		return auditoria.Registrar(ctx, t, tienda, auditoria.Registro{Accion: "integracion.arca_ajustes", Entidad: "integracion",
+			EntidadID: "arca", Texto: "cambió los ajustes de ARCA: " + strings.Join(cambios, ", ")})
 	})
 }
 

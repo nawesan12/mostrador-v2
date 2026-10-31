@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 )
 
 // RutaVuelta del OAuth de conexión: tiene que coincidir exacto con la de la aplicación.
@@ -141,7 +143,11 @@ func (s *Servicio) guardarTokens(ctx context.Context, tiendaID string, tk tokens
 					sucursal_mp = CASE WHEN mp_conexiones.mp_usuario = $2 THEN mp_conexiones.sucursal_mp END,
 					caja_externa = CASE WHEN mp_conexiones.mp_usuario = $2 THEN mp_conexiones.caja_externa END`,
 				tiendaID, tk.UserID, acceso, renov, vence, tk.Scope)
-			return err
+			if err != nil {
+				return err
+			}
+			return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "integracion.mercadopago_conectar",
+				Entidad: "integracion", EntidadID: "mercadopago", Texto: "conectó Mercado Pago"})
 		}
 		// Un refresh puede rotar el refresh token: se reemplazan los dos juntos.
 		_, err := t.Exec(ctx, `UPDATE mp_conexiones SET acceso = $2, renovacion = $3, vence_en = $4, reautorizar = false
@@ -153,8 +159,12 @@ func (s *Servicio) guardarTokens(ctx context.Context, tiendaID string, tk tokens
 // Desconectar borra los tokens. (La autorización se revoca desde la cuenta de Mercado Pago.)
 func (s *Servicio) Desconectar(ctx context.Context, tiendaID string) error {
 	return s.Pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		_, err := t.Exec(ctx, `DELETE FROM mp_conexiones WHERE tienda_id = $1`, tiendaID)
-		return err
+		tag, err := t.Exec(ctx, `DELETE FROM mp_conexiones WHERE tienda_id = $1`, tiendaID)
+		if err != nil || tag.RowsAffected() == 0 {
+			return err
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "integracion.mercadopago_desconectar",
+			Entidad: "integracion", EntidadID: "mercadopago", Texto: "desconectó Mercado Pago"})
 	})
 }
 

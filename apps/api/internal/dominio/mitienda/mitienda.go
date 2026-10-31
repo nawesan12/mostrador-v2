@@ -15,6 +15,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/tiendas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
@@ -190,7 +191,11 @@ func Publicar(ctx context.Context, pool tx, tiendaID string) error {
 				diseno_borrador = diseno_borrador - 'plantilla',
 				diseno_publicado = coalesce(diseno_borrador - 'plantilla', diseno_publicado)
 			WHERE id = $1`, tiendaID)
-		return err
+		if err != nil {
+			return err
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "mitienda.publicar", Entidad: "diseno",
+			Texto: "publicó el diseño de la tienda (Mi tienda)"})
 	})
 }
 

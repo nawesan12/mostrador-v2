@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 )
 
 // RutaVuelta del OAuth: tiene que coincidir exacto con la de la aplicación.
@@ -146,15 +148,23 @@ func (s *Servicio) guardar(ctx context.Context, tiendaID string, tk tokens, apod
 			ON CONFLICT (tienda_id) DO UPDATE SET ml_usuario = $2, apodo = $3, acceso = $4, renovacion = $5,
 				vence_en = $6, conectada_en = now(), reautorizar = false`,
 			tiendaID, tk.UserID, apodo, acceso, renov, vence)
-		return err
+		if err != nil {
+			return err
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "integracion.mercadolibre_conectar",
+			Entidad: "integracion", EntidadID: "mercadolibre", Texto: "conectó Mercado Libre (cuenta " + apodo + ")"})
 	})
 }
 
 // Desconectar borra los tokens. Las publicaciones quedan en Mercado Libre, sin sincronizar.
 func (s *Servicio) Desconectar(ctx context.Context, tiendaID string) error {
 	return s.Pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		_, err := t.Exec(ctx, `DELETE FROM ml_conexiones WHERE tienda_id = $1`, tiendaID)
-		return err
+		tag, err := t.Exec(ctx, `DELETE FROM ml_conexiones WHERE tienda_id = $1`, tiendaID)
+		if err != nil || tag.RowsAffected() == 0 {
+			return err
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "integracion.mercadolibre_desconectar",
+			Entidad: "integracion", EntidadID: "mercadolibre", Texto: "desconectó Mercado Libre"})
 	})
 }
 

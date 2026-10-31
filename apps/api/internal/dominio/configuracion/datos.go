@@ -12,6 +12,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 )
 
 var dominioValido = regexp.MustCompile(`^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$`)
@@ -129,8 +131,11 @@ func ConectarDominio(ctx context.Context, pool tx, tiendaID, nombre string) erro
 		return ErrInvalido
 	}
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		_, err := t.Exec(ctx, `INSERT INTO dominios (nombre, tienda_id) VALUES ($1, $2)`, nombre, tiendaID)
-		return err
+		if _, err := t.Exec(ctx, `INSERT INTO dominios (nombre, tienda_id) VALUES ($1, $2)`, nombre, tiendaID); err != nil {
+			return err
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "dominio.conectar", Entidad: "dominio",
+			EntidadID: nombre, Texto: "conectó el dominio " + nombre})
 	})
 	var pe *pgconn.PgError
 	if errors.As(err, &pe) && pe.Code == "23505" {
@@ -147,8 +152,11 @@ func DominioPrincipal(ctx context.Context, pool tx, tiendaID, nombre, sitio stri
 			return err
 		}
 		if nombre == host(sitio)+"/t/"+slug {
-			_, err := t.Exec(ctx, `UPDATE dominios SET principal = false WHERE tienda_id = $1`, tiendaID)
-			return err
+			if _, err := t.Exec(ctx, `UPDATE dominios SET principal = false WHERE tienda_id = $1`, tiendaID); err != nil {
+				return err
+			}
+			return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "dominio.principal", Entidad: "dominio",
+				EntidadID: nombre, Texto: "dejó como principal la dirección gratis " + nombre})
 		}
 		var verificado *time.Time
 		err := t.QueryRow(ctx, `SELECT verificado_en FROM dominios WHERE tienda_id = $1 AND nombre = $2`, tiendaID, nombre).Scan(&verificado)
@@ -161,8 +169,11 @@ func DominioPrincipal(ctx context.Context, pool tx, tiendaID, nombre, sitio stri
 		if verificado == nil {
 			return ErrNoSePuede
 		}
-		_, err = t.Exec(ctx, `UPDATE dominios SET principal = (nombre = $2) WHERE tienda_id = $1`, tiendaID, nombre)
-		return err
+		if _, err = t.Exec(ctx, `UPDATE dominios SET principal = (nombre = $2) WHERE tienda_id = $1`, tiendaID, nombre); err != nil {
+			return err
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "dominio.principal", Entidad: "dominio",
+			EntidadID: nombre, Texto: "eligió " + nombre + " como dominio principal"})
 	})
 }
 
@@ -172,7 +183,11 @@ func QuitarDominio(ctx context.Context, pool tx, tiendaID, nombre string) error 
 		if err == nil && tag.RowsAffected() == 0 {
 			return ErrNoExiste
 		}
-		return err
+		if err != nil {
+			return err
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "dominio.quitar", Entidad: "dominio",
+			EntidadID: nombre, Texto: "quitó el dominio " + nombre})
 	})
 }
 
@@ -287,9 +302,19 @@ func RegistrarExportacion(ctx context.Context, pool tx, tiendaID, tipo, formato 
 		if len(lista) > 5 {
 			lista = lista[:5]
 		}
-		_, err := t.Exec(ctx, `UPDATE tiendas SET preferencias = jsonb_set(preferencias, '{exportaciones}', $2) WHERE id = $1`, tiendaID, lista)
-		return err
+		if _, err := t.Exec(ctx, `UPDATE tiendas SET preferencias = jsonb_set(preferencias, '{exportaciones}', $2) WHERE id = $1`, tiendaID, lista); err != nil {
+			return err
+		}
+		que := map[string]string{"productos": "los productos", "clientes": "los clientes", "pedidos": "los pedidos",
+			"facturas": "las facturas", "resenas": "las reseñas", "conversaciones": "las conversaciones", "todo": "todos los datos de la tienda"}[tipo]
+		en := map[string]string{"csv": "CSV", "excel": "Excel"}[formato]
+		if tipo == "todo" {
+			en = "un ZIP"
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "datos.exportar", Entidad: "datos", EntidadID: tipo,
+			Texto: "bajó " + que + " en " + en})
 	})
+
 }
 
 // CerrarCuenta: con el nombre de la tienda como confirmación. Queda offline y se borra a los 90 días.

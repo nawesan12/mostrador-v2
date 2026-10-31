@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
@@ -142,7 +143,13 @@ func CambiarDireccion(ctx context.Context, pool enTienda, tiendaID, slug string)
 				return ErrDireccionReservada
 			}
 		}
-		return tx.QueryRow(ctx, `SELECT app.cambiar_slug($1)`, slug).Scan(&res)
+		if err := tx.QueryRow(ctx, `SELECT app.cambiar_slug($1)`, slug).Scan(&res); err != nil || res != "ok" {
+			return err
+		}
+		// Actividad (docs/decisiones.md §39).
+		return auditoria.Registrar(ctx, tx, tiendaID, auditoria.Registro{Accion: "negocio.direccion", Entidad: "tienda",
+			EntidadID: tiendaID, Texto: "cambió la dirección de la tienda de " + anterior + " a " + slug + " (la anterior redirige a la nueva)",
+			Antes: map[string]string{"slug": anterior}, Despues: map[string]string{"slug": slug}})
 	})
 	var pg *pgconn.PgError
 	if errors.As(err, &pg) && pg.Code == "23505" {
