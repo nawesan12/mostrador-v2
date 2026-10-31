@@ -51,7 +51,7 @@
 		o.demo = data.demo;
 		o.fijarTienda(data.tienda);
 		o.cargar(data.demo || !data.conSesion ? undefined : data.guardado);
-		o.alCambiar = () => formPaso?.requestSubmit();
+		o.alCambiar = () => guardarPaso();
 		// Desde «Usar esta plantilla» de la landing: ?plantilla= manda sobre lo guardado.
 		const tpl = page.url.searchParams.get('plantilla');
 		if (tpl && PLANTILLAS.some((p) => p.id === tpl)) {
@@ -99,10 +99,36 @@
 	let formPaso = $state<HTMLFormElement>();
 	let formFin = $state<HTMLFormElement>();
 	let sinGuardar = $state(false);
+	/**
+	 * Un solo guardado a la vez: cada uno manda el estado entero, y dos en vuelo podían llegar al
+	 * revés y dejar grabado el anterior. Si hay uno en curso, se vuelve a mandar al terminar (con lo
+	 * último); «Terminar» espera a que no quede ninguno.
+	 */
+	let guardando = false;
+	let otraVez = false;
+	let alQuedarLibre: (() => void)[] = [];
+	function guardarPaso() {
+		if (guardando) {
+			otraVez = true;
+			return;
+		}
+		guardando = true;
+		tick().then(() => formPaso?.requestSubmit());
+	}
+	function pasoGuardado() {
+		guardando = false;
+		if (otraVez) {
+			otraVez = false;
+			guardarPaso();
+			return;
+		}
+		for (const f of alQuedarLibre.splice(0)) f();
+	}
+	const libre = () =>
+		guardando ? new Promise<void>((ok) => alQuedarLibre.push(ok)) : Promise.resolve();
 	$effect(() => {
 		void paso;
-		if (listo && !data.demo && data.conSesion && paso > 0)
-			tick().then(() => formPaso?.requestSubmit());
+		if (listo && !data.demo && data.conSesion && paso > 0) guardarPaso();
 	});
 	const estado = $derived(
 		JSON.stringify({
@@ -132,7 +158,11 @@
 			// Sin almacenamiento: no importa.
 		}
 		destino = a;
-		tick().then(() => formFin?.requestSubmit());
+		// Que un guardado de paso en vuelo no llegue después y pise lo final.
+		otraVez = false;
+		libre()
+			.then(tick)
+			.then(() => formFin?.requestSubmit());
 	};
 
 	/**
@@ -371,6 +401,7 @@
 	use:enhance={() =>
 		async ({ result }) => {
 			sinGuardar = result.type !== 'success';
+			pasoGuardado();
 		}}
 	hidden
 >
