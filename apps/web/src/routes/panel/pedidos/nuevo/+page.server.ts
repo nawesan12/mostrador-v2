@@ -1,3 +1,4 @@
+import { ErrorApi } from '#lib/server/bff.ts';
 import { datosDe } from '#lib/server/datos/index.ts';
 import type { VarianteFila } from '#lib/panel/vendibles.ts';
 import type { PageServerLoad } from './$types';
@@ -11,7 +12,11 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const desde = Number(url.searchParams.get('desde'));
 	const [productos, clientes, entregas, pedido] = await Promise.all([
 		datos.listar('productos', { cuantos: 200 }),
-		datos.listar('clientes', { cuantos: 200 }),
+		// El rol Local no ve Clientes (403): sin la lista, el cliente se escribe a mano.
+		datos.listar('clientes', { cuantos: 200 }).catch((e: unknown) => {
+			if (e instanceof ErrorApi && e.estado === 403) return { filas: [] };
+			throw e;
+		}),
 		// Cómo entrega la tienda de verdad (Envíos y retiro): sin esto el pedido ofrecía Andreani y
 		// OCA con costos inventados.
 		datos.entregas(),
