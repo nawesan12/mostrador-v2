@@ -971,5 +971,48 @@ avisos que el iPhone de §40.
   recarga sola si otra persona publica (no pisa lo que se está editando): avisa. En la tienda online,
   si se agota algo del carrito (o el producto que se mira) se avisa antes de pagar, con «Ajustar
   carrito»; en la página del pedido, «¡Recibimos tu pago!» al acreditarse.
-- **Sin origen todavía**: notificaciones del panel y Bandeja (WhatsApp) no tienen tabla en la API
-  (vacías hoy); cuando la tengan, se suma su trigger y su clave.
+- **Sin origen todavía**: la Bandeja (WhatsApp) no tiene tabla en la API (vacía hoy); cuando la
+  tenga, se suma su trigger y su clave. Las notificaciones del panel ya tienen la suya (§45).
+
+## 45. La campanita del panel: notificaciones por persona (migración 00062)
+
+- **Una fila por evento y por persona**: `notificaciones` (tienda, persona, `clave` del hecho, ícono,
+  grupo ventas/sistema, título, detalle, `ruta` del panel, leída). RLS por tienda como todas y,
+  además, políticas RESTRICTIVE por persona: cada una ve y marca sólo las suyas. La app no inserta
+  directo: el worker usa `app.notificar` (SECURITY DEFINER), que sólo escribe en la tienda fijada y
+  para quien es del equipo de esa tienda. `UNIQUE (tienda, persona, clave)` con `ON CONFLICT DO
+  NOTHING`: reprocesar el outbox no duplica.
+- **Desde los mismos eventos que el mail y el push**: `notificaciones.Generador.Envolver` envuelve
+  los manejadores del worker; primero escribe la notificación y después corre el manejador que ya
+  estaba. Si falla la notificación, el evento se reintenta sin haber mandado nada.
+  - `tienda.venta` → «Nueva venta #N» (transferencia por confirmar, transferencia acreditada o pago
+    acreditado en Mercado Pago), a quien tiene Pedidos.
+  - `tienda.sin_stock` → «Te quedaste sin stock», a Productos (no sale si ya repusieron).
+  - `push.pregunta_ml` → «Pregunta nueva en Mercado Libre» (sin el texto), a Clientes.
+  - `pago.aprobado` (ya existía, sin manejador) → links de pago (a Finanzas), señas de turnos y pagos
+    de pedidos cargados en el panel (a Pedidos). Los de la tienda online ya avisan como venta y el QR
+    lo ve quien cobra.
+  - Eventos nuevos, encolados en la misma transacción que el cambio: `tienda.resena` (reseña de la
+    tienda online, a Clientes, con las estrellas y sin el texto), `integracion.reautorizar` (Mercado
+    Pago o Mercado Libre dejaron de aceptar la conexión, sólo la primera vez; a Tienda o Finanzas),
+    `equipo.aceptada` (alguien se sumó con la invitación; a Cuenta, no a quien se sumó),
+    `plan.activado` y `plan.pausado` (la suscripción del abono; a Cuenta).
+  - El monto, sólo con Finanzas (§37): Ventas y Local leen «2 productos · Transferencia por
+    confirmar». Nunca datos de quien compró.
+  - El certificado de ARCA por vencer no tiene aviso en la API (no hay nada que lo detecte): no hay
+    notificación hasta que exista.
+- **API** (`roles.Panel`, sólo la sesión de una persona; una IA o el soporte mirando la reciben vacía):
+  `GET /v1/panel/notificaciones` (de a 20, de la más nueva a la más vieja, cursor y `sinLeer`),
+  `GET /v1/panel/notificaciones/sin-leer`, `POST /v1/panel/notificaciones/{id}/leida` y
+  `POST /v1/panel/notificaciones/leidas`. `resumen.notificaciones` queda vacío con la API (la demo
+  sigue armando las suyas).
+- **Retención: 90 días.** `app.purgar_notificaciones()` la corre el worker una vez por día; la lista
+  tampoco muestra lo más viejo aunque todavía no se haya purgado.
+- **Tiempo real**: un trigger por sentencia avisa `notificacion.nueva` (alta) y `notificacion.leida`
+  (marcada) con `u`, sin id ni texto; el hub lo entrega sólo a las pestañas de esa persona paradas
+  en esa tienda. La web recarga `tienda:notificaciones` (el armazón del panel).
+- **La web**: la insignia con el número (hasta «9+») sobre la campanita, la lista con Todo / Ventas /
+  Sistema, «Ver anteriores» con el cursor, «Marcar todo como leído» sólo si hay sin leer y vacío
+  honesto. Tocar una la marca leída y abre su página (sólo rutas de `/panel`).
+- **De paso**: `/panel/pedidos/<n>` abierto en el navegador (el «Ver el pedido» de los mails y el
+  push) devolvía el JSON de la hoja; ahora lleva a `/panel/pedidos?pedido=<n>`.

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
+	import { insignia } from './notificaciones.ts';
 	import { getShell } from './shell.svelte.ts';
 
 	/** Barra de arriba (handoff): menú, dónde estás, estado de la tienda, tema y notificaciones. */
@@ -14,11 +15,13 @@
 		area: string;
 		seccion: string;
 		foto: string | null;
-		sinLeer: boolean;
+		/** Notificaciones sin leer de la persona (§45). */
+		sinLeer: number;
 		/** Sin conexión de tiempo real hace más de unos segundos (§44). */
 		caida?: boolean;
 	} = $props();
 	const shell = getShell();
+	const numero = $derived(insignia(sinLeer));
 </script>
 
 <header class="top">
@@ -63,10 +66,12 @@
 	<button
 		type="button"
 		class="ico"
-		aria-label="Notificaciones"
+		aria-label={numero ? `Notificaciones, ${sinLeer} sin leer` : 'Notificaciones'}
 		aria-expanded={shell.notificaciones}
 		onclick={() => (shell.notificaciones = !shell.notificaciones)}
-		><Icon icon={I.phBell} size={17} />{#if sinLeer}<span class="aviso"></span>{/if}</button
+		><Icon icon={I.phBell} size={17} />{#if numero}<span class="badge" aria-hidden="true"
+				>{numero}</span
+			>{/if}</button
 	>
 </header>
 
@@ -103,15 +108,22 @@
 		border-radius: 12px;
 		display: none;
 	}
-	.aviso {
+	/* La insignia de la barra de abajo (BarraAbajo), sobre la campanita. */
+	.badge {
 		position: absolute;
-		top: 8px;
-		right: 9px;
-		width: 7px;
-		height: 7px;
-		border-radius: 50%;
-		background: #d2582f;
-		box-shadow: 0 0 0 2px var(--sf);
+		top: -4px;
+		right: -5px;
+		min-width: 18px;
+		height: 18px;
+		padding: 0 5px;
+		border-radius: 999px;
+		background: #b0441d;
+		color: #fff;
+		font-size: 10.5px;
+		font-weight: 700;
+		display: grid;
+		place-items: center;
+		box-shadow: 0 0 0 2px var(--bg);
 	}
 	.chico {
 		display: none;

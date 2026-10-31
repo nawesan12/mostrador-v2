@@ -120,6 +120,7 @@ import type {
 	Idea,
 	Onboarding,
 	Periodo,
+	PaginaNotificaciones,
 	ResumenPanel,
 	Tablero,
 	Tienda
@@ -3506,10 +3507,35 @@ export class DatosSandbox implements Datos {
 				detalle: `${t.cliente.nombre} · ${cuandoTurno(t.inicio)}`,
 				creada: t.creadoEn,
 				leida: Date.parse(t.creadoEn) <= (leidas?.hasta ?? 0),
-				grupo: 'ventas' as const
+				grupo: 'ventas' as const,
+				ruta: '/panel/turnos'
 			}));
 		r.notificaciones = [...turnos, ...r.notificaciones];
 		return r;
+	}
+
+	/** La campanita de la demo: las del resumen, con las que el visitante tocó ya leídas. */
+	async notificaciones(): Promise<PaginaNotificaciones> {
+		const [r, cambios] = await Promise.all([
+			this.resumen(),
+			cambiosDe(this.db, this.sb.id, 'notificaciones')
+		]);
+		const tocadas = new Set((cambios.get('tocadas') as { ids?: string[] } | undefined)?.ids ?? []);
+		const lista = r.notificaciones.map((n) => (tocadas.has(n.id) ? { ...n, leida: true } : n));
+		return {
+			notificaciones: lista,
+			sinLeer: lista.filter((n) => !n.leida).length,
+			siguiente: null
+		};
+	}
+
+	async marcarNotificacionLeida(id: string) {
+		const cambios = await cambiosDe(this.db, this.sb.id, 'notificaciones');
+		const ids = (cambios.get('tocadas') as { ids?: string[] } | undefined)?.ids ?? [];
+		if (ids.includes(id)) return;
+		await guardarCambio(this.db, this.sb.id, 'notificaciones', 'tocadas', {
+			ids: [...ids, id.slice(0, 80)].slice(-100)
+		});
 	}
 
 	async marcarNotificacionesLeidas() {

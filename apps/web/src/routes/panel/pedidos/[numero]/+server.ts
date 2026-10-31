@@ -1,4 +1,4 @@
-import { error, json } from '@sveltejs/kit';
+import { error, json, redirect } from '@sveltejs/kit';
 import { datosDe } from '#lib/server/datos/index.ts';
 import type { EstadoPedido } from '#lib/server/datos/tipos.ts';
 import type { RequestHandler } from './$types';
@@ -18,9 +18,15 @@ const numeroDe = (s: string) => {
 	return n;
 };
 
-/** El detalle de un pedido (la hoja). */
-export const GET: RequestHandler = async ({ locals, params }) => {
-	const p = await datosDe(locals).pedido(numeroDe(params.numero));
+/**
+ * El detalle de un pedido (la hoja). Abierto en el navegador (el «Ver el pedido» de los mails y el
+ * push), lleva a la lista con esa hoja abierta.
+ */
+export const GET: RequestHandler = async ({ locals, params, request }) => {
+	const n = numeroDe(params.numero);
+	if (request.headers.get('accept')?.includes('text/html'))
+		redirect(303, `/panel/pedidos?pedido=${n}`);
+	const p = await datosDe(locals).pedido(n);
 	if (!p) error(404, 'Ese pedido no existe.');
 	return json(p, { headers: { 'cache-control': 'no-store' } });
 };

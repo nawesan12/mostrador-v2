@@ -1,18 +1,71 @@
 <script lang="ts">
+	import { SvelteSet } from 'svelte/reactivity';
 	import MarcaIcono from '#lib/components/MarcaIcono.svelte';
 	import type { components } from '@mostrador/contrato/esquema';
 	import { rutaDe } from './navegacion.ts';
 	import { getShell, hace } from './shell.svelte.ts';
+	import { esRutaPanel } from './notificaciones.ts';
 
-	/** Panel de notificaciones (handoff): Todo / Ventas / Sistema y "Marcar todo como leído". */
+	type Notificacion = components['schemas']['Notificacion'];
+	type Pagina = components['schemas']['PaginaNotificaciones'];
+
+	/**
+	 * La campanita (handoff; §45): Todo / Ventas / Sistema, «Marcar todo como leído» y, al tocar una,
+	 * se marca leída y abre su página del panel.
+	 */
 	let {
-		notificaciones,
-		marcarLeidas
-	}: { notificaciones: components['schemas']['Notificacion'][]; marcarLeidas: () => void } =
-		$props();
+		pagina,
+		marcarLeidas,
+		tocar
+	}: {
+		pagina: Pagina;
+		marcarLeidas: () => void;
+		/** Marca leída una (la recarga la hace quien llama). */
+		tocar: (n: Notificacion) => void;
+	} = $props();
 	const shell = getShell();
 	let grupo = $state<'todo' | 'ventas' | 'sistema'>('todo');
-	const lista = $derived(notificaciones.filter((n) => grupo === 'todo' || n.grupo === grupo));
+	// «Ver anteriores»: las páginas que se suman abajo. Si llega una lista nueva (tiempo real, marcar
+	// todo), se vuelve a la primera.
+	let anteriores = $state<Notificacion[]>([]);
+	let siguiente = $state<string | null>(null);
+	let cargando = $state(false);
+	let falla = $state(false);
+	$effect.pre(() => {
+		siguiente = pagina.siguiente;
+		anteriores = [];
+		falla = false;
+	});
+	// Lo que se tocó se ve leído en el acto, antes de que vuelva la lista.
+	const tocadas = new SvelteSet<string>();
+	const todas = $derived([...pagina.notificaciones, ...anteriores]);
+	const lista = $derived(todas.filter((n) => grupo === 'todo' || n.grupo === grupo));
+	const leida = (n: Notificacion) => n.leida || tocadas.has(n.id);
+
+	async function verAnteriores() {
+		if (!siguiente || cargando) return;
+		cargando = true;
+		falla = false;
+		try {
+			const r = await fetch(`/panel/notificaciones/lista?cursor=${encodeURIComponent(siguiente)}`);
+			if (!r.ok) throw new Error(String(r.status));
+			const p = (await r.json()) as Pagina;
+			anteriores = [...anteriores, ...p.notificaciones];
+			siguiente = p.siguiente;
+		} catch {
+			falla = true;
+		} finally {
+			cargando = false;
+		}
+	}
+
+	function abrir(n: Notificacion) {
+		if (!leida(n)) {
+			tocadas.add(n.id);
+			tocar(n);
+		}
+		shell.notificaciones = false;
+	}
 
 	function entra(el: HTMLElement) {
 		el.animate(
@@ -25,12 +78,24 @@
 	}
 </script>
 
+{#snippet contenido(n: Notificacion)}
+	<MarcaIcono k={n.tipo} size={36} radius={11} />
+	<span class="n-txt">
+		<span class="n-t">{n.titulo}</span>
+		{#if n.detalle}<span class="n-d">{n.detalle}</span>{/if}
+		<span class="n-h">{hace(n.creada)}</span>
+	</span>
+	{#if !leida(n)}<span class="sin-leer" aria-label="Sin leer"></span>{/if}
+{/snippet}
+
 {#if shell.notificaciones}
 	<div class="fuera" onclick={() => (shell.notificaciones = false)} aria-hidden="true"></div>
 	<div class="caja" role="dialog" aria-label="Notificaciones" use:entra>
 		<div class="cab">
 			<span class="t">Notificaciones</span>
-			<button type="button" class="leer" onclick={marcarLeidas}>Marcar todo como leído</button>
+			{#if pagina.sinLeer > 0 || todas.some((n) => !leida(n))}
+				<button type="button" class="leer" onclick={marcarLeidas}>Marcar todo como leído</button>
+			{/if}
 		</div>
 		<div class="tabs" role="group" aria-label="Filtrar">
 			{#each [['todo', 'Todo'], ['ventas', 'Ventas'], ['sistema', 'Sistema']] as const as [k, t] (k)}
@@ -39,18 +104,39 @@
 		</div>
 		<div class="lista">
 			{#each lista as n (n.id)}
-				<div class="n">
-					<MarcaIcono k={n.tipo} size={36} radius={11} />
-					<span class="n-txt">
-						<span class="n-t">{n.titulo}</span>
-						<span class="n-d">{n.detalle}</span>
-						<span class="n-h">{hace(n.creada)}</span>
-					</span>
-					{#if !n.leida}<span class="sin-leer" aria-label="Sin leer"></span>{/if}
-				</div>
+				{#if n.ruta && esRutaPanel(n.ruta)}
+					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- la ruta del panel la arma la API (§45) -->
+					<a class="n" class:leida={leida(n)} href={n.ruta} onclick={() => abrir(n)}
+						>{@render contenido(n)}</a
+					>
+				{:else}
+					<button type="button" class="n" class:leida={leida(n)} onclick={() => abrir(n)}
+						>{@render contenido(n)}</button
+					>
+				{/if}
 			{:else}
-				<div class="vacio">No hay notificaciones por ahora.</div>
+				<div class="vacio">
+					{#if todas.length === 0}
+						No tenés notificaciones por ahora. Acá te avisamos de ventas, pagos y lo que necesite tu
+						atención.
+					{:else}
+						Nada en {grupo === 'ventas' ? 'Ventas' : 'Sistema'} por ahora.
+					{/if}
+				</div>
 			{/each}
+			{#if siguiente && grupo === 'todo'}
+				<div class="mas">
+					<button
+						type="button"
+						class="btn btn-soft btn-sm"
+						disabled={cargando}
+						onclick={verAnteriores}>{cargando ? 'Cargando…' : 'Ver anteriores'}</button
+					>
+					{#if falla}<span class="falla" role="status"
+							>No pudimos traer las anteriores. Probá de nuevo.</span
+						>{/if}
+				</div>
+			{/if}
 		</div>
 		<div class="pie">
 			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta del panel armada con rutaDe -->
@@ -86,6 +172,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
+		min-height: 52px;
 		padding: 16px 18px 10px;
 	}
 	.t {
@@ -120,15 +207,25 @@
 		color: var(--sf);
 	}
 	.lista {
-		max-height: 400px;
+		max-height: min(400px, calc(100dvh - 220px));
 		overflow: auto;
 		border-top: 1px solid var(--ln);
 	}
 	.n {
 		display: flex;
 		gap: 12px;
+		width: 100%;
 		padding: 12px 18px;
+		border: 0;
 		border-bottom: 1px solid var(--ln);
+		background: transparent;
+		color: inherit;
+		font: inherit;
+		text-align: left;
+		text-decoration: none;
+	}
+	.n:hover {
+		background: var(--chip);
 	}
 	.n-txt {
 		flex: 1;
@@ -138,6 +235,9 @@
 		display: block;
 		font-size: 14px;
 		font-weight: 600;
+	}
+	.leida .n-t {
+		font-weight: 500;
 	}
 	.n-d {
 		display: block;
@@ -164,7 +264,20 @@
 		padding: 28px 18px;
 		text-align: center;
 		font-size: 14px;
+		line-height: 1.45;
 		color: var(--mu);
+		text-wrap: balance;
+	}
+	.mas {
+		display: grid;
+		justify-items: center;
+		gap: 6px;
+		padding: 12px 18px;
+	}
+	.falla {
+		font-size: 12.5px;
+		color: var(--mu);
+		text-align: center;
 	}
 	.pie {
 		padding: 12px 18px;

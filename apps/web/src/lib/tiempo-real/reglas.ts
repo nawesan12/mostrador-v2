@@ -43,7 +43,9 @@ const RECARGA: Record<string, readonly string[]> = {
 	turno: ['turnos', 'tablero'],
 	devolucion: ['devoluciones'],
 	finanzas: ['finanzas', 'tablero'],
-	sesion: ['sesiones']
+	sesion: ['sesiones'],
+	// La campanita (§45): sólo le llega a la persona destinataria.
+	notificacion: ['notificaciones']
 };
 
 /** Las dependencias (`tienda:<cosa>`) que hay que invalidar para un evento. */

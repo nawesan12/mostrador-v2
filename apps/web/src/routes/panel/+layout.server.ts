@@ -1,6 +1,7 @@
 import { env } from 'cloudflare:workers';
 import { datosDe, usaSandbox } from '#lib/server/datos/index.ts';
 import { plantilla } from '#lib/plantillas.ts';
+import type { PaginaNotificaciones } from '#lib/server/datos/tipos.ts';
 import type { LayoutServerLoad } from './$types';
 
 /**
@@ -8,12 +9,16 @@ import type { LayoutServerLoad } from './$types';
  * de la persona (tema y modo, en cookies que escribe el navegador, así el primer render ya sale bien).
  */
 export const load: LayoutServerLoad = async ({ locals, cookies, depends }) => {
-	// Tiempo real (§44): las insignias, la campanita y el plan se recargan con sus avisos.
-	depends('tienda:resumen', 'tienda:armazon', 'tienda:plan');
+	// Tiempo real (§44): las insignias, la campanita (§45) y el plan se recargan con sus avisos.
+	depends('tienda:resumen', 'tienda:armazon', 'tienda:plan', 'tienda:notificaciones');
 	const datos = datosDe(locals);
-	const [tienda, resumen, ajustes, acceso] = await Promise.all([
+	const [tienda, resumen, notificaciones, ajustes, acceso] = await Promise.all([
 		datos.tienda(),
 		datos.resumen(),
+		// Si la API no responde la campanita, el panel anda igual (la campanita queda vacía).
+		datos
+			.notificaciones()
+			.catch(() => ({ notificaciones: [], sinLeer: 0, siguiente: null }) as PaginaNotificaciones),
 		// Si la API todavía no responde turnos, la sección queda como la del rubro.
 		datos.ajustesTurnos().catch(() => null),
 		// El rol de la persona y sus tiendas: el menú muestra sólo lo que puede (Go igual responde 403).
@@ -22,6 +27,7 @@ export const load: LayoutServerLoad = async ({ locals, cookies, depends }) => {
 	return {
 		tienda,
 		resumen,
+		notificaciones,
 		acceso,
 		// En la demo, la portada de su plantilla; una tienda real no tiene foto propia todavía, así que
 		// van sus iniciales y no la foto de stock de la plantilla.

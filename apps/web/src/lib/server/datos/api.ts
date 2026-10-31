@@ -85,6 +85,7 @@ import type {
 	Idea,
 	Onboarding,
 	Periodo,
+	PaginaNotificaciones,
 	ResumenPanel,
 	Rubro,
 	Tablero,
@@ -167,6 +168,14 @@ export class DatosApi implements Datos {
 
 	resumen() {
 		return this.pedir<ResumenPanel>('/v1/panel/resumen');
+	}
+	notificaciones(cursor?: string) {
+		const q = cursor ? `?cursor=${encodeURIComponent(cursor)}` : '';
+		return this.pedir<PaginaNotificaciones>(`/v1/panel/notificaciones${q}`);
+	}
+	/** Una que ya no está (404: se purgó) no es un error para quien la tocó. */
+	async marcarNotificacionLeida(id: string) {
+		await this.intentar(`/v1/panel/notificaciones/${encodeURIComponent(id)}/leida`, 'POST', {});
 	}
 	marcarNotificacionesLeidas() {
 		return this.pedir<void>('/v1/panel/notificaciones/leidas', 'POST', {});

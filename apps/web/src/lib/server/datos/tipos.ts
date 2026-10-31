@@ -24,6 +24,7 @@ export type Plan = components['schemas']['Plan'];
 export type Onboarding = components['schemas']['Onboarding'];
 export type ResumenPanel = components['schemas']['ResumenPanel'];
 export type Notificacion = components['schemas']['Notificacion'];
+export type PaginaNotificaciones = components['schemas']['PaginaNotificaciones'];
 export type Tablero = components['schemas']['Tablero'];
 export type Periodo = Tablero['periodo'];
 export type ContextoHornero = components['schemas']['ContextoHornero'];
@@ -122,6 +123,9 @@ export interface Datos {
 	cambiarDireccion(slug: string): Promise<CambioDireccion>;
 	/** Insignias del menú, notificaciones, canales y prueba: lo que muestra el armazón del panel. */
 	resumen(): Promise<ResumenPanel>;
+	/** La campanita (§45): las notificaciones de la persona, de la más nueva a la más vieja. */
+	notificaciones(cursor?: string): Promise<PaginaNotificaciones>;
+	marcarNotificacionLeida(id: string): Promise<void>;
 	marcarNotificacionesLeidas(): Promise<void>;
 	/** El Resumen (dashboard) del período. */
 	tablero(periodo: Periodo): Promise<Tablero>;

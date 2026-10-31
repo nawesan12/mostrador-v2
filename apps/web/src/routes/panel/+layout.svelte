@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
 	import { page } from '$app/state';
-	import { invalidateAll } from '$app/navigation';
+	import { invalidate } from '$app/navigation';
 	import BarraAbajo from '#lib/panel/BarraAbajo.svelte';
 	import BarraLateral from '#lib/panel/BarraLateral.svelte';
 	import Cmdk from '#lib/panel/Cmdk.svelte';
@@ -69,7 +69,7 @@
 		return () => clearTimeout(t);
 	});
 	const donde = $derived(ubicar(page.url.pathname) ?? { seccion: 'Resumen', area: AREAS[0] });
-	const sinLeer = $derived(data.resumen.notificaciones.some((n) => !n.leida));
+	const sinLeer = $derived(data.notificaciones.sinLeer);
 	const dominio = $derived(`${SITE.replace(/^https?:\/\//, '')}/t/${data.tienda.slug}`);
 	const iniciales = $derived(
 		data.tienda.nombre
@@ -80,9 +80,19 @@
 			.toUpperCase()
 	);
 
+	// La campanita (§45): marcar y volver a pedir sólo lo suyo (las otras pestañas se enteran por el
+	// tiempo real).
 	async function marcarLeidas() {
 		await fetch('/panel/notificaciones', { method: 'POST' });
-		await invalidateAll();
+		await invalidate('tienda:notificaciones');
+	}
+	function tocarNotificacion(n: { id: string }) {
+		void fetch(`/panel/notificaciones/${encodeURIComponent(n.id)}`, {
+			method: 'POST',
+			keepalive: true
+		})
+			.then(() => invalidate('tienda:notificaciones'))
+			.catch(() => {});
 	}
 	// Al cambiar de sección se cierra lo que haya abierto. Depende del texto de la ruta: al recargar
 	// los datos (invalidateAll) `page.url` es otro objeto con la misma ruta y no tiene que cerrar nada.
@@ -149,7 +159,7 @@
 		</div>
 	</main>
 	<BarraAbajo seccion={donde.seccion} pedidos={data.resumen.insignias.pedidos} />
-	<Notificaciones notificaciones={data.resumen.notificaciones} {marcarLeidas} />
+	<Notificaciones pagina={data.notificaciones} {marcarLeidas} tocar={tocarNotificacion} />
 	<Cmdk />
 	<Hornero />
 	<LinkPago />

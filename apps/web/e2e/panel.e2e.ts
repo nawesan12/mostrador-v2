@@ -47,19 +47,42 @@ test('el tema se recuerda', async ({ page }) => {
 	await expect(page.locator('.panel')).toHaveAttribute('data-theme', 'dark');
 });
 
-test('notificaciones: filtra y marca todo como leído', async ({ page }) => {
+test('notificaciones: filtra, tocar una la marca y marca todo como leído', async ({ page }) => {
 	await demo(page);
-	await page.getByRole('button', { name: 'Notificaciones' }).click();
+	const campanita = page.locator('header.top').getByRole('button', { name: /^Notificaciones/ });
+	// La insignia con el número sin leer (§45).
+	await expect(campanita).toHaveAccessibleName('Notificaciones, 6 sin leer');
+	await expect(campanita.locator('.badge')).toHaveText('6');
+	await campanita.click();
 	const caja = page.getByRole('dialog', { name: 'Notificaciones' });
 	await expect(caja.locator('.n')).toHaveCount(6);
-	await expect(caja.getByText(/Tincho ya respondió/)).toBeVisible();
+	expect(await sinDesborde(page)).toBeLessThanOrEqual(0);
+	const caja1 = await caja.boundingBox();
+	const vista = page.viewportSize()!;
+	expect(caja1!.x + caja1!.width).toBeLessThanOrEqual(vista.width);
+	// Tocar una: se cierra, queda leída y la insignia baja.
+	await caja
+		.locator('.n')
+		.filter({ hasText: /Tincho ya respondió/ })
+		.click();
+	await expect(caja).toBeHidden();
+	await expect(campanita).toHaveAccessibleName('Notificaciones, 5 sin leer');
+	await campanita.click();
+	await expect(
+		caja
+			.locator('.n')
+			.filter({ hasText: /Tincho ya respondió/ })
+			.getByLabel('Sin leer')
+	).toHaveCount(0);
 	await caja.getByRole('button', { name: 'Sistema' }).click();
 	await expect(caja.locator('.n')).toHaveCount(2);
 	await caja.getByRole('button', { name: 'Marcar todo como leído' }).click();
 	await expect(caja.getByLabel('Sin leer')).toHaveCount(0);
+	await expect(caja.getByRole('button', { name: 'Marcar todo como leído' })).toHaveCount(0);
 	await page.reload();
 	await listo(page);
-	await expect(page.locator('.aviso')).toHaveCount(0);
+	await expect(campanita).toHaveAccessibleName('Notificaciones');
+	await expect(campanita.locator('.badge')).toHaveCount(0);
 });
 
 test('⌘K busca y lleva a la sección', async ({ page }) => {
