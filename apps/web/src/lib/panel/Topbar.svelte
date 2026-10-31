@@ -8,8 +8,16 @@
 		area,
 		seccion,
 		foto,
-		sinLeer
-	}: { area: string; seccion: string; foto: string | null; sinLeer: boolean } = $props();
+		sinLeer,
+		caida = false
+	}: {
+		area: string;
+		seccion: string;
+		foto: string | null;
+		sinLeer: boolean;
+		/** Sin conexión de tiempo real hace más de unos segundos (§44). */
+		caida?: boolean;
+	} = $props();
 	const shell = getShell();
 </script>
 
@@ -35,9 +43,15 @@
 		aria-label="Buscar"
 		onclick={() => (shell.cmdk = true)}><Icon icon={I.phMagnifyingGlass} size={17} /></button
 	>
-	<span class="en-linea"
-		><span class="punto"><span class="pulso"></span><span></span></span>Tienda en línea</span
-	>
+	{#if caida}
+		<span class="en-linea caida" role="status"
+			><span class="punto"><span></span></span>Reconectando…</span
+		>
+	{:else}
+		<span class="en-linea"
+			><span class="punto"><span class="pulso"></span><span></span></span>Tienda en línea</span
+		>
+	{/if}
 	<button
 		type="button"
 		class="ico"
@@ -163,6 +177,9 @@
 	.pulso {
 		animation: pulso 2s ease-out infinite;
 	}
+	.caida .punto span {
+		background: #b8860b;
+	}
 	@keyframes pulso {
 		to {
 			transform: scale(2.6);
@@ -197,6 +214,12 @@
 		.miga,
 		.en-linea {
 			display: none;
+		}
+		/* Sin conexión se ve también en el celular (es lo único de este cartel que importa ahí). */
+		.en-linea.caida {
+			display: flex;
+			padding: 7px 10px;
+			font-size: 12px;
 		}
 	}
 </style>

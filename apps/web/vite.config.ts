@@ -7,7 +7,14 @@ import { fileURLToPath } from 'node:url';
 const vps = process.env.DESTINO === 'vps';
 import { sveltekit } from '@sveltejs/kit/vite';
 
+// En desarrollo (vite dev con DATA_SOURCE=api), el WebSocket de tiempo real va por el mismo origen
+// (así viaja la cookie) y Vite lo pasa a la API, como Caddy en producción (§44).
+const api = process.env.API_URL;
+
 export default defineConfig({
+	server: api
+		? { proxy: { '/v1/tiempo-real': { target: api.replace(/^http/, 'ws'), ws: true } } }
+		: undefined,
 	// En el VPS todo va en el bundle: el contenedor no instala node_modules.
 	ssr: vps ? { noExternal: true } : undefined,
 	resolve: vps

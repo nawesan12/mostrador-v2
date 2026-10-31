@@ -6,7 +6,9 @@ import { codigoPedido } from '#lib/server/tienda/pedido.ts';
 import type { PageServerLoad } from './$types';
 
 /** La confirmación del pedido: el código lleva la firma, así nadie mira el pedido de otro. */
-export const load: PageServerLoad = async ({ params, cookies, url }) => {
+export const load: PageServerLoad = async ({ params, cookies, url, depends }) => {
+	// Tiempo real (§44): al acreditarse el pago (o cambiar el estado) la página se actualiza sola.
+	depends('tienda:pedido-publico');
 	const r = await resolverTienda(params.tienda, cookies.get(COOKIE));
 	// Con la API real, el código es el público del pedido.
 	if (r && !r.datos) {
@@ -20,6 +22,7 @@ export const load: PageServerLoad = async ({ params, cookies, url }) => {
 			pago: string;
 			nombre: string;
 			estado: string;
+			estadoPago?: string;
 			envio: string;
 			seguimiento: string | null;
 			alias: string | null;
@@ -49,7 +52,9 @@ export const load: PageServerLoad = async ({ params, cookies, url }) => {
 				...c,
 				codigo: params.codigo,
 				alias: tr ? (c.alias ?? c.cbu) : null,
-				esCbu: tr && !c.alias && !!c.cbu
+				esCbu: tr && !c.alias && !!c.cbu,
+				// Los mismos estados de «pagado» que los mails a quien compra (Go, 00034).
+				pagado: ['Aprobado', 'Acreditada', 'Cobrado'].includes(c.estadoPago ?? '')
 			}
 		};
 	}
@@ -76,7 +81,8 @@ export const load: PageServerLoad = async ({ params, cookies, url }) => {
 			alias: dt?.alias || dt?.cbu || null,
 			esCbu: !!dt && !dt.alias && !!dt.cbu,
 			estado: p.estado,
-			titular: r.tienda.cobros.datosTransferencia?.titular ?? null
+			titular: r.tienda.cobros.datosTransferencia?.titular ?? null,
+			pagado: false
 		}
 	};
 };

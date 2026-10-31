@@ -10,6 +10,8 @@ import { BOT, habilitado, vinculoApi, vinculoDe } from '#lib/server/telegram.ts'
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
+	// Tiempo real (§44): se recarga con los avisos de lo que muestra.
+	event.depends('tienda:integraciones');
 	const { locals, url } = event;
 	const d = datosDe(locals);
 	const db = locals.sandbox ? dbSandbox(env.SANDBOX) : null;

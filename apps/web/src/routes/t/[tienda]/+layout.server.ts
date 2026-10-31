@@ -1,4 +1,6 @@
+import { env } from 'cloudflare:workers';
 import { error, redirect } from '@sveltejs/kit';
+import { SITE } from '#lib/site.ts';
 import { resolverTienda } from '#lib/server/tienda/publica.ts';
 import { COOKIE } from '#lib/server/sandbox/sandbox.ts';
 import type { LayoutServerLoad } from './$types';
@@ -10,8 +12,11 @@ export const load: LayoutServerLoad = async ({
 	setHeaders,
 	url,
 	request,
-	locals
+	locals,
+	depends
 }) => {
+	// Tiempo real (§44): el stock y las fichas se recargan con los avisos de la tienda.
+	depends('tienda:vidriera');
 	const r = await resolverTienda(params.tienda, cookies.get(COOKIE));
 	if (!r) error(404, 'Esta tienda no existe o todavía no está publicada.');
 	// Con dominio propio principal, /t/<slug>/… vive allá: 301 con el mismo camino (Google y los
@@ -33,5 +38,11 @@ export const load: LayoutServerLoad = async ({
 	// Las plantillas eligen la cabecera y la grilla por el ancho: si el servidor ya sabe que es un
 	// celular, el primer render sale como el del celular y no salta al hidratar (CLS).
 	const movil = /Mobi|Android|iPhone|iPad/i.test(request.headers.get('user-agent') ?? '');
-	return { tienda: r.tienda, movil };
+	// Tiempo real sólo con la API y en una tienda de verdad (no en la demo ni en las vitrinas). En un
+	// dominio propio el WebSocket va a tulocalweb.com.ar (Caddy no lo rutea en cada dominio).
+	const tiempoReal =
+		r.datos || r.tienda.vitrina
+			? null
+			: { origen: String(env.TIEMPO_REAL_ORIGEN ?? '') || (locals.dominio ? SITE : null) };
+	return { tienda: r.tienda, movil, tiempoReal };
 };

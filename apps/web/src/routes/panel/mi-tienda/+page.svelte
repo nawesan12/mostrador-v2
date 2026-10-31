@@ -8,6 +8,7 @@
 	import { anim } from '#lib/panel/anim.ts';
 	import { pesos } from '#lib/panel/formato.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
+	import { escucharTiempoReal } from '#lib/tiempo-real/panel.svelte.ts';
 	import Modal from '#lib/components/Modal.svelte';
 	import Segmentado from '#lib/components/Segmentado.svelte';
 	import { subir as subirArchivo } from '#lib/panel/fotos.ts';
@@ -150,9 +151,23 @@
 		secciones = secciones.map((s, k) => (k === i ? { ...s, visible: !s.visible } : s));
 		void guardar();
 	}
+	// Si otra persona del equipo publica mientras esta pantalla está abierta (§44), se avisa: no se
+	// recarga sola para no pisar lo que se está editando acá.
+	let publiqueEn = 0;
+	escucharTiempoReal((e) => {
+		if (e.tipo !== 'mitienda.publicada' || Date.now() - publiqueEn < 10_000) return;
+		ui.toast({
+			k: 'info',
+			title: 'Otra persona publicó la tienda',
+			desc: 'Alguien del equipo publicó cambios del diseño.',
+			action: 'Ver lo publicado',
+			onAction: () => invalidateAll()
+		});
+	});
 	async function publicar() {
 		if (!sinPublicar) return;
 		await fila;
+		publiqueEn = Date.now();
 		await fetch('/panel/mi-tienda/publicar', { method: 'POST' });
 		await invalidateAll();
 		ui.toast({

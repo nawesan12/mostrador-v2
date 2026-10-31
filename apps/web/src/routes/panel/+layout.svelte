@@ -14,6 +14,12 @@
 	import { AREAS, ubicar } from '#lib/panel/navegacion.ts';
 	import { Shell, setShell } from '#lib/panel/shell.svelte.ts';
 	import { SITE } from '#lib/site.ts';
+	import {
+		crearTiempoReal,
+		LugarTiempoReal,
+		setTiempoReal
+	} from '#lib/tiempo-real/panel.svelte.ts';
+	import { getUi } from '#lib/ui.svelte.ts';
 
 	/** Armazón del panel (design/Mostrador v4.dc.html, vista Panel). */
 	let { data, children } = $props();
@@ -31,6 +37,36 @@
 	$effect.pre(() => {
 		shell.turnos = data.turnos;
 		acceso();
+	});
+	// Tiempo real (§44): una conexión por pestaña para todo el panel. Sin ella, todo anda igual.
+	const ui = getUi();
+	const lugar = setTiempoReal(new LugarTiempoReal());
+	onMount(() => {
+		if (!data.tiempoReal) return;
+		const tr = crearTiempoReal(data.tiempoReal.origen, ui);
+		if (!tr) return;
+		lugar.actual = tr;
+		tr.iniciar();
+		return () => {
+			tr.detener();
+			lugar.actual = null;
+		};
+	});
+	// «Reconectando…» sólo si el corte dura más de unos segundos (un parpadeo no se muestra).
+	let caida = $state(false);
+	$effect(() => {
+		const desde = lugar.actual?.conexion.caidaDesde;
+		if (desde == null) {
+			caida = false;
+			return;
+		}
+		const falta = 4000 - (Date.now() - desde);
+		if (falta <= 0) {
+			caida = true;
+			return;
+		}
+		const t = setTimeout(() => (caida = true), falta);
+		return () => clearTimeout(t);
 	});
 	const donde = $derived(ubicar(page.url.pathname) ?? { seccion: 'Resumen', area: AREAS[0] });
 	const sinLeer = $derived(data.resumen.notificaciones.some((n) => !n.leida));
@@ -106,6 +142,7 @@
 			seccion={donde.seccion === 'Resumen' && shell.modo === 'simple' ? 'Inicio' : donde.seccion}
 			foto={data.fotoTienda}
 			{sinLeer}
+			{caida}
 		/>
 		<div class="contenido">
 			{@render children()}

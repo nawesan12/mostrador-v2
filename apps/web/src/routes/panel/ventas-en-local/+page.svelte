@@ -12,10 +12,12 @@
 	import { rutaDe } from '#lib/panel/navegacion.ts';
 	import { vendibles } from '#lib/panel/vendibles.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
+	import { getTiempoReal } from '#lib/tiempo-real/panel.svelte.ts';
 
 	/** Ventas en el local (design/PanelVentas.dc.html, POS): grilla, ticket, medios de pago y Cobrar. */
 	let { data } = $props();
 	const ui = getUi();
+	const tiempoReal = getTiempoReal();
 
 	// Con opciones, cada variante es una tarjeta ("Remera · M · Negro").
 	const productos = $derived(vendibles(data.productos.filter((p) => p.publicado || p.stock > 0)));
@@ -107,6 +109,8 @@
 			return ui.toast({ k: 'err', title: 'No se cobró', desc: m ?? 'Probá de nuevo.' });
 		}
 		const { numero, total: t } = (await r.json()) as { numero: number; total: number };
+		// La venta la cargó esta pestaña: el tiempo real no la avisa como «pedido nuevo» (§44).
+		tiempoReal?.actual?.propio('pedido.nuevo', numero);
 		ticket.clear();
 		dividir = false;
 		await invalidateAll();

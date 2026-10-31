@@ -920,3 +920,56 @@ avisos que el iPhone de §40.
 - **En Notificaciones**, «Push en este celular»: activar (pide el permiso al tocar), «Mandame un
   aviso de prueba» (`cuenta.push_prueba`, sólo a esa sesión) y desactivar. En el iPhone sólo anda con
   el panel instalado e iOS 16.4 o más nuevo, y la fila lo dice.
+
+## 44. Tiempo real con WebSockets: Postgres avisa, Go reparte, la web recarga lo suyo (migración 00061)
+
+- **El origen es la base**: triggers por sentencia (tablas de transición) en las tablas que importan
+  hacen `pg_notify('tiempo_real', …)`, que Postgres entrega recién al confirmarse la transacción: lo
+  revertido no avisa y no hay forma de olvidarse de avisar desde un camino (panel, worker, webhook,
+  tienda online, importación). El aviso dice sólo **qué** cambió: `{t: tienda, k: tipo, id}` y, para
+  rutear, `u` (persona) o `s` (el id público de una sesión). Nunca montos, nombres ni textos.
+- **Ráfagas**: más de 20 filas de una tienda en una sentencia (importación, aumento masivo) salen como
+  un aviso `lote`; Postgres junta los idénticos de una transacción; Go vuelve a juntar en ventanas de
+  250 ms (más de 25 del mismo tipo y tienda → un lote) y espacia las familias ruidosas (visitas cada
+  10 s, carritos y actividad cada 2 s, importación cada 1 s; lo del medio sale al final, no se pierde).
+  Un UPDATE sólo avisa si cambió algo de lo que se mira (no el «visto» de la sesión, un token de
+  Mercado Pago renovado ni el borrador del diseño).
+- **Go**: `plataforma/tiemporeal`. Una conexión dedicada con `LISTEN` (fuera del pool), latido cada
+  30 s y reconexión con espera creciente y azar; al volver, a todos «resincronizá». El hub reparte por
+  tienda y filtra por rol con la misma tabla de `roles` (§37): pedidos, pagos, productos, envíos,
+  turnos y devoluciones a quien tiene Pedidos; clientes, carritos, reseñas y preguntas a Clientes;
+  cupones a Catálogo; comprobantes y cobros a Finanzas; integraciones a Tienda o Finanzas;
+  importación, actividad, Mi tienda y dominios a Tienda; plan y equipo a Cuenta; la tienda, visitas y
+  tareas a cualquiera del equipo. Un tipo sin destinatarios no le llega a nadie (cerrado por defecto,
+  con test contra los triggers). Las sesiones son de la persona: sólo a sus pestañas.
+- **El endpoint**: `GET /v1/tiempo-real` con la cookie `__Host-tlw_sesion` (o la «mirada» del
+  soporte) o `Authorization: Bearer` (la app de iPhone). Con cookie, el `Origin` es obligatorio y
+  tiene que ser `MOSTRADOR_SITIO` (más `MOSTRADOR_TIEMPO_REAL_ORIGENES`; en desarrollo, localhost):
+  si no, 403 antes del upgrade. Las IA conectadas no entran. Ping de protocolo y un `latido` de texto
+  cada 25 s (Cloudflare corta a los 100 s de silencio; el navegador no ve los pings), 512 bytes como
+  tope de lo que manda el navegador (no manda nada), hasta 12 conexiones por sesión y 60 por IP, cola
+  de 256 mensajes por conexión: si se llena, se corta (4408) y el navegador reconecta y recarga.
+- **Cortes**: la sesión se vuelve a mirar cada 5 min y se corta al vencer; cerrarla (salir, «Cerrar»,
+  contraseña nueva, quitar del equipo) corta en el acto por el aviso de la base (4401, no reintenta);
+  cambiar de tienda o que te cambien el rol corta con 4000 («resincronizá»): el panel reconecta con
+  lo nuevo y recarga todo. Al apagarse la API, 1012 y reconexión.
+- **La tienda online** (sin sesión): `GET /v1/tiempo-real/publico?tienda=<slug>[&pedido=<código>]`.
+  De la tienda sólo llegan `producto.*` (stock y ficha) y, con el código público, los cambios de ESE
+  pedido sin el número. Acepta el sitio y el dominio propio verificado de esa misma tienda.
+- **Ruteo**: el navegador se conecta a `wss://tulocalweb.com.ar/v1/tiempo-real` (mismo origen: viaja
+  la cookie `__Host-`) y Caddy manda esa ruta a la API; en un dominio propio, la tienda se conecta a
+  tulocalweb.com.ar (la CSP de `/t/` lo permite). En desarrollo, el proxy de Vite; en las pruebas,
+  `TIEMPO_REAL_ORIGEN` (p. ej. `ws://localhost:4000`).
+- **La web**: un cliente por pestaña (`lib/tiempo-real`), con reconexión exponencial con azar (1 s a
+  30 s), que detecta una conexión muerta por silencio (65 s) y reconecta al volver la red o la pestaña.
+  Cada aviso invalida sólo lo suyo (`depends('tienda:<cosa>')` en los load, juntando 300 ms); al
+  reconectar, al pedirlo el servidor o al volver la pestaña después de 15 s, `invalidateAll`. Con la
+  pestaña oculta no recarga nada hasta que vuelve. «Reconectando…» en la barra sólo si el corte dura
+  más de 4 s. Sin WebSocket, todo anda como antes. En la demo (sandbox) no se conecta.
+- **Avisos**: pedido nuevo con toast «Ver» (no el que cargó uno mismo en el punto de venta o Crear
+  pedido) y sonido opcional en Notificaciones, por navegador y apagado por defecto. Mi tienda no se
+  recarga sola si otra persona publica (no pisa lo que se está editando): avisa. En la tienda online,
+  si se agota algo del carrito (o el producto que se mira) se avisa antes de pagar, con «Ajustar
+  carrito»; en la página del pedido, «¡Recibimos tu pago!» al acreditarse.
+- **Sin origen todavía**: notificaciones del panel y Bandeja (WhatsApp) no tienen tabla en la API
+  (vacías hoy); cuando la tengan, se suma su trigger y su clave.

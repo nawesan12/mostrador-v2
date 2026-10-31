@@ -21,7 +21,70 @@
 	});
 
 	import { page } from '$app/state';
+	import { onMount } from 'svelte';
 	import { carritoDe } from '#lib/tienda/carrito.svelte.ts';
+	import { faltantes, textoFaltantes, type Faltante } from '#lib/tienda/faltantes.ts';
+	import { conectarVidriera } from '#lib/tiempo-real/publico.svelte.ts';
+	import { getUi } from '#lib/ui.svelte.ts';
+
+	// Tiempo real (§44): si se agota algo que está en el carrito (o el producto que se está mirando),
+	// se avisa antes de pagar, en vez de enterarse por el error del checkout.
+	const ui = getUi();
+	let avisado = '';
+	function revisarCarrito() {
+		const fs = faltantes(carritoDe(data.tienda.slug).lineas, data.tienda.productos);
+		const clave = JSON.stringify(fs);
+		if (!fs.length || clave === avisado) {
+			if (!fs.length) avisado = '';
+			return;
+		}
+		avisado = clave;
+		const t = textoFaltantes(fs);
+		ui.toast({
+			k: 'warn',
+			title: t.titulo,
+			desc: t.detalle,
+			action: 'Ajustar carrito',
+			onAction: () => ajustar(fs)
+		});
+	}
+	function ajustar(fs: Faltante[]) {
+		const c = carritoDe(data.tienda.slug);
+		for (const f of fs) c.fijar(f.clave, f.quedan);
+		avisado = '';
+	}
+	/** El producto que se está mirando (por slug o id), para avisar si se agota mientras tanto. */
+	const mirado = () =>
+		page.params.id
+			? data.tienda.productos.find((p) => p.slug === page.params.id || p.id === page.params.id)
+			: undefined;
+	onMount(() => {
+		if (!data.tiempoReal) return;
+		const stock = () => new Map(data.tienda.productos.map((p) => [p.id, p.stock]));
+		let antes = stock();
+		const c = conectarVidriera({
+			slug: data.tienda.slug,
+			origen: data.tiempoReal.origen,
+			alRecargar: (e) => {
+				if (!e.tipo.startsWith('producto.')) return;
+				const p = mirado();
+				const en = carritoDe(data.tienda.slug).lineas.some((l) => l.id === p?.id);
+				if (p && (antes.get(p.id) ?? 0) > 0 && p.stock === 0 && !en)
+					ui.toast({
+						k: 'warn',
+						title: `Se agotó ${p.nombre}`,
+						desc: 'Mientras lo mirabas se vendió el último.'
+					});
+				antes = stock();
+				revisarCarrito();
+			}
+		});
+		return () => c?.detener();
+	});
+	// Al entrar al carrito o al checkout también se revisa (el carrito pudo quedar de otro día).
+	afterNavigate(({ to }) => {
+		if (/\/(carrito|checkout)$/.test(to?.url.pathname ?? '')) revisarCarrito();
+	});
 
 	// Carrito abandonado: en el checkout, cuando quien compra deja su email (y al cambiar el nombre),
 	// se guarda el carrito para poder recordárselo. Escucha los campos `email` y `nombre` del form,

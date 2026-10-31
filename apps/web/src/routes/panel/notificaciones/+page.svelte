@@ -10,6 +10,8 @@
 	import { anim } from '#lib/panel/anim.ts';
 	import { activo, AVISOS, CANALES_AVISO, type CanalAviso } from '#lib/panel/avisos.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
+	import { onMount } from 'svelte';
+	import { prenderSonido, sonarPedido, sonidoPrendido } from '#lib/tiempo-real/sonido.ts';
 
 	/** Notificaciones (design/PanelCuenta.dc.html, sNot): qué avisos y por dónde. */
 	let { data } = $props();
@@ -58,6 +60,15 @@
 			title: v ? 'No molestar de 23 a 8 h' : 'No molestar desactivado',
 			desc: v ? 'Las ventas igual quedan en el panel' : 'Te avisamos a cualquier hora'
 		});
+	}
+	// El sonido de pedido nuevo con el panel abierto (§44): es de este navegador, apagado por defecto.
+	let sonido = $state(false);
+	onMount(() => (sonido = sonidoPrendido()));
+	function alternarSonido(v: boolean) {
+		sonido = v;
+		prenderSonido(v);
+		// El navegador deja sonar después de un toque: este mismo sirve para probarlo.
+		if (v) sonarPedido();
 	}
 	function resumen(r: 'whatsapp' | 'email' | 'off') {
 		prefs = { ...prefs, resumen: r };
@@ -141,6 +152,22 @@
 						{/each}
 					</span></span
 				>
+			</div>
+			<div class="activo">
+				<span class="a-ico" style:color="#D2582F"
+					><Icon icon={I.phBellRingingFill} size={20} /></span
+				>
+				<span class="a-txt"
+					><b>Sonido al entrar un pedido</b><span class="d"
+						>Con el panel abierto, cada pedido nuevo aparece al instante con un aviso. Prendé el
+						sonido si querés escucharlo; vale sólo en este&nbsp;navegador.</span
+					></span
+				>
+				<Interruptor
+					checked={sonido}
+					label="Sonido al entrar un pedido"
+					onchange={alternarSonido}
+				/>
 			</div>
 			<!-- Este aparato: activar el push web y probarlo (decisiones §43). -->
 			<PushEsteCelular />

@@ -1,4 +1,8 @@
 import { datosDe } from '#lib/server/datos/index.ts';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals }) => datosDe(locals).planCuenta();
+export const load: PageServerLoad = async ({ locals, depends }) => {
+	// Tiempo real (§44): se recarga con los avisos de lo que muestra.
+	depends('tienda:plan');
+	return datosDe(locals).planCuenta();
+};

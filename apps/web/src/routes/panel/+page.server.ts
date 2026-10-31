@@ -7,7 +7,9 @@ import type { Actions, PageServerLoad } from './$types';
 const PERIODOS: Periodo[] = ['hoy', '7d', '30d'];
 
 /** El Resumen (dashboard): el período sale de la URL (?periodo=hoy|7d|30d; 7 días si no está). */
-export const load: PageServerLoad = async ({ locals, url }) => {
+export const load: PageServerLoad = async ({ locals, url, depends }) => {
+	// Tiempo real (§44): se recarga con los avisos de lo que muestra.
+	depends('tienda:tablero', 'tienda:integraciones', 'tienda:configuracion');
 	const p = url.searchParams.get('periodo');
 	const periodo = PERIODOS.includes(p as Periodo) ? (p as Periodo) : '7d';
 	const d = datosDe(locals);

@@ -25,7 +25,8 @@ const CON_SANDBOX = /^\/(prueba|panel|integraciones|oauth|partners\/panel)(\/|$)
 const CSP_TIENDA = [
 	"default-src 'self'",
 	"script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://connect.facebook.net https://static.cloudflareinsights.com",
-	"connect-src 'self' https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://connect.facebook.net https://www.facebook.com https://cloudflareinsights.com",
+	// wss://tulocalweb.com.ar: el tiempo real de una tienda en su dominio propio (§44).
+	"connect-src 'self' wss://tulocalweb.com.ar https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://connect.facebook.net https://www.facebook.com https://cloudflareinsights.com",
 	"img-src 'self' data: https:",
 	"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
 	"font-src 'self' data: https://fonts.gstatic.com",
@@ -34,6 +35,14 @@ const CSP_TIENDA = [
 	"base-uri 'self'",
 	"frame-ancestors 'self'"
 ].join('; ');
+
+/** La CSP de la tienda con el origen del tiempo real de las pruebas, si lo hay (TIEMPO_REAL_ORIGEN). */
+function cspTienda() {
+	const o = String(env.TIEMPO_REAL_ORIGEN ?? '');
+	return o && /^wss?:\/\/[\w.:-]+$/.test(o)
+		? CSP_TIENDA.replace("connect-src 'self'", `connect-src 'self' ${o}`)
+		: CSP_TIENDA;
+}
 
 /**
  * Encabezados de seguridad en todas las respuestas (también las tempranas, como el rechazo por CSRF).
@@ -187,7 +196,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		res.headers.set('Server-Timing', `app;dur=${Date.now() - started}`);
 		// En desarrollo, Vite inyecta scripts y un websocket propios: la CSP va sólo en el build.
 		if (!dev && (dom || event.url.pathname.startsWith('/t/')))
-			res.headers.set('Content-Security-Policy', CSP_TIENDA);
+			res.headers.set('Content-Security-Policy', cspTienda());
 	} catch {
 		// Respuesta inmutable: el diagnóstico no vale una copia.
 	}

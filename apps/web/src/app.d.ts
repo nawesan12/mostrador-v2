@@ -29,6 +29,11 @@ declare global {
 			DATA_SOURCE: 'sandbox' | 'api';
 			/** URL de la API Go (DATA_SOURCE=api). */
 			API_URL: string;
+			/**
+			 * Origen del WebSocket de tiempo real si no es el mismo sitio (sólo pruebas y desarrollo,
+			 * p. ej. ws://localhost:4000). Vacío: el mismo sitio, que Caddy manda a la API.
+			 */
+			TIEMPO_REAL_ORIGEN?: string;
 			/** Clave AES-256 en base64url (secreto). Cifra credenciales de integraciones. */
 			ENCRYPTION_KEY: string;
 			/** Clave que comparte el BFF con la API Go (X-Mostrador-BFF). Secreto. */

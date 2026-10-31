@@ -3,7 +3,9 @@ import { diaAr, diaSemana, fechaValida, sumarDias } from '#lib/turnos/libres.ts'
 import type { PageServerLoad } from './$types';
 
 /** La agenda: un día o la semana (de lunes a domingo) que lo contiene. */
-export const load: PageServerLoad = async ({ locals, url }) => {
+export const load: PageServerLoad = async ({ locals, url, depends }) => {
+	// Tiempo real (§44): se recarga con los avisos de lo que muestra.
+	depends('tienda:turnos');
 	const q = url.searchParams.get('dia') ?? '';
 	const dia = fechaValida(q) ? q : diaAr(Date.now());
 	const vista = url.searchParams.get('vista') === 'semana' ? 'semana' : 'dia';

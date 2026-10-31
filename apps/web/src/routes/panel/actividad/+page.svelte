@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { goto, invalidateAll } from '$app/navigation';
 	import Icon from '#lib/components/Icon.svelte';
 	import Seo from '#lib/components/Seo.svelte';
@@ -28,12 +29,22 @@
 	let extra = $state<Evento[]>([]);
 	let siguiente = $state<string | null>(null);
 	let cargando = $state(false);
-	// Con cada carga (filtros nuevos), la lista vuelve a la primera página.
+	// Con filtros nuevos, la lista vuelve a la primera página. Si sólo se recargó (un registro nuevo
+	// por tiempo real, §44), lo nuevo aparece arriba y lo que ya se había bajado con «Ver más» queda.
+	let filtroVisto = '';
 	$effect.pre(() => {
+		const clave = JSON.stringify(data.filtro);
+		const igual = clave === untrack(() => filtroVisto);
+		filtroVisto = clave;
+		if (igual && untrack(() => extra.length)) return;
 		extra = [];
 		siguiente = data.pagina.siguiente;
 	});
-	const items = $derived([...data.pagina.items, ...extra]);
+	const items = $derived.by(() => {
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- local al cálculo
+		const vistos = new Set<string>();
+		return [...data.pagina.items, ...extra].filter((e) => !vistos.has(e.id) && !!vistos.add(e.id));
+	});
 	const filtro = $derived(data.filtro as FiltroActividad);
 	const hayFiltros = $derived(Object.values(filtro).some(Boolean));
 

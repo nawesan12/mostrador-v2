@@ -1,3 +1,4 @@
+import { env } from 'cloudflare:workers';
 import { datosDe, usaSandbox } from '#lib/server/datos/index.ts';
 import { plantilla } from '#lib/plantillas.ts';
 import type { LayoutServerLoad } from './$types';
@@ -6,7 +7,9 @@ import type { LayoutServerLoad } from './$types';
  * El armazón del panel: la tienda, el resumen (insignias, notificaciones, prueba) y las preferencias
  * de la persona (tema y modo, en cookies que escribe el navegador, así el primer render ya sale bien).
  */
-export const load: LayoutServerLoad = async ({ locals, cookies }) => {
+export const load: LayoutServerLoad = async ({ locals, cookies, depends }) => {
+	// Tiempo real (§44): las insignias, la campanita y el plan se recargan con sus avisos.
+	depends('tienda:resumen', 'tienda:armazon', 'tienda:plan');
 	const datos = datosDe(locals);
 	const [tienda, resumen, ajustes, acceso] = await Promise.all([
 		datos.tienda(),
@@ -29,6 +32,9 @@ export const load: LayoutServerLoad = async ({ locals, cookies }) => {
 		// La sección Turnos: con turnos activos o si la tienda es de servicios.
 		turnos: !!ajustes?.activo || tienda.rubro === 'servicios',
 		tema: cookies.get('panel_tema') === 'dark' ? ('dark' as const) : ('light' as const),
-		modo: cookies.get('panel_modo') === 'simple' ? ('simple' as const) : ('completo' as const)
+		modo: cookies.get('panel_modo') === 'simple' ? ('simple' as const) : ('completo' as const),
+		// El tiempo real sólo existe con la API (la demo no tiene servidor de avisos). El origen va
+		// vacío en producción (mismo sitio, así viaja la cookie); en las pruebas, el de la API.
+		tiempoReal: usaSandbox() ? null : { origen: String(env.TIEMPO_REAL_ORIGEN ?? '') || null }
 	};
 };
