@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="height:83px;background:{{ bg }};backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:.5px solid {{ line }};display:flex;justify-content:space-around;padding:6px 6px 0;box-sizing:border-box;position:relative;font-family:'Instrument Sans',system-ui,sans-serif">
+<div style="width:70px;display:flex;flex-direction:column;align-items:center;gap:3px;color:{{ c.inicio }}"><svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 11.5 12 4.2l8.5 7.3"></path><path d="M6.2 10v9.5h11.6V10"></path><path d="M10 19.5v-4.8h4v4.8"></path></svg><span style="font-size:10.5px;font-weight:600">Inicio</span></div>
+<div style="width:70px;display:flex;flex-direction:column;align-items:center;gap:3px;color:{{ c.pedidos }};position:relative"><svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h12v17l-2-1.4-2 1.4-2-1.4-2 1.4-2-1.4-2 1.4z"></path><path d="M9 8.5h6M9 12h6M9 15.5h3.5"></path></svg><span style="font-size:10.5px;font-weight:600">Pedidos</span><sc-if value="{{ hasBadge }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-2px;left:39px;min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:9px;background:#D2582F;color:#fff;font:700 11.5px/18px 'Instrument Sans';text-align:center;box-shadow:0 0 0 2px {{ ring }}">{{ badge }}</span></sc-if></div>
+<div style="width:70px;display:flex;flex-direction:column;align-items:center;gap:3px;color:{{ c.productos }}"><svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.6 12 4l8 3.6v8.8L12 20l-8-3.6z"></path><path d="m4 7.6 8 3.6 8-3.6M12 11.2V20"></path></svg><span style="font-size:10.5px;font-weight:600">Productos</span></div>
+<div style="width:70px;display:flex;flex-direction:column;align-items:center;gap:3px;color:{{ c.tincho }}"><span style="width:27px;height:27px;border-radius:50%;box-sizing:border-box;border:2px solid {{ c.tinchoRing }};overflow:hidden;background:#F8E6D4;display:block"><img src="assets/tincho/avatar.png" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></span><span style="font-size:10.5px;font-weight:600">Tincho</span></div>
+<div style="width:70px;display:flex;flex-direction:column;align-items:center;gap:3px;color:{{ c.mas }}"><svg width="27" height="27" viewBox="0 0 24 24" fill="currentColor"><circle cx="5.5" cy="12" r="1.9"></circle><circle cx="12" cy="12" r="1.9"></circle><circle cx="18.5" cy="12" r="1.9"></circle></svg><span style="font-size:10.5px;font-weight:600">Más</span></div>
+<span style="position:absolute;bottom:8px;left:50%;margin-left:-67px;width:134px;height:5px;border-radius:3px;background:{{ hi }}"></span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:393,&quot;height&quot;:83},&quot;active&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;inicio&quot;,&quot;pedidos&quot;,&quot;productos&quot;,&quot;tincho&quot;,&quot;mas&quot;],&quot;default&quot;:&quot;inicio&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;dark&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;badge&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:4,&quot;tsType&quot;:&quot;number&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const dark = !!this.props.dark, a = this.props.active ?? 'inicio';
+    const on = dark ? '#E07A48' : '#B0441D', off = dark ? '#A8907F' : '#7D6656';
+    const c = {}; ['inicio','pedidos','productos','tincho','mas'].forEach(k => c[k] = k === a ? on : off);
+    c.tinchoRing = a === 'tincho' ? on : 'transparent';
+    const badge = this.props.badge ?? 4;
+    return { c, badge, hasBadge: badge > 0,
+      bg: dark ? 'rgba(34,20,13,.92)' : 'rgba(251,247,242,.92)',
+      line: dark ? 'rgba(251,247,242,.12)' : 'rgba(58,29,18,.16)',
+      ring: dark ? '#22140D' : '#FBF7F2', hi: dark ? '#FBF7F2' : '#2A140C' };
+  }
+}
+</script>
+</body>
+</html>
