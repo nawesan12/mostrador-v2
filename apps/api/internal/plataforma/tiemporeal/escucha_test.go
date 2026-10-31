@@ -286,6 +286,52 @@ func TestSesionesYEquipoDesdeLaBase(t *testing.T) {
 	}
 }
 
+// La campanita (§45): app.notificar (lo que usa el worker) y marcar leída avisan sólo a esa persona
+// en esa tienda, al confirmarse.
+func TestNotificacionesDesdeLaBase(t *testing.T) {
+	e := nuevoEntorno(t)
+	ctx := context.Background()
+	ids := map[string]string{}
+	for _, n := range []string{"ana", "beto"} {
+		var id string
+		if err := e.admin.QueryRow(ctx, `INSERT INTO auth.usuarios (email, nombre) VALUES ($1, $2) RETURNING id::text`, n+"@sol.com", n).Scan(&id); err != nil {
+			t.Fatal(err)
+		}
+		ids[n] = id
+	}
+	e.sql(t, `INSERT INTO auth.membresias (usuario_id, tienda_id, rol) VALUES ($1, $3, 'local'), ($2, $3, 'duenio'), ($1, $4, 'duenio')`,
+		ids["ana"], ids["beto"], e.sol, e.luna)
+	anaSol := registrar(t, e.hub, &Cliente{Tienda: e.sol, Usuario: ids["ana"], Sesion: "s1", Rol: "local"})
+	anaLuna := registrar(t, e.hub, &Cliente{Tienda: e.luna, Usuario: ids["ana"], Sesion: "s2", Rol: "duenio"})
+	beto := registrar(t, e.hub, &Cliente{Tienda: e.sol, Usuario: ids["beto"], Sesion: "s3", Rol: "duenio"})
+	llegan(anaSol, 300*time.Millisecond)
+	llegan(anaLuna, 10*time.Millisecond)
+	llegan(beto, 10*time.Millisecond)
+
+	e.enTienda(t, e.sol, `SELECT app.notificar('venta:1', $1::uuid[], '{web}', '{ventas}', '{"Nueva venta #1"}', '{""}', '{/panel/pedidos/1}')`,
+		[]string{ids["ana"]})
+	if ms := llegan(anaSol, 300*time.Millisecond); !hay(ms, "notificacion.nueva", "") {
+		t.Fatalf("ana en sol: %v", ms)
+	}
+	if ms := append(llegan(anaLuna, 50*time.Millisecond), llegan(beto, 50*time.Millisecond)...); len(ms) != 0 {
+		t.Fatalf("le llegó a otra pestaña: %v", ms)
+	}
+	// Repetir el mismo hecho no inserta ni avisa.
+	e.enTienda(t, e.sol, `SELECT app.notificar('venta:1', $1::uuid[], '{web}', '{ventas}', '{"Nueva venta #1"}', '{""}', '{/panel/pedidos/1}')`,
+		[]string{ids["ana"]})
+	if ms := llegan(anaSol, 200*time.Millisecond); len(ms) != 0 {
+		t.Fatalf("repetida: %v", ms)
+	}
+	// Marcarla leída: sus otras pestañas en esa tienda se enteran.
+	e.sql(t, `UPDATE notificaciones SET leida_en = now()`)
+	if ms := llegan(anaSol, 300*time.Millisecond); !hay(ms, "notificacion.leida", "") {
+		t.Fatalf("leída: %v", ms)
+	}
+	if ms := llegan(beto, 50*time.Millisecond); len(ms) != 0 {
+		t.Fatalf("leída le llegó a beto: %v", ms)
+	}
+}
+
 func esperarCorte(t *testing.T, c *Cliente) Corte {
 	t.Helper()
 	select {
@@ -329,7 +375,7 @@ func TestTiposDeLosTriggersEnElCatalogo(t *testing.T) {
 	if n < 40 {
 		t.Fatalf("faltan triggers: %d", n)
 	}
-	for _, tipo := range []string{"pago.acreditado", "sesion.cambio", "sesion.cerrada", "sesion.tienda"} {
+	for _, tipo := range []string{"pago.acreditado", "sesion.cambio", "sesion.cerrada", "sesion.tienda", "notificacion.nueva", "notificacion.leida"} {
 		if !Conocido(tipo) {
 			t.Errorf("%s sin destinatarios", tipo)
 		}

@@ -83,6 +83,7 @@ var permisos = map[string][]roles.Permiso{
 	"visitas":     {roles.Panel},
 	"tarea":       {roles.Panel},
 	// "sesion": sólo a la persona de la sesión (Hub), nunca por permiso.
+	// "notificacion": sólo a la persona destinataria, en esa tienda (Hub), nunca por permiso.
 }
 
 func familia(tipo string) string {
@@ -94,7 +95,7 @@ func familia(tipo string) string {
 func Conocido(tipo string) bool {
 	f := familia(tipo)
 	_, ok := permisos[f]
-	return ok || f == "sesion"
+	return ok || f == "sesion" || f == "notificacion"
 }
 
 // Permitido dice si el rol puede recibir avisos de ese tipo.

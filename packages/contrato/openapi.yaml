@@ -2310,6 +2310,57 @@ paths:
       responses:
         '204': { description: Quitado }
         '404': { $ref: '#/components/responses/Problema' }
+  /v1/panel/notificaciones:
+    get:
+      operationId: notificaciones
+      summary: >-
+        La campanita (docs/decisiones.md §45): las notificaciones de la persona de la sesión en esa tienda, de la más
+        nueva a la más vieja, con cuántas no leyó. Cualquiera del equipo; cada persona ve sólo las suyas. Se guardan
+        90 días. Una IA conectada o el soporte mirando reciben la lista vacía.
+      parameters:
+        - { name: cursor, in: query, schema: { type: string }, description: 'El `siguiente` de la página anterior' }
+        - { name: limite, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+      responses:
+        '200':
+          description: Notificaciones
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaginaNotificaciones' }
+        '400': { $ref: '#/components/responses/Problema' }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/notificaciones/sin-leer:
+    get:
+      operationId: notificacionesSinLeer
+      summary: Cuántas notificaciones no leyó la persona (la insignia de la campanita).
+      responses:
+        '200':
+          description: Sin leer
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sinLeer]
+                properties:
+                  sinLeer: { type: integer }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/panel/notificaciones/{id}/leida:
+    post:
+      operationId: marcarNotificacionLeida
+      summary: Marca leída una notificación de la persona (al tocarla). 404 si no es suya o ya se borró.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '204': { description: Marcada }
+        '401': { $ref: '#/components/responses/Problema' }
+        '403': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+  /v1/panel/notificaciones/leidas:
+    post:
+      operationId: marcarNotificacionesLeidas
+      summary: «Marcar todo como leído» (las de la persona en la tienda de la sesión).
+      responses:
+        '204': { description: Marcadas }
+        '401': { $ref: '#/components/responses/Problema' }
   /v1/panel/notificaciones/preferencias:
     get:
       operationId: preferenciasAvisos
@@ -3280,6 +3331,7 @@ components:
             paraHacer: { type: integer, description: 'Tareas de hoy' }
         notificaciones:
           type: array
+          description: 'La demo arma las suyas; con la API va vacía: la campanita lee /v1/panel/notificaciones'
           items: { $ref: '#/components/schemas/Notificacion' }
         canales:
           type: array
@@ -4858,12 +4910,20 @@ components:
       required: [id, tipo, titulo, detalle, creada, leida, grupo]
       properties:
         id: { type: string }
-        tipo: { type: string, description: 'Marca o tipo del ícono: wa, mp, ml, warn, arca, star, ok, err' }
+        tipo: { type: string, description: 'Marca o tipo del ícono (lib/marcas.ts): web, transf, mp, ml, warn, arca, star, ok, err' }
         titulo: { type: string }
         detalle: { type: string }
         creada: { type: string, format: date-time }
         leida: { type: boolean }
         grupo: { type: string, enum: [ventas, sistema] }
+        ruta: { type: string, description: 'La página del panel que abre al tocarla (/panel/…)' }
+    PaginaNotificaciones:
+      type: object
+      required: [notificaciones, sinLeer, siguiente]
+      properties:
+        notificaciones: { type: array, items: { $ref: '#/components/schemas/Notificacion' } }
+        sinLeer: { type: integer, description: 'Cuántas no leyó (de todas, no sólo de esta página)' }
+        siguiente: { type: [string, 'null'], description: 'Cursor de la página siguiente (null: no hay más)' }
     Onboarding:
       type: object
       required: [elecciones]

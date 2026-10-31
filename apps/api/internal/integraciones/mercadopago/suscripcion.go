@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/outbox"
 )
 
 // El abono de Tu Local Web: suscripción sin plan, en estado pending (la guía de Subscriptions). El
@@ -152,7 +154,11 @@ func (s *Servicio) ConciliarSuscripcion(ctx context.Context, id string) error {
 			_, err = t.Exec(ctx, `UPDATE tiendas SET plan = $2, plan_ciclo = $3, suscripcion_mp = $4, suscripcion_estado = 'authorized',
 				plan_pendiente = NULL, ciclo_pendiente = NULL, cancelada_en = NULL WHERE id = $1`,
 				tiendaID, *pendiente, *cicloPend, p.ID)
-			return err
+			if err != nil {
+				return err
+			}
+			// La campanita de la dueña (§45).
+			return outbox.Publicar(ctx, t, tiendaID, "plan.activado", map[string]string{"plan": *pendiente})
 		case "cancelled", "paused":
 			// Sólo cuenta si es la vigente: una pendiente vieja que se cancela no cambia nada.
 			if actual == nil || *actual != p.ID {
@@ -163,7 +169,11 @@ func (s *Servicio) ConciliarSuscripcion(ctx context.Context, id string) error {
 				plan = "'gratis'"
 			}
 			_, err = t.Exec(ctx, `UPDATE tiendas SET suscripcion_estado = $2, plan = `+plan+` WHERE id = $1`, tiendaID, p.Status)
-			return err
+			if err != nil || p.Status != "paused" || (estado != nil && *estado == "paused") {
+				return err
+			}
+			// Mercado Pago pausó el cobro del abono vigente: la campanita de la dueña (§45).
+			return outbox.Publicar(ctx, t, tiendaID, "plan.pausado", map[string]string{})
 		}
 		return nil
 	})

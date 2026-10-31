@@ -2264,6 +2264,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/notificaciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** La campanita (docs/decisiones.md §45): las notificaciones de la persona de la sesión en esa tienda, de la más nueva a la más vieja, con cuántas no leyó. Cualquiera del equipo; cada persona ve sólo las suyas. Se guardan 90 días. Una IA conectada o el soporte mirando reciben la lista vacía. */
+        get: operations["notificaciones"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/notificaciones/sin-leer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Cuántas notificaciones no leyó la persona (la insignia de la campanita). */
+        get: operations["notificacionesSinLeer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/notificaciones/{id}/leida": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Marca leída una notificación de la persona (al tocarla). 404 si no es suya o ya se borró. */
+        post: operations["marcarNotificacionLeida"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/notificaciones/leidas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** «Marcar todo como leído» (las de la persona en la tienda de la sesión). */
+        post: operations["marcarNotificacionesLeidas"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/notificaciones/preferencias": {
         parameters: {
             query?: never;
@@ -3192,6 +3260,7 @@ export interface components {
                 /** @description Tareas de hoy */
                 paraHacer: number;
             };
+            /** @description La demo arma las suyas; con la API va vacía: la campanita lee /v1/panel/notificaciones */
             notificaciones: components["schemas"]["Notificacion"][];
             /** @description Canales conectados (ids: wa, ml, mp, ig, tg) */
             canales: string[];
@@ -4608,7 +4677,7 @@ export interface components {
         };
         Notificacion: {
             id: string;
-            /** @description Marca o tipo del ícono: wa, mp, ml, warn, arca, star, ok, err */
+            /** @description Marca o tipo del ícono (lib/marcas.ts): web, transf, mp, ml, warn, arca, star, ok, err */
             tipo: string;
             titulo: string;
             detalle: string;
@@ -4617,6 +4686,15 @@ export interface components {
             leida: boolean;
             /** @enum {string} */
             grupo: "ventas" | "sistema";
+            /** @description La página del panel que abre al tocarla (/panel/…) */
+            ruta?: string;
+        };
+        PaginaNotificaciones: {
+            notificaciones: components["schemas"]["Notificacion"][];
+            /** @description Cuántas no leyó (de todas, no sólo de esta página) */
+            sinLeer: number;
+            /** @description Cursor de la página siguiente (null: no hay más) */
+            siguiente: string | null;
         };
         Onboarding: {
             /** @description Una de las 16 del handoff */
@@ -9381,6 +9459,97 @@ export interface operations {
                 content?: never;
             };
             404: components["responses"]["Problema"];
+        };
+    };
+    notificaciones: {
+        parameters: {
+            query?: {
+                /** @description El `siguiente` de la página anterior */
+                cursor?: string;
+                limite?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Notificaciones */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginaNotificaciones"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            401: components["responses"]["Problema"];
+        };
+    };
+    notificacionesSinLeer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sin leer */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        sinLeer: number;
+                    };
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    marcarNotificacionLeida: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Marcada */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problema"];
+            403: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+        };
+    };
+    marcarNotificacionesLeidas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Marcadas */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problema"];
         };
     };
     preferenciasAvisos: {

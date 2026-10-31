@@ -301,6 +301,15 @@ func (h *Hub) entregar(e Evento) {
 	if e.Tienda == "" {
 		return
 	}
+	if familia(e.Tipo) == "notificacion" {
+		// La campanita es de cada persona (§45): sólo a sus pestañas paradas en esa tienda.
+		for c := range h.usuarios[e.Usuario] {
+			if c.Tienda == e.Tienda && !c.Publico {
+				c.mandar(Mensaje{Tipo: e.Tipo})
+			}
+		}
+		return
+	}
 	m := Mensaje{Tipo: e.Tipo, ID: e.ID, Lote: e.Lote}
 	for c := range h.tiendas[e.Tienda] {
 		if Permitido(c.Rol, e.Tipo) {

@@ -26,6 +26,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/links"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/listas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/mitienda"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/notificaciones"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/partners"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/precios"
@@ -142,6 +143,7 @@ func Nuevo(d Dependencias) http.Handler {
 			h = d.Cuentas.Autenticar(conActor(d.ClaveBFF, conGuardia))
 		}
 		tiendas.Rutas(mux, d.App, tienda)
+		notificaciones.Rutas(mux, d.App)
 		pedidos.Rutas(mux, d.App, tienda)
 		var fact listas.Facturas
 		if d.Facturacion != nil {

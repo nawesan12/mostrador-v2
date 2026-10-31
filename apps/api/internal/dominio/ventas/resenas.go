@@ -65,12 +65,17 @@ func DejarResena(ctx context.Context, pool tx, tienda string, n NuevaResena) err
 				prod = &id
 			}
 		}
-		_, err := t.Exec(ctx, `INSERT INTO resenas (tienda_id, pedido_numero, producto_id, autor, estrellas, texto)
-			VALUES ($1, $2, $3::uuid, $4, $5, $6)`, tienda, pedido, prod, n.Autor, n.Estrellas, n.Texto)
+		var id string
+		err := t.QueryRow(ctx, `INSERT INTO resenas (tienda_id, pedido_numero, producto_id, autor, estrellas, texto)
+			VALUES ($1, $2, $3::uuid, $4, $5, $6) RETURNING id::text`, tienda, pedido, prod, n.Autor, n.Estrellas, n.Texto).Scan(&id)
 		if err != nil && strings.Contains(err.Error(), "resenas_por_pedido") {
 			return ErrYaReseno
 		}
-		return err
+		if err != nil {
+			return err
+		}
+		// La campanita del equipo (§45).
+		return outbox.Publicar(ctx, t, tienda, "tienda.resena", map[string]string{"id": id})
 	})
 }
 

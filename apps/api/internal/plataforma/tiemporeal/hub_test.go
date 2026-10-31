@@ -146,6 +146,32 @@ func TestSesionesSoloDeLaPersona(t *testing.T) {
 	}
 }
 
+// La campanita (§45) es de cada persona: el aviso llega sólo a sus pestañas en esa tienda, sin
+// importar el rol, y a nadie más (ni a la otra tienda de la misma persona, ni a la tienda online).
+func TestNotificacionSoloALaPersonaEnEsaTienda(t *testing.T) {
+	h := hubDePrueba()
+	anaSol := registrar(t, h, &Cliente{Tienda: "sol", Usuario: "ana", Sesion: "s1", Rol: "local"})
+	anaLuna := registrar(t, h, &Cliente{Tienda: "luna", Usuario: "ana", Sesion: "s2", Rol: "duenio"})
+	beto := registrar(t, h, &Cliente{Tienda: "sol", Usuario: "beto", Sesion: "s3", Rol: "duenio"})
+	pub := registrar(t, h, &Cliente{Tienda: "sol", Publico: true, IP: "1.1.1.1"})
+
+	h.Publicar(Evento{Tienda: "sol", Tipo: "notificacion.nueva", Usuario: "ana"})
+	h.Publicar(Evento{Tienda: "sol", Tipo: "notificacion.nueva", Usuario: "ana"})
+	h.repartir(time.Now())
+	if ms := recibidos(anaSol); len(ms) != 1 || ms[0].Tipo != "notificacion.nueva" || ms[0].ID != "" {
+		t.Fatalf("ana en sol: %v", ms)
+	}
+	if len(recibidos(anaLuna)) != 0 || len(recibidos(beto)) != 0 || len(recibidos(pub)) != 0 {
+		t.Fatal("la notificación de ana en sol le llegó a otra pestaña")
+	}
+	// Sin persona no le llega a nadie.
+	h.Publicar(Evento{Tienda: "sol", Tipo: "notificacion.nueva"})
+	h.repartir(time.Now())
+	if len(recibidos(anaSol)) != 0 || len(recibidos(beto)) != 0 {
+		t.Fatal("sin persona no se reparte")
+	}
+}
+
 func TestCambioDeRolCortaALaPersonaAfectada(t *testing.T) {
 	h := hubDePrueba()
 	duenia := registrar(t, h, &Cliente{Tienda: "sol", Usuario: "ana", Sesion: "s1", Rol: "duenio"})

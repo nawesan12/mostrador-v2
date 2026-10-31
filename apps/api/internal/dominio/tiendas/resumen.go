@@ -17,8 +17,9 @@ import (
 const DiasPrueba = 14
 
 // Resumen es lo que muestra el armazón del panel (components/schemas/ResumenPanel). La insignia de
-// pedidos ya es real; las demás y las notificaciones se llenan a medida que llegan los dominios
-// (carritos, WhatsApp, tareas); hasta entonces van en cero y vacías, nunca inventadas.
+// pedidos y carritos ya son reales; las demás se llenan a medida que llegan los dominios (WhatsApp,
+// tareas); hasta entonces van en cero, nunca inventadas. Las notificaciones van vacías: la campanita
+// lee las suyas de /v1/panel/notificaciones (paquete notificaciones, §45).
 type Resumen struct {
 	Insignias struct {
 		Pedidos   int `json:"pedidos"`
@@ -87,13 +88,5 @@ func rutasResumen(mux *http.ServeMux, pool interface {
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Cache-Control", "no-store")
 		_ = json.NewEncoder(w).Encode(res)
-	})
-	// Sin notificaciones todavía: marcarlas como leídas no tiene nada que hacer.
-	mux.HandleFunc("POST /v1/panel/notificaciones/leidas", func(w http.ResponseWriter, r *http.Request) {
-		if tienda(r) == "" {
-			problema.Escribir(w, problema.SinSesion())
-			return
-		}
-		w.WriteHeader(http.StatusNoContent)
 	})
 }

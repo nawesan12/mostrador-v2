@@ -16,6 +16,9 @@ var Rutas = map[string]Permiso{
 	"GET /v1/panel/resumen":                         Panel,
 	"GET /v1/panel/tablero":                         Panel,
 	"POST /v1/panel/avisos/{aviso}/ocultar":         Panel,
+	"GET /v1/panel/notificaciones":                  Panel, // las de cada persona (§45)
+	"GET /v1/panel/notificaciones/sin-leer":         Panel,
+	"POST /v1/panel/notificaciones/{id}/leida":      Panel,
 	"POST /v1/panel/notificaciones/leidas":          Panel,
 	"GET /v1/panel/para-hacer":                      Panel,
 	"PUT /v1/panel/para-hacer/{id}":                 Panel,

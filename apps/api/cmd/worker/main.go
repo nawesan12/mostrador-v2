@@ -15,6 +15,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/facturacion"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ia"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/importacion"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/notificaciones"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/push"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ventas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/visitas"
@@ -119,6 +120,8 @@ func correr() error {
 			w.Manejadores[tipo] = m
 		}
 	}
+	// La campanita del panel (§45): los mismos eventos dejan además una notificación por persona.
+	(&notificaciones.Generador{Pool: app}).Envolver(w.Manejadores)
 	// Limpieza de las IA conectadas: códigos vencidos y clientes que nadie usa hace 30 días.
 	go func() {
 		iaS := &ia.Servicio{Pool: app}
@@ -143,6 +146,21 @@ func correr() error {
 		for {
 			if _, err := visitas.Purgar(ctx, app); err != nil && ctx.Err() == nil {
 				slog.Error("visitas: purgar", "error", err)
+			}
+			select {
+			case <-ctx.Done():
+				return
+			case <-t.C:
+			}
+		}
+	}()
+	// Notificaciones del panel: se guardan 90 días; una vez por día se borra lo más viejo.
+	go func() {
+		t := time.NewTicker(24 * time.Hour)
+		defer t.Stop()
+		for {
+			if _, err := notificaciones.Purgar(ctx, app); err != nil && ctx.Err() == nil {
+				slog.Error("notificaciones: purgar", "error", err)
 			}
 			select {
 			case <-ctx.Done():

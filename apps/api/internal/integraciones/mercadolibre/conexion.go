@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/outbox"
 )
 
 // RutaVuelta del OAuth: tiene que coincidir exacto con la de la aplicación.
@@ -222,9 +223,13 @@ func (s *Servicio) tokenDe(ctx context.Context, tiendaID string) (string, int64,
 		"refresh_token": {string(r)},
 	}, &tk); err != nil || tk.AccessToken == "" {
 		s.log().Warn("mercadolibre: no se pudo renovar el token", "tienda", tiendaID, "error", err)
+		// Sólo la primera vez que se cae avisa (la campanita, §45): los reintentos no repiten.
 		_ = s.Pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-			_, err := t.Exec(ctx, `UPDATE ml_conexiones SET reautorizar = true WHERE tienda_id = $1`, tiendaID)
-			return err
+			tag, err := t.Exec(ctx, `UPDATE ml_conexiones SET reautorizar = true WHERE tienda_id = $1 AND NOT reautorizar`, tiendaID)
+			if err != nil || tag.RowsAffected() == 0 {
+				return err
+			}
+			return outbox.Publicar(ctx, t, tiendaID, "integracion.reautorizar", map[string]string{"canal": "ml"})
 		})
 		return "", 0, ErrReautorizar
 	}

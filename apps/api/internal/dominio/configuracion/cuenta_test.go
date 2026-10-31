@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5"
+
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/configuracion"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
@@ -110,6 +112,13 @@ func TestEquipo(t *testing.T) {
 		}
 		if _, err := s.AceptarInvitacion(ctx, leo.Token, token); !errors.Is(err, cuentas.ErrTokenInvalido) {
 			t.Fatalf("se usó dos veces: %v", err)
+		}
+		// La campanita de la dueña (§45): un aviso, con la persona que se sumó.
+		var avisos int
+		if err := b.App.EnTienda(ctx, id, func(tx pgx.Tx) error {
+			return tx.QueryRow(ctx, `SELECT count(*) FROM outbox WHERE tipo = 'equipo.aceptada' AND datos->>'usuario' = (SELECT id::text FROM auth.usuarios WHERE email = 'leo@deco.com')`).Scan(&avisos)
+		}); err != nil || avisos != 1 {
+			t.Fatalf("aviso de invitación aceptada: %d %v", avisos, err)
 		}
 		d, err := s.Sesion(ctx, leo.Token)
 		if err != nil || d.TiendaID != id || d.Rol != "ventas" {

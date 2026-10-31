@@ -131,9 +131,17 @@ func sumar(ctx context.Context, tx pgx.Tx, usuario, token string) (string, error
 	if _, err := tx.Exec(ctx, `DELETE FROM invitaciones WHERE id = $1`, invitacionID); err != nil {
 		return "", err
 	}
-	if _, err := tx.Exec(ctx, `INSERT INTO auth.membresias (usuario_id, tienda_id, rol) VALUES ($1, $2, $3)
-		ON CONFLICT (usuario_id, tienda_id) DO NOTHING`, usuario, tiendaID, inv.Rol); err != nil {
+	tag, err := tx.Exec(ctx, `INSERT INTO auth.membresias (usuario_id, tienda_id, rol) VALUES ($1, $2, $3)
+		ON CONFLICT (usuario_id, tienda_id) DO NOTHING`, usuario, tiendaID, inv.Rol)
+	if err != nil {
 		return "", err
+	}
+	// Se sumó alguien nuevo: la campanita de quien maneja el equipo (§45). Con la tienda todavía fijada.
+	if tag.RowsAffected() == 1 {
+		if _, err := tx.Exec(ctx, `INSERT INTO outbox (tienda_id, tipo, datos) VALUES ($1, 'equipo.aceptada', jsonb_build_object('usuario', $2::text))`,
+			tiendaID, usuario); err != nil {
+			return "", err
+		}
 	}
 	_, err = tx.Exec(ctx, "SELECT set_config('app.tienda_id', '', true)")
 	return tiendaID, err
