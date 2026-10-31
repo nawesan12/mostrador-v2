@@ -2339,4 +2339,16 @@
 			display: none;
 		}
 	}
+
+	/* Área de toque de 44 px en pantallas táctiles, sin cambiar el dibujo del handoff. */
+	@media (pointer: coarse) {
+		.ver {
+			position: relative;
+		}
+		.ver::after {
+			content: '';
+			position: absolute;
+			inset: -14px -8px;
+		}
+	}
 </style>

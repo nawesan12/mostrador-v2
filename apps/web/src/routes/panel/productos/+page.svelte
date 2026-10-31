@@ -192,8 +192,11 @@
 		void leerCola();
 	});
 	// ?nuevo=1 (desde el Inicio o ⌘K): abre el editor de un producto nuevo de una.
+	// Una sola vez por llegada: al recargar los datos después de guardar no se vuelve a abrir.
+	let nuevoAbierto = false;
 	$effect(() => {
-		if (!page.url.searchParams.has('nuevo')) return;
+		if (nuevoAbierto || !page.url.searchParams.has('nuevo')) return;
+		nuevoAbierto = true;
 		replaceState(resolve('/panel/productos'), {});
 		producto = null;
 		editor = true;
@@ -421,23 +424,26 @@
 		>
 	{/snippet}
 	{#snippet antes()}
-		<div class="foto">
-			<img src="/hornero/foto.webp" alt="" width="64" height="64" />
-			<div class="f-txt">
-				<div class="f-t">Cargá productos con sus fotos</div>
-				<!-- Tincho no completa la ficha desde la foto (no hay nada que lo haga): se dice lo que hay. -->
-				<div class="f-d">
-					Subí las fotos desde el celular y completá nombre, precio y&nbsp;stock.
+		<!-- La invitación a cargar con foto es para arrancar: con productos, «Nuevo producto» está arriba. -->
+		{#if !data.lista.total}
+			<div class="foto">
+				<img src="/hornero/foto.webp" alt="" width="64" height="64" />
+				<div class="f-txt">
+					<div class="f-t">Cargá productos con sus fotos</div>
+					<!-- Tincho no completa la ficha desde la foto (no hay nada que lo haga): se dice lo que hay. -->
+					<div class="f-d">
+						Subí las fotos desde el celular y completá nombre, precio y&nbsp;stock.
+					</div>
 				</div>
+				<button
+					type="button"
+					onclick={() => {
+						producto = null;
+						editor = true;
+					}}><Icon icon={I.phCameraFill} size={16} style="color:#b0441d" />Cargar producto</button
+				>
 			</div>
-			<button
-				type="button"
-				onclick={() => {
-					producto = null;
-					editor = true;
-				}}><Icon icon={I.phCameraFill} size={16} style="color:#b0441d" />Cargar producto</button
-			>
-		</div>
+		{/if}
 	{/snippet}
 </MotorLista>
 

@@ -1,5 +1,5 @@
 import { dev } from '$app/env';
-import type { Handle } from '@sveltejs/kit/hooks';
+import type { Handle, HandleServerError } from '@sveltejs/kit/hooks';
 import { env } from 'cloudflare:workers';
 import { csrfForbidden } from '#lib/server/csrf.ts';
 import { COOKIE, dbSandbox, leer } from '#lib/server/sandbox/sandbox.ts';
@@ -192,4 +192,16 @@ export const handle: Handle = async ({ event, resolve }) => {
 		// Respuesta inmutable: el diagnóstico no vale una copia.
 	}
 	return res;
+};
+
+/**
+ * Un error inesperado (la API no contesta, un bug): los avisos del panel muestran este texto en lugar
+ * del «Internal Error» de SvelteKit. Los esperados (`error(400, …)`) y los 404 quedan como vienen.
+ */
+export const handleError: HandleServerError = ({ kind, error }) => {
+	if (kind !== 'unknown') return;
+	console.error(error);
+	return {
+		message: 'Algo falló de nuestro lado. Probá de nuevo en un rato; lo que escribiste sigue ahí.'
+	};
 };

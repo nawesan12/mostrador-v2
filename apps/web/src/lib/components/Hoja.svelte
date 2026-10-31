@@ -71,6 +71,11 @@
 		background: var(--sf);
 		border-bottom: 1px solid var(--ln);
 	}
+	/* Una cabecera armada en un solo bloque ocupa todo el ancho (el «Cerrar» queda a la derecha). */
+	:global(.hoja-cab > :only-child) {
+		flex: 1;
+		min-width: 0;
+	}
 	:global(.hoja-cuerpo) {
 		flex: 1;
 		overflow: auto;

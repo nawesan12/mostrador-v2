@@ -337,12 +337,6 @@
 	}
 	const sacarFoto = (f: string) => (fotos = fotos.filter((x) => x !== f));
 	const portada = (f: string) => (fotos = [f, ...fotos.filter((x) => x !== f)]);
-	const fondoPronto = () =>
-		ui.toast({
-			k: 'info',
-			title: 'Mejorar el fondo llega pronto',
-			desc: 'Mientras, subí la foto sobre un fondo liso.'
-		});
 </script>
 
 <Hoja bind:open titulo={producto ? 'Editar producto' : 'Nuevo producto'} ancho={560}>
@@ -400,9 +394,6 @@
 					disabled={subiendo > 0}
 					><Icon icon={subiendo ? I.phSpinnerGap : I.phPlusBold} size={18} /></button
 				>{/if}
-			<button type="button" class="f-magia" onclick={fondoPronto}
-				><Icon icon={I.phMagicWandFill} size={16} />Mejorar fondo</button
-			>
 		</div>
 
 		<div class="tarjeta campos">
@@ -446,7 +437,8 @@
 								inputmode="numeric"
 								aria-label="Precio base"
 								readonly={!conPrecios}
-								value={pesos(precio)}
+								placeholder="$ 0"
+								value={precio ? pesos(precio) : ''}
 								onchange={(e) => (precio = numero(e.currentTarget.value))}
 							/>
 						{:else}
@@ -465,7 +457,8 @@
 						class="costo"
 						inputmode="numeric"
 						aria-label="Costo"
-						value={pesos(costo)}
+						placeholder="$ 0"
+						value={costo ? pesos(costo) : ''}
 						onchange={(e) => (costo = numero(e.currentTarget.value))}
 					/>
 				</div>
@@ -717,22 +710,6 @@
 		display: grid;
 		place-items: center;
 		color: var(--mu);
-	}
-	.f-magia {
-		aspect-ratio: 1;
-		border-radius: 12px;
-		border: 0;
-		background: rgba(210, 88, 47, 0.1);
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 2px;
-		color: #b0441d;
-		font-size: 11px;
-		font-weight: 600;
-		text-align: center;
-		padding: 4px;
 	}
 	.tarjeta {
 		padding: 14px;

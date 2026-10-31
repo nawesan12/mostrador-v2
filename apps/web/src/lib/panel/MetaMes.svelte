@@ -239,4 +239,16 @@
 		gap: 8px;
 		justify-content: flex-end;
 	}
+
+	/* Área de toque de 44 px en pantallas táctiles, sin cambiar el dibujo del handoff. */
+	@media (pointer: coarse) {
+		.editar {
+			position: relative;
+		}
+		.editar::after {
+			content: '';
+			position: absolute;
+			inset: -14px -8px;
+		}
+	}
 </style>
