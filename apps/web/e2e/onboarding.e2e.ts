@@ -66,7 +66,7 @@ test('el onboarding se recorre entero y termina en el panel con la demo armada',
 
 	// 8: listo → panel.
 	await page.locator('.pie .seguir').click();
-	await expect(page.getByRole('heading', { name: 'Tu Local Web está 94% listo.' })).toBeVisible();
+	await expect(page.getByRole('heading', { name: 'Tu Local Web ya está listo.' })).toBeVisible();
 	expect(await sinDesborde(page)).toBeLessThanOrEqual(0);
 	await page.getByRole('button', { name: /Ir a mi panel/ }).click();
 	await expect(page).toHaveURL(/\/panel$/);
@@ -96,7 +96,7 @@ test('"Usar esta plantilla" de la landing arranca el onboarding con esa plantill
 		.getByRole('dialog')
 		.getByRole('link', { name: /Usar esta plantilla/ })
 		.click();
-	await expect(page).toHaveURL(/\/onboarding$/);
+	await expect(page).toHaveURL(/\/onboarding(\?|$)/);
 	await listo(page);
 	const tpl = await page.evaluate(() => localStorage.getItem('ob-tpl'));
 	expect(tpl).toBeTruthy();

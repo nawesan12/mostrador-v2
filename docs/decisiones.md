@@ -142,6 +142,19 @@ URL, para que no quede en el historial ni en logs.
   guarda con `PUT /v1/panel/onboarding` (columna `tiendas.onboarding`, jsonb hasta 16 KB).
 - Los datos que muestran los pasos son los del negocio de ejemplo del handoff (Café La Esquina);
   traerlos de verdad de cada integración llega con el PR de esa integración.
+- **Con la API, menos es más (31/10)**: la demo sigue con los 8 pasos del handoff; una cuenta real
+  recorre 6 (`PASOS_REALES` en `lib/onboarding/datos.ts`): Cuenta, Tu negocio (nombre, dirección y
+  rubro opcional), Importación, Tu tienda, Cobros y envíos (Mercado Pago, transferencia y entregas)
+  y ¡Listo!. Salen Canales (Mercado Pago pasa a Cobros; lo demás, a Integraciones), Tincho (el tono
+  no lo leía nada), los objetivos (tampoco), ARCA y la política de cambios (al panel), y en ¡Listo!
+  el equipo (no mandaba invitaciones) y «te quedan 2 cosas». El avance es pasos hechos / pasos.
+- Se retoma de la tienda, no del navegador: `GET /v1/panel/onboarding` devuelve lo guardado (con el
+  paso, por id) y si terminó. Al llegar a ¡Listo! queda terminado y las secciones pasan a la tienda,
+  así el link y el QR ya muestran lo elegido; después `/onboarding` lleva al panel (sólo ¡Listo! se
+  puede recargar). Cada paso es una entrada del historial: el «atrás» del celular vuelve un paso.
+- ¡Listo! termina en algo accionable: compartir (hoja del sistema en el celular, copiar y WhatsApp en
+  la compu, `compartirTienda` del panel), descargar el QR, ver la tienda y «Cargar mi primer
+  producto» (`/panel/productos?nuevo=1`), o «Traer mis productos» si eligió importar.
 
 ## 18. Ingreso con Google, Mercado Pago, Mercado Libre y WhatsApp (PR #18)
 

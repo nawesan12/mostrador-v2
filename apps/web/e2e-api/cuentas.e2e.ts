@@ -37,10 +37,10 @@ test('registro, salir, recuperar por mail, contraseña nueva e ingreso', async (
 	await page.getByRole('button', { name: 'Crear mi tienda' }).click();
 	await expect(page).toHaveURL(/\/onboarding\?paso=1$/);
 	await listo(page);
-	await expect(page.getByRole('heading', { name: /Encontramos tu negocio/ })).toBeVisible();
-	// Del paso 2 al 8 sin elegir nada nuevo, y al panel.
-	for (let i = 0; i < 6; i++) await page.locator('.pie .seguir').click();
-	await expect(page.getByRole('heading', { name: 'Tu mostrador está 94% listo.' })).toBeVisible();
+	await expect(page.getByRole('heading', { name: /Contanos un poco de tu negocio/ })).toBeVisible();
+	// Del paso 2 al 6 sin elegir nada nuevo, y al panel.
+	for (let i = 0; i < 4; i++) await page.locator('.pie .seguir').click();
+	await expect(page.getByRole('heading', { name: 'Tu tienda ya está en línea.' })).toBeVisible();
 	await page.getByRole('button', { name: /Ir a mi panel/ }).click();
 	await expect(page).toHaveURL(/\/panel$/);
 	await expect(page.locator('.barra .t-n')).toHaveText('La Esquina');
