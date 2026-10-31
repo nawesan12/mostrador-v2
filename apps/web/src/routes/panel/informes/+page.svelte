@@ -41,35 +41,34 @@
 		n === null
 			? ''
 			: `${n > 0 ? '+' : ''}${n.toLocaleString('es-AR', { maximumFractionDigits: 1 })}${suf}`;
-	const KPIS = $derived([
-		[
-			'Ventas del mes',
-			pesosCortos(k.ventas),
-			k.ventasVs === null ? '' : `${signo(k.ventasVs)} vs. ${k.mesAnterior}`,
-			(k.ventasVs ?? 0) >= 0 ? '#2F8F63' : '#B83A2E'
-		],
-		[
-			'Ticket promedio',
-			pesos(k.ticket),
-			signo(k.ticketVs),
-			(k.ticketVs ?? 0) >= 0 ? '#2F8F63' : '#B83A2E'
-		],
-		[
-			'Margen bruto',
-			k.margen === null ? '—' : `${k.margen}%`,
-			k.margenVs === null
-				? ''
-				: `${signo(k.margenVs, '')} ${Math.abs(k.margenVs) === 1 ? 'punto' : 'puntos'}`,
-			'#2F8F63'
-		],
-		[
-			'Comisiones ahorradas',
-			pesos(k.ahorro),
-			// Es una cuenta, no un dato: lo que se iría con una plataforma que cobra 2,1 % por venta.
-			'si pagaras 2,1 % por venta',
-			'#C24E25'
-		]
-	] as const);
+	// Sin costos cargados el margen es un guion: no se muestra. «Comisiones ahorradas» era una cuenta
+	// contra otra plataforma, no un dato de la tienda: tampoco.
+	const KPIS = $derived(
+		(
+			[
+				[
+					'Ventas del mes',
+					pesosCortos(k.ventas),
+					k.ventasVs === null ? '' : `${signo(k.ventasVs)} vs. ${k.mesAnterior}`,
+					(k.ventasVs ?? 0) >= 0 ? '#2F8F63' : '#B83A2E'
+				],
+				[
+					'Ticket promedio',
+					pesos(k.ticket),
+					signo(k.ticketVs),
+					(k.ticketVs ?? 0) >= 0 ? '#2F8F63' : '#B83A2E'
+				],
+				[
+					'Margen bruto',
+					k.margen === null ? '—' : `${k.margen}%`,
+					k.margenVs === null
+						? ''
+						: `${signo(k.margenVs, '')} ${Math.abs(k.margenVs) === 1 ? 'punto' : 'puntos'}`,
+					'#2F8F63'
+				]
+			] as const
+		).filter(([t]) => t !== 'Margen bruto' || k.margen !== null)
+	);
 	const ICONOS = [I.phTrendUpBold, I.phCoffeeFill, I.phTagBold];
 </script>
 
@@ -348,6 +347,10 @@
 	@media (max-width: 560px) {
 		.kpis {
 			grid-template-columns: 1fr 1fr;
+		}
+		/* Si quedan impares, la última va a lo ancho (sin una tarjeta sola en su renglón). */
+		.kpi:last-child:nth-child(odd) {
+			grid-column: 1 / -1;
 		}
 		.k-v {
 			font-size: 21px;

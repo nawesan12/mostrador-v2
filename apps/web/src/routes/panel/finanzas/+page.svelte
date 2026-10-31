@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import Icon from '#lib/components/Icon.svelte';
 	import Seo from '#lib/components/Seo.svelte';
 	import * as I from '#lib/icons.ts';
@@ -106,7 +107,7 @@
 			<div class="d-in">
 				{#if data.disponible === null}
 					<!-- Lo disponible en Mercado Pago no se trae todavía: va lo vendido y cobrado, que sí se sabe. -->
-					<div class="d-t">Vendido en 30 días</div>
+					<div class="d-t">Cobrado en 30 días</div>
 					<div class="d-v">{pesos(data.vendido30 ?? 0)}</div>
 					<div class="d-d">Lo disponible para retirar lo ves en tu cuenta de Mercado Pago</div>
 				{:else}
@@ -121,11 +122,21 @@
 			</div>
 		</div>
 		{#each KPIS as [t, v, d, c] (t)}
-			<div class="kpi">
-				<div class="k-t">{t}</div>
-				<div class="k-v" style:color={c}>{v}</div>
-				<div class="k-d">{d}</div>
-			</div>
+			{#if t === 'Ganancia estimada' && k.ganancia === null}
+				<!-- Sin costos no hay ganancia: la tarjeta lleva a cargarlos. -->
+				<a class="kpi" href={resolve('/panel/productos')}>
+					<div class="k-t">{t}</div>
+					<div class="k-v" style:color={c}>{v}</div>
+					<div class="k-d">{d}</div>
+					<div class="k-ir">Cargar costos <Icon icon={I.phArrowRight} size={13} /></div>
+				</a>
+			{:else}
+				<div class="kpi">
+					<div class="k-t">{t}</div>
+					<div class="k-v" style:color={c}>{v}</div>
+					<div class="k-d">{d}</div>
+				</div>
+			{/if}
 		{/each}
 	</div>
 
@@ -268,6 +279,20 @@
 		border-radius: 22px;
 		background: var(--sf);
 		box-shadow: var(--shd);
+	}
+	a.kpi {
+		display: block;
+		color: inherit;
+		text-decoration: none;
+	}
+	.k-ir {
+		margin-top: 10px;
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		font-size: 13px;
+		font-weight: 600;
+		color: #b0441d;
 	}
 	.k-t {
 		font-size: 13px;

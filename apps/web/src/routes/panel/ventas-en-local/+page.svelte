@@ -184,8 +184,11 @@
 						onclick={() => sumar(p.clave, 1)}
 						aria-label="Sumar {p.nombre}"
 					>
-						<div class="foto">
-							{#if p.foto}<img src={unsplash(p.foto, 300, '&h=250')} alt="" />{/if}
+						<!-- Sin foto, una franja con la inicial: el cuadro vacío sólo empujaba el ticket más abajo. -->
+						<div class="foto" class:sin={!p.foto}>
+							{#if p.foto}<img src={unsplash(p.foto, 300, '&h=250')} alt="" />{:else}<span
+									aria-hidden="true">{p.nombre.slice(0, 1).toUpperCase()}</span
+								>{/if}
 							{#if en}<span class="en">{en}</span>{/if}
 						</div>
 						<div class="p-txt">
@@ -450,6 +453,15 @@
 		border-radius: 12px;
 		overflow: hidden;
 		background: var(--sf3);
+	}
+	.foto.sin {
+		aspect-ratio: auto;
+		height: 46px;
+		display: grid;
+		place-items: center;
+		color: var(--mu);
+		font-size: 17px;
+		font-weight: 600;
 	}
 	.foto img {
 		width: 100%;

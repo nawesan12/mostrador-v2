@@ -374,72 +374,6 @@
 		</div>
 	</div>
 
-	<section class="ia" use:anim={{ t: 'rise', delay: 50 }}>
-		<div class="ia-cab">
-			<img src="/hornero/whatsapp.webp" alt="" width="52" height="52" />
-			<div class="ia-txt">
-				<div class="ia-t">Manejá Tu Local Web desde tu IA<span class="mcp">MCP</span></div>
-				<div class="ia-d">
-					Entrás con tu cuenta de la IA y listo. Preguntale por ventas, stock o pedidos, y pedile
-					que ajuste un producto, cree un cupón o arme un link de&nbsp;pago.
-				</div>
-			</div>
-		</div>
-		<div class="provs">
-			{#each IAS as p (p.id)}
-				{@const on = data.estado.ia[p.id]}
-				<button type="button" class="prov" class:on onclick={() => abrirIa(p)}>
-					<span class="p-ico" style:color={p.col}><Icon icon={p.icon} size={19} /></span>
-					<span class="p-txt">
-						<span class="p-t">{p.nombre}</span>
-						<span class="p-st">{on ? 'Conectado' : 'Conectar con tu cuenta'}</span>
-					</span>
-					<Icon icon={on ? I.phCheckCircleFill : I.phArrowRightBold} size={16} />
-				</button>
-			{/each}
-		</div>
-		<div class="perms">
-			<!-- «Responder mensajes» no tiene ninguna herramienta detrás (no hay WhatsApp ni Instagram). -->
-			{#each PERMISOS_IA.filter((g) => data.demo || g.id !== 'responder') as g (g.id)}
-				{@const on = data.estado.permisosIa[g.id]}
-				<button
-					type="button"
-					class="perm"
-					role="switch"
-					aria-checked={on}
-					disabled={g.id === 'leer'}
-					onclick={() => ajustar({ tipo: 'permisoIa', id: g.id, valor: !on })}
-				>
-					<Icon icon={g.icon} size={17} />
-					<span class="g-txt"><span class="g-t">{g.t}</span><span class="g-d">{g.d}</span></span>
-					<span class="tg" class:on><span></span></span>
-				</button>
-			{/each}
-		</div>
-		{#if data.mcp.conexiones.length}
-			<div class="conexiones" aria-label="IAs conectadas">
-				{#each data.mcp.conexiones as c (c.id)}
-					{@const p = IAS.find((x) => x.id === c.ia) ?? OTRA_IA}
-					<div class="cx">
-						<span class="p-ico" style:color={p.col}><Icon icon={p.icon} size={17} /></span>
-						<span class="g-txt"
-							><span class="g-t">{c.nombre}</span><span class="g-d"
-								>{c.acciones ? 'Lectura y acciones' : 'Sólo lectura'} · desde las {hora(
-									c.desde
-								)}{#if c.usada}&nbsp;· usada a las {hora(c.usada)}{/if}</span
-							></span
-						>
-						<button
-							type="button"
-							class="t-btn on rojo"
-							onclick={() => desconectarIa(c.id, c.nombre)}>Desconectar</button
-						>
-					</div>
-				{/each}
-			</div>
-		{/if}
-	</section>
-
 	{#if esperandoTg && !data.estado.conectadas.tg}
 		<div class="espera" role="status">
 			<Icon icon={I.logosTelegram} size={20} />
@@ -509,6 +443,73 @@
 			</div>
 		{/each}
 	</div>
+
+	<!-- Cobrar, vender y enviar va primero: manejar la tienda desde la IA es un extra. -->
+	<section class="ia" use:anim={{ t: 'rise', delay: 200 }}>
+		<div class="ia-cab">
+			<img src="/hornero/whatsapp.webp" alt="" width="52" height="52" />
+			<div class="ia-txt">
+				<div class="ia-t">Manejá Tu Local Web desde tu IA<span class="mcp">MCP</span></div>
+				<div class="ia-d">
+					Entrás con tu cuenta de la IA y listo. Preguntale por ventas, stock o pedidos, y pedile
+					que ajuste un producto, cree un cupón o arme un link de&nbsp;pago.
+				</div>
+			</div>
+		</div>
+		<div class="provs">
+			{#each IAS as p (p.id)}
+				{@const on = data.estado.ia[p.id]}
+				<button type="button" class="prov" class:on onclick={() => abrirIa(p)}>
+					<span class="p-ico" style:color={p.col}><Icon icon={p.icon} size={19} /></span>
+					<span class="p-txt">
+						<span class="p-t">{p.nombre}</span>
+						<span class="p-st">{on ? 'Conectado' : 'Conectar con tu cuenta'}</span>
+					</span>
+					<Icon icon={on ? I.phCheckCircleFill : I.phArrowRightBold} size={16} />
+				</button>
+			{/each}
+		</div>
+		<div class="perms">
+			<!-- «Responder mensajes» no tiene ninguna herramienta detrás (no hay WhatsApp ni Instagram). -->
+			{#each PERMISOS_IA.filter((g) => data.demo || g.id !== 'responder') as g (g.id)}
+				{@const on = data.estado.permisosIa[g.id]}
+				<button
+					type="button"
+					class="perm"
+					role="switch"
+					aria-checked={on}
+					disabled={g.id === 'leer'}
+					onclick={() => ajustar({ tipo: 'permisoIa', id: g.id, valor: !on })}
+				>
+					<Icon icon={g.icon} size={17} />
+					<span class="g-txt"><span class="g-t">{g.t}</span><span class="g-d">{g.d}</span></span>
+					<span class="tg" class:on><span></span></span>
+				</button>
+			{/each}
+		</div>
+		{#if data.mcp.conexiones.length}
+			<div class="conexiones" aria-label="IAs conectadas">
+				{#each data.mcp.conexiones as c (c.id)}
+					{@const p = IAS.find((x) => x.id === c.ia) ?? OTRA_IA}
+					<div class="cx">
+						<span class="p-ico" style:color={p.col}><Icon icon={p.icon} size={17} /></span>
+						<span class="g-txt"
+							><span class="g-t">{c.nombre}</span><span class="g-d"
+								>{c.acciones ? 'Lectura y acciones' : 'Sólo lectura'} · desde las {hora(
+									c.desde
+								)}{#if c.usada}&nbsp;· usada a las {hora(c.usada)}{/if}</span
+							></span
+						>
+						<button
+							type="button"
+							class="t-btn on rojo"
+							onclick={() => desconectarIa(c.id, c.nombre)}>Desconectar</button
+						>
+					</div>
+				{/each}
+			</div>
+		{/if}
+	</section>
 </div>
 
 <Modal

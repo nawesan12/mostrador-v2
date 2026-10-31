@@ -21,6 +21,7 @@
 	 * con una venta inventada).
 	 */
 	const demo = $derived(!!page.data.demo);
+	let verMas = $state(false);
 
 	const CANAL: Record<CanalAviso, [I.IconData, string, string]> = {
 		panel: [I.phBellFill, '#D2582F', 'Panel'],
@@ -79,53 +80,78 @@
 	</div>
 
 	{#if !demo}
-		<div class="hoy" use:anim={{ t: 'rise', delay: 30 }}>
-			<img src="/hornero/hablando.webp" alt="" width="56" height="56" />
-			<p>
-				Cada venta de tu tienda online te llega por <b>email</b> (al de
-				<a href={resolve('/panel/configuracion')}>Configuración › Negocio</a> o, si no hay, al de tu
-				cuenta): por transferencia apenas entra el pedido, por Mercado Pago cuando se acredita. Se
-				apaga en «Venta nueva › Email». También por <b>Telegram</b>, si lo vinculaste en
-				<a href={resolve('/panel/integraciones')}>Integraciones</a>. Los demás avisos todavía no
-				salen: lo que marques acá queda guardado para cuando&nbsp;estén.
-			</p>
+		<!-- Lo que hoy sale de verdad va arriba y a la vista; el resto de la matriz se guarda para cuando
+		     esté, detrás de «Más avisos». -->
+		<div class="tarjeta" use:anim={{ t: 'rise', delay: 30 }}>
+			<div class="activo">
+				<span class="a-ico" style:color={CANAL.email[1]}
+					><Icon icon={CANAL.email[0]} size={20} /></span
+				>
+				<span class="a-txt"
+					><b>Venta nueva por email</b><span class="d"
+						>Por transferencia apenas entra el pedido; por Mercado Pago cuando se acredita. Llega al
+						email de <a href="{resolve('/panel/configuracion')}?tab=negocio">tu negocio</a> o, si no hay,
+						al de tu&nbsp;cuenta.</span
+					></span
+				>
+				<Interruptor
+					checked={activo(prefs.matriz, 'venta', 'email')}
+					label="Venta nueva por email"
+					onchange={() => alternar('venta', 'email')}
+				/>
+			</div>
+			<a class="activo" href={resolve('/panel/integraciones')}>
+				<span class="a-ico" style:color="#229ED9"><Icon icon={I.logosTelegram} size={20} /></span>
+				<span class="a-txt"
+					><b>Venta nueva por Telegram</b><span class="d">Se vincula desde Integraciones</span
+					></span
+				>
+				<Icon icon={I.phCaretRight} size={14} style="color:var(--fa)" />
+			</a>
 		</div>
+		<button type="button" class="mas" aria-expanded={verMas} onclick={() => (verMas = !verMas)}
+			>{verMas ? 'Ocultar' : 'Más avisos'}<span class="d"
+				>Stock bajo, envíos, ARCA y más: los guardamos para cuando&nbsp;salgan</span
+			><Icon icon={verMas ? I.phCaretUpBold : I.phCaretDownBold} size={14} /></button
+		>
 	{/if}
 
-	<div class="tarjeta" use:anim={{ t: 'rise', delay: 50 }}>
-		<div class="desliza" use:deslizable>
-			<div class="tabla">
-				<div class="fila cab-t">
-					<span>Aviso</span>
-					{#each CANALES_AVISO as c (c)}
-						{@const [icono, col, t] = CANAL[c]}
-						<span class="canal"><Icon icon={icono} size={18} style="color:{col}" />{t}</span>
+	{#if demo || verMas}
+		<div class="tarjeta" use:anim={{ t: 'rise', delay: 50 }}>
+			<div class="desliza" use:deslizable>
+				<div class="tabla">
+					<div class="fila cab-t">
+						<span>Aviso</span>
+						{#each CANALES_AVISO as c (c)}
+							{@const [icono, col, t] = CANAL[c]}
+							<span class="canal"><Icon icon={icono} size={18} style="color:{col}" />{t}</span>
+						{/each}
+					</div>
+					{#each AVISOS as g (g.grupo)}
+						<div class="grupo">{g.grupo}</div>
+						{#each g.filas as f (f.id)}
+							<div class="fila">
+								<span><b>{f.t}</b><span class="d">{f.d}</span></span>
+								{#each CANALES_AVISO as c (c)}
+									<span class="celda"
+										><span class="c-mob" aria-hidden="true"
+											><Icon icon={CANAL[c][0]} size={15} style="color:{CANAL[c][1]}" />{CANAL[
+												c
+											][2]}</span
+										><Interruptor
+											checked={activo(prefs.matriz, f.id, c)}
+											label="{f.t} por {CANAL[c][2]}"
+											onchange={() => alternar(f.id, c)}
+										/></span
+									>
+								{/each}
+							</div>
+						{/each}
 					{/each}
 				</div>
-				{#each AVISOS as g (g.grupo)}
-					<div class="grupo">{g.grupo}</div>
-					{#each g.filas as f (f.id)}
-						<div class="fila">
-							<span><b>{f.t}</b><span class="d">{f.d}</span></span>
-							{#each CANALES_AVISO as c (c)}
-								<span class="celda"
-									><span class="c-mob" aria-hidden="true"
-										><Icon icon={CANAL[c][0]} size={15} style="color:{CANAL[c][1]}" />{CANAL[
-											c
-										][2]}</span
-									><Interruptor
-										checked={activo(prefs.matriz, f.id, c)}
-										label="{f.t} por {CANAL[c][2]}"
-										onchange={() => alternar(f.id, c)}
-									/></span
-								>
-							{/each}
-						</div>
-					{/each}
-				{/each}
 			</div>
 		</div>
-	</div>
+	{/if}
 
 	{#if demo}
 		<div class="dos" use:anim={{ t: 'rise', delay: 100 }}>
@@ -162,27 +188,58 @@
 </div>
 
 <style>
-	.hoy {
+	.activo {
 		display: flex;
 		align-items: center;
-		gap: 14px;
-		padding: 14px 18px;
-		border-radius: 20px;
-		background: var(--durazno);
+		gap: 12px;
+		min-height: 64px;
+		padding: 12px 18px;
+		color: var(--tx);
+		text-decoration: none;
 	}
-	.hoy img {
+	.activo + .activo {
+		border-top: 1px solid var(--ln);
+	}
+	.a-ico {
 		flex: none;
-		border-radius: 50%;
+		width: 38px;
+		height: 38px;
+		border-radius: 12px;
+		background: var(--sf3);
+		display: grid;
+		place-items: center;
 	}
-	.hoy p {
-		margin: 0;
+	.a-txt {
+		flex: 1;
+		min-width: 0;
 		font-size: 14px;
-		line-height: 1.45;
-		text-wrap: pretty;
 	}
-	.hoy a {
+	.a-txt b {
+		font-weight: 600;
+	}
+	.a-txt a {
 		color: var(--terracota);
 		font-weight: 600;
+	}
+	.mas {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		min-height: 48px;
+		padding: 10px 18px;
+		border-radius: 18px;
+		border: 1px solid var(--ln);
+		background: transparent;
+		color: var(--tx);
+		font: inherit;
+		font-size: 14px;
+		font-weight: 600;
+		text-align: left;
+		cursor: pointer;
+	}
+	.mas .d {
+		flex: 1;
+		font-weight: 400;
 	}
 	.pagina {
 		display: flex;

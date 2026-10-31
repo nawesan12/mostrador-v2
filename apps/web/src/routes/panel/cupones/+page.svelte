@@ -453,15 +453,18 @@
 		>
 	</div>
 
-	<div class="kpis" use:anim={{ t: 'rise', delay: 45 }}>
-		{#each kpis as x (x.t)}
-			<div class="kpi">
-				<div class="k-t"><Icon icon={x.i} size={15} style="color:{x.c}" />{x.t}</div>
-				<div class="k-v">{x.v}</div>
-				<div class="k-d" style:color={x.dc}>{x.d}</div>
-			</div>
-		{/each}
-	</div>
+	<!-- Sin ningún cupón, los números serían todos cero: aparecen con el primero. -->
+	{#if data.cupones.length}
+		<div class="kpis" use:anim={{ t: 'rise', delay: 45 }}>
+			{#each kpis as x (x.t)}
+				<div class="kpi">
+					<div class="k-t"><Icon icon={x.i} size={15} style="color:{x.c}" />{x.t}</div>
+					<div class="k-v">{x.v}</div>
+					<div class="k-d" style:color={x.dc}>{x.d}</div>
+				</div>
+			{/each}
+		</div>
+	{/if}
 
 	{#if data.consejo}
 		<div class="consejo" use:anim={{ t: 'rise', delay: 90 }}>
@@ -757,33 +760,36 @@
 	{/if}
 
 	{#if tab === 'cup'}
-		<div class="barra" use:anim={{ t: 'rise' }}>
-			<label class="buscar"
-				><Icon icon={I.phMagnifyingGlass} size={16} /><input
-					bind:value={q}
-					placeholder="Buscar código o producto"
-					aria-label="Buscar cupón"
-				/></label
-			>
-			<div class="filtros" role="group" aria-label="Estado" use:deslizable>
-				{#each FILTROS as [id, t, c] (id)}
-					<button
-						type="button"
-						class="pill"
-						aria-pressed={filtro === id}
-						onclick={() => (filtro = id)}
-						><span class="punto" style:background={c}></span>{t}<span class="fa"
-							>{id === 'todos'
-								? data.cupones.length
-								: data.cupones.filter((x) => x.estado === id).length}</span
-						></button
-					>
-				{/each}
+		<!-- Buscar, filtrar y ordenar sólo tienen sentido con cupones. -->
+		{#if data.cupones.length}
+			<div class="barra" use:anim={{ t: 'rise' }}>
+				<label class="buscar"
+					><Icon icon={I.phMagnifyingGlass} size={16} /><input
+						bind:value={q}
+						placeholder="Buscar código o producto"
+						aria-label="Buscar cupón"
+					/></label
+				>
+				<div class="filtros" role="group" aria-label="Estado" use:deslizable>
+					{#each FILTROS as [id, t, c] (id)}
+						<button
+							type="button"
+							class="pill"
+							aria-pressed={filtro === id}
+							onclick={() => (filtro = id)}
+							><span class="punto" style:background={c}></span>{t}<span class="fa"
+								>{id === 'todos'
+									? data.cupones.length
+									: data.cupones.filter((x) => x.estado === id).length}</span
+							></button
+						>
+					{/each}
+				</div>
+				<button type="button" class="orden" onclick={() => (orden = (orden + 1) % ORDENES.length)}
+					><Icon icon={I.phSortAscendingBold} size={15} />{ORDENES[orden][1]}</button
+				>
 			</div>
-			<button type="button" class="orden" onclick={() => (orden = (orden + 1) % ORDENES.length)}
-				><Icon icon={I.phSortAscendingBold} size={15} />{ORDENES[orden][1]}</button
-			>
-		</div>
+		{/if}
 		<div class="cupones">
 			{#each lista as c (c.id)}
 				{@const [et, sbg, sfg, cab] = ESTADOS[c.estado]}

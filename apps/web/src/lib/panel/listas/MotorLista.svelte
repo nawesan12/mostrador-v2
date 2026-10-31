@@ -201,7 +201,7 @@
 	 * Vacía de verdad (sin filas y sin filtros): no hay nada que buscar, filtrar, exportar ni
 	 * seleccionar, así que queda sólo el encabezado y el vacío con su acción.
 	 */
-	const vacia = $derived(!lista.total && sinFiltros && !vista);
+	const vacia = $derived(!lista.total && sinFiltros);
 	// Con pocas filas la caja no deja un hueco en blanco abajo; vacía, lo justo para el vacío.
 	const altoCaja = $derived(lista.total ? Math.min(alto, lista.total * FILA + 10) : 340);
 	const n = $derived(lista.total.toLocaleString('es-AR'));
@@ -220,7 +220,7 @@
 	<div class="cab" use:anim={{ t: 'rise' }}>
 		<div class="c-txt">
 			<h1>{config.titulo}</h1>
-			<div class="c-s">{config.kpi(lista)}</div>
+			{#if !vacia}<div class="c-s">{config.kpi(lista)}</div>{/if}
 		</div>
 		<!-- eslint-disable svelte/no-navigation-without-resolve -- la descarga del CSV no es una navegación -->
 		{#if exportar && !vacia}<a
@@ -236,7 +236,7 @@
 			>{/if}
 		<!-- eslint-enable svelte/no-navigation-without-resolve -->
 		{@render extra?.()}
-		{#if config.primario && !(vacia && !config.vacio)}
+		{#if config.primario && !(vacia && (!config.vacio || config.vacio.accion))}
 			{@const p = config.primario}
 			<button type="button" class="primario" onclick={() => p.hacer(ctx)}
 				><Icon icon={p.icon} size={15} />{p.t}</button
