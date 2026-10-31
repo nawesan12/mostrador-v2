@@ -1,5 +1,5 @@
 /**
- * El panel instalado como app en el celular (docs/decisiones.md §42): el service worker, la
+ * El panel instalado como app en el celular (docs/decisiones.md §43): el service worker, la
  * invitación a instalar y el push web. Sólo navegador.
  */
 

@@ -1,5 +1,5 @@
 /*
- * Service worker del panel instalado como app (docs/decisiones.md §42). Alcance: /panel.
+ * Service worker del panel instalado como app (docs/decisiones.md §43). Alcance: /panel.
  *
  * - No guarda nada del panel: los pedidos, las ventas y los clientes son privados y van siempre a la
  *   red. Sólo se guardan la pantalla «Sin conexión» y sus dos imágenes.

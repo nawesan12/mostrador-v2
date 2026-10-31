@@ -4,7 +4,7 @@
 // push, reusado mientras vale). Sólo biblioteca estándar.
 //
 // Sin configuración (clave pública, privada o sujeto), Desde devuelve nil y Enviar sobre un cliente
-// nil no hace nada: el envío queda apagado sin romper nada (docs/decisiones.md §42).
+// nil no hace nada: el envío queda apagado sin romper nada (docs/decisiones.md §43).
 package webpush
 
 import (

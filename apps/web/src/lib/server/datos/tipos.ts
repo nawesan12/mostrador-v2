@@ -78,7 +78,7 @@ export type ArcaPrueba = { ok: boolean; ultimo: number; detalle: string };
  */
 export type ArcaPedido = { pedido: string } | { demo: true } | { error: string };
 export type PreferenciasAvisos = components['schemas']['PreferenciasAvisos'];
-/** Push web del panel instalado (docs/decisiones.md §42): clave VAPID (vacía: apagado) y si esta sesión está suscripta. */
+/** Push web del panel instalado (docs/decisiones.md §43): clave VAPID (vacía: apagado) y si esta sesión está suscripta. */
 export type EstadoPushWeb = components['schemas']['EstadoPushWeb'];
 export type SuscripcionWeb = components['schemas']['SuscripcionWeb'];
 export type MisDatos = components['schemas']['MisDatos'];

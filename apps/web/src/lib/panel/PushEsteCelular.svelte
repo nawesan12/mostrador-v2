@@ -12,7 +12,7 @@
 	import { getUi } from '#lib/ui.svelte.ts';
 
 	/**
-	 * Notificaciones › «Push en este celular» (docs/decisiones.md §42): activa el push web en este
+	 * Notificaciones › «Push en este celular» (docs/decisiones.md §43): activa el push web en este
 	 * aparato y manda un aviso de prueba. En el iPhone sólo anda con el panel instalado en la pantalla
 	 * de inicio (iOS 16.4 o más nuevo), y se dice así.
 	 */

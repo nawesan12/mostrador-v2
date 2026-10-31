@@ -12,7 +12,7 @@
 	import { getUi } from '#lib/ui.svelte.ts';
 
 	/**
-	 * «Instalá Tu Local Web en tu celular» (docs/decisiones.md §42), en el Inicio. Sólo en el celular
+	 * «Instalá Tu Local Web en tu celular» (docs/decisiones.md §43), en el Inicio. Sólo en el celular
 	 * y sólo si se puede: en el iPhone, los pasos de Safari; en Android, el botón que abre el diálogo
 	 * del sistema. Con la app ya instalada (abierta desde la pantalla de inicio) no aparece, y «Ahora
 	 * no» la cierra para siempre en ese navegador.

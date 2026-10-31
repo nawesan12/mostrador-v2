@@ -18,7 +18,7 @@
 	/**
 	 * Con la API real, a la tienda le salen hoy tres avisos de venta nueva: el mail (Venta nueva ›
 	 * Email, prendido por defecto), el push al celular (Venta nueva › Celular, prendido por defecto;
-	 * docs/decisiones.md §40 y §42) y Telegram si lo vinculó. Y «Sin stock» por mail y push (§41). La matriz se guarda, pero no se promete
+	 * docs/decisiones.md §40 y §43) y Telegram si lo vinculó. Y «Sin stock» por mail y push (§41). La matriz se guarda, pero no se promete
 	 * un resumen diario, un «no molestar» ni una prueba que no mandan nada (la prueba era un toast
 	 * con una venta inventada).
 	 */
@@ -142,7 +142,7 @@
 					</span></span
 				>
 			</div>
-			<!-- Este aparato: activar el push web y probarlo (decisiones §42). -->
+			<!-- Este aparato: activar el push web y probarlo (decisiones §43). -->
 			<PushEsteCelular />
 			<a class="activo" href={resolve('/panel/integraciones')}>
 				<span class="a-ico" style:color="#229ED9"><Icon icon={I.logosTelegram} size={20} /></span>

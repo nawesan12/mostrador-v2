@@ -55,7 +55,7 @@
 		void ruta;
 		untrack(() => shell.cerrarTodo());
 	});
-	// El panel instalable como app (§42): service worker con alcance /panel e invitación a instalar.
+	// El panel instalable como app (§43): service worker con alcance /panel e invitación a instalar.
 	onMount(arrancarAppCelular);
 </script>
 
@@ -72,7 +72,7 @@
 <svelte:head>
 	<meta name="robots" content="noindex" />
 	<meta name="theme-color" content={shell.tema === 'dark' ? '#22140d' : '#f7f1ea'} />
-	<!-- Instalable como app sólo el panel: la tienda pública no lleva manifest (decisiones §42). -->
+	<!-- Instalable como app sólo el panel: la tienda pública no lleva manifest (decisiones §43). -->
 	<link rel="manifest" href="/panel/manifest.webmanifest" />
 	<link rel="apple-touch-icon" href="/panel/apple-touch-icon.png" />
 	<meta name="apple-mobile-web-app-capable" content="yes" />

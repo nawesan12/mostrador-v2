@@ -106,7 +106,7 @@ func correr() error {
 	if err != nil {
 		slog.Error("push: la clave de APNs no sirve, no se mandan avisos al iPhone", "error", err)
 	}
-	// Push web al panel instalado como app (§42). Sin MOSTRADOR_VAPID_*, apagado; unas claves que no
+	// Push web al panel instalado como app (§43). Sin MOSTRADOR_VAPID_*, apagado; unas claves que no
 	// sirven tampoco tiran el worker.
 	cliWeb, err := webpush.Desde(cfg.VAPIDPublica, cfg.VAPIDPrivada, cfg.VAPIDSujeto)
 	if err != nil {

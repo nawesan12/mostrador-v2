@@ -4,7 +4,7 @@ import { datosDe } from '#lib/server/datos/index.ts';
 import type { RequestHandler } from './$types';
 
 /**
- * Push web en este celular (docs/decisiones.md §42): la suscripción del navegador va a Go atada a
+ * Push web en este celular (docs/decisiones.md §43): la suscripción del navegador va a Go atada a
  * la sesión. El navegador nunca habla con Go: pasa por acá.
  */
 const B64 = v.pipe(v.string(), v.regex(/^[A-Za-z0-9_+/=-]+$/), v.maxLength(200));
