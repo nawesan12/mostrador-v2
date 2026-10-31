@@ -2057,6 +2057,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/dispositivos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Registra el iPhone de la sesión para los avisos push (APNs). Lo llama la app de iPhone con su token de sesión, directo contra api.tulocalweb.com.ar. El dispositivo queda atado a esta sesión y a la persona: si la sesión se cierra o vence, deja de recibir. Si el token estaba con otra sesión (otra cuenta en el mismo iPhone), pasa a esta. Cualquier rol; no con la sesión de una IA ni del soporte. */
+        post: operations["registrarDispositivo"];
+        /** Da de baja el iPhone de esta sesión (la app lo llama al cerrar sesión; cerrar la sesión también lo borra). */
+        delete: operations["bajaDispositivo"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/equipo": {
         parameters: {
             query?: never;
@@ -3871,6 +3889,21 @@ export interface components {
             /** @description CBU o CVU de 22 dígitos, con sus verificadores (vacío si no hay) */
             cbu?: string;
             titular?: string;
+        };
+        /** @description Un iPhone para los avisos push. El payload que llega tiene aps.alert (title/body), sound, thread-id (tienda-<id>, o cuenta) y, afuera de aps, ruta (pedido/<numero>, preguntas/ml/<id>, cuenta/seguridad) y tienda (el id) para abrir la pantalla. */
+        Dispositivo: {
+            /** @description Token de APNs en hexadecimal */
+            token: string;
+            /**
+             * @description sandbox para la app instalada desde Xcode
+             * @default produccion
+             * @enum {string}
+             */
+            entorno: "sandbox" | "produccion";
+            /** @description Por ejemplo, iPhone15,2 */
+            modelo?: string;
+            /** @description Versión de la app */
+            version?: string;
         };
         Miembro: {
             id: string;
@@ -8826,6 +8859,51 @@ export interface operations {
             };
             404: components["responses"]["Problema"];
             409: components["responses"]["Problema"];
+        };
+    };
+    registrarDispositivo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Dispositivo"];
+            };
+        };
+        responses: {
+            /** @description Registrado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
+            401: components["responses"]["Problema"];
+            403: components["responses"]["Problema"];
+        };
+    };
+    bajaDispositivo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Dado de baja */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problema"];
+            403: components["responses"]["Problema"];
         };
     };
     invitar: {

@@ -2064,6 +2064,32 @@ paths:
         '204': { description: Cerrada }
         '404': { $ref: '#/components/responses/Problema' }
         '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/dispositivos:
+    post:
+      operationId: registrarDispositivo
+      summary: >-
+        Registra el iPhone de la sesión para los avisos push (APNs). Lo llama la app de iPhone con su
+        token de sesión, directo contra api.tulocalweb.com.ar. El dispositivo queda atado a esta sesión y
+        a la persona: si la sesión se cierra o vence, deja de recibir. Si el token estaba con otra sesión
+        (otra cuenta en el mismo iPhone), pasa a esta. Cualquier rol; no con la sesión de una IA ni del
+        soporte.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Dispositivo' }
+      responses:
+        '204': { description: Registrado }
+        '400': { $ref: '#/components/responses/Problema' }
+        '401': { $ref: '#/components/responses/Problema' }
+        '403': { $ref: '#/components/responses/Problema' }
+    delete:
+      operationId: bajaDispositivo
+      summary: Da de baja el iPhone de esta sesión (la app lo llama al cerrar sesión; cerrar la sesión también lo borra).
+      responses:
+        '204': { description: Dado de baja }
+        '401': { $ref: '#/components/responses/Problema' }
+        '403': { $ref: '#/components/responses/Problema' }
   /v1/panel/equipo:
     post:
       operationId: invitar
@@ -4031,6 +4057,18 @@ components:
         alias: { type: string, maxLength: 20, pattern: '^([a-zA-Z0-9.-]{6,20})?$', description: 'Alias para cobrar por transferencia (6 a 20 caracteres; vacío si no hay)' }
         cbu: { type: string, maxLength: 22, pattern: '^([0-9]{22})?$', description: 'CBU o CVU de 22 dígitos, con sus verificadores (vacío si no hay)' }
         titular: { type: string, maxLength: 80 }
+    Dispositivo:
+      type: object
+      description: >-
+        Un iPhone para los avisos push. El payload que llega tiene aps.alert (title/body), sound,
+        thread-id (tienda-<id>, o cuenta) y, afuera de aps, ruta (pedido/<numero>, preguntas/ml/<id>,
+        cuenta/seguridad) y tienda (el id) para abrir la pantalla.
+      required: [token]
+      properties:
+        token: { type: string, pattern: '^[0-9a-fA-F]{64,200}$', description: Token de APNs en hexadecimal }
+        entorno: { type: string, enum: [sandbox, produccion], default: produccion, description: sandbox para la app instalada desde Xcode }
+        modelo: { type: string, maxLength: 60, description: 'Por ejemplo, iPhone15,2' }
+        version: { type: string, maxLength: 30, description: Versión de la app }
     Miembro:
       type: object
       required: [id, nombre, contacto, rol, foto, ultimo, pendiente, vence, vos, dobleFactor]
