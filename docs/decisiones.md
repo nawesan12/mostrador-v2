@@ -642,7 +642,7 @@ URL, para que no quede en el historial ni en logs.
 - **Interruptor**: Notificaciones › Venta nueva › Email (`preferencias.canales.matriz["venta:email"]`),
   prendido por defecto; el worker lo mira al mandar. Sin columna nueva.
 
-## 36. Visitas propias de la tienda, sin cookies (migración 00054)
+## 36. Visitas propias de la tienda, sin cookies (migración 00055)
 
 - **Quién cuenta**: el servidor de la web, sin scripts de terceros. La carga completa de una página
   de la tienda (inicio, catálogo, producto, carrito, checkout) la cuenta `hooks.server.ts` al
