@@ -131,7 +131,8 @@ export function configProductos(
 				tags: p.canales
 					.filter((k) => ICONO_CANAL[k])
 					.map((k) => ({ icon: ICONO_CANAL[k][0], col: ICONO_CANAL[k][1], t: ICONO_CANAL[k][2] })),
-				sub: `${p.sku ? `${p.sku} · ` : ''}${p.stock} en stock · ${p.margen === null ? 'margen sin dato' : `margen ${p.margen} %`}`,
+				// Sin costo cargado, «margen sin dato» sólo ocupa lugar (y cortaba el stock a 375 px).
+				sub: `${p.sku ? `${p.sku} · ` : ''}${p.stock} en stock${p.margen === null ? '' : ` · margen ${p.margen} %`}`,
 				spark: p.ventas.map((x) => ({
 					h: Math.max(3, (x / mx) * 22),
 					c: x ? '#D2582F' : 'var(--sf3)'

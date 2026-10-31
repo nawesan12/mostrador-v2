@@ -173,7 +173,8 @@ export function configClientes(
 					...(c.cuit ? [{ icon: I.phIdentificationCardFill, col: 'var(--mu)', t: 'CUIT' }] : []),
 					...c.etiquetas.map((e) => ({ icon: I.phTagFill, col: '#6A4FA0', t: e }))
 				],
-				sub: `${c.ciudad || 'Sin ciudad'} · ${c.pedidos} ${c.pedidos === 1 ? 'pedido' : 'pedidos'}`,
+				// Sin ciudad no se dice «Sin ciudad»: lo que importa en la fila es cuántas veces compró.
+				sub: `${c.ciudad ? `${c.ciudad} · ` : ''}${c.pedidos} ${c.pedidos === 1 ? 'pedido' : 'pedidos'}`,
 				spark: c.meses.map((m) => ({ h: m ? 6 + m * 5 : 3, c: m ? '#D2582F' : 'var(--sf3)' })),
 				vL: c.pedidos ? `Última compra ${hace(c.ultima)}` : 'Todavía no compró',
 				vC: c.ultima > 75 ? '#C24E25' : 'var(--mu)',
