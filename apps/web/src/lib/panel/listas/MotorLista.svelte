@@ -197,6 +197,13 @@
 	// Sin búsqueda ni filtros (salvo el orden): si no hay filas, la lista está vacía de verdad.
 	const sinFiltros = $derived(firma({ ...VACIO, orden: f.orden }) === firma(f));
 
+	/**
+	 * Vacía de verdad (sin filas y sin filtros): no hay nada que buscar, filtrar, exportar ni
+	 * seleccionar, así que queda sólo el encabezado y el vacío con su acción.
+	 */
+	const vacia = $derived(!lista.total && sinFiltros && !vista);
+	// Con pocas filas la caja no deja un hueco en blanco abajo; vacía, lo justo para el vacío.
+	const altoCaja = $derived(lista.total ? Math.min(alto, lista.total * FILA + 10) : 340);
 	const n = $derived(lista.total.toLocaleString('es-AR'));
 	const rangoTxt = $derived(
 		lista.total
@@ -216,7 +223,7 @@
 			<div class="c-s">{config.kpi(lista)}</div>
 		</div>
 		<!-- eslint-disable svelte/no-navigation-without-resolve -- la descarga del CSV no es una navegación -->
-		{#if exportar}<a
+		{#if exportar && !vacia}<a
 				class="secundario"
 				href="{base}/exportar?{escribir(f)}"
 				download
@@ -229,7 +236,7 @@
 			>{/if}
 		<!-- eslint-enable svelte/no-navigation-without-resolve -->
 		{@render extra?.()}
-		{#if config.primario}
+		{#if config.primario && !(vacia && !config.vacio)}
 			{@const p = config.primario}
 			<button type="button" class="primario" onclick={() => p.hacer(ctx)}
 				><Icon icon={p.icon} size={15} />{p.t}</button
@@ -253,174 +260,179 @@
 		</div>
 	{/if}
 
-	<div
-		class="vistas"
-		use:anim={{ t: 'rise', delay: 80 }}
-		role="group"
-		aria-label="Vistas"
-		use:deslizable
-	>
-		{#each config.vistas as v (v.id)}
-			<button
-				type="button"
-				class="vista"
-				aria-pressed={vista === v.id}
-				onclick={() => {
-					q = v.filtros.q ?? '';
-					ir({ ...VACIO, orden: f.orden, ...v.filtros });
-				}}><Icon icon={v.icon} size={15} style="color:{v.color}" />{v.t}</button
-			>
-		{/each}
-	</div>
-
-	<div
-		class="segs"
-		use:anim={{ t: 'rise', delay: 120 }}
-		role="group"
-		aria-label="Segmentos"
-		use:deslizable
-	>
-		{#each config.segmentos as s (s.k)}
-			{@const on = f.seg.includes(s.k)}
-			<button
-				type="button"
-				class="seg"
-				class:on
-				aria-pressed={on}
-				onclick={() => ir({ seg: alternar(f.seg, s.k) })}
-			>
-				<span class="s-t"><span class="s-p" style:background={s.c}></span>{s.t}</span>
-				<span class="s-n">{(lista.segmentos[s.k] ?? 0).toLocaleString('es-AR')}</span>
-				<span class="s-b" style:background={s.c} style:opacity={on || !f.seg.length ? 1 : 0.25}
-				></span>
-			</button>
-		{/each}
-	</div>
-
-	<div class="filtros" use:anim={{ t: 'rise', delay: 160 }}>
-		<div class="f-fila">
-			<label class="buscar">
-				<Icon icon={I.phMagnifyingGlass} size={16} style="color:var(--mu)" />
-				<input
-					value={q}
-					oninput={(e) => buscar(e.currentTarget.value)}
-					placeholder={config.buscar}
-					aria-label="Buscar {config.unidad}"
-				/>
-				{#if q}<button
-						type="button"
-						class="b-x"
-						aria-label="Borrar búsqueda"
-						onclick={() => buscar('')}><Icon icon={I.phXCircleFill} size={16} /></button
-					>{/if}
-			</label>
-			<button
-				type="button"
-				class="pildora"
-				class:on={mas}
-				aria-expanded={mas}
-				onclick={() => (mas = !mas)}
-				><Icon icon={I.phSlidersHorizontalBold} size={15} />Filtros{#if chips.length}<span
-						class="cuenta">{chips.length}</span
-					>{/if}</button
-			>
-			<button type="button" class="pildora" onclick={ciclarOrden} aria-label="Orden: {orden.t}"
-				><Icon icon={I.phSortAscendingBold} size={15} />{orden.t}</button
-			>
+	{#if !vacia}
+		<div
+			class="vistas"
+			use:anim={{ t: 'rise', delay: 80 }}
+			role="group"
+			aria-label="Vistas"
+			use:deslizable
+		>
+			{#each config.vistas as v (v.id)}
+				<button
+					type="button"
+					class="vista"
+					aria-pressed={vista === v.id}
+					onclick={() => {
+						q = v.filtros.q ?? '';
+						ir({ ...VACIO, orden: f.orden, ...v.filtros });
+					}}><Icon icon={v.icon} size={15} style="color:{v.color}" />{v.t}</button
+				>
+			{/each}
 		</div>
-		{#if mas}
-			<div class="mas" use:anim={{ t: 'rise' }}>
-				{#each config.facetas as fa (fa.k)}
-					<div>
-						<div class="m-t">{fa.t}</div>
-						<div class="opciones">
-							{#each opciones(fa.k) as o (o.k)}
-								{@const on = (f.facetas[fa.k] ?? []).includes(o.k)}
-								<button
-									type="button"
-									class="op"
-									class:on
-									aria-pressed={on}
-									onclick={() =>
-										ir({ facetas: { ...f.facetas, [fa.k]: alternar(f.facetas[fa.k] ?? [], o.k) } })}
-									>{#if o.marca}<MarcaIcono
-											k={o.marca}
-											size={18}
-											radius={5}
-										/>{:else if o.icon}<Icon
-											icon={o.icon}
-											size={14}
-											style="color:{o.col ?? 'inherit'}"
-										/>{/if}{o.t}<span class="op-n">{lista.facetas[fa.k]?.[o.k] ?? 0}</span></button
-								>
-							{/each}
-						</div>
-					</div>
-				{/each}
-				<div>
-					<label class="m-t m-rango" for="rango-{config.lista}"
-						>{config.rango.t}<b>{rango ? config.rango.formato(rango) : 'Cualquiera'}</b></label
-					>
+
+		<div
+			class="segs"
+			use:anim={{ t: 'rise', delay: 120 }}
+			role="group"
+			aria-label="Segmentos"
+			use:deslizable
+		>
+			{#each config.segmentos as s (s.k)}
+				{@const on = f.seg.includes(s.k)}
+				<button
+					type="button"
+					class="seg"
+					class:on
+					aria-pressed={on}
+					onclick={() => ir({ seg: alternar(f.seg, s.k) })}
+				>
+					<span class="s-t"><span class="s-p" style:background={s.c}></span>{s.t}</span>
+					<span class="s-n">{(lista.segmentos[s.k] ?? 0).toLocaleString('es-AR')}</span>
+					<span class="s-b" style:background={s.c} style:opacity={on || !f.seg.length ? 1 : 0.25}
+					></span>
+				</button>
+			{/each}
+		</div>
+
+		<div class="filtros" use:anim={{ t: 'rise', delay: 160 }}>
+			<div class="f-fila">
+				<label class="buscar">
+					<Icon icon={I.phMagnifyingGlass} size={16} style="color:var(--mu)" />
 					<input
-						id="rango-{config.lista}"
-						type="range"
-						min="0"
-						max={config.rango.max(lista)}
-						step={config.rango.paso}
-						bind:value={rango}
-						onchange={() => ir({ rango })}
+						value={q}
+						oninput={(e) => buscar(e.currentTarget.value)}
+						placeholder={config.buscar}
+						aria-label="Buscar {config.unidad}"
 					/>
-				</div>
-				<div class="banderas">
-					{#each config.banderas as b (b.k)}
-						<div class="bandera">
-							<span>{b.t}</span>
-							<Interruptor
-								label={b.t}
-								checked={f.banderas.includes(b.k)}
-								onchange={() => ir({ banderas: alternar(f.banderas, b.k) })}
-							/>
+					{#if q}<button
+							type="button"
+							class="b-x"
+							aria-label="Borrar búsqueda"
+							onclick={() => buscar('')}><Icon icon={I.phXCircleFill} size={16} /></button
+						>{/if}
+				</label>
+				<button
+					type="button"
+					class="pildora"
+					class:on={mas}
+					aria-expanded={mas}
+					onclick={() => (mas = !mas)}
+					><Icon icon={I.phSlidersHorizontalBold} size={15} />Filtros{#if chips.length}<span
+							class="cuenta">{chips.length}</span
+						>{/if}</button
+				>
+				<button type="button" class="pildora" onclick={ciclarOrden} aria-label="Orden: {orden.t}"
+					><Icon icon={I.phSortAscendingBold} size={15} />{orden.t}</button
+				>
+			</div>
+			{#if mas}
+				<div class="mas" use:anim={{ t: 'rise' }}>
+					{#each config.facetas as fa (fa.k)}
+						<div>
+							<div class="m-t">{fa.t}</div>
+							<div class="opciones">
+								{#each opciones(fa.k) as o (o.k)}
+									{@const on = (f.facetas[fa.k] ?? []).includes(o.k)}
+									<button
+										type="button"
+										class="op"
+										class:on
+										aria-pressed={on}
+										onclick={() =>
+											ir({
+												facetas: { ...f.facetas, [fa.k]: alternar(f.facetas[fa.k] ?? [], o.k) }
+											})}
+										>{#if o.marca}<MarcaIcono
+												k={o.marca}
+												size={18}
+												radius={5}
+											/>{:else if o.icon}<Icon
+												icon={o.icon}
+												size={14}
+												style="color:{o.col ?? 'inherit'}"
+											/>{/if}{o.t}<span class="op-n">{lista.facetas[fa.k]?.[o.k] ?? 0}</span
+										></button
+									>
+								{/each}
+							</div>
 						</div>
 					{/each}
+					<div>
+						<label class="m-t m-rango" for="rango-{config.lista}"
+							>{config.rango.t}<b>{rango ? config.rango.formato(rango) : 'Cualquiera'}</b></label
+						>
+						<input
+							id="rango-{config.lista}"
+							type="range"
+							min="0"
+							max={config.rango.max(lista)}
+							step={config.rango.paso}
+							bind:value={rango}
+							onchange={() => ir({ rango })}
+						/>
+					</div>
+					<div class="banderas">
+						{#each config.banderas as b (b.k)}
+							<div class="bandera">
+								<span>{b.t}</span>
+								<Interruptor
+									label={b.t}
+									checked={f.banderas.includes(b.k)}
+									onchange={() => ir({ banderas: alternar(f.banderas, b.k) })}
+								/>
+							</div>
+						{/each}
+					</div>
 				</div>
-			</div>
-		{/if}
-		{#if chips.length}
-			<div class="chips">
-				{#each chips as [t, cambio] (t)}
-					<button
-						type="button"
-						class="chip"
-						onclick={() => {
-							if ('q' in cambio) q = '';
-							ir(cambio);
-						}}>{t}<Icon icon={I.phXBold} size={11} /></button
-					>
-				{/each}
-				<button type="button" class="limpiar" onclick={limpiar}>Limpiar todo</button>
-			</div>
-		{/if}
-	</div>
+			{/if}
+			{#if chips.length}
+				<div class="chips">
+					{#each chips as [t, cambio] (t)}
+						<button
+							type="button"
+							class="chip"
+							onclick={() => {
+								if ('q' in cambio) q = '';
+								ir(cambio);
+							}}>{t}<Icon icon={I.phXBold} size={11} /></button
+						>
+					{/each}
+					<button type="button" class="limpiar" onclick={limpiar}>Limpiar todo</button>
+				</div>
+			{/if}
+		</div>
+	{/if}
 
 	<div class="lista" use:anim={{ t: 'rise', delay: 200 }}>
-		<div class="l-cab">
-			<button
-				type="button"
-				class="tilde"
-				aria-label="Seleccionar los visibles"
-				onclick={tildarVisibles}
-			></button>
-			<span class="l-r">{rangoTxt}</span>
-			<span class="l-v"
-				><Icon icon={I.phLightningFill} size={13} style="color:#b0441d" />{n}
-				{lista.total === 1 && config.unidad.endsWith('s')
-					? config.unidad.slice(0, -1)
-					: config.unidad}</span
-			>
-		</div>
+		{#if !vacia}<div class="l-cab">
+				<button
+					type="button"
+					class="tilde"
+					aria-label="Seleccionar los visibles"
+					onclick={tildarVisibles}
+				></button>
+				<span class="l-r">{rangoTxt}</span>
+				<span class="l-v"
+					><Icon icon={I.phLightningFill} size={13} style="color:#b0441d" />{n}
+					{lista.total === 1 && config.unidad.endsWith('s')
+						? config.unidad.slice(0, -1)
+						: config.unidad}</span
+				>
+			</div>{/if}
 		<div
 			class="scroll"
-			style:height="{alto}px"
+			style:height="{altoCaja}px"
 			bind:this={caja}
 			onscroll={alScrollear}
 			data-lenis-prevent

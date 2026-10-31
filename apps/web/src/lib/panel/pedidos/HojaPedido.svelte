@@ -109,10 +109,13 @@
 				<div class="f-txt">
 					<div class="f-n">{pedido.comprador.nombre}</div>
 					<div class="f-s">
-						Cliente desde {anio(pedido.comprador.desde)} · {pedido.comprador.pedidos}
-						{pedido.comprador.pedidos === 1 ? 'pedido' : 'pedidos'} · {pesos(
-							pedido.comprador.gastado
-						)}
+						<!-- Cada dato entero en su renglón: el «·» nunca arranca uno. -->
+						<span class="nw">Cliente desde {anio(pedido.comprador.desde)}</span>
+						<span class="nw"
+							>· {pedido.comprador.pedidos}
+							{pedido.comprador.pedidos === 1 ? 'pedido' : 'pedidos'}</span
+						>
+						<span class="nw">· {pesos(pedido.comprador.gastado)}</span>
 					</div>
 				</div>
 				{#if wa}
@@ -162,7 +165,7 @@
 				<div class="total"><span>Total</span><span>{pesos(pedido.total)}</span></div>
 			</div>
 
-			<div class="dos">
+			<div class="dos" class:uno={!pedido.factura}>
 				<div class="tarjeta">
 					<div class="t">Pago</div>
 					<div class="medio">
@@ -178,22 +181,18 @@
 						>
 					</div>
 				</div>
-				<div class="tarjeta">
-					<div class="t">Factura</div>
-					<div class="medio">
-						<MarcaIcono k="arca" size={34} radius={10} />
-						{#if pedido.factura}
+				<!-- Sin factura no se muestra nada: «se emite al cobrar» no es cierto sin ARCA conectado. -->
+				{#if pedido.factura}
+					<div class="tarjeta">
+						<div class="t">Factura</div>
+						<div class="medio">
+							<MarcaIcono k="arca" size={34} radius={10} />
 							<span
 								><span class="m-n">{pedido.factura}</span><span class="m-s ok">Emitida</span></span
 							>
-						{:else}
-							<span
-								><span class="m-n">Sin emitir</span><span class="m-s">Se emite al cobrar</span
-								></span
-							>
-						{/if}
+						</div>
 					</div>
-				</div>
+				{/if}
 			</div>
 
 			<div class="tarjeta fila">
@@ -338,6 +337,9 @@
 		font-size: 12.5px;
 		color: var(--mu);
 	}
+	.nw {
+		white-space: nowrap;
+	}
 	.wa {
 		display: flex;
 		align-items: center;
@@ -433,6 +435,9 @@
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 12px;
+	}
+	.dos.uno {
+		grid-template-columns: 1fr;
 	}
 	.dos .tarjeta {
 		padding: 14px;

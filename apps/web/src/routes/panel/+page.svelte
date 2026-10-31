@@ -8,6 +8,7 @@
 	import { cara, unsplash } from '#lib/landing/formato.ts';
 	import MetaMes from '#lib/panel/MetaMes.svelte';
 	import { anim } from '#lib/panel/anim.ts';
+	import { compartirTienda } from '#lib/panel/compartir.ts';
 	import {
 		curva,
 		diaCorto,
@@ -24,7 +25,7 @@
 		saludo,
 		variacion
 	} from '#lib/panel/formato.ts';
-	import { rutaDe } from '#lib/panel/navegacion.ts';
+	import { rutaDe, visible } from '#lib/panel/navegacion.ts';
 	import { getShell } from '#lib/panel/shell.svelte.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 
@@ -41,6 +42,13 @@
 	const mide = $derived(data.demo);
 	const visitas = $derived(data.demo ? null : (t.visitas ?? null));
 	const midoVisitas = $derived(data.demo || !!visitas?.desde);
+	/**
+	 * Una tienda real que todavía no tuvo ningún pedido: los números del período, el gráfico, la meta
+	 * y los rankings serían todos cero, así que el Inicio muestra sólo lo que sirve para arrancar.
+	 */
+	const sinPedidos = $derived(!data.demo && !t.ultimosPedidos.length);
+	const pasos = $derived(data.pasos);
+	const compartir = () => compartirTienda(ui, data.tienda);
 	const ahora = new Date();
 
 	const PERIODOS = [
@@ -167,56 +175,130 @@
 		t.meta.objetivo ? Math.round((t.meta.actual / t.meta.objetivo) * 100) : 0
 	);
 
-	const accesos = $derived([
-		{
-			icon: I.phCameraFill,
-			t: 'Cargar con foto',
-			k: 'Subí las fotos del celular',
-			bg: 'rgba(210,88,47,.12)',
-			fg: '#b0441d',
-			href: rutaDe('Productos')
-		},
-		{
-			icon: I.phLinkBold,
-			t: 'Link de pago',
-			k: 'Mandalo por donde quieras',
-			bg: 'rgba(47,143,99,.13)',
-			fg: '#237550',
-			href: rutaDe('Pedidos'),
-			abrir: () => shell.abrirLink()
-		},
-		{
-			icon: I.phCashRegisterFill,
-			t: 'Cobrar en el local',
-			k: 'Punto de venta',
-			bg: 'rgba(227,169,59,.2)',
-			fg: '#8a5f0e',
-			href: rutaDe('Ventas en local')
-		},
-		{
-			icon: I.phMegaphoneFill,
-			t: mide ? 'Enviar campaña' : 'Crear un cupón',
-			k: mide ? 'WhatsApp con costo exacto' : 'Para compartir con tus clientes',
-			bg: 'rgba(106,79,160,.13)',
-			fg: '#6A4FA0',
-			// Las campañas salen por WhatsApp Business, que todavía no se conecta: el acceso lleva a lo
-			// que sí funciona para traer ventas.
-			href: rutaDe(mide ? 'Marketing' : 'Cupones')
-		},
-		{
-			icon: I.phPrinterFill,
-			t: 'Imprimir etiquetas',
-			k: t.envios.paquetes
-				? plural(t.envios.paquetes, 'envío de hoy', 'envíos de hoy')
-				: 'Sin envíos hoy',
-			bg: 'var(--chip)',
-			fg: 'var(--mu)',
-			href: rutaDe('Envíos')
-		}
-	]);
-
-	const tareas = $derived(
+	const accesos = $derived(
 		[
+			{
+				icon: I.phCameraFill,
+				sec: 'Productos',
+				t: 'Cargar con foto',
+				k: 'Subí las fotos del celular',
+				bg: 'rgba(210,88,47,.12)',
+				fg: '#b0441d',
+				// Sin productos, directo al editor (el primero se carga desde acá).
+				href: pasos?.productos === 0 ? `${rutaDe('Productos')}?nuevo=1` : rutaDe('Productos')
+			},
+			{
+				icon: I.phLinkBold,
+				sec: 'Pedidos',
+				t: 'Link de pago',
+				k: 'Mandalo por donde quieras',
+				bg: 'rgba(47,143,99,.13)',
+				fg: '#237550',
+				href: rutaDe('Pedidos'),
+				abrir: () => shell.abrirLink()
+			},
+			{
+				icon: I.phCashRegisterFill,
+				sec: 'Ventas en local',
+				t: 'Cobrar en el local',
+				k: 'Punto de venta',
+				bg: 'rgba(227,169,59,.2)',
+				fg: '#8a5f0e',
+				href: rutaDe('Ventas en local')
+			},
+			{
+				icon: I.phMegaphoneFill,
+				sec: mide ? 'Marketing' : 'Cupones',
+				t: mide ? 'Enviar campaña' : 'Crear un cupón',
+				k: mide ? 'WhatsApp con costo exacto' : 'Para compartir con tus clientes',
+				bg: 'rgba(106,79,160,.13)',
+				fg: '#6A4FA0',
+				// Las campañas salen por WhatsApp Business, que todavía no se conecta: el acceso lleva a lo
+				// que sí funciona para traer ventas.
+				href: rutaDe(mide ? 'Marketing' : 'Cupones')
+			},
+			// Sin envíos para hoy, imprimir etiquetas no lleva a nada: en una tienda real ese lugar es para
+			// compartir el link, que es lo que trae los pedidos.
+			data.demo || t.envios.paquetes
+				? {
+						icon: I.phPrinterFill,
+						sec: 'Envíos',
+						t: 'Imprimir etiquetas',
+						k: t.envios.paquetes
+							? plural(t.envios.paquetes, 'envío de hoy', 'envíos de hoy')
+							: 'Sin envíos hoy',
+						bg: 'var(--chip)',
+						fg: 'var(--mu)',
+						href: rutaDe('Envíos')
+					}
+				: {
+						icon: I.phStorefrontFill,
+						sec: 'Resumen',
+						t: 'Compartir tu tienda',
+						k: 'Por WhatsApp o redes',
+						bg: 'rgba(47,143,99,.13)',
+						fg: '#237550',
+						href: rutaDe('Mi tienda'),
+						abrir: compartir
+					}
+		].filter((q) => visible(q.sec, shell.turnos, shell.permisos))
+	);
+
+	type Tarea = {
+		icon: typeof I.phPackageFill;
+		title: string;
+		sub: string;
+		bg: string;
+		fg: string;
+		href: string;
+		hacer?: () => unknown;
+	};
+	/** Lo que falta para empezar a vender (sólo en una tienda real, y sólo lo que se sabe seguro). */
+	const primeros = $derived(
+		!pasos
+			? []
+			: (
+					[
+						pasos.productos === 0 && {
+							icon: I.phCameraFill,
+							title: 'Cargá tu primer producto',
+							sub: 'Con foto, precio y stock: un minuto desde el celular',
+							bg: 'rgba(210,88,47,.13)',
+							fg: '#b0441d',
+							href: `${rutaDe('Productos')}?nuevo=1`
+						},
+						pasos.transferencia === false && {
+							icon: I.phBankFill,
+							title: 'Cargá tu alias o CBU',
+							sub: 'Para que te paguen por transferencia',
+							bg: 'rgba(227,169,59,.18)',
+							fg: '#8a5f0e',
+							href: `${rutaDe('Configuración')}?tab=negocio`
+						},
+						pasos.mercadoPago === false && {
+							icon: I.phHandCoinsFill,
+							title: 'Conectá Mercado Pago',
+							sub: 'Para cobrar con tarjeta y QR',
+							bg: 'rgba(0,158,227,.12)',
+							fg: '#00699a',
+							href: rutaDe('Integraciones')
+						},
+						sinPedidos &&
+							!!pasos.productos && {
+								icon: I.phStorefrontFill,
+								title: 'Compartí tu tienda',
+								sub: 'Mandá el link por WhatsApp o subilo a tus redes',
+								bg: 'rgba(47,143,99,.13)',
+								fg: '#237550',
+								href: rutaDe('Mi tienda'),
+								hacer: compartir
+							}
+					] as (Tarea | false)[]
+				).filter((x): x is Tarea => !!x)
+	);
+	const tareas = $derived([
+		...primeros,
+		...[
 			t.paraHacer.preparar && {
 				icon: I.phPackageFill,
 				title: plural(t.paraHacer.preparar, 'pedido para preparar', 'pedidos para preparar'),
@@ -237,10 +319,10 @@
 				icon: I.phBankFill,
 				title: plural(
 					t.paraHacer.transferencias,
-					'transferencia por conciliar',
-					'transferencias por conciliar'
+					'transferencia para confirmar',
+					'transferencias para confirmar'
 				),
-				sub: `${pesos(t.paraHacer.transferenciasMonto)} en total`,
+				sub: `${pesos(t.paraHacer.transferenciasMonto)} · marcalas cuando te llegue la plata`,
 				bg: 'rgba(227,169,59,.18)',
 				fg: '#8a5f0e',
 				href: `${rutaDe('Pedidos')}?estado=pago-pendiente`
@@ -255,8 +337,8 @@
 				fg: 'var(--mu)',
 				href: rutaDe('Inventario')
 			}
-		].filter((x) => !!x)
-	);
+		].filter((x): x is Tarea => !!x)
+	]);
 
 	const integraciones = $derived(
 		// Con la API, lo conectado de verdad (el tablero de Go no trae integraciones).
@@ -330,16 +412,16 @@
 			{#if t.meta.objetivo}· vas por el <b>{metaPct}%</b> de tu meta del mes{/if}
 		</div>
 	</div>
-	<div class="periodos" role="group" aria-label="Período">
-		{#each PERIODOS as [id, label] (id)}
-			<a
-				href="?periodo={id}"
-				data-sveltekit-noscroll
-				data-sveltekit-replacestate
-				aria-current={t.periodo === id ? 'true' : undefined}>{label}</a
-			>
-		{/each}
-	</div>
+	{#if !sinPedidos}<div class="periodos" role="group" aria-label="Período">
+			{#each PERIODOS as [id, label] (id)}
+				<a
+					href="?periodo={id}"
+					data-sveltekit-noscroll
+					data-sveltekit-replacestate
+					aria-current={t.periodo === id ? 'true' : undefined}>{label}</a
+				>
+			{/each}
+		</div>{/if}
 	<button type="button" class="nuevo" onclick={() => (shell.cmdk = true)}
 		><Icon icon={I.phPlusBold} size={14} />Nuevo</button
 	>
@@ -394,131 +476,40 @@
 	{/each}
 </div>
 
-<div class="kpis">
-	{#each kpis as k (k.label)}
-		<div class="kpi" use:anim={{ t: 'rise' }}>
-			<div class="k-cab">
-				<span>{k.label}</span><span class="k-ico"><Icon icon={k.icon} size={17} /></span>
-			</div>
-			<div class="k-v">{k.valor}</div>
-			<div class="k-n">
-				{#if k.delta}<span class="k-d" class:baja={k.delta.startsWith('−')}>{k.delta}</span>{/if}
-				{k.nota}
-			</div>
-		</div>
-	{/each}
-</div>
-
-<div class="grilla">
-	<div class="tarjeta ventas" use:anim={{ t: 'rise', delay: 60 }}>
-		<div class="v-cab">
-			<div>
-				<div class="v-l">Ventas · {ETIQUETA[t.periodo]}</div>
-				<div class="v-total">
-					<span>{pesos(t.ventas.actual)}</span>
-					{#if delta}
-						<span class="v-delta" class:baja={delta.startsWith('−')}
-							><Icon
-								icon={delta.startsWith('−') ? I.phTrendDownBold : I.phTrendUpBold}
-								size={13}
-							/>{delta}</span
-						>
-					{/if}
+{#if !sinPedidos}
+	<div class="kpis">
+		{#each kpis as k (k.label)}
+			<div class="kpi" use:anim={{ t: 'rise' }}>
+				<div class="k-cab">
+					<span>{k.label}</span><span class="k-ico"><Icon icon={k.icon} size={17} /></span>
+				</div>
+				<div class="k-v">{k.valor}</div>
+				<div class="k-n">
+					{#if k.delta}<span class="k-d" class:baja={k.delta.startsWith('−')}>{k.delta}</span>{/if}
+					{k.nota}
 				</div>
 			</div>
-			<div class="leyenda">
-				<span><span class="l-act"></span>Este período</span>
-				<span><span class="l-ant"></span>Anterior</span>
-			</div>
-		</div>
-		<div class="grafico">
-			<svg viewBox="0 0 600 200" preserveAspectRatio="none" aria-hidden="true">
-				<defs
-					><linearGradient id="ventas-area" x1="0" x2="0" y1="0" y2="1"
-						><stop offset="0" stop-color="#E8875F" stop-opacity=".35"></stop><stop
-							offset="1"
-							stop-color="#E8875F"
-							stop-opacity="0"
-						></stop></linearGradient
-					></defs
-				>
-				<line x1="0" x2="600" y1="66" y2="66" class="guia"></line>
-				<line x1="0" x2="600" y1="133" y2="133" class="guia"></line>
-				<path d={c.anterior} class="anterior"></path>
-				<path d={c.area} fill="url(#ventas-area)"></path>
-				{#key c.linea}<path use:anim={{ t: 'draw' }} d={c.linea} class="linea"></path>{/key}
-			</svg>
-			<div class="punto" style:top="{c.punto}%">
-				<span use:anim={{ t: 'pulse' }}></span><span class="p-c"></span>
-			</div>
-		</div>
-		<div class="eje">
-			{#each eje as x, i (i)}<span>{x}</span>{/each}
-		</div>
-		<div class="canales">
-			{#each t.canales.slice(0, 4) as ch (ch.canal)}
-				<div class="canal">
-					<MarcaIcono k={ch.canal} size={30} radius={9} />
-					<span class="c-txt"
-						><span class="c-n">{CANALES[ch.canal] ?? ch.canal}</span><span class="c-p"
-							>{Math.round(ch.parte * 100)}%</span
-						></span
-					>
-				</div>
-			{/each}
-		</div>
-	</div>
-
-	<MetaMes
-		mes={mes(ahora)}
-		objetivo={t.meta.objetivo}
-		actual={t.meta.actual}
-		proyeccion={t.meta.proyeccion}
-		carritos={t.hornero.recordados ? 0 : t.hornero.carritos}
-	/>
-
-	<div class="tarjeta pedidos" use:anim={{ t: 'rise' }}>
-		<div class="p-cab">
-			<div class="titulo">Últimos pedidos</div>
-			<a class="ver" href={rutaDe('Pedidos')}>Ver todos <Icon icon={I.phArrowRight} size={13} /></a>
-		</div>
-		{#each t.ultimosPedidos as o (o.numero)}
-			<a class="pedido" href="{rutaDe('Pedidos')}?pedido={o.numero}">
-				<span class="o-quien">
-					{#if o.foto}<img src={cara(o.foto)} alt="" width="38" height="38" />{:else}<span
-							class="o-ini"
-							>{o.cliente
-								.split(' ')
-								.map((w) => w[0])
-								.slice(0, 2)
-								.join('')}</span
-						>{/if}
-					<span class="o-txt"
-						><span class="o-c">{o.cliente}</span><span class="o-n"
-							>#{o.numero} · hace {haceCorto(o.creado)}</span
-						></span
-					>
-				</span>
-				<span class="o-canal"
-					><MarcaIcono k={o.canal} size={26} radius={8} />{CANALES[o.canal] ?? o.canal}</span
-				>
-				<span><ChipEstado estado={o.estado} /></span>
-				<span class="o-total">{pesos(o.total)}</span>
-			</a>
-		{:else}
-			<div class="vacio">Todavía no entró ningún pedido. Compartí tu tienda y aparecen acá.</div>
 		{/each}
-		<div class="p-pie"></div>
 	</div>
+{/if}
 
-	<div class="tarjeta col">
+{#snippet paraHacer(primero: boolean)}
+	<div class="tarjeta col" class:primero class:urgente={!primero && tareas.length > 0}>
 		<div class="fila-cab">
-			<div class="titulo">Para hacer hoy</div>
+			<div class="titulo">{primero ? 'Para empezar a vender' : 'Para hacer hoy'}</div>
 			{#if tareas.length}<span class="cuenta">{tareas.length}</span>{/if}
 		</div>
 		<div class="tareas">
 			{#each tareas as x (x.title)}
-				<a class="tarea" href={x.href}>
+				<a
+					class="tarea"
+					href={x.href}
+					onclick={(e) => {
+						if (!x.hacer) return;
+						e.preventDefault();
+						x.hacer();
+					}}
+				>
 					<span class="t-ico" style:background={x.bg} style:color={x.fg}
 						><Icon icon={x.icon} size={19} /></span
 					>
@@ -529,11 +520,124 @@
 				</a>
 			{:else}
 				<div class="vacio">
-					Nada pendiente por hoy. Buen momento para sumar productos o un cupón.
+					{primero
+						? 'Tu tienda ya está lista para vender. Cuando entre el primer pedido, lo ves acá.'
+						: 'Nada pendiente por hoy. Buen momento para sumar productos o un cupón.'}
 				</div>
 			{/each}
 		</div>
 	</div>
+{/snippet}
+
+<div class="grilla">
+	{#if sinPedidos}
+		{@render paraHacer(true)}
+	{:else}
+		<div class="tarjeta ventas" use:anim={{ t: 'rise', delay: 60 }}>
+			<div class="v-cab">
+				<div>
+					<div class="v-l">Ventas · {ETIQUETA[t.periodo]}</div>
+					<div class="v-total">
+						<span>{pesos(t.ventas.actual)}</span>
+						{#if delta}
+							<span class="v-delta" class:baja={delta.startsWith('−')}
+								><Icon
+									icon={delta.startsWith('−') ? I.phTrendDownBold : I.phTrendUpBold}
+									size={13}
+								/>{delta}</span
+							>
+						{/if}
+					</div>
+				</div>
+				<div class="leyenda">
+					<span><span class="l-act"></span>Este período</span>
+					<span><span class="l-ant"></span>Anterior</span>
+				</div>
+			</div>
+			<div class="grafico">
+				<svg viewBox="0 0 600 200" preserveAspectRatio="none" aria-hidden="true">
+					<defs
+						><linearGradient id="ventas-area" x1="0" x2="0" y1="0" y2="1"
+							><stop offset="0" stop-color="#E8875F" stop-opacity=".35"></stop><stop
+								offset="1"
+								stop-color="#E8875F"
+								stop-opacity="0"
+							></stop></linearGradient
+						></defs
+					>
+					<line x1="0" x2="600" y1="66" y2="66" class="guia"></line>
+					<line x1="0" x2="600" y1="133" y2="133" class="guia"></line>
+					<path d={c.anterior} class="anterior"></path>
+					<path d={c.area} fill="url(#ventas-area)"></path>
+					{#key c.linea}<path use:anim={{ t: 'draw' }} d={c.linea} class="linea"></path>{/key}
+				</svg>
+				<div class="punto" style:top="{c.punto}%">
+					<span use:anim={{ t: 'pulse' }}></span><span class="p-c"></span>
+				</div>
+			</div>
+			<div class="eje">
+				{#each eje as x, i (i)}<span>{x}</span>{/each}
+			</div>
+			<div class="canales">
+				{#each t.canales.slice(0, 4) as ch (ch.canal)}
+					<div class="canal">
+						<MarcaIcono k={ch.canal} size={30} radius={9} />
+						<span class="c-txt"
+							><span class="c-n">{CANALES[ch.canal] ?? ch.canal}</span><span class="c-p"
+								>{Math.round(ch.parte * 100)}%</span
+							></span
+						>
+					</div>
+				{/each}
+			</div>
+		</div>
+
+		<MetaMes
+			mes={mes(ahora)}
+			objetivo={t.meta.objetivo}
+			actual={t.meta.actual}
+			proyeccion={t.meta.proyeccion}
+			carritos={t.hornero.recordados ? 0 : t.hornero.carritos}
+		/>
+
+		<div class="tarjeta pedidos" use:anim={{ t: 'rise' }}>
+			<div class="p-cab">
+				<div class="titulo">Últimos pedidos</div>
+				<a class="ver" href={rutaDe('Pedidos')}
+					>Ver todos <Icon icon={I.phArrowRight} size={13} /></a
+				>
+			</div>
+			{#each t.ultimosPedidos as o (o.numero)}
+				<a class="pedido" href="{rutaDe('Pedidos')}?pedido={o.numero}">
+					<span class="o-quien">
+						{#if o.foto}<img src={cara(o.foto)} alt="" width="38" height="38" />{:else}<span
+								class="o-ini"
+								>{o.cliente
+									.split(' ')
+									.map((w) => w[0])
+									.slice(0, 2)
+									.join('')}</span
+							>{/if}
+						<span class="o-txt"
+							><span class="o-c">{o.cliente}</span><span class="o-n"
+								>#{o.numero} · hace {haceCorto(o.creado)}</span
+							></span
+						>
+					</span>
+					<span class="o-canal"
+						><MarcaIcono k={o.canal} size={26} radius={8} />{CANALES[o.canal] ?? o.canal}</span
+					>
+					<span><ChipEstado estado={o.estado} /></span>
+					<span class="o-total">{pesos(o.total)}</span>
+				</a>
+			{:else}
+				<div class="vacio">Todavía no entró ningún pedido. Compartí tu tienda y aparecen acá.</div>
+			{/each}
+			<div class="p-pie"></div>
+		</div>
+
+		{@render paraHacer(false)}
+	{/if}
 
 	{#if !mide}
 		<div class="tarjeta col">
@@ -577,7 +681,7 @@
 						las vas a ver acá.
 					</p>
 				</div>
-				<a class="b-borde abajo" href={rutaDe('Mi tienda')}>Ver mi tienda</a>
+				<button type="button" class="b-borde abajo" onclick={compartir}>Compartir mi tienda</button>
 			{/if}
 		</div>
 	{:else}
@@ -615,73 +719,79 @@
 		</div>
 	{/if}
 
-	<div class="tarjeta col">
-		<div class="fila-cab">
-			<div class="titulo">Caja del local</div>
-			{#if t.caja.abierta}
-				<span class="chip verde">Abierta {horaMin(new Date(t.caja.abierta))}</span>
-			{:else if mide}
-				<span class="chip gris">Cerrada</span>
-			{/if}
+	<!-- Con la API, sin cobros hoy la caja es un cero: «Cobrar en el local» ya está en los accesos. -->
+	{#if mide || t.caja.total || t.caja.medios.length}
+		<div class="tarjeta col">
+			<div class="fila-cab">
+				<div class="titulo">Caja del local</div>
+				{#if t.caja.abierta}
+					<span class="chip verde">Abierta {horaMin(new Date(t.caja.abierta))}</span>
+				{:else if mide}
+					<span class="chip gris">Cerrada</span>
+				{/if}
+			</div>
+			<div class="grande">
+				<span class="g-m">{pesos(t.caja.total)}</span><span class="g-l">cobrado hoy</span>
+			</div>
+			<div class="lista">
+				{#each t.caja.medios as m (m.medio)}
+					{@const [k, n] = MEDIOS[m.medio] ?? [m.medio, m.medio]}
+					<div class="item">
+						<MarcaIcono {k} size={28} radius={8} />
+						<span class="i-n">{n}</span><span class="i-v">{pesos(m.monto)}</span>
+					</div>
+				{:else}
+					<div class="vacio chico">Todavía no cobraste nada en el local hoy.</div>
+				{/each}
+			</div>
+			<!-- Con la API no hay apertura ni cierre de caja: sólo se cobra. -->
+			<div class="pie botones">
+				<a class="b-osc" href={rutaDe('Ventas en local')}>Cobrar</a>
+				{#if mide}
+					<a class="b-borde" href={rutaDe('Ventas en local')}
+						>{t.caja.abierta ? 'Cerrar caja' : 'Abrir caja'}</a
+					>
+				{/if}
+			</div>
 		</div>
-		<div class="grande">
-			<span class="g-m">{pesos(t.caja.total)}</span><span class="g-l">cobrado hoy</span>
-		</div>
-		<div class="lista">
-			{#each t.caja.medios as m (m.medio)}
-				{@const [k, n] = MEDIOS[m.medio] ?? [m.medio, m.medio]}
-				<div class="item">
-					<MarcaIcono {k} size={28} radius={8} />
-					<span class="i-n">{n}</span><span class="i-v">{pesos(m.monto)}</span>
-				</div>
-			{:else}
-				<div class="vacio chico">Todavía no cobraste nada en el local hoy.</div>
-			{/each}
-		</div>
-		<!-- Con la API no hay apertura ni cierre de caja: sólo se cobra. -->
-		<div class="pie botones">
-			<a class="b-osc" href={rutaDe('Ventas en local')}>Cobrar</a>
-			{#if mide}
-				<a class="b-borde" href={rutaDe('Ventas en local')}
-					>{t.caja.abierta ? 'Cerrar caja' : 'Abrir caja'}</a
-				>
-			{/if}
-		</div>
-	</div>
+	{/if}
 
-	<div class="tarjeta col">
-		<div class="fila-cab">
-			<div class="titulo">Próximas liquidaciones</div>
-			<a class="enlace" href={rutaDe('Finanzas')}>Finanzas</a>
+	<!-- Las acreditaciones todavía no se traen de Mercado Pago: con la API la tarjeta no diría nada. -->
+	{#if mide}
+		<div class="tarjeta col">
+			<div class="fila-cab">
+				<div class="titulo">Próximas liquidaciones</div>
+				<a class="enlace" href={rutaDe('Finanzas')}>Finanzas</a>
+			</div>
+			<div class="grande">
+				<span class="g-m">{pesos(t.liquidaciones.reduce((s, l) => s + l.monto, 0))}</span><span
+					class="g-l">en 7 días</span
+				>
+			</div>
+			<div class="lista">
+				{#each t.liquidaciones as l (l.medio)}
+					{@const dia = diaCorto(l.fecha, ahora)}
+					<div class="item">
+						<MarcaIcono k={l.medio} size={28} radius={8} />
+						<span class="i-n2"
+							><span>{LIQUIDA[l.medio] ?? l.medio}</span><span class="i-d">{dia}</span></span
+						>
+						<span class="i-der"
+							><span class="i-v">{pesos(l.monto)}</span>{#if dia === 'Hoy'}<span class="disp"
+									>Disponible</span
+								>{:else}<span class="prog">Programada</span>{/if}</span
+						>
+					</div>
+				{:else}
+					<div class="vacio chico">
+						{mide
+							? 'No hay acreditaciones en los próximos 7 días.'
+							: 'Todavía no traemos las acreditaciones: las ves en tu cuenta de Mercado Pago.'}
+					</div>
+				{/each}
+			</div>
 		</div>
-		<div class="grande">
-			<span class="g-m">{pesos(t.liquidaciones.reduce((s, l) => s + l.monto, 0))}</span><span
-				class="g-l">en 7 días</span
-			>
-		</div>
-		<div class="lista">
-			{#each t.liquidaciones as l (l.medio)}
-				{@const dia = diaCorto(l.fecha, ahora)}
-				<div class="item">
-					<MarcaIcono k={l.medio} size={28} radius={8} />
-					<span class="i-n2"
-						><span>{LIQUIDA[l.medio] ?? l.medio}</span><span class="i-d">{dia}</span></span
-					>
-					<span class="i-der"
-						><span class="i-v">{pesos(l.monto)}</span>{#if dia === 'Hoy'}<span class="disp"
-								>Disponible</span
-							>{:else}<span class="prog">Programada</span>{/if}</span
-					>
-				</div>
-			{:else}
-				<div class="vacio chico">
-					{mide
-						? 'No hay acreditaciones en los próximos 7 días.'
-						: 'Todavía no traemos las acreditaciones: las ves en tu cuenta de Mercado Pago.'}
-				</div>
-			{/each}
-		</div>
-	</div>
+	{/if}
 
 	<div class="hornero-card" use:anim={{ t: 'rise' }}>
 		<div class="h-cab">
@@ -746,7 +856,7 @@
 				>
 					<button class="h-si" disabled={recordando}>Sí, enviar</button>
 				</form>
-			{:else}
+			{:else if mide || t.hornero.carritos}
 				<a class="h-si" href={rutaDe('Carritos abandonados')}>Ver carritos</a>
 			{/if}
 			<button type="button" class="h-ideas" onclick={() => shell.hornero()}
@@ -757,89 +867,101 @@
 		</div>
 	</div>
 
-	<div class="tarjeta col">
-		<div class="fila-cab">
-			<div class="titulo con-ico"><Icon icon={I.logosWhatsappIcon} size={18} />Bandeja</div>
-			{#if t.bandeja.length}<span class="chip ambar">{t.bandeja.length} sin responder</span>{/if}
-		</div>
-		<div class="lista">
-			{#each t.bandeja as v (v.nombre)}
-				<div class="conv">
-					{#if v.foto}<img src={cara(v.foto)} alt="" width="38" height="38" />{:else}<span
-							class="o-ini"
-							>{v.nombre
-								.split(' ')
-								.map((w) => w[0])
-								.slice(0, 2)
-								.join('')}</span
-						>{/if}
-					<span class="cv-txt">
-						<span class="cv-cab"
-							><span class="cv-n">{v.nombre}</span><span class="cv-h">{haceCorto(v.creado)}</span
-							></span
-						>
-						<span class="cv-m">{v.mensaje}</span>
-						{#if v.atiende === 'hornero'}
-							<span class="cv-bot"
-								><Icon icon={I.phSparkleFill} size={11} />Tincho respondiendo<span
-									class="dots"
-									use:anim={{ t: 'dots' }}
-								></span></span
+	{#if mide || t.bandeja.length}
+		<div class="tarjeta col">
+			<div class="fila-cab">
+				<div class="titulo con-ico"><Icon icon={I.logosWhatsappIcon} size={18} />Bandeja</div>
+				{#if t.bandeja.length}<span class="chip ambar">{t.bandeja.length} sin responder</span>{/if}
+			</div>
+			<div class="lista">
+				{#each t.bandeja as v (v.nombre)}
+					<div class="conv">
+						{#if v.foto}<img src={cara(v.foto)} alt="" width="38" height="38" />{:else}<span
+								class="o-ini"
+								>{v.nombre
+									.split(' ')
+									.map((w) => w[0])
+									.slice(0, 2)
+									.join('')}</span
+							>{/if}
+						<span class="cv-txt">
+							<span class="cv-cab"
+								><span class="cv-n">{v.nombre}</span><span class="cv-h">{haceCorto(v.creado)}</span
+								></span
 							>
-						{:else}
-							<span class="cv-vos"><Icon icon={I.phUserFill} size={11} />Te espera a vos</span>
-						{/if}
-					</span>
-					{#if v.sinLeer}<span class="cv-sin">{v.sinLeer}</span>{/if}
-				</div>
-			{:else}
-				<div class="vacio chico">No hay conversaciones esperando.</div>
-			{/each}
+							<span class="cv-m">{v.mensaje}</span>
+							{#if v.atiende === 'hornero'}
+								<span class="cv-bot"
+									><Icon icon={I.phSparkleFill} size={11} />Tincho respondiendo<span
+										class="dots"
+										use:anim={{ t: 'dots' }}
+									></span></span
+								>
+							{:else}
+								<span class="cv-vos"><Icon icon={I.phUserFill} size={11} />Te espera a vos</span>
+							{/if}
+						</span>
+						{#if v.sinLeer}<span class="cv-sin">{v.sinLeer}</span>{/if}
+					</div>
+				{:else}
+					<div class="vacio chico">No hay conversaciones esperando.</div>
+				{/each}
+			</div>
+			<a class="b-borde abajo" href={rutaDe('WhatsApp')}>Abrir bandeja</a>
 		</div>
-		<a class="b-borde abajo" href={rutaDe('WhatsApp')}>Abrir bandeja</a>
-	</div>
+	{/if}
 
-	<div class="tarjeta">
-		<div class="fila-cab">
-			<div class="titulo">Integraciones</div>
-			<a class="enlace" href={rutaDe('Integraciones')}>Explorar</a>
+	{#if mide || integraciones.length}
+		<div class="tarjeta">
+			<div class="fila-cab">
+				<div class="titulo">Integraciones</div>
+				<a class="enlace" href={rutaDe('Integraciones')}>Explorar</a>
+			</div>
+			<div class="lista integ">
+				{#each integraciones as l (l.id)}
+					<div class="item">
+						<MarcaIcono k={l.id} size={32} radius={10} />
+						<span class="i-n2"><span class="in-n">{l.n}</span><span class="in-s">{l.st}</span></span
+						>
+						<span class="in-dot" style:background={l.dot}></span>
+					</div>
+				{:else}
+					<div class="vacio chico">Conectá tus canales y medios de pago desde Integraciones.</div>
+				{/each}
+			</div>
 		</div>
-		<div class="lista integ">
-			{#each integraciones as l (l.id)}
-				<div class="item">
-					<MarcaIcono k={l.id} size={32} radius={10} />
-					<span class="i-n2"><span class="in-n">{l.n}</span><span class="in-s">{l.st}</span></span>
-					<span class="in-dot" style:background={l.dot}></span>
-				</div>
-			{:else}
-				<div class="vacio chico">Conectá tus canales y medios de pago desde Integraciones.</div>
-			{/each}
-		</div>
-	</div>
+	{/if}
 
-	<div class="tarjeta">
-		<div class="fila-cab">
-			<div class="titulo">Más vendidos</div>
-			<span class="nota">esta semana</span>
-		</div>
-		<div class="tops">
-			{#each t.masVendidos as p (p.productoId)}
-				<div class="top">
-					{#if p.foto}<img src={unsplash(p.foto, 96, '&h=96')} alt="" width="40" height="40" />{/if}
-					<div class="tp-txt">
-						<div class="tp-cab">
-							<span class="tp-n">{p.nombre}</span><span class="tp-u">{p.unidades}&nbsp;u</span>
-						</div>
-						<div class="tp-barra">
-							<div style:width="{(p.unidades / maxVendidos) * 100}%"></div>
+	{#if mide || t.masVendidos.length}
+		<div class="tarjeta">
+			<div class="fila-cab">
+				<div class="titulo">Más vendidos</div>
+				<span class="nota">esta semana</span>
+			</div>
+			<div class="tops">
+				{#each t.masVendidos as p (p.productoId)}
+					<div class="top">
+						{#if p.foto}<img
+								src={unsplash(p.foto, 96, '&h=96')}
+								alt=""
+								width="40"
+								height="40"
+							/>{/if}
+						<div class="tp-txt">
+							<div class="tp-cab">
+								<span class="tp-n">{p.nombre}</span><span class="tp-u">{p.unidades}&nbsp;u</span>
+							</div>
+							<div class="tp-barra">
+								<div style:width="{(p.unidades / maxVendidos) * 100}%"></div>
+							</div>
 						</div>
 					</div>
-				</div>
-			{:else}
-				<div class="vacio chico">Cuando vendas, acá ves lo que más sale.</div>
-			{/each}
+				{:else}
+					<div class="vacio chico">Cuando vendas, acá ves lo que más sale.</div>
+				{/each}
+			</div>
 		</div>
-	</div>
+	{/if}
 
 	{#if visitas?.desde}
 		<div class="tarjeta">
@@ -874,80 +996,87 @@
 		</div>
 	{/if}
 
-	<div class="tarjeta col">
-		<div class="fila-cab">
-			<div class="titulo">Reseñas nuevas</div>
-			{#if t.resenas.promedio}<span class="estrellas-prom"
-					>★ {t.resenas.promedio.toLocaleString('es-AR', { minimumFractionDigits: 1 })}</span
-				>{/if}
-		</div>
-		<div class="lista">
-			{#each t.resenas.nuevas as r, i (i)}
-				<div class="resena">
-					<div class="r-cab">
-						<span class="r-est" aria-label="{r.estrellas} estrellas"
-							>{'★'.repeat(r.estrellas)}<span class="r-off">{'★'.repeat(5 - r.estrellas)}</span
-							></span
-						>
-						<span class="r-quien">{r.autor} · {r.producto}</span>
-						<MarcaIcono k={r.canal} size={22} radius={7} />
+	{#if mide || t.resenas.nuevas.length}
+		<div class="tarjeta col">
+			<div class="fila-cab">
+				<div class="titulo">Reseñas nuevas</div>
+				{#if t.resenas.promedio}<span class="estrellas-prom"
+						>★ {t.resenas.promedio.toLocaleString('es-AR', { minimumFractionDigits: 1 })}</span
+					>{/if}
+			</div>
+			<div class="lista">
+				{#each t.resenas.nuevas as r, i (i)}
+					<div class="resena">
+						<div class="r-cab">
+							<span class="r-est" aria-label="{r.estrellas} estrellas"
+								>{'★'.repeat(r.estrellas)}<span class="r-off">{'★'.repeat(5 - r.estrellas)}</span
+								></span
+							>
+							<span class="r-quien">{r.autor} · {r.producto}</span>
+							<MarcaIcono k={r.canal} size={22} radius={7} />
+						</div>
+						<div class="r-q">{r.texto}</div>
 					</div>
-					<div class="r-q">{r.texto}</div>
-				</div>
-			{:else}
-				<div class="vacio chico">Todavía no hay reseñas.</div>
-			{/each}
+				{:else}
+					<div class="vacio chico">Todavía no hay reseñas.</div>
+				{/each}
+			</div>
+			{#if t.resenas.nuevas.length}
+				<button
+					type="button"
+					class="b-ia abajo"
+					onclick={() => shell.hornero('Escribí respuestas cortas para las reseñas nuevas.')}
+					><Icon icon={I.phSparkleFill} size={14} />Responder con Tincho</button
+				>
+			{/if}
 		</div>
-		{#if t.resenas.nuevas.length}
-			<button
-				type="button"
-				class="b-ia abajo"
-				onclick={() => shell.hornero('Escribí respuestas cortas para las reseñas nuevas.')}
-				><Icon icon={I.phSparkleFill} size={14} />Responder con Tincho</button
-			>
-		{/if}
-	</div>
+	{/if}
 
-	<div class="tarjeta col ultima">
-		<div class="fila-cab">
-			<div class="titulo">Envíos de hoy</div>
-			<span class="nota">{plural(t.envios.paquetes, 'paquete', 'paquetes')}</span>
-		</div>
-		<div class="retiros">
-			{#each t.envios.retiros as e (e.transporte)}
-				<div class="retiro">
-					<span class="e-h">{e.hora}</span>
-					<MarcaIcono k={e.transporte} size={32} radius={10} />
-					<span class="e-txt">
-						<span class="e-t"
-							>{RETIRO[e.transporte]}{#if e.proximo}<span class="proximo">Próximo</span>{/if}</span
-						>
-						<span class="e-d">
-							{#if e.transporte === 'andreani'}{plural(e.paquetes, 'paquete', 'paquetes')} · etiquetas
-								listas
-							{:else if e.transporte === 'moto'}{plural(e.paquetes, 'entrega', 'entregas')}{e.ciudad
-									? ` en ${e.ciudad}`
-									: ''}
-							{:else}{plural(e.paquetes, 'paquete', 'paquetes')}{e.ciudad
-									? ` para ${e.ciudad}`
-									: ''}{/if}
+	{#if mide || t.envios.paquetes || t.envios.retiros.length}
+		<div class="tarjeta col ultima">
+			<div class="fila-cab">
+				<div class="titulo">Envíos de hoy</div>
+				<span class="nota">{plural(t.envios.paquetes, 'paquete', 'paquetes')}</span>
+			</div>
+			<div class="retiros">
+				{#each t.envios.retiros as e (e.transporte)}
+					<div class="retiro">
+						<span class="e-h">{e.hora}</span>
+						<MarcaIcono k={e.transporte} size={32} radius={10} />
+						<span class="e-txt">
+							<span class="e-t"
+								>{RETIRO[e.transporte]}{#if e.proximo}<span class="proximo">Próximo</span
+									>{/if}</span
+							>
+							<span class="e-d">
+								{#if e.transporte === 'andreani'}{plural(e.paquetes, 'paquete', 'paquetes')} · etiquetas
+									listas
+								{:else if e.transporte === 'moto'}{plural(
+										e.paquetes,
+										'entrega',
+										'entregas'
+									)}{e.ciudad ? ` en ${e.ciudad}` : ''}
+								{:else}{plural(e.paquetes, 'paquete', 'paquetes')}{e.ciudad
+										? ` para ${e.ciudad}`
+										: ''}{/if}
+							</span>
 						</span>
-					</span>
-				</div>
-			{:else}
-				<div class="vacio chico">Nada para despachar hoy.</div>
-			{/each}
+					</div>
+				{:else}
+					<div class="vacio chico">Nada para despachar hoy.</div>
+				{/each}
+			</div>
+			{#if t.envios.paquetes}
+				<a class="b-osc abajo con-ico" href={rutaDe('Envíos')}
+					><Icon icon={I.phPrinterBold} size={14} />Imprimir {plural(
+						t.envios.paquetes,
+						'etiqueta',
+						'etiquetas'
+					)}</a
+				>
+			{/if}
 		</div>
-		{#if t.envios.paquetes}
-			<a class="b-osc abajo con-ico" href={rutaDe('Envíos')}
-				><Icon icon={I.phPrinterBold} size={14} />Imprimir {plural(
-					t.envios.paquetes,
-					'etiqueta',
-					'etiquetas'
-				)}</a
-			>
-		{/if}
-	</div>
+	{/if}
 </div>
 
 <!-- eslint-enable svelte/no-navigation-without-resolve -->
@@ -1472,6 +1601,9 @@
 		grid-column: span 2;
 		padding: 0;
 		overflow: hidden;
+	}
+	.primero {
+		grid-column: span 2;
 	}
 	.p-cab {
 		display: flex;
@@ -2174,6 +2306,15 @@
 		.acceso {
 			flex-basis: 150px;
 		}
+		/* A lo angosto el título no se corta con «…»: baja de renglón, parejo. */
+		.q-t {
+			white-space: normal;
+			text-wrap: balance;
+			line-height: 1.25;
+		}
+		.q-k {
+			display: none;
+		}
 		.kpis,
 		.grilla {
 			gap: 12px;
@@ -2183,8 +2324,13 @@
 		}
 		.ventas,
 		.pedidos,
+		.primero,
 		.ultima {
 			grid-column: span 1;
+		}
+		/* En el celular, lo que hay que hacer va antes que los números. */
+		.urgente {
+			order: -1;
 		}
 		.pedido {
 			grid-template-columns: minmax(0, 1fr) auto auto;

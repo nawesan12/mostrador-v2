@@ -191,6 +191,13 @@
 		if (tn === 'importando' || onb) cola = { estado: 'pendiente' } as Importacion;
 		void leerCola();
 	});
+	// ?nuevo=1 (desde el Inicio o ⌘K): abre el editor de un producto nuevo de una.
+	$effect(() => {
+		if (!page.url.searchParams.has('nuevo')) return;
+		replaceState(resolve('/panel/productos'), {});
+		producto = null;
+		editor = true;
+	});
 	/** Las etapas de cada plataforma: de un link, sin cuenta, sólo salen productos. */
 	const etapasCola = $derived(
 		cola?.plataforma === 'tiendanube'

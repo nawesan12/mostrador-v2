@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { Dialog } from 'bits-ui';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
+	import { getUi } from '#lib/ui.svelte.ts';
+	import { compartirTienda } from './compartir.ts';
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
 	import type { IconData } from '#lib/icons.ts';
@@ -12,8 +15,18 @@
 	 * abrir caja) y saltar a cualquier sección. La opción 0 es Tincho; el resto va de la 1 en adelante.
 	 */
 	const shell = getShell();
+	const ui = getUi();
 	let q = $state('');
-	type Item = { t: string; s: string; icon: IconData; id: string; grupo: string; go: () => void };
+	type Item = {
+		t: string;
+		s: string;
+		icon: IconData;
+		id: string;
+		grupo: string;
+		go: () => void;
+		/** La sección que tiene que poder ver la persona (las acciones también siguen su rol). */
+		sec?: string;
+	};
 	const ACCIONES: Item[] = [
 		{
 			t: 'Crear pedido',
@@ -21,6 +34,7 @@
 			icon: I.phPlusBold,
 			id: 'a-pedido',
 			grupo: 'Acciones',
+			sec: 'Pedidos',
 			go: () => ir('/panel/pedidos/nuevo')
 		},
 		{
@@ -29,6 +43,7 @@
 			icon: I.phLinkBold,
 			id: 'a-link',
 			grupo: 'Acciones',
+			sec: 'Pedidos',
 			go: () => shell.abrirLink()
 		},
 		{
@@ -37,20 +52,34 @@
 			icon: I.phCameraBold,
 			id: 'a-foto',
 			grupo: 'Acciones',
-			go: () => ir(rutaDe('Productos'))
+			sec: 'Productos',
+			go: () => ir(`${rutaDe('Productos')}?nuevo=1`)
 		},
 		{
-			t: 'Abrir caja del local',
+			t: 'Cobrar en el local',
 			s: 'Punto de venta',
 			icon: I.phCashRegisterBold,
 			id: 'a-caja',
 			grupo: 'Acciones',
+			sec: 'Ventas en local',
 			go: () => ir(rutaDe('Ventas en local'))
+		},
+		{
+			t: 'Compartir mi tienda',
+			s: 'El link, por WhatsApp o redes',
+			icon: I.phStorefrontBold,
+			id: 'a-compartir',
+			grupo: 'Acciones',
+			go: () => {
+				shell.cmdk = false;
+				const t = page.data.tienda as { nombre: string; slug: string } | undefined;
+				if (t) void compartirTienda(ui, t);
+			}
 		}
 	];
 	const items = $derived(
 		[
-			...ACCIONES,
+			...ACCIONES.filter((a) => !a.sec || visible(a.sec, shell.turnos, shell.permisos)),
 			...AREAS.flatMap((a) =>
 				a.items
 					.filter((i) => visible(i.label, shell.turnos, shell.permisos))

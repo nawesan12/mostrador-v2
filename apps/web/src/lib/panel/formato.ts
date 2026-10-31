@@ -123,8 +123,11 @@ export function curva(s: number[], p: number[]) {
 			const p0 = A[i - 2] || A[i - 1],
 				p1 = A[i - 1],
 				p3 = A[i + 1] || q;
-			const c1 = [p1[0] + (q[0] - p0[0]) / 6, p1[1] + (q[1] - p0[1]) / 6];
-			const c2 = [q[0] - (p3[0] - p1[0]) / 6, q[1] - (p3[1] - p1[1]) / 6];
+			// Los controles no pasan la altura de sus dos puntos: las ventas acumuladas nunca bajan, y
+			// la curva tampoco (sin ese tope, un salto después de días quietos dibuja un pozo bajo cero).
+			const y = (v: number) => Math.min(Math.max(v, Math.min(p1[1], q[1])), Math.max(p1[1], q[1]));
+			const c1 = [p1[0] + (q[0] - p0[0]) / 6, y(p1[1] + (q[1] - p0[1]) / 6)];
+			const c2 = [q[0] - (p3[0] - p1[0]) / 6, y(q[1] - (p3[1] - p1[1]) / 6)];
 			return (
 				d +
 				` C${c1[0].toFixed(1)},${c1[1].toFixed(1)} ${c2[0].toFixed(1)},${c2[1].toFixed(1)} ${q[0].toFixed(1)},${q[1].toFixed(1)}`

@@ -11,12 +11,29 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const p = url.searchParams.get('periodo');
 	const periodo = PERIODOS.includes(p as Periodo) ? (p as Periodo) : '7d';
 	const d = datosDe(locals);
-	const [tablero, estado] = await Promise.all([
+	const real = !usaSandbox();
+	const [tablero, estado, productos, config] = await Promise.all([
 		d.tablero(periodo),
 		// Con la API, la tarjeta de Integraciones muestra lo que de verdad está conectado (el tablero
 		// de Go no lo trae). Si falla, la tarjeta invita a conectar en vez de tirar el Resumen.
-		usaSandbox() ? null : d.integraciones().catch(() => null)
+		real ? d.integraciones().catch(() => null) : null,
+		// Los primeros pasos de una tienda real: si ya tiene productos y cómo cobrar. Si algo falla,
+		// ese paso no se muestra (mejor callar que decir algo que no es).
+		real
+			? d
+					.listar('productos', { desde: 0, cuantos: 1 })
+					.then((l) => l.total)
+					.catch(() => null)
+			: null,
+		real ? d.configuracion().catch(() => null) : null
 	]);
+	const pasos = real
+		? {
+				productos,
+				mercadoPago: estado ? !!estado.conectadas.mp : null,
+				transferencia: config ? !!(config.negocio.alias || config.negocio.cbu) : null
+			}
+		: null;
 	const conectadas = estado
 		? INTEGRACIONES.filter((i) => estado.conectadas[i.id]).map((i) => ({
 				id: i.id,
@@ -24,7 +41,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 				nombre: i.nombre
 			}))
 		: null;
-	return { tablero, conectadas };
+	return { tablero, conectadas, pasos };
 };
 
 export const actions: Actions = {

@@ -12,6 +12,7 @@
 	import * as I from '#lib/icons.ts';
 	import { cara, unsplash } from '#lib/landing/formato.ts';
 	import { anim } from '#lib/panel/anim.ts';
+	import { compartirTienda } from '#lib/panel/compartir.ts';
 	import { pesos } from '#lib/panel/formato.ts';
 	import HojaPedido from '#lib/panel/pedidos/HojaPedido.svelte';
 	import {
@@ -70,6 +71,8 @@
 	let ancho = $state(1440);
 	const amplio = $derived(ancho >= 900);
 	const alto = $derived(ancho < 760 ? 520 : 600);
+	// Con pocos pedidos la caja no deja un hueco en blanco abajo; vacía, lo justo para el vacío.
+	const altoCaja = $derived(lista.total ? Math.min(alto, lista.total * FILA + 10) : 380);
 	let scroll = $state(0);
 	let caja = $state<HTMLElement>();
 	let filas = $state.raw<(Fila | undefined)[]>([]);
@@ -651,7 +654,7 @@
 		</div>
 		<div
 			class="scroll"
-			style:height="{alto}px"
+			style:height="{altoCaja}px"
 			bind:this={caja}
 			onscroll={alScrollear}
 			data-lenis-prevent
@@ -772,11 +775,10 @@
 							</p>
 							<div class="v-bs">
 								<a class="v-b" href={resolve('/panel/pedidos/nuevo')}>Cargar un pedido</a>
-								<a
+								<button
+									type="button"
 									class="v-b v-b2"
-									href={resolve('/t/[tienda]', { tienda: page.data.tienda.slug })}
-									target="_blank"
-									rel="noopener">Ver mi tienda</a
+									onclick={() => compartirTienda(ui, page.data.tienda)}>Compartir mi tienda</button
 								>
 							</div>
 						</div>
@@ -1401,8 +1403,10 @@
 		border: 0;
 		background: var(--tx);
 		color: var(--sf);
+		font-family: inherit;
 		font-size: 13px;
 		font-weight: 600;
+		cursor: pointer;
 	}
 	.v-b2 {
 		background: var(--sf3);
