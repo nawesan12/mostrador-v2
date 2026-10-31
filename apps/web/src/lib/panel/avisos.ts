@@ -25,6 +25,7 @@ export const AVISOS: readonly { grupo: string; filas: readonly Fila[] }[] = [
 	{
 		grupo: 'Operación',
 		filas: [
+			{ id: 'sinstock', t: 'Sin stock', d: 'Una venta lo dejó en 0', def: [1, 0, 1, 1] },
 			{ id: 'stock', t: 'Stock bajo', d: 'Menos de 5 unidades', def: [1, 0, 1, 1] },
 			{ id: 'demora', t: 'Envío demorado', d: 'Más de 48 h sin movimiento', def: [1, 1, 0, 1] },
 			{ id: 'arca', t: 'Certificado de ARCA por vencer', d: '15 días antes', def: [1, 1, 1, 0] }

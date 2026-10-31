@@ -17,7 +17,7 @@
 	/**
 	 * Con la API real, a la tienda le salen hoy tres avisos de venta nueva: el mail (Venta nueva ›
 	 * Email, prendido por defecto), el push al iPhone (Venta nueva › Celular, prendido por defecto;
-	 * docs/decisiones.md §40) y Telegram si lo vinculó. La matriz se guarda, pero no se promete
+	 * docs/decisiones.md §40) y Telegram si lo vinculó. Y «Sin stock» por mail y push (§41). La matriz se guarda, pero no se promete
 	 * un resumen diario, un «no molestar» ni una prueba que no mandan nada (la prueba era un toast
 	 * con una venta inventada).
 	 */
@@ -117,6 +117,29 @@
 					onchange={() => alternar('venta', 'celular')}
 				/>
 			</div>
+			<div class="activo">
+				<span class="a-ico" style:color="#B83A2E"
+					><Icon icon={I.phWarningCircleFill} size={20} /></span
+				>
+				<span class="a-txt"
+					><b>Sin stock</b><span class="d"
+						>Cuando una venta deja un producto en 0, con un botón para reponer. Uno por día como
+						mucho, a vos y a quien edita&nbsp;productos.</span
+					><span class="canales-a">
+						{#each ['email', 'celular'] as const as c (c)}
+							<span class="c-a"
+								><Icon icon={CANAL[c][0]} size={15} style="color:{CANAL[c][1]}" />{c === 'celular'
+									? 'iPhone'
+									: CANAL[c][2]}<Interruptor
+									checked={activo(prefs.matriz, 'sinstock', c)}
+									label="Sin stock por {c === 'celular' ? 'push en el iPhone' : 'email'}"
+									onchange={() => alternar('sinstock', c)}
+								/></span
+							>
+						{/each}
+					</span></span
+				>
+			</div>
 			<a class="activo" href={resolve('/panel/integraciones')}>
 				<span class="a-ico" style:color="#229ED9"><Icon icon={I.logosTelegram} size={20} /></span>
 				<span class="a-txt"
@@ -213,6 +236,19 @@
 		padding: 12px 18px;
 		color: var(--tx);
 		text-decoration: none;
+	}
+	.canales-a {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px 20px;
+		margin-top: 10px;
+	}
+	.c-a {
+		display: inline-flex;
+		align-items: center;
+		gap: 7px;
+		font-size: 13px;
+		font-weight: 600;
 	}
 	.activo + .activo {
 		border-top: 1px solid var(--ln);

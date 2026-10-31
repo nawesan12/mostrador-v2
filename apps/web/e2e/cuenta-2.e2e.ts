@@ -25,8 +25,9 @@ test('dominio: conectar, queda verificando y se puede quitar', async ({ page }) 
 
 test('notificaciones: un aviso por canal queda guardado', async ({ page }) => {
 	await demo(page, '/panel/notificaciones');
-	const sw = page.getByRole('switch', { name: 'Venta nueva por Email' });
-	await expect(sw).toHaveAttribute('aria-checked', 'false');
+	// Venta nueva por email viene prendido (docs/decisiones.md §35).
+	const sw = page.getByRole('switch', { name: 'Venta nueva por email' });
+	await expect(sw).toHaveAttribute('aria-checked', 'true');
 	const guardado = page.waitForResponse(
 		(r) => r.url().endsWith('/preferencias') && r.status() === 204
 	);
@@ -34,10 +35,16 @@ test('notificaciones: un aviso por canal queda guardado', async ({ page }) => {
 	await guardado;
 	await page.reload();
 	await listo(page);
-	await expect(page.getByRole('switch', { name: 'Venta nueva por Email' })).toHaveAttribute(
+	await expect(page.getByRole('switch', { name: 'Venta nueva por email' })).toHaveAttribute(
 		'aria-checked',
-		'true'
+		'false'
 	);
+	// Sin stock: mail y celular, prendidos por defecto (en la demo, en la matriz).
+	for (const canal of ['Email', 'Celular'])
+		await expect(page.getByRole('switch', { name: `Sin stock por ${canal}` })).toHaveAttribute(
+			'aria-checked',
+			'true'
+		);
 });
 
 test('mis datos: exportar en CSV y todo en ZIP; cerrar pide el nombre', async ({ page }) => {
