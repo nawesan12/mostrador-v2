@@ -84,6 +84,8 @@ jobs:
       MOSTRADOR_BASE_DE_DATOS_ADMIN: postgres://mostrador@localhost:5432/mostrador?sslmode=disable
       MOSTRADOR_BASE_DE_DATOS_MIGRADOR: postgres://mostrador_migrador@localhost:5432/mostrador_dev?sslmode=disable
       MOSTRADOR_BASE_DE_DATOS: postgres://mostrador_app@localhost:5432/mostrador_dev?sslmode=disable
+      # Sin esta, en desarrollo la API busca el rol del backoffice en el Postgres de compose (:5440).
+      MOSTRADOR_BASE_DE_DATOS_STAFF: postgres://mostrador_staff@localhost:5432/mostrador_dev?sslmode=disable
       MOSTRADOR_SMTP: 127.0.0.1:1025
       MOSTRADOR_CLAVE_BFF: clave-bff-e2e
       MOSTRADOR_DIRECCION: ':4000'
@@ -103,6 +105,8 @@ jobs:
           go build -o /tmp/api ./cmd/api
           /tmp/api > /tmp/api.log 2>&1 &
           for i in $(seq 1 30); do curl -sf localhost:4000/salud/listo && break; sleep 1; done
+          # Si la API no arrancó, que falle acá y no en los e2e (con «Network connection lost»).
+          curl -sf localhost:4000/salud/listo || (cat /tmp/api.log; exit 1)
       - name: Web en modo API
         working-directory: apps/web
         run: |
