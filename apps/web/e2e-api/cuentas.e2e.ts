@@ -34,7 +34,6 @@ test('registro, salir, recuperar por mail, contraseña nueva e ingreso', async (
 	await page.goto('/ingresar?m=registro');
 	await listo(page);
 	await page.getByRole('textbox', { name: 'Tu nombre' }).fill('Lucía');
-	await page.getByRole('textbox', { name: 'Nombre de la tienda' }).fill('La Esquina');
 	await page.getByRole('textbox', { name: 'Email' }).fill(email);
 	await page.getByLabel('Contraseña', { exact: true }).fill('Abcdefghijk1');
 	await page.locator('label.terminos .caja-check').click();
@@ -47,7 +46,8 @@ test('registro, salir, recuperar por mail, contraseña nueva e ingreso', async (
 	await expect(page.getByRole('heading', { name: 'Tu tienda ya está en línea.' })).toBeVisible();
 	await page.getByRole('button', { name: /Ir a mi panel/ }).click();
 	await expect(page).toHaveURL(/\/panel$/);
-	await expect(page.locator('.barra .t-n')).toHaveText('La Esquina');
+	// Sin nombre en el registro ni cambio en «Tu negocio», queda el provisorio.
+	await expect(page.locator('.barra .t-n')).toHaveText('La tienda de Lucía');
 	const cookie = (await context.cookies()).find((c) => c.name.endsWith('tlw_sesion'));
 	expect(cookie?.httpOnly).toBe(true);
 
@@ -56,7 +56,6 @@ test('registro, salir, recuperar por mail, contraseña nueva e ingreso', async (
 	await page.goto('/ingresar?m=registro');
 	await listo(page);
 	await page.getByRole('textbox', { name: 'Tu nombre' }).fill('Otra');
-	await page.getByRole('textbox', { name: 'Nombre de la tienda' }).fill('Otra');
 	await page.getByRole('textbox', { name: 'Email' }).fill(email);
 	await page.getByLabel('Contraseña', { exact: true }).fill('Abcdefghijk1');
 	await page.locator('label.terminos .caja-check').click();

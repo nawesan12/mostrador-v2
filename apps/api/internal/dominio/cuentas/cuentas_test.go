@@ -70,7 +70,7 @@ func TestRegistroValida(t *testing.T) {
 		campo string
 	}{
 		{cuentas.Alta{Tienda: "X", Email: "a@b.co", Clave: "Abcdefghijk1"}, "nombre"},
-		{cuentas.Alta{Nombre: "L", Email: "a@b.co", Clave: "Abcdefghijk1"}, "tienda"},
+		{cuentas.Alta{Nombre: "L", Tienda: strings.Repeat("x", 81), Email: "a@b.co", Clave: "Abcdefghijk1"}, "tienda"},
 		{cuentas.Alta{Nombre: "L", Tienda: "X", Email: "no-es-email", Clave: "Abcdefghijk1"}, "email"},
 		{cuentas.Alta{Nombre: "L", Tienda: "X", Email: "a@b.co", Clave: "corta"}, "clave"},
 	} {
@@ -78,6 +78,22 @@ func TestRegistroValida(t *testing.T) {
 		if _, err := s.Registrar(ctx, c.a, cl); !errors.As(err, &inv) || inv.Campo != c.campo {
 			t.Errorf("%s: err = %v", c.campo, err)
 		}
+	}
+}
+
+// Sin nombre de tienda (se elige en el onboarding) la cuenta se crea con uno provisorio.
+func TestRegistroSinNombreDeTienda(t *testing.T) {
+	s, _, b := nuevo(t)
+	ses, err := s.Registrar(ctx, cuentas.Alta{Nombre: "Lucía Fernández", Email: "lucia@tienda.com.ar", Clave: "Abcdefghijk1"}, cl)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var nombre string
+	if err := b.Staff.QueryRow(ctx, `SELECT nombre FROM tiendas WHERE id = $1`, ses.TiendaID).Scan(&nombre); err != nil {
+		t.Fatal(err)
+	}
+	if nombre != "La tienda de Lucía" {
+		t.Fatalf("nombre %q", nombre)
 	}
 }
 

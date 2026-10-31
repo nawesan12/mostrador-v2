@@ -26,7 +26,6 @@ test('una IA se conecta a una tienda real por OAuth y usa el MCP contra la API',
 	await page.goto('/ingresar?m=registro');
 	await listo(page);
 	await page.getByRole('textbox', { name: 'Tu nombre' }).fill('Lucía');
-	await page.getByRole('textbox', { name: 'Nombre de la tienda' }).fill('La Esquina IA');
 	await page.getByRole('textbox', { name: 'Email' }).fill(`lucia+ia${Date.now()}@laesquina.com.ar`);
 	await page.getByLabel('Contraseña', { exact: true }).fill('Abcdefghijk1');
 	await page.locator('label.terminos .caja-check').click();

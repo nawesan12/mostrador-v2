@@ -16,7 +16,6 @@ test('se retoma donde quedó, el atrás vuelve un paso y terminado va al panel',
 	await page.goto('/ingresar?m=registro');
 	await listo(page);
 	await page.getByRole('textbox', { name: 'Tu nombre' }).fill('Ana');
-	await page.getByRole('textbox', { name: 'Nombre de la tienda' }).fill('Kiosco Ana');
 	await page.getByRole('textbox', { name: 'Email' }).fill(`ana+${Date.now()}@ejemplo.com`);
 	await page.getByLabel('Contraseña', { exact: true }).fill('Abcdefghijk1');
 	await page.locator('label.terminos .caja-check').click();

@@ -132,9 +132,13 @@ func (s *Servicio) Registrar(ctx context.Context, a Alta, cl Cliente) (Sesion, e
 	if err != nil {
 		return Sesion{}, err
 	}
-	tienda, err := texto("tienda", a.Tienda, "Poné el nombre de tu tienda.")
-	if err != nil {
-		return Sesion{}, err
+	// El nombre de la tienda se elige en el onboarding: si no viene, uno provisorio como con Google.
+	tienda := strings.TrimSpace(a.Tienda)
+	if tienda == "" {
+		tienda = "La tienda de " + strings.Fields(nombre)[0]
+	}
+	if utf8.RuneCountInString(tienda) > 80 {
+		return Sesion{}, ErrInvalido{"tienda", "Es demasiado largo."}
 	}
 	email, err := normalizarEmail(a.Email)
 	if err != nil {

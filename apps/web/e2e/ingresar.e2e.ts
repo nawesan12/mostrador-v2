@@ -43,7 +43,6 @@ test('registro: medidor de fuerza y términos obligatorios', async ({ page }) =>
 	await expect(page.getByText('Muy segura')).toBeVisible();
 
 	await page.getByRole('textbox', { name: 'Tu nombre' }).fill('Lucía');
-	await page.getByRole('textbox', { name: 'Nombre de la tienda' }).fill('La Esquina');
 	await page.getByRole('textbox', { name: 'Email' }).fill('lucia@laesquina.com.ar');
 	// Escribir la contraseña después no puede borrar lo anterior (bug que tuvo esta pantalla).
 	await clave.fill('Abcdefghijk12');
@@ -53,9 +52,7 @@ test('registro: medidor de fuerza y términos obligatorios', async ({ page }) =>
 		page.getByText('Para crear la tienda tenés que aceptar los términos.')
 	).toBeVisible();
 	// Lo escrito no se pierde.
-	await expect(page.getByRole('textbox', { name: 'Nombre de la tienda' })).toHaveValue(
-		'La Esquina'
-	);
+	await expect(page.getByRole('textbox', { name: 'Email' })).toHaveValue('lucia@laesquina.com.ar');
 });
 
 test('recuperar por email muestra "Revisá tu email" sin poner el email en la URL', async ({

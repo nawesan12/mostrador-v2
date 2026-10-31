@@ -17,7 +17,8 @@ export const Ingreso = v.object({
 
 export const Registro = v.object({
 	nombre: v.pipe(v.string(), v.trim(), v.nonEmpty('¿Cómo te llamás?'), v.maxLength(80)),
-	tienda: v.pipe(v.string(), v.trim(), v.nonEmpty('Poné el nombre de tu tienda.'), v.maxLength(80)),
+	// El nombre de la tienda se elige en el onboarding («Tu negocio»); acá ya no se pide.
+	tienda: v.pipe(v.optional(v.string(), ''), v.trim(), v.maxLength(80)),
 	email,
 	clave: v.pipe(
 		v.string(),

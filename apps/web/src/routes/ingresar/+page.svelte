@@ -299,32 +299,18 @@
 							</div>
 							<div class="o"><span></span>o con tu email<span></span></div>
 						{/if}
-						<div class="dos">
-							<label class="campo"
-								>Tu nombre<span class="in"
-									><input
-										name="nombre"
-										autocomplete="name"
-										placeholder="Lucía Fernández"
-										defaultValue={form?.nombre ?? ''}
-										aria-invalid={!!err.nombre}
-										aria-describedby={err.nombre ? 'err-nombre' : undefined}
-									/></span
-								></label
-							>{#if err.nombre}<small class="err" id="err-nombre">{err.nombre}</small>{/if}
-							<label class="campo"
-								>Nombre de la tienda<span class="in"
-									><input
-										name="tienda"
-										autocomplete="organization"
-										placeholder="La Esquina"
-										defaultValue={form?.tienda ?? ''}
-										aria-invalid={!!err.tienda}
-										aria-describedby={err.tienda ? 'err-tienda' : undefined}
-									/></span
-								></label
-							>{#if err.tienda}<small class="err" id="err-tienda">{err.tienda}</small>{/if}
-						</div>
+						<label class="campo"
+							>Tu nombre<span class="in"
+								><input
+									name="nombre"
+									autocomplete="name"
+									placeholder="Lucía Fernández"
+									defaultValue={form?.nombre ?? ''}
+									aria-invalid={!!err.nombre}
+									aria-describedby={err.nombre ? 'err-nombre' : undefined}
+								/></span
+							></label
+						>{#if err.nombre}<small class="err" id="err-nombre">{err.nombre}</small>{/if}
 						<label class="campo"
 							>Email<span class="in"
 								><input
@@ -790,11 +776,6 @@
 		flex: 1;
 		height: 1px;
 		background: rgba(58, 29, 18, 0.12);
-	}
-	.dos {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-		gap: 10px;
 	}
 	.campo {
 		display: flex;
