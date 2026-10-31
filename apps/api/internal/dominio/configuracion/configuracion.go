@@ -15,7 +15,9 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/roles"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/geoip"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/limite"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
@@ -24,13 +26,16 @@ type tx interface {
 }
 
 var (
-	ErrNoExiste    = errors.New("no existe")
-	ErrRepetido    = errors.New("ya está en el equipo")
-	ErrNoSePuede   = errors.New("no se puede")
-	ErrInvalido    = errors.New("inválido")
-	avisosDef      = map[string]bool{"venta": true, "chats": true, "stock": true, "diario": true, "ideas": true, "novedades": false}
-	planes         = []string{"gratis", "emprende", "pro", "negocio"}
-	contactoValido = regexp.MustCompile(`^([^\s@]+@[^\s@]+\.[^\s@]+|\+?[\d\s-]{8,20})$`)
+	ErrNoExiste  = errors.New("no existe")
+	ErrRepetido  = errors.New("ya está en el equipo")
+	ErrNoSePuede = errors.New("no se puede")
+	ErrInvalido  = errors.New("inválido")
+	ErrSinEmail  = errors.New("la invitación no tiene email")
+	ErrDuenia    = errors.New("a la dueña no se la quita ni se le cambia el rol")
+	ErrVos       = errors.New("no podés cambiarte a vos")
+	avisosDef    = map[string]bool{"venta": true, "chats": true, "stock": true, "diario": true, "ideas": true, "novedades": false}
+	planes       = []string{"gratis", "emprende", "pro", "negocio"}
+	emailValido  = regexp.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`)
 )
 
 // Negocio es components/schemas/Negocio.
@@ -76,13 +81,15 @@ func CBUValido(c string) bool {
 
 // Miembro es components/schemas/Miembro.
 type Miembro struct {
-	ID          string     `json:"id"`
-	Nombre      string     `json:"nombre"`
-	Contacto    string     `json:"contacto"`
-	Rol         string     `json:"rol"`
-	Foto        *string    `json:"foto"`
-	Ultimo      *time.Time `json:"ultimo"`
-	Pendiente   bool       `json:"pendiente"`
+	ID        string     `json:"id"`
+	Nombre    string     `json:"nombre"`
+	Contacto  string     `json:"contacto"`
+	Rol       string     `json:"rol"`
+	Foto      *string    `json:"foto"`
+	Ultimo    *time.Time `json:"ultimo"`
+	Pendiente bool       `json:"pendiente"`
+	// Vence: invitación pendiente, cuándo vence su link (nil si nunca se mandó).
+	Vence       *time.Time `json:"vence"`
 	Vos         bool       `json:"vos"`
 	DobleFactor bool       `json:"dobleFactor"`
 }
@@ -104,8 +111,8 @@ type Sesion struct {
 	Actual bool      `json:"actual"`
 }
 
-// Quien es la persona que mira (para "vos" y sus sesiones).
-type Quien struct{ UsuarioID, SesionID string }
+// Quien es la persona que mira (para "vos", sus sesiones y lo que su rol puede ver).
+type Quien struct{ UsuarioID, SesionID, Rol string }
 
 func conDefecto(def, v map[string]bool) map[string]bool {
 	out := map[string]bool{}
@@ -193,13 +200,15 @@ func Leer(ctx context.Context, pool tx, geo geoip.Ubicador, tiendaID string, q Q
 		if err := filas.Err(); err != nil {
 			return err
 		}
-		inv, err := t.Query(ctx, `SELECT id::text, contacto, rol FROM invitaciones WHERE tienda_id = $1 ORDER BY creada_en`, tiendaID)
+		inv, err := t.Query(ctx, `SELECT i.id::text, i.contacto, i.rol, l.vence_en
+			FROM invitaciones i LEFT JOIN auth.invitaciones l ON l.invitacion_id = i.id
+			WHERE i.tienda_id = $1 ORDER BY i.creada_en`, tiendaID)
 		if err != nil {
 			return err
 		}
 		for inv.Next() {
 			var m Miembro
-			if err := inv.Scan(&m.ID, &m.Contacto, &m.Rol); err != nil {
+			if err := inv.Scan(&m.ID, &m.Contacto, &m.Rol, &m.Vence); err != nil {
 				return err
 			}
 			m.Nombre, m.Pendiente = m.Contacto, true
@@ -216,6 +225,14 @@ func Leer(ctx context.Context, pool tx, geo geoip.Ubicador, tiendaID string, q Q
 		ses, err := sesiones(ctx, t, geo, q)
 		if err != nil {
 			return err
+		}
+		// Lo que el rol no puede ver no sale: los datos del negocio (alias y CBU) sólo con Tienda; el
+		// equipo, sólo la dueña (las demás se ven a sí mismas).
+		if !roles.Puede(q.Rol, roles.Tienda) {
+			negocio = Negocio{Nombre: nombre}
+		}
+		if !roles.Puede(q.Rol, roles.Cuenta) {
+			equipo = slices.DeleteFunc(equipo, func(m Miembro) bool { return !m.Vos })
 		}
 		prueba := creada.Add(14 * 24 * time.Hour)
 		res = map[string]any{
@@ -304,30 +321,88 @@ func CerrarOtras(ctx context.Context, pool tx, tiendaID string, q Quien) (int64,
 	return n, err
 }
 
-// Invitar suma una invitación pendiente. Mandarla por email o WhatsApp llega con esos servicios.
-func Invitar(ctx context.Context, pool tx, tiendaID, contacto, rol string) (Miembro, error) {
-	contacto = strings.TrimSpace(contacto)
+// Invitar suma una invitación por email y encola el mail con el link (un solo uso, 7 días). Quien
+// invita queda anotada (sale en el mail).
+func Invitar(ctx context.Context, pool tx, sitio, tiendaID string, q Quien, contacto, rol string) (Miembro, error) {
+	contacto = strings.ToLower(strings.TrimSpace(contacto))
 	m := Miembro{Nombre: contacto, Contacto: contacto, Rol: rol, Pendiente: true}
-	if !contactoValido.MatchString(contacto) || !slices.Contains([]string{"admin", "ventas", "deposito"}, rol) {
+	if len(contacto) < 6 || len(contacto) > 120 || !emailValido.MatchString(contacto) || !roles.Invitable(rol) {
 		return m, ErrInvalido
 	}
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
 		var ya bool
 		if err := t.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM auth.membresias mm JOIN auth.usuarios u ON u.id = mm.usuario_id
-			WHERE mm.tienda_id = $1 AND lower(u.email) = lower($2))`, tiendaID, contacto).Scan(&ya); err != nil {
+			WHERE mm.tienda_id = $1 AND u.email = $2)`, tiendaID, contacto).Scan(&ya); err != nil {
 			return err
 		}
 		if ya {
 			return ErrRepetido
 		}
-		err := t.QueryRow(ctx, `INSERT INTO invitaciones (tienda_id, contacto, rol) VALUES ($1, $2, $3)
-			ON CONFLICT (tienda_id, contacto) DO NOTHING RETURNING id::text`, tiendaID, contacto, rol).Scan(&m.ID)
+		err := t.QueryRow(ctx, `INSERT INTO invitaciones (tienda_id, contacto, rol, invitada_por, enviada_en)
+			VALUES ($1, $2, $3, nullif($4, '')::uuid, now())
+			ON CONFLICT (tienda_id, contacto) DO NOTHING RETURNING id::text`, tiendaID, contacto, rol, q.UsuarioID).Scan(&m.ID)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return ErrRepetido
 		}
+		if err != nil {
+			return err
+		}
+		m.Vence, err = mandar(ctx, t, sitio, tiendaID, m.ID, contacto, rol, q)
 		return err
 	})
 	return m, err
+}
+
+// mandar arma el link nuevo de la invitación y encola el mail. Devuelve cuándo vence.
+func mandar(ctx context.Context, t pgx.Tx, sitio, tiendaID, id, para, rol string, q Quien) (*time.Time, error) {
+	var tienda, invita string
+	if err := t.QueryRow(ctx, `SELECT nombre, coalesce((SELECT nombre FROM auth.usuarios WHERE id::text = $2), '')
+		FROM tiendas WHERE id = $1`, tiendaID, q.UsuarioID).Scan(&tienda, &invita); err != nil {
+		return nil, err
+	}
+	if err := cuentas.EncolarInvitacion(ctx, t, sitio, tiendaID, id,
+		cuentas.MailInvitacion{Para: para, Tienda: tienda, Invita: invita, Rol: rol}); err != nil {
+		return nil, err
+	}
+	var v time.Time
+	err := t.QueryRow(ctx, `SELECT vence_en FROM auth.invitaciones WHERE invitacion_id = $1`, id).Scan(&v)
+	return &v, err
+}
+
+// Reenviar manda otra vez la invitación con un link nuevo (el anterior deja de valer).
+func Reenviar(ctx context.Context, pool tx, sitio, tiendaID string, q Quien, id string) error {
+	return pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		var contacto, rol string
+		err := t.QueryRow(ctx, `UPDATE invitaciones SET enviada_en = now() WHERE tienda_id = $1 AND id::text = $2
+			RETURNING contacto, rol`, tiendaID, id).Scan(&contacto, &rol)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrNoExiste
+		}
+		if err != nil {
+			return err
+		}
+		if !emailValido.MatchString(contacto) {
+			return ErrSinEmail // una invitación vieja a un WhatsApp: no hay a dónde mandarla
+		}
+		_, err = mandar(ctx, t, sitio, tiendaID, id, strings.ToLower(contacto), rol, q)
+		return err
+	})
+}
+
+// permitidoInvitar: hasta 30 mails de invitación por tienda por hora (cada uno es un mail que sale).
+func permitidoInvitar(ctx context.Context, pool tx, tiendaID string) error {
+	c, ok := pool.(limite.Consultor)
+	if !ok {
+		return nil
+	}
+	ok, err := limite.Permitido(ctx, c, "invitar:tienda:"+tiendaID, 30, time.Hour)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return cuentas.ErrDemasiadosIntentos
+	}
+	return nil
 }
 
 // CambiarPlan guarda el plan elegido. El cobro llega con Mercado Pago Suscripciones.
@@ -351,7 +426,7 @@ func Rutas(mux *http.ServeMux, pool tx, geo geoip.Ubicador, sitio string, cobraA
 				problema.Escribir(w, problema.SinSesion())
 				return
 			}
-			h(w, r, d.TiendaID, Quien{UsuarioID: d.Usuario.ID, SesionID: d.SesionID})
+			h(w, r, d.TiendaID, Quien{UsuarioID: d.Usuario.ID, SesionID: d.SesionID, Rol: d.Rol})
 		}
 	}
 	errorDe := func(w http.ResponseWriter, err error) {
@@ -362,6 +437,16 @@ func Rutas(mux *http.ServeMux, pool tx, geo geoip.Ubicador, sitio string, cobraA
 			problema.Escribir(w, problema.NoEncontrado("No existe."))
 		case errors.Is(err, ErrRepetido):
 			problema.Escribir(w, problema.Conflicto("repetido", "Esa persona ya está en el equipo."))
+		case errors.Is(err, ErrDuenia):
+			problema.Escribir(w, problema.Conflicto("duenia", "A la dueña no se la quita ni se le cambia el rol."))
+		case errors.Is(err, ErrVos):
+			problema.Escribir(w, problema.Conflicto("vos", "No podés cambiar tu propio rol ni quitarte del equipo."))
+		case errors.Is(err, ErrSinEmail):
+			problema.Escribir(w, problema.NoProcesable("sin_email", "Esa invitación era por WhatsApp y no se puede mandar: cancelala e invitá por email."))
+		case errors.Is(err, cuentas.ErrDemasiadosIntentos):
+			w.Header().Set("Retry-After", "3600")
+			problema.Escribir(w, &problema.Problema{Estado: http.StatusTooManyRequests, Codigo: "demasiados_intentos",
+				Titulo: "Esperá un rato", Detalle: "Mandaste muchas invitaciones seguidas. Probá de nuevo en una hora."})
 		case errors.Is(err, ErrNoSePuede):
 			problema.Escribir(w, problema.Conflicto("actual", "Para cerrar esta, salí de la cuenta."))
 		case errors.Is(err, ErrInvalido):
@@ -416,12 +501,16 @@ func Rutas(mux *http.ServeMux, pool tx, geo geoip.Ubicador, sitio string, cobraA
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]int64{"cerradas": n})
 	}))
-	mux.HandleFunc("POST /v1/panel/equipo", con(func(w http.ResponseWriter, r *http.Request, id string, _ Quien) {
+	mux.HandleFunc("POST /v1/panel/equipo", con(func(w http.ResponseWriter, r *http.Request, id string, q Quien) {
 		var b struct{ Contacto, Rol string }
 		if !leer(w, r, &b) {
 			return
 		}
-		m, err := Invitar(r.Context(), pool, id, b.Contacto, b.Rol)
+		if err := permitidoInvitar(r.Context(), pool, id); err != nil {
+			errorDe(w, err)
+			return
+		}
+		m, err := Invitar(r.Context(), pool, sitio, id, q, b.Contacto, b.Rol)
 		if err != nil {
 			errorDe(w, err)
 			return
@@ -429,6 +518,13 @@ func Rutas(mux *http.ServeMux, pool tx, geo geoip.Ubicador, sitio string, cobraA
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		_ = json.NewEncoder(w).Encode(m)
+	}))
+	mux.HandleFunc("POST /v1/panel/equipo/{id}/reenviar", con(func(w http.ResponseWriter, r *http.Request, id string, q Quien) {
+		if err := permitidoInvitar(r.Context(), pool, id); err != nil {
+			errorDe(w, err)
+			return
+		}
+		errorDe(w, Reenviar(r.Context(), pool, sitio, id, q, r.PathValue("id")))
 	}))
 	mux.HandleFunc("PUT /v1/panel/plan", con(func(w http.ResponseWriter, r *http.Request, id string, _ Quien) {
 		var b struct{ Plan, Ciclo string }

@@ -179,17 +179,20 @@ func (s *Servicio) VolverOAuth(ctx context.Context, proveedor, codigo, estado st
 	if perfil.Sujeto == "" {
 		return IngresoSocial{}, errors.New("oauth: el perfil no trae id")
 	}
-	return s.entrarConPerfil(ctx, proveedor, perfil, cl)
+	return s.entrarConPerfil(ctx, proveedor, perfil, cl, "")
 }
 
-func (s *Servicio) entrarConPerfil(ctx context.Context, proveedor string, perfil Perfil, cl Cliente) (IngresoSocial, error) {
+// entrarConPerfil: la identidad vinculada entra; si no, se vincula por email o se crea la cuenta.
+// invitacion (opcional) es el token de una invitación al equipo de una tienda: una cuenta que ya
+// existe entra y queda sumada; una nueva se crea sin tienda propia y queda sumada a esa.
+func (s *Servicio) entrarConPerfil(ctx context.Context, proveedor string, perfil Perfil, cl Cliente, invitacion string) (IngresoSocial, error) {
 	var usuario string
 	err := s.Pool.QueryRow(ctx, `SELECT usuario_id FROM auth.identidades WHERE proveedor = $1 AND sujeto = $2`,
 		proveedor, perfil.Sujeto).Scan(&usuario)
 	if err == nil {
 		s.ponerFoto(ctx, usuario, perfil.Foto)
 		ses, err := s.sesionDeUsuario(ctx, usuario, SesionLarga, cl)
-		return IngresoSocial{Sesion: ses}, err
+		return IngresoSocial{Sesion: s.conInvitacion(ctx, ses, err, invitacion)}, err
 	}
 	if !errors.Is(err, pgx.ErrNoRows) {
 		return IngresoSocial{}, err
@@ -214,7 +217,7 @@ func (s *Servicio) entrarConPerfil(ctx context.Context, proveedor string, perfil
 		}
 		s.ponerFoto(ctx, usuario, perfil.Foto)
 		ses, err := s.sesionDeUsuario(ctx, usuario, SesionLarga, cl)
-		return IngresoSocial{Sesion: ses}, err
+		return IngresoSocial{Sesion: s.conInvitacion(ctx, ses, err, invitacion)}, err
 	case !errors.Is(err, pgx.ErrNoRows):
 		return IngresoSocial{}, err
 	}
@@ -231,7 +234,17 @@ func (s *Servicio) entrarConPerfil(ctx context.Context, proveedor string, perfil
 	}
 	var ses Sesion
 	err = s.Pool.EnTx(ctx, func(tx pgx.Tx) error {
-		u, tiendaID, err := crearCuenta(ctx, tx, email, nombre, nil, "La tienda de "+strings.Fields(nombre)[0])
+		var u, tiendaID string
+		var err error
+		if invitacion != "" {
+			// Invitada: la cuenta sin tienda propia, sumada a la de la invitación.
+			if err = tx.QueryRow(ctx, `INSERT INTO auth.usuarios (email, nombre) VALUES ($1, $2) RETURNING id::text`, email, nombre).Scan(&u); err != nil {
+				return err
+			}
+			tiendaID, err = sumar(ctx, tx, u, invitacion)
+		} else {
+			u, tiendaID, err = crearCuenta(ctx, tx, email, nombre, nil, "La tienda de "+strings.Fields(nombre)[0])
+		}
 		if err != nil {
 			return err
 		}
@@ -252,10 +265,27 @@ func (s *Servicio) entrarConPerfil(ctx context.Context, proveedor string, perfil
 		ses, err = crearSesion(ctx, tx, u, tiendaID, SesionLarga, cl)
 		return err
 	})
+	if invitacion != "" {
+		return IngresoSocial{Sesion: ses}, err
+	}
 	if err == nil {
 		s.bienvenida(ctx, email, nombre, "La tienda de "+strings.Fields(nombre)[0])
 	}
 	return IngresoSocial{Sesion: ses, Nueva: err == nil}, err
+}
+
+// conInvitacion: después de entrar a una cuenta que ya existía, usa la invitación (si hay) y deja
+// la sesión en esa tienda. Si la invitación ya no sirve, se entra igual a la cuenta.
+func (s *Servicio) conInvitacion(ctx context.Context, ses Sesion, err error, invitacion string) Sesion {
+	if err != nil || invitacion == "" {
+		return ses
+	}
+	if t, e := s.AceptarInvitacion(ctx, ses.Token, invitacion); e == nil {
+		ses.TiendaID = t
+	} else {
+		slog.Info("cuentas: la invitación no se pudo usar al entrar", "error", e)
+	}
+	return ses
 }
 
 // ponerFoto guarda la foto del proveedor si cambió. Es un detalle: si falla, se entra igual.

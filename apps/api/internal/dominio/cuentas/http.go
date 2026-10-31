@@ -143,6 +143,7 @@ func (s *Servicio) Rutas(mux *http.ServeMux, claveBFF string) {
 		}
 		escribir(w, http.StatusOK, d)
 	})
+	s.rutasEquipo(mux, claveBFF)
 	mux.HandleFunc("POST /v1/auth/recuperar", func(w http.ResponseWriter, r *http.Request) {
 		var a struct{ Email, Telefono string }
 		if !leer(w, r, &a) {
@@ -185,6 +186,80 @@ func (s *Servicio) Rutas(mux *http.ServeMux, claveBFF string) {
 	})
 }
 
+// rutasEquipo: las tiendas de la persona y las invitaciones al equipo de una tienda.
+func (s *Servicio) rutasEquipo(mux *http.ServeMux, claveBFF string) {
+	mux.HandleFunc("GET /v1/auth/tiendas", func(w http.ResponseWriter, r *http.Request) {
+		d, ok := SesionDe(r)
+		if !ok || d.TiendaID == "" {
+			problema.Escribir(w, problema.SinSesion())
+			return
+		}
+		a, err := s.AccesoDe(r.Context(), d)
+		if err != nil {
+			escribirError(w, err)
+			return
+		}
+		escribir(w, http.StatusOK, a)
+	})
+	mux.HandleFunc("PUT /v1/auth/tienda", func(w http.ResponseWriter, r *http.Request) {
+		var a struct {
+			TiendaID string `json:"tiendaId"`
+		}
+		if _, ok := SesionDe(r); !ok {
+			problema.Escribir(w, problema.SinSesion())
+			return
+		}
+		if !leer(w, r, &a) {
+			return
+		}
+		if err := s.ElegirTienda(r.Context(), token(r), a.TiendaID); err != nil {
+			escribirError(w, err)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	})
+	mux.HandleFunc("POST /v1/auth/invitacion", func(w http.ResponseWriter, r *http.Request) {
+		var a struct{ Token string }
+		if !leer(w, r, &a) {
+			return
+		}
+		inv, err := s.VerInvitacion(r.Context(), a.Token)
+		if err != nil {
+			escribirError(w, err)
+			return
+		}
+		escribir(w, http.StatusOK, inv)
+	})
+	mux.HandleFunc("POST /v1/auth/invitacion/aceptar", func(w http.ResponseWriter, r *http.Request) {
+		var a struct{ Token string }
+		if _, ok := SesionDe(r); !ok {
+			problema.Escribir(w, problema.SinSesion())
+			return
+		}
+		if !leer(w, r, &a) {
+			return
+		}
+		t, err := s.AceptarInvitacion(r.Context(), token(r), a.Token)
+		if err != nil {
+			escribirError(w, err)
+			return
+		}
+		escribir(w, http.StatusOK, map[string]string{"tiendaId": t})
+	})
+	mux.HandleFunc("POST /v1/auth/invitacion/registro", func(w http.ResponseWriter, r *http.Request) {
+		var a struct{ Token, Nombre, Clave string }
+		if !leer(w, r, &a) {
+			return
+		}
+		ses, err := s.RegistrarConInvitacion(r.Context(), a.Token, a.Nombre, a.Clave, ClienteDe(r, claveBFF))
+		if err != nil {
+			escribirError(w, err)
+			return
+		}
+		escribir(w, http.StatusCreated, ses)
+	})
+}
+
 // rutasSociales: proveedores OAuth y link por WhatsApp.
 func (s *Servicio) rutasSociales(mux *http.ServeMux, claveBFF string) {
 	mux.HandleFunc("GET /v1/auth/proveedores", func(w http.ResponseWriter, _ *http.Request) {
@@ -212,11 +287,11 @@ func (s *Servicio) rutasSociales(mux *http.ServeMux, claveBFF string) {
 	})
 	// Token de sesión de Clerk (web o app de iPhone) → sesión de Tu Local Web.
 	mux.HandleFunc("POST /v1/auth/clerk", func(w http.ResponseWriter, r *http.Request) {
-		var a struct{ Token string }
+		var a struct{ Token, Invitacion string }
 		if !leer(w, r, &a) {
 			return
 		}
-		res, err := s.IngresarConClerk(r.Context(), a.Token, ClienteDe(r, claveBFF))
+		res, err := s.IngresarConClerkInvitada(r.Context(), a.Token, a.Invitacion, ClienteDe(r, claveBFF))
 		if err != nil {
 			escribirError(w, err)
 			return
@@ -293,6 +368,10 @@ func escribirError(w http.ResponseWriter, err error) {
 		p := problema.SinSesion()
 		p.Codigo, p.Titulo, p.Detalle = "clerk_token_invalido", "No pudimos ingresar", "El ingreso venció o no es válido. Probá de nuevo."
 		problema.Escribir(w, p)
+	case errors.Is(err, ErrSinSesion):
+		problema.Escribir(w, problema.SinSesion())
+	case errors.Is(err, ErrNoEsTuya):
+		problema.Escribir(w, problema.NoEncontrado("No sos parte de esa tienda."))
 	case errors.Is(err, ErrTokenInvalido):
 		problema.Escribir(w, problema.NoProcesable("link_invalido", "El link venció o ya se usó. Pedí uno nuevo."))
 	default:

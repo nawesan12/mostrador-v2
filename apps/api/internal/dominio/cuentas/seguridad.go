@@ -175,7 +175,7 @@ func (s *Servicio) avisarIngreso(ctx context.Context, tx pgx.Tx, usuario string,
 	return err
 }
 
-// Manejadores del worker: el mail de cada ingreso. sitio arma el link a Configuración › Seguridad.
+// Manejadores del worker: el mail de cada ingreso y el de las invitaciones al equipo. sitio arma el link a Configuración › Seguridad.
 func Manejadores(c correo.Correo, sitio string) map[string]outbox.Manejador {
 	return map[string]outbox.Manejador{
 		"cuenta.ingreso": func(ctx context.Context, e outbox.Evento) error {
@@ -185,6 +185,15 @@ func Manejadores(c correo.Correo, sitio string) map[string]outbox.Manejador {
 				return nil // reintentar no lo arregla
 			}
 			return c.Enviar(ctx, mailIngreso(d, sitio+"/panel/configuracion?tab=seguridad"))
+		},
+		// La invitación al equipo de una tienda (configuracion.Invitar y Reenviar). El link viene armado.
+		"cuenta.invitacion": func(ctx context.Context, e outbox.Evento) error {
+			var d MailInvitacion
+			if err := json.Unmarshal(e.Datos, &d); err != nil || d.Para == "" || d.Link == "" {
+				slog.Error("cuenta.invitacion: datos ilegibles", "evento", e.ID, "error", err)
+				return nil
+			}
+			return c.Enviar(ctx, mailInvitacion(d))
 		},
 	}
 }

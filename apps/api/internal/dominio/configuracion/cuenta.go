@@ -4,79 +4,41 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"slices"
 	"time"
 
 	"github.com/jackc/pgx/v5"
+
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/roles"
 )
-
-var roles = []string{"duenio", "admin", "ventas", "deposito"}
-
-// Permiso: los mismos que el panel (lib/panel/permisos.ts).
-type permiso struct {
-	ID, Titulo, Detalle string
-	Def                 [4]bool
-}
-
-var permisos = []permiso{
-	{"ventas", "Ver ventas y pedidos", "Lista de pedidos y clientes", [4]bool{true, true, true, true}},
-	{"productos", "Editar productos y precios", "Incluye stock e importaciones", [4]bool{true, true, false, true}},
-	{"whatsapp", "Responder WhatsApp", "Y aprobar respuestas de Tincho", [4]bool{true, true, true, false}},
-	{"despachar", "Preparar y despachar", "Etiquetas y cambios de estado", [4]bool{true, true, true, true}},
-	{"finanzas", "Ver finanzas", "Saldo, liquidaciones y Caja", [4]bool{true, true, false, false}},
-	{"facturas", "Emitir facturas", "Factura A, B y C ante ARCA", [4]bool{true, true, true, false}},
-	{"diseno", "Cambiar diseño de la tienda", "Plantilla, colores y secciones", [4]bool{true, true, false, false}},
-	{"cuenta", "Plan, usuarios y datos", "Solo el dueño puede cambiarlo", [4]bool{true, false, false, false}},
-}
-
-func fijo(p, rol string) bool { return rol == "duenio" || p == "cuenta" }
 
 func mes(t time.Time) string { return t.In(time.FixedZone("ART", -3*3600)).Format("2006-01") }
 
-// Permisos devuelve la matriz.
-func Permisos(ctx context.Context, pool tx, tiendaID string) ([]map[string]any, error) {
-	var cambios map[string]bool
-	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		return t.QueryRow(ctx, `SELECT permisos FROM tiendas WHERE id = $1`, tiendaID).Scan(&cambios)
-	})
-	out := []map[string]any{}
-	for _, p := range permisos {
-		r := map[string]bool{}
-		for i, rol := range roles {
-			r[rol] = p.Def[i]
-			if v, ok := cambios[p.ID+":"+rol]; ok && !fijo(p.ID, rol) {
-				r[rol] = v
-			}
-		}
-		out = append(out, map[string]any{"id": p.ID, "titulo": p.Titulo, "detalle": p.Detalle, "roles": r})
-	}
-	return out, err
-}
-
-// FijarPermiso cambia una celda de la matriz.
-func FijarPermiso(ctx context.Context, pool tx, tiendaID, p, rol string, activo bool) error {
-	if !slices.ContainsFunc(permisos, func(x permiso) bool { return x.ID == p }) || !slices.Contains(roles, rol) {
-		return ErrNoExiste
-	}
-	if fijo(p, rol) {
-		return ErrNoSePuede
-	}
-	return pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		_, err := t.Exec(ctx, `UPDATE tiendas SET permisos = permisos || jsonb_build_object($2::text, $3::boolean) WHERE id = $1`,
-			tiendaID, p+":"+rol, activo)
+// esDuenia: ErrDuenia si id es la dueña de la tienda.
+func esDuenia(ctx context.Context, t pgx.Tx, tiendaID, id string) error {
+	var es bool
+	if err := t.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM auth.membresias WHERE tienda_id = $1 AND usuario_id::text = $2 AND rol = 'duenio')`,
+		tiendaID, id).Scan(&es); err != nil {
 		return err
-	})
+	}
+	if es {
+		return ErrDuenia
+	}
+	return nil
 }
 
-// CambiarRol: a nadie se le da ni se le saca el rol de dueño, y uno no se cambia a sí mismo.
+// CambiarRol: a nadie se le da ni se le saca el rol de dueña, y una no se cambia a sí misma. Vale
+// para alguien del equipo o para una invitación pendiente.
 func CambiarRol(ctx context.Context, pool tx, tiendaID string, q Quien, id, rol string) error {
-	if !slices.Contains([]string{"admin", "ventas", "deposito"}, rol) {
+	if !roles.Invitable(rol) {
 		return ErrInvalido
 	}
 	if id == q.UsuarioID {
-		return ErrNoSePuede
+		return ErrVos
 	}
 	return pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		if err := esDuenia(ctx, t, tiendaID, id); err != nil {
+			return err
+		}
 		tag, err := t.Exec(ctx, `UPDATE auth.membresias SET rol = $3 WHERE tienda_id = $1 AND usuario_id::text = $2 AND rol <> 'duenio'`,
 			tiendaID, id, rol)
 		if err != nil {
@@ -93,12 +55,16 @@ func CambiarRol(ctx context.Context, pool tx, tiendaID string, q Quien, id, rol 
 	})
 }
 
-// Quitar saca a alguien del equipo (y le cierra las sesiones) o retira la invitación.
+// Quitar saca a alguien del equipo (y le cierra las sesiones que tenía abiertas en esta tienda) o
+// cancela la invitación (su link deja de valer). A la dueña no se la quita.
 func Quitar(ctx context.Context, pool tx, tiendaID string, q Quien, id string) error {
 	if id == q.UsuarioID {
-		return ErrNoSePuede
+		return ErrVos
 	}
 	return pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		if err := esDuenia(ctx, t, tiendaID, id); err != nil {
+			return err
+		}
 		tag, err := t.Exec(ctx, `DELETE FROM auth.membresias WHERE tienda_id = $1 AND usuario_id::text = $2 AND rol <> 'duenio'`, tiendaID, id)
 		if err != nil {
 			return err
@@ -218,18 +184,6 @@ func rutasCuenta(mux *http.ServeMux, pool tx, con func(func(http.ResponseWriter,
 			_, err := t.Exec(r.Context(), `UPDATE tiendas SET cancelada_en = NULL WHERE id = $1`, id)
 			return err
 		}))
-	}))
-	mux.HandleFunc("GET /v1/panel/permisos", con(func(w http.ResponseWriter, r *http.Request, id string, _ Quien) {
-		v, err := Permisos(r.Context(), pool, id)
-		escribir(w, map[string]any{"permisos": v}, err)
-	}))
-	mux.HandleFunc("PUT /v1/panel/permisos/{permiso}/{rol}", con(func(w http.ResponseWriter, r *http.Request, id string, _ Quien) {
-		var b struct {
-			Activo bool `json:"activo"`
-		}
-		if leer(w, r, &b) {
-			errorDe(w, FijarPermiso(r.Context(), pool, id, r.PathValue("permiso"), r.PathValue("rol"), b.Activo))
-		}
 	}))
 	mux.HandleFunc("PUT /v1/panel/equipo/{id}", con(func(w http.ResponseWriter, r *http.Request, id string, q Quien) {
 		var b struct{ Rol string }

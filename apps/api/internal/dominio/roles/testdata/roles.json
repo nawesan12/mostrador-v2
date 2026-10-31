@@ -1,0 +1,6 @@
+{
+	"duenio": ["panel", "pedidos", "clientes", "productos", "catalogo", "finanzas", "tienda", "cuenta"],
+	"admin": ["panel", "pedidos", "clientes", "productos", "catalogo", "finanzas", "tienda"],
+	"ventas": ["panel", "pedidos", "clientes", "productos"],
+	"local": ["panel", "pedidos"]
+}

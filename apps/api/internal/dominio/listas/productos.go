@@ -32,6 +32,9 @@ type Editable struct {
 	Opciones []Opcion `json:"opciones"`
 	// Variantes: sólo las combinaciones que se quieren tocar; las demás se conservan o se generan.
 	Variantes []VarianteEditable `json:"variantes"`
+	// SinPrecios: quien guarda no puede tocar precios ni costos (rol Ventas, docs/decisiones.md §36):
+	// quedan los que había, también los de las variantes. No viene del cliente.
+	SinPrecios bool `json:"-"`
 }
 
 // Producto es la ficha (components/schemas/Producto).
@@ -171,14 +174,15 @@ func GuardarEnTx(ctx context.Context, t pgx.Tx, tiendaID, id string, e Editable)
 			return "", err
 		}
 	} else if _, err := t.Exec(ctx, `UPDATE productos SET nombre = $3, descripcion = coalesce($4, descripcion),
-			categoria = $5, precio = $6, costo = coalesce($7, costo), sku = coalesce($8, sku),
+			categoria = $5, precio = CASE WHEN $14 THEN precio ELSE $6 END,
+			costo = CASE WHEN $14 THEN costo ELSE coalesce($7, costo) END, sku = coalesce($8, sku),
 			stock = coalesce($9, stock), foto = $10, canales = $11, publicado = true, fotos = $12, opciones = $13
 		WHERE tienda_id = $1 AND id::text = $2`,
 		tiendaID, id, strings.TrimSpace(e.Nombre), e.Descripcion, e.Categoria, e.Precio, e.Costo, e.SKU, stock, foto, canales,
-		fotos, opciones); err != nil {
+		fotos, opciones, e.SinPrecios); err != nil {
 		return "", err
 	}
-	if err := sincronizarVariantes(ctx, t, tiendaID, id, opciones, fotos, e.Variantes); err != nil {
+	if err := sincronizarVariantes(ctx, t, tiendaID, id, opciones, fotos, e.Variantes, e.SinPrecios); err != nil {
 		return "", err
 	}
 	if len(opciones) == 0 {

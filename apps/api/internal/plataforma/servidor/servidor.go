@@ -27,6 +27,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/partners"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/precios"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/roles"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/tiendas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/turnos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ventas"
@@ -119,6 +120,11 @@ func Nuevo(d Dependencias) http.Handler {
 				d.Cuentas.SesionEquipo = d.Equipo.ParaCuentas
 				conGuardia = equipo.SoloLectura(conGuardia)
 			}
+			// El rol de cada persona del equipo, en cada ruta del panel (docs/decisiones.md §36).
+			conGuardia = roles.Guardia(func(r *http.Request) (string, bool) {
+				s, ok := cuentas.SesionDe(r)
+				return s.Rol, ok && s.TiendaID != ""
+			}, conGuardia)
 			h = d.Cuentas.Autenticar(conGuardia)
 		}
 		tiendas.Rutas(mux, d.App, tienda)

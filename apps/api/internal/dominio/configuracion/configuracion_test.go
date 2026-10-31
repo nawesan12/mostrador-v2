@@ -35,7 +35,7 @@ func TestConfiguracion(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	q := configuracion.Quien{UsuarioID: usuario, SesionID: "aaaaaaaaaaaaaaaa"}
+	q := configuracion.Quien{UsuarioID: usuario, SesionID: "aaaaaaaaaaaaaaaa", Rol: "duenio"}
 	geo := lugares{"190.210.32.1": "Ciudad de Buenos Aires"}
 	c, err := configuracion.Leer(ctx, b.App, geo, id, q, time.Now())
 	if err != nil {
@@ -90,10 +90,10 @@ func TestConfiguracion(t *testing.T) {
 	if err := configuracion.CerrarSesion(ctx, b.App, id, q, "bbbbbbbbbbbbbbbb"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := configuracion.Invitar(ctx, b.App, id, "vale@luna.com", "ventas"); !errors.Is(err, configuracion.ErrRepetido) {
+	if _, err := configuracion.Invitar(ctx, b.App, "https://tulocalweb.test", id, q, "vale@luna.com", "ventas"); !errors.Is(err, configuracion.ErrRepetido) {
 		t.Fatalf("invitó a alguien del equipo: %v", err)
 	}
-	if _, err := configuracion.Invitar(ctx, b.App, id, "juli@mail.com", "deposito"); err != nil {
+	if _, err := configuracion.Invitar(ctx, b.App, "https://tulocalweb.test", id, q, "juli@mail.com", "local"); err != nil {
 		t.Fatal(err)
 	}
 	if err := configuracion.GuardarNegocio(ctx, b.App, id, configuracion.Negocio{Nombre: "Luna Deco", Horario: "9 a 18"}); err != nil {

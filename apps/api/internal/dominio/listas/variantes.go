@@ -173,7 +173,8 @@ func limpiarFotos(fs []string) ([]string, error) {
 // sincronizarVariantes deja en la base una variante por combinación: las que siguen conservan stock,
 // precio, SKU y foto; las nuevas arrancan con stock 0 y activas; las que ya no existen se borran
 // (los pedidos guardaron el texto). Lo que manda el editor pisa lo que había.
-func sincronizarVariantes(ctx context.Context, t pgx.Tx, tiendaID, productoID string, opciones []Opcion, fotos []string, editadas []VarianteEditable) error {
+func sincronizarVariantes(ctx context.Context, t pgx.Tx, tiendaID, productoID string, opciones []Opcion, fotos []string,
+	editadas []VarianteEditable, sinPrecios bool) error {
 	pedidas := map[string]VarianteEditable{}
 	for _, e := range editadas {
 		k := clave(opciones, e.Valores)
@@ -236,7 +237,10 @@ func sincronizarVariantes(ctx context.Context, t pgx.Tx, tiendaID, productoID st
 			if e.SKU != nil {
 				v.SKU = strings.TrimSpace(*e.SKU)
 			}
-			v.Precio, v.Foto = e.Precio, e.Foto
+			if !sinPrecios {
+				v.Precio = e.Precio
+			}
+			v.Foto = e.Foto
 			if e.Stock != nil {
 				v.Stock = *e.Stock
 			}

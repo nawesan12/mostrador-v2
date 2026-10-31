@@ -6,8 +6,30 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/roles"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
+
+// conPrecios dice si la sesión puede ver y tocar precios y costos (roles.Catalogo). Sin sesión en
+// el contexto (tests del paquete con otra forma de dar la tienda), sí.
+func conPrecios(r *http.Request) bool {
+	d, ok := cuentas.SesionDe(r)
+	return !ok || roles.Puede(d.Rol, roles.Catalogo)
+}
+
+// sinCostos saca el costo y lo que sale de él (margen, valor del stock) de una lista de productos
+// o de inventario, para quien no tiene Catalogo.
+func sinCostos(l Lista) Lista {
+	for _, r := range l.Filas {
+		delete(r, "costo")
+		delete(r, "margen")
+		delete(r, "lowm")
+	}
+	delete(l.Resumen, "valor")
+	delete(l.Resumen, "valorTotal")
+	return l
+}
 
 func escribir(w http.ResponseWriter, v any) {
 	w.Header().Set("Content-Type", "application/json")
@@ -72,7 +94,11 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, fact 
 			problema.Escribir(w, problema.Interno())
 			return
 		}
-		escribir(w, sinInternos(Aplicar(regs, def, f)))
+		l := sinInternos(Aplicar(regs, def, f))
+		if lista := r.PathValue("lista"); (lista == "productos" || lista == "inventario") && !conPrecios(r) {
+			l = sinCostos(l)
+		}
+		escribir(w, l)
 	}))
 	mux.HandleFunc("POST /v1/panel/listas/{lista}/acciones", con(func(w http.ResponseWriter, r *http.Request, id string) {
 		var c struct {
@@ -94,6 +120,10 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, fact 
 			case "pausar":
 				n, err = Publicar(r.Context(), pool, id, c.IDs, false)
 			case "precio":
+				if !conPrecios(r) {
+					problema.Escribir(w, problema.SinPermiso(roles.Mensaje(roles.Catalogo)))
+					return
+				}
 				var pct float64
 				_ = json.Unmarshal(c.Valor, &pct)
 				n, err = Precio(r.Context(), pool, id, c.IDs, pct)
@@ -171,6 +201,7 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, fact 
 			problema.Escribir(w, problema.Invalido("Mandá el producto."))
 			return
 		}
+		e.SinPrecios = !conPrecios(r)
 		p, err := Guardar(r.Context(), pool, tiendaID, id, e)
 		switch {
 		case errors.Is(err, ErrNoExiste):
@@ -220,6 +251,9 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, fact 
 		case err != nil:
 			problema.Escribir(w, problema.Interno())
 		default:
+			if !conPrecios(r) {
+				p.Costo = 0
+			}
 			escribir(w, p)
 		}
 	}))
