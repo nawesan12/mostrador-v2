@@ -10,8 +10,17 @@ export type EventoTR = { tipo: string; id?: string; lote?: boolean };
 /** Lo que se recarga, por familia de evento (el prefijo del tipo). */
 const RECARGA: Record<string, readonly string[]> = {
 	// Un pedido toca el Inicio (pedidos, para hacer, caja), las insignias, la lista y el detalle,
-	// la ficha del cliente y las finanzas.
-	pedido: ['pedidos', 'resumen', 'tablero', 'clientes', 'finanzas', 'parahacer'],
+	// los clientes (salen de quien compra), envíos, facturación y finanzas.
+	pedido: [
+		'pedidos',
+		'resumen',
+		'tablero',
+		'clientes',
+		'envios',
+		'facturacion',
+		'finanzas',
+		'parahacer'
+	],
 	pago: ['pedidos', 'resumen', 'tablero', 'finanzas'],
 	producto: ['productos', 'inventario', 'pos', 'tablero'],
 	cliente: ['clientes'],

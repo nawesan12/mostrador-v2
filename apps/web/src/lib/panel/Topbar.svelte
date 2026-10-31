@@ -216,10 +216,15 @@
 			display: none;
 		}
 		/* Sin conexión se ve también en el celular (es lo único de este cartel que importa ahí). */
+		/* En el celular no le saca lugar a la barra: va debajo, centrado. */
 		.en-linea.caida {
 			display: flex;
-			padding: 7px 10px;
-			font-size: 12px;
+			position: absolute;
+			top: 58px;
+			left: 50%;
+			transform: translateX(-50%);
+			padding: 6px 12px;
+			font-size: 12.5px;
 		}
 	}
 </style>

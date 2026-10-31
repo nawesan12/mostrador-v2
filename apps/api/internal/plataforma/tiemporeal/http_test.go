@@ -424,3 +424,29 @@ func TestOrigenPermitido(t *testing.T) {
 		}
 	}
 }
+
+// El http.Server de la API tiene plazos de lectura y escritura de segundos: la conexión del
+// WebSocket los saca al tomar la conexión, si no se cortaría sola.
+func TestSobreviveALosPlazosDelServidor(t *testing.T) {
+	h := NuevoHub()
+	h.Ventana = 20 * time.Millisecond
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go h.Correr(ctx)
+	ses := &sesiones{m: map[string]Quien{"ana": {Usuario: "u", Sesion: "s", Tienda: "sol", Rol: "duenio", VenceEn: time.Now().Add(time.Hour)}}}
+	mux := http.NewServeMux()
+	Rutas(mux, Config{Hub: h, Autenticar: ses.autenticar, Origenes: []string{sitio}, Ping: time.Hour})
+	srv := httptest.NewUnstartedServer(mux)
+	srv.Config.ReadTimeout = 150 * time.Millisecond
+	srv.Config.WriteTimeout = 150 * time.Millisecond
+	srv.Start()
+	defer srv.Close()
+	c, _, err := conectar(t, wsURL(srv, "/v1/tiempo-real"), conCookie("ana", sitio))
+	if err != nil {
+		t.Fatal(err)
+	}
+	c.esperar(t, TipoHola)
+	time.Sleep(500 * time.Millisecond)
+	h.Publicar(Evento{Tienda: "sol", Tipo: "pedido.nuevo", ID: "1"})
+	c.esperar(t, "pedido.nuevo")
+}
