@@ -3226,15 +3226,16 @@ components:
       type: object
       required: [ventasPorDia, productos, clientes, canales30d]
       properties:
+        montos: { type: boolean, description: 'false: el rol no ve montos y no vienen las ventas en pesos' }
         ventasPorDia:
           type: array
           description: 'Últimos 14 días, del más viejo a hoy (hora de Argentina)'
           items:
             type: object
-            required: [fecha, ventas, pedidos]
+            required: [fecha, pedidos]
             properties:
               fecha: { type: string, format: date }
-              ventas: { type: integer }
+              ventas: { type: integer, description: 'No viene sin montos' }
               pedidos: { type: integer }
         productos:
           type: array
@@ -3260,10 +3261,11 @@ components:
           type: array
           items:
             type: object
-            required: [canal, ventas]
+            required: [canal, pedidos]
             properties:
               canal: { type: string }
-              ventas: { type: integer }
+              ventas: { type: integer, description: 'No viene sin montos' }
+              pedidos: { type: integer }
         visitas:
           type: object
           description: 'Visitas de la tienda online (medición propia, sin cookies). No viene si todavía no se mide ninguna.'
@@ -4401,12 +4403,18 @@ components:
             el: { type: string, format: date-time }
     Tablero:
       type: object
-      required: [periodo, desde, hasta, hola, ventas, serie, kpis, canales, meta, avisos, ultimosPedidos, paraHacer, enVivo, caja, liquidaciones, hornero, bandeja, integraciones, masVendidos, resenas, envios]
+      description: >-
+        Con montos en false (roles sin el permiso finanzas: Ventas y Local) no vienen los montos de dinero:
+        ventas, serie, kpis.ticket, canales, meta, caja, liquidaciones, paraHacer.transferenciasMonto,
+        enVivo.carritosMonto, hornero.carritosMonto, el total de ultimosPedidos ni la integración mp.
+        Se omiten, no van en cero.
+      required: [periodo, desde, hasta, hola, montos, kpis, avisos, ultimosPedidos, paraHacer, enVivo, hornero, bandeja, integraciones, masVendidos, resenas, envios]
       properties:
         periodo: { type: string, enum: [hoy, 7d, 30d] }
         desde: { type: string, format: date-time }
         hasta: { type: string, format: date-time }
         hola: { type: [string, 'null'], description: 'Nombre de pila de quien entra' }
+        montos: { type: boolean, description: 'Si vienen los montos de dinero (false: el rol no ve finanzas)' }
         ventas: { $ref: '#/components/schemas/Comparado' }
         serie:
           type: object
@@ -4417,7 +4425,7 @@ components:
             anterior: { type: array, items: { type: number } }
         kpis:
           type: object
-          required: [pedidos, ticket, conversion, clientesNuevos]
+          required: [pedidos, conversion, clientesNuevos]
           properties:
             pedidos: { $ref: '#/components/schemas/Comparado' }
             ticket: { $ref: '#/components/schemas/Comparado' }
@@ -4449,7 +4457,7 @@ components:
           items: { $ref: '#/components/schemas/PedidoBreve' }
         paraHacer:
           type: object
-          required: [preparar, chats, chatMasViejoMin, transferencias, transferenciasMonto, sinStock, sinStockEnMl]
+          required: [preparar, chats, chatMasViejoMin, transferencias, sinStock, sinStockEnMl]
           properties:
             preparar: { type: integer }
             chats: { type: integer }
@@ -4460,7 +4468,7 @@ components:
             sinStockEnMl: { type: integer }
         enVivo:
           type: object
-          required: [personas, paginas, carritos, carritosMonto]
+          required: [personas, paginas, carritos]
           properties:
             personas: { type: integer }
             paginas:
@@ -4499,7 +4507,7 @@ components:
               monto: { type: integer }
         hornero:
           type: object
-          required: [chatsHoy, ideas, carritos, carritosMonto, costoMensaje, recordados, audiencia, ideasHechas]
+          required: [chatsHoy, ideas, carritos, costoMensaje, recordados, audiencia, ideasHechas]
           properties:
             chatsHoy: { type: integer }
             ideas: { type: integer }
@@ -4726,14 +4734,14 @@ components:
                   hecho: { type: boolean }
     PedidoBreve:
       type: object
-      required: [numero, cliente, foto, canal, estado, total, creado]
+      required: [numero, cliente, foto, canal, estado, creado]
       properties:
         numero: { type: integer }
         cliente: { type: string }
         foto: { type: [string, 'null'] }
         canal: { type: string }
         estado: { $ref: '#/components/schemas/EstadoPedido' }
-        total: { type: integer }
+        total: { type: integer, description: 'No viene sin montos' }
         creado: { type: string, format: date-time }
     Notificacion:
       type: object

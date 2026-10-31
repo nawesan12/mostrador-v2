@@ -21,8 +21,10 @@
 
 	type Inicio = {
 		hola: string | null;
-		ventasHoy: number;
-		ventasAyer: number;
+		pedidosHoy: number;
+		/** No vienen si el rol no ve montos (Ventas, Local). */
+		ventasHoy?: number;
+		ventasAyer?: number;
 		ideas: IdeaHornero[];
 	};
 	let inicio = $state<Inicio | null>(null);
@@ -115,7 +117,8 @@
 	const encabezado = $derived.by(() => {
 		if (!inicio) return null;
 		const nombre = inicio.hola ? `, ${inicio.hola}` : '';
-		const v = variacion(inicio.ventasHoy, inicio.ventasAyer);
+		const v =
+			inicio.ventasHoy === undefined ? null : variacion(inicio.ventasHoy, inicio.ventasAyer ?? 0);
 		const pend = inicio.ideas.filter((i) => !i.hecha).length;
 		const comp = !v
 			? ''
@@ -131,7 +134,8 @@
 				: `Encontré ${pend === 1 ? 'una cosa' : `${pend} cosas`} para hacer:`;
 		return {
 			saludo: `${saludo(new Date())}${nombre}.`,
-			ventas: pesos(inicio.ventasHoy),
+			ventas: inicio.ventasHoy === undefined ? null : pesos(inicio.ventasHoy),
+			pedidos: `${inicio.pedidosHoy} ${inicio.pedidosHoy === 1 ? 'pedido' : 'pedidos'}`,
 			comp,
 			cierre
 		};
@@ -158,7 +162,11 @@
 			<div class="lista" bind:this={lista} aria-live="polite">
 				{#if encabezado}
 					<div class="globo hornero">
-						{encabezado.saludo} Hoy vendiste <b>{encabezado.ventas}</b>{encabezado.comp}. {encabezado.cierre}
+						{#if encabezado.ventas}
+							{encabezado.saludo} Hoy vendiste <b>{encabezado.ventas}</b>{encabezado.comp}. {encabezado.cierre}
+						{:else}
+							{encabezado.saludo} Hoy entraron <b>{encabezado.pedidos}</b>. {encabezado.cierre}
+						{/if}
 					</div>
 					{#each inicio?.ideas ?? [] as idea (idea.id)}
 						<div class="idea">

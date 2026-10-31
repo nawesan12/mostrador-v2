@@ -3153,11 +3153,14 @@ export interface components {
             anterior: number;
         };
         ContextoHornero: {
+            /** @description false: el rol no ve montos y no vienen las ventas en pesos */
+            montos?: boolean;
             /** @description Últimos 14 días, del más viejo a hoy (hora de Argentina) */
             ventasPorDia: {
                 /** Format: date */
                 fecha: string;
-                ventas: number;
+                /** @description No viene sin montos */
+                ventas?: number;
                 pedidos: number;
             }[];
             productos: {
@@ -3177,7 +3180,9 @@ export interface components {
             };
             canales30d: {
                 canal: string;
-                ventas: number;
+                /** @description No viene sin montos */
+                ventas?: number;
+                pedidos: number;
             }[];
             /** @description Visitas de la tienda online (medición propia, sin cookies). No viene si todavía no se mide ninguna. */
             visitas?: {
@@ -4218,6 +4223,7 @@ export interface components {
                 el: string;
             } | null;
         };
+        /** @description Con montos en false (roles sin el permiso finanzas: Ventas y Local) no vienen los montos de dinero: ventas, serie, kpis.ticket, canales, meta, caja, liquidaciones, paraHacer.transferenciasMonto, enVivo.carritosMonto, hornero.carritosMonto, el total de ultimosPedidos ni la integración mp. Se omiten, no van en cero. */
         Tablero: {
             /** @enum {string} */
             periodo: "hoy" | "7d" | "30d";
@@ -4227,26 +4233,28 @@ export interface components {
             hasta: string;
             /** @description Nombre de pila de quien entra */
             hola: string | null;
-            ventas: components["schemas"]["Comparado"];
+            /** @description Si vienen los montos de dinero (false: el rol no ve finanzas) */
+            montos: boolean;
+            ventas?: components["schemas"]["Comparado"];
             /** @description Ventas acumuladas en 14 tramos del período, y las del período anterior */
-            serie: {
+            serie?: {
                 actual: number[];
                 anterior: number[];
             };
             kpis: {
                 pedidos: components["schemas"]["Comparado"];
-                ticket: components["schemas"]["Comparado"];
+                ticket?: components["schemas"]["Comparado"];
                 /** @description Porcentaje (3.4 = 3,4 %): pedidos web por cada 100 visitas, por días */
                 conversion: components["schemas"]["Comparado"];
                 clientesNuevos: components["schemas"]["Comparado"];
             };
             /** @description Parte de las ventas del período por canal (web, wa, ml, ig, pos, tg), de mayor a menor */
-            canales: {
+            canales?: {
                 canal: string;
                 /** @description De 0 a 1 */
                 parte: number;
             }[];
-            meta: {
+            meta?: {
                 /** @description 0: sin meta */
                 objetivo: number;
                 /** @description Vendido en el mes */
@@ -4264,7 +4272,7 @@ export interface components {
                 chats: number;
                 chatMasViejoMin: number;
                 transferencias: number;
-                transferenciasMonto: number;
+                transferenciasMonto?: number;
                 sinStock: number;
                 sinStockEnMl: number;
             };
@@ -4275,9 +4283,9 @@ export interface components {
                     personas: number;
                 }[];
                 carritos: number;
-                carritosMonto: number;
+                carritosMonto?: number;
             };
-            caja: {
+            caja?: {
                 /**
                  * Format: date-time
                  * @description Cuándo se abrió hoy (null: cerrada)
@@ -4291,7 +4299,7 @@ export interface components {
                 }[];
             };
             /** @description Lo que se acredita en los próximos 7 días, por medio de pago */
-            liquidaciones: {
+            liquidaciones?: {
                 medio: string;
                 /** Format: date */
                 fecha: string;
@@ -4301,7 +4309,7 @@ export interface components {
                 chatsHoy: number;
                 ideas: number;
                 carritos: number;
-                carritosMonto: number;
+                carritosMonto?: number;
                 /** @description Lo que cuesta cada mensaje de WhatsApp */
                 costoMensaje: number;
                 /** @description Ya se les mandó el recordatorio */
@@ -4501,7 +4509,8 @@ export interface components {
             foto: string | null;
             canal: string;
             estado: components["schemas"]["EstadoPedido"];
-            total: number;
+            /** @description No viene sin montos */
+            total?: number;
             /** Format: date-time */
             creado: string;
         };

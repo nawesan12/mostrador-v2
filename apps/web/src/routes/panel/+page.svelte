@@ -47,6 +47,12 @@
 	 * y los rankings serían todos cero, así que el Inicio muestra sólo lo que sirve para arrancar.
 	 */
 	const sinPedidos = $derived(!data.demo && !t.ultimosPedidos.length);
+	/**
+	 * Ventas y Local no ven montos de dinero (la API no los manda: `montos` en false). Sin montos no
+	 * aparecen las ventas con su gráfico, el ticket, la meta, la caja ni los totales: el Inicio queda
+	 * con las cantidades y lo que hay para hacer.
+	 */
+	const montos = $derived(t.montos);
 	const pasos = $derived(data.pasos);
 	const puedeTienda = $derived(shell.permisos.includes('tienda'));
 	const compartir = () => compartirTienda(ui, data.tienda);
@@ -90,7 +96,7 @@
 	const plural = (n: number, uno: string, varios: string) =>
 		`${n.toLocaleString('es-AR')} ${n === 1 ? uno : varios}`;
 
-	const c = $derived(curva(t.serie.actual, t.serie.anterior));
+	const c = $derived(t.serie ? curva(t.serie.actual, t.serie.anterior) : null);
 	const eje = $derived(
 		Array.from({ length: 5 }, (_, i) => {
 			const d0 = Date.parse(t.desde);
@@ -98,7 +104,8 @@
 			return etiquetaEje(new Date(d0 + ((d1 - d0) * i) / 4), t.periodo);
 		})
 	);
-	const delta = $derived(variacion(t.ventas.actual, t.ventas.anterior));
+	const delta = $derived(t.ventas ? variacion(t.ventas.actual, t.ventas.anterior) : null);
+	const ticket = $derived(t.kpis.ticket);
 	const kpis = $derived([
 		{
 			label: 'Pedidos',
@@ -107,13 +114,17 @@
 			delta: diferencia(t.kpis.pedidos.actual, t.kpis.pedidos.anterior),
 			nota: CONTRA[t.periodo]
 		},
-		{
-			label: 'Ticket promedio',
-			icon: I.phReceipt,
-			valor: pesos(t.kpis.ticket.actual),
-			delta: variacion(t.kpis.ticket.actual, t.kpis.ticket.anterior),
-			nota: CONTRA[t.periodo]
-		},
+		...(ticket
+			? [
+					{
+						label: 'Ticket promedio',
+						icon: I.phReceipt,
+						valor: pesos(ticket.actual),
+						delta: variacion(ticket.actual, ticket.anterior),
+						nota: CONTRA[t.periodo]
+					}
+				]
+			: []),
 		{
 			label: 'Conversión',
 			icon: I.phFunnelSimple,
@@ -173,7 +184,7 @@
 	);
 	const maxVistos = $derived(Math.max(1, ...(visitas?.masVistos ?? []).map((p) => p.vistas)));
 	const metaPct = $derived(
-		t.meta.objetivo ? Math.round((t.meta.actual / t.meta.objetivo) * 100) : 0
+		t.meta?.objetivo ? Math.round((t.meta.actual / t.meta.objetivo) * 100) : 0
 	);
 
 	const accesos = $derived(
@@ -326,7 +337,10 @@
 					'transferencia para confirmar',
 					'transferencias para confirmar'
 				),
-				sub: `${pesos(t.paraHacer.transferenciasMonto)} · marcalas cuando te llegue la plata`,
+				sub:
+					t.paraHacer.transferenciasMonto === undefined
+						? 'Marcalas cuando te llegue la plata'
+						: `${pesos(t.paraHacer.transferenciasMonto)} · marcalas cuando te llegue la plata`,
 				bg: 'rgba(227,169,59,.18)',
 				fg: '#8a5f0e',
 				href: `${rutaDe('Pedidos')}?estado=pago-pendiente`
@@ -390,6 +404,26 @@
 	);
 	const maxVendidos = $derived(Math.max(1, ...t.masVendidos.map((p) => p.unidades)));
 
+	/**
+	 * Sin montos se van la caja y las liquidaciones, y «Envíos de hoy» puede quedar sola en la última
+	 * fila de tres columnas. Se cuentan las celdas de las tarjetas de antes y la de envíos ocupa lo que
+	 * falta de esa fila (o la fila entera) para no dejar huecos.
+	 */
+	const enviosAncho = $derived.by(() => {
+		if (montos) return 1;
+		const celdas = [
+			sinPedidos ? 2 : 3 + (t.ventas ? 2 : 0) + (t.meta ? 1 : 0),
+			1, // visitas o «Ahora en tu tienda»
+			1, // Tincho
+			mide || t.bandeja.length ? 1 : 0,
+			mide || integraciones.length ? 1 : 0,
+			mide || t.masVendidos.length ? 1 : 0,
+			visitas?.desde ? 1 : 0,
+			mide || t.resenas.nuevas.length ? 1 : 0
+		].reduce((a, b) => a + b, 0);
+		return 3 - (celdas % 3);
+	});
+
 	let ocultando = $state(false);
 	let recordando = $state(false);
 </script>
@@ -413,7 +447,7 @@
 		<h1>{saludo(ahora)}{t.hola ? `, ${t.hola}` : ''}</h1>
 		<div class="sub">
 			{fechaLarga(ahora)}
-			{#if t.meta.objetivo}· vas por el <b>{metaPct}%</b> de tu meta del mes{/if}
+			{#if t.meta?.objetivo}· vas por el <b>{metaPct}%</b> de tu meta del mes{/if}
 		</div>
 	</div>
 	{#if !sinPedidos}<div class="periodos" role="group" aria-label="Período">
@@ -481,7 +515,7 @@
 </div>
 
 {#if !sinPedidos}
-	<div class="kpis">
+	<div class="kpis" class:tres={kpis.length === 3}>
 		{#each kpis as k (k.label)}
 			<div class="kpi" use:anim={{ t: 'rise' }}>
 				<div class="k-cab">
@@ -537,72 +571,76 @@
 	{#if sinPedidos}
 		{@render paraHacer(true)}
 	{:else}
-		<div class="tarjeta ventas" use:anim={{ t: 'rise', delay: 60 }}>
-			<div class="v-cab">
-				<div>
-					<div class="v-l">Ventas · {ETIQUETA[t.periodo]}</div>
-					<div class="v-total">
-						<span>{pesos(t.ventas.actual)}</span>
-						{#if delta}
-							<span class="v-delta" class:baja={delta.startsWith('−')}
-								><Icon
-									icon={delta.startsWith('−') ? I.phTrendDownBold : I.phTrendUpBold}
-									size={13}
-								/>{delta}</span
-							>
-						{/if}
+		{#if t.ventas && t.serie && c}
+			<div class="tarjeta ventas" use:anim={{ t: 'rise', delay: 60 }}>
+				<div class="v-cab">
+					<div>
+						<div class="v-l">Ventas · {ETIQUETA[t.periodo]}</div>
+						<div class="v-total">
+							<span>{pesos(t.ventas.actual)}</span>
+							{#if delta}
+								<span class="v-delta" class:baja={delta.startsWith('−')}
+									><Icon
+										icon={delta.startsWith('−') ? I.phTrendDownBold : I.phTrendUpBold}
+										size={13}
+									/>{delta}</span
+								>
+							{/if}
+						</div>
+					</div>
+					<div class="leyenda">
+						<span><span class="l-act"></span>Este período</span>
+						<span><span class="l-ant"></span>Anterior</span>
 					</div>
 				</div>
-				<div class="leyenda">
-					<span><span class="l-act"></span>Este período</span>
-					<span><span class="l-ant"></span>Anterior</span>
-				</div>
-			</div>
-			<div class="grafico">
-				<svg viewBox="0 0 600 200" preserveAspectRatio="none" aria-hidden="true">
-					<defs
-						><linearGradient id="ventas-area" x1="0" x2="0" y1="0" y2="1"
-							><stop offset="0" stop-color="#E8875F" stop-opacity=".35"></stop><stop
-								offset="1"
-								stop-color="#E8875F"
-								stop-opacity="0"
-							></stop></linearGradient
-						></defs
-					>
-					<line x1="0" x2="600" y1="66" y2="66" class="guia"></line>
-					<line x1="0" x2="600" y1="133" y2="133" class="guia"></line>
-					<path d={c.anterior} class="anterior"></path>
-					<path d={c.area} fill="url(#ventas-area)"></path>
-					{#key c.linea}<path use:anim={{ t: 'draw' }} d={c.linea} class="linea"></path>{/key}
-				</svg>
-				<div class="punto" style:top="{c.punto}%">
-					<span use:anim={{ t: 'pulse' }}></span><span class="p-c"></span>
-				</div>
-			</div>
-			<div class="eje">
-				{#each eje as x, i (i)}<span>{x}</span>{/each}
-			</div>
-			<div class="canales">
-				{#each t.canales.slice(0, 4) as ch (ch.canal)}
-					<div class="canal">
-						<MarcaIcono k={ch.canal} size={30} radius={9} />
-						<span class="c-txt"
-							><span class="c-n">{CANALES[ch.canal] ?? ch.canal}</span><span class="c-p"
-								>{Math.round(ch.parte * 100)}%</span
-							></span
+				<div class="grafico">
+					<svg viewBox="0 0 600 200" preserveAspectRatio="none" aria-hidden="true">
+						<defs
+							><linearGradient id="ventas-area" x1="0" x2="0" y1="0" y2="1"
+								><stop offset="0" stop-color="#E8875F" stop-opacity=".35"></stop><stop
+									offset="1"
+									stop-color="#E8875F"
+									stop-opacity="0"
+								></stop></linearGradient
+							></defs
 						>
+						<line x1="0" x2="600" y1="66" y2="66" class="guia"></line>
+						<line x1="0" x2="600" y1="133" y2="133" class="guia"></line>
+						<path d={c.anterior} class="anterior"></path>
+						<path d={c.area} fill="url(#ventas-area)"></path>
+						{#key c.linea}<path use:anim={{ t: 'draw' }} d={c.linea} class="linea"></path>{/key}
+					</svg>
+					<div class="punto" style:top="{c.punto}%">
+						<span use:anim={{ t: 'pulse' }}></span><span class="p-c"></span>
 					</div>
-				{/each}
+				</div>
+				<div class="eje">
+					{#each eje as x, i (i)}<span>{x}</span>{/each}
+				</div>
+				<div class="canales">
+					{#each (t.canales ?? []).slice(0, 4) as ch (ch.canal)}
+						<div class="canal">
+							<MarcaIcono k={ch.canal} size={30} radius={9} />
+							<span class="c-txt"
+								><span class="c-n">{CANALES[ch.canal] ?? ch.canal}</span><span class="c-p"
+									>{Math.round(ch.parte * 100)}%</span
+								></span
+							>
+						</div>
+					{/each}
+				</div>
 			</div>
-		</div>
+		{/if}
 
-		<MetaMes
-			mes={mes(ahora)}
-			objetivo={t.meta.objetivo}
-			actual={t.meta.actual}
-			proyeccion={t.meta.proyeccion}
-			carritos={t.hornero.recordados ? 0 : t.hornero.carritos}
-		/>
+		{#if t.meta}
+			<MetaMes
+				mes={mes(ahora)}
+				objetivo={t.meta.objetivo}
+				actual={t.meta.actual}
+				proyeccion={t.meta.proyeccion}
+				carritos={t.hornero.recordados ? 0 : t.hornero.carritos}
+			/>
+		{/if}
 
 		<div class="tarjeta pedidos" use:anim={{ t: 'rise' }}>
 			<div class="p-cab">
@@ -612,7 +650,7 @@
 				>
 			</div>
 			{#each t.ultimosPedidos as o (o.numero)}
-				<a class="pedido" href="{rutaDe('Pedidos')}?pedido={o.numero}">
+				<a class="pedido" class:sin-total={!montos} href="{rutaDe('Pedidos')}?pedido={o.numero}">
 					<span class="o-quien">
 						{#if o.foto}<img src={cara(o.foto)} alt="" width="38" height="38" />{:else}<span
 								class="o-ini"
@@ -632,7 +670,7 @@
 						><MarcaIcono k={o.canal} size={26} radius={8} />{CANALES[o.canal] ?? o.canal}</span
 					>
 					<span><ChipEstado estado={o.estado} /></span>
-					<span class="o-total">{pesos(o.total)}</span>
+					{#if o.total !== undefined}<span class="o-total">{pesos(o.total)}</span>{/if}
 				</a>
 			{:else}
 				<div class="vacio">Todavía no entró ningún pedido. Compartí tu tienda y aparecen acá.</div>
@@ -715,8 +753,8 @@
 				<div class="pie">
 					<div class="armando">
 						<b>{plural(t.enVivo.carritos, 'carrito', 'carritos')}</b>
-						{t.enVivo.carritos === 1 ? 'armándose' : 'armándose'} ahora por
-						<b>{pesos(t.enVivo.carritosMonto)}</b>
+						armándose ahora{#if t.enVivo.carritosMonto !== undefined}
+							por <b>{pesos(t.enVivo.carritosMonto)}</b>{/if}
 					</div>
 				</div>
 			{/if}
@@ -724,7 +762,7 @@
 	{/if}
 
 	<!-- Con la API, sin cobros hoy la caja es un cero: «Cobrar en el local» ya está en los accesos. -->
-	{#if mide || t.caja.total || t.caja.medios.length}
+	{#if t.caja && (mide || t.caja.total || t.caja.medios.length)}
 		<div class="tarjeta col">
 			<div class="fila-cab">
 				<div class="titulo">Caja del local</div>
@@ -761,7 +799,7 @@
 	{/if}
 
 	<!-- Las acreditaciones todavía no se traen de Mercado Pago: con la API la tarjeta no diría nada. -->
-	{#if mide}
+	{#if mide && t.liquidaciones}
 		<div class="tarjeta col">
 			<div class="fila-cab">
 				<div class="titulo">Próximas liquidaciones</div>
@@ -817,8 +855,9 @@
 		</div>
 		<div class="burbuja">
 			{#if t.hornero.carritos && !t.hornero.recordados}
-				Hay <b>{plural(t.hornero.carritos, 'carrito abandonado', 'carritos abandonados')}</b> por
-				<b class="naranja">{pesos(t.hornero.carritosMonto)}</b>.
+				Hay <b>{plural(t.hornero.carritos, 'carrito abandonado', 'carritos abandonados')}</b
+				>{#if t.hornero.carritosMonto !== undefined}
+					por <b class="naranja">{pesos(t.hornero.carritosMonto)}</b>{/if}.
 				{#if mide}
 					¿Les mando un recordatorio por WhatsApp? Cuesta {pesos(
 						t.hornero.carritos * t.hornero.costoMensaje
@@ -1039,7 +1078,11 @@
 	{/if}
 
 	{#if mide || t.envios.paquetes || t.envios.retiros.length}
-		<div class="tarjeta col ultima">
+		<div
+			class="tarjeta col ultima"
+			class:ancho2={enviosAncho === 2}
+			class:ancho3={enviosAncho === 3}
+		>
 			<div class="fila-cab">
 				<div class="titulo">Envíos de hoy</div>
 				<span class="nota">{plural(t.envios.paquetes, 'paquete', 'paquetes')}</span>
@@ -1323,6 +1366,11 @@
 	}
 	.k-d.baja {
 		color: #8a5f0e;
+	}
+
+	/* Sin montos (Ventas, Local) no va el ticket: tres indicadores a lo ancho. */
+	.kpis.tres {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
 
 	/* Grilla de tarjetas */
@@ -1636,6 +1684,30 @@
 		border-radius: 14px;
 		font-size: 14px;
 		color: var(--tx);
+	}
+	.pedido.sin-total {
+		grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.1fr) auto;
+	}
+	/* «Envíos de hoy» completa la última fila de tres columnas (sin montos; ver enviosAncho). */
+	@media (min-width: 1100px) {
+		.ancho2 {
+			grid-column: span 2;
+		}
+		.ancho3 {
+			grid-column: 1 / -1;
+		}
+		/* A lo ancho, los retiros en columnas y el botón a su medida. */
+		.ancho2 .retiros,
+		.ancho3 .retiros {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+			column-gap: 24px;
+		}
+		.ancho2 .abajo,
+		.ancho3 .abajo {
+			align-self: start;
+			padding-inline: 28px;
+		}
 	}
 	.pedido:hover {
 		background: var(--chip);
@@ -2341,6 +2413,16 @@
 		}
 		.pedido {
 			grid-template-columns: minmax(0, 1fr) auto auto;
+		}
+		.pedido.sin-total {
+			grid-template-columns: minmax(0, 1fr) auto;
+		}
+		/* Tres indicadores en dos columnas: el tercero a lo ancho, sin hueco. */
+		.kpis.tres {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+		.kpis.tres .kpi:last-child {
+			grid-column: 1 / -1;
 		}
 		.o-canal {
 			display: none;

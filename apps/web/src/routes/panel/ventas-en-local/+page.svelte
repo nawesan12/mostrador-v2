@@ -145,9 +145,9 @@
 		<div class="c-txt">
 			<h1>Ventas en el local</h1>
 			<div class="c-s">
-				{data.caja.abierta
+				{data.caja?.abierta
 					? `Caja abierta desde las ${horaMin(new Date(data.caja.abierta))}`
-					: data.caja.total
+					: data.caja?.total
 						? `${pesos(data.caja.total)} cobrados hoy`
 						: 'Mismo stock que la web'}
 			</div>

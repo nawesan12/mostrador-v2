@@ -39,7 +39,10 @@ export function ideasDe(t: Tablero, real = false): IdeaHornero[] {
 				? {
 						id: 'carritos',
 						titulo: `Recordar ${plural(carritos, 'carrito', 'carritos')}`,
-						detalle: `Un mail con el link a su carrito a quienes dejaron ${pesos(carritosMonto)} sin comprar`,
+						detalle:
+							carritosMonto === undefined
+								? 'Un mail con el link a su carrito a quienes no terminaron la compra'
+								: `Un mail con el link a su carrito a quienes dejaron ${pesos(carritosMonto)} sin comprar`,
 						nota: 'Sin costo · a cada uno, como mucho uno por día',
 						hecha: t.hornero.recordados,
 						listo: {

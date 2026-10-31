@@ -6,7 +6,8 @@
  * demo cuesta una escritura y no cientos, y el cupo gratis de D1 (100.000 escrituras por día)
  * alcanza para muchas visitas.
  */
-import { PERMISOS_DE, type RolInvitable } from '#lib/panel/permisos.ts';
+import { PERMISOS_DE, type Rol, type RolInvitable } from '#lib/panel/permisos.ts';
+import { contextoSinMontos, sinMontos, type TableroConMontos } from '../datos/montos.ts';
 import {
 	configuracionDemo,
 	type EstadoCuenta,
@@ -511,6 +512,12 @@ export class DatosSandbox implements Datos {
 		/** Lo que viene del Worker: con qué cifrar credenciales y la app de Tiendanube (si está). */
 		private ext: { cifra?: Cifra; tiendanube?: AppTN | null; fuentes?: Fuentes } = {}
 	) {}
+
+	/**
+	 * Quien prueba la demo es la dueña de la tienda de ejemplo. Con otro rol (pruebas), el sandbox
+	 * se comporta como la API: sin finanzas, el Inicio y Tincho no reciben montos.
+	 */
+	rol: Rol = 'duenio';
 
 	async rubros() {
 		return RUBROS;
@@ -2058,7 +2065,7 @@ export class DatosSandbox implements Datos {
 	async finanzas(): Promise<Finanzas> {
 		const [d, t, productos, retiros, campanas] = await Promise.all([
 			this.demo(),
-			this.tablero('7d'),
+			this.tableroConMontos('7d'),
 			this.regProductos(),
 			cambiosDe(this.db, this.sb.id, 'retiro'),
 			cambiosDe(this.db, this.sb.id, 'campana')
@@ -2167,9 +2174,9 @@ export class DatosSandbox implements Datos {
 		const t = await this.tienda();
 		return {
 			tiendaId: t.id,
-			rol: 'duenio',
-			permisos: PERMISOS_DE.duenio,
-			tiendas: [{ id: t.id, nombre: t.nombre, slug: t.slug, rol: 'duenio' }]
+			rol: this.rol,
+			permisos: PERMISOS_DE[this.rol],
+			tiendas: [{ id: t.id, nombre: t.nombre, slug: t.slug, rol: this.rol }]
 		};
 	}
 
@@ -3488,6 +3495,12 @@ export class DatosSandbox implements Datos {
 	}
 
 	async tablero(periodo: Periodo): Promise<Tablero> {
+		const t = await this.tableroConMontos(periodo);
+		return PERMISOS_DE[this.rol].includes('finanzas') ? t : sinMontos(t);
+	}
+
+	/** El tablero entero, con montos (Finanzas lo usa; sólo lo ve quien tiene finanzas). */
+	private async tableroConMontos(periodo: Periodo): Promise<TableroConMontos> {
 		const d = await this.demo();
 		const c = await cambiosDe(this.db, this.sb.id, 'tablero');
 		const cambios: CambiosTablero = {
@@ -3530,7 +3543,8 @@ export class DatosSandbox implements Datos {
 	}
 
 	async contextoHornero(): Promise<ContextoHornero> {
-		return contextoDemo(await this.demo(), Date.now());
+		const c = contextoDemo(await this.demo(), Date.now());
+		return PERMISOS_DE[this.rol].includes('finanzas') ? c : contextoSinMontos(c);
 	}
 
 	// ---------------------------------------------------------------- Turnos

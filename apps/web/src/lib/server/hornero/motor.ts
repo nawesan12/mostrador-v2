@@ -4,7 +4,7 @@
  * "¿cómo hago para…?") y las contesta con los datos reales de la tienda, al instante y sin costo.
  * Lo que no entiende devuelve null y recién ahí responde el modelo (Workers AI).
  */
-import type { DatosHornero } from './contexto.ts';
+import { conMontos, type DatosHornero } from './contexto.ts';
 
 type Producto = DatosHornero['contexto']['productos'][number];
 
@@ -112,6 +112,9 @@ export function responderSinIa(pregunta: string, d: DatosHornero): string | null
 	const { contexto, hoy, semana } = d;
 	const productos = contexto.productos;
 	const dias = contexto.ventasPorDia;
+	// Ventas y Local no ven montos: Tincho les cuenta pedidos y unidades, nunca pesos.
+	const montos = conMontos(d);
+	const sinPlata = ' Tu rol no ve montos de dinero.';
 
 	if (/^(gracias|genial|buenisimo|perfecto|joya|dale)\b/.test(q))
 		return '¡De nada! Si necesitás algo más, acá estoy.';
@@ -120,7 +123,9 @@ export function responderSinIa(pregunta: string, d: DatosHornero): string | null
 		q.split(' ').length <= 4
 	) {
 		const nombre = d.hola ? `, ${d.hola}` : '';
-		return `¡Hola${nombre}! Hoy llevás **${pesos(hoy.ventas.actual)}** en ${plural(hoy.kpis.pedidos.actual, 'pedido', 'pedidos')}. Preguntame por ventas, stock, precios o cómo hacer algo en el panel.`;
+		return montos
+			? `¡Hola${nombre}! Hoy llevás **${pesos(hoy.ventas?.actual ?? 0)}** en ${plural(hoy.kpis.pedidos.actual, 'pedido', 'pedidos')}. Preguntame por ventas, stock, precios o cómo hacer algo en el panel.`
+			: `¡Hola${nombre}! Hoy entraron **${plural(hoy.kpis.pedidos.actual, 'pedido', 'pedidos')}**. Preguntame por pedidos, stock o cómo hacer algo en el panel.`;
 	}
 
 	for (const [re, texto] of GUIAS)
@@ -128,43 +133,49 @@ export function responderSinIa(pregunta: string, d: DatosHornero): string | null
 
 	// Ventas y pedidos.
 	if (/(vendi|venta|ventas|facture|gane|recaude|pedido|pedidos)/.test(q)) {
-		const pedidos = /pedido/.test(q) && !/vend|venta/.test(q);
+		const soloPedidos = /pedido/.test(q) && !/vend|venta/.test(q);
+		const pedidos = soloPedidos || !montos;
+		const nota = soloPedidos || montos ? '' : sinPlata;
 		if (/ayer/.test(q)) {
 			const ayer = dias.at(-2);
 			if (!ayer) return 'Todavía no tengo datos de ayer.';
 			return pedidos
-				? `Ayer entraron **${plural(ayer.pedidos, 'pedido', 'pedidos')}**.`
-				: `Ayer vendiste **${pesos(ayer.ventas)}** en ${plural(ayer.pedidos, 'pedido', 'pedidos')}.`;
+				? `Ayer entraron **${plural(ayer.pedidos, 'pedido', 'pedidos')}**.${nota}`
+				: `Ayer vendiste **${pesos(ayer.ventas ?? 0)}** en ${plural(ayer.pedidos, 'pedido', 'pedidos')}.`;
 		}
 		if (/semana|7 dias|siete dias/.test(q))
 			return pedidos
-				? `En los últimos 7 días entraron **${plural(semana.kpis.pedidos.actual, 'pedido', 'pedidos')}**${variacion(semana.kpis.pedidos.actual, semana.kpis.pedidos.anterior)}.`
-				: `En los últimos 7 días vendiste **${pesos(semana.ventas.actual)}**${variacion(semana.ventas.actual, semana.ventas.anterior)}.`;
+				? `En los últimos 7 días entraron **${plural(semana.kpis.pedidos.actual, 'pedido', 'pedidos')}**${variacion(semana.kpis.pedidos.actual, semana.kpis.pedidos.anterior)}.${nota}`
+				: `En los últimos 7 días vendiste **${pesos(semana.ventas?.actual ?? 0)}**${variacion(semana.ventas?.actual ?? 0, semana.ventas?.anterior ?? 0)}.`;
 		if (/(14|catorce) dias|dos semanas|quincena/.test(q)) {
-			const total = dias.reduce((n, x) => n + x.ventas, 0);
-			return `En los últimos 14 días vendiste **${pesos(total)}** en ${plural(
-				dias.reduce((n, x) => n + x.pedidos, 0),
-				'pedido',
-				'pedidos'
-			)}.`;
+			const cuantos = dias.reduce((n, x) => n + x.pedidos, 0);
+			if (pedidos)
+				return `En los últimos 14 días entraron **${plural(cuantos, 'pedido', 'pedidos')}**.${nota}`;
+			const total = dias.reduce((n, x) => n + (x.ventas ?? 0), 0);
+			return `En los últimos 14 días vendiste **${pesos(total)}** en ${plural(cuantos, 'pedido', 'pedidos')}.`;
 		}
 		if (/mejor dia|dia que mas/.test(q) && dias.length) {
-			const mejor = [...dias].sort((a, b) => b.ventas - a.ventas)[0];
+			const valor = (x: (typeof dias)[number]) => (montos ? (x.ventas ?? 0) : x.pedidos);
+			const mejor = [...dias].sort((a, b) => valor(b) - valor(a))[0];
 			const f = new Date(mejor.fecha + 'T12:00:00').toLocaleDateString('es-AR', {
 				weekday: 'long',
 				day: 'numeric',
 				month: 'long'
 			});
-			return mejor.ventas
-				? `Tu mejor día de las últimas dos semanas fue el **${f}**: ${pesos(mejor.ventas)}.`
-				: 'En las últimas dos semanas todavía no hubo ventas.';
+			if (!valor(mejor)) return 'En las últimas dos semanas todavía no hubo ventas.';
+			return montos
+				? `Tu mejor día de las últimas dos semanas fue el **${f}**: ${pesos(valor(mejor))}.`
+				: `Tu mejor día de las últimas dos semanas fue el **${f}**: ${plural(mejor.pedidos, 'pedido', 'pedidos')}.`;
 		}
 		return pedidos
-			? `Hoy entraron **${plural(hoy.kpis.pedidos.actual, 'pedido', 'pedidos')}**.`
-			: `Hoy llevás **${pesos(hoy.ventas.actual)}** en ${plural(hoy.kpis.pedidos.actual, 'pedido', 'pedidos')}. Ayer a esta hora: ${pesos(hoy.ventas.anterior)}.`;
+			? `Hoy entraron **${plural(hoy.kpis.pedidos.actual, 'pedido', 'pedidos')}**.${nota}`
+			: `Hoy llevás **${pesos(hoy.ventas?.actual ?? 0)}** en ${plural(hoy.kpis.pedidos.actual, 'pedido', 'pedidos')}. Ayer a esta hora: ${pesos(hoy.ventas?.anterior ?? 0)}.`;
 	}
-	if (/ticket|promedio por compra|gasta cada/.test(q))
-		return `En los últimos 7 días cada compra fue de **${pesos(semana.kpis.ticket.actual)}** en promedio${variacion(semana.kpis.ticket.actual, semana.kpis.ticket.anterior)}.`;
+	if (/ticket|promedio por compra|gasta cada/.test(q)) {
+		const tk = semana.kpis.ticket;
+		if (!tk) return `No tengo el ticket promedio para vos.${sinPlata}`;
+		return `En los últimos 7 días cada compra fue de **${pesos(tk.actual)}** en promedio${variacion(tk.actual, tk.anterior)}.`;
+	}
 	if (/conversion|convierte|de cada 100/.test(q) && !semana.kpis.conversion.actual)
 		return 'Todavía no mido las visitas de tu tienda, así que no puedo calcular la conversión. Si conectás **Google Analytics** en Integraciones, la ves en tu cuenta de Google.';
 	if (/conversion|convierte|de cada 100/.test(q))
@@ -259,13 +270,18 @@ export function responderSinIa(pregunta: string, d: DatosHornero): string | null
 			pos: 'el local',
 			tg: 'Telegram'
 		};
+		const valor = (x: (typeof contexto.canales30d)[number]) =>
+			montos ? (x.ventas ?? 0) : x.pedidos;
 		const c = [...contexto.canales30d]
-			.filter((x) => x.ventas > 0)
-			.sort((a, b) => b.ventas - a.ventas);
+			.filter((x) => valor(x) > 0)
+			.sort((a, b) => valor(b) - valor(a));
 		if (!c.length) return 'Todavía no hay ventas en los últimos 30 días para ver de dónde vienen.';
 		return `En 30 días vendiste más por ${c
 			.slice(0, 3)
-			.map((x) => `**${NOMBRES[x.canal] ?? x.canal}** (${pesos(x.ventas)})`)
+			.map(
+				(x) =>
+					`**${NOMBRES[x.canal] ?? x.canal}** (${montos ? pesos(valor(x)) : plural(x.pedidos, 'pedido', 'pedidos')})`
+			)
 			.join(', ')}.`;
 	}
 

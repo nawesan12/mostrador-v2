@@ -7,9 +7,9 @@
  */
 import type { components } from '@mostrador/contrato/esquema';
 import type { Demo, Pedido } from './demo.ts';
+import type { ContextoConMontos, TableroConMontos } from '../datos/montos.ts';
 
 type Tablero = components['schemas']['Tablero'];
-type ContextoHornero = components['schemas']['ContextoHornero'];
 export type Periodo = Tablero['periodo'];
 export const PERIODOS: Periodo[] = ['hoy', '7d', '30d'];
 
@@ -76,7 +76,7 @@ export function tableroDemo(
 	d: Demo,
 	periodo: Periodo,
 	opciones: { base: number; ahora: number; hola: string | null; cambios: CambiosTablero }
-): Tablero {
+): TableroConMontos {
 	const { base, ahora, cambios } = opciones;
 	const { pedidos, clientes, catalogo } = d;
 	const cliente = new Map(clientes.map((c) => [c.id, c]));
@@ -208,6 +208,7 @@ export function tableroDemo(
 		desde: new Date(desde).toISOString(),
 		hasta: new Date(hasta).toISOString(),
 		hola: opciones.hola,
+		montos: true,
 		ventas: { actual: totalActual, anterior: suma(anterior) },
 		serie: { actual: acumulada(desde), anterior: acumulada(desde - corrimiento) },
 		kpis: {
@@ -314,7 +315,7 @@ export function tableroDemo(
 }
 
 /** Lo que Tincho sabe de la tienda de ejemplo (ver ContextoHornero en el contrato). */
-export function contextoDemo(d: Demo, ahora: number): ContextoHornero {
+export function contextoDemo(d: Demo, ahora: number): ContextoConMontos {
 	const hoy = inicioDelDia(ahora);
 	const vale30 = d.pedidos.filter(
 		(p) => vale(p) && p.creado >= ahora - 30 * DIA && p.creado <= ahora
@@ -334,7 +335,11 @@ export function contextoDemo(d: Demo, ahora: number): ContextoHornero {
 	for (const p of d.pedidos.filter(vale))
 		compras.set(p.clienteId, [...(compras.get(p.clienteId) ?? []), p.creado]);
 	const canales = new Map<string, number>();
-	for (const p of vale30) canales.set(p.canal, (canales.get(p.canal) ?? 0) + p.total);
+	const pedidosCanal = new Map<string, number>();
+	for (const p of vale30) {
+		canales.set(p.canal, (canales.get(p.canal) ?? 0) + p.total);
+		pedidosCanal.set(p.canal, (pedidosCanal.get(p.canal) ?? 0) + 1);
+	}
 	const minoristas = d.clientes.filter((c) => !c.mayorista);
 	return {
 		ventasPorDia,
@@ -356,6 +361,6 @@ export function contextoDemo(d: Demo, ahora: number): ContextoHornero {
 		},
 		canales30d: [...canales]
 			.sort((a, b) => b[1] - a[1])
-			.map(([canal, ventas]) => ({ canal, ventas }))
+			.map(([canal, ventas]) => ({ canal, ventas, pedidos: pedidosCanal.get(canal) ?? 0 }))
 	};
 }

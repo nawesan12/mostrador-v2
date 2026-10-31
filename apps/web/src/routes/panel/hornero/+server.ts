@@ -14,10 +14,11 @@ import type { RequestHandler } from './$types';
 /** Lo que muestra Tincho al abrirse: cómo viene el día y sus ideas. */
 export const GET: RequestHandler = async ({ locals }) => {
 	const t = await datosDe(locals).tablero('hoy');
+	// Sin montos (Ventas, Local): Tincho saluda con los pedidos de hoy, no con lo vendido.
 	return json({
 		hola: t.hola,
-		ventasHoy: t.ventas.actual,
-		ventasAyer: t.ventas.anterior,
+		pedidosHoy: t.kpis.pedidos.actual,
+		...(t.ventas ? { ventasHoy: t.ventas.actual, ventasAyer: t.ventas.anterior } : {}),
 		ideas: ideasDe(t, !usaSandbox())
 	});
 };

@@ -3,6 +3,7 @@ import { demoDe } from '../sandbox/demo.ts';
 import { contextoDemo, tableroDemo } from '../sandbox/tablero.ts';
 import type { DatosHornero } from './contexto.ts';
 import { normalizar, productoDe, responderSinIa } from './motor.ts';
+import { contextoSinMontos, sinMontos } from '../datos/montos.ts';
 
 const BASE = Date.parse('2026-10-20T15:00:00Z');
 const AHORA = BASE + 30 * 60_000;
@@ -24,11 +25,13 @@ describe('Tincho sin IA', () => {
 	it('ventas de ayer, de la semana y de hoy, con los datos reales', () => {
 		const x = datos();
 		const ayer = x.contexto.ventasPorDia.at(-2)!;
-		expect(responderSinIa('¿Cuánto vendí ayer?', x)).toContain(pesos(ayer.ventas));
+		expect(responderSinIa('¿Cuánto vendí ayer?', x)).toContain(pesos(ayer.ventas!));
 		expect(responderSinIa('cuanto facturé esta semana', x)).toContain(
-			pesos(x.semana.ventas.actual)
+			pesos(x.semana.ventas!.actual)
 		);
-		expect(responderSinIa('¿cómo vienen las ventas hoy?', x)).toContain(pesos(x.hoy.ventas.actual));
+		expect(responderSinIa('¿cómo vienen las ventas hoy?', x)).toContain(
+			pesos(x.hoy.ventas!.actual)
+		);
 	});
 
 	it('lo que más sale y lo que está sin stock', () => {
@@ -63,5 +66,32 @@ describe('Tincho sin IA', () => {
 
 	it('lo que no entiende queda para la IA', () => {
 		expect(responderSinIa('escribime un poema sobre el otoño', datos())).toBeNull();
+	});
+
+	it('a Ventas y Local (sin montos) les cuenta pedidos, nunca pesos', () => {
+		const x = datos();
+		const sin: DatosHornero = {
+			...x,
+			hoy: sinMontos(x.hoy),
+			semana: sinMontos(x.semana),
+			contexto: contextoSinMontos(x.contexto)
+		};
+		for (const q of [
+			'hola',
+			'¿Cuánto vendí ayer?',
+			'cuanto facturé esta semana',
+			'¿cómo vienen las ventas hoy?',
+			'ventas de los últimos 14 días',
+			'¿cuál fue mi mejor día de ventas?',
+			'¿cuál es el ticket promedio?',
+			'¿por qué canal vendo más?'
+		]) {
+			const r = responderSinIa(q, sin);
+			expect(r, q).toBeTruthy();
+			expect(r, q).not.toContain('$');
+		}
+		expect(responderSinIa('cuanto facturé esta semana', sin)).toContain(
+			String(x.semana.kpis.pedidos.actual)
+		);
 	});
 });

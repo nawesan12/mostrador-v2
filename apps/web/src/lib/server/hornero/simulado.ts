@@ -11,7 +11,9 @@ export function responderSimulado(pregunta: string, d: DatosHornero) {
 	const dias = d.contexto.ventasPorDia;
 	if (/ayer/.test(q) && dias.length >= 2) {
 		const ayer = dias[dias.length - 2];
-		return `Ayer vendiste **${pesos(ayer.ventas)}** en ${ayer.pedidos} pedidos.`;
+		return ayer.ventas === undefined
+			? `Ayer entraron **${ayer.pedidos} pedidos**.`
+			: `Ayer vendiste **${pesos(ayer.ventas)}** en ${ayer.pedidos} pedidos.`;
 	}
 	if (/precio|subí|subi|aument/.test(q)) {
 		const pct = Number(q.match(/(\d+)\s*%/)?.[1] ?? 8);

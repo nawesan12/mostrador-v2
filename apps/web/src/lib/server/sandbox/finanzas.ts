@@ -6,9 +6,9 @@
 import type { components } from '@mostrador/contrato/esquema';
 import type { Demo } from './demo.ts';
 import { DIAS_DE_PRUEBA } from './resumen.ts';
+import type { TableroConMontos } from '../datos/montos.ts';
 
 type Finanzas = components['schemas']['Finanzas'];
-type Tablero = components['schemas']['Tablero'];
 type Movimiento = Finanzas['movimientos'][number];
 
 const HORA = 3_600_000;
@@ -33,7 +33,7 @@ export type GastoCampana = { personas: number; en: number };
 export function finanzasDemo(
 	d: Demo,
 	ahora: number,
-	t: Tablero,
+	t: TableroConMontos,
 	margen: number,
 	retiros: Retiro[],
 	campanas: GastoCampana[],

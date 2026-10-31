@@ -370,6 +370,10 @@ function opcion<T extends string>(v: unknown, campo: string, valores: readonly T
 	return v as T;
 }
 const monto = (n: number) => ({ pesos: n, texto: pesos(n) });
+/** Un monto del tablero, que no viene si el rol no ve montos (Ventas, Local): tampoco va acá. */
+const montoSi = (n: number | undefined) => (n === undefined ? undefined : monto(n));
+/** Lo que se le dice a la IA cuando el rol de quien la conectó no ve montos. */
+const SIN_MONTOS = { montos: 'Tu rol no ve montos de dinero: van sólo cantidades.' };
 const fecha = (iso: string | null | undefined) => iso ?? null;
 
 const pedidoBreve = (
@@ -425,9 +429,10 @@ async function informePeriodo(d: Datos, periodo: 'hoy' | '7d' | '30d') {
 		periodo,
 		desde: t.desde,
 		hasta: t.hasta,
-		ventas: { ...monto(t.ventas.actual), periodo_anterior: monto(t.ventas.anterior) },
+		...(t.montos ? {} : SIN_MONTOS),
+		ventas: t.ventas && { ...monto(t.ventas.actual), periodo_anterior: monto(t.ventas.anterior) },
 		pedidos: { cantidad: t.kpis.pedidos.actual, periodo_anterior: t.kpis.pedidos.anterior },
-		ticket_promedio: {
+		ticket_promedio: t.kpis.ticket && {
 			...monto(t.kpis.ticket.actual),
 			periodo_anterior: monto(t.kpis.ticket.anterior)
 		},
@@ -435,7 +440,10 @@ async function informePeriodo(d: Datos, periodo: 'hoy' | '7d' | '30d') {
 			cantidad: t.kpis.clientesNuevos.actual,
 			periodo_anterior: t.kpis.clientesNuevos.anterior
 		},
-		canales: t.canales.map((c) => ({ canal: c.canal, parte_pct: Math.round(c.parte * 1000) / 10 })),
+		canales: t.canales?.map((c) => ({
+			canal: c.canal,
+			parte_pct: Math.round(c.parte * 1000) / 10
+		})),
 		mas_vendidos_7d: t.masVendidos.map((m) => ({
 			id: m.productoId,
 			nombre: m.nombre,
@@ -449,19 +457,20 @@ const MANEJADORES: Record<string, Manejador> = {
 		const t = await datos.tablero('hoy');
 		return {
 			desde: t.desde,
-			ventas_hoy: monto(t.ventas.actual),
-			ventas_ayer_mismo_tramo: monto(t.ventas.anterior),
+			...(t.montos ? {} : SIN_MONTOS),
+			ventas_hoy: montoSi(t.ventas?.actual),
+			ventas_ayer_mismo_tramo: montoSi(t.ventas?.anterior),
 			pedidos_hoy: t.kpis.pedidos.actual,
 			pedidos_ayer: t.kpis.pedidos.anterior,
-			ticket_promedio: monto(t.kpis.ticket.actual),
+			ticket_promedio: montoSi(t.kpis.ticket?.actual),
 			para_hacer: {
 				pedidos_para_preparar: t.paraHacer.preparar,
 				chats_sin_responder: t.paraHacer.chats,
 				transferencias_por_confirmar: t.paraHacer.transferencias,
-				transferencias_monto: monto(t.paraHacer.transferenciasMonto),
+				transferencias_monto: montoSi(t.paraHacer.transferenciasMonto),
 				productos_sin_stock: t.paraHacer.sinStock
 			},
-			meta_del_mes: t.meta.objetivo
+			meta_del_mes: t.meta?.objetivo
 				? {
 						objetivo: monto(t.meta.objetivo),
 						vendido: monto(t.meta.actual),
@@ -473,7 +482,7 @@ const MANEJADORES: Record<string, Manejador> = {
 				cliente: p.cliente,
 				canal: p.canal,
 				estado: p.estado,
-				total: monto(p.total),
+				total: montoSi(p.total),
 				creado: p.creado
 			}))
 		};

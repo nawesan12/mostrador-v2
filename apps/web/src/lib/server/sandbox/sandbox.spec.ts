@@ -132,3 +132,40 @@ describe('slugDe', () => {
 		expect(slugDe('  Ópt!ca   Faro ')).toBe('opt-ca-faro');
 	});
 });
+
+describe('montos del Inicio por rol', () => {
+	it('como la API: dueña y administración con montos; ventas y local sin ninguno', async () => {
+		const db = nueva();
+		const sb = (await crear(db, 'almacen'))!;
+		const MONTOS = [
+			'"ventas"',
+			'"serie"',
+			'"ticket"',
+			'"meta"',
+			'"caja"',
+			'"canales"',
+			'"liquidaciones"',
+			'"transferenciasMonto"',
+			'"carritosMonto"',
+			'"total"'
+		];
+		for (const rol of ['duenio', 'admin', 'ventas', 'local'] as const) {
+			const datos = new DatosSandbox(db, sb);
+			datos.rol = rol;
+			const t = await datos.tablero('7d');
+			const j = JSON.stringify(t);
+			const con = rol === 'duenio' || rol === 'admin';
+			expect(t.montos, rol).toBe(con);
+			for (const m of MONTOS) expect(j.includes(m), `${rol} ${m}`).toBe(con);
+			expect(t.kpis.pedidos.actual, rol).toBeGreaterThan(0);
+			if (!con)
+				expect(
+					t.integraciones.some((i) => i.id === 'mp'),
+					rol
+				).toBe(false);
+			const c = JSON.stringify(await datos.contextoHornero());
+			expect(c.includes('"ventas"'), rol).toBe(con);
+			expect(c).toContain('"pedidos"');
+		}
+	});
+});

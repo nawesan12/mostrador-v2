@@ -4,6 +4,7 @@ import { contextoDemo, tableroDemo } from '../sandbox/tablero.ts';
 import { datosParaElModelo, sistema, type DatosHornero } from './contexto.ts';
 import { ideasDe } from './ideas.ts';
 import { soloTexto } from './modelo.ts';
+import { contextoSinMontos, sinMontos } from '../datos/montos.ts';
 import { responderSimulado } from './simulado.ts';
 
 const BASE = Date.parse('2026-10-20T15:00:00Z');
@@ -86,7 +87,7 @@ describe('Tincho', () => {
 		const x = datos();
 		const ayer = x.contexto.ventasPorDia.at(-2)!;
 		expect(responderSimulado('¿Cuánto vendí ayer?', x)).toContain(
-			'$ ' + ayer.ventas.toLocaleString('es-AR')
+			'$ ' + ayer.ventas!.toLocaleString('es-AR')
 		);
 		expect(responderSimulado('Subí precios 8%', x)).toMatch(/8%/);
 		expect(responderSimulado('Clientes que no vuelven', x)).toContain(
@@ -108,5 +109,25 @@ describe('Tincho', () => {
 		});
 		const texto = await new Response(soloTexto(sse)).text();
 		expect(texto).toBe('Hola, Valeria');
+	});
+
+	it('sin montos, al modelo no le llega ningún monto y sabe que no tiene que darlos', () => {
+		const x = datos();
+		const sin: DatosHornero = {
+			...x,
+			hoy: sinMontos(x.hoy),
+			semana: sinMontos(x.semana),
+			contexto: contextoSinMontos(x.contexto)
+		};
+		const m = JSON.stringify(datosParaElModelo(sin));
+		expect(m).not.toContain(`"ventas":`);
+		expect(m).not.toContain('ticketPromedio');
+		expect(m).not.toContain('transferenciasMonto');
+		expect(m).not.toContain(`"monto":`);
+		expect(m).not.toContain('objetivo');
+		expect(sistema(sin)).toContain('nunca des montos en pesos');
+		expect(sistema(x)).not.toContain('nunca des montos en pesos');
+		const carritos = ideasDe(sinMontos(tab()), true).find((i) => i.id === 'carritos');
+		expect(carritos?.detalle).not.toContain('$');
 	});
 });
