@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { onMount, untrack } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
+	import Alerta from '#lib/components/Alerta.svelte';
 	import Icon from '#lib/components/Icon.svelte';
 	import Segmentado from '#lib/components/Segmentado.svelte';
 	import Seo from '#lib/components/Seo.svelte';
@@ -10,6 +12,8 @@
 	import { pesos } from '#lib/panel/formato.ts';
 	import { rutaDe } from '#lib/panel/navegacion.ts';
 	import { vendibles } from '#lib/panel/vendibles.ts';
+	import { clienteDe, volverAVender } from '#lib/panel/pedidos/volver-a-vender.ts';
+	import { page } from '$app/state';
 	import { getShell } from '#lib/panel/shell.svelte.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 
@@ -115,6 +119,36 @@
 	let medio = $state<(typeof MEDIOS)[number][0]>('transf');
 	let nota = $state('');
 
+	// ---- Volver a vender (?desde=1048): lo mismo para el mismo cliente, con precio y stock de hoy ----
+	const desde = untrack(() => data.desde);
+	const repetido = untrack(() =>
+		desde ? volverAVender(desde.items, data.productos) : { renglones: [], avisos: [] }
+	);
+	if (desde) {
+		for (const r of repetido.renglones) items.set(r.clave, r.cantidad);
+		const c = clienteDe(
+			desde.comprador,
+			untrack(() => data.clientes)
+		);
+		if (c) elegir(c);
+		else if (!/^consumidor final$/i.test(desde.comprador.nombre)) {
+			nombre = desde.comprador.nombre;
+			telefono = desde.comprador.telefono ?? '';
+		}
+		const k = CANALES.find(([x]) => x === desde.canal)?.[0];
+		canal = k ?? 'web';
+		const e = untrack(() => ENVIOS).find(([x]) => x === desde.envio)?.[0];
+		if (e) envio = e;
+	}
+	onMount(() => {
+		if (!desde && page.url.searchParams.has('desde'))
+			ui.toast({
+				k: 'warn',
+				title: 'No encontramos ese pedido',
+				desc: 'Cargá los productos a mano.'
+			});
+	});
+
 	const subtotal = $derived(renglones.reduce((s, x) => s + x.p.precio * x.q, 0));
 	const costoEnvio = $derived(ENVIOS.find((e) => e[0] === envio)?.[2] ?? 0);
 	let creando = $state(false);
@@ -179,9 +213,17 @@
 	<div class="cab" use:anim={{ t: 'rise' }}>
 		<div class="c-txt">
 			<h1>Crear pedido</h1>
-			<div class="c-s">Para lo que te piden por WhatsApp, Instagram o en el mostrador</div>
+			<div class="c-s">
+				{#if desde}Lo mismo que el pedido #{desde.numero}, con los precios de hoy. Revisalo y
+					guardalo.{:else}Para lo que te piden por WhatsApp, Instagram o en el mostrador{/if}
+			</div>
 		</div>
 	</div>
+	{#if repetido.avisos.length}
+		<div use:anim={{ t: 'rise', delay: 30 }}>
+			<Alerta tipo="warn" titulo="Revisá antes de guardar" texto={repetido.avisos.join(' ')} />
+		</div>
+	{/if}
 
 	<div class="grilla" use:anim={{ t: 'rise', delay: 60 }}>
 		<div class="izq">
