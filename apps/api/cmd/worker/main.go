@@ -28,6 +28,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/outbox"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/webpush"
 )
 
 func main() {
@@ -105,7 +106,13 @@ func correr() error {
 	if err != nil {
 		slog.Error("push: la clave de APNs no sirve, no se mandan avisos al iPhone", "error", err)
 	}
-	ps := push.Nuevo(app, cliAPNs, slog.Default())
+	// Push web al panel instalado como app (§41). Sin MOSTRADOR_VAPID_*, apagado; unas claves que no
+	// sirven tampoco tiran el worker.
+	cliWeb, err := webpush.Desde(cfg.VAPIDPublica, cfg.VAPIDPrivada, cfg.VAPIDSujeto)
+	if err != nil {
+		slog.Error("push: las claves VAPID no sirven, no se mandan avisos al panel instalado", "error", err)
+	}
+	ps := push.Nuevo(app, cliAPNs, slog.Default()).ConWeb(cliWeb)
 	for _, ms := range []map[string]outbox.Manejador{mp.Manejadores(), ml.Manejadores(), av.Manejadores(), mc.Manejadores(), tg.Manejadores(), equipo.Manejadores(mails), imp.Manejadores(),
 		cuentas.Manejadores(mails, cfg.Sitio), ps.Manejadores()} {
 		for tipo, m := range ms {

@@ -2090,6 +2090,57 @@ paths:
         '204': { description: Dado de baja }
         '401': { $ref: '#/components/responses/Problema' }
         '403': { $ref: '#/components/responses/Problema' }
+  /v1/panel/push-web:
+    get:
+      operationId: estadoPushWeb
+      summary: >-
+        Push web del panel instalado como app: la clave pública VAPID para suscribirse (vacía si el
+        push web está apagado) y si esta sesión ya tiene una suscripción. Cualquier rol; no con la
+        sesión de una IA ni del soporte.
+      responses:
+        '200':
+          description: Estado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EstadoPushWeb' }
+        '401': { $ref: '#/components/responses/Problema' }
+        '403': { $ref: '#/components/responses/Problema' }
+    post:
+      operationId: suscribirPushWeb
+      summary: >-
+        Guarda la suscripción de Web Push del navegador, atada a esta sesión y a la persona (si la
+        sesión se cierra o vence, deja de recibir). Sólo servicios de push conocidos (FCM, Apple,
+        Mozilla, Windows). Si el endpoint estaba con otra sesión, pasa a esta. 409 push_apagado si no
+        hay claves VAPID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SuscripcionWeb' }
+      responses:
+        '204': { description: Suscripta }
+        '400': { $ref: '#/components/responses/Problema' }
+        '401': { $ref: '#/components/responses/Problema' }
+        '403': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
+    delete:
+      operationId: bajaPushWeb
+      summary: Borra las suscripciones de esta sesión (desactivar los avisos en este celular).
+      responses:
+        '204': { description: Dada de baja }
+        '401': { $ref: '#/components/responses/Problema' }
+        '403': { $ref: '#/components/responses/Problema' }
+  /v1/panel/push-web/prueba:
+    post:
+      operationId: probarPushWeb
+      summary: >-
+        Encola un aviso de prueba a las suscripciones de esta sesión (lo manda el worker en un
+        segundo). 409 sin_suscripcion si esta sesión no activó los avisos, o push_apagado.
+      responses:
+        '202': { description: Encolado }
+        '401': { $ref: '#/components/responses/Problema' }
+        '403': { $ref: '#/components/responses/Problema' }
+        '409': { $ref: '#/components/responses/Problema' }
   /v1/panel/equipo:
     post:
       operationId: invitar
@@ -4069,6 +4120,24 @@ components:
         entorno: { type: string, enum: [sandbox, produccion], default: produccion, description: sandbox para la app instalada desde Xcode }
         modelo: { type: string, maxLength: 60, description: 'Por ejemplo, iPhone15,2' }
         version: { type: string, maxLength: 30, description: Versión de la app }
+    EstadoPushWeb:
+      type: object
+      required: [clave, suscripta]
+      properties:
+        clave: { type: string, description: 'Clave pública VAPID en base64url (applicationServerKey); vacía si el push web está apagado' }
+        suscripta: { type: boolean, description: Si esta sesión ya tiene una suscripción }
+    SuscripcionWeb:
+      type: object
+      description: >-
+        Lo que da PushSubscription.toJSON() en el navegador (endpoint y keys.p256dh, keys.auth), más
+        cómo se ve el aparato. El aviso que llega es JSON con title, body, url (la página del panel),
+        tienda y tag.
+      required: [endpoint, p256dh, auth]
+      properties:
+        endpoint: { type: string, format: uri, maxLength: 1000 }
+        p256dh: { type: string, description: Clave pública P-256 del navegador en base64url }
+        auth: { type: string, description: Secreto de 16 bytes en base64url }
+        aparato: { type: string, maxLength: 60, description: 'Por ejemplo, iPhone · Safari' }
     Miembro:
       type: object
       required: [id, nombre, contacto, rol, foto, ultimo, pendiente, vence, vos, dobleFactor]

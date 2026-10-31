@@ -28,6 +28,10 @@ var Rutas = map[string]Permiso{
 	"GET /v1/panel/turnos/ajustes":                  Panel, // el armazón decide si muestra Turnos
 	"POST /v1/panel/dispositivos":                   Panel, // el iPhone de la sesión (push)
 	"DELETE /v1/panel/dispositivos":                 Panel,
+	"GET /v1/panel/push-web":                        Panel, // el panel instalado de la sesión (push web)
+	"POST /v1/panel/push-web":                       Panel,
+	"DELETE /v1/panel/push-web":                     Panel,
+	"POST /v1/panel/push-web/prueba":                Panel,
 
 	// Pedidos, punto de venta, envíos, devoluciones y turnos.
 	"GET /v1/panel/pedidos":                                Pedidos,

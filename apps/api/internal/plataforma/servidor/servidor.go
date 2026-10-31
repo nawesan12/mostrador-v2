@@ -78,6 +78,8 @@ type Dependencias struct {
 	Equipo *equipo.Servicio
 	// Importar la tienda desde otra plataforma (el avance lo hace el worker). nil: no se monta.
 	Importacion *importacion.Servicio
+	// Clave pública VAPID del push web del panel instalado (vacía: apagado; §41).
+	VAPIDPublica string
 }
 
 // Nuevo devuelve el handler raíz de la API.
@@ -157,6 +159,8 @@ func Nuevo(d Dependencias) http.Handler {
 		mitienda.Rutas(mux, d.App, tienda, d.Sitio)
 		// Los iPhone de la app (token de APNs atado a la sesión).
 		push.Rutas(mux, d.App)
+		// El panel instalado como app (suscripción de Web Push atada a la sesión).
+		push.RutasWeb(mux, d.App, d.VAPIDPublica)
 		partners.Rutas(mux, d.App, d.ClaveBFF, nil)
 		var geo geoip.Ubicador
 		if d.Cuentas != nil {

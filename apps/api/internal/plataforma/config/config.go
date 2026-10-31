@@ -53,6 +53,9 @@ type Config struct {
 	// al .p8 (nunca en el repo) y el topic (el bundle id de la app). Sin Key ID, Team ID o clave, el
 	// worker no manda pushes.
 	APNsKeyID, APNsTeamID, APNsClave, APNsTopic string
+	// Web Push del panel instalado (docs/decisiones.md §41): el par VAPID en base64url (`go run
+	// ./cmd/vapid`) y el sujeto (mailto: o https:). Sin las tres, no hay push web.
+	VAPIDPublica, VAPIDPrivada, VAPIDSujeto string
 }
 
 // Desarrollo dice si se está corriendo en local.
@@ -98,6 +101,9 @@ func Leer() (Config, error) {
 		APNsTeamID:       os.Getenv("MOSTRADOR_APNS_TEAM_ID"),
 		APNsClave:        os.Getenv("MOSTRADOR_APNS_CLAVE"),
 		APNsTopic:        valor("MOSTRADOR_APNS_TOPIC", "ar.com.tulocalweb.app"),
+		VAPIDPublica:     os.Getenv("MOSTRADOR_VAPID_PUBLICA"),
+		VAPIDPrivada:     os.Getenv("MOSTRADOR_VAPID_PRIVADA"),
+		VAPIDSujeto:      os.Getenv("MOSTRADOR_VAPID_SUJETO"),
 	}
 	switch c.Entorno {
 	case "desarrollo", "staging", "produccion":

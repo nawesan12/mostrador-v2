@@ -30,6 +30,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/geoip"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/servidor"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/webpush"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/whatsapp"
 )
 
@@ -118,6 +119,7 @@ func correr() error {
 			Telegram:        &telegram.Servicio{Pool: app},
 			Equipo:          eq,
 			Importacion:     importacionDe(app, cfg.ClaveCifrado, cfg.OAuth["tiendanube"]),
+			VAPIDPublica:    vapidPublica(cfg),
 		}),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
@@ -181,4 +183,15 @@ func importacionDe(app *db.Pool, claveCifrado string, tn [2]string) *importacion
 		}
 	}
 	return s
+}
+
+// vapidPublica: la clave pública del push web para el navegador, sólo si el par VAPID está completo
+// y es válido (si no, el panel dice que los avisos al celular no están disponibles).
+func vapidPublica(cfg config.Config) string {
+	c, err := webpush.Desde(cfg.VAPIDPublica, cfg.VAPIDPrivada, cfg.VAPIDSujeto)
+	if err != nil {
+		slog.Error("push web: las claves VAPID no sirven, queda apagado", "error", err)
+		return ""
+	}
+	return c.ClavePublica()
 }

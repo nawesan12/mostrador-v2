@@ -16,6 +16,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/roles"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/apns"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/outbox"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/webpush"
 )
 
 // Enviador es lo que hace falta de APNs (*apns.Cliente lo cumple; en los tests, uno falso).
@@ -23,15 +24,22 @@ type Enviador interface {
 	Enviar(context.Context, apns.Envio) error
 }
 
-// Servicio manda los avisos del outbox. Sin APNs (nil), los manejadores no hacen nada.
+// EnviadorWeb es lo que hace falta de Web Push (*webpush.Cliente lo cumple; en los tests, uno falso).
+type EnviadorWeb interface {
+	Enviar(context.Context, webpush.Envio) error
+}
+
+// Servicio manda los avisos del outbox. Sin APNs ni Web Push (nil), los manejadores no hacen nada.
 type Servicio struct {
 	Pool Pool
 	APNs Enviador
-	Log  *slog.Logger
+	// Web: el push web del panel instalado como app (§41). nil: apagado.
+	Web EnviadorWeb
+	Log *slog.Logger
 }
 
-// Nuevo arma el servicio. Con cli nil (sin MOSTRADOR_APNS_*) el envío queda apagado y lo dice el log
-// una sola vez, al arrancar.
+// Nuevo arma el servicio. Con cli nil (sin MOSTRADOR_APNS_*) el envío al iPhone queda apagado y lo
+// dice el log una sola vez, al arrancar.
 func Nuevo(p Pool, cli *apns.Cliente, log *slog.Logger) *Servicio {
 	if log == nil {
 		log = slog.Default()
@@ -45,7 +53,17 @@ func Nuevo(p Pool, cli *apns.Cliente, log *slog.Logger) *Servicio {
 	return s
 }
 
-func (s *Servicio) activo() bool {
+// ConWeb suma el push web. Con cli nil (sin MOSTRADOR_VAPID_*) queda apagado y lo dice el log.
+func (s *Servicio) ConWeb(cli *webpush.Cliente) *Servicio {
+	if cli == nil {
+		s.Log.Info("push: Web Push sin configurar (MOSTRADOR_VAPID_*), no se mandan avisos al panel instalado")
+		return s
+	}
+	s.Web = cli
+	return s
+}
+
+func (s *Servicio) apnsActivo() bool {
 	if s == nil || s.APNs == nil {
 		return false
 	}
@@ -55,6 +73,18 @@ func (s *Servicio) activo() bool {
 	return true
 }
 
+func (s *Servicio) webActivo() bool {
+	if s == nil || s.Web == nil {
+		return false
+	}
+	if c, ok := s.Web.(*webpush.Cliente); ok && c == nil {
+		return false
+	}
+	return true
+}
+
+func (s *Servicio) activo() bool { return s.apnsActivo() || s.webActivo() }
+
 // Manejadores del outbox.
 func (s *Servicio) Manejadores() map[string]outbox.Manejador {
 	return map[string]outbox.Manejador{
@@ -62,6 +92,7 @@ func (s *Servicio) Manejadores() map[string]outbox.Manejador {
 		"push.pregunta_ml":    s.preguntaML,
 		"cuenta.ingreso_push": s.ingreso,
 		"push.sin_stock":      s.sinStock,
+		"cuenta.push_prueba":  s.prueba,
 	}
 }
 
@@ -109,67 +140,183 @@ func (s *Servicio) sinStock(ctx context.Context, ev outbox.Evento) error {
 	if err != nil {
 		return err
 	}
-	p := Payload(AvisoSinStock(ev.TiendaID, d.Producto, a))
-	var envios []apns.Envio
+	aviso := AvisoSinStock(ev.TiendaID, d.Producto, a)
+	var envios []envio
 	for _, x := range dest {
 		if roles.Puede(x.rol, roles.Productos) {
-			envios = append(envios, apns.Envio{Token: x.token, Entorno: x.entorno, Payload: p,
-				Colapso: "sin-stock-" + d.Producto, Vence: time.Now().Add(24 * time.Hour)})
+			envios = append(envios, para(x, aviso, "sin-stock-"+d.Producto, 24*time.Hour))
 		}
 	}
 	return s.mandar(ctx, envios)
 }
 
-// destino es un iPhone con el rol de su persona en la tienda del aviso.
+// destino es un iPhone (token de APNs) o un panel instalado (suscripción web), con el rol de su
+// persona en la tienda del aviso.
 type destino struct {
-	usuario, rol, token, entorno string
+	usuario, rol   string
+	token, entorno string
+	web            *webpush.Suscripcion
 }
 
-// deTienda: los iPhone del equipo de la tienda con sesión vigente.
+// envio es un aviso ya armado para un destino: por APNs o por Web Push.
+type envio struct {
+	apns *apns.Envio
+	web  *webpush.Envio
+}
+
+// para arma el envío de un aviso a un destino. colapso agrupa los reintentos (apns-collapse-id, el
+// Topic de Web Push y la etiqueta de la notificación).
+func para(d destino, a Aviso, colapso string, vida time.Duration) envio {
+	if d.web != nil {
+		return envio{web: &webpush.Envio{Suscripcion: *d.web, Payload: PayloadWeb(a, colapso), TTL: vida, Tema: colapso}}
+	}
+	return envio{apns: &apns.Envio{Token: d.token, Entorno: d.entorno, Payload: Payload(a), Colapso: colapso, Vence: time.Now().Add(vida)}}
+}
+
+// deTienda: los iPhone y los paneles instalados del equipo de la tienda con sesión vigente (de los
+// canales configurados).
 func (s *Servicio) deTienda(ctx context.Context, tienda string) ([]destino, error) {
 	var out []destino
 	err := s.Pool.EnTienda(ctx, tienda, func(t pgx.Tx) error {
-		filas, err := t.Query(ctx, `SELECT usuario_id::text, rol, token, entorno FROM app.dispositivos_de_tienda()`)
-		if err != nil {
-			return err
-		}
-		defer filas.Close()
-		for filas.Next() {
-			var d destino
-			if err := filas.Scan(&d.usuario, &d.rol, &d.token, &d.entorno); err != nil {
+		if s.apnsActivo() {
+			filas, err := t.Query(ctx, `SELECT usuario_id::text, rol, token, entorno FROM app.dispositivos_de_tienda()`)
+			if err != nil {
 				return err
 			}
-			out = append(out, d)
+			ds, err := pgx.CollectRows(filas, func(f pgx.CollectableRow) (destino, error) {
+				var d destino
+				err := f.Scan(&d.usuario, &d.rol, &d.token, &d.entorno)
+				return d, err
+			})
+			if err != nil {
+				return err
+			}
+			out = append(out, ds...)
 		}
-		return filas.Err()
+		if s.webActivo() {
+			filas, err := t.Query(ctx, `SELECT usuario_id::text, rol, endpoint, p256dh, auth FROM app.suscripciones_web_de_tienda()`)
+			if err != nil {
+				return err
+			}
+			ds, err := pgx.CollectRows(filas, func(f pgx.CollectableRow) (destino, error) {
+				d := destino{web: &webpush.Suscripcion{}}
+				err := f.Scan(&d.usuario, &d.rol, &d.web.Endpoint, &d.web.P256dh, &d.web.Auth)
+				return d, err
+			})
+			if err != nil {
+				return err
+			}
+			out = append(out, ds...)
+		}
+		return nil
 	})
 	return out, err
 }
 
-// mandar entrega un aviso a cada destino. Un token que APNs da por muerto se borra; si algún envío
-// falló de una forma que vale reintentar (APNs caído, 429), devuelve error para que el outbox
-// reintente (el apns-collapse-id evita que se vea dos veces). Lo demás se anota y sigue.
-func (s *Servicio) mandar(ctx context.Context, envios []apns.Envio) error {
-	var reintentar error
-	for _, e := range envios {
-		err := s.APNs.Enviar(ctx, e)
-		var ea *apns.Error
-		switch {
-		case err == nil:
-		case errors.Is(err, apns.ErrTokenInvalido):
-			if err := s.Pool.EnTx(ctx, func(t pgx.Tx) error {
-				_, err := t.Exec(ctx, `SELECT app.olvidar_dispositivo($1)`, e.Token)
-				return err
-			}); err != nil {
+// dePersona: los iPhone y paneles instalados de una persona, con sesión vigente y no inactiva, cuya
+// sesión cumple cond (sobre d.sesion_hash, con $1 = sesion).
+func (s *Servicio) dePersona(ctx context.Context, usuario, cond, sesion string) ([]destino, error) {
+	const vigente = ` AND s.vence_en > now()
+		AND NOT (coalesce((u.seguridad->>'inactivas')::boolean, false) AND s.visto_en < now() - $2::interval)`
+	var out []destino
+	err := s.Pool.EnUsuario(ctx, usuario, func(t pgx.Tx) error {
+		if s.apnsActivo() {
+			filas, err := t.Query(ctx, `SELECT d.token, d.entorno FROM auth.dispositivos d
+				JOIN auth.sesiones s ON s.token_hash = d.sesion_hash
+				JOIN auth.usuarios u ON u.id = d.usuario_id
+				WHERE `+cond+vigente, sesion, cuentas.Inactividad.String())
+			if err != nil {
 				return err
 			}
-		case errors.As(err, &ea) && !ea.Reintentable():
-			s.Log.Warn("push: APNs rechazó el aviso", "estado", ea.Estado, "motivo", ea.Motivo)
-		default:
+			ds, err := pgx.CollectRows(filas, func(f pgx.CollectableRow) (destino, error) {
+				var d destino
+				err := f.Scan(&d.token, &d.entorno)
+				return d, err
+			})
+			if err != nil {
+				return err
+			}
+			out = append(out, ds...)
+		}
+		if s.webActivo() {
+			filas, err := t.Query(ctx, `SELECT d.endpoint, d.p256dh, d.auth FROM auth.suscripciones_web d
+				JOIN auth.sesiones s ON s.token_hash = d.sesion_hash
+				JOIN auth.usuarios u ON u.id = d.usuario_id
+				WHERE `+cond+vigente, sesion, cuentas.Inactividad.String())
+			if err != nil {
+				return err
+			}
+			ds, err := pgx.CollectRows(filas, func(f pgx.CollectableRow) (destino, error) {
+				d := destino{web: &webpush.Suscripcion{}}
+				err := f.Scan(&d.web.Endpoint, &d.web.P256dh, &d.web.Auth)
+				return d, err
+			})
+			if err != nil {
+				return err
+			}
+			out = append(out, ds...)
+		}
+		return nil
+	})
+	return out, err
+}
+
+// mandar entrega cada envío. Un token que APNs da por muerto o una suscripción que el servicio de
+// push da por vencida (404/410) se borra; si algún envío falló de una forma que vale reintentar
+// (servicio caído, 429), devuelve error para que el outbox reintente (apns-collapse-id y Topic
+// evitan que se vea dos veces). Lo demás se anota y sigue.
+func (s *Servicio) mandar(ctx context.Context, envios []envio) error {
+	var reintentar error
+	for _, e := range envios {
+		var err error
+		if e.web != nil {
+			err = s.mandarWeb(ctx, *e.web)
+		} else {
+			err = s.mandarAPNs(ctx, *e.apns)
+		}
+		if err != nil {
 			reintentar = err
 		}
 	}
 	return reintentar
+}
+
+// mandarAPNs: devuelve error sólo si vale reintentar.
+func (s *Servicio) mandarAPNs(ctx context.Context, e apns.Envio) error {
+	err := s.APNs.Enviar(ctx, e)
+	var ea *apns.Error
+	switch {
+	case err == nil:
+	case errors.Is(err, apns.ErrTokenInvalido):
+		return s.Pool.EnTx(ctx, func(t pgx.Tx) error {
+			_, err := t.Exec(ctx, `SELECT app.olvidar_dispositivo($1)`, e.Token)
+			return err
+		})
+	case errors.As(err, &ea) && !ea.Reintentable():
+		s.Log.Warn("push: APNs rechazó el aviso", "estado", ea.Estado, "motivo", ea.Motivo)
+	default:
+		return err
+	}
+	return nil
+}
+
+// mandarWeb: devuelve error sólo si vale reintentar.
+func (s *Servicio) mandarWeb(ctx context.Context, e webpush.Envio) error {
+	err := s.Web.Enviar(ctx, e)
+	var ew *webpush.Error
+	switch {
+	case err == nil:
+	case errors.Is(err, webpush.ErrVencida), errors.Is(err, webpush.ErrInvalida):
+		return s.Pool.EnTx(ctx, func(t pgx.Tx) error {
+			_, err := t.Exec(ctx, `SELECT app.olvidar_suscripcion_web($1)`, e.Endpoint)
+			return err
+		})
+	case errors.As(err, &ew) && !ew.Reintentable():
+		s.Log.Warn("push: el servicio de push web rechazó el aviso", "estado", ew.Estado)
+	default:
+		return err
+	}
+	return nil
 }
 
 // Venta es lo que dice el push de una venta, según quién lo lee.
@@ -210,7 +357,7 @@ func AvisoVenta(tienda, rol string, v Venta) Aviso {
 
 // venta: push.venta, que encola el trigger app.avisar_venta_tienda junto con el mail. Sale una sola
 // vez (pedidos.avisos->'push_venta'), a quien tiene Pedidos, y no sale si la tienda apagó
-// Notificaciones › Venta nueva › Celular.
+// Notificaciones › Venta nueva › Celular (vale para el iPhone y para el panel instalado).
 func (s *Servicio) venta(ctx context.Context, ev outbox.Evento) error {
 	if !s.activo() {
 		return nil
@@ -244,13 +391,12 @@ func (s *Servicio) venta(ctx context.Context, ev outbox.Evento) error {
 	if err != nil {
 		return err
 	}
-	var envios []apns.Envio
+	var envios []envio
 	for _, x := range dest {
 		if !roles.Puede(x.rol, roles.Pedidos) {
 			continue
 		}
-		envios = append(envios, apns.Envio{Token: x.token, Entorno: x.entorno, Payload: Payload(AvisoVenta(ev.TiendaID, x.rol, v)),
-			Colapso: fmt.Sprintf("venta-%d", v.Numero), Vence: time.Now().Add(24 * time.Hour)})
+		envios = append(envios, para(x, AvisoVenta(ev.TiendaID, x.rol, v), fmt.Sprintf("venta-%d", v.Numero), 24*time.Hour))
 	}
 	if len(envios) == 0 {
 		return nil
@@ -308,11 +454,10 @@ func (s *Servicio) preguntaML(ctx context.Context, ev outbox.Evento) error {
 	if err != nil {
 		return err
 	}
-	var envios []apns.Envio
+	var envios []envio
 	for _, x := range dest {
 		if roles.Puede(x.rol, roles.Clientes) {
-			envios = append(envios, apns.Envio{Token: x.token, Entorno: x.entorno, Payload: Payload(AvisoPreguntaML(ev.TiendaID, d.ID, producto)),
-				Colapso: fmt.Sprintf("pregunta-ml-%d", d.ID), Vence: time.Now().Add(24 * time.Hour)})
+			envios = append(envios, para(x, AvisoPreguntaML(ev.TiendaID, d.ID, producto), fmt.Sprintf("pregunta-ml-%d", d.ID), 24*time.Hour))
 		}
 	}
 	return s.mandar(ctx, envios)
@@ -327,7 +472,8 @@ func AvisoIngreso(aparato string) Aviso {
 	return Aviso{Titulo: "Entraron a tu cuenta", Cuerpo: cuerpo, Hilo: "cuenta", Ruta: "cuenta/seguridad"}
 }
 
-// ingreso: cuenta.ingreso_push, sólo a los iPhone de la persona, menos el de la sesión nueva.
+// ingreso: cuenta.ingreso_push, sólo a los iPhone y paneles instalados de la persona, menos los de
+// la sesión nueva.
 func (s *Servicio) ingreso(ctx context.Context, ev outbox.Evento) error {
 	if !s.activo() {
 		return nil
@@ -336,30 +482,37 @@ func (s *Servicio) ingreso(ctx context.Context, ev outbox.Evento) error {
 	if json.Unmarshal(ev.Datos, &d) != nil || d.Usuario == "" {
 		return nil
 	}
-	var envios []apns.Envio
-	err := s.Pool.EnUsuario(ctx, d.Usuario, func(t pgx.Tx) error {
-		filas, err := t.Query(ctx, `SELECT d.token, d.entorno FROM auth.dispositivos d
-			JOIN auth.sesiones s ON s.token_hash = d.sesion_hash
-			JOIN auth.usuarios u ON u.id = d.usuario_id
-			WHERE d.sesion_hash <> $1 AND s.vence_en > now()
-				AND NOT (coalesce((u.seguridad->>'inactivas')::boolean, false) AND s.visto_en < now() - $2::interval)`,
-			d.Sesion, cuentas.Inactividad.String())
-		if err != nil {
-			return err
-		}
-		defer filas.Close()
-		p := Payload(AvisoIngreso(d.Aparato))
-		for filas.Next() {
-			e := apns.Envio{Payload: p, Colapso: fmt.Sprintf("ingreso-%d", ev.ID), Vence: time.Now().Add(6 * time.Hour)}
-			if err := filas.Scan(&e.Token, &e.Entorno); err != nil {
-				return err
-			}
-			envios = append(envios, e)
-		}
-		return filas.Err()
-	})
+	dest, err := s.dePersona(ctx, d.Usuario, `d.sesion_hash <> $1`, d.Sesion)
 	if err != nil {
 		return err
+	}
+	a := AvisoIngreso(d.Aparato)
+	var envios []envio
+	for _, x := range dest {
+		envios = append(envios, para(x, a, fmt.Sprintf("ingreso-%d", ev.ID), 6*time.Hour))
+	}
+	return s.mandar(ctx, envios)
+}
+
+// prueba: cuenta.push_prueba, «Mandame un aviso de prueba» de Notificaciones. Sólo al panel
+// instalado de esa sesión (el celular donde se tocó el botón).
+func (s *Servicio) prueba(ctx context.Context, ev outbox.Evento) error {
+	if !s.webActivo() {
+		return nil
+	}
+	var d Prueba
+	if json.Unmarshal(ev.Datos, &d) != nil || d.Usuario == "" || d.Sesion == "" {
+		return nil
+	}
+	dest, err := s.dePersona(ctx, d.Usuario, `d.sesion_hash = $1`, d.Sesion)
+	if err != nil {
+		return err
+	}
+	var envios []envio
+	for _, x := range dest {
+		if x.web != nil {
+			envios = append(envios, para(x, AvisoPrueba(), fmt.Sprintf("prueba-%d", ev.ID), 10*time.Minute))
+		}
 	}
 	return s.mandar(ctx, envios)
 }

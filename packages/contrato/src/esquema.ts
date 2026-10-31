@@ -2075,6 +2075,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/push-web": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Push web del panel instalado como app: la clave pública VAPID para suscribirse (vacía si el push web está apagado) y si esta sesión ya tiene una suscripción. Cualquier rol; no con la sesión de una IA ni del soporte. */
+        get: operations["estadoPushWeb"];
+        put?: never;
+        /** Guarda la suscripción de Web Push del navegador, atada a esta sesión y a la persona (si la sesión se cierra o vence, deja de recibir). Sólo servicios de push conocidos (FCM, Apple, Mozilla, Windows). Si el endpoint estaba con otra sesión, pasa a esta. 409 push_apagado si no hay claves VAPID. */
+        post: operations["suscribirPushWeb"];
+        /** Borra las suscripciones de esta sesión (desactivar los avisos en este celular). */
+        delete: operations["bajaPushWeb"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/push-web/prueba": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Encola un aviso de prueba a las suscripciones de esta sesión (lo manda el worker en un segundo). 409 sin_suscripcion si esta sesión no activó los avisos, o push_apagado. */
+        post: operations["probarPushWeb"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/equipo": {
         parameters: {
             query?: never;
@@ -3904,6 +3940,23 @@ export interface components {
             modelo?: string;
             /** @description Versión de la app */
             version?: string;
+        };
+        EstadoPushWeb: {
+            /** @description Clave pública VAPID en base64url (applicationServerKey); vacía si el push web está apagado */
+            clave: string;
+            /** @description Si esta sesión ya tiene una suscripción */
+            suscripta: boolean;
+        };
+        /** @description Lo que da PushSubscription.toJSON() en el navegador (endpoint y keys.p256dh, keys.auth), más cómo se ve el aparato. El aviso que llega es JSON con title, body, url (la página del panel), tienda y tag. */
+        SuscripcionWeb: {
+            /** Format: uri */
+            endpoint: string;
+            /** @description Clave pública P-256 del navegador en base64url */
+            p256dh: string;
+            /** @description Secreto de 16 bytes en base64url */
+            auth: string;
+            /** @description Por ejemplo, iPhone · Safari */
+            aparato?: string;
         };
         Miembro: {
             id: string;
@@ -8904,6 +8957,95 @@ export interface operations {
             };
             401: components["responses"]["Problema"];
             403: components["responses"]["Problema"];
+        };
+    };
+    estadoPushWeb: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Estado */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EstadoPushWeb"];
+                };
+            };
+            401: components["responses"]["Problema"];
+            403: components["responses"]["Problema"];
+        };
+    };
+    suscribirPushWeb: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SuscripcionWeb"];
+            };
+        };
+        responses: {
+            /** @description Suscripta */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problema"];
+            401: components["responses"]["Problema"];
+            403: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
+        };
+    };
+    bajaPushWeb: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Dada de baja */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problema"];
+            403: components["responses"]["Problema"];
+        };
+    };
+    probarPushWeb: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Encolado */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problema"];
+            403: components["responses"]["Problema"];
+            409: components["responses"]["Problema"];
         };
     };
     invitar: {
