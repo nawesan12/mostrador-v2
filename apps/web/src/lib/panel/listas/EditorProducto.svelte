@@ -17,6 +17,7 @@
 		type Variante
 	} from '#lib/tienda/variantes.ts';
 	import type { components } from '@mostrador/contrato/esquema';
+	import { compartirProducto } from '../compartir.ts';
 	import { subir } from '../fotos.ts';
 	import { pesos } from '../formato.ts';
 
@@ -135,13 +136,16 @@
 	const margen = $derived(
 		precio && costo > 0 ? Math.round(((precio - costo) / precio) * 100) : null
 	);
+	// El link no cambia al renombrar (docs: migración 00043): el de un producto ya creado es el suyo.
 	const slug = $derived(
-		nombre
-			.normalize('NFD')
-			.replace(/[̀-ͯ]/g, '')
-			.toLowerCase()
-			.replace(/[^a-z0-9]+/g, '-')
-			.replace(/^-|-$/g, '') || 'producto'
+		producto?.slug ||
+			nombre
+				.normalize('NFD')
+				.replace(/[̀-ͯ]/g, '')
+				.toLowerCase()
+				.replace(/[^a-z0-9]+/g, '-')
+				.replace(/^-|-$/g, '') ||
+			'producto'
 	);
 	/**
 	 * El precio de la tienda y, con Mercado Libre conectado, el que se publica allá: con el recargo
@@ -588,7 +592,7 @@
 	</div>
 
 	{#snippet pie()}
-		<div class="pie">
+		<div class="pie" class:editando={!!producto}>
 			{#if producto}
 				<button
 					type="button"
@@ -608,6 +612,15 @@
 						disabled={guardando}
 						aria-label="Duplicar el producto"
 						title="Duplicar"><Icon icon={I.phCopyBold} size={18} /></button
+					>
+					<button
+						type="button"
+						class="icono"
+						onclick={() =>
+							producto && compartirProducto(ui, page.data.tienda?.slug ?? '', producto, guardar)}
+						disabled={guardando}
+						aria-label="Compartir el producto"
+						title="Compartir"><Icon icon={I.phShareNetworkBold} size={18} /></button
 					>
 				{/if}
 			{/if}
@@ -1058,6 +1071,13 @@
 		color: var(--tx);
 		font-size: 14px;
 		font-weight: 600;
+	}
+	/* En el celular, editando, la cruz de arriba ya cierra: «Cancelar» deja lugar a borrar, duplicar
+	   y compartir sin partir «Guardar y publicar». */
+	@media (max-width: 760px) {
+		.pie.editando .cancelar {
+			display: none;
+		}
 	}
 	.guardar {
 		flex: 1;

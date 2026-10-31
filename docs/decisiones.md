@@ -868,3 +868,17 @@ existe; esto deja listo lo que va a usar.
   Plantilla de los mails de la tienda.
 - **Preferencia**: Notificaciones › «Sin stock» (`sinstock:email` y `sinstock:celular` de la matriz,
   prendidos por defecto); el worker la mira al mandar.
+
+## 42. Compartir un producto (sin migración)
+
+- **Dónde**: «Compartir» en cada fila de Productos y en el pie del editor; en la ficha pública, un
+  botón chico debajo de comprar (las doce plantillas, `CompartirProducto.svelte`).
+- **Cómo** (`lib/panel/compartir.ts`): en el celular, la hoja de compartir del sistema con
+  «Nombre · $ precio — link» y la imagen del producto (`/t/<slug>/producto/<id>/compartir/0.jpg`, la
+  de §34) como archivo si el navegador lo acepta; la imagen se espera 1,2 s como mucho (Safari sólo
+  abre la hoja poco después del toque) y si no llega se comparte sin ella. En la compu, el link queda
+  copiado y el aviso ofrece «Enviar por WhatsApp» (wa.me con el mismo texto); en la ficha pública,
+  «Link copiado».
+- **Sólo publicados**: uno pausado avisa «Primero publicalo», con el botón para publicarlo.
+- **El link** es el slug guardado del producto (fijo desde que se creó, migración 00043): la lista y
+  la ficha del panel ahora lo leen de la base en vez de armarlo del nombre.

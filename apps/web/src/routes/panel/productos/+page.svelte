@@ -9,6 +9,7 @@
 	import * as I from '#lib/icons.ts';
 	import EditorProducto from '#lib/panel/listas/EditorProducto.svelte';
 	import MotorLista from '#lib/panel/listas/MotorLista.svelte';
+	import { compartirProducto } from '#lib/panel/compartir.ts';
 	import { configProductos, type ProductoFila } from '#lib/panel/listas/productos.ts';
 	import { SITE } from '#lib/site.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
@@ -40,7 +41,18 @@
 		(ids) => {
 			porcentaje = ids;
 			cambiandoPrecio = true;
-		}
+		},
+		(p, ctx) =>
+			compartirProducto(ui, tienda.slug, p, async () => {
+				await ctx.accion([p.id], 'publicar', true);
+				ui.toast({
+					k: 'ok',
+					title: `${p.nombre} publicado`,
+					desc: 'Ya lo podés compartir',
+					action: 'Compartir',
+					onAction: () => compartirProducto(ui, tienda.slug, { ...p, publicado: true })
+				});
+			})
 	);
 
 	async function abrir(p: ProductoFila) {
@@ -200,6 +212,13 @@
 		replaceState(resolve('/panel/productos'), {});
 		producto = null;
 		editor = true;
+	});
+	// ?editar=<id> (el botón «Reponer stock» del aviso de sin stock): abre ese producto.
+	$effect(() => {
+		const id = page.url.searchParams.get('editar');
+		if (!id) return;
+		replaceState(resolve('/panel/productos'), {});
+		void abrir({ id } as ProductoFila);
 	});
 	/** Las etapas de cada plataforma: de un link, sin cuenta, sólo salen productos. */
 	const etapasCola = $derived(

@@ -9,6 +9,7 @@
 	import { enOrden } from '../secciones.ts';
 	import * as I from '#lib/icons.ts';
 	import FormResena from '../FormResena.svelte';
+	import CompartirProducto from '../CompartirProducto.svelte';
 	import PreguntasProducto from '../PreguntasProducto.svelte';
 	import type { TemaOpiniones } from '../opiniones.ts';
 	import { carritoDe } from '../carrito.svelte.ts';
@@ -1211,6 +1212,7 @@
 							style="margin-top:8px;display:flex;justify-content:center;align-items:center;gap:8px;padding:14px;border-radius:999px;border:1.5px solid #E2C3C8;font-size:14.5px;font-weight:700;color:#3A1F25;text-decoration:none"
 							><Icon icon={I.logosWhatsappIcon} size={17} />Consultanos por WhatsApp</a
 						>{/if}
+					<CompartirProducto {tienda} {producto} {tema} />
 					{#if envia(tienda.envios)}<div
 							style="margin-top:18px;padding:16px;border-radius:22px;background:#fff"
 						>

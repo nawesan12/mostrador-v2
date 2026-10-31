@@ -375,6 +375,8 @@ export type RegProducto = {
 	estado: 'active' | 'out' | 'paused' | 'draft';
 	lowm: boolean;
 	star: boolean;
+	/** La parte del link público (como la tienda de la demo: del nombre). */
+	slug: string;
 };
 
 /** Clave del stock de una variante en los cambios del sandbox (ajustes y ventas). */
@@ -486,7 +488,7 @@ export function registrosProductos(
 	return [...nuevos, ...delCatalogo];
 }
 
-function armar(p: Omit<RegProducto, 'margen' | 'estado' | 'lowm' | 'star'>): RegProducto {
+function armar(p: Omit<RegProducto, 'margen' | 'estado' | 'lowm' | 'star' | 'slug'>): RegProducto {
 	const margen =
 		p.precio && p.costo > 0 ? Math.round(((p.precio - p.costo) / p.precio) * 100) : null;
 	const estado: RegProducto['estado'] = !p.publicado
@@ -496,7 +498,14 @@ function armar(p: Omit<RegProducto, 'margen' | 'estado' | 'lowm' | 'star'>): Reg
 		: p.stock === 0
 			? 'out'
 			: 'active';
-	return { ...p, margen, estado, lowm: margen !== null && margen < 25, star: p.vendidos30 > 60 };
+	return {
+		...p,
+		margen,
+		estado,
+		lowm: margen !== null && margen < 25,
+		star: p.vendidos30 > 60,
+		slug: slugProducto(p.nombre)
+	};
 }
 
 export const DEF_PRODUCTOS: DefLista<RegProducto> = {

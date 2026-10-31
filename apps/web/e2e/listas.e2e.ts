@@ -51,7 +51,9 @@ test('clientes: alta y etiqueta', async ({ page }) => {
 
 test('productos: pausar, editar, crear y exportar', async ({ page }) => {
 	await demo(page, '/panel/productos');
-	await expect(page.getByText('Cargá productos con sus fotos')).toBeVisible();
+	// La invitación a cargar con foto es sólo para la lista vacía; la demo ya tiene productos.
+	await expect(page.locator('.fila').first()).toBeVisible();
+	await expect(page.getByText('Cargá productos con sus fotos')).toHaveCount(0);
 	expect(await sinDesborde(page)).toBeLessThanOrEqual(0);
 
 	const primero = page.locator('.fila').first();
@@ -90,6 +92,52 @@ test('productos: pausar, editar, crear y exportar', async ({ page }) => {
 	const csv = await (await page.request.get('/panel/listas/productos/exportar')).text();
 	expect(csv.split('\r\n')[0]).toContain('Nombre;SKU;Categoría;Precio');
 	expect(csv).toContain('Termo de prueba');
+});
+
+test('productos: compartir uno publicado; pausado pide publicarlo', async ({ page }, info) => {
+	// La hoja del sistema, de mentira: registra lo que se compartió.
+	await page.addInitScript(() => {
+		const w = window as unknown as { compartido: ShareData[] };
+		w.compartido = [];
+		Object.defineProperty(navigator, 'share', {
+			value: async (d: ShareData) => void w.compartido.push(d)
+		});
+		Object.defineProperty(navigator, 'canShare', { value: () => true });
+	});
+	await demo(page, '/panel/productos');
+	const fila = page
+		.locator('.fila')
+		.filter({ has: page.locator('[role=switch][aria-checked=true]') })
+		.first();
+	const nombre = (await fila.locator('.q-t').textContent())!.trim();
+	const esa = page.locator('.fila').filter({ hasText: nombre }).first();
+	await esa.getByRole('button', { name: `Compartir: ${nombre}` }).click();
+	if (info.project.name === 'mobile') {
+		await expect
+			.poll(() =>
+				page.evaluate(() => (window as unknown as { compartido: ShareData[] }).compartido)
+			)
+			.toHaveLength(1);
+		const [d] = await page.evaluate(
+			() => (window as unknown as { compartido: ShareData[] }).compartido
+		);
+		expect(d.text).toMatch(
+			new RegExp(
+				`^${nombre.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} · \\$ [\\d.]+ — https://tulocalweb\\.com\\.ar/t/[^/]+/producto/`
+			)
+		);
+	} else {
+		await expect(page.getByText(/link del producto/i)).toBeVisible();
+		await expect(page.getByRole('button', { name: 'Enviar por WhatsApp' })).toBeVisible();
+	}
+
+	// Pausado: avisa que primero hay que publicarlo, con el botón para hacerlo.
+	await esa.getByRole('switch').click();
+	await expect(page.getByText(`${nombre} pausado`)).toBeVisible();
+	await esa.getByRole('button', { name: `Compartir: ${nombre}` }).click();
+	await expect(page.getByText('Primero publicalo')).toBeVisible();
+	await page.getByRole('button', { name: 'Publicar', exact: true }).click();
+	await expect(page.getByText(`${nombre} publicado`)).toBeVisible();
 });
 
 test('productos: importar un CSV', async ({ page }) => {

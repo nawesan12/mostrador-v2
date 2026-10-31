@@ -1373,6 +1373,14 @@
 		.chip-f {
 			display: none;
 		}
+		/* Con acción por fila (compartir, pedir…) el nombre necesita cada píxel: el monto ocupa lo
+		   suyo y la acción es sólo el ícono (el área de toque sigue siendo de 44 px). */
+		.valor {
+			min-width: 0;
+		}
+		.accion {
+			padding: 8px;
+		}
 		.tip {
 			flex-wrap: wrap;
 		}

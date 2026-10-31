@@ -4,7 +4,7 @@ import { unsplash } from '#lib/landing/formato.ts';
 import { pesos } from '../formato.ts';
 import { rutaDe } from '../navegacion.ts';
 import { CANALES } from './clientes.ts';
-import type { ConfigLista } from './tipos.ts';
+import type { ConfigLista, Ctx } from './tipos.ts';
 
 export type ProductoFila = {
 	id: string;
@@ -21,6 +21,8 @@ export type ProductoFila = {
 	vendidos30: number;
 	canales: string[];
 	publicado: boolean;
+	/** La parte del link público (/t/<tienda>/producto/<slug>). */
+	slug?: string;
 	estado: 'active' | 'out' | 'paused' | 'draft';
 	lowm: boolean;
 	star: boolean;
@@ -42,7 +44,8 @@ const ESTADO = {
 
 export function configProductos(
 	nuevo: () => void,
-	pedirPorcentaje: (ids: string[]) => void
+	pedirPorcentaje: (ids: string[]) => void,
+	compartir: (p: ProductoFila, ctx: Ctx) => Promise<void>
 ): ConfigLista<ProductoFila> {
 	return {
 		lista: 'productos',
@@ -143,9 +146,11 @@ export function configProductos(
 				chip: e ? { t: e[0], bg: e[1], fg: e[2] } : undefined,
 				v: pesos(p.precio),
 				vs: 'precio',
-				toggle: { on: p.publicado, t: p.publicado ? 'Publicado' : 'Pausado' }
+				toggle: { on: p.publicado, t: p.publicado ? 'Publicado' : 'Pausado' },
+				act: { t: 'Compartir', icon: I.phShareNetworkBold, bg: 'var(--sf3)', fg: 'var(--tx)' }
 			};
 		},
+		accionFila: compartir,
 		async alternar(p, on, ctx) {
 			await ctx.accion([p.id], 'publicar', on);
 			ctx.ui.toast({

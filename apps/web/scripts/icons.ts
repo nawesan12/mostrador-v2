@@ -57,6 +57,8 @@ const EXTRA = [
 	'ph:arrow-down-bold',
 	'ph:pencil-simple',
 	'ph:calendar-x',
+	// Compartir un producto (panel y ficha pública).
+	'ph:share-network-bold',
 	// Seguir con Apple en /ingresar (Clerk).
 	'logos:apple'
 ];
