@@ -676,3 +676,42 @@ URL, para que no quede en el historial ni en logs.
   desde que se mide. Tincho recibe las visitas en su contexto (`ContextoHornero.visitas`). Sin
   ninguna visita, el panel lo dice y la conversión queda en «—». La demo sigue con su «Ahora en tu
   tienda» de ejemplo.
+
+## 37. El equipo de cada tienda: roles fijos aplicados en Go e invitaciones por mail (migración 00054)
+
+- **Roles fijos en vez de la matriz editable**: la matriz de Usuarios y permisos se guardaba pero
+  Go no la aplicaba (cualquiera del equipo veía y hacía todo). Se reemplazó por cuatro roles claros
+  que Go aplica en cada ruta: **Dueña** (todo), **Administración** (todo menos el plan, la
+  facturación de Tu Local Web y el equipo), **Ventas** (pedidos, clientes y productos, sin precios,
+  costos ni finanzas) y **Local** (punto de venta, pedidos y ver productos). «Depósito» pasó a
+  «Local»; la columna `tiendas.permisos` queda sin uso. La tabla rol → permisos es una sola:
+  `roles.porRol` en Go y `lib/panel/permisos.ts` en la web, comparadas por test contra
+  `apps/api/internal/dominio/roles/testdata/roles.json`.
+- **Go decide, la web oculta**: `roles.Guardia` resuelve cada pedido de `/v1/panel/` con un
+  `ServeMux` propio cargado con `roles.Rutas` (el mismo patrón con que se registra la ruta) y responde
+  403 si el rol no tiene el permiso. Una ruta que no está en la tabla sólo la usa la dueña (cerrado por
+  defecto) y un test recorre el código y falla si una ruta del panel no tiene permiso. Lo que depende
+  del cuerpo va en el handler: Ventas no ve `costo`/`margen` en productos e inventario, y al editar un
+  producto Go conserva precio, costo y precios de variantes; la acción «precio» de la lista pide
+  Catálogo. `GET /v1/panel/configuracion` no le manda los datos del negocio (alias, CBU) a quien no
+  tiene Tienda ni el equipo a quien no es dueña. La seguridad y las sesiones son de cada persona: las
+  ve cualquiera. Las IA conectadas heredan el rol de quien las conectó.
+- **Invitar sólo por email**: el link (`/invitacion?token=…`) es de un solo uso y vence a los 7 días;
+  el sha256 del token vive en `auth.invitaciones` (fuera de RLS: quien abre el link todavía no es de
+  la tienda; de ahí sale la tienda y recién entonces se lee la invitación con la tienda fijada). El
+  mail sale por el outbox (`cuenta.invitacion`, sin tienda, plantilla de los mails de cuentas). Hasta
+  30 mails de invitación por tienda por hora. Reenviar arma un link nuevo y anula el anterior;
+  cancelar borra la invitación y su link. Las invitaciones viejas por WhatsApp quedan «sin mandar»:
+  se cancelan e invitan por email.
+- **Aceptar**: con sesión, «Sumarme» (si ya era del equipo, conserva su rol) y la sesión pasa a esa
+  tienda. Sin sesión: si el email ya tiene cuenta, ingresa (clave, Google o Apple) y vuelve al link;
+  si no, crea la cuenta ahí con el email de la invitación (queda verificado) o con Google/Apple, y
+  **no se crea otra tienda**. Para Google y Apple el token viaja en la cookie corta `tlw_invitacion`
+  hasta `/ingresar/clerk`, que lo manda a `POST /v1/auth/clerk` (`invitacion`).
+- **Quitar y cambiar rol**: quitar borra la membresía y cierra las sesiones de esa persona en esa
+  tienda (su cuenta y sus otras tiendas siguen). A la dueña no se la quita ni se la degrada, nadie
+  pasa a dueña y nadie se cambia a sí misma.
+- **Varias tiendas**: `GET /v1/auth/tiendas` da la tienda actual, el rol, sus permisos y todas las
+  tiendas de la persona (`app.tiendas_de_usuario`, que fija cada tienda de sus membresías para leerla
+  con RLS forzada); `PUT /v1/auth/tienda` cambia la de la sesión. En la barra lateral aparece un
+  selector simple cuando hay más de una.
