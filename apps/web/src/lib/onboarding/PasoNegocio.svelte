@@ -1,6 +1,8 @@
 <script lang="ts">
 	import RUBROS from '@mostrador/contrato/rubros.json';
+	import CampoDireccion from '#lib/components/CampoDireccion.svelte';
 	import Icon from '#lib/components/Icon.svelte';
+	import { esNombreAutomatico } from '#lib/tienda/direccion.ts';
 	import * as I from '#lib/icons.ts';
 	import { DATOS_NEGOCIO, HALLAZGOS, OBJETIVOS } from './datos.ts';
 	import Etiqueta from './Etiqueta.svelte';
@@ -13,6 +15,11 @@
 	 * quedan los objetivos (nunca datos de otro negocio).
 	 */
 	const o = getOnboarding();
+	// El nombre que puso el registro con Google, Apple o Mercado Pago: se muestra, pero invita a
+	// cambiarlo (decisiones §38).
+	const automatico = $derived(
+		!!o.tienda && esNombreAutomatico(o.tienda.nombre) && o.nombre.trim() === o.tienda.nombre
+	);
 	const COLORES = ['#6B3A22', '#E9D8C4', '#2F5D50'];
 
 	function aparece(el: HTMLElement) {
@@ -88,6 +95,49 @@
 	</div>
 {:else}
 	<Etiqueta rotulo="Tu negocio" titulo="Contanos un poco de tu negocio." />
+	{#if o.tienda}
+		<div class="objetivos tienda">
+			<label class="o-t" for="ob-nombre">¿Cómo se llama tu tienda?</label>
+			<div class="o-d">Es lo que ve quien entra a comprar. Lo podés cambiar cuando quieras.</div>
+			<input
+				id="ob-nombre"
+				class="ob-in"
+				class:sugerido={automatico}
+				value={o.nombre}
+				oninput={(e) => o.cambiarNombre(e.currentTarget.value)}
+				maxlength="80"
+				autocomplete="organization"
+				placeholder="Por ejemplo, Almacén Don Pepe"
+				aria-describedby={automatico ? 'ob-nombre-sug' : undefined}
+			/>
+			{#if automatico}
+				<div class="sug" id="ob-nombre-sug">
+					<Icon icon={I.phLightbulbFill} size={15} />
+					<span
+						>Lo armamos con tu nombre para empezar. Poné el de tu negocio: así te encuentran, y la
+						dirección se arma sola con ese nombre.</span
+					>
+				</div>
+			{/if}
+			<div class="dir">
+				<CampoDireccion
+					id="ob-direccion"
+					bind:slug={o.slug}
+					bind:estado={o.estadoDireccion}
+					actual={o.tienda.slug}
+					oninput={() => {
+						o.slugTocado = true;
+						o.errorTienda = '';
+					}}
+				/>
+				<div class="o-d nota-dir">
+					Va en tus links, el QR y lo que compartas. Si la cambiás más adelante, los links viejos
+					siguen andando.
+				</div>
+			</div>
+			{#if o.errorTienda}<div class="err" role="alert">{o.errorTienda}</div>{/if}
+		</div>
+	{/if}
 	<div class="objetivos">
 		<div class="o-t">¿Qué vendés?</div>
 		<div class="o-d">
@@ -296,6 +346,64 @@
 		font-weight: 500;
 		border: 1px dashed rgba(58, 29, 18, 0.25);
 		color: #7a6252;
+	}
+	.tienda {
+		display: flex;
+		flex-direction: column;
+	}
+	.tienda .o-t {
+		display: block;
+	}
+	.ob-in {
+		margin-top: 12px;
+		min-height: 48px;
+		padding: 0 14px;
+		border-radius: 14px;
+		border: 1.5px solid rgba(58, 29, 18, 0.14);
+		background: #fff;
+		font:
+			600 16px 'Instrument Sans',
+			sans-serif;
+		color: #2a140c;
+		outline: none;
+		transition: border-color 0.2s;
+		width: 100%;
+		min-width: 0;
+	}
+	.ob-in:focus {
+		border-color: #d2582f;
+	}
+	.ob-in.sugerido {
+		color: #7a6252;
+		border-style: dashed;
+	}
+	.sug {
+		display: flex;
+		gap: 8px;
+		align-items: flex-start;
+		margin-top: 10px;
+		padding: 10px 12px;
+		border-radius: 12px;
+		background: #fcede5;
+		color: #8a3a1a;
+		font-size: 13px;
+		line-height: 1.4;
+	}
+	.sug :global(svg) {
+		flex: none;
+		margin-top: 1px;
+	}
+	.dir {
+		margin-top: 16px;
+	}
+	.nota-dir {
+		margin-top: 2px;
+	}
+	.err {
+		margin-top: 10px;
+		font-size: 13.5px;
+		font-weight: 600;
+		color: #b83a2e;
 	}
 	.objetivos {
 		margin-top: 26px;

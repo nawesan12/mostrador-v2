@@ -3,8 +3,8 @@
 	import { page } from '$app/state';
 	import Marca from '#lib/landing/Marca.svelte';
 	import { onMount, tick } from 'svelte';
-	import { enhance } from '$app/forms';
-	import { replaceState } from '$app/navigation';
+	import { deserialize, enhance } from '$app/forms';
+	import { invalidateAll, replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Grano from '#lib/components/Grano.svelte';
 	import Icon from '#lib/components/Icon.svelte';
@@ -20,6 +20,7 @@
 		PORCENTAJE
 	} from '#lib/onboarding/datos.ts';
 	import { Onboarding, setOnboarding } from '#lib/onboarding/estado.svelte.ts';
+	import { slugFinal } from '#lib/tienda/direccion.ts';
 	import PasoCanales from '#lib/onboarding/PasoCanales.svelte';
 	import PasoCobros from '#lib/onboarding/PasoCobros.svelte';
 	import PasoCuenta from '#lib/onboarding/PasoCuenta.svelte';
@@ -38,6 +39,7 @@
 	let listo = $state(false);
 	onMount(() => {
 		o.demo = data.demo;
+		o.fijarTienda(data.tienda);
 		o.cargar();
 		// Desde «Usar esta plantilla» de la landing: ?plantilla= manda sobre lo guardado.
 		const tpl = page.url.searchParams.get('plantilla');
@@ -83,6 +85,7 @@
 			plantilla: o.e.plantilla,
 			elecciones: {
 				objetivos: o.e.objetivos,
+				rubro: o.e.rubro,
 				conexiones: o.e.conexiones,
 				conflicto: o.e.conflicto,
 				instagram: o.e.instagram,
@@ -103,7 +106,61 @@
 		formFin?.requestSubmit();
 	};
 
-	const siguiente = () => o.ir(paso + 1);
+	/**
+	 * Paso 2 con la API: el nombre y la dirección se guardan al seguir (decisiones §38). Si la
+	 * dirección no se puede, queda en el paso con el motivo. «Hacerlo después» no frena por eso.
+	 */
+	async function guardarTienda(): Promise<boolean> {
+		if (!o.tienda) return true;
+		const nombre = o.nombre.trim();
+		const slug = slugFinal(o.slug) || o.tienda.slug;
+		if (!nombre) {
+			o.errorTienda = 'Poné el nombre de tu tienda.';
+			return false;
+		}
+		if (nombre === o.tienda.nombre && slug === o.tienda.slug) return true;
+		if (o.estadoDireccion === 'mal') {
+			o.errorTienda = 'Elegí otra dirección: esa no se puede usar.';
+			return false;
+		}
+		o.guardandoTienda = true;
+		try {
+			const f = new FormData();
+			f.set('nombre', nombre);
+			f.set('slug', slug);
+			const r = await fetch('?/tienda', {
+				method: 'POST',
+				body: f,
+				headers: { 'x-sveltekit-action': 'true' }
+			});
+			const res = deserialize(await r.text());
+			if (res.type === 'failure') {
+				o.errorTienda = String(res.data?.error ?? 'No pudimos guardar. Probá de nuevo.');
+				return false;
+			}
+			if (res.type !== 'success') {
+				o.errorTienda = 'No pudimos guardar. Probá de nuevo.';
+				return false;
+			}
+			o.fijarTienda({ nombre, slug });
+			await invalidateAll();
+			return true;
+		} catch {
+			o.errorTienda = 'No pudimos guardar. Revisá tu conexión y probá de nuevo.';
+			return false;
+		} finally {
+			o.guardandoTienda = false;
+		}
+	}
+
+	const siguiente = async () => {
+		if (paso === 1 && !data.demo && !(await guardarTienda())) return;
+		o.ir(paso + 1);
+	};
+	const despues = async () => {
+		if (paso === 1 && !data.demo) await guardarTienda();
+		o.ir(paso + 1);
+	};
 	const etiquetaSiguiente = $derived(
 		paso === 3 && !o.importacionLista
 			? 'Seguir mientras importa'
@@ -252,11 +309,14 @@
 				<div class="nota">
 					{(data.demo ? NOTA_PIE : NOTA_PIE_REAL)[paso] ?? 'Todo se guarda solo.'}
 				</div>
-				<button type="button" class="saltar" onclick={siguiente}
+				<button type="button" class="saltar" onclick={despues} disabled={o.guardandoTienda}
 					><span class="largo">Hacerlo después</span><span class="corto">Después</span></button
 				>
-				<button type="button" class="seguir" onclick={siguiente}
-					>{etiquetaSiguiente}<Icon icon={I.phArrowRightBold} size={15} /></button
+				<button type="button" class="seguir" onclick={siguiente} disabled={o.guardandoTienda}
+					>{o.guardandoTienda ? 'Guardando…' : etiquetaSiguiente}<Icon
+						icon={I.phArrowRightBold}
+						size={15}
+					/></button
 				>
 			</div>
 		{/if}

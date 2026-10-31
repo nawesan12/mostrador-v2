@@ -39,3 +39,32 @@ export async function redireccionTienda(
 	if (!hacia || !haciaValido(hacia)) return null;
 	return `/t/${slug}${hacia === '/' ? '' : hacia}`;
 }
+
+const VIEJA = /^\/t\/([a-z0-9-]{2,60})(\/.*)?$/;
+
+/**
+ * Una dirección vieja de la tienda (la dueña la cambió, decisiones §38): el path de /t/<viejo>/…
+ * con la dirección vigente (/t/<nuevo>/…, absoluto en el sitio), o null. Vale para siempre: links de
+ * Google, Instagram, mails, QR impresos y las vueltas de Mercado Pago de pedidos ya hechos.
+ */
+export async function direccionNueva(
+	pathname: string,
+	cookie: string | undefined
+): Promise<string | null> {
+	const m = VIEJA.exec(pathname);
+	if (!m) return null;
+	const [, viejo, resto = ''] = m;
+	let nuevo: string | null = null;
+	if (!usaSandbox()) {
+		const r = await fetch(`${String(env.API_URL)}/v1/publico/slugs/${viejo}`, {
+			headers: { accept: 'application/json' }
+		});
+		if (r.ok) nuevo = ((await r.json()) as { slug?: string }).slug ?? null;
+	} else {
+		const db = dbSandbox(env.SANDBOX);
+		const sb = await leer(db, cookie);
+		if (sb) nuevo = await new DatosSandbox(db, sb).slugVigente(viejo);
+	}
+	if (!nuevo || nuevo === viejo || !/^[a-z0-9-]{2,60}$/.test(nuevo)) return null;
+	return `/t/${nuevo}${resto}`;
+}

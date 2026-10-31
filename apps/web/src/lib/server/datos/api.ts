@@ -9,6 +9,8 @@ import {
 	type AjusteIntegracion
 } from '#lib/panel/integraciones.ts';
 import type {
+	CambioDireccion,
+	DisponibilidadDireccion,
 	AjustesTurnos,
 	EstadoTurno,
 	Profesional,
@@ -138,6 +140,21 @@ export class DatosApi implements Datos {
 
 	guardarOnboarding(o: Onboarding) {
 		return this.pedir<void>('/v1/panel/onboarding', 'PUT', o);
+	}
+
+	disponibilidadDireccion(slug: string) {
+		return this.pedir<DisponibilidadDireccion>(
+			`/v1/panel/tienda/direccion?slug=${encodeURIComponent(slug)}`
+		);
+	}
+
+	async cambiarDireccion(slug: string): Promise<CambioDireccion> {
+		const r = await this.intentar('/v1/panel/tienda/direccion', 'PUT', { slug }, [400]);
+		if (r.ok) return { ok: true, ...((await r.json()) as { slug: string; anterior: string }) };
+		const p = (await r.json().catch(() => null)) as { detail?: string; code?: string } | null;
+		const motivo =
+			p?.code === 'usado' || p?.code === 'reservado' || p?.code === 'tope' ? p.code : 'invalido';
+		return { ok: false, motivo, mensaje: p?.detail ?? 'No pudimos cambiar la dirección.' };
 	}
 
 	resumen() {

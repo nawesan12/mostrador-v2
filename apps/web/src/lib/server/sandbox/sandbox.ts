@@ -43,7 +43,15 @@ import {
 	type AjusteIntegracion,
 	type EstadoIntegraciones
 } from '#lib/panel/integraciones.ts';
+import {
+	MAX_CAMBIOS_POR_DIA,
+	MENSAJES,
+	motivoDeFormato,
+	type MotivoDireccion
+} from '#lib/tienda/direccion.ts';
 import type {
+	CambioDireccion,
+	DisponibilidadDireccion,
 	AjustesTurnos,
 	EstadoTurno,
 	Profesional,
@@ -517,6 +525,74 @@ export class DatosSandbox implements Datos {
 		};
 		const cambio = (await cambiosDe(this.db, this.sb.id, 'tienda')).get('tienda');
 		return cambio ? { ...base, ...cambio } : base;
+	}
+
+	/** Las direcciones que usó la tienda del visitante y cuándo las cambió (decisiones §38). */
+	async #direccion(): Promise<{ anteriores: string[]; cambios: number[] }> {
+		const d = (await cambiosDe(this.db, this.sb.id, 'tienda')).get('direccion') as {
+			anteriores?: string[];
+			cambios?: number[];
+		} | null;
+		return { anteriores: d?.anteriores ?? [], cambios: d?.cambios ?? [] };
+	}
+
+	/** En la demo no hay otras tiendas: sólo las vitrinas, que están reservadas. */
+	async disponibilidadDireccion(slug: string): Promise<DisponibilidadDireccion> {
+		const [t, dir] = await Promise.all([this.tienda(), this.#direccion()]);
+		// Una que ya usó gana a los reservados (la de la plantilla con la que arrancó es una vitrina).
+		const formato = motivoDeFormato(slug);
+		const motivo: MotivoDireccion =
+			slug === t.slug
+				? 'actual'
+				: formato === 'invalido'
+					? formato
+					: dir.anteriores.includes(slug)
+						? 'propio'
+						: (formato ?? 'libre');
+		return {
+			slug,
+			motivo,
+			disponible: motivo === 'libre' || motivo === 'propio',
+			mensaje: MENSAJES[motivo]
+		};
+	}
+
+	async cambiarDireccion(slug: string, ahora = Date.now()): Promise<CambioDireccion> {
+		const d = await this.disponibilidadDireccion(slug);
+		if (d.motivo === 'actual') return { ok: true, slug, anterior: slug };
+		if (d.motivo !== 'libre' && d.motivo !== 'propio')
+			return { ok: false, motivo: d.motivo, mensaje: d.mensaje };
+		const [t, dir, previo] = await Promise.all([
+			this.tienda(),
+			this.#direccion(),
+			cambiosDe(this.db, this.sb.id, 'tienda').then((m) => m.get('tienda') ?? {})
+		]);
+		const recientes = dir.cambios.filter((x) => x > ahora - 86_400_000);
+		if (recientes.length >= MAX_CAMBIOS_POR_DIA)
+			return {
+				ok: false,
+				motivo: 'tope',
+				mensaje: `Ya cambiaste la dirección ${MAX_CAMBIOS_POR_DIA} veces hoy. Probá de nuevo mañana.`
+			};
+		await guardarCambio(this.db, this.sb.id, 'tienda', 'tienda', { ...previo, slug }, ahora);
+		await guardarCambio(
+			this.db,
+			this.sb.id,
+			'tienda',
+			'direccion',
+			{
+				anteriores: [...dir.anteriores.filter((x) => x !== slug), t.slug],
+				cambios: [...recientes, ahora]
+			},
+			ahora
+		);
+		return { ok: true, slug, anterior: t.slug };
+	}
+
+	/** La dirección vigente si slug es una que la tienda del visitante usó antes, o null. */
+	async slugVigente(slug: string): Promise<string | null> {
+		const dir = await this.#direccion();
+		return dir.anteriores.includes(slug) ? (await this.tienda()).slug : null;
 	}
 
 	/** La plantilla ya la fija el sandbox al crearse; acá queda el resto de lo elegido. */

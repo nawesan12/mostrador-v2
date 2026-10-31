@@ -25,3 +25,8 @@ export async function slugDeDominio(host: string): Promise<string | null> {
 	cache.set(h, { slug, vence: Date.now() + TTL });
 	return slug;
 }
+
+/** Olvida lo guardado de un dominio (la tienda cambió de dirección y este isolate no lo sabía). */
+export function olvidarDominio(host: string) {
+	cache.delete(host.toLowerCase());
+}

@@ -3,6 +3,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import CampoDireccion, { type EstadoDireccion } from '#lib/components/CampoDireccion.svelte';
 	import Icon from '#lib/components/Icon.svelte';
 	import Interruptor from '#lib/components/Interruptor.svelte';
 	import Seo from '#lib/components/Seo.svelte';
@@ -12,6 +13,7 @@
 	import { diaDeMes, haceCorto, pesos } from '#lib/panel/formato.ts';
 	import { AREAS, NOMBRE_ROL } from '#lib/panel/permisos.ts';
 	import { PLANES } from '#lib/panel/planes.ts';
+	import { HOST, MAX_CAMBIOS_POR_DIA, slugFinal } from '#lib/tienda/direccion.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 
 	/** Configuración (design/PanelOperacion.dc.html, sCfg): negocio, equipo, seguridad, avisos y plan. */
@@ -76,6 +78,40 @@
 		if (!(await pedir('/panel/configuracion/negocio', 'PUT', negocio))) return;
 		await invalidateAll();
 		ui.toast({ k: 'ok', title: 'Datos guardados', desc: 'Se ven en la tienda y en tus facturas' });
+	}
+
+	// ---- Dirección de la tienda (decisiones §38) ----
+	const slugActual = $derived((page.data.tienda as { slug: string } | undefined)?.slug ?? '');
+	let slug = $derived(slugActual);
+	let estadoDir = $state<EstadoDireccion>('actual');
+	let cambiando = $state(false);
+	async function cambiarDireccion(nuevo: string, deshacer = false) {
+		cambiando = true;
+		const r = await fetch('/panel/configuracion/direccion', {
+			method: 'PUT',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ slug: nuevo })
+		}).catch(() => null);
+		cambiando = false;
+		const res = (await r?.json().catch(() => null)) as
+			{ ok: true; slug: string; anterior: string } | { ok: false; mensaje: string } | null;
+		if (!res?.ok) {
+			ui.toast({
+				k: 'err',
+				title: 'No se pudo cambiar la dirección',
+				desc: res && !res.ok ? res.mensaje : 'Probá de nuevo.'
+			});
+			return;
+		}
+		await invalidateAll();
+		if (deshacer) {
+			ui.toast({ k: 'ok', title: 'Volvió la dirección de antes', desc: `${HOST}/t/${res.slug}` });
+			return;
+		}
+		const anterior = res.anterior;
+		ui.undoable('Dirección cambiada', `Ahora es ${HOST}/t/${res.slug}`, () =>
+			cambiarDireccion(anterior, true)
+		);
 	}
 
 	// ---- Seguridad y avisos ----
@@ -216,6 +252,43 @@
 								onclick={() => (negocio = { ...data.negocio })}>Descartar</button
 							>
 							<button class="btn btn-primary">Guardar cambios</button>
+						</div>
+					{/if}
+				</form>
+				<form
+					class="tarjeta direccion"
+					onsubmit={(e) => {
+						e.preventDefault();
+						const nuevo = slugFinal(slug);
+						if (nuevo && nuevo !== slugActual && estadoDir !== 'mal') void cambiarDireccion(nuevo);
+					}}
+				>
+					<div class="t-cab"><span>Dirección de tu tienda</span></div>
+					<p class="d-txt">
+						Es la que va en tus links, el QR y lo que compartas. Si la cambiás, los links viejos
+						siguen andando: quien entre por la dirección anterior llega a la nueva.
+					</p>
+					<CampoDireccion
+						id="cfg-direccion"
+						etiqueta="Nueva dirección"
+						bind:slug
+						bind:estado={estadoDir}
+						actual={slugActual}
+					/>
+					<p class="d-nota">
+						Podés cambiarla hasta {MAX_CAMBIOS_POR_DIA} veces por día. Una dirección que dejás no la puede
+						usar otra tienda.
+					</p>
+					{#if slugFinal(slug) !== slugActual}
+						<div class="guardar">
+							<button type="button" class="btn btn-secondary" onclick={() => (slug = slugActual)}
+								>Descartar</button
+							>
+							<button
+								class="btn btn-primary"
+								disabled={cambiando || estadoDir === 'mal' || estadoDir === 'revisando'}
+								>{cambiando ? 'Cambiando…' : 'Cambiar dirección'}</button
+							>
 						</div>
 					{/if}
 				</form>
@@ -428,6 +501,21 @@
 		border-radius: 22px;
 		background: var(--sf);
 		box-shadow: var(--shd);
+	}
+	.direccion {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+	.d-txt,
+	.d-nota {
+		margin: 0;
+		font-size: 13.5px;
+		line-height: 1.45;
+		color: var(--mu);
+	}
+	.d-nota {
+		font-size: 12.5px;
 	}
 	.campos {
 		display: grid;

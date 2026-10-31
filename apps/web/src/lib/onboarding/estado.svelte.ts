@@ -4,6 +4,7 @@
  * al servidor al terminar o, con la API, en cada paso.
  */
 import { getContext, setContext } from 'svelte';
+import { slugDeNombre } from '#lib/tienda/direccion.ts';
 import { CONEXIONES, CONFIGURACION, type Conexion, type Seccion, type Tono } from './datos.ts';
 
 export type EstadoConexion = 'off' | 'wait' | 'on';
@@ -96,6 +97,18 @@ export class Onboarding {
 	dispositivo = $state<'desk' | 'mob'>('desk');
 	galeria = $state(false);
 	consejo = $state(false);
+	/**
+	 * Paso 2 con la API: el nombre y la dirección de la tienda (decisiones §38). `tienda` es lo
+	 * guardado; nombre y slug, lo que se está escribiendo (se guardan al seguir).
+	 */
+	tienda = $state<{ nombre: string; slug: string } | null>(null);
+	nombre = $state('');
+	slug = $state('');
+	/** Si tocó la dirección a mano: entonces ya no la arma el nombre. */
+	slugTocado = $state(false);
+	estadoDireccion = $state<'actual' | 'revisando' | 'ok' | 'mal'>('actual');
+	errorTienda = $state('');
+	guardandoTienda = $state(false);
 	#timers: ReturnType<typeof setInterval>[] = [];
 
 	get paso() {
@@ -183,6 +196,26 @@ export class Onboarding {
 			if (rec && (this.e.conexiones[k] ?? 'off') === 'off')
 				setTimeout(() => this.conectar(k), i * 260);
 		});
+	}
+
+	/** La tienda guardada: lo que se escribe arranca de ahí. */
+	fijarTienda(t: { nombre: string; slug: string } | null) {
+		this.tienda = t;
+		this.nombre = t?.nombre ?? '';
+		this.slug = t?.slug ?? '';
+		this.slugTocado = false;
+		this.errorTienda = '';
+	}
+
+	/** Mientras no toque la dirección, la arma el nombre (con el nombre guardado, la guardada). */
+	cambiarNombre(nombre: string) {
+		this.nombre = nombre;
+		this.errorTienda = '';
+		if (this.slugTocado || !this.tienda) return;
+		this.slug =
+			nombre.trim() === this.tienda.nombre
+				? this.tienda.slug
+				: slugDeNombre(nombre) || this.tienda.slug;
 	}
 
 	/** El rubro propone su plantilla como punto de partida (se cambia en «Tu tienda»). */

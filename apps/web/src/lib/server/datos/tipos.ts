@@ -14,6 +14,11 @@ export type ErrorVueltaTN =
 
 export type Rubro = components['schemas']['Rubro'];
 export type Tienda = components['schemas']['Tienda'];
+export type DisponibilidadDireccion = components['schemas']['DisponibilidadDireccion'];
+/** Cómo terminó un cambio de dirección: la nueva y la anterior, o por qué no se pudo. */
+export type CambioDireccion =
+	| { ok: true; slug: string; anterior: string }
+	| { ok: false; motivo: 'invalido' | 'reservado' | 'usado' | 'tope'; mensaje: string };
 export type Plan = components['schemas']['Plan'];
 
 export type Onboarding = components['schemas']['Onboarding'];
@@ -104,6 +109,10 @@ export interface Datos {
 	tienda(): Promise<Tienda>;
 	/** Lo elegido en el onboarding (y si terminó). */
 	guardarOnboarding(o: Onboarding): Promise<void>;
+	/** Si la tienda puede pasar a tulocalweb.com.ar/t/<slug> (decisiones §38). */
+	disponibilidadDireccion(slug: string): Promise<DisponibilidadDireccion>;
+	/** Cambia la dirección; la anterior sigue andando (301) para siempre. */
+	cambiarDireccion(slug: string): Promise<CambioDireccion>;
 	/** Insignias del menú, notificaciones, canales y prueba: lo que muestra el armazón del panel. */
 	resumen(): Promise<ResumenPanel>;
 	marcarNotificacionesLeidas(): Promise<void>;

@@ -5,8 +5,8 @@ import { csrfForbidden } from '#lib/server/csrf.ts';
 import { COOKIE, dbSandbox, leer } from '#lib/server/sandbox/sandbox.ts';
 import { COOKIE_SESION, COOKIE_SESION_VIEJA } from '#lib/server/auth/sesion.ts';
 import { COOKIE_EQUIPO, COOKIE_MIRADA } from '#lib/server/staff/index.ts';
-import { redireccionTienda } from '#lib/server/tienda/redireccion.ts';
-import { slugDeDominio } from '#lib/server/tienda/dominio.ts';
+import { direccionNueva, redireccionTienda } from '#lib/server/tienda/redireccion.ts';
+import { olvidarDominio, slugDeDominio } from '#lib/server/tienda/dominio.ts';
 import { contarVista } from '#lib/server/tienda/vistas.ts';
 import { esDominioPropio, GLOBALES_EN_DOMINIO } from '#lib/tienda/dominio.ts';
 
@@ -160,11 +160,28 @@ export const handle: Handle = async ({ event, resolve }) => {
 		(dom || event.url.pathname.startsWith('/t/'))
 	) {
 		const base = dom ? `/t/${dom}` : '';
-		let hacia = await redireccionTienda(base + event.url.pathname, event.cookies.get(COOKIE)).catch(
+		// Primero, si es una dirección vieja de la tienda (la cambió, decisiones §38): 301 a la nueva
+		// con el mismo camino y la misma consulta (las vueltas de Mercado Pago traen la suya).
+		const nueva = await direccionNueva(base + event.url.pathname, event.cookies.get(COOKIE)).catch(
 			() => null
 		);
-		if (hacia && dom) hacia = hacia.slice(base.length) || '/';
-		if (hacia) res = secure(new Response(null, { status: 301, headers: { location: hacia } }));
+		if (nueva && dom) {
+			// El dominio propio sigue andando: este isolate tenía guardada la dirección vieja. Se olvida
+			// y se vuelve a pedir la misma URL, que ya sale con la nueva.
+			olvidarDominio(event.url.hostname);
+			res = secure(new Response(null, { status: 307, headers: { location: event.url.href } }));
+		} else if (nueva) {
+			res = secure(
+				new Response(null, { status: 301, headers: { location: nueva + event.url.search } })
+			);
+		} else {
+			let hacia = await redireccionTienda(
+				base + event.url.pathname,
+				event.cookies.get(COOKIE)
+			).catch(() => null);
+			if (hacia && dom) hacia = hacia.slice(base.length) || '/';
+			if (hacia) res = secure(new Response(null, { status: 301, headers: { location: hacia } }));
+		}
 	}
 	try {
 		res.headers.set('Server-Timing', `app;dur=${Date.now() - started}`);

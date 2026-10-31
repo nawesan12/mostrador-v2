@@ -180,6 +180,25 @@ const campo = (f: FormData, k: string, max: number) =>
 		.slice(0, max);
 
 export const actions: Actions = {
+	/**
+	 * Paso 2 con la API: el nombre de la tienda y su dirección (decisiones §38). Primero la
+	 * dirección, que es lo que puede no estar disponible; el nombre va con los datos del negocio.
+	 */
+	tienda: async (event) => {
+		if (usaSandbox() || !event.locals.token) return fail(400, { error: 'Primero creá tu cuenta.' });
+		const f = await event.request.formData();
+		const nombre = campo(f, 'nombre', 80);
+		const slug = campo(f, 'slug', 60);
+		if (!nombre) return fail(400, { error: 'Poné el nombre de tu tienda.' });
+		const datos = datosDe(event.locals);
+		const [t, conf] = await Promise.all([datos.tienda(), datos.configuracion()]);
+		if (slug && slug !== t.slug) {
+			const r = await datos.cambiarDireccion(slug);
+			if (!r.ok) return fail(400, { error: r.mensaje });
+		}
+		if (nombre !== conf.negocio.nombre) await datos.guardarNegocio({ ...conf.negocio, nombre });
+		return { tienda: { nombre, slug: slug || t.slug } };
+	},
 	/** Paso 6: alias, CBU y titular para cobrar por transferencia (todo opcional). */
 	transferencia: async (event) => {
 		if (usaSandbox()) return { guardado: 'transferencia' as const };

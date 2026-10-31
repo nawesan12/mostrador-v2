@@ -5,6 +5,7 @@
   "exports": {
     "./esquema": "./src/esquema.ts",
     "./rubros.json": "./rubros.json",
+    "./direccion.json": "./direccion.json",
     "./casos/*": "./casos/*"
   },
   "scripts": {
