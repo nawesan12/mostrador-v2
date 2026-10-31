@@ -279,7 +279,9 @@ func (c Config) servir(ctx context.Context, ws *websocket.Conn, cli *Cliente, re
 			pctx, cancel := context.WithTimeout(ctx, min(esperaEscritura, c.Ping))
 			err := ws.Ping(pctx)
 			cancel()
-			if err != nil {
+			// Además un latido de texto: el navegador no ve los pings del protocolo y así se da
+			// cuenta solo de una conexión muerta (la compu se durmió, cambió la red).
+			if err != nil || escribir(Mensaje{Tipo: TipoLatido}) != nil {
 				return
 			}
 		case <-revisar:

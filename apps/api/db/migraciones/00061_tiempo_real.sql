@@ -1,5 +1,5 @@
 -- +goose Up
--- Tiempo real (docs/decisiones.md §42). Los cambios que importan avisan por NOTIFY en el canal
+-- Tiempo real (docs/decisiones.md §44). Los cambios que importan avisan por NOTIFY en el canal
 -- `tiempo_real`, que Postgres entrega recién al confirmarse la transacción (si se revierte, no sale
 -- nada). La API escucha con una conexión dedicada y reparte por tienda y por rol a los navegadores.
 --

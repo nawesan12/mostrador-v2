@@ -89,7 +89,7 @@ func (w *ws) cierre(t *testing.T) websocket.StatusCode {
 }
 
 // El tiempo real con la API entera: sesiones de verdad por cookie, los roles de la base, las rutas
-// reales escribiendo y los triggers avisando (docs/decisiones.md §42).
+// reales escribiendo y los triggers avisando (docs/decisiones.md §44).
 func TestTiempoRealConLaAPI(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

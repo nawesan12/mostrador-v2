@@ -100,7 +100,7 @@ func correr() error {
 		cs.Geo = geo
 	}
 
-	// Tiempo real (§42): una conexión dedicada con LISTEN y el hub que reparte por tienda y rol.
+	// Tiempo real (§44): una conexión dedicada con LISTEN y el hub que reparte por tienda y rol.
 	hub := tiemporeal.NuevoHub()
 	go hub.Correr(ctx)
 	go (&tiemporeal.Escucha{URL: cfg.BaseApp, Hub: hub}).Correr(ctx)

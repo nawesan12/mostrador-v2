@@ -1,5 +1,5 @@
 // Package tiemporeal reparte a los navegadores, por WebSocket, los avisos de cambio que manda
-// Postgres (docs/decisiones.md §42). El origen es la base: los triggers de la migración 00061 hacen
+// Postgres (docs/decisiones.md §44). El origen es la base: los triggers de la migración 00061 hacen
 // NOTIFY al confirmarse cada transacción; una conexión dedicada (Escucha) los recibe y el Hub los
 // reparte por tienda, filtrando por rol. Un aviso dice sólo qué cambió ({tipo, id}): el navegador
 // vuelve a pedir lo suyo por los caminos de siempre, que aplican RLS y roles como cualquier pedido.
@@ -37,6 +37,8 @@ type Mensaje struct {
 const (
 	// Hola: la conexión quedó lista (el navegador aprovecha para ponerse al día).
 	TipoHola = "hola"
+	// Latido: cada Ping, para que el navegador sepa que la conexión sigue viva.
+	TipoLatido = "latido"
 	// Resincronizar: se perdieron avisos (se cayó la escucha de Postgres): hay que recargar todo.
 	TipoResincronizar = "resincronizar"
 )

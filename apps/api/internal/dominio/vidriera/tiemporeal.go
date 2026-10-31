@@ -8,7 +8,7 @@ import (
 )
 
 // TiendaYPedido: la tienda abierta de un slug y, si viene un código público, el número de ese
-// pedido de esa tienda (el tiempo real de la tienda online, docs/decisiones.md §42). Un código que
+// pedido de esa tienda (el tiempo real de la tienda online, docs/decisiones.md §44). Un código que
 // no es de esa tienda da ErrNoExiste, igual que uno que no existe.
 func TiendaYPedido(ctx context.Context, pool tx, slug, codigo string) (tienda, pedido string, err error) {
 	tienda, err = tiendaDe(ctx, pool, slug)

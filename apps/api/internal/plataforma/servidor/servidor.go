@@ -82,7 +82,7 @@ type Dependencias struct {
 	Importacion *importacion.Servicio
 	// Clave pública VAPID del push web del panel instalado (vacía: apagado; §43).
 	VAPIDPublica string
-	// Tiempo real (§42): el hub que reparte los avisos de Postgres. nil: no se monta.
+	// Tiempo real (§44): el hub que reparte los avisos de Postgres. nil: no se monta.
 	TiempoReal *tiemporeal.Hub
 	// De dónde se acepta el WebSocket del panel (además del Sitio).
 	TiempoRealOrigenes []string
@@ -231,7 +231,7 @@ func Nuevo(d Dependencias) http.Handler {
 	return recuperar(d.Log, h)
 }
 
-// rutasTiempoReal monta el WebSocket del panel y el de la tienda online (docs/decisiones.md §42).
+// rutasTiempoReal monta el WebSocket del panel y el de la tienda online (docs/decisiones.md §44).
 func rutasTiempoReal(mux *http.ServeMux, d Dependencias, ip func(*http.Request) string) {
 	origenes := append([]string{strings.TrimRight(d.Sitio, "/")}, d.TiempoRealOrigenes...)
 	if d.Desarrollo {

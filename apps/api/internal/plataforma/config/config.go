@@ -56,7 +56,7 @@ type Config struct {
 	// Web Push del panel instalado (docs/decisiones.md §43): el par VAPID en base64url (`go run
 	// ./cmd/vapid`) y el sujeto (mailto: o https:). Sin las tres, no hay push web.
 	VAPIDPublica, VAPIDPrivada, VAPIDSujeto string
-	// Tiempo real (docs/decisiones.md §42): orígenes extra que pueden abrir el WebSocket del panel,
+	// Tiempo real (docs/decisiones.md §44): orígenes extra que pueden abrir el WebSocket del panel,
 	// además de MOSTRADOR_SITIO (separados por coma; admiten comodines como https://*.ejemplo.com).
 	TiempoRealOrigenes []string
 }
