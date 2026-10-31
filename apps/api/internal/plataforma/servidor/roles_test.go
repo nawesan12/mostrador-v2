@@ -8,9 +8,11 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/configuracion"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db/pruebadb"
 )
@@ -191,6 +193,53 @@ func TestPermisosPorRol(t *testing.T) {
 		}
 		if rec := pedir("duenio", "GET", "/v1/panel/configuracion", ""); !strings.Contains(rec.Body.String(), "sol.deco.mp") {
 			t.Fatalf("la dueña no ve su alias: %s", rec.Body)
+		}
+	})
+
+	t.Run("el Inicio sin montos para ventas y local", func(t *testing.T) {
+		mail := "compradora@ejemplo.com"
+		for _, estado := range []string{"Entregado", "Sin pagar"} {
+			if _, err := pedidos.Crear(ctx, b.App, ana.TiendaID, pedidos.Nuevo{
+				Comprador: pedidos.Comprador{Nombre: "Compradora", Email: &mail}, Canal: "pos", Pago: "transf",
+				Envio: "retiro", Estado: estado, Creado: time.Now().Add(-time.Minute),
+				Items: []pedidos.Item{{Nombre: "Mate", Cantidad: 1, Precio: 734_500}},
+			}); err != nil {
+				t.Fatal(err)
+			}
+		}
+		montos := []string{`"ventas"`, `"serie"`, `"ticket"`, `"meta"`, `"caja"`, `"canales"`, `"liquidaciones"`,
+			`"transferenciasMonto"`, `"carritosMonto"`, `"total"`, "734500"}
+		for _, rol := range []string{"duenio", "admin", "ventas", "local"} {
+			rec := pedir(rol, "GET", "/v1/panel/tablero?periodo=hoy", "")
+			if rec.Code != http.StatusOK {
+				t.Fatalf("tablero como %s: %d %s", rol, rec.Code, rec.Body)
+			}
+			cuerpo := rec.Body.String()
+			var tb struct {
+				Montos    bool
+				Kpis      struct{ Pedidos struct{ Actual float64 } }
+				ParaHacer struct{ Transferencias int }
+			}
+			_ = json.Unmarshal(rec.Body.Bytes(), &tb)
+			if tb.Kpis.Pedidos.Actual != 1 || tb.ParaHacer.Transferencias != 1 {
+				t.Errorf("%s no ve las cantidades: %s", rol, cuerpo)
+			}
+			conMontos := rol == "duenio" || rol == "admin"
+			if tb.Montos != conMontos {
+				t.Errorf("%s: montos=%v", rol, tb.Montos)
+			}
+			for _, m := range montos {
+				if strings.Contains(cuerpo, m) != conMontos {
+					t.Errorf("%s: %s presente=%v en %s", rol, m, !conMontos, cuerpo)
+				}
+			}
+			rec = pedir(rol, "GET", "/v1/panel/hornero/contexto", "")
+			if strings.Contains(rec.Body.String(), `"ventas"`) != conMontos || !strings.Contains(rec.Body.String(), `"pedidos"`) {
+				t.Errorf("contexto de Tincho como %s: %s", rol, rec.Body)
+			}
+			if rec := pedir(rol, "GET", "/v1/panel/resumen", ""); strings.Contains(rec.Body.String(), "734500") {
+				t.Errorf("resumen como %s con montos: %s", rol, rec.Body)
+			}
 		}
 	})
 

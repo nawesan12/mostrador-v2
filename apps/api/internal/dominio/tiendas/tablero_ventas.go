@@ -34,7 +34,7 @@ func llenarVentas(ctx context.Context, tx pgx.Tx, tiendaID string, t *Tablero, d
 	if err != nil {
 		return err
 	}
-	t.Ventas = comparado{va, vb}
+	*t.Ventas = comparado{va, vb}
 	t.Kpis.Pedidos = comparado{pa, pb}
 	t.Kpis.ClientesNuevos = comparado{na, nb}
 	ticket := func(v, p float64) float64 {
@@ -43,7 +43,7 @@ func llenarVentas(ctx context.Context, tx pgx.Tx, tiendaID string, t *Tablero, d
 		}
 		return float64(int64(v / p))
 	}
-	t.Kpis.Ticket = comparado{ticket(va, pa), ticket(vb, pb)}
+	*t.Kpis.Ticket = comparado{ticket(va, pa), ticket(vb, pb)}
 	// La conversión necesita las visitas: la llena llenarVisitas (tablero.go), con días enteros.
 
 	// Serie: ventas acumuladas en 14 tramos, de este período y del anterior.
@@ -141,7 +141,7 @@ func llenarVentas(ctx context.Context, tx pgx.Tx, tiendaID string, t *Tablero, d
 			coalesce(sum(total) FILTER (WHERE estado = 'Sin pagar' AND pago = 'transf'), 0),
 			count(*) FILTER (WHERE estado = 'Listo para despachar' AND envio <> 'retiro')
 		FROM pedidos WHERE tienda_id = $1`, tiendaID).Scan(&t.ParaHacer.Preparar, &t.ParaHacer.Transferencias,
-		&t.ParaHacer.TransferenciasMonto, &t.Envios.Paquetes); err != nil {
+		t.ParaHacer.TransferenciasMonto, &t.Envios.Paquetes); err != nil {
 		return err
 	}
 	if err := tx.QueryRow(ctx, `SELECT count(*) FROM productos WHERE tienda_id = $1 AND publicado AND stock <= 0`,

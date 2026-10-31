@@ -9,8 +9,10 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/roles"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ventas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/visitas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
@@ -32,66 +34,60 @@ type comparado struct {
 // para hacer y más vendidos salen de los pedidos (tablero_ventas.go); las visitas y la conversión,
 // de la medición propia (paquete visitas); lo que todavía no se mide (en vivo, bandeja) va en cero
 // y vacío, nunca inventado.
+//
+// Los montos de dinero (ventas, serie, ticket, canales, meta, caja, liquidaciones y los montos de
+// transferencias, carritos y últimos pedidos) sólo van si Montos es true: a quien no tiene
+// roles.Finanzas (Ventas y Local) no le llegan, ni en cero (ver SinMontos).
 type Tablero struct {
-	Periodo string    `json:"periodo"`
-	Desde   time.Time `json:"desde"`
-	Hasta   time.Time `json:"hasta"`
-	Hola    *string   `json:"hola"`
-	Ventas  comparado `json:"ventas"`
-	Serie   struct {
-		Actual   []float64 `json:"actual"`
-		Anterior []float64 `json:"anterior"`
-	} `json:"serie"`
-	Kpis struct {
-		Pedidos        comparado `json:"pedidos"`
-		Ticket         comparado `json:"ticket"`
-		Conversion     comparado `json:"conversion"`
-		ClientesNuevos comparado `json:"clientesNuevos"`
+	Periodo string     `json:"periodo"`
+	Desde   time.Time  `json:"desde"`
+	Hasta   time.Time  `json:"hasta"`
+	Hola    *string    `json:"hola"`
+	Montos  bool       `json:"montos"`
+	Ventas  *comparado `json:"ventas,omitempty"`
+	Serie   *serie     `json:"serie,omitempty"`
+	Kpis    struct {
+		Pedidos        comparado  `json:"pedidos"`
+		Ticket         *comparado `json:"ticket,omitempty"`
+		Conversion     comparado  `json:"conversion"`
+		ClientesNuevos comparado  `json:"clientesNuevos"`
 	} `json:"kpis"`
-	Canales []any `json:"canales"`
-	Meta    struct {
-		Objetivo   int64 `json:"objetivo"`
-		Actual     int64 `json:"actual"`
-		Proyeccion int64 `json:"proyeccion"`
-	} `json:"meta"`
-	Avisos struct {
+	Canales []any `json:"canales,omitzero"`
+	Meta    *meta `json:"meta,omitempty"`
+	Avisos  struct {
 		CertificadoDias *int `json:"certificadoDias"`
 	} `json:"avisos"`
-	UltimosPedidos []any `json:"ultimosPedidos"`
+	UltimosPedidos []map[string]any `json:"ultimosPedidos"`
 	ParaHacer      struct {
-		Preparar            int   `json:"preparar"`
-		Chats               int   `json:"chats"`
-		ChatMasViejoMin     int   `json:"chatMasViejoMin"`
-		Transferencias      int   `json:"transferencias"`
-		TransferenciasMonto int64 `json:"transferenciasMonto"`
-		SinStock            int   `json:"sinStock"`
-		SinStockEnMl        int   `json:"sinStockEnMl"`
+		Preparar            int    `json:"preparar"`
+		Chats               int    `json:"chats"`
+		ChatMasViejoMin     int    `json:"chatMasViejoMin"`
+		Transferencias      int    `json:"transferencias"`
+		TransferenciasMonto *int64 `json:"transferenciasMonto,omitempty"`
+		SinStock            int    `json:"sinStock"`
+		SinStockEnMl        int    `json:"sinStockEnMl"`
 	} `json:"paraHacer"`
 	EnVivo struct {
-		Personas      int   `json:"personas"`
-		Paginas       []any `json:"paginas"`
-		Carritos      int   `json:"carritos"`
-		CarritosMonto int64 `json:"carritosMonto"`
+		Personas      int    `json:"personas"`
+		Paginas       []any  `json:"paginas"`
+		Carritos      int    `json:"carritos"`
+		CarritosMonto *int64 `json:"carritosMonto,omitempty"`
 	} `json:"enVivo"`
-	Caja struct {
-		Abierta *time.Time `json:"abierta"`
-		Total   int64      `json:"total"`
-		Medios  []any      `json:"medios"`
-	} `json:"caja"`
-	Liquidaciones []any `json:"liquidaciones"`
+	Caja          *caja `json:"caja,omitempty"`
+	Liquidaciones []any `json:"liquidaciones,omitzero"`
 	Hornero       struct {
 		ChatsHoy      int      `json:"chatsHoy"`
 		Ideas         int      `json:"ideas"`
 		Carritos      int      `json:"carritos"`
-		CarritosMonto int64    `json:"carritosMonto"`
+		CarritosMonto *int64   `json:"carritosMonto,omitempty"`
 		CostoMensaje  int      `json:"costoMensaje"`
 		Recordados    bool     `json:"recordados"`
 		Audiencia     int      `json:"audiencia"`
 		IdeasHechas   []string `json:"ideasHechas"`
 	} `json:"hornero"`
-	Bandeja       []any `json:"bandeja"`
-	Integraciones []any `json:"integraciones"`
-	MasVendidos   []any `json:"masVendidos"`
+	Bandeja       []any            `json:"bandeja"`
+	Integraciones []map[string]any `json:"integraciones"`
+	MasVendidos   []any            `json:"masVendidos"`
 	Resenas       struct {
 		Promedio *float64 `json:"promedio"`
 		Nuevas   []any    `json:"nuevas"`
@@ -101,6 +97,51 @@ type Tablero struct {
 		Retiros  []any `json:"retiros"`
 	} `json:"envios"`
 	Visitas visitas.Resumen `json:"visitas"`
+}
+
+type serie struct {
+	Actual   []float64 `json:"actual"`
+	Anterior []float64 `json:"anterior"`
+}
+
+type meta struct {
+	Objetivo   int64 `json:"objetivo"`
+	Actual     int64 `json:"actual"`
+	Proyeccion int64 `json:"proyeccion"`
+}
+
+type caja struct {
+	Abierta *time.Time `json:"abierta"`
+	Total   int64      `json:"total"`
+	Medios  []any      `json:"medios"`
+}
+
+// ConMontos dice si quien pide ve montos de dinero en el Inicio: con roles.Finanzas (dueña y
+// administración). Sin autor en el contexto (tests, Telegram, el equipo de Tu Local Web mirando),
+// sí, como siempre.
+func ConMontos(ctx context.Context) bool {
+	a, ok := auditoria.ActorDe(ctx)
+	return !ok || roles.Puede(a.Rol, roles.Finanzas)
+}
+
+// SinMontos saca del tablero todo monto de dinero (no lo deja en cero: lo omite) y lo marca con
+// Montos en false. Lo que queda son cantidades y lo que hay para hacer.
+func (t *Tablero) SinMontos() {
+	t.Montos = false
+	t.Ventas, t.Serie, t.Kpis.Ticket, t.Meta, t.Caja = nil, nil, nil, nil, nil
+	t.Canales, t.Liquidaciones = nil, nil
+	t.ParaHacer.TransferenciasMonto, t.EnVivo.CarritosMonto, t.Hornero.CarritosMonto = nil, nil, nil
+	for _, p := range t.UltimosPedidos {
+		delete(p, "total")
+	}
+	// La integración de Mercado Pago muestra lo cobrado en 7 días: es un monto.
+	integ := make([]map[string]any, 0, len(t.Integraciones))
+	for _, i := range t.Integraciones {
+		if i["id"] != "mp" {
+			integ = append(integ, i)
+		}
+	}
+	t.Integraciones = integ
 }
 
 // Ventana devuelve desde y hasta del período (hoy, 7d o 30d) en hora de Argentina.
@@ -131,10 +172,13 @@ func ObtenerTablero(ctx context.Context, pool interface {
 	if err != nil {
 		return t, err
 	}
-	t.Periodo, t.Desde, t.Hasta = periodo, desde, hasta
-	t.Serie.Actual, t.Serie.Anterior = make([]float64, 14), make([]float64, 14)
-	t.Canales, t.UltimosPedidos, t.Liquidaciones, t.Bandeja = []any{}, []any{}, []any{}, []any{}
-	t.Integraciones, t.MasVendidos, t.EnVivo.Paginas, t.Caja.Medios = []any{}, []any{}, []any{}, []any{}
+	t.Periodo, t.Desde, t.Hasta, t.Montos = periodo, desde, hasta, true
+	t.Ventas, t.Kpis.Ticket, t.Meta = &comparado{}, &comparado{}, &meta{}
+	t.Serie = &serie{Actual: make([]float64, 14), Anterior: make([]float64, 14)}
+	t.Caja = &caja{Medios: []any{}}
+	t.ParaHacer.TransferenciasMonto, t.EnVivo.CarritosMonto, t.Hornero.CarritosMonto = new(int64), new(int64), new(int64)
+	t.Canales, t.UltimosPedidos, t.Liquidaciones, t.Bandeja = []any{}, []map[string]any{}, []any{}, []any{}
+	t.Integraciones, t.MasVendidos, t.EnVivo.Paginas = []map[string]any{}, []any{}, []any{}
 	t.Resenas.Nuevas, t.Envios.Retiros = []any{}, []any{}
 	t.Hornero.CostoMensaje, t.Hornero.IdeasHechas = 120, []string{}
 	err = pool.EnTienda(ctx, tiendaID, func(tx pgx.Tx) error {
@@ -156,7 +200,7 @@ func ObtenerTablero(ctx context.Context, pool interface {
 		// Carritos abandonados de la semana para recordar (Hornero los ofrece en el tablero).
 		return tx.QueryRow(ctx, `SELECT count(*), coalesce(sum(total), 0), bool_or(recordado_en IS NOT NULL) IS TRUE
 			FROM carritos WHERE tienda_id = $1 AND recuperado_en IS NULL AND actualizado > now() - interval '7 days'`, tiendaID).
-			Scan(&t.Hornero.Carritos, &t.Hornero.CarritosMonto, &t.Hornero.Recordados)
+			Scan(&t.Hornero.Carritos, t.Hornero.CarritosMonto, &t.Hornero.Recordados)
 	})
 	return t, err
 }
@@ -263,6 +307,21 @@ func ContextoHornero(ctx context.Context, pool interface {
 	return c
 }
 
+// ContextoSinMontos saca del contexto de Tincho las ventas en pesos (por día y por canal) para
+// quien no ve montos: quedan los pedidos. Así Tincho no le cuenta a Ventas o Local cuánto se vendió.
+func ContextoSinMontos(c map[string]any) map[string]any {
+	for _, clave := range []string{"ventasPorDia", "canales30d"} {
+		l, _ := c[clave].([]any)
+		for _, x := range l {
+			if m, ok := x.(map[string]any); ok {
+				delete(m, "ventas")
+			}
+		}
+	}
+	c["montos"] = false
+	return c
+}
+
 func contextoHornero(ctx context.Context, pool interface {
 	EnTienda(context.Context, string, func(pgx.Tx) error) error
 }, tiendaID string, ahora time.Time) (map[string]any, error) {
@@ -332,7 +391,7 @@ func contextoHornero(ctx context.Context, pool interface {
 		}
 		clientes = map[string]int{"total": total, "nuevos30d": nuevos, "conWhatsApp": conWa, "sinVolver": sinVolver}
 
-		filas, err = tx.Query(ctx, `SELECT canal, sum(total) FROM pedidos
+		filas, err = tx.Query(ctx, `SELECT canal, sum(total), count(*) FROM pedidos
 			WHERE tienda_id = $1 AND creado_en >= $2 AND `+vendido+` GROUP BY 1 ORDER BY 2 DESC`, tiendaID, hace30)
 		if err != nil {
 			return err
@@ -340,11 +399,11 @@ func contextoHornero(ctx context.Context, pool interface {
 		defer filas.Close()
 		for filas.Next() {
 			var canal string
-			var v int64
-			if err := filas.Scan(&canal, &v); err != nil {
+			var v, n int64
+			if err := filas.Scan(&canal, &v, &n); err != nil {
 				return err
 			}
-			canales = append(canales, map[string]any{"canal": canal, "ventas": v})
+			canales = append(canales, map[string]any{"canal": canal, "ventas": v, "pedidos": n})
 		}
 		return filas.Err()
 	})
@@ -387,6 +446,9 @@ func rutasTablero(mux *http.ServeMux, pool interface {
 		case err != nil:
 			problema.Escribir(w, problema.Interno())
 			return
+		}
+		if !ConMontos(r.Context()) {
+			t.SinMontos()
 		}
 		w.Header().Set("Cache-Control", "no-store")
 		escribir(w, t)
@@ -431,7 +493,11 @@ func rutasTablero(mux *http.ServeMux, pool interface {
 			problema.Escribir(w, problema.SinSesion())
 			return
 		}
-		escribir(w, ContextoHornero(r.Context(), pool, tienda(r)))
+		c := ContextoHornero(r.Context(), pool, tienda(r))
+		if !ConMontos(r.Context()) {
+			c = ContextoSinMontos(c)
+		}
+		escribir(w, c)
 	})
 	// Las ideas salen de carritos, stock y campañas: sin esos dominios todavía no hay ninguna.
 	mux.HandleFunc("POST /v1/panel/hornero/ideas/{idea}", func(w http.ResponseWriter, r *http.Request) {

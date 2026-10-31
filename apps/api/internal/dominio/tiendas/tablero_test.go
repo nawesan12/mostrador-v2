@@ -2,7 +2,9 @@ package tiendas_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -47,7 +49,7 @@ func TestMetaPorTienda(t *testing.T) {
 	if tu.Meta.Objetivo != 20_000_000 || to.Meta.Objetivo != 0 {
 		t.Fatalf("metas: %d / %d", tu.Meta.Objetivo, to.Meta.Objetivo)
 	}
-	if len(tu.Serie.Actual) != 14 || tu.UltimosPedidos == nil || tu.Avisos.CertificadoDias != nil {
+	if !tu.Montos || len(tu.Serie.Actual) != 14 || tu.UltimosPedidos == nil || tu.Avisos.CertificadoDias != nil {
 		t.Fatalf("tablero vacío mal armado: %+v", tu)
 	}
 }
@@ -87,8 +89,22 @@ func TestTableroConVentas(t *testing.T) {
 	if len(tb.Canales) != 2 || len(tb.UltimosPedidos) != 4 || len(tb.MasVendidos) != 1 {
 		t.Fatalf("canales %v, últimos %d, más vendidos %v", tb.Canales, len(tb.UltimosPedidos), tb.MasVendidos)
 	}
-	if tb.ParaHacer.Preparar != 1 || tb.ParaHacer.Transferencias != 1 || tb.Meta.Actual < 15_000 {
+	if tb.ParaHacer.Preparar != 1 || tb.ParaHacer.Transferencias != 1 || *tb.ParaHacer.TransferenciasMonto != 99_000 || tb.Meta.Actual < 15_000 {
 		t.Fatalf("para hacer %+v, meta %+v", tb.ParaHacer, tb.Meta)
+	}
+
+	// Sin montos (Ventas, Local): quedan las cantidades y no va ningún monto, ni en cero.
+	sin := tb
+	sin.SinMontos()
+	j, _ := json.Marshal(sin)
+	for _, clave := range []string{`"ventas"`, `"serie"`, `"ticket"`, `"meta"`, `"caja"`, `"canales"`, `"total"`,
+		`"transferenciasMonto"`, `"carritosMonto"`, `"liquidaciones"`} {
+		if strings.Contains(string(j), clave) {
+			t.Fatalf("sin montos quedó %s: %s", clave, j)
+		}
+	}
+	if sin.Montos || sin.Kpis.Pedidos.Actual != 2 || sin.ParaHacer.Transferencias != 1 || len(sin.MasVendidos) != 1 {
+		t.Fatalf("sin montos perdió cantidades: %+v", sin)
 	}
 
 	// Tincho ve lo mismo: ventas por día, clientes y canales del mes.
@@ -96,5 +112,9 @@ func TestTableroConVentas(t *testing.T) {
 	dias := c["ventasPorDia"].([]any)
 	if len(dias) != 14 || c["clientes"].(map[string]int)["total"] != 1 || len(c["canales30d"].([]any)) != 2 {
 		t.Fatalf("contexto de Tincho: %+v", c)
+	}
+	c = tiendas.ContextoSinMontos(c)
+	if j, _ := json.Marshal(c); strings.Contains(string(j), `"ventas"`) || !strings.Contains(string(j), `"canal":"web","pedidos":1`) {
+		t.Fatalf("contexto sin montos: %s", j)
 	}
 }
