@@ -3,15 +3,30 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
 	import { renderSVG } from 'uqr';
+	import { onMount } from 'svelte';
+	import { compartirTienda } from '#lib/panel/compartir.ts';
+	import { getUi } from '#lib/ui.svelte.ts';
 	import { RESUMEN } from './datos.ts';
 	import { getOnboarding } from './estado.svelte.ts';
 
 	/**
-	 * Paso 8, ¡Listo!: confeti, lo que quedó armado, lo que falta, el QR y el equipo. "Ir a mi
-	 * panel" manda las elecciones al servidor (form del padre) y entra al panel.
+	 * Último paso, ¡Listo!. En la demo, el del handoff: lo que quedó armado, lo que falta, el QR y el
+	 * equipo. Con la API, sólo lo accionable: el link y el QR de verdad para compartir, y el siguiente
+	 * paso más útil (cargar el primer producto, o seguir la importación si eligió traer su tienda).
+	 * Los botones mandan las elecciones al servidor (form del padre) y siguen en el panel.
 	 */
-	let { terminar }: { terminar: () => void } = $props();
+	let {
+		terminar,
+		terminando = false
+	}: { terminar: (a?: 'panel' | 'producto') => void; terminando?: boolean } = $props();
 	const o = getOnboarding();
+	const ui = getUi();
+	// En el celular, la hoja de compartir del sistema; en la compu, el link copiado.
+	let tactil = $state(false);
+	onMount(() => {
+		tactil = matchMedia('(pointer: coarse)').matches && typeof navigator.share === 'function';
+	});
+	const importa = $derived(o.e.importar);
 	const conSesion = $derived(!!page.data.conSesion);
 	// Con la API, la tienda de verdad; en la demo, la del handoff.
 	const real = $derived(page.data.tienda as { nombre: string; slug: string } | null);
@@ -66,6 +81,7 @@
 		setTimeout(() => (copiado = false), 1800);
 	}
 	const iniciales = (e: string) => e.slice(0, 2).toUpperCase();
+	const compartir = () => real && compartirTienda(ui, real);
 </script>
 
 <div class="todo">
@@ -92,34 +108,104 @@
 		<p class="bajada">
 			Y no tuviste que cargar nada a mano. Ya podés vender por todos tus canales.
 		</p>
-	{:else}
-		<h1>Tu tienda ya está creada.</h1>
-		<p class="bajada">Sumá un medio de pago y tus productos, y ya podés vender.</p>
-	{/if}
-	{#if o.demo}<div class="resumen">
+		<div class="resumen">
 			{#each RESUMEN as [v, t] (t)}<div>
 					<div class="r-v">{v}</div>
 					<div class="r-t">{t}</div>
 				</div>{/each}
-		</div>{/if}
-	<div class="faltan">
-		<div class="f-t">Te quedan 2 cosas, cuando quieras</div>
-		<div class="f-fila">
-			<span class="arca">ARCA</span><span class="f-x"
-				>Subir el certificado para facturar <span>· 2 minutos</span></span
-			><button type="button" class="f-link" onclick={terminar}>Hacerlo</button>
 		</div>
-		<div class="f-fila">
-			<span class="corona"><Icon icon={I.phCrownSimpleFill} size={15} /></span><span class="f-x"
-				>Elegir tu plan <span>· te quedan 14 días gratis</span></span
+		<div class="faltan">
+			<div class="f-t">Te quedan 2 cosas, cuando quieras</div>
+			<div class="f-fila">
+				<span class="arca">ARCA</span><span class="f-x"
+					>Subir el certificado para facturar <span>· 2 minutos</span></span
+				><button type="button" class="f-link" onclick={() => terminar()}>Hacerlo</button>
+			</div>
+			<div class="f-fila">
+				<span class="corona"><Icon icon={I.phCrownSimpleFill} size={15} /></span><span class="f-x"
+					>Elegir tu plan <span>· te quedan 14 días gratis</span></span
+				>
+				<!-- Con sesión, los planes del panel; sin sesión (la demo), los de la landing. -->
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- rutas fijas -->
+				<a class="f-link" href={conSesion ? '/panel/plan-y-facturacion' : '/#precios'}>Ver planes</a
+				>
+			</div>
+		</div>
+		<div class="dos">
+			<div class="online">
+				<!-- El QR real del link de la tienda: tocándolo se descarga para imprimir. -->
+				<!-- eslint-disable svelte/no-navigation-without-resolve -- descarga de un data: URL -->
+				<a
+					class="qr"
+					href={qrSvg}
+					download="qr-{real?.slug ?? 'tienda'}.svg"
+					aria-label="Descargar el QR de la tienda"
+					><img src={qrSvg} alt="QR de {link.replace('https://', '')}" /></a
+				>
+				<!-- eslint-enable svelte/no-navigation-without-resolve -->
+				<div class="on-txt">
+					<div class="on-t">Tu tienda ya está en línea</div>
+					<div class="on-d">{link.replace('https://', '')} · imprimí el QR para el mostrador</div>
+					<div class="on-acc">
+						<button type="button" onclick={copiar}
+							><Icon icon={copiado ? I.phCheckBold : I.phCopyBold} size={13} />{copiado
+								? 'Copiado'
+								: 'Copiar link'}</button
+						>
+						<a
+							class="wa"
+							href="https://wa.me/?text={encodeURIComponent(`Mirá mi tienda: ${link}`)}"
+							target="_blank"
+							rel="noopener"><Icon icon={I.phWhatsappLogoFill} size={13} />Compartir</a
+						>
+					</div>
+				</div>
+			</div>
+			<div class="equipo">
+				<div class="eq-t">Sumá a tu equipo</div>
+				<div class="eq-d">Cada uno con sus permisos y doble verificación.</div>
+				<div class="eq-l">
+					{#each o.e.equipo as m (m.email)}
+						<div>
+							<span class="ini">{iniciales(m.email)}</span><span class="mail">{m.email}</span><span
+								class="rol">{m.rol}</span
+							>
+						</div>
+					{/each}
+				</div>
+				<form
+					class="invitar"
+					onsubmit={(ev) => {
+						ev.preventDefault();
+						o.invitar(invitacion);
+						invitacion = '';
+					}}
+				>
+					<input
+						type="email"
+						bind:value={invitacion}
+						placeholder="email de tu socio o empleado"
+						aria-label="Email de tu socio o empleado"
+					/>
+					<button type="submit">Invitar</button>
+				</form>
+			</div>
+		</div>
+		<div class="ctas">
+			<button type="button" class="pri" onclick={() => terminar()}
+				>Ir a mi panel <Icon icon={I.phArrowRightBold} size={16} /></button
 			>
-			<!-- Con sesión, los planes del panel; sin sesión (la demo), los de la landing. -->
-			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- rutas fijas -->
-			<a class="f-link" href={conSesion ? '/panel/plan-y-facturacion' : '/#precios'}>Ver planes</a>
+			<button type="button" class="sec" onclick={() => terminar()}>Ver mi tienda</button>
 		</div>
-	</div>
-	<div class="dos">
-		<div class="online">
+	{:else}
+		<!-- Con la API: el link de verdad para compartir y el siguiente paso, nada más. -->
+		<h1>Tu tienda ya está en línea.</h1>
+		<p class="bajada">
+			{importa
+				? 'Compartí el link cuando quieras y traé tus productos: empieza apenas sigas.'
+				: 'Compartí el link con tus clientes y cargá tu primer producto.'}
+		</p>
+		<div class="online real-online">
 			<!-- El QR real del link de la tienda: tocándolo se descarga para imprimir. -->
 			<!-- eslint-disable svelte/no-navigation-without-resolve -- descarga de un data: URL -->
 			<a
@@ -131,59 +217,54 @@
 			>
 			<!-- eslint-enable svelte/no-navigation-without-resolve -->
 			<div class="on-txt">
-				<div class="on-t">Tu tienda ya está en línea</div>
-				<div class="on-d">{link.replace('https://', '')} · imprimí el QR para el mostrador</div>
+				<div class="on-t">Tu link</div>
+				<div class="on-d link">{link.replace('https://', '')}</div>
 				<div class="on-acc">
-					<button type="button" onclick={copiar}
-						><Icon icon={copiado ? I.phCheckBold : I.phCopyBold} size={13} />{copiado
-							? 'Copiado'
-							: 'Copiar link'}</button
+					{#if tactil}
+						<button type="button" class="compartir" onclick={compartir}
+							><Icon icon={I.phPaperPlaneTiltFill} size={15} />Compartir</button
+						>
+					{:else}
+						<button type="button" class="compartir" onclick={copiar}
+							><Icon icon={copiado ? I.phCheckBold : I.phCopyBold} size={15} />{copiado
+								? 'Copiado'
+								: 'Copiar link'}</button
+						>
+						<a
+							class="wa"
+							href="https://wa.me/?text={encodeURIComponent(
+								`¡Hola! Mirá ${real?.nombre ?? 'mi tienda'}, ya podés comprar online: ${link}`
+							)}"
+							target="_blank"
+							rel="noopener"><Icon icon={I.phWhatsappLogoFill} size={15} />WhatsApp</a
+						>
+					{/if}
+					<!-- eslint-disable svelte/no-navigation-without-resolve -- descarga de un data: URL -->
+					<a href={qrSvg} download="qr-{real?.slug ?? 'tienda'}.svg"
+						><Icon icon={I.phQrCodeFill} size={15} />Descargar QR</a
 					>
-					<a
-						class="wa"
-						href="https://wa.me/?text={encodeURIComponent(`Mirá mi tienda: ${link}`)}"
-						target="_blank"
-						rel="noopener"><Icon icon={I.phWhatsappLogoFill} size={13} />Compartir</a
-					>
+					<!-- eslint-enable svelte/no-navigation-without-resolve -->
 				</div>
 			</div>
 		</div>
-		<div class="equipo">
-			<div class="eq-t">Sumá a tu equipo</div>
-			<div class="eq-d">Cada uno con sus permisos y doble verificación.</div>
-			<div class="eq-l">
-				{#each o.e.equipo as m (m.email)}
-					<div>
-						<span class="ini">{iniciales(m.email)}</span><span class="mail">{m.email}</span><span
-							class="rol">{m.rol}</span
-						>
-					</div>
-				{/each}
-			</div>
-			<form
-				class="invitar"
-				onsubmit={(ev) => {
-					ev.preventDefault();
-					o.invitar(invitacion);
-					invitacion = '';
-				}}
+		<div class="ctas">
+			<button
+				type="button"
+				class="pri"
+				disabled={terminando}
+				onclick={() => terminar(importa ? 'panel' : 'producto')}
+				>{terminando ? 'Abriendo…' : importa ? 'Traer mis productos' : 'Cargar mi primer producto'}
+				<Icon icon={I.phArrowRightBold} size={16} /></button
 			>
-				<input
-					type="email"
-					bind:value={invitacion}
-					placeholder="email de tu socio o empleado"
-					aria-label="Email de tu socio o empleado"
-				/>
-				<button type="submit">Invitar</button>
-			</form>
+			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- la tienda pública, en otra pestaña -->
+			<a class="sec" href={link} target="_blank" rel="noopener">Ver mi tienda</a>
+			{#if !importa}
+				<button type="button" class="sec" disabled={terminando} onclick={() => terminar('panel')}
+					>Ir a mi panel</button
+				>
+			{/if}
 		</div>
-	</div>
-	<div class="ctas">
-		<button type="button" class="pri" onclick={terminar}
-			>Ir a mi panel <Icon icon={I.phArrowRightBold} size={16} /></button
-		>
-		<button type="button" class="sec" onclick={terminar}>Ver mi tienda</button>
-	</div>
+	{/if}
 </div>
 
 <style>
@@ -381,6 +462,35 @@
 	.on-acc .wa {
 		background: #25d366;
 	}
+	.real-online {
+		margin-top: 22px;
+		text-align: left;
+	}
+	.real-online .qr {
+		width: 112px;
+		height: 112px;
+	}
+	.on-d.link {
+		font-size: 14px;
+		color: #fbf7f2;
+		font-weight: 600;
+		overflow-wrap: anywhere;
+	}
+	.on-acc .compartir {
+		background: #fbf7f2;
+		color: #2a140c;
+	}
+	.ctas button:disabled {
+		opacity: 0.7;
+	}
+	.ctas a {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		font-size: 16px;
+		font-weight: 600;
+		border-radius: 999px;
+	}
 	.equipo {
 		padding: 16px;
 		border-radius: 20px;
@@ -494,6 +604,41 @@
 	@media (max-width: 560px) {
 		.resumen {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+		/* En el celular: el QR arriba, los botones a lo ancho y de 44 px. */
+		.real-online {
+			flex-direction: column;
+			align-items: stretch;
+			text-align: center;
+		}
+		.real-online .qr {
+			margin: 0 auto;
+			width: 160px;
+			height: 160px;
+		}
+		.real-online .on-acc {
+			justify-content: center;
+		}
+		.on-acc button,
+		.on-acc a {
+			min-height: 44px;
+			padding: 10px 16px;
+			font-size: 14px;
+		}
+		.ctas {
+			flex-direction: column;
+			align-items: stretch;
+		}
+		.ctas button,
+		.ctas a {
+			justify-content: center;
+		}
+		.anillo {
+			width: 150px;
+			height: 150px;
+		}
+		.ave {
+			inset: 16px;
 		}
 	}
 </style>

@@ -39,6 +39,7 @@
 	const elegida = $derived(o.e.importar?.plataforma ?? null);
 	function elegir(p: Plataforma | null) {
 		o.e.importar = p ? { plataforma: p, url: o.e.importar?.url ?? '' } : null;
+		o.errorImportacion = '';
 		o.guardar();
 	}
 	const fmt = (n: number) => Math.round(n).toLocaleString('es-AR');
@@ -78,11 +79,21 @@
 			<label class="campo"
 				>Link de tu tienda<input
 					bind:value={o.e.importar.url}
-					oninput={() => o.guardar()}
+					oninput={() => ((o.errorImportacion = ''), o.guardar())}
 					placeholder={EJEMPLO[p]}
+					type="url"
+					inputmode="url"
+					autocapitalize="none"
+					spellcheck="false"
 					autocomplete="url"
+					enterkeyhint="done"
+					aria-invalid={!!o.errorImportacion}
+					aria-describedby={o.errorImportacion ? 'ob-err-imp' : undefined}
 				/></label
 			>
+			{#if o.errorImportacion}<p class="err" id="ob-err-imp" role="alert">
+					{o.errorImportacion}
+				</p>{/if}
 		{/if}
 		<div class="trae">
 			<div class="t-t">Lo que traemos</div>
@@ -439,6 +450,7 @@
 		flex-wrap: wrap;
 	}
 	.origenes button {
+		min-height: 44px;
 		padding: 11px 18px;
 		border-radius: 999px;
 		border: 1.5px solid rgba(58, 29, 18, 0.16);
@@ -453,6 +465,13 @@
 		background: #2a140c;
 		border-color: #2a140c;
 		color: #fff;
+	}
+	.err {
+		margin: 8px 0 0;
+		max-width: 440px;
+		font-size: 13.5px;
+		font-weight: 600;
+		color: #b83a2e;
 	}
 	.campo {
 		margin-top: 18px;

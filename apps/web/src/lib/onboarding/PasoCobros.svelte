@@ -2,29 +2,30 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
 	import Interruptor from '#lib/components/Interruptor.svelte';
+	import { cbuValido } from '#lib/panel/cbu.ts';
 	import { COBROS_REALES, CONFIGURACION } from './datos.ts';
 	import Etiqueta from './Etiqueta.svelte';
 	import { getOnboarding } from './estado.svelte.ts';
 	import Logo from './Logo.svelte';
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
-	import Arca from '../../routes/panel/integraciones/Arca.svelte';
-	import type { ArcaConfig, EstadoEntregas, Negocio } from '#lib/server/datos/tipos.ts';
+	import { page } from '$app/state';
+	import type { EstadoEntregas, Negocio } from '#lib/server/datos/tipos.ts';
 
 	/**
-	 * Paso 6, Cobros, envíos y facturas. En la demo, lo "ya configurado" para confirmar. Con la API,
-	 * cada cosa se carga acá mismo (sin salir del onboarding) y nada es obligatorio para seguir.
+	 * Paso Cobros y envíos. En la demo, lo "ya configurado" para confirmar. Con la API, lo justo para
+	 * vender: Mercado Pago (se conecta y vuelve a este paso), transferencia y cómo entrega, todo acá
+	 * mismo y nada obligatorio. La factura electrónica se conecta desde el panel cuando quiera.
 	 */
-	type Cobros = {
-		negocio: Negocio | null;
-		entregas: EstadoEntregas | null;
-		arca: ArcaConfig | null;
-	} | null;
-	let { cobros = null }: { cobros?: Cobros } = $props();
+	type Cobros = { negocio: Negocio | null; entregas: EstadoEntregas | null } | null;
+	let {
+		cobros = null,
+		mp = false,
+		volver = 0
+	}: { cobros?: Cobros; mp?: boolean; volver?: number } = $props();
 	const o = getOnboarding();
 
 	let abierto = $state<'transferencia' | 'entregas' | null>(null);
-	let arcaAbierta = $state(false);
 	let guardando = $state(false);
 	let error = $state<{ donde: string; texto: string } | null>(null);
 	const n = $derived(cobros?.negocio);
@@ -37,6 +38,28 @@
 		moto = en?.moto ?? false;
 	});
 
+	// Validación amable: se avisa al salir del campo (y después, mientras lo corrige), no en cada letra.
+	let alias = $state('');
+	let cbu = $state('');
+	let tocado = $state({ alias: false, cbu: false });
+	$effect.pre(() => {
+		alias = n?.alias ?? '';
+		cbu = n?.cbu ?? '';
+	});
+	const errAlias = $derived(
+		tocado.alias && alias.trim() && !/^[a-zA-Z0-9.-]{6,20}$/.test(alias.trim())
+			? 'El alias tiene de 6 a 20 letras, números o puntos.'
+			: ''
+	);
+	const cbuLimpio = $derived(cbu.replace(/\D/g, ''));
+	const errCbu = $derived(
+		tocado.cbu && cbuLimpio && !cbuValido(cbuLimpio)
+			? cbuLimpio.length === 22
+				? 'Revisá el CBU o CVU: algún número no coincide.'
+				: `Son 22 números (van ${cbuLimpio.length}).`
+			: ''
+	);
+
 	const guardar = (donde: string) => () => {
 		guardando = true;
 		error = null;
@@ -48,8 +71,13 @@
 			update: (o?: { reset?: boolean }) => Promise<void>;
 		}) => {
 			guardando = false;
-			if (result.type === 'failure') {
-				error = { donde, texto: String(result.data?.error ?? 'No se pudo guardar.') };
+			if (result.type !== 'success') {
+				error = {
+					donde,
+					texto: String(
+						result.data?.error ?? 'No pudimos guardar. Revisá tu conexión y probá de nuevo.'
+					)
+				};
 				return;
 			}
 			await update({ reset: false });
@@ -57,6 +85,32 @@
 			abierto = null;
 		};
 	};
+
+	// Mercado Pago: se va a autorizar y se vuelve a este mismo paso (?mercadopago=conectada|error).
+	let yendo = $state(false);
+	let aviso = $state('');
+	const vuelta = $derived(
+		page.url.searchParams.get('mercadopago') === 'error'
+			? 'No se pudo conectar Mercado Pago. Probá de nuevo.'
+			: ''
+	);
+	async function conectarMp() {
+		yendo = true;
+		aviso = '';
+		const r = await fetch(
+			`/panel/integraciones/mercadopago?volver=${encodeURIComponent(`/onboarding?paso=${volver}`)}`,
+			{ method: 'POST' }
+		).catch(() => null);
+		if (!r?.ok) {
+			yendo = false;
+			aviso = r
+				? (((await r.json().catch(() => null)) as { message?: string } | null)?.message ??
+					'No se pudo conectar. Probá de nuevo.')
+				: 'No se pudo conectar. Revisá tu conexión y probá de nuevo.';
+			return;
+		}
+		location.href = ((await r.json()) as { url: string }).url;
+	}
 </script>
 
 {#if o.demo}
@@ -90,23 +144,45 @@
 		{/each}
 	</div>
 {:else}
-	<Etiqueta rotulo="Cobros, envíos y facturas" titulo="Lo que falta para vender." />
+	<Etiqueta rotulo="Cobros y envíos" titulo="Cómo te pagan y cómo entregás." />
 	<div class="reales">
+		<!-- Mercado Pago -->
+		<div class="real" class:on={mp}>
+			<div class="r-fila">
+				<Logo k={COBROS_REALES.mp.k} tam={36} icono={18} radio={11} />
+				<span class="r-txt"
+					><span class="r-t">{COBROS_REALES.mp.t}</span><span class="r-d">{COBROS_REALES.mp.d}</span
+					></span
+				>
+				{#if mp}
+					<span class="r-ok"><Icon icon={I.phCheckBold} size={14} />Conectado</span>
+				{:else}
+					<button type="button" class="r-con" disabled={yendo} onclick={conectarMp}
+						>{yendo ? 'Abriendo…' : 'Conectar'}</button
+					>
+				{/if}
+			</div>
+			{#if aviso || vuelta}<p class="r-err r-aviso" role="alert">{aviso || vuelta}</p>{/if}
+		</div>
+
 		<!-- Transferencia -->
 		<div class="real" class:on={tieneTransf}>
 			<div class="r-fila">
-				<Logo k={COBROS_REALES[0].k} tam={36} icono={18} radio={11} />
+				<Logo k={COBROS_REALES.transf.k} tam={36} icono={18} radio={11} />
 				<span class="r-txt"
-					><span class="r-t">Transferencia</span><span class="r-d"
+					><span class="r-t">{COBROS_REALES.transf.t}</span><span class="r-d"
 						>{tieneTransf
-							? `Alias ${n?.alias || '—'}${n?.titular ? ` · ${n.titular}` : ''}`
-							: COBROS_REALES[0].d}</span
+							? [n?.alias ? `Alias ${n.alias}` : 'CBU cargado', n?.titular]
+									.filter(Boolean)
+									.join(' · ')
+							: COBROS_REALES.transf.d}</span
 					></span
 				>
 				<button
 					type="button"
 					class="r-con"
 					class:sec={tieneTransf}
+					aria-expanded={abierto === 'transferencia'}
 					onclick={() => (abierto = abierto === 'transferencia' ? null : 'transferencia')}
 					>{abierto === 'transferencia' ? 'Cerrar' : tieneTransf ? 'Editar' : 'Cargar'}</button
 				>
@@ -121,29 +197,45 @@
 					<label
 						><span>Alias</span><input
 							name="alias"
-							value={n?.alias ?? ''}
+							bind:value={alias}
+							onblur={() => (tocado.alias = true)}
 							placeholder="mi.tienda.mp"
 							autocomplete="off"
+							autocapitalize="none"
+							spellcheck="false"
+							enterkeyhint="next"
+							maxlength="20"
+							aria-invalid={!!errAlias}
+							aria-describedby={errAlias ? 'ob-err-alias' : undefined}
 						/></label
 					>
+					{#if errAlias}<p class="r-err" id="ob-err-alias">{errAlias}</p>{/if}
 					<label
 						><span>CBU o CVU <em>(opcional)</em></span><input
 							name="cbu"
-							value={n?.cbu ?? ''}
+							bind:value={cbu}
+							onblur={() => (tocado.cbu = true)}
 							inputmode="numeric"
 							placeholder="22 números"
 							autocomplete="off"
+							enterkeyhint="next"
+							maxlength="26"
+							aria-invalid={!!errCbu}
+							aria-describedby={errCbu ? 'ob-err-cbu' : undefined}
 						/></label
 					>
+					{#if errCbu}<p class="r-err" id="ob-err-cbu">{errCbu}</p>{/if}
 					<label
 						><span>Titular <em>(opcional)</em></span><input
 							name="titular"
 							value={n?.titular ?? ''}
 							placeholder="Nombre y apellido o razón social"
+							autocomplete="name"
+							enterkeyhint="done"
 						/></label
 					>
 					{#if error?.donde === 'transferencia'}<p class="r-err" role="alert">{error.texto}</p>{/if}
-					<button class="r-guardar" disabled={guardando}
+					<button class="r-guardar" disabled={guardando || !!errAlias || !!errCbu}
 						>{guardando ? 'Guardando…' : 'Guardar'}</button
 					>
 				</form>
@@ -153,9 +245,9 @@
 		<!-- Envíos y retiro -->
 		<div class="real" class:on={!!en}>
 			<div class="r-fila">
-				<Logo k={COBROS_REALES[1].k} tam={36} icono={18} radio={11} />
+				<Logo k={COBROS_REALES.envios.k} tam={36} icono={18} radio={11} />
 				<span class="r-txt"
-					><span class="r-t">Envíos y retiro</span><span class="r-d"
+					><span class="r-t">{COBROS_REALES.envios.t}</span><span class="r-d"
 						>{en
 							? [
 									en.retiro && 'Retiro en el local',
@@ -164,12 +256,13 @@
 								]
 									.filter(Boolean)
 									.join(' · ') || 'Elegí cómo entregás'
-							: COBROS_REALES[1].d}</span
+							: COBROS_REALES.envios.d}</span
 					></span
 				>
 				<button
 					type="button"
 					class="r-con sec"
+					aria-expanded={abierto === 'entregas'}
 					onclick={() => (abierto = abierto === 'entregas' ? null : 'entregas')}
 					>{abierto === 'entregas' ? 'Cerrar' : 'Editar'}</button
 				>
@@ -185,6 +278,7 @@
 								name="retiroDireccion"
 								value={en?.retiroDireccion ?? ''}
 								placeholder="Si la dejás vacía, va la del negocio"
+								autocomplete="street-address"
 							/></label
 						>
 						<label
@@ -192,6 +286,7 @@
 								name="retiroHorario"
 								value={en?.retiroHorario ?? ''}
 								placeholder="Lunes a viernes de 9 a 18"
+								autocomplete="off"
 							/></label
 						>
 					{/if}
@@ -204,6 +299,8 @@
 								name="motoZona"
 								value={en?.motoZona ?? ''}
 								placeholder="Barrios o localidades"
+								autocomplete="off"
+								required
 							/></label
 						>
 						<label
@@ -212,6 +309,7 @@
 								value={en?.motoCosto ? String(en.motoCosto) : ''}
 								inputmode="numeric"
 								placeholder="$ 0"
+								autocomplete="off"
 							/></label
 						>
 						<label
@@ -219,6 +317,7 @@
 								name="motoDemora"
 								value={en?.motoDemora ?? ''}
 								placeholder="En el día"
+								autocomplete="off"
 							/></label
 						>
 					{/if}
@@ -230,47 +329,10 @@
 				</form>
 			{/if}
 		</div>
-
-		<!-- Factura electrónica -->
-		<div class="real" class:on={!!cobros?.arca?.conectada}>
-			<div class="r-fila">
-				<Logo k={COBROS_REALES[2].k} tam={36} icono={18} radio={11} />
-				<span class="r-txt"
-					><span class="r-t">Factura electrónica</span><span class="r-d"
-						>{cobros?.arca?.conectada
-							? `CUIT ${cobros.arca.cuit} · conectada`
-							: COBROS_REALES[2].d}</span
-					></span
-				>
-				{#if cobros?.arca}
-					<button
-						type="button"
-						class="r-con"
-						class:sec={cobros.arca.conectada}
-						onclick={() => (arcaAbierta = true)}
-						>{cobros.arca.conectada ? 'Ver' : 'Conectar'}</button
-					>
-				{/if}
-			</div>
-		</div>
-
-		<!-- Cambios y devoluciones -->
-		<div class="real on">
-			<div class="r-fila">
-				<Logo k={COBROS_REALES[3].k} tam={36} icono={18} radio={11} />
-				<span class="r-txt"
-					><span class="r-t">Cambios y devoluciones</span><span class="r-d"
-						>Tu tienda ya muestra el botón de arrepentimiento (10 días, por ley).</span
-					></span
-				>
-				<span class="r-ok"><Icon icon={I.phCheckBold} size={14} />Incluido</span>
-			</div>
-		</div>
 	</div>
 	<p class="r-nota">
 		Nada de esto es obligatorio para seguir: lo completás ahora o después desde el&nbsp;panel.
 	</p>
-	{#if cobros?.arca}<Arca bind:open={arcaAbierta} arca={cobros.arca} demo={false} />{/if}
 {/if}
 
 <style>
@@ -379,6 +441,7 @@
 	}
 	.r-con {
 		flex: none;
+		min-height: 44px;
 		padding: 10px 16px;
 		border-radius: 999px;
 		border: 0;
@@ -437,6 +500,9 @@
 		gap: 10px;
 		font-size: 15px;
 	}
+	.r-form .r-check {
+		min-height: 44px;
+	}
 	.r-check input {
 		width: 20px;
 		height: 20px;
@@ -447,6 +513,12 @@
 		font-size: 13px;
 		color: #6b5244;
 	}
+	.r-aviso {
+		margin-top: 10px;
+	}
+	.r-con:disabled {
+		opacity: 0.6;
+	}
 	.r-err {
 		margin: 0;
 		font-size: 13.5px;
@@ -454,6 +526,7 @@
 	}
 	.r-guardar {
 		align-self: flex-start;
+		min-height: 44px;
 		padding: 12px 22px;
 		border-radius: 999px;
 		border: 0;

@@ -355,6 +355,7 @@
 		font-weight: 600;
 	}
 	.ver {
+		min-height: 44px;
 		margin-top: 12px;
 		width: 100%;
 		display: flex;
@@ -454,6 +455,12 @@
 		}
 		.lado {
 			flex: 1 1 100%;
+		}
+	}
+	@media (max-width: 559px) {
+		.disp button,
+		.secs button {
+			min-height: 44px;
 		}
 	}
 </style>

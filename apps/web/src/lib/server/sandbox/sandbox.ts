@@ -604,8 +604,7 @@ export class DatosSandbox implements Datos {
 
 	async onboarding(): Promise<Onboarding> {
 		const g = (await cambiosDe(this.db, this.sb.id, 'onboarding')).get('estado') as
-			| { elecciones?: Record<string, unknown>; terminado?: boolean }
-			| undefined;
+			{ elecciones?: Record<string, unknown>; terminado?: boolean } | undefined;
 		return {
 			plantilla: (await this.tienda()).plantilla,
 			elecciones: g?.elecciones ?? {},

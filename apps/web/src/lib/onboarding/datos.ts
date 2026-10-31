@@ -6,16 +6,43 @@
 import * as I from '#lib/icons.ts';
 import type { IconData } from '#lib/icons.ts';
 
-export const PASOS = [
-	'Cuenta',
-	'Tu negocio',
-	'Canales',
-	'Importación',
-	'Tu tienda',
-	'Cobros y envíos',
-	'Tincho',
-	'¡Listo!'
-] as const;
+/** Los pasos, por id: la demo recorre los 8 del handoff; una cuenta real, sólo los que sirven. */
+export type PasoId =
+	'cuenta' | 'negocio' | 'canales' | 'importacion' | 'tienda' | 'cobros' | 'tincho' | 'listo';
+export const PASOS_DEMO: readonly PasoId[] = [
+	'cuenta',
+	'negocio',
+	'canales',
+	'importacion',
+	'tienda',
+	'cobros',
+	'tincho',
+	'listo'
+];
+/**
+ * Con la API, menos es más: Canales sale (Mercado Pago pasa a Cobros; Mercado Libre, WhatsApp e
+ * Instagram se conectan desde Integraciones) y Tincho también (el tono no lo usa nada todavía).
+ * Cuenta queda primero y Tu negocio segundo: el registro y los ingresos sociales vuelven a ?paso=1.
+ */
+export const PASOS_REALES: readonly PasoId[] = [
+	'cuenta',
+	'negocio',
+	'importacion',
+	'tienda',
+	'cobros',
+	'listo'
+];
+export const ROTULO: Record<PasoId, string> = {
+	cuenta: 'Cuenta',
+	negocio: 'Tu negocio',
+	canales: 'Canales',
+	importacion: 'Importación',
+	tienda: 'Tu tienda',
+	cobros: 'Cobros y envíos',
+	tincho: 'Tincho',
+	listo: '¡Listo!'
+};
+/** El avance de la demo (handoff); con la API sale de los pasos hechos. */
 export const PORCENTAJE = [6, 28, 52, 71, 80, 88, 94, 100] as const;
 export const CONSEJOS = [
 	'Si entrás con Mercado Pago, me ahorro preguntarte la mitad de las cosas.',
@@ -28,30 +55,28 @@ export const CONSEJOS = [
 	'¡Listo! Te dejo el panel ordenado y te aviso apenas entre la primera venta.'
 ] as const;
 /** Los consejos de Tincho con una cuenta real: nada de lo que "encontró" la demo. */
-export const CONSEJOS_REALES = [
-	'Te pido lo justo. Todo lo podés cambiar después desde el panel.',
-	'Contame qué querés resolver y ordeno tu panel según eso.',
-	'Conectá lo que ya usás cuando quieras: cada cosa se conecta con tu cuenta, desde el panel.',
-	'Si venís de otra plataforma, traigo tus productos. Empieza al terminar y te aviso.',
-	'Elegí la plantilla; los colores y las secciones los cambiás cuando quieras.',
-	'Con un medio de pago ya podés vender. Te dejo el link a cada cosa.',
-	'Elegí cómo querés que hable. Nunca inventa precios ni promete lo que no tenés.',
-	'¡Listo! Te aviso apenas entre la primera venta.'
-] as const;
-export const NOTA_PIE_REAL: Record<number, string> = {
-	3: 'La importación empieza al terminar y la seguís desde Productos.',
-	5: 'Podés cambiar todo después desde Configuración.'
+export const CONSEJOS_REALES: Partial<Record<PasoId, string>> = {
+	cuenta: 'Te pido lo justo. Todo lo podés cambiar después desde el panel.',
+	negocio: 'Con el nombre y lo que vendés te armo la tienda. La dirección se arma sola.',
+	importacion: 'Si venís de otra plataforma, traigo tus productos. Empieza al terminar y te aviso.',
+	tienda: 'Elegí la plantilla; los colores y las secciones los cambiás cuando quieras.',
+	cobros: 'Con un medio de pago ya podés vender. Lo demás, cuando quieras.',
+	listo: 'Compartí el link o el QR: así te llegan las primeras ventas.'
 };
-export const ILUSTRACION = [
-	'saludo',
-	'lupa',
-	'whatsapp',
-	'caja',
-	'foto',
-	'ticket',
-	'hablando',
-	'celebrando'
-] as const;
+export const NOTA_PIE_REAL: Partial<Record<PasoId, string>> = {
+	importacion: 'La importación empieza al terminar y la seguís desde Productos.',
+	cobros: 'Podés cambiar todo después desde Configuración.'
+};
+export const ILUSTRACION: Record<PasoId, string> = {
+	cuenta: 'saludo',
+	negocio: 'lupa',
+	canales: 'whatsapp',
+	importacion: 'caja',
+	tienda: 'foto',
+	cobros: 'ticket',
+	tincho: 'hablando',
+	listo: 'celebrando'
+};
 
 /** Marca de cada servicio: ícono o sigla, con su color y fondo. */
 export type Logo = { icon?: IconData; word?: string; col: string; bg: string };
@@ -79,6 +104,15 @@ export const TRAE_MP = [
 	[I.phChartLineUpFill, 'Tus ventas, para los informes'],
 	[I.phWalletFill, 'Cobros, cuotas y tu alias para transferencias'],
 	[I.phQrCodeFill, 'Tu QR del local y el Point']
+] as const;
+
+/** Con una cuenta real: los pasos que siguen, tal cual (sin prometer datos que no se traen). */
+export const LO_QUE_SIGUE = [
+	[I.phStorefrontFill, 'El nombre y la dirección de tu tienda'],
+	[I.phUploadSimpleFill, 'Si venís de otra plataforma, tus productos'],
+	[I.phPaintBrushFill, 'Cómo se ve: una plantilla para tu rubro'],
+	[I.phWalletFill, 'Cómo te pagan: Mercado Pago o transferencia'],
+	[I.phQrCodeFill, 'Tu link y tu QR, listos para compartir']
 ] as const;
 
 export const DATOS_NEGOCIO = [
@@ -189,62 +223,16 @@ export const CONEXIONES = [
 ] as const;
 export type Conexion = (typeof CONEXIONES)[number][0];
 
-/**
- * Con una cuenta real (la API): lo que conviene conectar y configurar, con el link a la pantalla del
- * panel donde se hace. Sin datos de ejemplo.
- */
-export const CANALES_REALES = [
-	{
-		k: 'mp',
-		t: 'Mercado Pago',
-		d: 'Cobrá con tarjeta, QR y cuotas en tu tienda',
-		href: '/panel/integraciones'
-	},
-	{
-		k: 'ml',
-		t: 'Mercado Libre',
-		d: 'Publicá tus productos con el mismo stock',
-		href: '/panel/integraciones'
-	},
-	{
-		k: 'wa',
-		t: 'WhatsApp',
-		d: 'Atendé los mensajes desde la bandeja del panel',
-		href: '/panel/whatsapp'
-	},
-	{
-		k: 'ig',
-		t: 'Instagram y Facebook',
-		d: 'Los mensajes, en la misma bandeja',
-		href: '/panel/integraciones'
-	}
-];
-export const COBROS_REALES = [
-	{
-		k: 'transf',
-		t: 'Transferencia',
-		d: 'Cargá tu alias o CBU para ofrecerla al pagar',
-		href: '/panel/configuracion'
-	},
-	{
+/** Con una cuenta real (la API): cómo cobra y entrega, sin datos de ejemplo. */
+export const COBROS_REALES = {
+	mp: { k: 'mp', t: 'Mercado Pago', d: 'Cobrá con tarjeta, QR y cuotas en tu tienda' },
+	transf: { k: 'transf', t: 'Transferencia', d: 'Cargá tu alias o CBU para ofrecerla al pagar' },
+	envios: {
 		k: 'local',
 		t: 'Envíos y retiro',
-		d: 'Elegí cómo entregás: retiro, Correo Argentino o moto',
-		href: '/panel/envios/configurar'
-	},
-	{
-		k: 'arca',
-		t: 'Factura electrónica',
-		d: 'Conectá ARCA para facturar cada venta',
-		href: '/panel/facturacion'
-	},
-	{
-		k: 'pol',
-		t: 'Cambios y devoluciones',
-		d: 'Tu política, a la vista en la tienda',
-		href: '/panel/mi-tienda'
+		d: 'Elegí cómo entregás: retiro en el local o moto'
 	}
-];
+} as const;
 
 export const IMPORTACION = [
 	[

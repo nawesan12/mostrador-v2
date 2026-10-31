@@ -4,7 +4,7 @@
 	import Marca from '#lib/landing/Marca.svelte';
 	import { onMount, tick } from 'svelte';
 	import { deserialize, enhance } from '$app/forms';
-	import { invalidateAll, replaceState } from '$app/navigation';
+	import { invalidateAll, pushState, replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Grano from '#lib/components/Grano.svelte';
 	import Icon from '#lib/components/Icon.svelte';
@@ -16,8 +16,8 @@
 		ILUSTRACION,
 		NOTA_PIE,
 		NOTA_PIE_REAL,
-		PASOS,
-		PORCENTAJE
+		PORCENTAJE,
+		ROTULO
 	} from '#lib/onboarding/datos.ts';
 	import { Onboarding, setOnboarding } from '#lib/onboarding/estado.svelte.ts';
 	import { slugFinal } from '#lib/tienda/direccion.ts';
@@ -31,16 +31,27 @@
 	import PasoTienda from '#lib/onboarding/PasoTienda.svelte';
 	import type { PageProps } from './$types';
 
-	/** Onboarding de 8 pasos (design/Onboarding Mostrador.dc.html). */
+	/**
+	 * Onboarding (design/Onboarding Mostrador.dc.html): los 8 pasos del handoff en la demo; con una
+	 * cuenta real, sólo los que sirven para tener la tienda andando y compartida (datos.ts).
+	 */
 	let { data, form }: PageProps = $props();
 	const o = setOnboarding(new Onboarding());
 	const paso = $derived(o.e.paso);
+	const id = $derived(o.id);
+	const total = $derived(o.pasos.length);
+	// El avance: el del handoff en la demo; con la API, los pasos hechos de los que hay (honesto).
+	const porcentaje = $derived(
+		data.demo ? PORCENTAJE[paso] : Math.round(((paso + 1) / total) * 100)
+	);
+	const consejo = $derived(data.demo ? CONSEJOS[paso] : (CONSEJOS_REALES[id] ?? ''));
 
 	let listo = $state(false);
 	onMount(() => {
 		o.demo = data.demo;
 		o.fijarTienda(data.tienda);
-		o.cargar();
+		o.cargar(data.demo || !data.conSesion ? undefined : data.guardado);
+		o.alCambiar = () => formPaso?.requestSubmit();
 		// Desde «Usar esta plantilla» de la landing: ?plantilla= manda sobre lo guardado.
 		const tpl = page.url.searchParams.get('plantilla');
 		if (tpl && PLANTILLAS.some((p) => p.id === tpl)) {
@@ -53,28 +64,41 @@
 			o.e.importar = { plataforma: desde, url: page.url.searchParams.get('origen') ?? '' };
 			o.guardar();
 		}
-		// Con la API, sin sesión no se puede pasar del paso 1; al volver del registro, ?paso= manda.
-		if (data.paso !== null) o.ir(data.paso);
-		else if (!data.demo && !data.conSesion) o.ir(0);
+		// Con la API, sin sesión no se puede pasar del paso 1 y con sesión no se vuelve a él; si no, al
+		// volver del registro o de conectar algo, ?paso= manda.
+		if (!data.demo && !data.conSesion) o.ir(0);
+		else if (data.paso !== null) o.ir(!data.demo && data.paso === 0 ? 1 : data.paso);
 		listo = true;
 		return () => o.detener();
 	});
 
 	// El paso queda en la dirección (?paso=N): al recargar se vuelve al mismo, no al que trajo el
 	// registro (antes quedaba fijo en ?paso=1 y recargar en el 6 mandaba al 2).
+	// Cada paso nuevo es una entrada del historial: el «atrás» del celular (o del navegador) vuelve
+	// al paso anterior en vez de salir del onboarding. El primero sólo se reemplaza.
+	let primero = true;
 	$effect(() => {
 		const n = paso;
 		if (!listo) return;
 		const u = new URL(location.href);
 		if (u.searchParams.get('paso') === String(n)) return;
 		u.searchParams.set('paso', String(n));
+		const a = `${resolve('/onboarding')}${u.search}`;
 		// eslint-disable-next-line svelte/no-navigation-without-resolve -- la ruta pasa por resolve(); sólo cambia la consulta
-		replaceState(`${resolve('/onboarding')}${u.search}`, page.state);
+		if (primero) replaceState(a, { paso: n });
+		// eslint-disable-next-line svelte/no-navigation-without-resolve -- la ruta pasa por resolve(); sólo cambia la consulta
+		else pushState(a, { paso: n });
+		primero = false;
+	});
+	$effect(() => {
+		const s = page.state as { paso?: number };
+		if (listo && typeof s.paso === 'number' && s.paso !== o.e.paso) o.ir(s.paso);
 	});
 
-	// Con la API, cada cambio de paso se guarda en la tienda.
+	// Con la API, cada cambio de paso se guarda en la tienda (y lo que se elige, un momento después).
 	let formPaso = $state<HTMLFormElement>();
 	let formFin = $state<HTMLFormElement>();
+	let sinGuardar = $state(false);
 	$effect(() => {
 		void paso;
 		if (listo && !data.demo && data.conSesion && paso > 0)
@@ -84,6 +108,8 @@
 		JSON.stringify({
 			plantilla: o.e.plantilla,
 			elecciones: {
+				// Con la API, el paso en que quedó: se retoma ahí (también desde otro dispositivo).
+				...(data.demo ? {} : { paso: id }),
 				objetivos: o.e.objetivos,
 				rubro: o.e.rubro,
 				conexiones: o.e.conexiones,
@@ -97,13 +123,16 @@
 			}
 		})
 	);
-	const terminar = () => {
+	let destino = $state<'panel' | 'producto'>('panel');
+	let terminando = $state(false);
+	const terminar = (a: 'panel' | 'producto' = 'panel') => {
 		try {
 			localStorage.setItem('ob-step', '0');
 		} catch {
 			// Sin almacenamiento: no importa.
 		}
-		formFin?.requestSubmit();
+		destino = a;
+		tick().then(() => formFin?.requestSubmit());
 	};
 
 	/**
@@ -154,21 +183,28 @@
 	}
 
 	const siguiente = async () => {
-		if (paso === 1 && !data.demo && !(await guardarTienda())) return;
+		if (id === 'negocio' && !data.demo && !(await guardarTienda())) return;
+		if (id === 'importacion' && !o.importacionValida) {
+			o.errorImportacion = 'Pegá el link de tu tienda, o elegí «Empiezo de cero».';
+			return;
+		}
 		o.ir(paso + 1);
 	};
 	const despues = async () => {
-		if (paso === 1 && !data.demo) await guardarTienda();
+		if (id === 'negocio' && !data.demo) await guardarTienda();
+		// «Después» en la importación es no traer nada ahora (se hace desde Productos).
+		if (id === 'importacion' && !data.demo) o.e.importar = null;
 		o.ir(paso + 1);
 	};
 	const etiquetaSiguiente = $derived(
-		paso === 3 && !o.importacionLista
+		id === 'importacion' && !o.importacionLista
 			? 'Seguir mientras importa'
-			: paso === 6
+			: paso === total - 2
 				? 'Terminar'
 				: 'Continuar'
 	);
-	const ilustracion = $derived(`/hornero/${ILUSTRACION[paso]}.webp`);
+	const ilustracion = $derived(`/hornero/${ILUSTRACION[id]}.webp`);
+	const nota = $derived((data.demo ? NOTA_PIE[paso] : NOTA_PIE_REAL[id]) ?? 'Todo se guarda solo.');
 
 	// Se anima cada vez que cambia (como en el handoff).
 	let caja = $state<HTMLElement>();
@@ -201,18 +237,22 @@
 		</a>
 		<div class="avance">
 			<div class="a-t">Tu cuenta está</div>
-			<div class="a-v"><span>{PORCENTAJE[paso]}%</span><span class="a-l">lista</span></div>
-			<div class="a-barra"><div style:width="{PORCENTAJE[paso]}%"></div></div>
-			<div class="a-d">Sin cargar nada a mano: lo traemos de lo que ya usás.</div>
+			<div class="a-v"><span>{porcentaje}%</span><span class="a-l">lista</span></div>
+			<div class="a-barra"><div style:width="{porcentaje}%"></div></div>
+			<div class="a-d">
+				{data.demo
+					? 'Sin cargar nada a mano: lo traemos de lo que ya usás.'
+					: 'Lo justo para empezar a vender. Lo demás, cuando quieras.'}
+			</div>
 		</div>
 		<nav class="pasos" aria-label="Pasos">
-			{#each PASOS as label, i (label)}
+			{#each o.pasos as p, i (p)}
 				<button
 					type="button"
 					class:cur={i === paso}
 					class:prox={i > paso}
 					aria-current={i === paso ? 'step' : undefined}
-					disabled={i > paso + 1 || (!data.demo && !data.conSesion && i > 0)}
+					disabled={i > paso + 1 || (!data.demo && (!data.conSesion ? i > 0 : i === 0))}
 					onclick={() => o.ir(i)}
 				>
 					{#if i < paso}
@@ -220,7 +260,7 @@
 					{:else}
 						<span class="n">{i + 1}</span>
 					{/if}
-					<span class="p-l">{label}</span>
+					<span class="p-l">{ROTULO[p]}</span>
 				</button>
 			{/each}
 		</nav>
@@ -229,7 +269,7 @@
 			<div class="c-av"><img src={ilustracion} alt="Tincho" width="52" height="52" /></div>
 			<div>
 				<div class="c-n">Tincho</div>
-				<div class="c-t">{(data.demo ? CONSEJOS : CONSEJOS_REALES)[paso]}</div>
+				<div class="c-t">{consejo}</div>
 			</div>
 		</div>
 	</aside>
@@ -239,9 +279,10 @@
 			<div class="m-fila">
 				<Marca color="#E8875F" alto={22} />
 				<span class="m-paso"
-					><span class="m-n">Paso {paso + 1} de 8</span><span class="m-l">{PASOS[paso]}</span></span
+					><span class="m-n">Paso {paso + 1} de {total}</span><span class="m-l">{ROTULO[id]}</span
+					></span
 				>
-				<span class="m-pct">{PORCENTAJE[paso]}%</span>
+				<span class="m-pct">{porcentaje}%</span>
 				<button
 					type="button"
 					class="m-av"
@@ -250,27 +291,29 @@
 					onclick={() => (o.consejo = !o.consejo)}><img src={ilustracion} alt="" /></button
 				>
 			</div>
-			<div class="m-barras">
-				{#each PASOS as label, i (label)}
-					<button
-						type="button"
-						aria-label={label}
-						class:hecho={i < paso}
-						class:cur={i === paso}
-						disabled={i > paso + 1 || (!data.demo && !data.conSesion && i > 0)}
-						onclick={() => o.ir(i)}
-					></button>
+			<!-- El avance, sin tocarse: en el celular se vuelve con «Atrás» (unas barras de 5 px no son
+			     un botón que se pueda tocar). -->
+			<div class="m-barras" aria-hidden="true">
+				{#each o.pasos as p, i (p)}
+					<span class:hecho={i < paso} class:cur={i === paso}></span>
 				{/each}
 			</div>
 			{#if o.consejo}<div class="m-consejo">
 					<b>Tincho:</b>
-					{(data.demo ? CONSEJOS : CONSEJOS_REALES)[paso]}
+					{consejo}
 				</div>{/if}
 		</div>
 		<div class="arriba">
-			<span class="ar-paso">Paso {paso + 1} de 8</span>
-			<span class="ar-ok"><Icon icon={I.phCloudCheckFill} size={16} />Guardado automáticamente</span
-			>
+			<span class="ar-paso">Paso {paso + 1} de {total}</span>
+			{#if sinGuardar}
+				<span class="ar-ok mal"
+					><Icon icon={I.phWarningCircleFill} size={16} />No se pudo guardar: revisá tu conexión</span
+				>
+			{:else}
+				<span class="ar-ok"
+					><Icon icon={I.phCloudCheckFill} size={16} />Guardado automáticamente</span
+				>
+			{/if}
 			<span class="esp"></span>
 			<a href="/ayuda">¿Necesitás ayuda?</a>
 			<a href="/">Salir</a>
@@ -278,37 +321,35 @@
 
 		<div class="contenido">
 			<div class="paso" bind:this={caja}>
-				{#if paso === 0}
+				{#if id === 'cuenta'}
 					<PasoCuenta demo={data.demo} clerk={data.clerk} seguir={siguiente} />
-				{:else if paso === 1}
+				{:else if id === 'negocio'}
 					<PasoNegocio />
-				{:else if paso === 2}
-					<PasoCanales conectadas={data.conectadas} />
-				{:else if paso === 3}
+				{:else if id === 'canales'}
+					<PasoCanales />
+				{:else if id === 'importacion'}
 					<PasoImportacion />
-				{:else if paso === 4}
+				{:else if id === 'tienda'}
 					<PasoTienda />
-				{:else if paso === 5}
-					<PasoCobros cobros={data.cobros} />
-				{:else if paso === 6}
+				{:else if id === 'cobros'}
+					<PasoCobros cobros={data.cobros} mp={data.mp} volver={paso} />
+				{:else if id === 'tincho'}
 					<PasoHornero />
 				{:else}
-					<PasoListo {terminar} />
+					<PasoListo {terminar} {terminando} />
 					{#if form && 'error' in form}<div class="error" role="alert">{form.error}</div>{/if}
 				{/if}
 			</div>
 		</div>
 
-		{#if paso > 0 && paso < 7}
+		{#if paso > 0 && id !== 'listo'}
 			<div class="pie">
 				{#if paso > 1}
 					<button type="button" class="atras" onclick={() => o.ir(paso - 1)}
 						><Icon icon={I.phArrowLeftBold} size={14} /><span class="atras-t">Atrás</span></button
 					>
 				{/if}
-				<div class="nota">
-					{(data.demo ? NOTA_PIE : NOTA_PIE_REAL)[paso] ?? 'Todo se guarda solo.'}
-				</div>
+				<div class="nota">{nota}</div>
 				<button type="button" class="saltar" onclick={despues} disabled={o.guardandoTienda}
 					><span class="largo">Hacerlo después</span><span class="corto">Después</span></button
 				>
@@ -323,11 +364,34 @@
 	</main>
 </div>
 
-<form method="POST" action="?/paso" bind:this={formPaso} use:enhance={() => async () => {}} hidden>
+<form
+	method="POST"
+	action="?/paso"
+	bind:this={formPaso}
+	use:enhance={() =>
+		async ({ result }) => {
+			sinGuardar = result.type !== 'success';
+		}}
+	hidden
+>
 	<input type="hidden" name="estado" value={estado} />
+	<input type="hidden" name="listo" value={id === 'listo' ? '1' : ''} />
 </form>
-<form method="POST" action="?/terminar" bind:this={formFin} use:enhance hidden>
+<form
+	method="POST"
+	action="?/terminar"
+	bind:this={formFin}
+	use:enhance={() => {
+		terminando = true;
+		return async ({ update }) => {
+			await update();
+			terminando = false;
+		};
+	}}
+	hidden
+>
 	<input type="hidden" name="estado" value={estado} />
+	<input type="hidden" name="destino" value={destino} />
 </form>
 
 <style>
@@ -513,6 +577,13 @@
 		display: flex;
 		flex-direction: column;
 		min-height: 100vh;
+		/* El confeti de «¡Listo!» no abre scroll horizontal (clip no corta el pie pegajoso). */
+		overflow-x: clip;
+	}
+	/* Un campo enfocado no queda tapado por el pie (ni por el teclado que lo empuja). */
+	.contenido :global(input),
+	.contenido :global(textarea) {
+		scroll-margin-bottom: 110px;
 	}
 	.movil {
 		display: none;
@@ -536,6 +607,9 @@
 		font-size: 13px;
 		color: #237550;
 		font-weight: 600;
+	}
+	.ar-ok.mal {
+		color: #b83a2e;
 	}
 	.arriba a {
 		font-size: 14px;
@@ -575,6 +649,7 @@
 		border-top: 1px solid rgba(58, 29, 18, 0.08);
 	}
 	.atras {
+		min-height: 44px;
 		display: flex;
 		align-items: center;
 		gap: 8px;
@@ -593,6 +668,7 @@
 		color: #7a6252;
 	}
 	.saltar {
+		min-height: 44px;
 		border: 0;
 		background: transparent;
 		font-size: 14px;
@@ -670,8 +746,8 @@
 			letter-spacing: -0.03em;
 		}
 		.m-av {
-			width: 40px;
-			height: 40px;
+			width: 44px;
+			height: 44px;
 			flex: none;
 			border-radius: 50%;
 			border: 0;
@@ -690,18 +766,16 @@
 			gap: 3px;
 			padding: 0 14px 10px;
 		}
-		.m-barras button {
+		.m-barras span {
 			flex: 1;
 			height: 5px;
-			padding: 0;
-			border: 0;
 			border-radius: 3px;
 			background: rgba(251, 247, 242, 0.18);
 		}
-		.m-barras button.hecho {
+		.m-barras span.hecho {
 			background: #2f8f63;
 		}
-		.m-barras button.cur {
+		.m-barras span.cur {
 			background: #e8875f;
 		}
 		.m-consejo {

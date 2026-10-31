@@ -3,7 +3,7 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import { ErrorClerk, iniciar, type ProveedorClerk } from '#lib/clerk.ts';
 	import * as I from '#lib/icons.ts';
-	import { TRAE_MP } from './datos.ts';
+	import { LO_QUE_SIGUE, TRAE_MP } from './datos.ts';
 	import Etiqueta from './Etiqueta.svelte';
 
 	/**
@@ -48,8 +48,9 @@
 	<div class="izq">
 		<Etiqueta rotulo="Crear cuenta" titulo="Abrí Tu Local Web. No arrancás de cero." grande />
 		<p class="bajada">
-			Entrá con la cuenta que ya usás y traemos tus datos desde ahí: nombre, CUIT, clientes y
-			ventas.
+			{demo
+				? 'Entrá con la cuenta que ya usás y traemos tus datos desde ahí: nombre, CUIT, clientes y ventas.'
+				: 'Entrá con la cuenta que ya usás o con tu email. En unos minutos tenés tu tienda online, lista para compartir.'}
 		</p>
 		<form class="botones" method="POST" action="?/proveedor">
 			<button
@@ -62,7 +63,9 @@
 				<span class="ico blanco"
 					><Icon icon={I.siMercadopago} size={18} style="color:#00B1EA" /></span
 				>
-				<span class="txt">Continuar con Mercado Pago</span><span class="reco">Recomendado</span>
+				<span class="txt">Continuar con Mercado Pago</span>{#if demo}<span class="reco"
+						>Recomendado</span
+					>{/if}
 			</button>
 			<button
 				class="ml"
@@ -98,6 +101,11 @@
 			<input
 				name="email"
 				type="email"
+				inputmode="email"
+				autocapitalize="none"
+				spellcheck="false"
+				enterkeyhint="go"
+				required
 				autocomplete="email"
 				placeholder="tu@email.com"
 				aria-label="Tu email"
@@ -111,15 +119,12 @@
 		</div>
 	</div>
 	<div class="trae">
-		<div class="t-t">Con Mercado Pago traemos</div>
+		<div class="t-t">{demo ? 'Con Mercado Pago traemos' : 'Lo que sigue, en unos minutos'}</div>
 		<div class="t-l">
-			{#each TRAE_MP as [ico, t] (t)}
+			{#each demo ? TRAE_MP : LO_QUE_SIGUE as [ico, t] (t)}
 				<div>
-					<span class="t-ico"><Icon icon={ico} size={17} /></span><span class="t-x">{t}</span><Icon
-						icon={I.phCheckBold}
-						size={14}
-						style="color:#237550"
-					/>
+					<span class="t-ico"><Icon icon={ico} size={17} /></span><span class="t-x">{t}</span
+					>{#if demo}<Icon icon={I.phCheckBold} size={14} style="color:#237550" />{/if}
 				</div>
 			{/each}
 		</div>
@@ -128,7 +133,10 @@
 				icon={I.phLockKeyFill}
 				size={13}
 				style="color:#b0441d;display:inline;vertical-align:-1px"
-			/> Solo leemos lo necesario. Nunca movemos tu plata sin permiso.
+			/>
+			{demo
+				? 'Solo leemos lo necesario. Nunca movemos tu plata sin permiso.'
+				: 'Todo es opcional salvo el nombre. Lo cambiás cuando quieras desde el panel.'}
 		</div>
 	</div>
 </div>

@@ -5,7 +5,16 @@
  */
 import { getContext, setContext } from 'svelte';
 import { slugDeNombre } from '#lib/tienda/direccion.ts';
-import { CONEXIONES, CONFIGURACION, type Conexion, type Seccion, type Tono } from './datos.ts';
+import {
+	CONEXIONES,
+	CONFIGURACION,
+	PASOS_DEMO,
+	PASOS_REALES,
+	type Conexion,
+	type PasoId,
+	type Seccion,
+	type Tono
+} from './datos.ts';
 
 export type EstadoConexion = 'off' | 'wait' | 'on';
 
@@ -61,7 +70,9 @@ export const INICIAL: Elecciones = {
  */
 export const INICIAL_REAL: Elecciones = {
 	...INICIAL,
+	paso: 1,
 	instagram: false,
+	objetivos: [],
 	conexiones: {},
 	equipo: [],
 	importar: null
@@ -84,6 +95,38 @@ function leerGuardado(base: Elecciones): Elecciones {
 	} catch {
 		return { ...base };
 	}
+}
+
+/** Lo que la tienda tiene guardado del onboarding (GET /v1/panel/onboarding). */
+export type Guardado = { plantilla?: string; elecciones: Record<string, unknown> } | null;
+
+/**
+ * Con la API, lo guardado en la tienda manda: se retoma también desde otro dispositivo y nunca se
+ * mezcla con lo que dejó en este navegador otra cuenta (o la demo). Una cuenta recién creada arranca
+ * de cero, salvo la plantilla que eligió en la landing antes de registrarse.
+ */
+function leerDeLaTienda(g: Guardado): Elecciones {
+	const el = g?.elecciones ?? {};
+	const e: Elecciones = { ...INICIAL_REAL };
+	if (!Object.keys(el).length) {
+		try {
+			const tpl = localStorage.getItem('ob-tpl');
+			if (tpl) e.plantilla = tpl;
+		} catch {
+			// Sin almacenamiento: la plantilla del rubro.
+		}
+		return e;
+	}
+	if (g?.plantilla) e.plantilla = g.plantilla;
+	if (typeof el.rubro === 'string') e.rubro = el.rubro;
+	if (el.secciones && typeof el.secciones === 'object')
+		e.secciones = { ...e.secciones, ...(el.secciones as Elecciones['secciones']) };
+	const imp = el.importar as Elecciones['importar'];
+	if (imp && typeof imp === 'object' && typeof imp.plataforma === 'string')
+		e.importar = { plataforma: imp.plataforma, url: String(imp.url ?? '') };
+	const i = PASOS_REALES.indexOf(el.paso as PasoId);
+	e.paso = i > 0 ? i : 1;
+	return e;
 }
 
 export class Onboarding {
@@ -114,25 +157,54 @@ export class Onboarding {
 	get paso() {
 		return this.e.paso;
 	}
+	/** Los pasos de este recorrido: los 8 del handoff en la demo, menos con una cuenta real. */
+	get pasos() {
+		return this.demo ? PASOS_DEMO : PASOS_REALES;
+	}
+	get id(): PasoId {
+		return this.pasos[this.e.paso] ?? 'listo';
+	}
+	get ultimo() {
+		return this.pasos.length - 1;
+	}
 	get conectadas() {
 		return CONEXIONES.filter(([k]) => this.e.conexiones[k] === 'on').length;
 	}
 	get importacionLista() {
 		return this.importado >= 100;
 	}
+	/** Shopify y WooCommerce se traen desde el link de la tienda: sin link no hay qué importar. */
+	get importacionValida() {
+		const i = this.e.importar;
+		return !i || i.plataforma === 'tiendanube' || i.url.trim().length >= 4;
+	}
+	errorImportacion = $state('');
 
-	cargar() {
-		this.e = leerGuardado(this.demo ? INICIAL : INICIAL_REAL);
+	/** Con la API y sesión, `guardado` es lo de la tienda; sin sesión, siempre el paso 1 (Cuenta). */
+	cargar(guardado?: Guardado) {
+		if (this.demo) this.e = leerGuardado(INICIAL);
+		else if (guardado !== undefined) this.e = leerDeLaTienda(guardado);
+		else this.e = { ...INICIAL_REAL, paso: 0 };
 		if (!this.demo) {
-			// Lo de ejemplo que pudo quedar guardado de una visita a la demo, afuera.
-			this.e.equipo = this.e.equipo.filter((m) => !m.email.endsWith('@laesquina.com.ar'));
 			this.revelado = 3;
 			this.importado = 100;
 		}
+		this.e.paso = Math.min(this.e.paso, this.ultimo);
 		this.entrar(this.e.paso);
 	}
 
+	/** Con la API, lo que manda lo elegido a la tienda (lo pone la página). */
+	alCambiar: (() => void) | null = null;
+	#espera: ReturnType<typeof setTimeout> | undefined;
+
 	guardar() {
+		// Con la API lo guarda la tienda (un momento después del último cambio, para no mandar uno
+		// por toque); el navegador sólo recuerda la demo.
+		if (!this.demo) {
+			clearTimeout(this.#espera);
+			this.#espera = setTimeout(() => this.alCambiar?.(), 800);
+			return;
+		}
 		try {
 			localStorage.setItem(CLAVE, JSON.stringify(this.e));
 			localStorage.setItem('ob-step', String(this.e.paso));
@@ -143,7 +215,7 @@ export class Onboarding {
 	}
 
 	ir(paso: number) {
-		const p = Math.max(0, Math.min(7, paso));
+		const p = Math.max(0, Math.min(this.ultimo, paso));
 		if (p === this.e.paso) return;
 		this.e.paso = p;
 		this.guardar();
@@ -175,6 +247,7 @@ export class Onboarding {
 	}
 
 	detener() {
+		clearTimeout(this.#espera);
 		for (const t of this.#timers) clearInterval(t);
 		this.#timers = [];
 	}

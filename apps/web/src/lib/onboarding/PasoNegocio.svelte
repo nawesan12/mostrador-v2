@@ -11,8 +11,8 @@
 
 	/**
 	 * Paso 2, Tu negocio. En la demo, la ilustración del handoff: lo que "se encontró" en ARCA,
-	 * Instagram y Maps y el rubro. Con una cuenta real todavía no se lee nada de afuera, así que sólo
-	 * quedan los objetivos (nunca datos de otro negocio).
+	 * Instagram y Maps, el rubro y los objetivos. Con una cuenta real, lo que arma la tienda: nombre,
+	 * dirección y qué vende (que elige la plantilla). Los objetivos no: nada los usaba.
 	 */
 	const o = getOnboarding();
 	// El nombre que puso el registro con Google, Apple o Mercado Pago: se muestra, pero invita a
@@ -107,6 +107,8 @@
 				oninput={(e) => o.cambiarNombre(e.currentTarget.value)}
 				maxlength="80"
 				autocomplete="organization"
+				autocapitalize="words"
+				enterkeyhint="next"
 				placeholder="Por ejemplo, Almacén Don Pepe"
 				aria-describedby={automatico ? 'ob-nombre-sug' : undefined}
 			/>
@@ -139,7 +141,7 @@
 		</div>
 	{/if}
 	<div class="objetivos">
-		<div class="o-t">¿Qué vendés?</div>
+		<div class="o-t">¿Qué vendés? <span class="opc">Opcional</span></div>
 		<div class="o-d">
 			Te recomendamos plantillas pensadas para eso. Elegí el que más se parezca.
 		</div>
@@ -159,20 +161,22 @@
 		</div>
 	</div>
 {/if}
-<div class="objetivos">
-	<div class="o-t">¿Qué querés resolver primero?</div>
-	<div class="o-d">Ordenamos tu panel y tus primeras tareas según esto. Elegí las que quieras.</div>
-	<div class="o-g">
-		{#each OBJETIVOS as [ico, t], i (t)}
-			{@const on = o.e.objetivos.includes(i)}
-			<button type="button" class:on aria-pressed={on} onclick={() => o.alternarObjetivo(i)}>
-				<span class="o-ico"><Icon icon={ico} size={18} /></span>
-				<span class="o-x">{t}</span>
-				{#if on}<Icon icon={I.phCheckCircleFill} size={18} style="color:#b0441d;flex:none" />{/if}
-			</button>
-		{/each}
-	</div>
-</div>
+{#if o.demo}<div class="objetivos">
+		<div class="o-t">¿Qué querés resolver primero?</div>
+		<div class="o-d">
+			Ordenamos tu panel y tus primeras tareas según esto. Elegí las que quieras.
+		</div>
+		<div class="o-g">
+			{#each OBJETIVOS as [ico, t], i (t)}
+				{@const on = o.e.objetivos.includes(i)}
+				<button type="button" class:on aria-pressed={on} onclick={() => o.alternarObjetivo(i)}>
+					<span class="o-ico"><Icon icon={ico} size={18} /></span>
+					<span class="o-x">{t}</span>
+					{#if on}<Icon icon={I.phCheckCircleFill} size={18} style="color:#b0441d;flex:none" />{/if}
+				</button>
+			{/each}
+		</div>
+	</div>{/if}
 
 <style>
 	.datos {
@@ -416,6 +420,12 @@
 		font-size: 16px;
 		font-weight: 600;
 	}
+	.opc {
+		margin-left: 6px;
+		font-size: 12.5px;
+		font-weight: 500;
+		color: #7a6252;
+	}
 	.o-d {
 		font-size: 13.5px;
 		color: #7a6252;
@@ -428,6 +438,7 @@
 		gap: 8px;
 	}
 	.o-g button {
+		min-height: 44px;
 		display: flex;
 		align-items: center;
 		gap: 10px;
