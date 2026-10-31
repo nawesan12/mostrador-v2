@@ -132,9 +132,40 @@ test('marcar pagado una transferencia desde la fila y deshacerlo', async ({ page
 
 test('WhatsApp con el mensaje del estado, desde la fila y la hoja', async ({ page }) => {
 	await demo(page);
-	await page.goto('/panel/pedidos?estado=en-camino');
+	// Uno en camino propio: los de la demo dependen de la hora (a la mañana no hay ninguno).
+	let numero = '';
+	for (const productoId of [
+		'mate-de-calabaza',
+		'miel-de-monte',
+		'dulce-de-mamon',
+		'bombilla-alpaca'
+	]) {
+		const r = await page.request.post('/panel/pedidos/nuevo', {
+			data: {
+				items: [{ productoId, cantidad: 1 }],
+				pago: 'transf',
+				canal: 'wa',
+				envio: 'moto',
+				cliente: 'Lu Pérez',
+				telefono: '1155556666'
+			}
+		});
+		if (r.status() !== 201) continue;
+		numero = String(((await r.json()) as { numero: number }).numero);
+		break;
+	}
+	expect(numero).not.toBe('');
+	for (const estado of ['Listo para despachar', 'En camino']) {
+		const r = await page.request.post(`/panel/pedidos/${numero}`, { data: { estado } });
+		expect(r.status(), estado).toBe(204);
+	}
+	await page.goto(`/panel/pedidos?estado=en-camino&q=%23${numero}`);
 	await listo(page);
-	const href = (await page.locator('.fila a.wa').first().getAttribute('href'))!;
+	const href = (await page
+		.locator('.fila')
+		.filter({ hasText: `#${numero}` })
+		.locator('a.wa')
+		.getAttribute('href'))!;
 	expect(href).toMatch(/^https:\/\/wa\.me\/549\d{10}\?text=/);
 	expect(decodeURIComponent(href.split('text=')[1])).toMatch(
 		/^¡Hola \S+! Tu pedido #\d+ ya (salió para tu casa|está en camino)\./
@@ -142,7 +173,13 @@ test('WhatsApp con el mensaje del estado, desde la fila y la hoja', async ({ pag
 
 	await page.goto('/panel/pedidos?estado=entregado&canal=web');
 	await listo(page);
-	await page.locator('.fila .abrir').first().click();
+	// Uno con teléfono (sin teléfono no hay a quién escribirle).
+	await page
+		.locator('.fila')
+		.filter({ has: page.locator('a.wa') })
+		.first()
+		.locator('.abrir')
+		.click();
 	const escribir = page.getByRole('dialog').getByRole('link', { name: 'Escribir' });
 	const texto = decodeURIComponent((await escribir.getAttribute('href'))!.split('text=')[1]);
 	expect(texto).toMatch(/dejanos una reseña: https:\/\/tulocalweb\.com\.ar\/t\/.+\/pedido\/\d+-/);
