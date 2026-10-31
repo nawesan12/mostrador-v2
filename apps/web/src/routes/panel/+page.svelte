@@ -48,6 +48,7 @@
 	 */
 	const sinPedidos = $derived(!data.demo && !t.ultimosPedidos.length);
 	const pasos = $derived(data.pasos);
+	const puedeTienda = $derived(shell.permisos.includes('tienda'));
 	const compartir = () => compartirTienda(ui, data.tienda);
 	const ahora = new Date();
 
@@ -267,22 +268,25 @@
 							fg: '#b0441d',
 							href: `${rutaDe('Productos')}?nuevo=1`
 						},
-						pasos.transferencia === false && {
-							icon: I.phBankFill,
-							title: 'Cargá tu alias o CBU',
-							sub: 'Para que te paguen por transferencia',
-							bg: 'rgba(227,169,59,.18)',
-							fg: '#8a5f0e',
-							href: `${rutaDe('Configuración')}?tab=negocio`
-						},
-						pasos.mercadoPago === false && {
-							icon: I.phHandCoinsFill,
-							title: 'Conectá Mercado Pago',
-							sub: 'Para cobrar con tarjeta y QR',
-							bg: 'rgba(0,158,227,.12)',
-							fg: '#00699a',
-							href: rutaDe('Integraciones')
-						},
+						// Cobros e integraciones son de quien maneja la tienda (dueña o administración).
+						puedeTienda &&
+							pasos.transferencia === false && {
+								icon: I.phBankFill,
+								title: 'Cargá tu alias o CBU',
+								sub: 'Para que te paguen por transferencia',
+								bg: 'rgba(227,169,59,.18)',
+								fg: '#8a5f0e',
+								href: `${rutaDe('Configuración')}?tab=negocio`
+							},
+						puedeTienda &&
+							pasos.mercadoPago === false && {
+								icon: I.phHandCoinsFill,
+								title: 'Conectá Mercado Pago',
+								sub: 'Para cobrar con tarjeta y QR',
+								bg: 'rgba(0,158,227,.12)',
+								fg: '#00699a',
+								href: rutaDe('Integraciones')
+							},
 						sinPedidos &&
 							!!pasos.productos && {
 								icon: I.phStorefrontFill,
@@ -1228,7 +1232,8 @@
 		gap: 12px;
 	}
 	.acceso {
-		flex: 1 1 200px;
+		/* Los cinco entran en una fila a 1280 px y más (sin uno solo abajo). */
+		flex: 1 1 170px;
 		min-width: 0;
 		display: flex;
 		align-items: center;
