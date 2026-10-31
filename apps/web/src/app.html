@@ -17,6 +17,12 @@
 				}
 				if (ok) document.documentElement.dataset.cookies = '1';
 			} catch (e) {}
+			// Android: el pedido para instalar el panel (sólo el panel tiene manifest) llega temprano; se
+			// guarda para el botón «Instalar» del panel (lib/panel/app-celular.svelte.ts).
+			addEventListener('beforeinstallprompt', function (e) {
+				e.preventDefault();
+				window.__tlwInstalar = e;
+			});
 		</script>
 		%sveltekit.head%
 	</head>

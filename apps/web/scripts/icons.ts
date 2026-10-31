@@ -60,7 +60,10 @@ const EXTRA = [
 	// Compartir un producto (panel y ficha pública).
 	'ph:share-network-bold',
 	// Seguir con Apple en /ingresar (Clerk).
-	'logos:apple'
+	'logos:apple',
+	// Instalar el panel en el iPhone: Compartir › Agregar a inicio (los íconos que muestra Safari).
+	'ph:export',
+	'ph:plus-square'
 ];
 const names = new Set<string>([...EXTRA, ...process.argv.slice(2)]);
 for (const f of files)

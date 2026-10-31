@@ -6,6 +6,7 @@
 	import Seo from '#lib/components/Seo.svelte';
 	import * as I from '#lib/icons.ts';
 	import { cara, unsplash } from '#lib/landing/formato.ts';
+	import InstalarApp from '#lib/panel/InstalarApp.svelte';
 	import MetaMes from '#lib/panel/MetaMes.svelte';
 	import { anim } from '#lib/panel/anim.ts';
 	import { compartirTienda } from '#lib/panel/compartir.ts';
@@ -494,6 +495,9 @@
 		</form>
 	</div>
 {/if}
+
+<!-- En el celular: instalar el panel como app (se cierra y no vuelve; instalada, no aparece). -->
+<InstalarApp />
 
 <div class="accesos">
 	{#each accesos as q (q.t)}

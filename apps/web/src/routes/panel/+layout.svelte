@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { page } from '$app/state';
 	import { invalidateAll } from '$app/navigation';
 	import BarraAbajo from '#lib/panel/BarraAbajo.svelte';
@@ -10,6 +10,7 @@
 	import Notificaciones from '#lib/panel/Notificaciones.svelte';
 	import Rail from '#lib/panel/Rail.svelte';
 	import Topbar from '#lib/panel/Topbar.svelte';
+	import { arrancarAppCelular } from '#lib/panel/app-celular.svelte.ts';
 	import { AREAS, ubicar } from '#lib/panel/navegacion.ts';
 	import { Shell, setShell } from '#lib/panel/shell.svelte.ts';
 	import { SITE } from '#lib/site.ts';
@@ -54,6 +55,8 @@
 		void ruta;
 		untrack(() => shell.cerrarTodo());
 	});
+	// El panel instalable como app (§42): service worker con alcance /panel e invitación a instalar.
+	onMount(arrancarAppCelular);
 </script>
 
 <!-- Escape cierra la barra lateral y las notificaciones (⌘K lo maneja su diálogo). -->
@@ -69,6 +72,13 @@
 <svelte:head>
 	<meta name="robots" content="noindex" />
 	<meta name="theme-color" content={shell.tema === 'dark' ? '#22140d' : '#f7f1ea'} />
+	<!-- Instalable como app sólo el panel: la tienda pública no lleva manifest (decisiones §42). -->
+	<link rel="manifest" href="/panel/manifest.webmanifest" />
+	<link rel="apple-touch-icon" href="/panel/apple-touch-icon.png" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-title" content="Tu Local Web" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="default" />
 </svelte:head>
 
 {#if data.mirada}

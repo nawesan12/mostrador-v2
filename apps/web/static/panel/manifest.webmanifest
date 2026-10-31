@@ -1,0 +1,30 @@
+{
+	"id": "/panel",
+	"name": "Tu Local Web",
+	"short_name": "Tu Local Web",
+	"description": "El panel de tu tienda: ventas, pedidos y stock desde el celular.",
+	"lang": "es-AR",
+	"dir": "ltr",
+	"start_url": "/panel",
+	"scope": "/panel",
+	"display": "standalone",
+	"orientation": "portrait",
+	"background_color": "#FBF3EA",
+	"theme_color": "#F7F1EA",
+	"categories": ["business", "shopping", "productivity"],
+	"icons": [
+		{ "src": "/panel/icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+		{ "src": "/panel/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+		{
+			"src": "/panel/icono-512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "maskable"
+		},
+		{ "src": "/panel/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+	],
+	"shortcuts": [
+		{ "name": "Pedidos", "url": "/panel/pedidos", "icons": [{ "src": "/panel/icono-192.png", "sizes": "192x192" }] },
+		{ "name": "Productos", "url": "/panel/productos", "icons": [{ "src": "/panel/icono-192.png", "sizes": "192x192" }] }
+	]
+}
