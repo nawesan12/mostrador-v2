@@ -803,3 +803,44 @@ Con equipo en las tiendas (§37), la dueña necesita saber quién hizo cada cosa
   corre el worker una vez por día. La app sigue sin poder borrar ni reescribir registros.
 - Lo anterior a esta migración no tiene autor ni frase: la pantalla lo dice («Lo de antes no se
   guardó»).
+
+## 40. Push en el iPhone: dispositivos por sesión y APNs desde el worker (migración 00058)
+
+El lado servidor de las notificaciones de la app de iPhone (docs/handoff/app-ios). La app todavía no
+existe; esto deja listo lo que va a usar.
+
+- **Registro**: la app, con su token de sesión y directo contra `api.tulocalweb.com.ar`, manda
+  `POST /v1/panel/dispositivos` (token de APNs en hexadecimal, `entorno` sandbox/produccion, modelo y
+  versión) y `DELETE /v1/panel/dispositivos` al cerrar sesión. Las dos son `roles.Panel` (cualquiera
+  del equipo) y sólo con la sesión de una persona: una IA conectada o el soporte mirando reciben 403.
+- **Atado a la sesión y a la persona**: `auth.dispositivos` guarda el hash de la sesión con
+  `ON DELETE CASCADE`, así que salir, «Cerrar», contraseña nueva, quitar del equipo o una inactiva
+  se llevan el iPhone; una sesión vencida queda pero el worker no la elige. El token es único: si
+  vuelve a llegar con otra sesión (otra cuenta en el mismo iPhone) se mueve. Vive en `auth` con RLS
+  forzada por persona (`db.EnUsuario`), como las fichas de partner; la app no inserta directo: pasa por
+  `app.registrar_dispositivo`, que exige que la sesión sea de esa persona y esté vigente.
+- **Envío**: APNs por HTTP/2 con autenticación por token (`plataforma/apns`, sólo biblioteca
+  estándar): JWT ES256 firmado con el .p8, reusado 40 minutos y firmado de nuevo si APNs responde
+  `ExpiredProviderToken`. Config: `MOSTRADOR_APNS_KEY_ID`, `MOSTRADOR_APNS_TEAM_ID`,
+  `MOSTRADOR_APNS_CLAVE` (ruta al .p8, nunca en el repo) y `MOSTRADOR_APNS_TOPIC`
+  (`ar.com.tulocalweb.app` por defecto). Sin eso, el worker lo dice una vez en el log y los
+  manejadores no mandan nada. El host sale del `entorno` de cada iPhone (sandbox para lo instalado
+  desde Xcode).
+- **Tokens muertos**: 410, `BadDeviceToken` o `Unregistered` borran el token (`app.olvidar_dispositivo`).
+  429 y 5xx hacen reintentar el evento; `apns-collapse-id` evita que un reintento se vea dos veces.
+- **Qué se manda**, por el outbox (un evento aparte por canal, para que cada uno se reintente solo):
+  - `push.venta`: «Nueva venta #N», en el mismo momento que el mail `tienda.venta` (el trigger de la
+    00052 ahora encola los dos). Una sola vez (`pedidos.avisos->'push_venta'`), a quien tiene Pedidos.
+    El monto sólo a quien tiene Finanzas (§37); nunca el nombre de quien compró.
+  - `push.pregunta_ml`: «Pregunta nueva en Mercado Libre», cuando llega una pregunta nueva sin
+    responder; a quien tiene Clientes, con el producto pero sin el texto de la pregunta.
+  - `cuenta.ingreso_push`: «Entraron a tu cuenta», con el mismo interruptor que el mail
+    (`avisoIngreso`), sólo a los iPhone de esa persona y no al de la sesión nueva. Con el aparato, sin
+    IP ni lugar (se ve en la pantalla bloqueada).
+- **A quién**: a los iPhone de las personas del equipo de la tienda con sesión vigente
+  (`app.dispositivos_de_tienda`), aunque esa sesión esté parada en otra de sus tiendas.
+- **Payload**: `aps.alert` (title/body en castellano), `sound: default`, `thread-id` por tienda
+  (`tienda-<id>`; `cuenta` para lo de la persona) y, afuera de `aps`, `ruta` (`pedido/<numero>`,
+  `preguntas/ml/<id>`, `cuenta/seguridad`) y `tienda` para abrir la pantalla.
+- **Preferencia**: Notificaciones › «Push en el iPhone» es `venta:celular` de la matriz (prendido por
+  defecto); el worker la mira al mandar. Sin columna nueva.
