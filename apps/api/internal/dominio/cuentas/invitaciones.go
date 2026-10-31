@@ -119,6 +119,15 @@ func sumar(ctx context.Context, tx pgx.Tx, usuario, token string) (string, error
 	if err != nil {
 		return "", err
 	}
+	// Sólo la cuenta del email invitado: un link reenviado o abierto con otra sesión no suma a nadie más.
+	var propio bool
+	if err := tx.QueryRow(ctx, `SELECT lower(email) = lower($2) FROM auth.usuarios WHERE id = $1`, usuario, inv.Email).
+		Scan(&propio); err != nil {
+		return "", err
+	}
+	if !propio {
+		return "", ErrOtroEmail
+	}
 	if _, err := tx.Exec(ctx, `DELETE FROM invitaciones WHERE id = $1`, invitacionID); err != nil {
 		return "", err
 	}

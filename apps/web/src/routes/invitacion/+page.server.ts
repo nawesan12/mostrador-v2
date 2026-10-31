@@ -3,7 +3,7 @@ import { env } from 'cloudflare:workers';
 import { fapiDe } from '#lib/clerk.ts';
 import { ErrorApi } from '#lib/server/bff.ts';
 import { guardarInvitacion, tomarInvitacion } from '#lib/server/auth/invitacion.ts';
-import { guardarSesion } from '#lib/server/auth/sesion.ts';
+import { borrarSesion, guardarSesion } from '#lib/server/auth/sesion.ts';
 import { cuentasDe, usaSandbox } from '#lib/server/datos/index.ts';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -41,6 +41,16 @@ export const load: PageServerLoad = async (event) => {
 };
 
 export const actions: Actions = {
+	/** Entró con otra cuenta: sale y vuelve a la invitación para ingresar con la del email invitado. */
+	salir: async (event) => {
+		const token = String((await event.request.formData()).get('token') ?? '');
+		if (event.locals.token)
+			await cuentasDe(event)
+				.salir(event.locals.token)
+				.catch(() => {});
+		borrarSesion(event.cookies);
+		redirect(303, `/invitacion?token=${encodeURIComponent(token)}`);
+	},
 	aceptar: async (event) => {
 		const token = String((await event.request.formData()).get('token') ?? '');
 		if (!event.locals.token) redirect(303, `/invitacion?token=${encodeURIComponent(token)}`);
@@ -52,7 +62,9 @@ export const actions: Actions = {
 				error:
 					e.estado === 401
 						? 'Tu sesión venció: ingresá de nuevo y volvé a abrir el link.'
-						: 'La invitación venció o ya se usó. Pedile a la dueña que te la reenvíe.'
+						: e.estado === 409
+							? 'Esta invitación es para otro email. Salí y entrá con la cuenta de ese email.'
+							: 'La invitación venció o ya se usó. Pedile a la dueña que te la reenvíe.'
 			});
 		}
 		tomarInvitacion(event.cookies);

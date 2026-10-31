@@ -36,7 +36,9 @@ var (
 	ErrEmailEnUso         = errors.New("ese email ya tiene cuenta")
 	ErrDemasiadosIntentos = errors.New("demasiados intentos")
 	ErrTokenInvalido      = errors.New("el link venció o ya se usó")
-	ErrSinSesion          = errors.New("sin sesión")
+	// ErrOtroEmail: la invitación es para otro email que el de la cuenta que la quiere usar.
+	ErrOtroEmail = errors.New("la invitación es para otro email")
+	ErrSinSesion = errors.New("sin sesión")
 )
 
 // ErrInvalido es un dato mal cargado, con el campo.

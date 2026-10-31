@@ -91,6 +91,18 @@ func TestEquipo(t *testing.T) {
 		t.Fatalf("ver: %+v %v", inv, err)
 	}
 
+	t.Run("otra cuenta no puede usar el link de Leo", func(t *testing.T) {
+		mia, err := s.Registrar(ctx, cuentas.Alta{Nombre: "Mía", Tienda: "Mía", Email: "mia@otra.com", Clave: "clave-larga-3"}, cl)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := s.AceptarInvitacion(ctx, mia.Token, token); !errors.Is(err, cuentas.ErrOtroEmail) {
+			t.Fatalf("aceptar con otra cuenta: %v", err)
+		}
+		if _, err := s.VerInvitacion(ctx, token); err != nil {
+			t.Fatalf("el link de Leo se gastó: %v", err)
+		}
+	})
 	t.Run("con cuenta: se suma y la sesión pasa a esa tienda", func(t *testing.T) {
 		tienda, err := s.AceptarInvitacion(ctx, leo.Token, token)
 		if err != nil || tienda != id {

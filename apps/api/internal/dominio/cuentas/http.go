@@ -348,6 +348,8 @@ func escribirError(w http.ResponseWriter, err error) {
 		p := problema.SinSesion()
 		p.Codigo, p.Titulo, p.Detalle = "credenciales_invalidas", "No pudimos ingresar", "El email o la contraseña no son correctos."
 		problema.Escribir(w, p)
+	case errors.Is(err, ErrOtroEmail):
+		problema.Escribir(w, problema.Conflicto("otro_email", "Esta invitación es para otro email. Entrá con la cuenta de ese email o pedile a quien te invitó que te mande una nueva."))
 	case errors.Is(err, ErrEmailEnUso):
 		problema.Escribir(w, problema.Conflicto("email_en_uso", "Ese email ya tiene una cuenta. Probá ingresar o recuperar la contraseña."))
 	case errors.Is(err, ErrDemasiadosIntentos):

@@ -90,15 +90,23 @@
 					</div>
 					{#if form?.error}<div class="err-form" role="alert">{form.error}</div>{/if}
 
-					{#if data.sesion}
+					{#if data.sesion && data.sesion.email.toLowerCase() !== inv.email.toLowerCase()}
+						<!-- Sólo la cuenta del email invitado puede sumarse (Go lo exige). -->
 						<div class="nota">
 							<Icon icon={phInfoFill} size={18} style="flex:none;margin-top:1px" />
 							<span
-								>Entraste como <b>{data.sesion.email}</b>. La invitación es para
-								<b>{inv.email}</b>{data.sesion.email.toLowerCase() === inv.email.toLowerCase()
-									? '.'
-									: ': si no es tu cuenta, salí y entrá con la otra.'}</span
+								>Entraste como <b>{data.sesion.email}</b>, pero la invitación es para
+								<b>{inv.email}</b>. Salí y entrá con esa&nbsp;cuenta.</span
 							>
+						</div>
+						<form method="POST" action="?/salir">
+							<input type="hidden" name="token" value={data.token} />
+							<button class="cta">Salir y entrar con {inv.email}</button>
+						</form>
+					{:else if data.sesion}
+						<div class="nota">
+							<Icon icon={phInfoFill} size={18} style="flex:none;margin-top:1px" />
+							<span>Entraste como <b>{data.sesion.email}</b>.</span>
 						</div>
 						<form method="POST" action="?/aceptar" use:enhance={conEnvio}>
 							<input type="hidden" name="token" value={data.token} />
@@ -167,10 +175,6 @@
 								>{enviando ? 'Creando tu cuenta…' : 'Crear mi cuenta y sumarme'}</button
 							>
 						</form>
-						<p class="pie">
-							¿Ya tenés cuenta con otro email? <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- resuelto arriba -->
-							<a href={volver}>Ingresá con ella</a>
-						</p>
 					{/if}
 					<p class="pie">El link sirve una sola vez y vence el {vence}.</p>
 				</div>
@@ -345,9 +349,5 @@
 		text-align: center;
 		font-size: 14px;
 		color: #5c4536;
-	}
-	.pie a {
-		color: #b0441d;
-		font-weight: 600;
 	}
 </style>
