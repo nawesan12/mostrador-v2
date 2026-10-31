@@ -98,15 +98,24 @@ test('el Resumen abre un pedido y exporta CSV', async ({ page }) => {
 
 test('marcar pagado una transferencia desde la fila y deshacerlo', async ({ page }) => {
 	await demo(page);
-	// Las tiendas de la demo cambian: se toma uno ya pagado sin Mercado Pago y se vuelve a sin pagar
-	// (el deshacer que usa la lista), para no depender de que haya uno.
-	await page.goto(
-		'/panel/pedidos?estado=para-preparar&pago=transf,efectivo,tarjeta,payway,modo,uala'
-	);
-	await listo(page);
-	const numero = (await page.locator('.fila .q-s').first().textContent())!.match(/#(\d+)/)![1];
-	const r = await page.request.post(`/panel/pedidos/${numero}`, { data: { estado: 'Sin pagar' } });
-	expect(r.status()).toBe(204);
+	// Los pedidos de la demo dependen de la hora (a la mañana puede no haber ninguno para preparar
+	// por transferencia): se carga uno sin pagar, como «Crear pedido», con un producto de Litoral
+	// sin variantes (los que tienen piden elegir una).
+	let numero = '';
+	for (const productoId of [
+		'mate-de-calabaza',
+		'miel-de-monte',
+		'dulce-de-mamon',
+		'bombilla-alpaca'
+	]) {
+		const r = await page.request.post('/panel/pedidos/nuevo', {
+			data: { items: [{ productoId, cantidad: 1 }], pago: 'transf', canal: 'wa', pagado: false }
+		});
+		if (r.status() !== 201) continue;
+		numero = String(((await r.json()) as { numero: number }).numero);
+		break;
+	}
+	expect(numero).not.toBe('');
 	await page.goto(`/panel/pedidos?estado=sin-pagar&q=%23${numero}`);
 	await listo(page);
 	const fila = page.locator('.fila').filter({ hasText: `#${numero}` });
