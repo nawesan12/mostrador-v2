@@ -126,6 +126,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/auth/tiendas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** La tienda que se está viendo, el rol y sus permisos, y todas las tiendas de la persona. */
+        get: operations["acceso"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/tienda": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Cambia la tienda de la sesión (una persona con varias tiendas elige cuál ver). */
+        put: operations["elegirTienda"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/invitacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Qué invitación es (tienda, rol, email) sin usarla. Va por POST para que el token no quede en logs. */
+        post: operations["verInvitacion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/invitacion/aceptar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Suma a la persona de la sesión a la tienda de la invitación (un solo uso) y deja la sesión en esa tienda. */
+        post: operations["aceptarInvitacion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/invitacion/registro": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Crea la cuenta con el email de la invitación (sin tienda propia) y la suma a esa tienda. */
+        post: operations["registrarConInvitacion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/recuperar": {
         parameters: {
             query?: never;
@@ -1963,7 +2048,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Invita a alguien al equipo. */
+        /** Invita a alguien al equipo por email (link de un solo uso que vence en 7 días). Sólo la dueña. */
         post: operations["invitar"];
         delete?: never;
         options?: never;
@@ -2040,39 +2125,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/panel/permisos": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Qué puede hacer cada rol. */
-        get: operations["permisos"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/panel/permisos/{permiso}/{rol}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["fijarPermiso"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/panel/equipo/{id}": {
         parameters: {
             query?: never;
@@ -2084,6 +2136,23 @@ export interface paths {
         put: operations["cambiarRol"];
         post?: never;
         delete: operations["quitarDelEquipo"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/equipo/{id}/reenviar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Manda otra vez la invitación con un link nuevo (el anterior deja de valer) y otros 7 días. */
+        post: operations["reenviarInvitacion"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -3738,12 +3807,17 @@ export interface components {
             nombre: string;
             contacto: string;
             /** @enum {string} */
-            rol: "duenio" | "admin" | "ventas" | "deposito";
+            rol: "duenio" | "admin" | "ventas" | "local";
             foto: string | null;
             /** Format: date-time */
             ultimo: string | null;
             /** @description Invitación sin aceptar */
             pendiente: boolean;
+            /**
+             * Format: date-time
+             * @description Invitación: cuándo vence el link (null si nunca se mandó)
+             */
+            vence: string | null;
             vos: boolean;
             dobleFactor: boolean;
         };
@@ -3830,19 +3904,6 @@ export interface components {
                 /** Format: date-time */
                 hasta: string;
             } | null;
-        };
-        Permisos: {
-            permisos: {
-                id: string;
-                titulo: string;
-                detalle: string;
-                roles: {
-                    duenio: boolean;
-                    admin: boolean;
-                    ventas: boolean;
-                    deposito: boolean;
-                };
-            }[];
         };
         UrlExterna: {
             /** Format: uri */
@@ -4523,7 +4584,7 @@ export interface components {
                 nombre: string;
                 slug: string;
                 /** @enum {string} */
-                rol: "admin" | "ventas" | "deposito";
+                rol: "admin" | "ventas" | "local";
             }[];
         };
         PedidoArrepentimiento: {
@@ -4553,6 +4614,34 @@ export interface components {
             /** @description La cuenta se creó recién: sigue al onboarding */
             nueva: boolean;
         };
+        Acceso: {
+            tiendaId: string;
+            /** @enum {string} */
+            rol: "duenio" | "admin" | "ventas" | "local";
+            /** @description Qué puede el rol (docs/decisiones.md §36). Go responde 403 a lo demás. */
+            permisos: ("panel" | "pedidos" | "clientes" | "productos" | "catalogo" | "finanzas" | "tienda" | "cuenta")[];
+            tiendas: {
+                id: string;
+                nombre: string;
+                slug: string;
+                /** @enum {string} */
+                rol: "duenio" | "admin" | "ventas" | "local";
+            }[];
+        };
+        Invitacion: {
+            /** @description Nombre de la tienda */
+            tienda: string;
+            /** @enum {string} */
+            rol: "admin" | "ventas" | "local";
+            /** @description A quién se invitó */
+            email: string;
+            /** @description Quién invitó (vacío si ya no está) */
+            invita: string;
+            /** Format: date-time */
+            vence: string;
+            /** @description Ese email ya tiene cuenta: que ingrese y acepte */
+            tieneCuenta: boolean;
+        };
         DatosSesion: {
             usuario: {
                 /** Format: uuid */
@@ -4564,7 +4653,7 @@ export interface components {
             };
             tiendaId: string;
             /** @enum {string} */
-            rol: "duenio" | "admin" | "ventas" | "deposito" | "";
+            rol: "duenio" | "admin" | "ventas" | "local" | "";
             /** Format: date-time */
             venceEn: string;
         };
@@ -5207,6 +5296,8 @@ export interface operations {
                 "application/json": {
                     /** @description Token de sesión de Clerk (JWT) */
                     token: string;
+                    /** @description Token de una invitación al equipo de una tienda: la cuenta (nueva o no) queda sumada a esa tienda y una cuenta nueva no crea otra tienda */
+                    invitacion?: string;
                 };
             };
         };
@@ -5239,6 +5330,157 @@ export interface operations {
                 };
             };
             429: components["responses"]["Problema"];
+        };
+    };
+    acceso: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Acceso */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Acceso"];
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    elegirTienda: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    tiendaId: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Cambiada */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+        };
+    };
+    verInvitacion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    token: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Invitación */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invitacion"];
+                };
+            };
+            /** @description Venció, se canceló o ya se usó (`link_invalido`) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problema"];
+                };
+            };
+        };
+    };
+    aceptarInvitacion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    token: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Sumada */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        tiendaId: string;
+                    };
+                };
+            };
+            401: components["responses"]["Problema"];
+            422: components["responses"]["Problema"];
+        };
+    };
+    registrarConInvitacion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    token: string;
+                    nombre: string;
+                    clave: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Sesión */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Sesion"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            /** @description Ese email ya tiene cuenta (`email_en_uso`): que ingrese y acepte */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problema"];
+                };
+            };
+            422: components["responses"]["Problema"];
         };
     };
     recuperar: {
@@ -8444,10 +8686,10 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description Email o WhatsApp */
+                    /** @description Email */
                     contacto: string;
                     /** @enum {string} */
-                    rol: "admin" | "ventas" | "deposito";
+                    rol: "admin" | "ventas" | "local";
                 };
             };
         };
@@ -8601,55 +8843,6 @@ export interface operations {
             };
         };
     };
-    permisos: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Matriz */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Permisos"];
-                };
-            };
-        };
-    };
-    fijarPermiso: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                permiso: string;
-                rol: "admin" | "ventas" | "deposito";
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    activo: boolean;
-                };
-            };
-        };
-        responses: {
-            /** @description Guardado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["Problema"];
-            409: components["responses"]["Problema"];
-        };
-    };
     cambiarRol: {
         parameters: {
             query?: never;
@@ -8663,7 +8856,7 @@ export interface operations {
             content: {
                 "application/json": {
                     /** @enum {string} */
-                    rol: "admin" | "ventas" | "deposito";
+                    rol: "admin" | "ventas" | "local";
                 };
             };
         };
@@ -8699,6 +8892,28 @@ export interface operations {
             };
             404: components["responses"]["Problema"];
             409: components["responses"]["Problema"];
+        };
+    };
+    reenviarInvitacion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Reenviada */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["Problema"];
+            422: components["responses"]["Problema"];
         };
     };
     dominios: {

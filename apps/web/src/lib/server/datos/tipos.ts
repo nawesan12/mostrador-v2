@@ -4,6 +4,7 @@
  * packages/contrato/casos corren contra las dos.
  */
 import type { components } from '@mostrador/contrato/esquema';
+import type { RolInvitable } from '#lib/panel/permisos.ts';
 import type { AjusteIntegracion, EstadoIntegraciones } from '#lib/panel/integraciones.ts';
 import type { Importacion, ImportacionNueva, PedidoHistorial } from '../importacion/fuente.ts';
 
@@ -73,7 +74,7 @@ export type PreferenciasAvisos = components['schemas']['PreferenciasAvisos'];
 export type MisDatos = components['schemas']['MisDatos'];
 export type TipoExport =
 	'productos' | 'clientes' | 'pedidos' | 'facturas' | 'resenas' | 'conversaciones';
-export type Permisos = components['schemas']['Permisos'];
+export type Acceso = components['schemas']['Acceso'];
 export type Negocio = components['schemas']['Negocio'];
 export type Miembro = components['schemas']['Miembro'];
 export type IdPlan = Configuracion['plan']['actual'];
@@ -228,20 +229,21 @@ export interface Datos {
 	devolverPack(): Promise<Resultado>;
 	cancelarPlan(motivo: number, accion: 'cancelar' | 'oferta'): Promise<{ hasta: string }>;
 	reactivarPlan(): Promise<void>;
-	permisos(): Promise<Permisos>;
-	fijarPermiso(
-		permiso: string,
-		rol: 'admin' | 'ventas' | 'deposito',
-		activo: boolean
-	): Promise<Resultado>;
-	cambiarRol(id: string, rol: 'admin' | 'ventas' | 'deposito'): Promise<Resultado>;
+	/** La tienda que se ve, el rol con sus permisos y las tiendas de la persona. */
+	acceso(): Promise<Acceso>;
+	/** Cambia la tienda de la sesión (una persona con varias tiendas). */
+	elegirTienda(id: string): Promise<Resultado>;
+	cambiarRol(id: string, rol: RolInvitable): Promise<Resultado>;
+	/** Quita a alguien del equipo (cierra sus sesiones en la tienda) o cancela la invitación. */
 	quitarDelEquipo(id: string): Promise<Resultado>;
+	/** Manda otra vez la invitación con un link nuevo. */
+	reenviarInvitacion(id: string): Promise<Resultado>;
 	guardarNegocio(n: Negocio): Promise<void>;
 	fijarOpcion(grupo: 'seguridad' | 'avisos', clave: string, activo: boolean): Promise<Resultado>;
 	cerrarSesion(id: string): Promise<Resultado>;
 	/** Cierra todas las sesiones de la persona menos la actual; devuelve cuántas cerró. */
 	cerrarOtrasSesiones(): Promise<number>;
-	invitar(contacto: string, rol: Miembro['rol']): Promise<Miembro | 'repetido'>;
+	invitar(email: string, rol: RolInvitable): Promise<Miembro | 'repetido'>;
 	/** Con el abono por Mercado Pago, un plan pago devuelve adónde ir a cargar la tarjeta. */
 	cambiarPlan(plan: IdPlan, ciclo?: 'mes' | 'anio'): Promise<void | { url: string }>;
 	guardarMiTienda(d: DisenoTienda): Promise<void>;

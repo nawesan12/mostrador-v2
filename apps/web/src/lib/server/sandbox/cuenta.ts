@@ -60,8 +60,6 @@ export type EstadoCuenta = {
 	roles: Map<string, Miembro['rol']>;
 	invitados: Invitado[];
 	plan: { actual?: Plan; ciclo?: 'mes' | 'anio' };
-	/** Cambios a la matriz de permisos: "permiso:rol" → activo. */
-	permisos: Record<string, boolean>;
 	/** Packs de 2.000 respuestas comprados, por mes ("2026-10"). */
 	packs: Record<string, number>;
 	/** Cancelado al final del período (o null). */
@@ -104,6 +102,7 @@ export function configuracionDemo(
 			foto: m.foto,
 			ultimo: iso(ahora - m.haceMin * MIN),
 			pendiente: false,
+			vence: null,
 			vos: m.id === 'u1',
 			dobleFactor: m.id !== 'u3'
 		})),
@@ -115,6 +114,7 @@ export function configuracionDemo(
 			foto: null,
 			ultimo: null,
 			pendiente: true,
+			vence: iso(i.en + 7 * 24 * 60 * MIN),
 			vos: false,
 			dobleFactor: false
 		}))

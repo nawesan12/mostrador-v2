@@ -33,22 +33,28 @@ test('plan: anual, pack de Tincho y cancelación en 3 pasos con deshacer', async
 	await expect(page.getByText('¿Necesitás frenar?')).toBeVisible();
 });
 
-test('usuarios: rol, permisos y quitar', async ({ page }) => {
+test('usuarios: invitar, rol fijo y quitar', async ({ page }) => {
 	await demo(page, '/panel/usuarios-y-permisos');
 	const martin = page.locator('.persona').filter({ hasText: 'Martín Ríos' });
-	await martin.getByRole('group').getByRole('button', { name: 'Depósito' }).click();
-	await expect(page.getByText('Martín ahora es Depósito')).toBeVisible();
-	await expect(martin).toContainText('Stock');
+	await martin.getByRole('group').getByRole('button', { name: 'Local' }).click();
+	await expect(page.getByText('Martín ahora es Local')).toBeVisible();
+	await expect(martin).toContainText('Punto de venta');
+	// Roles fijos: la tarjeta explica qué puede cada uno (sin matriz para tocar).
+	await expect(page.getByText('Qué puede cada rol')).toBeVisible();
 
-	const celda = page.getByRole('button', { name: 'Ventas: Ver finanzas' });
-	await expect(celda).toHaveAttribute('aria-pressed', 'false');
-	await celda.click();
-	await expect(celda).toHaveAttribute('aria-pressed', 'true');
-	await page.getByRole('button', { name: 'Admin: Plan, usuarios y datos' }).click();
-	await expect(page.getByRole('button', { name: 'Admin: Plan, usuarios y datos' })).toHaveAttribute(
-		'aria-pressed',
-		'false'
-	);
+	await page.getByRole('button', { name: 'Invitar persona' }).click();
+	await page.getByLabel('Email').fill('juli@mail.com');
+	await page
+		.getByRole('group', { name: 'Rol', exact: true })
+		.getByRole('button', { name: /^Administración/ })
+		.click();
+	await page.getByRole('button', { name: 'Mandar invitación' }).click();
+	const juli = page.locator('.persona').filter({ hasText: 'juli@mail.com' });
+	await expect(juli).toContainText('Invitación enviada');
+	await juli.getByRole('button', { name: 'Reenviar' }).click();
+	await expect(page.getByText('Invitación reenviada')).toBeVisible();
+	await juli.getByRole('button', { name: 'Cancelar la invitación a juli@mail.com' }).click();
+	await expect(page.locator('.persona').filter({ hasText: 'juli@mail.com' })).toHaveCount(0);
 
 	await page.getByRole('button', { name: 'Quitar a Carla Díaz' }).click();
 	await expect(page.getByText('Carla Díaz ya no tiene acceso')).toBeVisible();

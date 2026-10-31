@@ -5,6 +5,7 @@
 	import * as I from '#lib/icons.ts';
 	import { unsplash } from '#lib/landing/formato.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
+	import { page } from '$app/state';
 	import {
 		colorDe,
 		errorOpciones,
@@ -50,6 +51,9 @@
 	let descripcion = $state('');
 	let precio = $state(0);
 	let costo = $state(0);
+	// Ventas edita el producto pero no los precios ni los costos (docs/decisiones.md §36): se ven sin
+	// poder cambiarlos y el costo no se muestra. Go igual conserva los que había.
+	const conPrecios = $derived((page.data.acceso?.permisos ?? ['catalogo']).includes('catalogo'));
 	let stock = $state(0);
 	let categoria = $state('');
 	let canales = $state<Record<string, boolean>>({ web: true, ml: false, ig: false, google: false });
@@ -441,6 +445,7 @@
 								class="p-in"
 								inputmode="numeric"
 								aria-label="Precio base"
+								readonly={!conPrecios}
 								value={pesos(precio)}
 								onchange={(e) => (precio = numero(e.currentTarget.value))}
 							/>
@@ -451,17 +456,22 @@
 					</div>
 				{/each}
 			</div>
-			<div class="margen">
-				Margen {#if margen === null}<b>sin dato</b>{:else}<b class:bajo={margen < 25}>{margen} %</b
-					>{/if} · costo
-				<input
-					class="costo"
-					inputmode="numeric"
-					aria-label="Costo"
-					value={pesos(costo)}
-					onchange={(e) => (costo = numero(e.currentTarget.value))}
-				/>
-			</div>
+			{#if conPrecios}
+				<div class="margen">
+					Margen {#if margen === null}<b>sin dato</b>{:else}<b class:bajo={margen < 25}
+							>{margen} %</b
+						>{/if} · costo
+					<input
+						class="costo"
+						inputmode="numeric"
+						aria-label="Costo"
+						value={pesos(costo)}
+						onchange={(e) => (costo = numero(e.currentTarget.value))}
+					/>
+				</div>
+			{:else}
+				<div class="margen">Los precios los cambia la dueña o administración.</div>
+			{/if}
 		</div>
 
 		<div class="tarjeta">
@@ -520,6 +530,7 @@
 								class="v-p"
 								inputmode="numeric"
 								aria-label="Precio de {nombreVariante(v)}"
+								readonly={!conPrecios}
 								placeholder={pesos(precio)}
 								value={v.precio === null ? '' : pesos(v.precio)}
 								onchange={(e) =>

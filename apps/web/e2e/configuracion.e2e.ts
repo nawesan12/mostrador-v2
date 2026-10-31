@@ -19,18 +19,13 @@ test('configuración: negocio, equipo, seguridad y plan', async ({ page, isMobil
 	await listo(page);
 	await expect(page.getByLabel('Horario')).toHaveValue('Lun a vie · 9 a 18 h');
 
+	// El equipo se lista acá; se invita desde Usuarios y permisos (cuenta.e2e.ts).
 	await nav.getByRole('button', { name: 'Equipo y permisos' }).click();
-	await page.getByRole('button', { name: 'Invitar' }).click();
-	await page.getByLabel('Email o WhatsApp').fill('juli@mail.com');
-	await page
-		.getByRole('group', { name: 'Rol' })
-		.getByRole('button', { name: /^Depósito/ })
-		.click();
-	await page.getByRole('button', { name: 'Mandar invitación' }).click();
-	await expect(page.locator('.miembro').filter({ hasText: 'juli@mail.com' })).toContainText(
-		'Depósito'
+	await expect(page.getByText('Equipo · 4 personas')).toBeVisible();
+	await expect(page.getByRole('link', { name: 'Invitar' })).toHaveAttribute(
+		'href',
+		'/panel/usuarios-y-permisos'
 	);
-	await expect(page.getByText('Equipo · 5 personas')).toBeVisible();
 
 	await nav.getByRole('button', { name: 'Seguridad' }).click();
 	await page

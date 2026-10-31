@@ -98,11 +98,77 @@ paths:
               required: [token]
               properties:
                 token: { type: string, maxLength: 8192, description: Token de sesión de Clerk (JWT) }
+                invitacion: { type: string, maxLength: 200, description: 'Token de una invitación al equipo de una tienda: la cuenta (nueva o no) queda sumada a esa tienda y una cuenta nueva no crea otra tienda' }
       responses:
         '200': { description: Sesión, content: { application/json: { schema: { $ref: '#/components/schemas/IngresoSocial' } } } }
         '401': { description: 'Token inválido o vencido (`clerk_token_invalido`)', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problema' } } } }
         '422': { description: 'Clerk apagado (`proveedor_apagado`) o la persona no tiene un email verificado (`sin_email`)', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problema' } } } }
         '429': { $ref: '#/components/responses/Problema' }
+  /v1/auth/tiendas:
+    get:
+      operationId: acceso
+      summary: La tienda que se está viendo, el rol y sus permisos, y todas las tiendas de la persona.
+      responses:
+        '200': { description: Acceso, content: { application/json: { schema: { $ref: '#/components/schemas/Acceso' } } } }
+        '401': { $ref: '#/components/responses/Problema' }
+  /v1/auth/tienda:
+    put:
+      operationId: elegirTienda
+      summary: Cambia la tienda de la sesión (una persona con varias tiendas elige cuál ver).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [tiendaId], properties: { tiendaId: { type: string } } }
+      responses:
+        '204': { description: Cambiada }
+        '401': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+  /v1/auth/invitacion:
+    post:
+      operationId: verInvitacion
+      summary: Qué invitación es (tienda, rol, email) sin usarla. Va por POST para que el token no quede en logs.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [token], properties: { token: { type: string } } }
+      responses:
+        '200': { description: Invitación, content: { application/json: { schema: { $ref: '#/components/schemas/Invitacion' } } } }
+        '422': { description: 'Venció, se canceló o ya se usó (`link_invalido`)', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problema' } } } }
+  /v1/auth/invitacion/aceptar:
+    post:
+      operationId: aceptarInvitacion
+      summary: Suma a la persona de la sesión a la tienda de la invitación (un solo uso) y deja la sesión en esa tienda.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [token], properties: { token: { type: string } } }
+      responses:
+        '200': { description: Sumada, content: { application/json: { schema: { type: object, required: [tiendaId], properties: { tiendaId: { type: string } } } } } }
+        '401': { $ref: '#/components/responses/Problema' }
+        '422': { $ref: '#/components/responses/Problema' }
+  /v1/auth/invitacion/registro:
+    post:
+      operationId: registrarConInvitacion
+      summary: Crea la cuenta con el email de la invitación (sin tienda propia) y la suma a esa tienda.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, nombre, clave]
+              properties:
+                token: { type: string }
+                nombre: { type: string, maxLength: 80 }
+                clave: { type: string, minLength: 8 }
+      responses:
+        '201': { description: Sesión, content: { application/json: { schema: { $ref: '#/components/schemas/Sesion' } } } }
+        '400': { $ref: '#/components/responses/Problema' }
+        '409': { description: 'Ese email ya tiene cuenta (`email_en_uso`): que ingrese y acepte', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problema' } } } }
+        '422': { $ref: '#/components/responses/Problema' }
   /v1/auth/recuperar:
     post:
       operationId: recuperar
@@ -1949,7 +2015,7 @@ paths:
   /v1/panel/equipo:
     post:
       operationId: invitar
-      summary: Invita a alguien al equipo.
+      summary: Invita a alguien al equipo por email (link de un solo uso que vence en 7 días). Sólo la dueña.
       requestBody:
         required: true
         content:
@@ -1958,8 +2024,8 @@ paths:
               type: object
               required: [contacto, rol]
               properties:
-                contacto: { type: string, minLength: 6, maxLength: 120, description: 'Email o WhatsApp' }
-                rol: { type: string, enum: [admin, ventas, deposito] }
+                contacto: { type: string, minLength: 6, maxLength: 120, description: Email }
+                rol: { type: string, enum: [admin, ventas, local] }
       responses:
         '201':
           description: Invitado
@@ -2037,35 +2103,6 @@ paths:
       summary: Deshace la cancelación.
       responses:
         '204': { description: Reactivado }
-  /v1/panel/permisos:
-    get:
-      operationId: permisos
-      summary: Qué puede hacer cada rol.
-      responses:
-        '200':
-          description: Matriz
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/Permisos' }
-  /v1/panel/permisos/{permiso}/{rol}:
-    put:
-      operationId: fijarPermiso
-      parameters:
-        - { name: permiso, in: path, required: true, schema: { type: string } }
-        - { name: rol, in: path, required: true, schema: { type: string, enum: [admin, ventas, deposito] } }
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [activo]
-              properties:
-                activo: { type: boolean }
-      responses:
-        '204': { description: Guardado }
-        '404': { $ref: '#/components/responses/Problema' }
-        '409': { $ref: '#/components/responses/Problema' }
   /v1/panel/equipo/{id}:
     put:
       operationId: cambiarRol
@@ -2079,7 +2116,7 @@ paths:
               type: object
               required: [rol]
               properties:
-                rol: { type: string, enum: [admin, ventas, deposito] }
+                rol: { type: string, enum: [admin, ventas, local] }
       responses:
         '204': { description: Cambiado }
         '404': { $ref: '#/components/responses/Problema' }
@@ -2092,6 +2129,16 @@ paths:
         '204': { description: Quitado }
         '404': { $ref: '#/components/responses/Problema' }
         '409': { $ref: '#/components/responses/Problema' }
+  /v1/panel/equipo/{id}/reenviar:
+    post:
+      operationId: reenviarInvitacion
+      summary: Manda otra vez la invitación con un link nuevo (el anterior deja de valer) y otros 7 días.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '204': { description: Reenviada }
+        '404': { $ref: '#/components/responses/Problema' }
+        '422': { $ref: '#/components/responses/Problema' }
   /v1/panel/dominios:
     get:
       operationId: dominios
@@ -3870,15 +3917,16 @@ components:
         titular: { type: string, maxLength: 80 }
     Miembro:
       type: object
-      required: [id, nombre, contacto, rol, foto, ultimo, pendiente, vos, dobleFactor]
+      required: [id, nombre, contacto, rol, foto, ultimo, pendiente, vence, vos, dobleFactor]
       properties:
         id: { type: string }
         nombre: { type: string }
         contacto: { type: string }
-        rol: { type: string, enum: [duenio, admin, ventas, deposito] }
+        rol: { type: string, enum: [duenio, admin, ventas, local] }
         foto: { type: [string, 'null'] }
         ultimo: { type: [string, 'null'], format: date-time }
         pendiente: { type: boolean, description: 'Invitación sin aceptar' }
+        vence: { type: [string, 'null'], format: date-time, description: 'Invitación: cuándo vence el link (null si nunca se mandó)' }
         vos: { type: boolean }
         dobleFactor: { type: boolean }
     Configuracion:
@@ -3973,27 +4021,6 @@ components:
           required: [hasta]
           properties:
             hasta: { type: string, format: date-time }
-    Permisos:
-      type: object
-      required: [permisos]
-      properties:
-        permisos:
-          type: array
-          items:
-            type: object
-            required: [id, titulo, detalle, roles]
-            properties:
-              id: { type: string }
-              titulo: { type: string }
-              detalle: { type: string }
-              roles:
-                type: object
-                required: [duenio, admin, ventas, deposito]
-                properties:
-                  duenio: { type: boolean }
-                  admin: { type: boolean }
-                  ventas: { type: boolean }
-                  deposito: { type: boolean }
     UrlExterna:
       type: object
       required: [url]
@@ -4735,7 +4762,7 @@ components:
               tiendaId: { type: string }
               nombre: { type: string }
               slug: { type: string }
-              rol: { type: string, enum: [admin, ventas, deposito] }
+              rol: { type: string, enum: [admin, ventas, local] }
     PedidoArrepentimiento:
       type: object
       required: [email, nombre, documento, plan]
@@ -4767,6 +4794,36 @@ components:
           required: [nueva]
           properties:
             nueva: { type: boolean, description: 'La cuenta se creó recién: sigue al onboarding' }
+    Acceso:
+      type: object
+      required: [tiendaId, rol, permisos, tiendas]
+      properties:
+        tiendaId: { type: string }
+        rol: { type: string, enum: [duenio, admin, ventas, local] }
+        permisos:
+          type: array
+          description: 'Qué puede el rol (docs/decisiones.md §36). Go responde 403 a lo demás.'
+          items: { type: string, enum: [panel, pedidos, clientes, productos, catalogo, finanzas, tienda, cuenta] }
+        tiendas:
+          type: array
+          items:
+            type: object
+            required: [id, nombre, slug, rol]
+            properties:
+              id: { type: string }
+              nombre: { type: string }
+              slug: { type: string }
+              rol: { type: string, enum: [duenio, admin, ventas, local] }
+    Invitacion:
+      type: object
+      required: [tienda, rol, email, invita, vence, tieneCuenta]
+      properties:
+        tienda: { type: string, description: Nombre de la tienda }
+        rol: { type: string, enum: [admin, ventas, local] }
+        email: { type: string, description: A quién se invitó }
+        invita: { type: string, description: 'Quién invitó (vacío si ya no está)' }
+        vence: { type: string, format: date-time }
+        tieneCuenta: { type: boolean, description: 'Ese email ya tiene cuenta: que ingrese y acepte' }
     DatosSesion:
       type: object
       required: [usuario, tiendaId, rol, venceEn]
@@ -4780,7 +4837,7 @@ components:
             email: { type: string }
             foto: { type: string, description: 'Foto de perfil (https) que dio Google o Apple al entrar con Clerk' }
         tiendaId: { type: string }
-        rol: { type: string, enum: [duenio, admin, ventas, deposito, ''] }
+        rol: { type: string, enum: [duenio, admin, ventas, local, ''] }
         venceEn: { type: string, format: date-time }
     Rubro:
       type: object

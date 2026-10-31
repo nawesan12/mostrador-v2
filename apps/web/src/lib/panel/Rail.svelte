@@ -2,14 +2,22 @@
 	import Marca from '#lib/landing/Marca.svelte';
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
-	import { AREAS, rutaDe, type Area } from './navegacion.ts';
+	import { AREAS, rutaDe, visible, type Area } from './navegacion.ts';
 	import { getShell } from './shell.svelte.ts';
 
 	/** Rail de áreas (handoff): marca, áreas, Tincho y la persona. No se muestra en el celular. */
 	let { area, iniciales }: { area: Area; iniciales: string } = $props();
 	let menu = $state(false);
 	const shell = getShell();
-	const areas = $derived(shell.modo === 'simple' ? AREAS.slice(0, 1) : AREAS);
+	// Sólo las áreas con alguna sección que el rol puede ver; cada una lleva a la primera que ve.
+	const areas = $derived(
+		(shell.modo === 'simple' ? AREAS.slice(0, 1) : AREAS)
+			.map((a) => ({
+				...a,
+				items: a.items.filter((i) => visible(i.label, shell.turnos, shell.permisos))
+			}))
+			.filter((a) => a.items.length)
+	);
 </script>
 
 <!-- eslint-disable svelte/no-navigation-without-resolve -- rutas del panel armadas con rutaDe -->

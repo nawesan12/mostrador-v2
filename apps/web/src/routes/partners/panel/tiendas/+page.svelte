@@ -30,7 +30,7 @@
 	] as const);
 	const lista = $derived(p.tiendas.filter((t) => en(filtro, t.estado)));
 	const mesFin = (fecha: string) => nombreMes(fecha.slice(0, 7));
-	const ROL = { admin: 'Admin', ventas: 'Ventas', deposito: 'Depósito' } as const;
+	const ROL = { admin: 'Admin', ventas: 'Ventas', local: 'Local' } as const;
 
 	// ---- Sumar una tienda ----
 	let sumando = $state(false);

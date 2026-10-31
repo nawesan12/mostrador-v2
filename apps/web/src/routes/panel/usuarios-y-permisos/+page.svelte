@@ -1,18 +1,29 @@
 <script lang="ts">
 	import { deslizable } from '#lib/panel/deslizable.ts';
 	import { invalidateAll } from '$app/navigation';
-	import { page } from '$app/state';
 	import Icon from '#lib/components/Icon.svelte';
 	import Modal from '#lib/components/Modal.svelte';
 	import Seo from '#lib/components/Seo.svelte';
 	import * as I from '#lib/icons.ts';
 	import { unsplash } from '#lib/landing/formato.ts';
 	import { anim } from '#lib/panel/anim.ts';
-	import { AREAS, fijo, NOMBRE_ROL, ROLES, type Rol } from '#lib/panel/permisos.ts';
+	import {
+		AREAS,
+		DETALLE_ROL,
+		INVITABLES,
+		NOMBRE_ROL,
+		QUE_HACE,
+		ROLES,
+		type RolInvitable
+	} from '#lib/panel/permisos.ts';
 	import { PLANES } from '#lib/panel/planes.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 
-	/** Usuarios y permisos (design/PanelCuenta.dc.html, sUsers): equipo, roles y la matriz de permisos. */
+	/**
+	 * Usuarios y permisos (design/PanelCuenta.dc.html, sUsers): el equipo, las invitaciones y qué puede
+	 * cada rol. Los roles son fijos (docs/decisiones.md §36): la matriz editable del handoff se cambió
+	 * por la explicación de cada uno, porque Go aplica esos cuatro y nada más.
+	 */
 	let { data } = $props();
 	const ui = getUi();
 	type M = (typeof data.equipo)[number];
@@ -32,13 +43,22 @@
 		}
 		return r.ok;
 	}
-	/**
-	 * Con la API real, invitar sólo guardaba una fila: no salía ningún mail ni WhatsApp y no hay cómo
-	 * aceptar la invitación. Hasta que exista, no se ofrece «Invitar» ni se dice «Invitación enviada».
-	 */
-	const demo = $derived(!!page.data.demo);
+	const fecha = (iso: string) =>
+		new Date(iso).toLocaleDateString('es-AR', {
+			day: 'numeric',
+			month: 'short',
+			timeZone: 'America/Argentina/Buenos_Aires'
+		});
+	const vencida = (m: M) => !!m.vence && Date.parse(m.vence) < Date.now();
+	const estadoInvitacion = (m: M) =>
+		!m.vence ? 'Sin mandar' : vencida(m) ? 'Vencida' : 'Invitación enviada';
 	const ultimo = (m: M) => {
-		if (m.pendiente) return demo ? 'Invitación enviada' : 'Invitación sin mandar';
+		if (m.pendiente)
+			return !m.vence
+				? 'Nunca se mandó: reenviala o cancelala'
+				: vencida(m)
+					? `Venció el ${fecha(m.vence)}`
+					: `Vence el ${fecha(m.vence)}`;
 		if (!m.ultimo) return 'Nunca entró';
 		const min = Math.round((Date.now() - Date.parse(m.ultimo)) / 60_000);
 		return min < 2
@@ -56,14 +76,14 @@
 				? '#2F8F63'
 				: 'var(--ln2)';
 
-	async function rol(m: M, r: Rol) {
-		if (m.vos || r === 'duenio' || r === m.rol) return;
+	async function rol(m: M, r: RolInvitable) {
+		if (m.vos || m.rol === 'duenio' || r === m.rol) return;
 		if (!(await pedir(`/panel/equipo/${m.id}`, 'PUT', { rol: r }))) return;
 		await invalidateAll();
 		ui.toast({
 			k: 'ok',
 			title: `${m.nombre.split(' ')[0]} ahora es ${NOMBRE_ROL[r]}`,
-			desc: 'Le avisamos por email'
+			desc: m.pendiente ? 'Entra con ese rol cuando acepte' : 'Aplica al instante'
 		});
 	}
 	async function quitar(m: M) {
@@ -71,36 +91,42 @@
 		await invalidateAll();
 		ui.toast({
 			k: 'ok',
-			title: `${m.nombre} ya no tiene acceso`,
-			desc: m.pendiente ? 'Retiramos la invitación' : 'Cerramos todas sus sesiones'
+			title: m.pendiente
+				? `Cancelaste la invitación a ${m.contacto}`
+				: `${m.nombre} ya no tiene acceso`,
+			desc: m.pendiente ? 'El link del mail ya no sirve' : 'Cerramos sus sesiones en esta tienda'
 		});
 	}
-	async function permiso(id: string, titulo: string, r: Rol, on: boolean) {
-		if (fijo(id, r)) return;
-		if (!(await pedir(`/panel/permisos/${id}/${r}`, 'PUT', { activo: !on }))) return;
+	let reenviando = $state('');
+	async function reenviar(m: M) {
+		reenviando = m.id;
+		const ok = await pedir(`/panel/equipo/${m.id}/reenviar`, 'POST');
+		reenviando = '';
+		if (!ok) return;
 		await invalidateAll();
-		ui.toast({
-			k: 'ok',
-			title: `${NOMBRE_ROL[r]} ${on ? 'ya no puede' : 'ahora puede'}: ${titulo.toLowerCase()}`,
-			desc: 'Aplica al instante'
-		});
+		ui.toast({ k: 'ok', title: 'Invitación reenviada', desc: `${m.contacto} · vence en 7 días` });
 	}
 
 	// ---- Invitar ----
 	let invitando = $state(false);
-	let contacto = $state('');
-	let nuevoRol = $state<'admin' | 'ventas' | 'deposito'>('ventas');
+	let mandando = $state(false);
+	let email = $state('');
+	let nuevoRol = $state<RolInvitable>('ventas');
+	const ICONO: Record<RolInvitable, I.IconData> = {
+		admin: I.phShieldStar,
+		ventas: I.phChatsCircle,
+		local: I.phStorefront
+	};
 	async function invitar(e: SubmitEvent) {
 		e.preventDefault();
-		if (!(await pedir('/panel/equipo', 'POST', { contacto, rol: nuevoRol }))) return;
+		mandando = true;
+		const ok = await pedir('/panel/equipo', 'POST', { contacto: email, rol: nuevoRol });
+		mandando = false;
+		if (!ok) return;
 		invitando = false;
 		await invalidateAll();
-		ui.toast({
-			k: 'ok',
-			title: 'Invitación enviada',
-			desc: `${contacto} · ${NOMBRE_ROL[nuevoRol]}`
-		});
-		contacto = '';
+		ui.toast({ k: 'ok', title: 'Invitación enviada', desc: `${email} · ${NOMBRE_ROL[nuevoRol]}` });
+		email = '';
 	}
 </script>
 
@@ -122,18 +148,10 @@
 					: ` · ${libres} ${libres === 1 ? 'lugar libre' : 'lugares libres'} en tu plan`}
 			</div>
 		</div>
-		{#if demo}
-			<button type="button" class="invitar" onclick={() => (invitando = true)}
-				><Icon icon={I.phUserPlusBold} size={15} />Invitar persona</button
-			>
-		{/if}
+		<button type="button" class="invitar" onclick={() => (invitando = true)}
+			><Icon icon={I.phUserPlusBold} size={15} />Invitar persona</button
+		>
 	</div>
-	{#if !demo}
-		<p class="aviso" use:anim={{ t: 'rise', delay: 30 }}>
-			Sumar personas al equipo todavía no está: la invitación no le llega a nadie. Cuando esté, la
-			vas a mandar desde acá.
-		</p>
-	{/if}
 
 	<div class="lista" use:anim={{ t: 'rise', delay: 50 }}>
 		{#each data.equipo as m (m.id)}
@@ -151,7 +169,8 @@
 				<span class="p-txt">
 					<span class="p-n"
 						>{m.nombre}{#if m.vos}<span class="vos">Vos</span>{/if}{#if m.pendiente}<span
-								class="inv">{demo ? 'Invitación enviada' : 'Sin mandar'}</span
+								class="inv"
+								class:apagada={!m.vence || vencida(m)}>{estadoInvitacion(m)}</span
 							>{/if}</span
 					>
 					<span class="p-e">{m.contacto} · {ultimo(m)}</span>
@@ -159,93 +178,96 @@
 				<span class="areas"
 					>{#each AREAS[m.rol] as a (a)}<span>{a}</span>{/each}</span
 				>
-				<span class="roles" role="group" aria-label="Rol de {m.nombre}" use:deslizable>
-					{#each ROLES as r (r)}
-						<button
-							type="button"
-							aria-pressed={m.rol === r}
-							class:apagado={m.vos && r !== 'duenio'}
-							onclick={() => rol(m, r)}>{NOMBRE_ROL[r]}</button
-						>
-					{/each}
-				</span>
-				{#if !m.vos}
-					<button
-						type="button"
-						class="quitar"
-						aria-label="Quitar a {m.nombre}"
-						onclick={() => quitar(m)}><Icon icon={I.phTrash} size={17} /></button
-					>
+				{#if m.rol === 'duenio'}
+					<span class="duenia">Dueña</span>
+				{:else}
+					<span class="roles" role="group" aria-label="Rol de {m.nombre}" use:deslizable>
+						{#each INVITABLES as r (r)}
+							<button type="button" aria-pressed={m.rol === r} onclick={() => rol(m, r)}
+								>{NOMBRE_ROL[r]}</button
+							>
+						{/each}
+					</span>
 				{/if}
+				{#if m.pendiente || (!m.vos && m.rol !== 'duenio')}<span class="acc">
+						{#if m.pendiente}
+							<button
+								type="button"
+								class="reenviar"
+								disabled={reenviando === m.id}
+								onclick={() => reenviar(m)}
+								><Icon icon={I.phPaperPlaneTilt} size={15} />{reenviando === m.id
+									? 'Mandando…'
+									: 'Reenviar'}</button
+							>
+						{/if}
+						{#if !m.vos && m.rol !== 'duenio'}
+							<button
+								type="button"
+								class="quitar"
+								aria-label={m.pendiente
+									? `Cancelar la invitación a ${m.contacto}`
+									: `Quitar a ${m.nombre}`}
+								onclick={() => quitar(m)}><Icon icon={I.phTrash} size={17} /></button
+							>
+						{/if}
+					</span>{/if}
 			</div>
 		{/each}
 	</div>
 
-	<div class="tarjeta matriz" use:anim={{ t: 'rise', delay: 100 }}>
+	<div class="tarjeta" use:anim={{ t: 'rise', delay: 100 }}>
 		<div class="mz-cab">
-			<span>Qué puede hacer cada rol</span><span class="mz-s">Tocá un permiso para cambiarlo</span>
+			<span>Qué puede cada rol</span><span class="mz-s">Lo que un rol no puede, no lo ve</span>
 		</div>
-		<div class="desliza" use:deslizable>
-			<div class="tabla">
-				<div class="fila cab-t">
-					<span>Permiso</span>{#each ROLES as r (r)}<span>{NOMBRE_ROL[r]}</span>{/each}
+		<div class="roles-fijos">
+			{#each ROLES as r (r)}
+				<div class="rf">
+					<b>{NOMBRE_ROL[r]}</b>
+					<span class="rf-d">{QUE_HACE[r]}</span>
+					<ul>
+						{#each DETALLE_ROL[r].si as x (x)}<li class="si">
+								<Icon icon={I.phCheckBold} size={13} />{x}
+							</li>{/each}
+						{#each DETALLE_ROL[r].no as x (x)}<li class="no">
+								<Icon icon={I.phXBold} size={13} />{x}
+							</li>{/each}
+					</ul>
 				</div>
-				{#each data.permisos as p (p.id)}
-					<div class="fila">
-						<span><b>{p.titulo}</b><span class="d">{p.detalle}</span></span>
-						{#each ROLES as r (r)}
-							{@const on = p.roles[r]}
-							<span class="celda">
-								<span class="c-mob" aria-hidden="true">{NOMBRE_ROL[r]}</span>
-								<button
-									type="button"
-									class:on
-									class:fijo={fijo(p.id, r)}
-									aria-pressed={on}
-									aria-label="{NOMBRE_ROL[r]}: {p.titulo}"
-									onclick={() => permiso(p.id, p.titulo, r, on)}
-									>{#if on}<Icon icon={I.phCheckBold} size={14} />{/if}</button
-								>
-							</span>
-						{/each}
-					</div>
-				{/each}
-			</div>
+			{/each}
 		</div>
-		<!-- La matriz se guarda pero Go todavía no la aplica en cada pantalla: se dice, no se promete. -->
-		<p class="aviso">
-			Por ahora estos permisos se guardan pero no limitan el panel: cada persona invitada ve todo.
-			Lo sensible (ARCA, importar, devolver señas y Telegram) sí pide ser Dueño o Admin.
-		</p>
 	</div>
-
-	<!-- La verificación en dos pasos todavía no existe: no se la muestra como obligatoria ni se
-	     «recuerda» por WhatsApp (antes era un aviso que no mandaba nada). -->
 </div>
 
 <Modal bind:open={invitando} titulo="Invitar a tu equipo" ancho={480} padding={24}>
 	<form onsubmit={invitar}>
 		<b class="m-t">Invitar a tu equipo</b>
-		<div class="m-d">Le llega un link por email o WhatsApp. Vence en 7 días.</div>
+		<div class="m-d">Le llega un link por email. Sirve una sola vez y vence en 7&nbsp;días.</div>
 		<input
 			class="m-in"
-			bind:value={contacto}
-			placeholder="email o WhatsApp"
-			aria-label="Email o WhatsApp"
+			type="email"
+			bind:value={email}
+			placeholder="nombre@email.com"
+			aria-label="Email"
+			autocomplete="off"
 			maxlength="120"
+			required
 		/>
 		<div class="m-r">Rol</div>
 		<div class="m-roles" role="group" aria-label="Rol">
-			{#each [['admin', I.phShieldStar, 'Todo menos plan y usuarios'], ['ventas', I.phChatsCircle, 'Pedidos, clientes y WhatsApp'], ['deposito', I.phPackage, 'Stock, preparación y envíos']] as const as [id, icono, d] (id)}
+			{#each INVITABLES as id (id)}
 				<button type="button" aria-pressed={nuevoRol === id} onclick={() => (nuevoRol = id)}
-					><Icon icon={icono} size={20} /><span><b>{NOMBRE_ROL[id]}</b><span>{d}</span></span
+					><Icon icon={ICONO[id]} size={20} /><span
+						><b>{NOMBRE_ROL[id]}</b><span>{QUE_HACE[id]}</span></span
 					></button
 				>
 			{/each}
 		</div>
 		<div class="m-acc">
 			<button type="button" class="b-sec" onclick={() => (invitando = false)}>Cancelar</button>
-			<button class="b-pri" disabled={contacto.trim().length < 6}>Mandar invitación</button>
+			<button class="b-pri" disabled={email.trim().length < 6 || mandando}
+				>{mandando ? 'Mandando…' : 'Mandar invitación'}</button
+			>
 		</div>
 	</form>
 </Modal>
@@ -399,8 +421,89 @@
 		background: var(--sf);
 		box-shadow: var(--sh);
 	}
-	.roles button.apagado {
-		opacity: 0.4;
+	.acc {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		margin-left: auto;
+	}
+	.duenia {
+		font-size: 12px;
+		font-weight: 600;
+		padding: 7px 12px;
+		border-radius: 999px;
+		background: var(--chip);
+	}
+	.reenviar {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		min-height: 34px;
+		padding: 6px 12px;
+		border-radius: 999px;
+		border: 1px solid var(--ln2);
+		background: transparent;
+		color: var(--tx);
+		font:
+			600 12.5px 'Instrument Sans',
+			sans-serif;
+		white-space: nowrap;
+	}
+	.reenviar:disabled {
+		opacity: 0.6;
+	}
+	.inv.apagada {
+		background: var(--chip);
+		color: var(--mu);
+	}
+	.mz-s {
+		font-size: 12.5px;
+		color: var(--mu);
+		font-weight: 400;
+	}
+	.roles-fijos {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	}
+	.rf {
+		padding: 14px 18px 16px;
+		border-top: 1px solid var(--ln);
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+	.rf b {
+		font-size: 15px;
+	}
+	.rf-d {
+		font-size: 12.5px;
+		color: var(--mu);
+		text-wrap: pretty;
+	}
+	.rf ul {
+		margin: 6px 0 0;
+		padding: 0;
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: 5px;
+		font-size: 13px;
+	}
+	.rf li {
+		display: flex;
+		align-items: center;
+		gap: 7px;
+	}
+	.rf li.si :global(svg) {
+		color: #2f8f63;
+		flex: none;
+	}
+	.rf li.no {
+		color: var(--mu);
+	}
+	.rf li.no :global(svg) {
+		color: #b0441d;
+		flex: none;
 	}
 	.quitar {
 		width: 34px;
@@ -443,131 +546,19 @@
 	.ini.pend {
 		opacity: 0.55;
 	}
-	.aviso {
-		margin: 12px 0 0;
-		padding: 10px 14px;
-		border-radius: 14px;
-		background: rgba(227, 169, 59, 0.14);
-		color: #7a5410;
-		font-size: 13px;
-		line-height: 1.45;
-		text-wrap: pretty;
-	}
-	.mz-s {
-		font-size: 12.5px;
-		color: var(--mu);
-		font-weight: 400;
-	}
-	.desliza {
-		overflow-x: auto;
-	}
-	.tabla {
-		min-width: 560px;
-	}
-	.fila {
-		display: grid;
-		grid-template-columns: minmax(180px, 1.6fr) repeat(4, minmax(80px, 1fr));
-		padding: 10px 18px;
-		border-top: 1px solid var(--ln);
-		align-items: center;
-		font-size: 14px;
-	}
-	.fila b {
-		font-weight: 600;
-	}
-	.d {
-		display: block;
-		font-size: 12px;
-		color: var(--mu);
-	}
-	.cab-t {
-		border-top: 0;
-		font-size: 12px;
-		font-weight: 700;
-		letter-spacing: 0.04em;
-		text-transform: uppercase;
-		color: var(--mu);
-		background: var(--sf2);
-	}
-	.cab-t span:not(:first-child) {
-		text-align: center;
-	}
-	.celda {
-		display: grid;
-		place-items: center;
-	}
-	.celda button {
-		width: 28px;
-		height: 28px;
-		border-radius: 9px;
-		border: 1.5px solid var(--ln2);
-		background: transparent;
-		color: #fff;
-		display: grid;
-		place-items: center;
-	}
-	.celda button.on {
-		border-color: #d2582f;
-		background: #d2582f;
-	}
-	.celda button.on.fijo {
-		background: #e8a589;
-		border-color: #e8a589;
-	}
-	.celda button.fijo {
-		cursor: not-allowed;
-	}
-	.c-mob {
-		display: none;
-	}
-	/* Celular: el rol de cada persona ocupa su propia fila con los cuatro a la vista (antes se
-	   cortaba en "Admin" con un scroll escondido). */
+	/* Celular: el rol de cada persona ocupa su propia fila con los tres a la vista (antes se
+	   cortaba con un scroll escondido). */
 	@media (max-width: 760px) {
 		.roles {
 			flex: 1 1 100%;
 			order: 5;
 			display: grid;
-			grid-template-columns: repeat(4, minmax(0, 1fr));
+			grid-template-columns: repeat(3, minmax(0, 1fr));
 			overflow: visible;
 		}
 		.roles button {
 			min-height: 40px;
 			padding: 6px 4px;
-		}
-	}
-	/* Celular: cada permiso es una tarjeta con los cuatro roles debajo, cada uno con su nombre
-	   (sin tabla ancha ni scroll escondido). */
-	@media (max-width: 760px) {
-		.desliza {
-			overflow: visible;
-		}
-		.tabla {
-			min-width: 0;
-		}
-		.cab-t {
-			display: none;
-		}
-		.fila {
-			grid-template-columns: repeat(4, minmax(0, 1fr));
-			row-gap: 10px;
-			padding: 12px 16px 14px;
-		}
-		.fila > span:first-child {
-			grid-column: 1 / -1;
-		}
-		.celda {
-			gap: 4px;
-		}
-		.c-mob {
-			display: block;
-			font-size: 11.5px;
-			font-weight: 600;
-			color: var(--mu);
-		}
-		.celda button {
-			width: 44px;
-			height: 44px;
-			border-radius: 12px;
 		}
 	}
 	.m-t {

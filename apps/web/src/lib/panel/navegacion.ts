@@ -4,6 +4,7 @@
  */
 import * as I from '#lib/icons.ts';
 import type { IconData } from '#lib/icons.ts';
+import { PERMISOS, puedeVer } from './permisos.ts';
 
 export type Insignia = 'pedidos' | 'carritos' | 'whatsapp' | 'paraHacer';
 export type Item = { label: string; icon: IconData; iconFill: IconData; insignia?: Insignia };
@@ -114,10 +115,12 @@ export const AREAS: Area[] = [
 ];
 
 /**
- * Secciones que sólo se ven si la tienda las usa: Turnos, con turnos activos o rubro de servicios.
- * (La ruta existe igual; esto decide qué se muestra en el menú y en ⌘K.)
+ * Secciones que se muestran: Turnos, con turnos activos o rubro de servicios; y sólo las que el rol
+ * de la persona puede ver (Go igual responde 403 a lo demás). La ruta existe igual; esto decide qué
+ * se muestra en el menú y en ⌘K.
  */
-export const visible = (label: string, turnos: boolean) => label !== 'Turnos' || turnos;
+export const visible = (label: string, turnos: boolean, permisos: readonly string[] = PERMISOS) =>
+	(label !== 'Turnos' || turnos) && puedeVer(permisos, label);
 
 /** Modo Simple: una sola lista ("Día a día"). */
 export const SIMPLE: Item[] = [

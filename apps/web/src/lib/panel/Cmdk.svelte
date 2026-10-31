@@ -53,7 +53,7 @@
 			...ACCIONES,
 			...AREAS.flatMap((a) =>
 				a.items
-					.filter((i) => visible(i.label, shell.turnos))
+					.filter((i) => visible(i.label, shell.turnos, shell.permisos))
 					.map((i): Item => {
 						const href = rutaDe(i.label);
 						return {

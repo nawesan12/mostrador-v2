@@ -5,6 +5,7 @@
 	import * as I from '#lib/icons.ts';
 	import type { components } from '@mostrador/contrato/esquema';
 	import { AREAS, rutaDe, visible, type Area, type Item } from './navegacion.ts';
+	import { NOMBRE_ROL, type Rol } from './permisos.ts';
 	import { getShell } from './shell.svelte.ts';
 
 	/**
@@ -30,6 +31,18 @@
 		resumen: components['schemas']['ResumenPanel'];
 	} = $props();
 	const shell = getShell();
+	// Una persona con varias tiendas elige cuál ver: la sesión pasa a esa tienda y el panel se carga
+	// de nuevo entero (nada de la otra tienda queda en pantalla).
+	let eligiendo = $state(false);
+	async function elegir(id: string) {
+		if (id === shell.tiendaId) return void (eligiendo = false);
+		const r = await fetch('/panel/tienda', {
+			method: 'PUT',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ tiendaId: id })
+		});
+		if (r.ok) location.assign('/panel');
+	}
 	// Sin foto de la tienda, sus iniciales (nunca una foto de stock).
 	const iniciales = $derived(
 		tienda
@@ -108,7 +121,27 @@
 					><span class="vivo"></span>{dominio}</span
 				></span
 			>
+			{#if shell.tiendas.length > 1}
+				<button
+					type="button"
+					class="t-cambiar"
+					aria-expanded={eligiendo}
+					aria-label="Cambiar de tienda"
+					onclick={() => (eligiendo = !eligiendo)}><Icon icon={I.phCaretUpDown} size={17} /></button
+				>
+			{/if}
 		</div>
+		{#if eligiendo}
+			<div class="t-lista" role="group" aria-label="Tus tiendas">
+				{#each shell.tiendas as t (t.id)}
+					<button type="button" aria-current={t.id === shell.tiendaId} onclick={() => elegir(t.id)}
+						><span class="t-n">{t.nombre}</span><span class="t-r"
+							>{NOMBRE_ROL[t.rol as Rol] ?? ''}</span
+						>{#if t.id === shell.tiendaId}<Icon icon={I.phCheckBold} size={14} />{/if}</button
+					>
+				{/each}
+			</div>
+		{/if}
 		<button
 			type="button"
 			class="buscar"
@@ -123,7 +156,7 @@
 			<div class="solo-ancho">
 				<div class="area">{area.label}</div>
 				<nav class="items">
-					{#each area.items.filter( (i) => visible(i.label, shell.turnos) ) as i (i.label)}{@render seccionLink(
+					{#each area.items.filter( (i) => visible(i.label, shell.turnos, shell.permisos) ) as i (i.label)}{@render seccionLink(
 							i
 						)}{/each}
 				</nav>
@@ -131,7 +164,7 @@
 		{:else}
 			<!-- Celular: todas las áreas, en acordeón. -->
 			<nav class="acordeon" aria-label="Áreas del panel">
-				{#each AREAS as a (a.id)}
+				{#each AREAS.filter( (x) => x.items.some( (i) => visible(i.label, shell.turnos, shell.permisos) ) ) as a (a.id)}
 					{@const on = desplegada === a.id}
 					{@const n = pendientes(a)}
 					<button
@@ -148,7 +181,7 @@
 					</button>
 					{#if on}
 						<div class="items sub">
-							{#each a.items.filter( (i) => visible(i.label, shell.turnos) ) as i (i.label)}{@render seccionLink(
+							{#each a.items.filter( (i) => visible(i.label, shell.turnos, shell.permisos) ) as i (i.label)}{@render seccionLink(
 									i
 								)}{/each}
 						</div>
@@ -172,7 +205,7 @@
 				>
 			</div>
 		{/if}
-		{#if resumen.prueba.diasRestantes > 0}
+		{#if resumen.prueba.diasRestantes > 0 && shell.permisos.includes('cuenta')}
 			<a class="prueba-corta" href={rutaDe('Plan y facturación')}>
 				<span><b>Plan {resumen.prueba.plan} · prueba</b><span>{restan}</span></span><span
 					class="pc-cta">Elegir plan</span
@@ -185,7 +218,7 @@
 		</form>
 	</div>
 	<div class="abajo">
-		{#if resumen.prueba.diasRestantes > 0}
+		{#if resumen.prueba.diasRestantes > 0 && shell.permisos.includes('cuenta')}
 			<div class="prueba">
 				<div class="p-in">
 					<div class="p-plan">Plan {resumen.prueba.plan} · prueba</div>
@@ -247,6 +280,51 @@
 		border: 1px solid var(--ln);
 		background: var(--sf);
 		box-shadow: var(--sh);
+	}
+	.t-cambiar {
+		flex: none;
+		width: 36px;
+		height: 36px;
+		display: grid;
+		place-items: center;
+		border: 0;
+		border-radius: 10px;
+		background: transparent;
+		color: var(--mu);
+	}
+	.t-lista {
+		margin-top: 6px;
+		display: flex;
+		flex-direction: column;
+		padding: 4px;
+		border-radius: 14px;
+		border: 1px solid var(--ln);
+		background: var(--sf);
+		box-shadow: var(--sh);
+	}
+	.t-lista button {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		min-height: 44px;
+		padding: 8px 10px;
+		border: 0;
+		border-radius: 10px;
+		background: transparent;
+		color: var(--tx);
+		font: inherit;
+		text-align: left;
+	}
+	.t-lista button[aria-current='true'] {
+		background: var(--chip);
+	}
+	.t-lista .t-n {
+		flex: 1;
+		min-width: 0;
+	}
+	.t-r {
+		font-size: 12px;
+		color: var(--mu);
 	}
 	.t-ini {
 		flex: none;

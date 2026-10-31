@@ -1,72 +1,114 @@
-/** Qué puede hacer cada rol (design/PanelCuenta.dc.html). El dueño puede todo; "Plan, usuarios y datos" sólo el dueño. */
-export const ROLES = ['duenio', 'admin', 'ventas', 'deposito'] as const;
+/**
+ * Roles fijos del equipo de una tienda (docs/decisiones.md §36). Go los aplica en cada ruta del
+ * panel (403 si no); acá sólo se decide qué mostrar. La tabla de qué puede cada rol es la misma que
+ * la de Go: el test la compara con apps/api/internal/dominio/roles/testdata/roles.json.
+ */
+export const ROLES = ['duenio', 'admin', 'ventas', 'local'] as const;
 export type Rol = (typeof ROLES)[number];
+export const INVITABLES = ['admin', 'ventas', 'local'] as const;
+export type RolInvitable = (typeof INVITABLES)[number];
+
 export const NOMBRE_ROL: Record<Rol, string> = {
-	duenio: 'Dueño',
-	admin: 'Admin',
+	duenio: 'Dueña',
+	admin: 'Administración',
 	ventas: 'Ventas',
-	deposito: 'Depósito'
+	local: 'Local'
 };
 
 export const PERMISOS = [
-	{
-		id: 'ventas',
-		titulo: 'Ver ventas y pedidos',
-		detalle: 'Lista de pedidos y clientes',
-		def: [1, 1, 1, 1]
-	},
-	{
-		id: 'productos',
-		titulo: 'Editar productos y precios',
-		detalle: 'Incluye stock e importaciones',
-		def: [1, 1, 0, 1]
-	},
-	{
-		id: 'whatsapp',
-		titulo: 'Responder WhatsApp',
-		detalle: 'Y aprobar respuestas de Tincho',
-		def: [1, 1, 1, 0]
-	},
-	{
-		id: 'despachar',
-		titulo: 'Preparar y despachar',
-		detalle: 'Etiquetas y cambios de estado',
-		def: [1, 1, 1, 1]
-	},
-	{
-		id: 'finanzas',
-		titulo: 'Ver finanzas',
-		detalle: 'Saldo y liquidaciones',
-		def: [1, 1, 0, 0]
-	},
-	{
-		id: 'facturas',
-		titulo: 'Emitir facturas',
-		detalle: 'Factura A, B y C ante ARCA',
-		def: [1, 1, 1, 0]
-	},
-	{
-		id: 'diseno',
-		titulo: 'Cambiar diseño de la tienda',
-		detalle: 'Plantilla, colores y secciones',
-		def: [1, 1, 0, 0]
-	},
-	{
-		id: 'cuenta',
-		titulo: 'Plan, usuarios y datos',
-		detalle: 'Solo el dueño puede cambiarlo',
-		def: [1, 0, 0, 0]
-	}
+	'panel',
+	'pedidos',
+	'clientes',
+	'productos',
+	'catalogo',
+	'finanzas',
+	'tienda',
+	'cuenta'
 ] as const;
+export type Permiso = (typeof PERMISOS)[number];
 
-/** Lo que no se puede tocar: todo lo del dueño y "Plan, usuarios y datos". */
-export const fijo = (permiso: string, rol: Rol) => rol === 'duenio' || permiso === 'cuenta';
+export const PERMISOS_DE: Record<Rol, Permiso[]> = {
+	duenio: ['panel', 'pedidos', 'clientes', 'productos', 'catalogo', 'finanzas', 'tienda', 'cuenta'],
+	admin: ['panel', 'pedidos', 'clientes', 'productos', 'catalogo', 'finanzas', 'tienda'],
+	ventas: ['panel', 'pedidos', 'clientes', 'productos'],
+	local: ['panel', 'pedidos']
+};
 
+/** Qué hace cada rol, en una línea (invitar y la lista del equipo). */
+export const QUE_HACE: Record<Rol, string> = {
+	duenio: 'Todo, también el plan y el equipo',
+	admin: 'Todo menos el plan, la facturación de Tu Local Web y el equipo',
+	ventas: 'Pedidos, clientes y productos, sin precios, costos ni finanzas',
+	local: 'Punto de venta y pedidos'
+};
+
+/** Lo que cada rol puede y no puede, para la tarjeta «Qué puede cada rol». */
+export const DETALLE_ROL: Record<Rol, { si: string[]; no: string[] }> = {
+	duenio: { si: ['Todo el panel', 'Plan y facturación', 'Invitar y quitar personas'], no: [] },
+	admin: {
+		si: [
+			'Pedidos, clientes y productos',
+			'Precios, costos y finanzas',
+			'Configuración de la tienda'
+		],
+		no: ['Plan y facturación', 'El equipo']
+	},
+	ventas: {
+		si: ['Pedidos y punto de venta', 'Clientes y WhatsApp', 'Editar productos y stock'],
+		no: ['Precios y costos', 'Finanzas', 'Configuración']
+	},
+	local: {
+		si: ['Punto de venta', 'Pedidos y envíos', 'Ver productos'],
+		no: ['Clientes', 'Editar productos', 'Finanzas y configuración']
+	}
+};
+
+/** Chips cortos de cada persona en la lista del equipo. */
 export const AREAS: Record<Rol, string[]> = {
 	duenio: ['Todo'],
-	admin: ['Ventas', 'Catálogo', 'Finanzas'],
-	ventas: ['Pedidos', 'WhatsApp'],
-	deposito: ['Stock', 'Envíos']
+	admin: ['Todo menos plan y equipo'],
+	ventas: ['Pedidos', 'Clientes', 'Productos'],
+	local: ['Punto de venta', 'Pedidos']
+};
+
+/**
+ * El permiso que hace falta para ver cada sección del panel (por su nombre en la navegación). Lo
+ * que no está acá lo ve cualquiera del equipo.
+ */
+export const PERMISO_SECCION: Record<string, Permiso> = {
+	Pedidos: 'pedidos',
+	Turnos: 'pedidos',
+	Devoluciones: 'pedidos',
+	'Ventas en local': 'pedidos',
+	Productos: 'pedidos',
+	Inventario: 'pedidos',
+	Envíos: 'pedidos',
+	'Carritos abandonados': 'clientes',
+	WhatsApp: 'clientes',
+	Clientes: 'clientes',
+	'Reseñas y preguntas': 'clientes',
+	'Listas de precio': 'catalogo',
+	Cupones: 'catalogo',
+	Finanzas: 'finanzas',
+	Cobros: 'finanzas',
+	Facturación: 'finanzas',
+	Informes: 'finanzas',
+	Marketing: 'tienda',
+	Canales: 'tienda',
+	'Mi tienda': 'tienda',
+	'Tarjeta para paquetes': 'tienda',
+	Integraciones: 'tienda',
+	Dominio: 'tienda',
+	Notificaciones: 'tienda',
+	'Mis datos': 'tienda',
+	'Plan y facturación': 'cuenta',
+	'Usuarios y permisos': 'cuenta'
+};
+
+/** ¿Estos permisos alcanzan para ver la sección? */
+export const puedeVer = (permisos: readonly string[], seccion: string) => {
+	const p = PERMISO_SECCION[seccion];
+	return !p || permisos.includes(p);
 };
 
 /** Los motivos y la oferta de cada uno en la cancelación en 3 pasos. */

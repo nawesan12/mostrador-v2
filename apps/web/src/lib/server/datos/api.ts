@@ -34,7 +34,7 @@ import type {
 	MisDatos,
 	PreferenciasAvisos,
 	TipoExport,
-	Permisos,
+	Acceso,
 	PlanCuenta,
 	Configuracion,
 	Miembro,
@@ -86,6 +86,7 @@ import type {
 } from './tipos.ts';
 import type { Importacion, ImportacionNueva, PedidoHistorial } from '../importacion/fuente.ts';
 import type { ErrorVueltaTN } from './tipos.ts';
+import type { RolInvitable } from '#lib/panel/permisos.ts';
 
 /** Un producto de una API sin galería ni variantes todavía se ve como uno sin opciones. */
 function conVariantes(p: Producto): Producto {
@@ -423,17 +424,18 @@ export class DatosApi implements Datos {
 	async reactivarPlan() {
 		await this.pedir<void>('/v1/panel/cuenta/cancelacion', 'DELETE');
 	}
-	permisos() {
-		return this.pedir<Permisos>('/v1/panel/permisos');
+	acceso() {
+		return this.pedir<Acceso>('/v1/auth/tiendas');
 	}
-	async fijarPermiso(permiso: string, rol: 'admin' | 'ventas' | 'deposito', activo: boolean) {
+	async elegirTienda(id: string) {
+		return resultado(await this.intentar('/v1/auth/tienda', 'PUT', { tiendaId: id }));
+	}
+	async reenviarInvitacion(id: string) {
 		return resultado(
-			await this.intentar(`/v1/panel/permisos/${encodeURIComponent(permiso)}/${rol}`, 'PUT', {
-				activo
-			})
+			await this.intentar(`/v1/panel/equipo/${encodeURIComponent(id)}/reenviar`, 'POST')
 		);
 	}
-	async cambiarRol(id: string, rol: 'admin' | 'ventas' | 'deposito') {
+	async cambiarRol(id: string, rol: RolInvitable) {
 		return resultado(
 			await this.intentar(`/v1/panel/equipo/${encodeURIComponent(id)}`, 'PUT', { rol })
 		);
@@ -460,8 +462,8 @@ export class DatosApi implements Datos {
 	async cerrarOtrasSesiones() {
 		return (await this.pedir<{ cerradas: number }>('/v1/panel/sesiones', 'DELETE')).cerradas;
 	}
-	async invitar(contacto: string, rol: Miembro['rol']) {
-		const r = await this.intentar('/v1/panel/equipo', 'POST', { contacto, rol });
+	async invitar(email: string, rol: RolInvitable) {
+		const r = await this.intentar('/v1/panel/equipo', 'POST', { contacto: email, rol });
 		if (r.status === 409) return 'repetido' as const;
 		return (await r.json()) as Miembro;
 	}

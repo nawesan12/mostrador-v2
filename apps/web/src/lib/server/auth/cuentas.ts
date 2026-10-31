@@ -8,6 +8,7 @@ import { ClienteBff } from '../bff.ts';
 export { ErrorApi as ErrorCuenta } from '../bff.ts';
 export type Sesion = components['schemas']['Sesion'];
 export type DatosSesion = components['schemas']['DatosSesion'];
+export type Invitacion = components['schemas']['Invitacion'];
 
 export class CuentasApi extends ClienteBff {
 	registrar(a: components['schemas']['Alta']) {
@@ -48,9 +49,32 @@ export class CuentasApi extends ClienteBff {
 			{ codigo, estado }
 		);
 	}
-	/** Entra con el token de sesión de Clerk (Google, Apple): Go lo verifica con la instancia. */
-	ingresarConClerk(token: string) {
-		return this.pedir<Sesion & { nueva: boolean }>('POST', '/v1/auth/clerk', { token });
+	/**
+	 * Entra con el token de sesión de Clerk (Google, Apple): Go lo verifica con la instancia. Con una
+	 * invitación, la persona queda sumada a esa tienda (y una cuenta nueva no crea otra tienda).
+	 */
+	ingresarConClerk(token: string, invitacion?: string) {
+		return this.pedir<Sesion & { nueva: boolean }>('POST', '/v1/auth/clerk', {
+			token,
+			...(invitacion ? { invitacion } : {})
+		});
+	}
+	/** De qué tienda y con qué rol es la invitación (sin usarla). */
+	verInvitacion(token: string) {
+		return this.pedir<Invitacion>('POST', '/v1/auth/invitacion', { token });
+	}
+	/** Suma a la persona de la sesión a la tienda de la invitación. */
+	aceptarInvitacion(token: string, sesion: string) {
+		return this.pedir<{ tiendaId: string }>(
+			'POST',
+			'/v1/auth/invitacion/aceptar',
+			{ token },
+			sesion
+		);
+	}
+	/** Crea la cuenta con el email de la invitación, sin tienda propia, y la suma a esa tienda. */
+	registrarConInvitacion(token: string, nombre: string, clave: string) {
+		return this.pedir<Sesion>('POST', '/v1/auth/invitacion/registro', { token, nombre, clave });
 	}
 	/** Link para entrar sin contraseña, al WhatsApp de la cuenta. */
 	pedirEnlace(telefono: string) {

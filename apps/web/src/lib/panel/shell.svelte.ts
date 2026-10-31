@@ -3,6 +3,7 @@
  * preferencias de la persona (tema y modo), que se guardan en cookies para el primer render.
  */
 import { getContext, setContext } from 'svelte';
+import { PERMISOS } from './permisos.ts';
 
 export type Tema = 'light' | 'dark';
 export type Modo = 'simple' | 'completo';
@@ -28,6 +29,12 @@ export class Shell {
 	modo = $state<Modo>('completo');
 	/** La tienda toma turnos (o es de servicios): se ve la sección Turnos. */
 	turnos = $state(false);
+	/** Lo que el rol de la persona puede ver (lib/panel/permisos.ts). */
+	permisos = $state<readonly string[]>(PERMISOS);
+	/** Las tiendas de la persona, para elegir cuál ver (con una sola no hay selector). */
+	tiendas = $state<{ id: string; nombre: string; rol: string }[]>([]);
+	/** La tienda que se está viendo. */
+	tiendaId = $state('');
 
 	// El modo Simple ya no se ofrece (confundía): quien lo tenía guardado vuelve al completo.
 	constructor(tema: Tema) {

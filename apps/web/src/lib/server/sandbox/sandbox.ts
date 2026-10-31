@@ -6,7 +6,7 @@
  * demo cuesta una escritura y no cientos, y el cupo gratis de D1 (100.000 escrituras por día)
  * alcanza para muchas visitas.
  */
-import { PERMISOS, ROLES, fijo, type Rol } from '#lib/panel/permisos.ts';
+import { PERMISOS_DE, type RolInvitable } from '#lib/panel/permisos.ts';
 import {
 	configuracionDemo,
 	type EstadoCuenta,
@@ -68,7 +68,7 @@ import type {
 	Dominios,
 	MisDatos,
 	PreferenciasAvisos,
-	Permisos,
+	Acceso,
 	PlanCuenta,
 	Configuracion,
 	Miembro,
@@ -2003,10 +2003,18 @@ export class DatosSandbox implements Datos {
 			avisos: g('avisos', {}),
 			cerradas: new Set(g<string[]>('cerradas', [])),
 			quitados: new Set(g<string[]>('quitados', [])),
-			roles: new Map(Object.entries(g<Record<string, Miembro['rol']>>('roles', {}))),
-			invitados: g<Invitado[]>('invitados', []),
+			// «Depósito» pasó a «Local» (docs/decisiones.md §36): lo guardado antes se lee con el nombre nuevo.
+			roles: new Map(
+				Object.entries(g<Record<string, string>>('roles', {})).map(([k, r]) => [
+					k,
+					(r === 'deposito' ? 'local' : r) as Miembro['rol']
+				])
+			),
+			invitados: g<Invitado[]>('invitados', []).map((i) => ({
+				...i,
+				rol: ((i.rol as string) === 'deposito' ? 'local' : i.rol) as Miembro['rol']
+			})),
 			plan: g('plan', {}),
-			permisos: g('permisos', {}),
 			packs: g('packs', {}),
 			cancelado: g('cancelado', null),
 			oferta: g('oferta', null)
@@ -2053,7 +2061,36 @@ export class DatosSandbox implements Datos {
 		return otras.length;
 	}
 
-	async invitar(contacto: string, rol: Miembro['rol']): Promise<Miembro | 'repetido'> {
+	/** En la demo, quien prueba es la dueña de una sola tienda. */
+	async acceso(): Promise<Acceso> {
+		const t = await this.tienda();
+		return {
+			tiendaId: t.id,
+			rol: 'duenio',
+			permisos: PERMISOS_DE.duenio,
+			tiendas: [{ id: t.id, nombre: t.nombre, slug: t.slug, rol: 'duenio' }]
+		};
+	}
+
+	async elegirTienda(id: string): Promise<Resultado> {
+		return id === (await this.tienda()).id ? 'ok' : 'no-existe';
+	}
+
+	/** En la demo no sale ningún mail: la invitación vuelve a vencer en 7 días desde ahora. */
+	async reenviarInvitacion(id: string): Promise<Resultado> {
+		const e = await this.estadoCuenta();
+		if (!e.invitados.some((i) => i.id === id)) return 'no-existe';
+		await guardarCambio(
+			this.db,
+			this.sb.id,
+			'cuenta',
+			'invitados',
+			e.invitados.map((i) => (i.id === id ? { ...i, en: Date.now() } : i))
+		);
+		return 'ok';
+	}
+
+	async invitar(contacto: string, rol: RolInvitable): Promise<Miembro | 'repetido'> {
 		const c = await this.configuracion();
 		const v = contacto.trim().toLowerCase();
 		if (c.equipo.some((m) => m.contacto.toLowerCase() === v)) return 'repetido';
@@ -2146,38 +2183,10 @@ export class DatosSandbox implements Datos {
 		await guardarCambio(this.db, this.sb.id, 'cuenta', 'cancelado', null);
 	}
 
-	async permisos(): Promise<Permisos> {
-		const e = await this.estadoCuenta();
-		return {
-			permisos: PERMISOS.map((p) => ({
-				id: p.id,
-				titulo: p.titulo,
-				detalle: p.detalle,
-				roles: Object.fromEntries(
-					ROLES.map((r, i) => [
-						r,
-						fijo(p.id, r) ? !!p.def[i] : (e.permisos[`${p.id}:${r}`] ?? !!p.def[i])
-					])
-				) as Permisos['permisos'][number]['roles']
-			}))
-		};
-	}
-
-	async fijarPermiso(permiso: string, rol: Rol, activo: boolean): Promise<Resultado> {
-		if (!PERMISOS.some((p) => p.id === permiso)) return 'no-existe';
-		if (fijo(permiso, rol)) return 'no-se-puede';
-		const e = await this.estadoCuenta();
-		await guardarCambio(this.db, this.sb.id, 'cuenta', 'permisos', {
-			...e.permisos,
-			[`${permiso}:${rol}`]: activo
-		});
-		return 'ok';
-	}
-
-	async cambiarRol(id: string, rol: Miembro['rol']): Promise<Resultado> {
+	async cambiarRol(id: string, rol: RolInvitable): Promise<Resultado> {
 		const m = (await this.configuracion()).equipo.find((x) => x.id === id);
 		if (!m) return 'no-existe';
-		if (m.vos || rol === 'duenio') return 'no-se-puede';
+		if (m.vos || m.rol === 'duenio') return 'no-se-puede';
 		const e = await this.estadoCuenta();
 		await guardarCambio(this.db, this.sb.id, 'cuenta', 'roles', {
 			...Object.fromEntries(e.roles),

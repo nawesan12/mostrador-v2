@@ -5,12 +5,12 @@
 	import { page } from '$app/state';
 	import Icon from '#lib/components/Icon.svelte';
 	import Interruptor from '#lib/components/Interruptor.svelte';
-	import Modal from '#lib/components/Modal.svelte';
 	import Seo from '#lib/components/Seo.svelte';
 	import * as I from '#lib/icons.ts';
 	import { unsplash } from '#lib/landing/formato.ts';
 	import { anim } from '#lib/panel/anim.ts';
 	import { diaDeMes, haceCorto, pesos } from '#lib/panel/formato.ts';
+	import { AREAS, NOMBRE_ROL } from '#lib/panel/permisos.ts';
 	import { PLANES } from '#lib/panel/planes.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 
@@ -18,22 +18,29 @@
 	let { data } = $props();
 	/**
 	 * Con la API real, los interruptores de Avisos se guardaban pero nada los usaba: los avisos se
-	 * manejan en Notificaciones. Invitar tampoco le llega a nadie todavía.
+	 * manejan en Notificaciones.
 	 */
 	const demo = $derived(!!page.data.demo);
 	const ui = getUi();
 
-	const TABS = [
-		['negocio', I.phStorefrontFill, 'Negocio'],
-		['equipo', I.phUsersThreeFill, 'Equipo y permisos'],
-		['seguridad', I.phShieldCheckFill, 'Seguridad'],
-		['avisos', I.phBellRingingFill, 'Notificaciones'],
-		['plan', I.phCrownSimpleFill, 'Plan']
+	// Cada pestaña con el permiso que pide (docs/decisiones.md §36): la seguridad y las sesiones son
+	// de cada persona, así que las ve cualquiera del equipo.
+	const TODAS = [
+		['negocio', I.phStorefrontFill, 'Negocio', 'tienda'],
+		['equipo', I.phUsersThreeFill, 'Equipo y permisos', 'cuenta'],
+		['seguridad', I.phShieldCheckFill, 'Seguridad', 'panel'],
+		['avisos', I.phBellRingingFill, 'Notificaciones', 'tienda'],
+		['plan', I.phCrownSimpleFill, 'Plan', 'cuenta']
 	] as const;
-	type Tab = (typeof TABS)[number][0];
+	type Tab = (typeof TODAS)[number][0];
+	const permisos = $derived(page.data.acceso?.permisos ?? []);
+	const TABS = $derived(TODAS.filter(([, , , p]) => permisos.includes(p)));
 	// ?tab=seguridad: el link del mail «Entraron a tu cuenta» abre directo en las sesiones.
 	const pedida = page.url.searchParams.get('tab');
-	let tab = $state<Tab>(TABS.find(([k]) => k === pedida)?.[0] ?? 'negocio');
+	let elegida = $state<Tab | null>(null);
+	const tab = $derived<Tab>(
+		elegida ?? TABS.find(([k]) => k === pedida)?.[0] ?? TABS[0]?.[0] ?? 'seguridad'
+	);
 
 	async function pedir(url: string, method: string, cuerpo?: unknown) {
 		const r = await fetch(url, {
@@ -69,30 +76,6 @@
 		if (!(await pedir('/panel/configuracion/negocio', 'PUT', negocio))) return;
 		await invalidateAll();
 		ui.toast({ k: 'ok', title: 'Datos guardados', desc: 'Se ven en la tienda y en tus facturas' });
-	}
-
-	// ---- Equipo ----
-	const ROL = { duenio: 'Dueña', admin: 'Admin', ventas: 'Ventas', deposito: 'Depósito' } as const;
-	const AREAS = {
-		duenio: ['Todo'],
-		admin: ['Todo menos plan'],
-		ventas: ['Pedidos', 'Bandeja'],
-		deposito: ['Stock', 'Envíos']
-	} as const;
-	let invitando = $state(false);
-	let contacto = $state('');
-	let rol = $state<'admin' | 'ventas' | 'deposito'>('ventas');
-	async function invitar(e: SubmitEvent) {
-		e.preventDefault();
-		if (!(await pedir('/panel/equipo', 'POST', { contacto, rol }))) return;
-		invitando = false;
-		await invalidateAll();
-		ui.toast({
-			k: 'ok',
-			title: 'Invitación enviada',
-			desc: 'Le pedimos que active la doble verificación al entrar'
-		});
-		contacto = '';
 	}
 
 	// ---- Seguridad y avisos ----
@@ -193,16 +176,18 @@
 				<button
 					type="button"
 					aria-current={tab === id ? 'page' : undefined}
-					onclick={() => (tab = id)}><Icon icon={icono} size={17} />{t}</button
+					onclick={() => (elegida = id)}><Icon icon={icono} size={17} />{t}</button
 				>
 			{/each}
 			<!-- Envíos y retiro tiene su pantalla (también se llega desde Envíos). -->
-			<a href={resolve('/panel/envios/configurar')}
-				><Icon icon={I.phTruckFill} size={17} />Envíos y retiro<Icon
-					icon={I.phArrowRightBold}
-					size={12}
-				/></a
-			>
+			{#if permisos.includes('tienda')}
+				<a href={resolve('/panel/envios/configurar')}
+					><Icon icon={I.phTruckFill} size={17} />Envíos y retiro<Icon
+						icon={I.phArrowRightBold}
+						size={12}
+					/></a
+				>
+			{/if}
 		</nav>
 
 		<div class="contenido">
@@ -241,12 +226,10 @@
 							>Equipo · {data.equipo.length}
 							{data.equipo.length === 1 ? 'persona' : 'personas'}</span
 						>
-						<!-- Con la API la invitación no le llega a nadie (no hay mail ni forma de aceptarla). -->
-						{#if demo}
-							<button type="button" class="oscuro" onclick={() => (invitando = true)}
-								>Invitar</button
-							>
-						{/if}
+						<!-- Se invita desde Usuarios y permisos (un solo lugar, con reenviar y cancelar). -->
+						<a class="oscuro" href={resolve('/panel/[seccion]', { seccion: 'usuarios-y-permisos' })}
+							>Invitar</a
+						>
 					</div>
 					<div class="miembros">
 						{#each data.equipo as m (m.id)}
@@ -258,7 +241,7 @@
 								<span class="m-txt"
 									><span class="m-n">{m.nombre}{m.vos ? ' (vos)' : ''}</span><span class="m-e"
 										>{m.pendiente
-											? demo
+											? m.vence
 												? 'Invitación enviada'
 												: 'Invitación sin mandar'
 											: m.contacto}</span
@@ -267,7 +250,7 @@
 								<span class="permisos"
 									>{#each AREAS[m.rol] as p (p)}<span>{p}</span>{/each}</span
 								>
-								<span class="rol" class:duenio={m.rol === 'duenio'}>{ROL[m.rol]}</span>
+								<span class="rol" class:duenio={m.rol === 'duenio'}>{NOMBRE_ROL[m.rol]}</span>
 								{#if m.dobleFactor}<span title="Doble verificación activa"
 										><Icon icon={I.phShieldCheckFill} size={17} style="color:#237550" /></span
 									>{/if}
@@ -366,36 +349,6 @@
 		</div>
 	</div>
 </div>
-
-<Modal bind:open={invitando} titulo="Invitar al equipo" ancho={440}>
-	<form onsubmit={invitar}>
-		<div class="m-t">Invitar al equipo</div>
-		<div class="m-d">Le llega la invitación y entra con su propio usuario.</div>
-		<label class="field m-campo"
-			>Email o WhatsApp<input
-				class="input"
-				bind:value={contacto}
-				maxlength="120"
-				placeholder="nombre@mail.com o 11 5555 5555"
-			/></label
-		>
-		<div class="roles" role="group" aria-label="Rol">
-			{#each [['admin', 'Admin', 'Todo menos plan y usuarios'], ['ventas', 'Ventas', 'Pedidos, clientes y WhatsApp'], ['deposito', 'Depósito', 'Stock, preparación y envíos']] as const as [id, t, d] (id)}
-				<button type="button" aria-pressed={rol === id} onclick={() => (rol = id)}
-					><b>{t}</b><span>{d}</span></button
-				>
-			{/each}
-		</div>
-		<div class="m-acc">
-			<button type="button" class="btn btn-secondary" onclick={() => (invitando = false)}
-				>Cancelar</button
-			>
-			<button class="btn btn-primary" disabled={contacto.trim().length < 6}
-				>Mandar invitación</button
-			>
-		</div>
-	</form>
-</Modal>
 
 <style>
 	.pagina {
@@ -514,6 +467,7 @@
 		font-weight: 600;
 	}
 	.oscuro {
+		text-decoration: none;
 		padding: 9px 14px;
 		border-radius: 999px;
 		border: 0;
@@ -764,53 +718,6 @@
 	.plan.actual button {
 		background: #b0441d;
 		color: #fff;
-	}
-	.m-t {
-		font-size: 21px;
-		font-weight: 600;
-		letter-spacing: -0.02em;
-	}
-	.m-d {
-		margin-top: 6px;
-		font-size: 14.5px;
-		color: var(--mu);
-	}
-	.m-campo {
-		margin-top: 16px;
-	}
-	.roles {
-		margin-top: 12px;
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
-	}
-	.roles button {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		gap: 2px;
-		padding: 10px 12px;
-		border-radius: 14px;
-		border: 1.5px solid var(--ln2);
-		background: transparent;
-		color: var(--tx);
-		text-align: left;
-		font:
-			500 13px 'Instrument Sans',
-			sans-serif;
-	}
-	.roles button span {
-		color: var(--mu);
-	}
-	.roles button[aria-pressed='true'] {
-		border-color: #d2582f;
-		background: rgba(210, 88, 47, 0.06);
-	}
-	.m-acc {
-		margin-top: 20px;
-		display: flex;
-		gap: 8px;
-		justify-content: flex-end;
 	}
 	@media (max-width: 899px) {
 		.grilla {

@@ -20,8 +20,16 @@
 	const shell = setShell(new Shell(untrack(() => data.tema)));
 	// La sección Turnos (también en el primer render del servidor, donde los efectos no corren).
 	shell.turnos = untrack(() => data.turnos);
+	// Lo que el rol puede ver y las tiendas de la persona (también en el primer render del servidor).
+	const acceso = () => {
+		shell.permisos = data.acceso.permisos;
+		shell.tiendas = data.acceso.tiendas;
+		shell.tiendaId = data.acceso.tiendaId;
+	};
+	untrack(acceso);
 	$effect.pre(() => {
 		shell.turnos = data.turnos;
+		acceso();
 	});
 	const donde = $derived(ubicar(page.url.pathname) ?? { seccion: 'Resumen', area: AREAS[0] });
 	const sinLeer = $derived(data.resumen.notificaciones.some((n) => !n.leida));

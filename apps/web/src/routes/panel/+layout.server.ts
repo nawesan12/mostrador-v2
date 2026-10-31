@@ -8,15 +8,18 @@ import type { LayoutServerLoad } from './$types';
  */
 export const load: LayoutServerLoad = async ({ locals, cookies }) => {
 	const datos = datosDe(locals);
-	const [tienda, resumen, ajustes] = await Promise.all([
+	const [tienda, resumen, ajustes, acceso] = await Promise.all([
 		datos.tienda(),
 		datos.resumen(),
 		// Si la API todavía no responde turnos, la sección queda como la del rubro.
-		datos.ajustesTurnos().catch(() => null)
+		datos.ajustesTurnos().catch(() => null),
+		// El rol de la persona y sus tiendas: el menú muestra sólo lo que puede (Go igual responde 403).
+		datos.acceso()
 	]);
 	return {
 		tienda,
 		resumen,
+		acceso,
 		// En la demo, la portada de su plantilla; una tienda real no tiene foto propia todavía, así que
 		// van sus iniciales y no la foto de stock de la plantilla.
 		fotoTienda: usaSandbox() ? (plantilla(tienda.plantilla)?.img ?? null) : null,
