@@ -103,7 +103,10 @@ jobs:
           go run ./cmd/mostradorctl bootstrap
           go run ./cmd/mostradorctl migrar
           go build -o /tmp/api ./cmd/api
+          go build -o /tmp/worker ./cmd/worker
           /tmp/api > /tmp/api.log 2>&1 &
+          # El worker manda lo que sale por el outbox (invitaciones, avisos): sin él esos mails no llegan.
+          /tmp/worker > /tmp/worker.log 2>&1 &
           for i in $(seq 1 30); do curl -sf localhost:4000/salud/listo && break; sleep 1; done
           # Si la API no arrancó, que falle acá y no en los e2e (con «Network connection lost»).
           curl -sf localhost:4000/salud/listo || (cat /tmp/api.log; exit 1)
@@ -115,7 +118,7 @@ jobs:
           bunx playwright install --with-deps chromium
           bun run test:e2e:api
       - if: failure()
-        run: cat /tmp/api.log
+        run: cat /tmp/api.log /tmp/worker.log
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

@@ -105,8 +105,10 @@ test('registro, salir, recuperar por mail, contraseña nueva e ingreso', async (
 	await page.getByRole('button', { name: 'Ingresar', exact: true }).click();
 	await expect(page).toHaveURL(/\/panel$/);
 	await page.request.post('/salir', { headers: { origin: 'http://localhost:4174' } });
+	// Con tiempo real, el panel abierto se entera de que la sesión se cerró y va solo a ingresar.
+	await expect(page).toHaveURL(/\/ingresar(\?|$)/);
 	await page.goto('/panel');
-	await expect(page).toHaveURL(/\/ingresar$/);
+	await expect(page).toHaveURL(/\/ingresar(\?|$)/);
 });
 
 test('ingreso con proveedores apagados y link por WhatsApp', async ({ page }) => {
