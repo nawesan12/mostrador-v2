@@ -882,3 +882,41 @@ existe; esto deja listo lo que va a usar.
 - **Sólo publicados**: uno pausado avisa «Primero publicalo», con el botón para publicarlo.
 - **El link** es el slug guardado del producto (fijo desde que se creó, migración 00043): la lista y
   la ficha del panel ahora lo leen de la base en vez de armarlo del nombre.
+
+## 43. El panel instalable como app y el push web (migración 00060)
+
+Mientras no exista la app nativa, el panel se instala en la pantalla de inicio y recibe los mismos
+avisos que el iPhone de §40.
+
+- **Instalable sólo el panel**: el `<link rel="manifest">` (`static/panel/manifest.webmanifest`,
+  «Tu Local Web», `start_url` y `scope` `/panel`, `standalone`), el apple-touch-icon y las metas de iOS
+  van en el `<svelte:head>` del armazón del panel. La landing y las tiendas no llevan manifest: una
+  tienda nunca se instala como Tu Local Web. Íconos (192, 512 «any» y «maskable», 180 para iOS e
+  insignia monocroma de 96 para Android) salen del isotipo del handoff.
+- **Service worker** (`static/sw-panel.js`, alcance `/panel`): no guarda nada del panel (pedidos,
+  ventas y clientes van siempre a la red). Sólo guarda `panel/sin-conexion.html` (Tincho
+  desenchufado, «Reintentar», se recarga sola al volver la red) y la muestra cuando una navegación
+  del panel falla sin conexión.
+- **Invitación** (`InstalarApp.svelte`, en el Inicio): sólo en el celular. iPhone: los pasos de
+  Safari (Compartir › Agregar a inicio) con los íconos que se ven ahí; Android: botón que abre el
+  diálogo del sistema (`beforeinstallprompt`, guardado temprano desde `app.html`). «Ahora no» la
+  cierra para siempre en ese navegador; abierta desde el ícono (`display-mode: standalone`), no sale.
+- **Push web** (Web Push estándar, sin Firebase): `plataforma/webpush` cifra con RFC 8291
+  (aes128gcm, ECDH P-256, HKDF; verificado con el vector del apéndice A) y firma VAPID ES256, sólo
+  con la biblioteca estándar. Config `MOSTRADOR_VAPID_PUBLICA`, `MOSTRADOR_VAPID_PRIVADA` (base64url,
+  `go run ./cmd/vapid`) y `MOSTRADOR_VAPID_SUJETO` (`mailto:`); sin las tres, apagado (la API da la
+  clave vacía y el panel dice «Todavía no está disponible»). Cambiar las claves invalida todas las
+  suscripciones.
+- **Atada a la sesión**: `auth.suscripciones_web`, hermana de `auth.dispositivos` (RLS por persona,
+  `ON DELETE CASCADE` con la sesión, el endpoint único se mueve de sesión). Sólo endpoints de servicios
+  de push conocidos (FCM, Apple, Mozilla, Windows): el worker les hace un POST.
+  `GET/POST/DELETE /v1/panel/push-web` y `POST /v1/panel/push-web/prueba` (`roles.Panel`, sólo con
+  la sesión de una persona).
+- **Envío**: los mismos manejadores de §40 y §41 (`push.venta`, `push.pregunta_ml`,
+  `push.sin_stock`, `cuenta.ingreso_push`) mandan por APNs y por Web Push con las mismas reglas de
+  rol y montos y la misma preferencia (`venta:celular`). 404/410 borran la suscripción; 429 y 5xx
+  reintentan el evento (el `Topic` evita verlo dos veces). El aviso es JSON (`title`, `body`, `url`
+  del panel, `tienda`, `tag`); al tocarlo, el service worker elige esa tienda y abre la página.
+- **En Notificaciones**, «Push en este celular»: activar (pide el permiso al tocar), «Mandame un
+  aviso de prueba» (`cuenta.push_prueba`, sólo a esa sesión) y desactivar. En el iPhone sólo anda con
+  el panel instalado e iOS 16.4 o más nuevo, y la fila lo dice.
