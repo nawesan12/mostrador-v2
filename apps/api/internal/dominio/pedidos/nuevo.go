@@ -131,9 +131,14 @@ func CrearDesdeProductos(ctx context.Context, pool tx, tiendaID string, n Pedido
 			if i.Cantidad < 1 || i.Cantidad > 10000 {
 				return errors.New("cantidad inválida")
 			}
-			it, err := descontar(ctx, t, tiendaID, i)
+			it, quedan, err := descontar(ctx, t, tiendaID, i)
 			if err != nil {
 				return err
+			}
+			if quedan == 0 {
+				if err := avisarSinStock(ctx, t, tiendaID, i); err != nil {
+					return err
+				}
 			}
 			if p, ok := n.Precios[i.ProductoID+":"+i.VarianteID]; ok && i.VarianteID != "" {
 				it.Precio = p
@@ -239,26 +244,28 @@ func lineasDescuento(n PedidoNuevo) []Descuento {
 }
 
 // descontar baja el stock de la línea sólo si alcanza (la condición del UPDATE evita vender lo que no
-// hay con dos cajas a la vez) y devuelve el ítem con el precio y la foto de la tienda.
-func descontar(ctx context.Context, t pgx.Tx, tiendaID string, i Linea) (Item, error) {
+// hay con dos cajas a la vez) y devuelve el ítem con el precio y la foto de la tienda, y cuántas
+// unidades quedan (del producto o de la variante).
+func descontar(ctx context.Context, t pgx.Tx, tiendaID string, i Linea) (Item, int, error) {
 	var it Item
+	var quedan int
 	if i.VarianteID == "" {
 		err := t.QueryRow(ctx, `UPDATE productos SET stock = stock - $3
 			WHERE tienda_id = $1 AND id::text = $2 AND stock >= $3 AND opciones = '[]'::jsonb
-			RETURNING nombre, foto, precio`, tiendaID, i.ProductoID, i.Cantidad).Scan(&it.Nombre, &it.Foto, &it.Precio)
+			RETURNING nombre, foto, precio, stock`, tiendaID, i.ProductoID, i.Cantidad).Scan(&it.Nombre, &it.Foto, &it.Precio, &quedan)
 		if !errors.Is(err, pgx.ErrNoRows) {
-			return it, err
+			return it, quedan, err
 		}
 		var conOpciones *bool
 		_ = t.QueryRow(ctx, `SELECT opciones <> '[]'::jsonb FROM productos WHERE tienda_id = $1 AND id::text = $2`,
 			tiendaID, i.ProductoID).Scan(&conOpciones)
 		switch {
 		case conOpciones == nil:
-			return it, ErrProducto
+			return it, 0, ErrProducto
 		case *conOpciones:
-			return it, ErrSinVariante
+			return it, 0, ErrSinVariante
 		}
-		return it, ErrSinStock
+		return it, 0, ErrSinStock
 	}
 	// La variante: activa, de ese producto y de esta tienda (RLS además lo asegura).
 	var opciones []listas.Opcion
@@ -268,24 +275,24 @@ func descontar(ctx context.Context, t pgx.Tx, tiendaID string, i Linea) (Item, e
 		FROM productos p
 		WHERE v.tienda_id = $1 AND v.producto_id::text = $2 AND v.id::text = $3 AND v.activa AND v.stock >= $4
 			AND p.tienda_id = v.tienda_id AND p.id = v.producto_id AND p.opciones <> '[]'::jsonb
-		RETURNING p.nombre, coalesce(v.foto, p.foto), coalesce(v.precio, p.precio), v.id::text, v.valores, p.opciones`,
-		tiendaID, i.ProductoID, i.VarianteID, i.Cantidad).Scan(&it.Nombre, &it.Foto, &it.Precio, &id, &valores, &opciones)
+		RETURNING p.nombre, coalesce(v.foto, p.foto), coalesce(v.precio, p.precio), v.id::text, v.valores, p.opciones, v.stock`,
+		tiendaID, i.ProductoID, i.VarianteID, i.Cantidad).Scan(&it.Nombre, &it.Foto, &it.Precio, &id, &valores, &opciones, &quedan)
 	if errors.Is(err, pgx.ErrNoRows) {
 		var activa *bool
 		_ = t.QueryRow(ctx, `SELECT v.activa FROM variantes v JOIN productos p ON p.tienda_id = v.tienda_id AND p.id = v.producto_id
 			WHERE v.tienda_id = $1 AND v.producto_id::text = $2 AND v.id::text = $3 AND p.opciones <> '[]'::jsonb`,
 			tiendaID, i.ProductoID, i.VarianteID).Scan(&activa)
 		if activa != nil && *activa {
-			return it, ErrSinStock
+			return it, 0, ErrSinStock
 		}
-		return it, ErrVariante
+		return it, 0, ErrVariante
 	}
 	if err != nil {
-		return it, err
+		return it, 0, err
 	}
 	texto := listas.TextoVariante(opciones, valores)
 	it.VarianteID, it.Variante = &id, &texto
-	return it, nil
+	return it, quedan, nil
 }
 
 func rutasNuevo(mux *http.ServeMux, pool tx, con func(func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc) {

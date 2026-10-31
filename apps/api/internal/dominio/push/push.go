@@ -3,8 +3,8 @@
 // La app registra el token de APNs de cada iPhone atado a la sesión con que entró
 // (POST /v1/panel/dispositivos) y lo da de baja al salir (DELETE). El worker manda, por el outbox:
 // «Nueva venta #N» (push.venta, el mismo momento que el mail tienda.venta), «Pregunta nueva en
-// Mercado Libre» (push.pregunta_ml) y «Entraron a tu cuenta» (cuenta.ingreso_push, sólo a la
-// persona). Cada persona recibe lo que su rol puede ver: los montos, sólo con Finanzas.
+// Mercado Libre» (push.pregunta_ml), «Te quedaste sin stock» (push.sin_stock, §41) y «Entraron a tu
+// cuenta» (cuenta.ingreso_push, sólo a la persona). Cada persona recibe lo que su rol puede ver: los montos, sólo con Finanzas.
 package push
 
 import (

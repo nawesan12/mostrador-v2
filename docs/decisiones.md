@@ -844,3 +844,27 @@ existe; esto deja listo lo que va a usar.
   `preguntas/ml/<id>`, `cuenta/seguridad`) y `tienda` para abrir la pantalla.
 - **Preferencia**: Notificaciones › «Push en el iPhone» es `venta:celular` de la matriz (prendido por
   defecto); el worker la mira al mandar. Sin columna nueva.
+
+## 41. «Te quedaste sin stock»: mail y push al llegar a 0 (migración 00059)
+
+- **Cuándo**: una venta deja en 0 un producto publicado o una de sus variantes activas. Toda venta
+  pasa por `pedidos.CrearDesdeProductos` (tienda online, punto de venta, Crear pedido y Mercado
+  Libre), así que el aviso se encola ahí, en Go y en la misma transacción que descuenta: si la venta
+  no se hace, tampoco el aviso. Bajar el stock a mano (Inventario, editor) no avisa: lo hizo la misma
+  persona. Un producto pausado no avisa.
+- **Uno por producto por día** (de Argentina): `productos.sin_stock_avisado` guarda el día del último
+  aviso; el UPDATE condicionado corre con la fila ya bloqueada por el descuento, así que de dos ventas
+  a la vez avisa una. Dos variantes del mismo producto el mismo día: un aviso. Sin tabla aparte, nada
+  que purgar.
+- **Dos eventos** (`tienda.sin_stock` y `push.sin_stock`, datos `{producto, variante}`), uno por
+  canal para que cada uno se reintente solo. Al mandar se vuelve a leer: si ya repusieron o lo
+  pausaron, no sale.
+- **A quién**: la dueña y quien tiene Productos (Dueña, Administración, Ventas; Local no). El mail, a
+  la dueña en el email del negocio (o el de su cuenta si no hay) y al resto en el de su cuenta, uno
+  por persona; si falla alguno pero ya salió otro, no se reintenta (no se le manda dos veces a quien
+  ya lo tiene). El push, a los iPhone del equipo con Productos (`ruta: producto/<id>`).
+- **Qué dice**: «Te quedaste sin stock», el producto (con la variante) y que en la tienda online
+  figura «Sin stock». Botón «Reponer stock» a `/panel/productos?editar=<id>`, que abre el editor.
+  Plantilla de los mails de la tienda.
+- **Preferencia**: Notificaciones › «Sin stock» (`sinstock:email` y `sinstock:celular` de la matriz,
+  prendidos por defecto); el worker la mira al mandar.

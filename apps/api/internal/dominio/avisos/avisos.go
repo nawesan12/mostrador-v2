@@ -34,7 +34,7 @@ type Servicio struct {
 
 func (s *Servicio) Manejadores() map[string]outbox.Manejador {
 	return map[string]outbox.Manejador{"comprador.aviso": s.manejar, "pregunta.respondida": s.preguntaRespondida,
-		"tienda.venta": s.ventaNueva}
+		"tienda.venta": s.ventaNueva, "tienda.sin_stock": s.sinStock}
 }
 
 type item struct {

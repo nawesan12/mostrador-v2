@@ -21,6 +21,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/configuracion"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/listas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/push"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/vidriera"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/apns"
@@ -400,6 +401,55 @@ func TestVentaNuevaPorRol(t *testing.T) {
 	}
 	if len(f.envios) != 4 {
 		t.Fatalf("con el push apagado salieron %d más", len(f.envios)-4)
+	}
+}
+
+// «Te quedaste sin stock» al iPhone: a quien tiene Productos (no a Local), con su interruptor.
+func TestSinStockPorRol(t *testing.T) {
+	e := armar(t)
+	ctx := context.Background()
+	for rol, c := range map[string]string{"duenio": "a", "admin": "b", "ventas": "c", "local": "d"} {
+		e.registrar(t, rol, token(c))
+	}
+	f := &apnsFalso{}
+	s := &push.Servicio{Pool: e.b.App, APNs: f, Log: silencio()}
+	w := &outbox.Worker{Pool: e.b.Worker, Manejadores: s.Manejadores()}
+	nuevo := func(nombre string) listas.Producto {
+		t.Helper()
+		uno := 1
+		p, err := listas.Guardar(ctx, e.b.App, e.tienda, "", listas.Editable{Nombre: nombre, Precio: 9000, Stock: &uno})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return p
+	}
+	ultima := func(p listas.Producto) {
+		t.Helper()
+		if _, _, err := pedidos.CrearDesdeProductos(ctx, e.b.App, e.tienda, pedidos.PedidoNuevo{Pago: "efectivo", Canal: "pos",
+			Items: []pedidos.Linea{{ProductoID: p.ID, Cantidad: 1}}}); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := w.Pasada(ctx); err != nil {
+			t.Fatal(err)
+		}
+	}
+	mate := nuevo("Mate imperial")
+	ultima(mate)
+	got := f.cuerpos()
+	if len(got) != 3 || got[token("d")] != "" {
+		t.Fatalf("salieron %d avisos, quería 3 (sin Local): %v", len(got), got)
+	}
+	if got[token("a")] != "Se vendió la última unidad de Mate imperial. Tocá para reponer." {
+		t.Errorf("cuerpo: %q", got[token("a")])
+	}
+	if ruta := f.envios[0].aviso["ruta"]; ruta != "producto/"+mate.ID {
+		t.Errorf("ruta: %v", ruta)
+	}
+	// Con Sin stock › Celular apagado, no sale.
+	e.admin(t, `UPDATE tiendas SET preferencias = jsonb_set(coalesce(preferencias, '{}'), '{canales}', '{"matriz":{"sinstock:celular":false}}') WHERE id = $1`, e.tienda)
+	ultima(nuevo("Yerba"))
+	if len(f.envios) != 3 {
+		t.Fatalf("con el push apagado salieron %d más", len(f.envios)-3)
 	}
 }
 

@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/roles"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/apns"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/outbox"
@@ -60,7 +61,63 @@ func (s *Servicio) Manejadores() map[string]outbox.Manejador {
 		"push.venta":          s.venta,
 		"push.pregunta_ml":    s.preguntaML,
 		"cuenta.ingreso_push": s.ingreso,
+		"push.sin_stock":      s.sinStock,
 	}
+}
+
+// AvisoSinStock: «Te quedaste sin stock» con el producto (y la variante), y la ruta para reponer.
+func AvisoSinStock(tienda, producto string, a pedidos.Agotado) Aviso {
+	nombre := a.Nombre
+	if a.Variante != "" {
+		nombre += " (" + a.Variante + ")"
+	}
+	return Aviso{Titulo: "Te quedaste sin stock", Cuerpo: "Se vendió la última unidad de " + nombre + ". Tocá para reponer.",
+		Hilo: HiloTienda(tienda), Ruta: "producto/" + producto, Tienda: tienda}
+}
+
+// sinStock: push.sin_stock, que encola Go al descontar (uno por producto por día, junto con el mail
+// tienda.sin_stock). A quien tiene Productos; no sale si la tienda apagó Sin stock › Celular ni si
+// el producto ya no está en 0 o se pausó.
+func (s *Servicio) sinStock(ctx context.Context, ev outbox.Evento) error {
+	if !s.activo() {
+		return nil
+	}
+	var d pedidos.SinStock
+	if json.Unmarshal(ev.Datos, &d) != nil || d.Producto == "" {
+		return nil
+	}
+	var a pedidos.Agotado
+	var prendido bool
+	err := s.Pool.EnTienda(ctx, ev.TiendaID, func(t pgx.Tx) error {
+		var err error
+		if a, err = pedidos.LeerSinStock(ctx, t, d); err != nil {
+			return err
+		}
+		return t.QueryRow(ctx, `SELECT coalesce(preferencias->'canales'->'matriz'->'sinstock:celular', 'true') <> 'false'
+			FROM tiendas WHERE id = $1`, ev.TiendaID).Scan(&prendido)
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if !prendido || !a.Sigue {
+		return nil
+	}
+	dest, err := s.deTienda(ctx, ev.TiendaID)
+	if err != nil {
+		return err
+	}
+	p := Payload(AvisoSinStock(ev.TiendaID, d.Producto, a))
+	var envios []apns.Envio
+	for _, x := range dest {
+		if roles.Puede(x.rol, roles.Productos) {
+			envios = append(envios, apns.Envio{Token: x.token, Entorno: x.entorno, Payload: p,
+				Colapso: "sin-stock-" + d.Producto, Vence: time.Now().Add(24 * time.Hour)})
+		}
+	}
+	return s.mandar(ctx, envios)
 }
 
 // destino es un iPhone con el rol de su persona en la tienda del aviso.
