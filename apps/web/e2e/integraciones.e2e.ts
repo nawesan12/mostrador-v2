@@ -20,14 +20,23 @@ test('integraciones: conectar, configurar y desconectar', async ({ page }) => {
 	expect(await sinDesborde(page)).toBeLessThanOrEqual(0);
 
 	// Filtrar por categoría.
+	// (Sólo las que se pueden conectar de verdad: en Envíos queda Correo Argentino.)
 	await page.getByRole('button', { name: 'Envíos', exact: true }).click();
-	await expect(page.locator('.tarjeta')).toHaveCount(3);
+	await expect(page.locator('.tarjeta')).toHaveCount(1);
+	await expect(page.locator('.tarjeta')).toContainText('Correo Argentino');
 	await page.getByRole('button', { name: 'Todas', exact: true }).click();
 
-	// Conectar una disponible.
-	const oca = page.locator('.tarjeta', { hasText: 'OCA' });
-	await oca.getByRole('button', { name: 'Conectar' }).click();
-	await expect(oca.getByText('● Conectada')).toBeVisible();
+	// Desconectar y volver a conectar una de las conectadas de la demo.
+	const gm = page.locator('.tarjeta', { hasText: 'Google Shopping' });
+	await gm.getByRole('button', { name: 'Configurar' }).click();
+	await page.getByRole('dialog').getByRole('button', { name: 'Desconectar' }).click();
+	await expect(
+		page.getByRole('status').filter({ hasText: 'Google Shopping desconectado' })
+	).toBeVisible();
+	// Conectar abre los pasos del feed; «Ya lo cargué» la deja conectada.
+	await gm.getByRole('button', { name: 'Conectar' }).click();
+	await page.getByRole('dialog').getByRole('button', { name: 'Ya lo cargué' }).click();
+	await expect(gm.getByText('● Conectada')).toBeVisible();
 
 	// Mercado Pago: configurar muestra la cuenta; desconectar y volver a conectar (en la demo vuelve sola).
 	const mp = page.locator('.tarjeta', { hasText: 'Mercado Pago' });

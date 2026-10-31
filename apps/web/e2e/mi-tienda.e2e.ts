@@ -27,16 +27,18 @@ test('mi tienda: ocultar, reordenar y cambiar colores queda sin publicar hasta p
 	await page.getByRole('button', { name: 'Ocultar Botón de WhatsApp' }).click();
 	await expect(page.locator('.sitio .wa')).toHaveCount(0);
 	await page.getByRole('button', { name: 'Subir Reseñas' }).click();
-	await page.getByRole('button', { name: 'Paleta 4' }).click();
+	await page
+		.getByRole('group', { name: 'Color de acento' })
+		.getByRole('button', { name: 'Color 4' })
+		.click();
 	await expect(page.getByRole('button', { name: 'Publicar cambios' })).toBeVisible();
 	await expect.poll(() => guardados, { timeout: 15_000 }).toBe(3);
 	await page.reload();
 	await listo(page);
 	await expect(page.locator('.panelito .s-t').nth(2)).toContainText('Reseñas');
-	await expect(page.getByRole('button', { name: 'Paleta 4' })).toHaveAttribute(
-		'aria-pressed',
-		'true'
-	);
+	await expect(
+		page.getByRole('group', { name: 'Color de acento' }).getByRole('button', { name: 'Color 4' })
+	).toHaveAttribute('aria-pressed', 'true');
 	await page.getByRole('button', { name: 'Publicar cambios' }).click();
 	await expect(page.getByText('Cambios publicados')).toBeVisible();
 	await expect(page.getByRole('button', { name: 'Todo publicado' })).toBeVisible();

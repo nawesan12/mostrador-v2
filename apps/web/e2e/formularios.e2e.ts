@@ -51,9 +51,11 @@ test('novedades: filtra por tipo y suma el email', async ({ page }) => {
 	await page.goto('/novedades');
 	await listo(page);
 	expect(await sinDesborde(page)).toBeLessThanOrEqual(0);
-	await expect(page.locator('article')).toHaveCount(9);
+	// Las mismas que lib/sitio/novedades.ts: todas, y después sólo los arreglos.
+	await expect(page.locator('article')).toHaveCount(6);
 	await page.getByRole('button', { name: 'Arreglo', exact: true }).click();
-	await expect(page.locator('article')).toHaveCount(2);
+	await expect(page.locator('article')).toHaveCount(1);
+	await expect(page.locator('article')).toContainText('Factura A con CUIT extranjero');
 	await expect(page.getByText('Agosto 2026')).toHaveCount(0);
 	await page.getByLabel('Tu email').fill('nada');
 	await page.getByRole('button', { name: 'Sumarme' }).click();

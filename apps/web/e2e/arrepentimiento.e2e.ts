@@ -24,7 +24,7 @@ test('botón de arrepentimiento de la tienda: código de trámite y devolución 
 	await page.getByLabel('Teléfono').fill('11 5555-0101');
 	await page.getByLabel('Código postal').fill('1414');
 	await page.getByLabel(/Dirección/).fill('Gorriti 4500');
-	await page.getByRole('radio', { name: /Correo Argentino/ }).click();
+	await page.getByRole('radio', { name: /Retiro en el local/ }).click();
 	await page.getByRole('radio', { name: /Transferencia/ }).click();
 	await page.getByRole('button', { name: /^Pagar/ }).click();
 	await expect(page).toHaveURL(/\/pedido\//);

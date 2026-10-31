@@ -29,13 +29,31 @@ test('reseñas: quien compró deja su reseña, el panel la ve con compra y la oc
 	await page.getByLabel('Teléfono').fill('11 5555-0101');
 	await page.getByLabel('Código postal').fill('1414');
 	await page.getByLabel(/Dirección/).fill('Gorriti 4500');
-	await page.getByRole('radio', { name: /Correo Argentino/ }).click();
+	await page.getByRole('radio', { name: /Retiro en el local/ }).click();
 	await page.getByRole('radio', { name: /Mercado Pago/ }).click();
 	await page.getByRole('button', { name: /^Pagar/ }).click();
 	await expect(page.getByRole('heading', { name: '¡Gracias, Lucía!' })).toBeVisible();
+	const confirmacion = page.url();
+	const numero = (await page
+		.locator('b', { hasText: /^#\d+$/ })
+		.first()
+		.textContent())!.slice(1);
+	// La reseña se pide recién cuando lo recibió (o lo retiró), no al pagar.
+	const titulo = page.getByRole('heading', { name: '¿Cómo te fue? Dejá tu reseña' });
+	await expect(titulo).toHaveCount(0);
+
+	// En el panel: listo para retirar y retirado.
+	await page.goto(`/panel/pedidos?pedido=${numero}`);
+	await listo(page);
+	const hoja = page.getByRole('dialog', { name: `Pedido #${numero}` });
+	await hoja.getByRole('button', { name: 'Marcar como listo para retirar' }).click();
+	await hoja.getByRole('button', { name: 'Marcar como retirado' }).click();
+	await expect(hoja.getByRole('button', { name: 'Marcar como retirado' })).toHaveCount(0);
 
 	// La reseña, desde la confirmación (con el código del pedido).
-	await expect(page.getByRole('heading', { name: '¿Cómo te fue? Dejá tu reseña' })).toBeVisible();
+	await page.goto(confirmacion);
+	await listo(page);
+	await expect(titulo).toBeVisible();
 	expect(await sinDesborde(page)).toBeLessThanOrEqual(0);
 	await page.locator('label', { hasText: '5 estrellas' }).click();
 	await expect(page.getByRole('radio', { name: '5 estrellas' })).toBeChecked();

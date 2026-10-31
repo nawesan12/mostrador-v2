@@ -90,12 +90,12 @@ test('registro, salir, recuperar por mail, contraseña nueva e ingreso', async (
 	await page.getByRole('button', { name: 'Guardar contraseña' }).click();
 	await expect(page.getByText('Listo, tu contraseña cambió.')).toBeVisible();
 
-	// El link se usa una sola vez.
+	// El link se usa una sola vez: al abrirlo de nuevo lo avisa de entrada, sin pedir la contraseña.
 	await page.goto(new URL(link!).pathname + new URL(link!).search);
 	await listo(page);
-	await page.getByLabel('Contraseña nueva', { exact: true }).fill('Otraclave1234');
-	await page.getByRole('button', { name: 'Guardar contraseña' }).click();
-	await expect(page.getByText(/El link venció o ya se usó/)).toBeVisible();
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText('El link venció o ya se usó');
+	await expect(page.getByLabel('Contraseña nueva', { exact: true })).toHaveCount(0);
+	await expect(page.getByRole('link', { name: 'Pedir un link nuevo' })).toBeVisible();
 
 	// Ingreso con la nueva y salida.
 	await page.goto('/ingresar');

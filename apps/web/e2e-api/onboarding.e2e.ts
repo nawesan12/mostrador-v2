@@ -57,10 +57,19 @@ test('se retoma donde quedó, el atrás vuelve un paso y terminado va al panel',
 	// Cobros y envíos, y «¡Listo!» con el link real de la tienda.
 	await seguir(page);
 	await expect(titulo(page)).toHaveText('Cómo te pagan y cómo entregás.');
+	// Llegar a «¡Listo!» lo guarda como terminado (en segundo plano): se espera antes de seguir.
+	const terminado = page.waitForResponse(
+		(r) =>
+			r.request().method() === 'POST' &&
+			r.url().includes('?/paso') &&
+			/listo=1|name="listo"\r\n\r\n1/.test(r.request().postData() ?? '')
+	);
 	await seguir(page);
 	await expect(page.getByRole('heading', { name: 'Tu tienda ya está en línea.' })).toBeVisible();
+	expect((await terminado).ok()).toBe(true);
 	const tienda = page.getByRole('link', { name: 'Ver mi tienda' });
-	await expect(tienda).toHaveAttribute('href', /\/t\/kiosco-ana/);
+	// Sin nombre en el registro ni cambio en «Tu negocio», la dirección sale del provisorio.
+	await expect(tienda).toHaveAttribute('href', /\/t\/la-tienda-de-ana(-\d+)?$/);
 	await expect(page.getByText('Sumá a tu equipo')).toHaveCount(0);
 
 	// Ya terminado: volver al onboarding lleva al panel.

@@ -54,7 +54,7 @@ test('una IA se conecta por OAuth, usa el servidor MCP y se desconecta', async (
 	});
 	await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 	await page.goto(`/oauth/autorizar?${q}`);
-	await expect(page).toHaveURL(/\/demo\?volver=/);
+	await expect(page).toHaveURL(/\/prueba\?volver=/);
 	await listo(page);
 	await page.getByRole('button', { name: /^Litoral/ }).click();
 	await expect(page).toHaveURL(/\/oauth\/autorizar\?/);
@@ -122,9 +122,12 @@ test('una IA se conecta por OAuth, usa el servidor MCP y se desconecta', async (
 
 	const productos = await rpc(request, tokens.access_token, 'tools/call', {
 		name: 'listar_productos',
-		arguments: { limite: 1 }
+		arguments: { limite: 50 }
 	});
-	const prod = productos.body.result.structuredContent.productos[0];
+	// Uno sin variantes: el stock de los que tienen se ajusta por variante (y la tool lo rechaza).
+	const prod = (
+		productos.body.result.structuredContent.productos as { id: string; precio: { texto: string } }[]
+	).find((p) => p.id === 'bombilla-alpaca')!;
 	expect(prod.id).toBeTruthy();
 	expect(prod.precio.texto).toMatch(/^\$/);
 

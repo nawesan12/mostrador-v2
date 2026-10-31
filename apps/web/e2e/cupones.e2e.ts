@@ -24,7 +24,14 @@ test('crear un cupón con el armador, pausarlo y duplicarlo', async ({ page }) =
 		.getByRole('button', { name: 'Porcentaje' })
 		.click();
 	await expect(page.locator('.tk-h')).toHaveText('15 % off');
-	await expect(page.locator('.calcula')).toContainText('Margen que te queda');
+	// Lo que cuesta cada uso sale del ticket promedio real (ya no se muestra un margen inventado).
+	const calcula = page.locator('.calcula');
+	await expect(calcula).toContainText('Te cuesta cada uso');
+	const montos = (await calcula.locator('.ca-f b').allTextContents()).map((t) =>
+		Number(t.replace(/\D/g, ''))
+	);
+	expect(montos).toHaveLength(2);
+	expect(Math.abs(montos[1] - montos[0] * 0.15)).toBeLessThanOrEqual(1);
 	await page.getByRole('button', { name: 'Crear PRUEBA20' }).click();
 	await expect(page.getByText('PRUEBA20 está activo')).toBeVisible();
 

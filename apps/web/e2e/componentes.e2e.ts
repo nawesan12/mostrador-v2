@@ -28,7 +28,8 @@ test.describe('/componentes', () => {
 
 	test('máximo 3 toasts a la vez', async ({ page }) => {
 		const boton = page.getByRole('button', { name: 'Toast', exact: true });
-		for (let i = 0; i < 5; i++) await boton.click();
+		// En el celular los avisos salen arriba y tapan el botón: el clic va directo al botón.
+		for (let i = 0; i < 5; i++) await boton.dispatchEvent('click');
 		await expect(page.locator('.pila .toast')).toHaveCount(3);
 	});
 

@@ -48,8 +48,11 @@ test('preparar un pedido, deshacerlo y verlo en la hoja', async ({ page }) => {
 	await listo(page);
 	const fila = page.locator('.fila').first();
 	const numero = (await fila.locator('.q-s').textContent())!.match(/#(\d+)/)![1];
+	// Un retiro en el local queda «listo para retirar» en vez de «preparado».
 	await fila.getByRole('button', { name: new RegExp(`Preparar #${numero}`) }).click();
-	await expect(page.getByText(`#${numero} preparado`)).toBeVisible();
+	await expect(
+		page.getByText(new RegExp(`^#${numero} (preparado|listo para retirar)$`))
+	).toBeVisible();
 	await page.getByRole('button', { name: 'Deshacer' }).click();
 	await expect(page.locator('.fila').filter({ hasText: `#${numero}` })).toBeVisible();
 
@@ -60,8 +63,8 @@ test('preparar un pedido, deshacerlo y verlo en la hoja', async ({ page }) => {
 		.click();
 	const hoja = page.getByRole('dialog', { name: `Pedido #${numero}` });
 	await expect(hoja.getByText('Historial')).toBeVisible();
-	await hoja.getByRole('button', { name: 'Marcar como preparado' }).click();
-	await expect(hoja.getByText('Listo para despachar').first()).toBeVisible();
+	await hoja.getByRole('button', { name: /^Marcar como (preparado|listo para retirar)$/ }).click();
+	await expect(hoja.getByText(/^Listo para (despachar|retirar)$/).first()).toBeVisible();
 });
 
 test('seleccionar varios y prepararlos en lote', async ({ page }) => {
@@ -87,8 +90,10 @@ test('el Resumen abre un pedido y exporta CSV', async ({ page }) => {
 	expect(r.headers()['content-type']).toContain('text/csv');
 	const csv = await r.text();
 	expect(csv.split('\r\n')[0]).toContain('Número;Fecha;Cliente');
-	// El canal sale en castellano (textos-export), no «wa».
-	expect(csv).toContain(';WhatsApp;');
+	// Canal en castellano, y sólo los de WhatsApp (el filtro de la URL).
+	const filas = csv.trim().split('\r\n').slice(1);
+	expect(filas.length).toBeGreaterThan(0);
+	for (const f of filas) expect(f.split(';')[4]).toBe('WhatsApp');
 });
 
 test('marcar pagado una transferencia desde la fila y deshacerlo', async ({ page }) => {

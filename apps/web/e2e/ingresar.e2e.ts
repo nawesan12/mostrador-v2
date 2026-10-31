@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
 	await page.addInitScript(() => localStorage.setItem('tlw-cookies', 'nec'));
 });
 
-test('login: errores en criollo, mostrar contraseña y en la demo lleva a /demo', async ({
+test('login: errores en criollo, mostrar contraseña y en la demo lleva a /prueba', async ({
 	page
 }) => {
 	await page.goto('/ingresar');
@@ -29,7 +29,7 @@ test('login: errores en criollo, mostrar contraseña y en la demo lleva a /demo'
 	await expect(clave).toHaveAttribute('type', 'text');
 
 	await page.getByRole('button', { name: 'Ingresar', exact: true }).click();
-	await expect(page).toHaveURL(/\/demo$/);
+	await expect(page).toHaveURL(/\/prueba$/);
 });
 
 test('registro: medidor de fuerza y términos obligatorios', async ({ page }) => {
@@ -120,7 +120,7 @@ test('WhatsApp pide el número y, en la demo, sigue a la demo', async ({ page })
 	await expect(page.getByText(/Escribí el número con código de área/)).toBeVisible();
 	await page.getByLabel('WhatsApp de tu cuenta').fill('11 5555-0000');
 	await page.getByRole('button', { name: 'Mandame el link' }).click();
-	await expect(page).toHaveURL(/\/demo$/);
+	await expect(page).toHaveURL(/\/prueba$/);
 });
 
 test('el link del WhatsApp pide un clic para entrar', async ({ page }) => {

@@ -40,7 +40,8 @@ test('el CTA lleva al registro', async ({ page }) => {
 		.getByRole('link', { name: /Crear mi tienda|Empezar/ })
 		.first()
 		.click();
-	await expect(page).toHaveURL(/\/onboarding$/);
+	// El paso queda en la dirección (?paso=N) para que recargar vuelva al mismo.
+	await expect(page).toHaveURL(/\/onboarding\?paso=0$/);
 });
 
 test('el chat de Tincho avanza solo', async ({ page }) => {
@@ -134,7 +135,7 @@ test('el modal de plantillas recorre, elige y lleva al registro con la plantilla
 		.getByRole('dialog')
 		.getByRole('link', { name: /Usar esta plantilla/ })
 		.click();
-	await expect(page).toHaveURL(/\/onboarding$/);
+	await expect(page).toHaveURL(/\/onboarding\?plantilla=[a-z-]+&paso=0$/);
 	expect(await page.evaluate(() => localStorage.getItem('ob-tpl'))).toBeTruthy();
 });
 

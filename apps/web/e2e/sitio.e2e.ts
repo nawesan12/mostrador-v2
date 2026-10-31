@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 for (const [ruta, h1] of [
-	['/seguridad', 'Tu negocio no se cae. Y nada se pierde.'],
+	['/seguridad', 'Tu negocio, cuidado desde el primer día.'],
 	['/nosotros', 'Hacemos que vender sea más barato y más simple para el que empieza.']
 ]) {
 	test(`${ruta} carga sin desborde`, async ({ page }) => {
@@ -24,14 +24,14 @@ test('las preguntas de seguridad se abren de a una', async ({ page }) => {
 	await page.goto('/seguridad');
 	await listo(page);
 	const primera = page.getByRole('button', {
-		name: '¿Qué pasa si se cae Tu Local Web en pleno Hot Sale?'
+		name: '¿Qué pasa si se cae Tu Local Web?'
 	});
 	const segunda = page.getByRole('button', { name: '¿Pueden ver los datos de mis clientes?' });
 	await expect(primera).toHaveAttribute('aria-expanded', 'true');
 	await segunda.click();
 	await expect(segunda).toHaveAttribute('aria-expanded', 'true');
 	await expect(primera).toHaveAttribute('aria-expanded', 'false');
-	await expect(page.getByText('Solo el personal de soporte que vos autorices')).toBeVisible();
+	await expect(page.getByText('nunca los vendemos ni los compartimos')).toBeVisible();
 });
 
 test('una ruta inexistente muestra el 404 del sitio', async ({ page }) => {
@@ -52,10 +52,17 @@ test('migrar: la pestaña sale de ?desde= y el botón lleva al registro con el o
 		'aria-pressed',
 		'true'
 	);
-	await expect(page.getByText('Traemos tus publicaciones de Mercado Libre')).toBeVisible();
+	// Lo que de verdad trae (traer las publicaciones de hoy todavía no).
+	await expect(page.getByText('Conectás tu cuenta de Mercado Libre')).toBeVisible();
+	// Tiendanube se conecta por OAuth (sin link); Shopify lleva el link de la tienda como origen.
 	await page.getByRole('button', { name: 'Desde Tiendanube' }).click();
 	await expect(page).toHaveURL(/desde=tiendanube/);
-	await page.getByLabel('Link de tu tienda en Tiendanube').fill('lucia.mitiendanube.com');
+	await expect(page.getByLabel('Link de tu tienda en Tiendanube')).toHaveCount(0);
+	await page.getByRole('button', { name: 'Desde Shopify' }).click();
+	await expect(page).toHaveURL(/desde=shopify/);
+	await page.getByLabel('Link de tu tienda en Shopify').fill('lucia.myshopify.com');
 	await page.getByRole('button', { name: 'Empezar' }).click();
-	await expect(page).toHaveURL(/\/onboarding\?desde=tiendanube&origen=lucia\.mitiendanube\.com$/);
+	await expect(page).toHaveURL(
+		/\/onboarding\?desde=shopify&origen=lucia\.myshopify\.com(&paso=0)?$/
+	);
 });

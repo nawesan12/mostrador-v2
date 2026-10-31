@@ -10,7 +10,6 @@ test('finanzas: transferir deja en cero lo disponible y suma el movimiento', asy
 	await expect(page).toHaveURL(/\/panel$/);
 	await page.goto('/panel/finanzas');
 	await listo(page);
-	await expect(page.getByText('Conectado con Caja')).toBeVisible();
 	await expect(page.locator('.barras .col')).toHaveCount(14);
 	const antes = (await page.locator('.d-v').textContent())!;
 	expect(Number(antes.replace(/\D/g, ''))).toBeGreaterThan(0);

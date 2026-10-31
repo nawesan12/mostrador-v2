@@ -52,5 +52,5 @@ test('informes: cambia la serie y exporta el CSV', async ({ page }) => {
 	const descarga = page.waitForEvent('download');
 	await page.getByRole('link', { name: 'Exportar' }).click();
 	const d = await descarga;
-	expect(d.suggestedFilename()).toBe('informe-12-meses.csv');
+	expect(d.suggestedFilename()).toBe('informe-clientes-nuevos-12-meses.csv');
 });

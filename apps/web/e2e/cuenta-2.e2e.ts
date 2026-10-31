@@ -69,5 +69,5 @@ test('mis datos: exportar en CSV y todo en ZIP; cerrar pide el nombre', async ({
 	await dialogo.getByRole('button', { name: 'Cerrar cuenta' }).click();
 	await expect(page).toHaveURL(/\/$/);
 	await page.goto('/panel');
-	await expect(page).toHaveURL(/\/demo$/);
+	await expect(page).toHaveURL(/\/prueba$/);
 });
