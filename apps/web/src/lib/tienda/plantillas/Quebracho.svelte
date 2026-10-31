@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { envia } from '../envio.ts';
 	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
 	import { untrack } from 'svelte';
@@ -1044,37 +1045,39 @@
 								><Icon icon={I.phWhatsappLogo} size={18} />Comprar por WhatsApp</a
 							>{/if}
 					</div>
-					<div style="margin-top:16px;padding:16px;border:1px solid rgba(43,37,32,.16)">
-						<label for="cp-ficha" style="font-size:14px;font-weight:600">Calculá el envío</label>
-						<div style="margin-top:10px;display:flex;gap:6px">
-							<input
-								id="cp-ficha"
-								bind:value={cp}
-								inputmode="numeric"
-								maxlength="4"
-								placeholder="Código postal"
-								style="flex:1;min-width:0;padding:11px 12px;border:0;background:#F7F3EE;font:400 14px 'Familjen Grotesk';color:#2B2520"
-								onkeydown={(e) => e.key === 'Enter' && calcular()}
-							/><button
-								type="button"
-								onclick={calcular}
-								style="padding:11px 16px;border:0;background:#2B2520;color:#EFE9E1;font:600 13.5px 'Familjen Grotesk';cursor:pointer"
-								>Calcular</button
-							>
-						</div>
-						{#if cotizado}<div
-								style="margin-top:10px;display:flex;flex-direction:column;gap:6px;font-size:13.5px"
-							>
-								{#each cotizado as o (o.id)}<span
-										style="display:flex;justify-content:space-between;gap:10px"
-										><span>{o.nombre} · {o.detalle}</span><b
-											style="white-space:nowrap;color:{o.precio
-												? '#2B2520'
-												: 'var(--acento, #4F5B3A)'}">{o.precio ? fmt(o.precio) : 'Gratis'}</b
-										></span
-									>{/each}
-							</div>{/if}
-					</div>
+					{#if envia(tienda.envios)}<div
+							style="margin-top:16px;padding:16px;border:1px solid rgba(43,37,32,.16)"
+						>
+							<label for="cp-ficha" style="font-size:14px;font-weight:600">Calculá el envío</label>
+							<div style="margin-top:10px;display:flex;gap:6px">
+								<input
+									id="cp-ficha"
+									bind:value={cp}
+									inputmode="numeric"
+									maxlength="4"
+									placeholder="Código postal"
+									style="flex:1;min-width:0;padding:11px 12px;border:0;background:#F7F3EE;font:400 14px 'Familjen Grotesk';color:#2B2520"
+									onkeydown={(e) => e.key === 'Enter' && calcular()}
+								/><button
+									type="button"
+									onclick={calcular}
+									style="padding:11px 16px;border:0;background:#2B2520;color:#EFE9E1;font:600 13.5px 'Familjen Grotesk';cursor:pointer"
+									>Calcular</button
+								>
+							</div>
+							{#if cotizado}<div
+									style="margin-top:10px;display:flex;flex-direction:column;gap:6px;font-size:13.5px"
+								>
+									{#each cotizado as o (o.id)}<span
+											style="display:flex;justify-content:space-between;gap:10px"
+											><span>{o.nombre} · {o.detalle}</span><b
+												style="white-space:nowrap;color:{o.precio
+													? '#2B2520'
+													: 'var(--acento, #4F5B3A)'}">{o.precio ? fmt(o.precio) : 'Gratis'}</b
+											></span
+										>{/each}
+								</div>{/if}
+						</div>{/if}
 					<div
 						style="margin-top:14px;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid rgba(43,37,32,.16)"
 					>

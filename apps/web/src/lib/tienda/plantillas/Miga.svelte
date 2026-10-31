@@ -1075,36 +1075,39 @@
 						>
 							{producto.descripcion}
 						</p>{/if}
-					<div style="margin-top:14px;padding:12px;border-radius:18px;background:#fff">
-						<label for="cp-ficha" style="font-size:13.5px;font-weight:700">Calculá el envío</label>
-						<div style="margin-top:8px;display:flex;gap:6px">
-							<input
-								id="cp-ficha"
-								bind:value={cp}
-								inputmode="numeric"
-								maxlength="4"
-								placeholder="Código postal"
-								onkeydown={(e) => e.key === 'Enter' && calcular()}
-								style="flex:1;min-width:0;padding:11px 12px;border:0;border-radius:12px;background:#F4EADB;font:400 14px 'Instrument Sans';color:#2A1C12"
-							/><button
-								type="button"
-								onclick={calcular}
-								style="padding:11px 14px;border-radius:12px;border:1.5px solid rgba(58,36,20,.2);background:transparent;font:700 14px 'Instrument Sans';color:#2A1C12;cursor:pointer"
-								>Calcular</button
+					{#if envia(tienda.envios)}<div
+							style="margin-top:14px;padding:12px;border-radius:18px;background:#fff"
+						>
+							<label for="cp-ficha" style="font-size:13.5px;font-weight:700">Calculá el envío</label
 							>
-						</div>
-						{#if cotizado}<div
-								style="margin-top:12px;display:flex;flex-direction:column;gap:8px;font-size:13.5px"
-							>
-								{#each cotizado as o (o.id)}<span
-										style="display:flex;justify-content:space-between;gap:10px"
-										><span>{o.nombre} · <span style="color:#7A5F4C">{o.detalle}</span></span><b
-											style="white-space:nowrap;color:{o.precio ? '#2A1C12' : '#2F7A43'}"
-											>{o.precio ? fmt(o.precio) : 'Gratis'}</b
-										></span
-									>{/each}
-							</div>{/if}
-					</div>
+							<div style="margin-top:8px;display:flex;gap:6px">
+								<input
+									id="cp-ficha"
+									bind:value={cp}
+									inputmode="numeric"
+									maxlength="4"
+									placeholder="Código postal"
+									onkeydown={(e) => e.key === 'Enter' && calcular()}
+									style="flex:1;min-width:0;padding:11px 12px;border:0;border-radius:12px;background:#F4EADB;font:400 14px 'Instrument Sans';color:#2A1C12"
+								/><button
+									type="button"
+									onclick={calcular}
+									style="padding:11px 14px;border-radius:12px;border:1.5px solid rgba(58,36,20,.2);background:transparent;font:700 14px 'Instrument Sans';color:#2A1C12;cursor:pointer"
+									>Calcular</button
+								>
+							</div>
+							{#if cotizado}<div
+									style="margin-top:12px;display:flex;flex-direction:column;gap:8px;font-size:13.5px"
+								>
+									{#each cotizado as o (o.id)}<span
+											style="display:flex;justify-content:space-between;gap:10px"
+											><span>{o.nombre} · <span style="color:#7A5F4C">{o.detalle}</span></span><b
+												style="white-space:nowrap;color:{o.precio ? '#2A1C12' : '#2F7A43'}"
+												>{o.precio ? fmt(o.precio) : 'Gratis'}</b
+											></span
+										>{/each}
+								</div>{/if}
+						</div>{/if}
 					<div style="margin-top:8px;padding:6px 16px;border-radius:18px;background:#fff">
 						{#each acc as a, i (a.t)}<div
 								style="padding:12px 0;border-bottom:{i < acc.length - 1

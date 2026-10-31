@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { envia } from '../envio.ts';
 	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
 	import { untrack } from 'svelte';
@@ -1054,22 +1055,22 @@
 							><Icon icon={I.phWhatsappLogoBold} size={18} />Comprar por WhatsApp</a
 						>{/if}
 					<div style="margin-top:18px;border:2px solid #2A2A2A">
-						<div style="display:flex">
-							<label for="cp-ficha" class="oculto">Código postal</label><input
-								id="cp-ficha"
-								bind:value={cp}
-								inputmode="numeric"
-								maxlength="4"
-								placeholder="Código postal"
-								onkeydown={(e) => e.key === 'Enter' && calcular()}
-								style="flex:1;min-width:0;padding:13px 14px;border:0;background:transparent;font:400 14px 'Archivo';color:#F2F2F2;outline:none"
-							/><button
-								type="button"
-								onclick={calcular}
-								style="padding:13px 16px;border:0;background:#F2F2F2;color:#111;font:800 12px 'Archivo';letter-spacing:.1em;text-transform:uppercase;cursor:pointer"
-								>Calcular</button
-							>
-						</div>
+						{#if envia(tienda.envios)}<div style="display:flex">
+								<label for="cp-ficha" class="oculto">Código postal</label><input
+									id="cp-ficha"
+									bind:value={cp}
+									inputmode="numeric"
+									maxlength="4"
+									placeholder="Código postal"
+									onkeydown={(e) => e.key === 'Enter' && calcular()}
+									style="flex:1;min-width:0;padding:13px 14px;border:0;background:transparent;font:400 14px 'Archivo';color:#F2F2F2;outline:none"
+								/><button
+									type="button"
+									onclick={calcular}
+									style="padding:13px 16px;border:0;background:#F2F2F2;color:#111;font:800 12px 'Archivo';letter-spacing:.1em;text-transform:uppercase;cursor:pointer"
+									>Calcular</button
+								>
+							</div>{/if}
 						{#if cotizado}<div
 								style="border-top:2px solid #2A2A2A;padding:12px 14px;display:flex;flex-direction:column;gap:8px;font-size:13.5px"
 							>

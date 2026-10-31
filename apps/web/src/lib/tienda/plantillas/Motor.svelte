@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { envia } from '../envio.ts';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import Icon from '#lib/components/Icon.svelte';
@@ -1384,39 +1385,42 @@
 									><Icon icon={I.phWhatsappLogo} size={18} />Comprar por WhatsApp</a
 								>{/if}
 						</div>
-						<div style="margin-top:18px;padding:16px;background:{T.sf};border-radius:{T.rL}">
-							<label for="cp-ficha" style="font-size:13.5px;font-weight:700">Calculá el envío</label
+						{#if envia(tienda.envios)}<div
+								style="margin-top:18px;padding:16px;background:{T.sf};border-radius:{T.rL}"
 							>
-							<div style="margin-top:10px;display:flex;gap:6px">
-								<input
-									id="cp-ficha"
-									bind:value={cp}
-									inputmode="numeric"
-									maxlength="4"
-									placeholder="Código postal"
-									style="flex:1;min-width:0;padding:11px 12px;background:{T.bg};border:0;border-radius:{T.r};font:400 14px 'Instrument Sans';color:{T.ink}"
-									onkeydown={(e) => e.key === 'Enter' && calcular()}
-								/><button
-									type="button"
-									onclick={calcular}
-									style="padding:11px 16px;border:0;background:{T.ink};color:{T.bg};border-radius:{T.r};font:700 13.5px 'Instrument Sans';cursor:pointer"
-									>Calcular</button
+								<label for="cp-ficha" style="font-size:13.5px;font-weight:700"
+									>Calculá el envío</label
 								>
-							</div>
-							{#if cotizado}<div
-									style="margin-top:12px;display:flex;flex-direction:column;gap:8px;font-size:13.5px"
-								>
-									{#each cotizado as o (o.id)}<span
-											style="display:flex;justify-content:space-between;gap:10px"
-											><span>{o.nombre} · {o.detalle}</span><b
-												style="color:{o.precio ? T.ink : T.ok};white-space:nowrap"
-												>{o.precio ? fmt(o.precio) : 'Gratis'}</b
-											></span
-										>{:else}<span style="color:{T.mu}"
-											>No llegamos a ese código postal por&nbsp;ahora.</span
-										>{/each}
-								</div>{/if}
-						</div>
+								<div style="margin-top:10px;display:flex;gap:6px">
+									<input
+										id="cp-ficha"
+										bind:value={cp}
+										inputmode="numeric"
+										maxlength="4"
+										placeholder="Código postal"
+										style="flex:1;min-width:0;padding:11px 12px;background:{T.bg};border:0;border-radius:{T.r};font:400 14px 'Instrument Sans';color:{T.ink}"
+										onkeydown={(e) => e.key === 'Enter' && calcular()}
+									/><button
+										type="button"
+										onclick={calcular}
+										style="padding:11px 16px;border:0;background:{T.ink};color:{T.bg};border-radius:{T.r};font:700 13.5px 'Instrument Sans';cursor:pointer"
+										>Calcular</button
+									>
+								</div>
+								{#if cotizado}<div
+										style="margin-top:12px;display:flex;flex-direction:column;gap:8px;font-size:13.5px"
+									>
+										{#each cotizado as o (o.id)}<span
+												style="display:flex;justify-content:space-between;gap:10px"
+												><span>{o.nombre} · {o.detalle}</span><b
+													style="color:{o.precio ? T.ink : T.ok};white-space:nowrap"
+													>{o.precio ? fmt(o.precio) : 'Gratis'}</b
+												></span
+											>{:else}<span style="color:{T.mu}"
+												>No llegamos a ese código postal por&nbsp;ahora.</span
+											>{/each}
+									</div>{/if}
+							</div>{/if}
 						<div style="margin-top:14px;border-top:1px solid {T.ln}">
 							{#each acc as a (a.t)}<div style="padding:16px 0;border-bottom:1px solid {T.ln}">
 									<button

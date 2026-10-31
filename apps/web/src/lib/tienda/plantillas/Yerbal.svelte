@@ -1388,37 +1388,39 @@
 									><Icon icon={I.phWhatsappLogoFill} size={18} />Pedir por WhatsApp</a
 								>{/if}
 						</div>
-						<div
-							style="padding:14px;border-radius:14px;background:#fff;display:flex;flex-direction:column;gap:6px;font-size:13.5px"
-						>
-							<label for="cp-ficha" style="display:flex;align-items:center;gap:8px;font-weight:700"
-								><Icon icon={I.phMapPinBold} size={16} />Calculá el envío</label
+						{#if envia(tienda.envios)}<div
+								style="padding:14px;border-radius:14px;background:#fff;display:flex;flex-direction:column;gap:6px;font-size:13.5px"
 							>
-							<div style="display:flex;gap:6px;padding-top:4px">
-								<input
-									id="cp-ficha"
-									bind:value={cp}
-									inputmode="numeric"
-									maxlength="4"
-									placeholder="Código postal"
-									onkeydown={(e) => e.key === 'Enter' && calcular()}
-									style="flex:1;min-width:0;padding:10px 12px;border-radius:9px;border:1.5px solid rgba(30,43,34,.14);background:transparent;font:400 14px 'Schibsted Grotesk';color:#1E2B22"
-								/><button
-									type="button"
-									onclick={calcular}
-									style="padding:10px 14px;border:0;border-radius:9px;background:#1E2B22;color:#EEF1E8;font:700 13.5px 'Schibsted Grotesk';cursor:pointer"
-									>Calcular</button
+								<label
+									for="cp-ficha"
+									style="display:flex;align-items:center;gap:8px;font-weight:700"
+									><Icon icon={I.phMapPinBold} size={16} />Calculá el envío</label
 								>
-							</div>
-							{#if cotizado}{#each cotizado as o (o.id)}<span
-										style="display:flex;justify-content:space-between;gap:10px;padding:8px 0 0"
-										><span>{o.nombre} · {o.detalle}</span><b
-											style="white-space:nowrap;color:{o.precio
-												? '#1E2B22'
-												: 'var(--acento, #2F5D50)'}">{o.precio ? fmt(o.precio) : 'Gratis'}</b
-										></span
-									>{/each}{/if}
-						</div>
+								<div style="display:flex;gap:6px;padding-top:4px">
+									<input
+										id="cp-ficha"
+										bind:value={cp}
+										inputmode="numeric"
+										maxlength="4"
+										placeholder="Código postal"
+										onkeydown={(e) => e.key === 'Enter' && calcular()}
+										style="flex:1;min-width:0;padding:10px 12px;border-radius:9px;border:1.5px solid rgba(30,43,34,.14);background:transparent;font:400 14px 'Schibsted Grotesk';color:#1E2B22"
+									/><button
+										type="button"
+										onclick={calcular}
+										style="padding:10px 14px;border:0;border-radius:9px;background:#1E2B22;color:#EEF1E8;font:700 13.5px 'Schibsted Grotesk';cursor:pointer"
+										>Calcular</button
+									>
+								</div>
+								{#if cotizado}{#each cotizado as o (o.id)}<span
+											style="display:flex;justify-content:space-between;gap:10px;padding:8px 0 0"
+											><span>{o.nombre} · {o.detalle}</span><b
+												style="white-space:nowrap;color:{o.precio
+													? '#1E2B22'
+													: 'var(--acento, #2F5D50)'}">{o.precio ? fmt(o.precio) : 'Gratis'}</b
+											></span
+										>{/each}{/if}
+							</div>{/if}
 						<div style="display:flex;flex-direction:column;gap:6px">
 							{#each acc as a (a.t)}<div
 									style="padding:12px 14px;border-radius:14px;background:#fff;font-size:14px"

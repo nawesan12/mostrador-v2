@@ -1211,44 +1211,46 @@
 							style="margin-top:8px;display:flex;justify-content:center;align-items:center;gap:8px;padding:14px;border-radius:999px;border:1.5px solid #E2C3C8;font-size:14.5px;font-weight:700;color:#3A1F25;text-decoration:none"
 							><Icon icon={I.logosWhatsappIcon} size={17} />Consultanos por WhatsApp</a
 						>{/if}
-					<div style="margin-top:18px;padding:16px;border-radius:22px;background:#fff">
-						<label for="cp-ficha" style="font-size:14px;font-weight:700">Envío</label>
-						<div style="margin-top:10px;display:flex;gap:6px">
-							<input
-								id="cp-ficha"
-								bind:value={cp}
-								inputmode="numeric"
-								maxlength="4"
-								placeholder="Código postal"
-								style="flex:1;min-width:0;padding:11px 12px;border:0;border-radius:14px;background:#FBF4F1;font:400 14px 'Hanken Grotesk';color:#3A1F25"
-								onkeydown={(e) => e.key === 'Enter' && calcular()}
-							/><button
-								type="button"
-								onclick={calcular}
-								style="padding:11px 16px;border:0;border-radius:14px;background:#3A1F25;color:#fff;font:700 13.5px 'Hanken Grotesk';cursor:pointer"
-								>Calcular</button
-							>
-						</div>
-						{#if cotizado || tienda.envios.gratisDesde}<div
-								style="margin-top:10px;display:flex;flex-direction:column;gap:6px;font-size:13.5px"
-							>
-								{#each cotizado ?? [] as o (o.id)}<span
-										style="display:flex;justify-content:space-between;gap:10px"
-										><span>{o.nombre} · {o.detalle}</span><b
-											style="white-space:nowrap;color:{o.precio ? '#3A1F25' : '#2F7D55'}"
-											>{o.precio ? fmt(o.precio) : 'Gratis'}</b
-										></span
-									>{/each}{#if tienda.envios.gratisDesde}<span
-										style="display:flex;justify-content:space-between;gap:10px"
-										><span>Gratis desde {fmt(tienda.envios.gratisDesde)}</span><b
-											style="color:#2F7D55;white-space:nowrap"
-											>{sel.precio >= tienda.envios.gratisDesde
-												? 'Te llega gratis'
-												: `Te faltan ${fmt(tienda.envios.gratisDesde - sel.precio)}`}</b
-										></span
-									>{/if}
-							</div>{/if}
-					</div>
+					{#if envia(tienda.envios)}<div
+							style="margin-top:18px;padding:16px;border-radius:22px;background:#fff"
+						>
+							<label for="cp-ficha" style="font-size:14px;font-weight:700">Envío</label>
+							<div style="margin-top:10px;display:flex;gap:6px">
+								<input
+									id="cp-ficha"
+									bind:value={cp}
+									inputmode="numeric"
+									maxlength="4"
+									placeholder="Código postal"
+									style="flex:1;min-width:0;padding:11px 12px;border:0;border-radius:14px;background:#FBF4F1;font:400 14px 'Hanken Grotesk';color:#3A1F25"
+									onkeydown={(e) => e.key === 'Enter' && calcular()}
+								/><button
+									type="button"
+									onclick={calcular}
+									style="padding:11px 16px;border:0;border-radius:14px;background:#3A1F25;color:#fff;font:700 13.5px 'Hanken Grotesk';cursor:pointer"
+									>Calcular</button
+								>
+							</div>
+							{#if cotizado || tienda.envios.gratisDesde}<div
+									style="margin-top:10px;display:flex;flex-direction:column;gap:6px;font-size:13.5px"
+								>
+									{#each cotizado ?? [] as o (o.id)}<span
+											style="display:flex;justify-content:space-between;gap:10px"
+											><span>{o.nombre} · {o.detalle}</span><b
+												style="white-space:nowrap;color:{o.precio ? '#3A1F25' : '#2F7D55'}"
+												>{o.precio ? fmt(o.precio) : 'Gratis'}</b
+											></span
+										>{/each}{#if tienda.envios.gratisDesde}<span
+											style="display:flex;justify-content:space-between;gap:10px"
+											><span>Gratis desde {fmt(tienda.envios.gratisDesde)}</span><b
+												style="color:#2F7D55;white-space:nowrap"
+												>{sel.precio >= tienda.envios.gratisDesde
+													? 'Te llega gratis'
+													: `Te faltan ${fmt(tienda.envios.gratisDesde - sel.precio)}`}</b
+											></span
+										>{/if}
+								</div>{/if}
+						</div>{/if}
 					<div style="margin-top:12px;padding:4px 16px;border-radius:22px;background:#fff">
 						{#each acc as a, k (a.t)}<div
 								style="padding:14px 0;border-top:{k ? '1px solid #EAD3CF' : '0'}"

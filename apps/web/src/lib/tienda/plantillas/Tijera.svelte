@@ -1662,40 +1662,40 @@
 								{tienda.direccion ? `en ${tienda.direccion}` : ''} y no pagás&nbsp;envío.
 							</div>
 						</div>{/if}
-					<div
-						style="margin-top:12px;padding:14px;border-radius:20px;background:#fff;box-shadow:0 1px 2px rgba(30,27,46,.06)"
-					>
-						<label for="cp-ficha" style="display:block;font-size:13.5px;font-weight:700"
-							>Envío a domicilio</label
+					{#if envia(tienda.envios)}<div
+							style="margin-top:12px;padding:14px;border-radius:20px;background:#fff;box-shadow:0 1px 2px rgba(30,27,46,.06)"
 						>
-						<div style="margin-top:8px;display:flex;gap:6px">
-							<input
-								id="cp-ficha"
-								bind:value={cp}
-								inputmode="numeric"
-								maxlength="4"
-								placeholder="Código postal"
-								onkeydown={(e) => e.key === 'Enter' && calcular()}
-								style="flex:1;min-width:0;padding:10px 12px;border:0;border-radius:12px;background:#F6F4F1;font:400 14px 'Instrument Sans';color:#1E1B2E"
-							/><button
-								type="button"
-								onclick={calcular}
-								style="padding:10px 14px;border:0;border-radius:12px;background:#1E1B2E;color:#fff;font:700 13.5px 'Instrument Sans';cursor:pointer"
-								>Calcular</button
+							<label for="cp-ficha" style="display:block;font-size:13.5px;font-weight:700"
+								>Envío a domicilio</label
 							>
-						</div>
-						{#if cotizado}<div
-								style="margin-top:10px;display:flex;flex-direction:column;gap:6px;font-size:13.5px"
-							>
-								{#each cotizado as o (o.id)}<span
-										style="display:flex;justify-content:space-between;gap:10px"
-										><span>{o.nombre} · {o.detalle}</span><b
-											style="white-space:nowrap;color:{o.precio ? '#1E1B2E' : '#2F7D4F'}"
-											>{o.precio ? fmt(o.precio) : 'Gratis'}</b
-										></span
-									>{/each}
-							</div>{/if}
-					</div>
+							<div style="margin-top:8px;display:flex;gap:6px">
+								<input
+									id="cp-ficha"
+									bind:value={cp}
+									inputmode="numeric"
+									maxlength="4"
+									placeholder="Código postal"
+									onkeydown={(e) => e.key === 'Enter' && calcular()}
+									style="flex:1;min-width:0;padding:10px 12px;border:0;border-radius:12px;background:#F6F4F1;font:400 14px 'Instrument Sans';color:#1E1B2E"
+								/><button
+									type="button"
+									onclick={calcular}
+									style="padding:10px 14px;border:0;border-radius:12px;background:#1E1B2E;color:#fff;font:700 13.5px 'Instrument Sans';cursor:pointer"
+									>Calcular</button
+								>
+							</div>
+							{#if cotizado}<div
+									style="margin-top:10px;display:flex;flex-direction:column;gap:6px;font-size:13.5px"
+								>
+									{#each cotizado as o (o.id)}<span
+											style="display:flex;justify-content:space-between;gap:10px"
+											><span>{o.nombre} · {o.detalle}</span><b
+												style="white-space:nowrap;color:{o.precio ? '#1E1B2E' : '#2F7D4F'}"
+												>{o.precio ? fmt(o.precio) : 'Gratis'}</b
+											></span
+										>{/each}
+								</div>{/if}
+						</div>{/if}
 					<div
 						style="margin-top:12px;padding:4px 14px;border-radius:20px;background:#fff;box-shadow:0 1px 2px rgba(30,27,46,.06)"
 					>
