@@ -49,6 +49,10 @@ type Config struct {
 	CAPruebas          bool
 	// Base DB-IP City Lite (mmdb) para ubicar la IP de cada sesión. Vacía: las sesiones van sin lugar.
 	GeoIP string
+	// APNs (push al iPhone, docs/decisiones.md §40): Key ID y Team ID de la cuenta de Apple, la ruta
+	// al .p8 (nunca en el repo) y el topic (el bundle id de la app). Sin Key ID, Team ID o clave, el
+	// worker no manda pushes.
+	APNsKeyID, APNsTeamID, APNsClave, APNsTopic string
 }
 
 // Desarrollo dice si se está corriendo en local.
@@ -90,6 +94,10 @@ func Leer() (Config, error) {
 		CAClave:          os.Getenv("MOSTRADOR_CA_CLAVE"),
 		CAPruebas:        os.Getenv("MOSTRADOR_CA_AMBIENTE") == "pruebas",
 		GeoIP:            os.Getenv("MOSTRADOR_GEOIP"),
+		APNsKeyID:        os.Getenv("MOSTRADOR_APNS_KEY_ID"),
+		APNsTeamID:       os.Getenv("MOSTRADOR_APNS_TEAM_ID"),
+		APNsClave:        os.Getenv("MOSTRADOR_APNS_CLAVE"),
+		APNsTopic:        valor("MOSTRADOR_APNS_TOPIC", "ar.com.tulocalweb.app"),
 	}
 	switch c.Entorno {
 	case "desarrollo", "staging", "produccion":

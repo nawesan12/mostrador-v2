@@ -15,11 +15,13 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/facturacion"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ia"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/importacion"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/push"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ventas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/visitas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/telegram"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/apns"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/cifrado"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/config"
@@ -97,8 +99,15 @@ func correr() error {
 	if c, err := cifrado.Nuevo(cfg.ClaveCifrado); err == nil && cfg.ClaveCifrado != "" {
 		imp.Cifra = c
 	}
+	// Push al iPhone por APNs. Sin MOSTRADOR_APNS_*, apagado (lo dice el log una vez); una clave mal
+	// configurada no tira el worker: se anota y queda apagado.
+	cliAPNs, err := apns.Desde(cfg.APNsKeyID, cfg.APNsTeamID, cfg.APNsClave, cfg.APNsTopic)
+	if err != nil {
+		slog.Error("push: la clave de APNs no sirve, no se mandan avisos al iPhone", "error", err)
+	}
+	ps := push.Nuevo(app, cliAPNs, slog.Default())
 	for _, ms := range []map[string]outbox.Manejador{mp.Manejadores(), ml.Manejadores(), av.Manejadores(), mc.Manejadores(), tg.Manejadores(), equipo.Manejadores(mails), imp.Manejadores(),
-		cuentas.Manejadores(mails, cfg.Sitio)} {
+		cuentas.Manejadores(mails, cfg.Sitio), ps.Manejadores()} {
 		for tipo, m := range ms {
 			w.Manejadores[tipo] = m
 		}

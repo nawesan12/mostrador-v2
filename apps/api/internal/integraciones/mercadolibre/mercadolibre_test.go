@@ -230,6 +230,14 @@ func TestMercadoLibreDePuntaAPunta(t *testing.T) {
 	if len(ps) != 1 || ps[0].Producto != "Termo Stanley 1 L" || ps[0].Estado != "UNANSWERED" {
 		t.Fatalf("preguntas: %+v", ps)
 	}
+	// La pregunta nueva encola un solo push (otro aviso de la misma no lo repite).
+	aviso("questions", "/questions/77", "810")
+	_, _ = w.Pasada(ctx)
+	var pushes int
+	_ = b.Worker.QueryRow(ctx, `SELECT count(*) FROM outbox WHERE tipo = 'push.pregunta_ml' AND datos->>'id' = '77'`).Scan(&pushes)
+	if pushes != 1 {
+		t.Fatalf("push de la pregunta: %d, quería 1", pushes)
+	}
 	if err := s.Responder(ctx, luna, 77, "¡Sí! Tenemos en negro y en verde."); err != nil {
 		t.Fatal(err)
 	}

@@ -26,6 +26,8 @@ var Rutas = map[string]Permiso{
 	"DELETE /v1/panel/sesiones":                     Panel,
 	"DELETE /v1/panel/sesiones/{id}":                Panel,
 	"GET /v1/panel/turnos/ajustes":                  Panel, // el armazón decide si muestra Turnos
+	"POST /v1/panel/dispositivos":                   Panel, // el iPhone de la sesión (push)
+	"DELETE /v1/panel/dispositivos":                 Panel,
 
 	// Pedidos, punto de venta, envíos, devoluciones y turnos.
 	"GET /v1/panel/pedidos":                                Pedidos,

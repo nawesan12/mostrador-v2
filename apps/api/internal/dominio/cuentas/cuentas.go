@@ -311,7 +311,7 @@ func (s *Servicio) sesionDeUsuario(ctx context.Context, usuario string, vida tim
 		if err != nil {
 			return err
 		}
-		return s.avisarIngreso(ctx, tx, usuario, cl)
+		return s.avisarIngreso(ctx, tx, usuario, hashToken(ses.Token), cl)
 	})
 	return ses, err
 }
@@ -330,6 +330,9 @@ type Datos struct {
 	VenceEn  time.Time `json:"venceEn"`
 	// SesionID identifica la sesión (un prefijo del hash del token) para listarla y cerrarla.
 	SesionID string `json:"-"`
+	// SesionHash: el hash entero del token, sólo en las sesiones de personas (no en las de una IA
+	// ni del equipo). Ata un iPhone a esta sesión (push.Registrar).
+	SesionHash string `json:"-"`
 	// IA es la conexión de una IA (paquete ia) cuando el token es de un conector MCP; IAAcciones,
 	// si esa conexión puede escribir. Las sesiones de personas los dejan vacíos.
 	IA         string `json:"-"`
@@ -373,7 +376,8 @@ func (s *Servicio) Sesion(ctx context.Context, token string) (Datos, error) {
 	if tienda != nil && rol != nil {
 		d.TiendaID, d.Rol = *tienda, *rol
 	}
-	d.SesionID = hashToken(token)[:16]
+	d.SesionHash = hashToken(token)
+	d.SesionID = d.SesionHash[:16]
 	if time.Since(visto) > time.Hour {
 		_, _ = s.Pool.Exec(ctx, `UPDATE auth.sesiones SET visto_en = now() WHERE token_hash = $1`, hashToken(token))
 	}

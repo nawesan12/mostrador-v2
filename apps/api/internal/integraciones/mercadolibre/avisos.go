@@ -231,11 +231,17 @@ func (s *Servicio) traerPregunta(ctx context.Context, tiendaID, token, recurso s
 		respuesta = &q.Answer.Text
 	}
 	return s.Pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		_, err := t.Exec(ctx, `INSERT INTO ml_preguntas (pregunta_id, tienda_id, item_id, texto, respuesta, estado, creada_en)
+		var nueva bool
+		err := t.QueryRow(ctx, `INSERT INTO ml_preguntas (pregunta_id, tienda_id, item_id, texto, respuesta, estado, creada_en)
 			VALUES ($1, $2, $3, $4, $5, $6, $7)
-			ON CONFLICT (pregunta_id) DO UPDATE SET respuesta = coalesce($5, ml_preguntas.respuesta), estado = $6`,
-			q.ID, tiendaID, q.ItemID, recortar(q.Text, 2000), respuesta, q.Status, creada)
-		return err
+			ON CONFLICT (pregunta_id) DO UPDATE SET respuesta = coalesce($5, ml_preguntas.respuesta), estado = $6
+			RETURNING xmax = 0`,
+			q.ID, tiendaID, q.ItemID, recortar(q.Text, 2000), respuesta, q.Status, creada).Scan(&nueva)
+		if err != nil || !nueva || respuesta != nil || q.Status != "UNANSWERED" {
+			return err
+		}
+		// Pregunta nueva sin responder: push al iPhone de quien atiende (push.pregunta_ml, §40).
+		return outbox.Publicar(ctx, t, tiendaID, "push.pregunta_ml", map[string]int64{"id": q.ID})
 	})
 }
 

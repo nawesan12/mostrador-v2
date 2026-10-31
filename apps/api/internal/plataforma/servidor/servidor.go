@@ -28,6 +28,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/partners"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/precios"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/push"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/roles"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/tiendas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/turnos"
@@ -154,6 +155,8 @@ func Nuevo(d Dependencias) http.Handler {
 		hoy.Rutas(mux, d.App, tienda)
 		finanzas.Rutas(mux, d.App, tienda)
 		mitienda.Rutas(mux, d.App, tienda, d.Sitio)
+		// Los iPhone de la app (token de APNs atado a la sesión).
+		push.Rutas(mux, d.App)
 		partners.Rutas(mux, d.App, d.ClaveBFF, nil)
 		var geo geoip.Ubicador
 		if d.Cuentas != nil {

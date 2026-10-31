@@ -150,8 +150,10 @@ type ingreso struct {
 }
 
 // avisarIngreso encola el mail de la sesión nueva, en la misma transacción, si la persona no lo
-// apagó. El evento va sin tienda: es de la persona, no de una tienda (migración 00051).
-func (s *Servicio) avisarIngreso(ctx context.Context, tx pgx.Tx, usuario string, cl Cliente) error {
+// apagó. El evento va sin tienda: es de la persona, no de una tienda (migración 00051). Con el mismo
+// interruptor sale el push «Entraron a tu cuenta» a sus iPhone (cuenta.ingreso_push, §40), menos al
+// de la sesión nueva (sesion es el hash de su token).
+func (s *Servicio) avisarIngreso(ctx context.Context, tx pgx.Tx, usuario, sesion string, cl Cliente) error {
 	var d ingreso
 	var avisar bool
 	if err := tx.QueryRow(ctx, `SELECT email, nombre, coalesce((seguridad->>'avisoIngreso')::boolean, true)
@@ -171,8 +173,23 @@ func (s *Servicio) avisarIngreso(ctx context.Context, tx pgx.Tx, usuario string,
 	if err != nil {
 		return err
 	}
-	_, err = tx.Exec(ctx, `INSERT INTO outbox (tienda_id, tipo, datos) VALUES (NULL, 'cuenta.ingreso', $1)`, b)
+	if _, err = tx.Exec(ctx, `INSERT INTO outbox (tienda_id, tipo, datos) VALUES (NULL, 'cuenta.ingreso', $1)`, b); err != nil {
+		return err
+	}
+	p, err := json.Marshal(IngresoPush{Usuario: usuario, Sesion: sesion, Aparato: d.Aparato})
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(ctx, `INSERT INTO outbox (tienda_id, tipo, datos) VALUES (NULL, 'cuenta.ingreso_push', $1)`, p)
 	return err
+}
+
+// IngresoPush son los datos de cuenta.ingreso_push: a quién, qué sesión no avisar (la nueva) y desde
+// qué aparato se entró. Sin IP ni lugar: se ve en la pantalla bloqueada.
+type IngresoPush struct {
+	Usuario string `json:"usuario"`
+	Sesion  string `json:"sesion"`
+	Aparato string `json:"aparato"`
 }
 
 // Manejadores del worker: el mail de cada ingreso y el de las invitaciones al equipo. sitio arma el link a Configuración › Seguridad.
