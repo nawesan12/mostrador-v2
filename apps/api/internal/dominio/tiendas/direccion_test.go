@@ -161,6 +161,32 @@ func TestCambiarDireccion(t *testing.T) {
 	}
 }
 
+// Una tienda que arrancó con un slug que hoy está reservado puede dejarlo y volver; otra, no.
+func TestDireccionReservadaPropia(t *testing.T) {
+	ctx := context.Background()
+	b := pruebadb.Nueva(t)
+	vieja := pruebadb.CrearTienda(t, b.App, "demo")
+	otra := pruebadb.CrearTienda(t, b.App, "otra")
+	if d, _ := tiendas.DisponibilidadDireccion(ctx, b.App, vieja, "demo"); d.Motivo != "actual" {
+		t.Fatalf("actual reservada: %+v", d)
+	}
+	if _, err := tiendas.CambiarDireccion(ctx, b.App, vieja, "la-de-siempre"); err != nil {
+		t.Fatal(err)
+	}
+	if d, _ := tiendas.DisponibilidadDireccion(ctx, b.App, vieja, "demo"); d.Motivo != "propio" || !d.Disponible {
+		t.Errorf("propia reservada: %+v", d)
+	}
+	if d, _ := tiendas.DisponibilidadDireccion(ctx, b.App, otra, "demo"); d.Motivo != "reservado" {
+		t.Errorf("reservada para otra: %+v", d)
+	}
+	if _, err := tiendas.CambiarDireccion(ctx, b.App, otra, "demo"); !errors.Is(err, tiendas.ErrDireccionReservada) {
+		t.Errorf("otra toma la reservada: %v", err)
+	}
+	if _, err := tiendas.CambiarDireccion(ctx, b.App, vieja, "demo"); err != nil {
+		t.Errorf("volver a la propia: %v", err)
+	}
+}
+
 func TestCambiarDireccionTope(t *testing.T) {
 	ctx := context.Background()
 	b := pruebadb.Nueva(t)

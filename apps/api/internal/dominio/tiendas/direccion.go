@@ -107,11 +107,12 @@ func DisponibilidadDireccion(ctx context.Context, pool enTienda, tiendaID, slug 
 	if err != nil {
 		return d, err
 	}
-	// La actual pasa aunque hoy no fuera válida (una tienda vieja con un slug reservado).
-	if motivo != MotivoActual {
-		if m := motivoDeFormato(slug); m != "" {
-			motivo = m
-		}
+	// La actual pasa aunque hoy no fuera válida, y una que ya usó gana a los reservados (una tienda
+	// vieja que tenía un slug que hoy está reservado puede volver a él).
+	switch m := motivoDeFormato(slug); {
+	case motivo == MotivoActual || m == "":
+	case m == MotivoInvalido || motivo != MotivoPropio:
+		motivo = m
 	}
 	d.Motivo = motivo
 	d.Disponible = motivo == MotivoLibre || motivo == MotivoPropio
@@ -122,16 +123,24 @@ func DisponibilidadDireccion(ctx context.Context, pool enTienda, tiendaID, slug 
 // CambiarDireccion pasa la tienda a slug y devuelve la dirección anterior (igual a slug si ya era
 // esa). La anterior queda redirigida para siempre.
 func CambiarDireccion(ctx context.Context, pool enTienda, tiendaID, slug string) (string, error) {
-	switch motivoDeFormato(slug) {
-	case MotivoInvalido:
+	formato := motivoDeFormato(slug)
+	if formato == MotivoInvalido {
 		return "", ErrDireccionInvalida
-	case MotivoReservado:
-		return "", ErrDireccionReservada
 	}
 	var anterior, res string
 	err := pool.EnTienda(ctx, tiendaID, func(tx pgx.Tx) error {
 		if err := tx.QueryRow(ctx, `SELECT slug FROM tiendas WHERE id = $1`, tiendaID).Scan(&anterior); err != nil {
 			return err
+		}
+		if formato == MotivoReservado {
+			// Sólo si ya fue suya (o es la actual).
+			var est string
+			if err := tx.QueryRow(ctx, `SELECT app.estado_slug($1)`, slug).Scan(&est); err != nil {
+				return err
+			}
+			if est != MotivoPropio && est != MotivoActual {
+				return ErrDireccionReservada
+			}
 		}
 		return tx.QueryRow(ctx, `SELECT app.cambiar_slug($1)`, slug).Scan(&res)
 	})
