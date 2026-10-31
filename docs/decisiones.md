@@ -709,6 +709,13 @@ URL, para que no quede en el historial ni en logs.
   Catálogo. `GET /v1/panel/configuracion` no le manda los datos del negocio (alias, CBU) a quien no
   tiene Tienda ni el equipo a quien no es dueña. La seguridad y las sesiones son de cada persona: las
   ve cualquiera. Las IA conectadas heredan el rol de quien las conectó.
+- **El Inicio sin plata para Ventas y Local** (31/10, sin migración): quien no tiene Finanzas no
+  recibe montos en `GET /v1/panel/tablero` (ventas, serie, ticket, canales, meta, caja,
+  liquidaciones, montos de transferencias y carritos, total de los últimos pedidos ni lo cobrado por
+  Mercado Pago) ni las ventas en pesos del contexto de Tincho: se omiten, no van en cero, y
+  `montos: false` lo dice. Go lo decide con el rol del autor (`tiendas.ConMontos`); el sandbox hace
+  lo mismo (`datos/montos.ts`). La web saca esas tarjetas y Tincho (motor, modelo y MCP) responde
+  con pedidos y unidades.
 - **Invitar sólo por email**: el link (`/invitacion?token=…`) es de un solo uso y vence a los 7 días;
   el sha256 del token vive en `auth.invitaciones` (fuera de RLS: quien abre el link todavía no es de
   la tienda; de ahí sale la tienda y recién entonces se lee la invitación con la tienda fijada). El
