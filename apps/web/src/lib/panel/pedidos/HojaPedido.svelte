@@ -9,7 +9,7 @@
 	import { cara, unsplash } from '#lib/landing/formato.ts';
 	import type { components } from '@mostrador/contrato/esquema';
 	import { pesos } from '../formato.ts';
-	import { linkWhatsapp } from '#lib/whatsapp.ts';
+	import { whatsappDe, type Contexto } from './acciones.ts';
 	import { NOMBRE_CANAL, NOMBRE_ENVIO, NOMBRE_PAGO, siguienteDe, textoEstado } from './nombres.ts';
 
 	type Detalle = components['schemas']['PedidoDetalle'];
@@ -19,12 +19,15 @@
 		open = $bindable(false),
 		pedido,
 		avanzar,
-		imprimir
+		imprimir,
+		contexto
 	}: {
 		open?: boolean;
 		pedido: Detalle | null;
 		avanzar: (p: Detalle) => void;
 		imprimir: (p: Detalle) => void;
+		/** Dónde se retira y la dirección de la tienda, para el mensaje de WhatsApp. */
+		contexto: Contexto;
 	} = $props();
 
 	const TZ = 'America/Argentina/Buenos_Aires';
@@ -61,7 +64,15 @@
 			.map((w) => w[0])
 			.slice(0, 2)
 			.join('');
-	const wa = $derived(pedido?.comprador.telefono ? linkWhatsapp(pedido.comprador.telefono) : null);
+	// El WhatsApp sale con el mensaje del estado (listo para retirar, en camino, la reseña…).
+	const wa = $derived(
+		pedido
+			? whatsappDe(
+					{ ...pedido, telefono: pedido.comprador.telefono },
+					{ ...contexto, seguimiento: pedido.seguimiento }
+				)
+			: null
+	);
 	const siguiente = $derived(pedido ? siguienteDe(pedido) : undefined);
 </script>
 
@@ -238,10 +249,20 @@
 	{/if}
 
 	{#snippet pie()}
-		{#if pedido && siguiente}
+		{#if pedido}
 			<div class="pie">
-				<button type="button" class="principal" onclick={() => avanzar(pedido!)}>{siguiente}</button
+				<!-- Un pedido nuevo para el mismo cliente, con lo mismo: se revisa en Crear pedido. -->
+				<a
+					class="secundario"
+					href="{resolve('/panel/pedidos/nuevo')}?desde={pedido.numero}"
+					data-sveltekit-preload-data="off"
+					><Icon icon={I.phArrowClockwiseBold} size={15} />Volver a vender</a
 				>
+				{#if siguiente}
+					<button type="button" class="principal" onclick={() => avanzar(pedido!)}
+						>{siguiente}</button
+					>
+				{/if}
 			</div>
 		{/if}
 	{/snippet}
@@ -518,6 +539,24 @@
 		width: 100%;
 		display: flex;
 		gap: 8px;
+	}
+	.secundario {
+		flex: none;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 7px;
+		padding: 12px 16px;
+		border-radius: 999px;
+		border: 1px solid var(--ln2);
+		color: var(--tx);
+		font-size: 14px;
+		font-weight: 600;
+		white-space: nowrap;
+		text-decoration: none;
+	}
+	.pie .secundario:only-child {
+		flex: 1;
 	}
 	.principal {
 		flex: 1;

@@ -15,6 +15,7 @@
 	import { compartirTienda } from '#lib/panel/compartir.ts';
 	import { pesos } from '#lib/panel/formato.ts';
 	import HojaPedido from '#lib/panel/pedidos/HojaPedido.svelte';
+	import { accionRapida, avisoDe, whatsappDe } from '#lib/panel/pedidos/acciones.ts';
 	import {
 		escribirFiltros,
 		leerFiltros,
@@ -70,6 +71,7 @@
 	const VENTANA = 60;
 	let ancho = $state(1440);
 	const amplio = $derived(ancho >= 900);
+	const celu = $derived(ancho < 760);
 	const alto = $derived(ancho < 760 ? 520 : 600);
 	// Con pocos pedidos la caja no deja un hueco en blanco abajo; vacía, lo justo para el vacío.
 	const altoCaja = $derived(lista.total ? Math.min(alto, lista.total * FILA + 10) : 380);
@@ -154,73 +156,29 @@
 		return true;
 	}
 
+	// ---- Acción de un toque y WhatsApp desde la fila (lib/panel/pedidos/acciones.ts) ----
+	const contexto = $derived({ retiro: data.retiro, slug: page.data.tienda.slug as string });
+	const enCurso = new SvelteSet<number>();
 	async function accion(p: Fila) {
-		const nombre = p.cliente.split(' ')[0];
-		if (p.estado === 'Sin pagar') {
-			const r = await fetch(`/panel/pedidos/${p.numero}`, {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({ recordatorio: true })
-			});
-			if (r.ok)
-				ui.toast({
-					k: 'wa',
-					title: 'Recordatorio de pago enviado',
-					desc: `${p.cliente} · ${pesos(p.total)} por WhatsApp`
-				});
-			return;
+		const a = accionRapida(p);
+		if (!a || enCurso.has(p.numero)) return;
+		enCurso.add(p.numero);
+		try {
+			if (!(await cambiar(p.numero, a.a))) return;
+			await invalidateAll();
+		} finally {
+			enCurso.delete(p.numero);
 		}
-		if (p.estado === 'En camino') {
-			ui.toast({
-				k: 'info',
-				title: `Seguimiento de #${p.numero}`,
-				desc: `En camino a ${p.ciudad}`
-			});
-			return;
-		}
-		const a = proximoDe(p);
-		if (!a || !(await cambiar(p.numero, a))) return;
-		await invalidateAll();
-		const deshacer = async () => {
-			if (await cambiar(p.numero, p.estado)) await invalidateAll();
-		};
-		if (p.envio === 'retiro' && a === 'Entregado')
-			ui.toast({
-				k: 'ok',
-				title: `#${p.numero} retirado`,
-				desc: `${nombre} ya pasó a buscarlo`,
-				action: 'Deshacer',
-				onAction: deshacer
-			});
-		else if (p.estado === 'Para preparar')
-			ui.toast({
-				k: 'ok',
-				title: `#${p.numero} ${p.envio === 'retiro' ? 'listo para retirar' : 'preparado'}`,
-				desc: `Le avisamos a ${nombre}`,
-				action: 'Deshacer',
-				onAction: deshacer
-			});
-		else
-			ui.toast({
-				k: p.envio === 'retiro' ? 'ok' : (p.envio as 'andreani'),
-				title: `Etiqueta de ${NOMBRE_ENVIO[p.envio]}`,
-				desc: `#${p.numero} · listo para despachar`,
-				action: 'Deshacer',
-				onAction: deshacer
-			});
+		ui.toast({
+			k: 'ok',
+			...avisoDe(p),
+			action: 'Deshacer',
+			onAction: async () => {
+				if (await cambiar(p.numero, p.estado)) await invalidateAll();
+			}
+		});
 	}
 
-	type Accion = [string, typeof I.phPackageFill, string, string];
-	/** El retiro no lleva etiqueta: lo listo se marca como retirado. */
-	const RETIRADO: Accion = ['Retirado', I.phCheckCircleFill, 'rgba(47,143,99,.14)', '#237550'];
-	const accionDe = (p: Fila) =>
-		p.envio === 'retiro' && p.estado === 'Listo para despachar' ? RETIRADO : ACCION[p.estado];
-	const ACCION: Partial<Record<EstadoPedido, Accion>> = {
-		'Sin pagar': ['Reclamar pago', I.phWhatsappLogoFill, '#E9F8EE', '#1F6F4A'],
-		'Para preparar': ['Preparar', I.phPackageFill, '#2A140C', '#fff'],
-		'Listo para despachar': ['Etiqueta', I.phPrinterFill, 'rgba(210,88,47,.14)', '#C24E25'],
-		'En camino': ['Seguimiento', I.phMapPinFill, 'var(--chip)', 'var(--tx)']
-	};
 	const LOTE = [
 		{ accion: 'preparar', t: 'Preparar', i: I.phPackageFill },
 		{ accion: 'etiquetas', t: 'Etiquetas', i: I.phPrinterFill },
@@ -670,7 +628,8 @@
 							{@const paso = ETAPAS.findIndex((x) => x.estado === p.estado)}
 							{@const sel = seleccion.has(p.numero)}
 							{@const u = urgencia(p)}
-							{@const a = accionDe(p)}
+							{@const a = accionRapida(p)}
+							{@const wa = whatsappDe(p, contexto)}
 							<div class="f-in" class:sel>
 								<button
 									type="button"
@@ -697,7 +656,11 @@
 												/>{/if}{#if p.hornero}<span class="q-ai" title="Lo vendió Tincho">✦</span
 												>{/if}</span
 										>
-										<span class="q-s">#{p.numero} · {hace(p.creado)} · {p.ciudad}</span>
+										<!-- En el celular el monto pasa a este renglón: el nombre y los botones de 44 px entran. -->
+										<span class="q-s"
+											>#{p.numero} · {#if celu}{pesos(p.total)} ·
+											{/if}{hace(p.creado)} · {p.ciudad}</span
+										>
 									</span>
 									{#if amplio}
 										<span class="prods">
@@ -727,7 +690,7 @@
 									{/if}
 									{#if u}<span class="urg" style:background={u[1]} style:color={u[2]}>{u[0]}</span
 										>{/if}
-									<span class="monto">
+									<span class="monto" class:oculto={celu}>
 										<span class="m-v">{pesos(p.total)}</span>
 										<span class="m-p"
 											><Icon
@@ -738,17 +701,37 @@
 										>
 									</span>
 								</button>
-								{#if a}
-									<button
-										type="button"
-										class="accion"
-										style:background={a[2]}
-										style:color={a[3]}
-										aria-label="{a[0]} #{p.numero}"
-										onclick={() => accion(p)}
-										><Icon icon={a[1]} size={14} />{#if amplio}{a[0]}{/if}</button
-									>
-								{/if}
+								<!-- Ancho fijo: con o sin WhatsApp, las columnas de la lista quedan alineadas. -->
+								<span class="acciones">
+									{#if wa}
+										<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- link externo a WhatsApp -->
+										<a
+											class="wa"
+											href={wa}
+											target="_blank"
+											rel="noopener noreferrer"
+											title="Escribirle por WhatsApp"
+											aria-label="WhatsApp a {p.cliente} por el #{p.numero}"
+											><Icon icon={I.phWhatsappLogoFill} size={17} /></a
+										>
+									{/if}
+									{#if a}
+										<button
+											type="button"
+											class="accion"
+											style:background={a.fondo}
+											style:color={a.color}
+											aria-label="{a.texto} #{p.numero}"
+											title={amplio ? undefined : a.texto}
+											disabled={enCurso.has(p.numero)}
+											onclick={() => accion(p)}
+											><Icon
+												icon={a.icono}
+												size={celu ? 19 : 14}
+											/>{#if amplio}{a.texto}{/if}</button
+										>
+									{/if}
+								</span>
 							</div>
 						{:else}
 							<div class="f-in esqueleto"><span></span><span></span></div>
@@ -817,7 +800,7 @@
 {/if}
 
 <!-- eslint-enable svelte/no-navigation-without-resolve -->
-<HojaPedido bind:open={hoja} pedido={detalle} avanzar={avanzarDesdeHoja} {imprimir} />
+<HojaPedido bind:open={hoja} pedido={detalle} avanzar={avanzarDesdeHoja} {imprimir} {contexto} />
 
 <style>
 	.pedidos {
@@ -1366,6 +1349,28 @@
 		font-weight: 600;
 		white-space: nowrap;
 	}
+	.acciones {
+		flex: none;
+		width: 204px;
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 8px;
+	}
+	.accion:disabled {
+		opacity: 0.6;
+	}
+	/* WhatsApp a quien compró, con el mensaje del estado (los colores de «Reclamar pago» del handoff). */
+	.wa {
+		flex: none;
+		width: 34px;
+		height: 34px;
+		border-radius: 50%;
+		display: grid;
+		place-items: center;
+		background: #e9f8ee;
+		color: #1f6f4a;
+	}
 	.esqueleto span {
 		height: 12px;
 		border-radius: 6px;
@@ -1491,13 +1496,27 @@
 		.abrir {
 			gap: 10px;
 		}
+		.acciones {
+			width: auto;
+		}
 	}
 	@media (max-width: 759px) {
 		/* En el celular la fila deja lugar al nombre: el medio de pago y la urgencia se ven en el
-		   detalle (y el ícono del canal ya está en la foto). */
+		   detalle (y el ícono del canal ya está en la foto); el monto va debajo del nombre. */
 		.m-p,
-		.urg {
+		.urg,
+		.monto.oculto {
 			display: none;
+		}
+		.fila {
+			padding: 5px 6px;
+		}
+		.acciones {
+			width: 96px;
+		}
+		.f-in {
+			gap: 8px;
+			padding: 0 6px 0 10px;
 		}
 		/* En el handoff las etapas se cortan: acá se desplazan. */
 		.etapas {
@@ -1509,6 +1528,14 @@
 		}
 		.lote {
 			bottom: 92px;
+		}
+		/* Las acciones de la fila, a un toque: botones visibles de 44 px. */
+		.wa,
+		.accion {
+			width: 44px;
+			height: 44px;
+			padding: 0;
+			justify-content: center;
 		}
 		.urg {
 			display: none;

@@ -87,5 +87,64 @@ test('el Resumen abre un pedido y exporta CSV', async ({ page }) => {
 	expect(r.headers()['content-type']).toContain('text/csv');
 	const csv = await r.text();
 	expect(csv.split('\r\n')[0]).toContain('Número;Fecha;Cliente');
-	expect(csv).toContain(';wa;');
+	// El canal sale en castellano (textos-export), no «wa».
+	expect(csv).toContain(';WhatsApp;');
+});
+
+test('marcar pagado una transferencia desde la fila y deshacerlo', async ({ page }) => {
+	await demo(page);
+	// Las tiendas de la demo cambian: se toma uno ya pagado sin Mercado Pago y se vuelve a sin pagar
+	// (el deshacer que usa la lista), para no depender de que haya uno.
+	await page.goto(
+		'/panel/pedidos?estado=para-preparar&pago=transf,efectivo,tarjeta,payway,modo,uala'
+	);
+	await listo(page);
+	const numero = (await page.locator('.fila .q-s').first().textContent())!.match(/#(\d+)/)![1];
+	const r = await page.request.post(`/panel/pedidos/${numero}`, { data: { estado: 'Sin pagar' } });
+	expect(r.status()).toBe(204);
+	await page.goto(`/panel/pedidos?estado=sin-pagar&q=%23${numero}`);
+	await listo(page);
+	const fila = page.locator('.fila').filter({ hasText: `#${numero}` });
+	const boton = fila.getByRole('button', { name: `Marcar pagado #${numero}` });
+	// En el celular, botón visible de 44 px.
+	const caja = (await boton.boundingBox())!;
+	expect(caja.height).toBeGreaterThanOrEqual(page.viewportSize()!.width < 760 ? 44 : 30);
+	await boton.click();
+	await expect(page.getByText(`#${numero} pagado`)).toBeVisible();
+	await expect(page.locator('.fila').filter({ hasText: `#${numero}` })).toHaveCount(0);
+	await page.getByRole('button', { name: 'Deshacer' }).click();
+	await expect(page.locator('.fila').filter({ hasText: `#${numero}` })).toBeVisible();
+});
+
+test('WhatsApp con el mensaje del estado, desde la fila y la hoja', async ({ page }) => {
+	await demo(page);
+	await page.goto('/panel/pedidos?estado=en-camino');
+	await listo(page);
+	const href = (await page.locator('.fila a.wa').first().getAttribute('href'))!;
+	expect(href).toMatch(/^https:\/\/wa\.me\/549\d{10}\?text=/);
+	expect(decodeURIComponent(href.split('text=')[1])).toMatch(
+		/^¡Hola \S+! Tu pedido #\d+ ya (salió para tu casa|está en camino)\./
+	);
+
+	await page.goto('/panel/pedidos?estado=entregado&canal=web');
+	await listo(page);
+	await page.locator('.fila .abrir').first().click();
+	const escribir = page.getByRole('dialog').getByRole('link', { name: 'Escribir' });
+	const texto = decodeURIComponent((await escribir.getAttribute('href'))!.split('text=')[1]);
+	expect(texto).toMatch(/dejanos una reseña: https:\/\/tulocalweb\.com\.ar\/t\/.+\/pedido\/\d+-/);
+});
+
+test('volver a vender abre Crear pedido completo para revisar', async ({ page }) => {
+	await demo(page);
+	await page.goto('/panel/pedidos?pedido=1048');
+	await listo(page);
+	const hoja = page.getByRole('dialog', { name: 'Pedido #1048' });
+	await expect(hoja.locator('.item').first()).toBeVisible();
+	const productos = await hoja.locator('.item').count();
+	await hoja.getByRole('link', { name: 'Volver a vender' }).click();
+	await expect(page).toHaveURL(/\/panel\/pedidos\/nuevo\?desde=1048/);
+	await expect(page.getByText('Lo mismo que el pedido #1048')).toBeVisible();
+	await expect(page.locator('.resumen .item').first()).toBeVisible();
+	expect(await page.locator('.resumen .item').count()).toBeLessThanOrEqual(productos);
+	await expect(page.getByRole('button', { name: /^Crear/ })).toBeEnabled();
 });
