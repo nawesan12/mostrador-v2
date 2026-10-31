@@ -15,7 +15,13 @@ import {
 	type Plan
 } from './cuenta.ts';
 import { finanzasDemo, type Retiro } from './finanzas.ts';
-import { actividadDemo, type FilaCambio, type Nombres } from './actividad.ts';
+import {
+	actividadDemo,
+	filasDemo,
+	paginaDemo,
+	type FilaCambio,
+	type Nombres
+} from './actividad.ts';
 import { canalesDemo, informesDemo, marketingDemo, type CampanaDemo } from './crecer.ts';
 import { cuando } from '#lib/panel/cupones.ts';
 import { descripcionDe, lunes9, vigenciaDe } from '#lib/panel/cupones.ts';
@@ -84,6 +90,7 @@ import type {
 	MiTienda,
 	Finanzas,
 	Evento,
+	FiltroActividad,
 	ParaHacer,
 	Campana,
 	Canales,
@@ -1851,7 +1858,15 @@ export class DatosSandbox implements Datos {
 		};
 	}
 
-	async actividad(): Promise<Evento[]> {
+	async actividad(f: FiltroActividad = {}) {
+		return paginaDemo(await this.actividadToda(), f);
+	}
+
+	async exportarActividad(f: FiltroActividad = {}) {
+		return filasDemo(await this.actividadToda(), f);
+	}
+
+	private async actividadToda(): Promise<Evento[]> {
 		const [filas, nombres] = await Promise.all([this.historial(), this.nombres()]);
 		const deshechos = filas
 			.filter((f) => f.entidad === 'deshecho')
@@ -1867,7 +1882,7 @@ export class DatosSandbox implements Datos {
 	}
 
 	async deshacerEvento(id: string): Promise<Resultado> {
-		const e = (await this.actividad()).find((x) => x.id === id);
+		const e = (await this.actividadToda()).find((x) => x.id === id);
 		if (!e) return 'no-existe';
 		if (!e.deshacer) return 'no-se-puede';
 		const i = id.indexOf(':');

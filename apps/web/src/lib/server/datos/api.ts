@@ -8,6 +8,7 @@ import {
 	estadoInicial,
 	type AjusteIntegracion
 } from '#lib/panel/integraciones.ts';
+import { consultaDe } from '#lib/panel/actividad.ts';
 import type {
 	CambioDireccion,
 	DisponibilidadDireccion,
@@ -45,7 +46,8 @@ import type {
 	DisenoTienda,
 	MiTienda,
 	Finanzas,
-	Evento,
+	FiltroActividad,
+	PaginaActividad,
 	ParaHacer,
 	Campana,
 	Canales,
@@ -640,8 +642,15 @@ export class DatosApi implements Datos {
 		if (r.status === 409) return 'sin-cobros' as const;
 		return (await r.json()) as { monto: number; cuenta: string };
 	}
-	async actividad() {
-		return (await this.pedir<{ items: Evento[] }>('/v1/panel/actividad')).items;
+	actividad(f: FiltroActividad = {}) {
+		const q = consultaDe(f);
+		return this.pedir<PaginaActividad>('/v1/panel/actividad' + (q ? `?${q}` : ''));
+	}
+	async exportarActividad(f: FiltroActividad = {}) {
+		const q = consultaDe({ ...f, cursor: undefined });
+		return (
+			await this.pedir<{ filas: string[][] }>('/v1/panel/actividad/exportar' + (q ? `?${q}` : ''))
+		).filas;
 	}
 	async deshacerEvento(id: string) {
 		return resultado(

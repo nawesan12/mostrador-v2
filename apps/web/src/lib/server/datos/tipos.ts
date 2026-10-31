@@ -53,6 +53,8 @@ export type ListasPrecio = components['schemas']['ListasPrecio'];
 export type Cupon = components['schemas']['Cupon'];
 export type Marketing = components['schemas']['Marketing'];
 export type Evento = components['schemas']['Evento'];
+export type { FiltroActividad, PaginaActividad } from '#lib/panel/actividad.ts';
+import type { FiltroActividad, PaginaActividad } from '#lib/panel/actividad.ts';
 export type Finanzas = components['schemas']['Finanzas'];
 export type MiTienda = components['schemas']['MiTienda'];
 export type Tarjeta = components['schemas']['Tarjeta'];
@@ -178,7 +180,10 @@ export interface Datos {
 	listasPrecio(): Promise<ListasPrecio>;
 	cupones(): Promise<Cupones>;
 	marketing(): Promise<Marketing>;
-	actividad(): Promise<Evento[]>;
+	/** Actividad (§38): una página con los filtros. */
+	actividad(f?: FiltroActividad): Promise<PaginaActividad>;
+	/** Las filas del CSV de la actividad (la primera es el encabezado). */
+	exportarActividad(f?: FiltroActividad): Promise<string[][]>;
 	finanzas(): Promise<Finanzas>;
 	miTienda(): Promise<MiTienda>;
 	/** La tarjeta A6 para los paquetes (modelo, textos y QR del dorso). */

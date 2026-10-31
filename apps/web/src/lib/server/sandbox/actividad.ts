@@ -4,9 +4,36 @@
  * ejemplo. Se puede deshacer lo que vuelve a quedar como estaba con sólo borrar el cambio.
  */
 import type { components } from '@mostrador/contrato/esquema';
+import {
+	nombreCategoria,
+	type CategoriaEvento,
+	type FiltroActividad,
+	type PaginaActividad
+} from '#lib/panel/actividad.ts';
 import type { Demo } from './demo.ts';
 
 type Evento = components['schemas']['Evento'];
+
+/** De qué se trata cada cambio guardado del visitante (el filtro «Tipo»). */
+const CATEGORIA: Record<string, CategoriaEvento> = {
+	pedido: 'pedido',
+	producto: 'producto',
+	stock: 'producto',
+	aumento: 'producto',
+	cupon: 'promocion',
+	'cupon-nuevo': 'promocion',
+	automatica: 'promocion',
+	canal: 'integracion',
+	link: 'pedido',
+	devolucion: 'pedido'
+};
+function categoriaDe(f: FilaCambio): CategoriaEvento {
+	if (f.entidad === 'pedido-nuevo') {
+		const p = ((f.datos ?? {}) as { pedido?: { canal?: string } }).pedido;
+		return p?.canal === 'pos' ? 'venta' : 'pedido';
+	}
+	return CATEGORIA[f.entidad] ?? 'otro';
+}
 
 const MIN = 60_000;
 const iso = (t: number) => new Date(t).toISOString();
@@ -151,6 +178,8 @@ export function actividadDemo(
 				id: `${f.entidad}:${f.clave}`,
 				tipo: 'equipo' as const,
 				quien: 'Vos',
+				rol: 'Dueña',
+				categoria: categoriaDe(f),
 				foto: null,
 				texto: t[0],
 				cuando: iso(f.en),
@@ -164,6 +193,8 @@ export function actividadDemo(
 		id: x.id,
 		tipo: 'equipo',
 		quien: 'Vos',
+		rol: 'Dueña',
+		categoria: CATEGORIA[x.id.slice(0, x.id.indexOf(':'))] ?? 'otro',
 		foto: null,
 		texto: x.texto,
 		cuando: iso(x.en),
@@ -180,6 +211,8 @@ export function actividadDemo(
 			id: 'd-hornero',
 			tipo: 'hornero',
 			quien: 'Tincho',
+			rol: null,
+			categoria: 'otro',
 			foto: null,
 			texto: `respondió ${d.conversaciones.length * 9 + 14} consultas y cerró ${ventasHornero.length} ventas por ${pesos(ventasHornero.reduce((s, p) => s + p.total, 0))}`,
 			cuando: iso(ahora - 5 * MIN),
@@ -191,6 +224,8 @@ export function actividadDemo(
 			id: `d-caja-${p.numero}`,
 			tipo: 'equipo',
 			quien: EQUIPO.nombre,
+			rol: 'Local',
+			categoria: 'venta',
 			foto: EQUIPO.foto,
 			texto: `cobró ${pesos(p.total)} en ${p.pago === 'efectivo' ? 'efectivo' : 'la caja'} del local`,
 			cuando: iso(Math.min(p.creado, ahora - (60 + i * 90) * MIN)),
@@ -202,6 +237,8 @@ export function actividadDemo(
 			id: 'd-ml',
 			tipo: 'sistema',
 			quien: 'Sistema',
+			rol: null,
+			categoria: 'integracion',
 			foto: null,
 			texto: `sincronizó ${d.enMl.length} publicaciones con Mercado Libre`,
 			cuando: iso(ahora - 120 * MIN),
@@ -213,6 +250,8 @@ export function actividadDemo(
 			id: 'd-fotos',
 			tipo: 'hornero',
 			quien: 'Tincho',
+			rol: null,
+			categoria: 'producto',
 			foto: null,
 			texto: `mejoró las fotos de ${Math.min(12, d.catalogo.productos.length)} productos`,
 			cuando: iso(ahora - 300 * MIN),
@@ -224,6 +263,8 @@ export function actividadDemo(
 			id: 'd-ingreso',
 			tipo: 'sistema',
 			quien: 'Seguridad',
+			rol: null,
+			categoria: 'sesion',
 			foto: null,
 			texto: 'nuevo inicio de sesión en la demo',
 			cuando: iso(creado),
@@ -235,6 +276,8 @@ export function actividadDemo(
 			id: 'd-copia',
 			tipo: 'sistema',
 			quien: 'Sistema',
+			rol: null,
+			categoria: 'otro',
 			foto: null,
 			texto: 'hizo una copia de seguridad completa',
 			cuando: iso(copiaDiaria(ahora)),
@@ -246,4 +289,53 @@ export function actividadDemo(
 	return [...propios, ...viejos, ...demo].sort(
 		(a, b) => Date.parse(b.cuando) - Date.parse(a.cuando)
 	);
+}
+
+/** Quién es quién en la demo, para el filtro por persona. */
+const PERSONAS = [
+	{ id: 'vos', nombre: 'Vos', quien: 'Vos' },
+	{ id: 'equipo', nombre: EQUIPO.nombre, quien: EQUIPO.nombre }
+];
+const TAM = 50;
+
+/** Lo que pasa los filtros (sin paginar). */
+function filtrar(todos: Evento[], f: FiltroActividad) {
+	const persona = PERSONAS.find((p) => p.id === f.persona);
+	const dia = (iso: string) => new Date(Date.parse(iso) - 3 * 3_600_000).toISOString().slice(0, 10);
+	return todos.filter(
+		(e) =>
+			(!f.persona || e.quien === persona?.quien) &&
+			(!f.tipo || e.categoria === f.tipo) &&
+			(!f.desde || dia(e.cuando) >= f.desde) &&
+			(!f.hasta || dia(e.cuando) <= f.hasta)
+	);
+}
+
+/** Filtra y pagina la actividad de la demo como la API (el cursor es la posición). */
+export function paginaDemo(todos: Evento[], f: FiltroActividad): PaginaActividad {
+	const l = filtrar(todos, f);
+	const desde = Math.max(0, Math.floor(Number(f.cursor)) || 0);
+	return {
+		items: l.slice(desde, desde + TAM),
+		siguiente: desde + TAM < l.length ? String(desde + TAM) : null,
+		personas: PERSONAS.map(({ id, nombre }) => ({ id, nombre }))
+	};
+}
+
+/** Las filas del CSV, como las arma la API. */
+export function filasDemo(todos: Evento[], f: FiltroActividad): string[][] {
+	const filas = [['Fecha', 'Hora', 'Quién', 'Rol', 'Tipo', 'Qué hizo', 'Desde']];
+	for (const e of filtrar(todos, f)) {
+		const t = new Date(Date.parse(e.cuando) - 3 * 3_600_000).toISOString();
+		filas.push([
+			t.slice(0, 10),
+			t.slice(11, 16),
+			e.quien,
+			e.rol ?? '',
+			nombreCategoria(e.categoria),
+			e.texto,
+			e.donde
+		]);
+	}
+	return filas;
 }

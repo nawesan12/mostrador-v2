@@ -1,52 +1,72 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
-	import { page } from '$app/state';
+	import { goto, invalidateAll } from '$app/navigation';
 	import Icon from '#lib/components/Icon.svelte';
 	import Seo from '#lib/components/Seo.svelte';
+	import Vacio from '#lib/components/Vacio.svelte';
 	import * as I from '#lib/icons.ts';
 	import { unsplash } from '#lib/landing/formato.ts';
+	import {
+		CATEGORIAS,
+		consultaDe,
+		cuando,
+		nombreCategoria,
+		type Evento,
+		type FiltroActividad,
+		type PaginaActividad
+	} from '#lib/panel/actividad.ts';
 	import { anim } from '#lib/panel/anim.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 
-	/** Actividad (design/PanelCrecer.dc.html, sAct): quién hizo qué y desde dónde, con deshacer. */
-	let { data } = $props();
 	/**
-	 * Con la API, la auditoría sólo la escriben las acciones del equipo de soporte (Go no anota
-	 * todavía los cambios de cada sección): no se promete «todo lo que pasó».
+	 * Actividad (design/PanelCrecer.dc.html, sAct; docs/decisiones.md §38): quién del equipo hizo qué,
+	 * sobre qué y cuándo. Lo anota Go donde se hace cada acción; acá se lee, se filtra y se baja.
+	 * Sólo la dueña y administración llegan hasta acá (Go responde 403 al resto).
 	 */
-	const demo = $derived(!!page.data.demo);
+	let { data } = $props();
 	const ui = getUi();
 
-	const FILTROS = [
-		['todo', 'Todo'],
-		['equipo', 'Equipo'],
-		['hornero', 'Tincho'],
-		['sistema', 'Sistema']
-	] as const;
-	let filtro = $state<(typeof FILTROS)[number][0]>('todo');
-	const items = $derived(data.items.filter((a) => filtro === 'todo' || a.tipo === filtro));
+	let extra = $state<Evento[]>([]);
+	let siguiente = $state<string | null>(null);
+	let cargando = $state(false);
+	// Con cada carga (filtros nuevos), la lista vuelve a la primera página.
+	$effect.pre(() => {
+		extra = [];
+		siguiente = data.pagina.siguiente;
+	});
+	const items = $derived([...data.pagina.items, ...extra]);
+	const filtro = $derived(data.filtro as FiltroActividad);
+	const hayFiltros = $derived(Object.values(filtro).some(Boolean));
 
-	const MIN = 60_000;
-	function cuando(iso: string) {
-		const t = Date.parse(iso);
-		const min = Math.round((Date.now() - t) / MIN);
-		if (min < 1) return 'recién';
-		if (min < 60) return `hace ${min} min`;
-		if (min < 6 * 60) return `hace ${Math.round(min / 60)} h`;
-		const hora = new Date(t).toLocaleTimeString('es-AR', {
-			hour: '2-digit',
-			minute: '2-digit',
-			timeZone: 'America/Argentina/Buenos_Aires'
-		});
-		const dia = (x: number) => new Date(x - 3 * 3_600_000).toISOString().slice(0, 10);
-		if (dia(t) === dia(Date.now())) return `hoy ${hora}`;
-		if (dia(t) === dia(Date.now() - 86_400_000)) return `ayer ${hora}`;
-		return new Date(t).toLocaleDateString('es-AR', {
-			day: 'numeric',
-			month: 'short',
-			timeZone: 'America/Argentina/Buenos_Aires'
-		});
+	function ir(q: string) {
+		// eslint-disable-next-line svelte/no-navigation-without-resolve -- misma página, sólo cambia la query
+		void goto(q ? `?${q}` : '?', { replace: true, reset: false });
 	}
+	const filtrar = (cambio: Partial<FiltroActividad>) =>
+		ir(consultaDe({ ...filtro, ...cambio, cursor: undefined }));
+	const sacarFiltros = () => ir('');
+	const valor = (e: Event) => (e.currentTarget as HTMLInputElement | HTMLSelectElement).value;
+
+	async function verMas() {
+		if (!siguiente || cargando) return;
+		cargando = true;
+		try {
+			const r = await fetch(
+				`/panel/actividad/pagina?${consultaDe({ ...filtro, cursor: siguiente })}`
+			);
+			if (!r.ok) throw new Error();
+			const p = (await r.json()) as PaginaActividad;
+			extra = [...extra, ...p.items];
+			siguiente = p.siguiente;
+		} catch {
+			ui.toast({ k: 'err', title: 'No se pudo cargar más', desc: 'Probá de nuevo en un rato.' });
+		} finally {
+			cargando = false;
+		}
+	}
+
+	const exportar = $derived(
+		`/panel/actividad/exportar${consultaDe(filtro) ? `?${consultaDe(filtro)}` : ''}`
+	);
 
 	async function deshacer(id: string) {
 		const r = await fetch(`/panel/actividad/${encodeURIComponent(id)}/deshacer`, {
@@ -56,16 +76,21 @@
 		await invalidateAll();
 		ui.toast({ k: 'ok', title: 'Cambio deshecho', desc: 'Volvimos todo a como estaba' });
 	}
+
 	const ICONO = {
 		hornero: [I.phSparkleFill, 'rgba(210,88,47,.12)', '#C24E25'],
+		ia: [I.phSparkleBold, 'rgba(91,76,196,.12)', '#5B4CC4'],
+		soporte: [I.phLifebuoyFill, 'var(--chip)', 'var(--mu)'],
 		sistema: [I.phGearSixFill, 'var(--chip)', 'var(--mu)'],
 		equipo: [I.phUserFill, 'rgba(210,88,47,.12)', '#C24E25']
 	} as const;
+	const inicial = (q: string) => (q.trim()[0] ?? '·').toUpperCase();
+	const hoyAR = new Date(Date.now() - 3 * 3_600_000).toISOString().slice(0, 10);
 </script>
 
 <Seo
 	title="Actividad · Panel"
-	description="Actividad de la cuenta"
+	description="Quién hizo qué en tu tienda"
 	path="/panel/actividad"
 	noindex
 />
@@ -74,49 +99,118 @@
 	<div class="cab" use:anim={{ t: 'rise' }}>
 		<div class="c-txt">
 			<h1>Actividad</h1>
-			<div class="c-s">
-				{demo
-					? 'Todo lo que pasó en tu cuenta, quién lo hizo y desde dónde'
-					: 'Los cambios que quedan registrados en tu cuenta'}
-			</div>
+			<div class="c-s">Quién de tu equipo hizo qué y cuándo. Se guarda un año.</div>
 		</div>
-		<div class="tabs" role="group" aria-label="Ver">
-			{#each FILTROS as [id, t] (id)}
-				<button type="button" aria-pressed={filtro === id} onclick={() => (filtro = id)}>{t}</button
-				>
-			{/each}
-		</div>
+		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- descarga (un +server), con la query de los filtros -->
+		<a class="btn btn-secondary btn-sm bajar" href={exportar} download data-sveltekit-reload
+			><Icon icon={I.phDownloadSimpleBold} size={16} /> Bajar CSV</a
+		>
 	</div>
 
-	<div class="lista" use:anim={{ t: 'rise', delay: 60 }}>
-		{#each items as a (a.id)}
-			{@const [icono, bg, fg] = ICONO[a.tipo]}
-			<div class="evento" class:deshecho={a.deshecho}>
-				{#if a.foto}
-					<img src={unsplash(a.foto, 72, '&h=72&crop=faces')} alt="" />
-				{:else if a.quien === 'Vos'}
-					<span class="av vos">V</span>
-				{:else}
-					<span class="av" style:background={bg} style:color={fg}
-						><Icon icon={icono} size={17} /></span
-					>
-				{/if}
-				<span class="txt">
-					<span class="t"><b>{a.quien}</b> {a.texto}</span>
-					<span class="s">{cuando(a.cuando)} · {a.donde}</span>
-				</span>
-				{#if a.deshacer}
-					<button type="button" class="deshacer" onclick={() => deshacer(a.id)}>Deshacer</button>
-				{/if}
-			</div>
-		{:else}
-			<div class="vacio">
-				{demo
-					? 'Nada por acá todavía.'
-					: 'Todavía no hay nada registrado. Por ahora acá quedan los cambios que hace el equipo de soporte de Tu Local Web; tus ventas y productos los ves en cada sección.'}
-			</div>
-		{/each}
-	</div>
+	<form class="filtros" use:anim={{ t: 'rise', delay: 40 }} onsubmit={(e) => e.preventDefault()}>
+		<label class="field"
+			>Persona
+			<select
+				class="select"
+				value={filtro.persona ?? ''}
+				onchange={(e) => filtrar({ persona: valor(e) || undefined })}
+			>
+				<option value="">Todas</option>
+				{#each data.pagina.personas as p (p.id)}<option value={p.id}>{p.nombre}</option>{/each}
+			</select></label
+		>
+		<label class="field"
+			>Tipo
+			<select
+				class="select"
+				value={filtro.tipo ?? ''}
+				onchange={(e) => filtrar({ tipo: (valor(e) || undefined) as FiltroActividad['tipo'] })}
+			>
+				<option value="">Todo</option>
+				{#each CATEGORIAS as [id, nombre] (id)}<option value={id}>{nombre}</option>{/each}
+			</select></label
+		>
+		<label class="field"
+			>Desde
+			<input
+				class="input"
+				type="date"
+				max={filtro.hasta ?? hoyAR}
+				value={filtro.desde ?? ''}
+				onchange={(e) => filtrar({ desde: valor(e) || undefined })}
+			/></label
+		>
+		<label class="field"
+			>Hasta
+			<input
+				class="input"
+				type="date"
+				min={filtro.desde}
+				max={hoyAR}
+				value={filtro.hasta ?? ''}
+				onchange={(e) => filtrar({ hasta: valor(e) || undefined })}
+			/></label
+		>
+		{#if hayFiltros}
+			<button type="button" class="limpiar" onclick={sacarFiltros}
+				><Icon icon={I.phXBold} size={14} /> Sacar filtros</button
+			>
+		{/if}
+	</form>
+
+	{#if items.length}
+		<div class="lista" use:anim={{ t: 'rise', delay: 60 }}>
+			{#each items as a (a.id)}
+				{@const [icono, bg, fg] = ICONO[a.tipo]}
+				<div class="evento" class:deshecho={a.deshecho}>
+					{#if a.foto}
+						<img src={unsplash(a.foto, 72, '&h=72&crop=faces')} alt="" />
+					{:else if a.tipo === 'equipo'}
+						<span class="av" class:vos={a.quien === 'Vos'}>{inicial(a.quien)}</span>
+					{:else}
+						<span class="av" style:background={bg} style:color={fg}
+							><Icon icon={icono} size={17} /></span
+						>
+					{/if}
+					<span class="txt">
+						<span class="t"><b>{a.quien}</b> {a.texto}</span>
+						<!-- Cada dato entero en su renglón (sin «·» sueltos al cortar). -->
+						<span class="s"
+							>{#each [cuando(a.cuando), a.rol, nombreCategoria(a.categoria), a.donde].filter(Boolean) as x, i (i)}<span
+									class="d">{i ? '· ' : ''}{x}</span
+								>{/each}</span
+						>
+					</span>
+					{#if a.deshacer}
+						<button type="button" class="deshacer" onclick={() => deshacer(a.id)}>Deshacer</button>
+					{/if}
+				</div>
+			{/each}
+		</div>
+		{#if siguiente}
+			<button
+				type="button"
+				class="btn btn-soft mas"
+				aria-busy={cargando}
+				disabled={cargando}
+				onclick={verMas}>{cargando ? 'Cargando…' : 'Ver más'}</button
+			>
+		{/if}
+	{:else if hayFiltros}
+		<Vacio
+			hornero="lupa"
+			titulo="Nada con esos filtros"
+			texto="No hay cambios de esa persona, de ese tipo o en esas fechas. Probá con otros."
+		>
+			<button type="button" class="btn btn-secondary" onclick={sacarFiltros}>Sacar filtros</button>
+		</Vacio>
+	{:else}
+		<Vacio
+			hornero="horno-vacio"
+			titulo="Todavía no hay nada registrado"
+			texto="Desde ahora, cada precio, pedido, cobro o cambio de configuración queda acá con quién lo hizo. Lo de antes no se guardó."
+		/>
+	{/if}
 </div>
 
 <style>
@@ -145,27 +239,38 @@
 		margin-top: 2px;
 		font-size: 15px;
 		color: var(--mu);
+		text-wrap: pretty;
 	}
-	.tabs {
-		display: flex;
-		padding: 3px;
-		border-radius: 999px;
-		background: var(--chip);
+	.bajar {
+		gap: 6px;
+		min-height: 40px;
 	}
-	.tabs button {
+	.filtros {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+		align-items: end;
+		gap: 10px;
+	}
+	.filtros .select,
+	.filtros .input {
+		min-height: 44px;
+		padding: 9px 12px;
+		font-size: 14px;
+	}
+	.limpiar {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		min-height: 44px;
+		padding: 0 12px;
 		border: 0;
+		border-radius: 999px;
+		background: transparent;
+		color: var(--mu);
 		font:
 			600 13px 'Instrument Sans',
 			sans-serif;
-		padding: 8px 13px;
-		border-radius: 999px;
-		background: transparent;
-		color: var(--tx);
 		white-space: nowrap;
-	}
-	.tabs button[aria-pressed='true'] {
-		background: var(--sf);
-		box-shadow: var(--sh);
 	}
 	.lista {
 		padding: 8px 20px;
@@ -195,12 +300,14 @@
 	.av {
 		display: grid;
 		place-items: center;
+		background: rgba(210, 88, 47, 0.12);
+		color: #c24e25;
+		font-size: 14px;
+		font-weight: 700;
 	}
 	.av.vos {
 		background: #2a140c;
 		color: #fbf7f2;
-		font-size: 14px;
-		font-weight: 700;
 	}
 	.txt {
 		flex: 1;
@@ -210,6 +317,8 @@
 		display: block;
 		font-size: 14px;
 		line-height: 1.4;
+		overflow-wrap: anywhere;
+		text-wrap: pretty;
 	}
 	.deshecho .t {
 		color: var(--mu);
@@ -219,6 +328,17 @@
 		font-size: 12.5px;
 		color: var(--fa);
 		margin-top: 2px;
+	}
+	.d {
+		display: inline-block;
+		max-width: 100%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		vertical-align: top;
+	}
+	.d + .d {
+		margin-left: 0.3em;
 	}
 	.deshacer {
 		align-self: center;
@@ -231,9 +351,20 @@
 			600 12.5px 'Instrument Sans',
 			sans-serif;
 	}
-	.vacio {
-		padding: 24px 0;
-		text-align: center;
-		color: var(--mu);
+	.mas {
+		align-self: center;
+		min-height: 44px;
+	}
+	@media (max-width: 760px) {
+		.filtros {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+		.limpiar {
+			grid-column: 1 / -1;
+			justify-self: start;
+		}
+		.lista {
+			padding: 4px 16px;
+		}
 	}
 </style>

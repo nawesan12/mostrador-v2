@@ -21,10 +21,11 @@ describe('roles del equipo de una tienda', () => {
 		expect(ve('ventas')).toEqual(expect.arrayContaining(['Pedidos', 'Clientes', 'Productos']));
 		expect(ve('ventas')).not.toContain('Finanzas');
 		expect(ve('ventas')).not.toContain('Listas de precio');
+		expect(ve('ventas')).not.toContain('Actividad');
+		expect(ve('admin')).toContain('Actividad');
 		expect(ve('local')).toEqual([
 			'Resumen',
 			'Para hacer hoy',
-			'Actividad',
 			'Pedidos',
 			'Turnos',
 			'Devoluciones',

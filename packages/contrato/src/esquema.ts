@@ -1803,8 +1803,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Todo lo que pasó en la cuenta, quién lo hizo y desde dónde. */
+        /** Quién hizo qué en la tienda (docs/decisiones.md §38): lo que anota cada sección, del más nuevo al más viejo, de a 50. Sólo la dueña y administración (403 a ventas y local). Se guarda un año. */
         get: operations["actividad"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/actividad/exportar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Las filas del CSV de la actividad con los mismos filtros (hasta 20.000). La descarga queda anotada. */
+        get: operations["exportarActividad"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3678,9 +3695,16 @@ export interface components {
         };
         Evento: {
             id: string;
-            /** @enum {string} */
-            tipo: "equipo" | "hornero" | "sistema";
+            /**
+             * @description Quién: persona del equipo, IA conectada, Tincho, soporte de Tu Local Web o el sistema
+             * @enum {string}
+             */
+            tipo: "equipo" | "ia" | "hornero" | "soporte" | "sistema";
+            /** @description «Vos», el nombre de la persona o «Claude (conectada por Leo)» */
             quien: string;
+            /** @description Rol de la persona en ese momento (Dueña, Administración, Ventas, Local) */
+            rol: string | null;
+            categoria: components["schemas"]["CategoriaEvento"];
             foto: string | null;
             texto: string;
             /** Format: date-time */
@@ -3690,6 +3714,11 @@ export interface components {
             deshacer: boolean;
             deshecho: boolean;
         };
+        /**
+         * @description De qué se trata (el filtro «Tipo» de Actividad).
+         * @enum {string}
+         */
+        CategoriaEvento: "producto" | "pedido" | "venta" | "promocion" | "cobros" | "negocio" | "envios" | "dominio" | "integracion" | "personas" | "plan" | "datos" | "sesion" | "mitienda" | "soporte" | "otro";
         ParaHacer: {
             grupos: {
                 /** @enum {string} */
@@ -8362,7 +8391,17 @@ export interface operations {
     };
     actividad: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Id de la persona (de `personas`) o «soporte» */
+                persona?: string;
+                tipo?: components["schemas"]["CategoriaEvento"];
+                /** @description YYYY-MM-DD, hora de Argentina, inclusive */
+                desde?: string;
+                /** @description YYYY-MM-DD, hora de Argentina, inclusive */
+                hasta?: string;
+                /** @description El `siguiente` de la página anterior */
+                cursor?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -8377,10 +8416,49 @@ export interface operations {
                 content: {
                     "application/json": {
                         items: components["schemas"]["Evento"][];
+                        /** @description Cursor de la página siguiente (null: no hay más) */
+                        siguiente: string | null;
+                        /** @description Quiénes aparecen en la actividad, para el filtro */
+                        personas: {
+                            id: string;
+                            nombre: string;
+                        }[];
                     };
                 };
             };
+            400: components["responses"]["Problema"];
             401: components["responses"]["Problema"];
+            403: components["responses"]["Problema"];
+        };
+    };
+    exportarActividad: {
+        parameters: {
+            query?: {
+                persona?: string;
+                tipo?: components["schemas"]["CategoriaEvento"];
+                desde?: string;
+                hasta?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Filas (la primera es el encabezado) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        filas: string[][];
+                    };
+                };
+            };
+            400: components["responses"]["Problema"];
+            401: components["responses"]["Problema"];
+            403: components["responses"]["Problema"];
         };
     };
     deshacerEvento: {

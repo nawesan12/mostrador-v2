@@ -1817,7 +1817,15 @@ paths:
   /v1/panel/actividad:
     get:
       operationId: actividad
-      summary: Todo lo que pasó en la cuenta, quién lo hizo y desde dónde.
+      summary: >-
+        Quién hizo qué en la tienda (docs/decisiones.md §38): lo que anota cada sección, del más nuevo al más viejo,
+        de a 50. Sólo la dueña y administración (403 a ventas y local). Se guarda un año.
+      parameters:
+        - { name: persona, in: query, schema: { type: string }, description: 'Id de la persona (de `personas`) o «soporte»' }
+        - { name: tipo, in: query, schema: { $ref: '#/components/schemas/CategoriaEvento' } }
+        - { name: desde, in: query, schema: { type: string, format: date }, description: 'YYYY-MM-DD, hora de Argentina, inclusive' }
+        - { name: hasta, in: query, schema: { type: string, format: date }, description: 'YYYY-MM-DD, hora de Argentina, inclusive' }
+        - { name: cursor, in: query, schema: { type: string }, description: 'El `siguiente` de la página anterior' }
       responses:
         '200':
           description: Actividad
@@ -1825,10 +1833,44 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [items]
+                required: [items, siguiente, personas]
                 properties:
                   items: { type: array, items: { $ref: '#/components/schemas/Evento' } }
+                  siguiente: { type: [string, 'null'], description: 'Cursor de la página siguiente (null: no hay más)' }
+                  personas:
+                    type: array
+                    description: Quiénes aparecen en la actividad, para el filtro
+                    items:
+                      type: object
+                      required: [id, nombre]
+                      properties:
+                        id: { type: string }
+                        nombre: { type: string }
+        '400': { $ref: '#/components/responses/Problema' }
         '401': { $ref: '#/components/responses/Problema' }
+        '403': { $ref: '#/components/responses/Problema' }
+  /v1/panel/actividad/exportar:
+    get:
+      operationId: exportarActividad
+      summary: Las filas del CSV de la actividad con los mismos filtros (hasta 20.000). La descarga queda anotada.
+      parameters:
+        - { name: persona, in: query, schema: { type: string } }
+        - { name: tipo, in: query, schema: { $ref: '#/components/schemas/CategoriaEvento' } }
+        - { name: desde, in: query, schema: { type: string, format: date } }
+        - { name: hasta, in: query, schema: { type: string, format: date } }
+      responses:
+        '200':
+          description: Filas (la primera es el encabezado)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [filas]
+                properties:
+                  filas: { type: array, items: { type: array, items: { type: string } } }
+        '400': { $ref: '#/components/responses/Problema' }
+        '401': { $ref: '#/components/responses/Problema' }
+        '403': { $ref: '#/components/responses/Problema' }
   /v1/panel/actividad/{id}/deshacer:
     post:
       operationId: deshacerEvento
@@ -3791,17 +3833,23 @@ components:
         insights: { type: array, items: { type: string } }
     Evento:
       type: object
-      required: [id, tipo, quien, foto, texto, cuando, donde, deshacer, deshecho]
+      required: [id, tipo, quien, rol, categoria, foto, texto, cuando, donde, deshacer, deshecho]
       properties:
         id: { type: string }
-        tipo: { type: string, enum: [equipo, hornero, sistema] }
-        quien: { type: string }
+        tipo: { type: string, enum: [equipo, ia, hornero, soporte, sistema], description: 'Quién: persona del equipo, IA conectada, Tincho, soporte de Tu Local Web o el sistema' }
+        quien: { type: string, description: '«Vos», el nombre de la persona o «Claude (conectada por Leo)»' }
+        rol: { type: [string, 'null'], description: 'Rol de la persona en ese momento (Dueña, Administración, Ventas, Local)' }
+        categoria: { $ref: '#/components/schemas/CategoriaEvento' }
         foto: { type: [string, 'null'] }
         texto: { type: string }
         cuando: { type: string, format: date-time }
         donde: { type: string }
         deshacer: { type: boolean, description: 'Se puede volver atrás' }
         deshecho: { type: boolean }
+    CategoriaEvento:
+      type: string
+      description: De qué se trata (el filtro «Tipo» de Actividad).
+      enum: [producto, pedido, venta, promocion, cobros, negocio, envios, dominio, integracion, personas, plan, datos, sesion, mitienda, soporte, otro]
     ParaHacer:
       type: object
       required: [grupos]
