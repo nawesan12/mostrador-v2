@@ -200,7 +200,8 @@ test('los avisos llegan al equipo según su rol, nunca a otra tienda, y a quien 
 
 	// Lo que no le toca a nadie de afuera: Eva no recibió nada de Sol; Beto, ni cupones ni plata.
 	await new Promise((ok) => setTimeout(ok, 1000));
-	expect(pEva.marcos.filter((m) => !/"(hola|latido)"/.test(m))).toEqual([]);
+	// (sesion.cambio es de sus propias sesiones: se reparte por persona, nunca por tienda.)
+	expect(pEva.marcos.filter((m) => !/"(hola|latido|sesion\.cambio)"/.test(m))).toEqual([]);
 	expect(llego(pBeto, 'cupon.nuevo')).toBe(false);
 	expect(llego(pBeto, 'finanzas.cambio')).toBe(false);
 	expect(llego(pBeto, 'pago.acreditado')).toBe(true);
