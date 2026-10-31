@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
@@ -58,17 +57,6 @@ type Producto struct {
 	Fotos       []string        `json:"fotos"`
 	Opciones    []Opcion        `json:"opciones"`
 	Variantes   []Variante      `json:"variantes"`
-}
-
-var noSlug = regexp.MustCompile(`[^a-z0-9]+`)
-
-// Slug arma la parte de la URL del producto.
-func Slug(nombre string) string {
-	s := strings.Trim(noSlug.ReplaceAllString(normal(nombre), "-"), "-")
-	if len(s) > 60 {
-		s = s[:60]
-	}
-	return s
 }
 
 // Validar revisa lo que se carga.
@@ -259,14 +247,14 @@ func Productos(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (
 		if err != nil {
 			return err
 		}
-		filas, err := t.Query(ctx, `SELECT id, nombre, descripcion, categoria, precio, costo, sku, stock, foto, canales, publicado, fotos, opciones
+		filas, err := t.Query(ctx, `SELECT id, nombre, descripcion, categoria, precio, costo, sku, stock, foto, canales, publicado, fotos, opciones, slug
 			FROM productos WHERE tienda_id = $1 ORDER BY creado_en DESC`, tiendaID)
 		if err != nil {
 			return err
 		}
 		for filas.Next() {
 			var p Producto
-			if err := filas.Scan(&p.ID, &p.Nombre, &p.Descripcion, &p.Categoria, &p.Precio, &p.Costo, &p.SKU, &p.Stock, &p.Foto, &p.Canales, &p.Publicado, &p.Fotos, &p.Opciones); err != nil {
+			if err := filas.Scan(&p.ID, &p.Nombre, &p.Descripcion, &p.Categoria, &p.Precio, &p.Costo, &p.SKU, &p.Stock, &p.Foto, &p.Canales, &p.Publicado, &p.Fotos, &p.Opciones, &p.Slug); err != nil {
 				return err
 			}
 			p.Variantes = porProducto[p.ID]
@@ -279,7 +267,7 @@ func Productos(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (
 				resumen = append(resumen, Registro{"id": v.ID, "texto": TextoVariante(p.Opciones, v.Valores), "sku": v.SKU,
 					"precio": v.Precio, "stock": v.Stock, "activa": v.Activa})
 			}
-			p.Vendidos30d, p.Slug = ultimos30[p.Nombre], Slug(p.Nombre)
+			p.Vendidos30d = ultimos30[p.Nombre]
 			ventas := semanas[p.Nombre]
 			if ventas == nil {
 				ventas = make([]int, 8)
@@ -314,7 +302,7 @@ func Productos(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (
 				"id": p.ID, "nombre": p.Nombre, "descripcion": p.Descripcion, "foto": p.Foto, "sku": p.SKU,
 				"categoria": cat, "precio": p.Precio, "costo": p.Costo, "margen": margen, "stock": p.Stock,
 				"ventas": ventas, "vendidos30": p.Vendidos30d, "canales": canales, "publicado": p.Publicado,
-				"estado": estado, "lowm": lowm, "star": p.Vendidos30d > 60, "variantes": resumen, "_ficha": p,
+				"estado": estado, "lowm": lowm, "star": p.Vendidos30d > 60, "variantes": resumen, "slug": p.Slug, "_ficha": p,
 			})
 		}
 		return filas.Err()
