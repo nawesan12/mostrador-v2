@@ -175,11 +175,14 @@ func venta(ctx context.Context, t pgx.Tx, ev outbox.Evento) (Hecho, error) {
 	}}, nil
 }
 
+// RutaPedido: la lista de pedidos con la hoja de ese pedido abierta.
+func RutaPedido(numero int) string { return fmt.Sprintf("/panel/pedidos?pedido=%d", numero) }
+
 // TextoVenta: «Nueva venta #N» con lo que el rol puede ver (sin monto para Ventas y Local) y nada
 // de quien compró.
 func TextoVenta(rol string, numero int, total int64, productos int, pago, estadoPago string) Texto {
 	tx := Texto{Tipo: "web", Grupo: "ventas", Titulo: fmt.Sprintf("Nueva venta #%d", numero),
-		Ruta: fmt.Sprintf("/panel/pedidos/%d", numero)}
+		Ruta: RutaPedido(numero)}
 	detalle := ""
 	if roles.Puede(rol, roles.Finanzas) {
 		detalle = auditoria.Pesos(total) + " · "
@@ -307,8 +310,8 @@ func pagoAprobado(ctx context.Context, t pgx.Tx, ev outbox.Evento) (Hecho, error
 				Ruta: "/panel/finanzas"}, true
 		}}, nil
 	case "turno":
-		var id string
-		if err := t.QueryRow(ctx, `SELECT id::text FROM turnos WHERE id::text = $1`, d.Objetivo).Scan(&id); err != nil {
+		var existe bool
+		if err := t.QueryRow(ctx, `SELECT true FROM turnos WHERE id::text = $1`, d.Objetivo).Scan(&existe); err != nil {
 			return Hecho{}, err
 		}
 		return Hecho{Clave: clave, Para: func(m Miembro) (Texto, bool) {
@@ -316,7 +319,7 @@ func pagoAprobado(ctx context.Context, t pgx.Tx, ev outbox.Evento) (Hecho, error
 				return Texto{}, false
 			}
 			return Texto{Tipo: "mp", Grupo: "ventas", Titulo: "Seña acreditada",
-				Detalle: conMonto(m.Rol, "Pagaron la seña de un turno por Mercado Pago"), Ruta: "/panel/turnos/" + id}, true
+				Detalle: conMonto(m.Rol, "Pagaron la seña de un turno por Mercado Pago"), Ruta: "/panel/turnos"}, true
 		}}, nil
 	case "pedido":
 		var numero int
@@ -332,7 +335,7 @@ func pagoAprobado(ctx context.Context, t pgx.Tx, ev outbox.Evento) (Hecho, error
 				return Texto{}, false
 			}
 			return Texto{Tipo: "mp", Grupo: "ventas", Titulo: fmt.Sprintf("Pago acreditado del pedido #%d", numero),
-				Detalle: conMonto(m.Rol, "Mercado Pago"), Ruta: fmt.Sprintf("/panel/pedidos/%d", numero)}, true
+				Detalle: conMonto(m.Rol, "Mercado Pago"), Ruta: RutaPedido(numero)}, true
 		}}, nil
 	}
 	return Hecho{}, nil

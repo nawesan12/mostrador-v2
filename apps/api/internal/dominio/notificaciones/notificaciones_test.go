@@ -30,7 +30,7 @@ func TestTextoVentaSinMontosParaVentasYLocal(t *testing.T) {
 			t.Errorf("%s: %q (con monto=%v)", rol, tx.Detalle, conMonto)
 		}
 		if !strings.HasSuffix(tx.Detalle, "1 producto · Transferencia por confirmar") || tx.Titulo != "Nueva venta #7" ||
-			tx.Ruta != "/panel/pedidos/7" || tx.Grupo != "ventas" || tx.Tipo != "transf" {
+			tx.Ruta != "/panel/pedidos?pedido=7" || tx.Grupo != "ventas" || tx.Tipo != "transf" {
 			t.Errorf("%s: %+v", rol, tx)
 		}
 	}
@@ -194,7 +194,7 @@ func TestGeneracionPorEventoYRol(t *testing.T) {
 				t.Errorf("%s ve montos: %q", r, ns[r].detalle)
 			}
 		}
-		if ns["admin"].ruta != "/panel/pedidos/5" || ns["admin"].titulo != "Nueva venta #5" {
+		if ns["admin"].ruta != "/panel/pedidos?pedido=5" || ns["admin"].titulo != "Nueva venta #5" {
 			t.Errorf("%+v", ns["admin"])
 		}
 		if e.llamado["tienda.venta"] != 3 {
