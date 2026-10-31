@@ -17,9 +17,11 @@ export type DatosHornero = {
 
 export function datosParaElModelo(d: DatosHornero) {
 	const { hoy, semana, contexto } = d;
-	// Con la API real las visitas no se miden (conversión 0) y no hay WhatsApp para mandar mensajes:
-	// al modelo no se le pasa un 0 % ni un costo por mensaje que después repetiría como dato.
-	const midoVisitas = semana.kpis.conversion.actual > 0;
+	// Las visitas las mide Tu Local Web (sin cookies) desde el primer día con alguna; antes, al
+	// modelo no se le pasa un 0 % que después repetiría como dato. En la demo, la conversión de
+	// ejemplo. Con la API real no hay WhatsApp para mandar mensajes: tampoco va su costo.
+	const midoVisitas = !!semana.visitas?.desde || semana.kpis.conversion.actual > 0;
+	const demo = !semana.visitas && semana.kpis.conversion.actual > 0;
 	return {
 		// Hoy hasta ahora y ayer completo; el detalle de cada día va en ventasPorDia.
 		hoyHastaAhora: { ventas: hoy.ventas.actual, pedidos: hoy.kpis.pedidos.actual },
@@ -40,7 +42,21 @@ export function datosParaElModelo(d: DatosHornero) {
 		ventasPorCanal30Dias: contexto.canales30d,
 		pendientes: semana.paraHacer,
 		carritosAbandonados: { cantidad: semana.hornero.carritos, monto: semana.hornero.carritosMonto },
-		...(midoVisitas ? { costoMensajeWhatsApp: semana.hornero.costoMensaje } : {}),
+		// Una visita = una persona distinta en un día (sin cookies: no se sabe si volvió otro día).
+		visitasTiendaOnline: semana.visitas?.desde
+			? {
+					hoy: hoy.visitas?.hoy.actual ?? semana.visitas.hoy.actual,
+					ayer: semana.visitas.hoy.anterior,
+					ultimos7Dias: semana.visitas.dias7.actual,
+					semanaAnterior: semana.visitas.dias7.anterior,
+					paginasVistas7Dias: semana.visitas.vistas.actual,
+					masVistos7Dias: semana.visitas.masVistos.map((p) => `${p.nombre}: ${p.vistas} vistas`),
+					...(contexto.visitas ?? {})
+				}
+			: demo
+				? 'en la demo sólo hay la conversión de ejemplo'
+				: 'todavía no hubo visitas medidas',
+		...(demo ? { costoMensajeWhatsApp: semana.hornero.costoMensaje } : {}),
 		resenas: { promedio: semana.resenas.promedio, nuevas: semana.resenas.nuevas }
 	};
 }

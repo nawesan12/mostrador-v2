@@ -52,6 +52,36 @@ describe('Tincho', () => {
 		expect(JSON.stringify(x)).not.toContain('MismaHora');
 	});
 
+	it('con la API real le pasa las visitas medidas, o que todavía no hubo, sin un 0 % inventado', () => {
+		const real = (desde: string | null) => {
+			const x = datos();
+			const visitas = {
+				desde,
+				hoy: { actual: 12, anterior: 30 },
+				dias7: { actual: 140, anterior: 120 },
+				dias30: { actual: 500, anterior: 0 },
+				visitantes: { actual: 140, anterior: 120 },
+				vistas: { actual: 420, anterior: 300 },
+				paginas: [],
+				masVistos: [{ productoId: 'p1', nombre: 'Mate', foto: null, vistas: 50, visitantes: 40 }]
+			};
+			x.semana = {
+				...x.semana,
+				visitas,
+				kpis: { ...x.semana.kpis, conversion: { actual: desde ? 2.1 : 0, anterior: 0 } }
+			};
+			x.hoy = { ...x.hoy, visitas };
+			return datosParaElModelo(x);
+		};
+		const con = real('2026-10-01');
+		expect(con.visitasTiendaOnline).toMatchObject({ ayer: 30, ultimos7Dias: 140 });
+		expect(con.ultimos7Dias.conversionPorcentaje).toBe(2.1);
+		expect(JSON.stringify(con)).not.toContain('costoMensajeWhatsApp');
+		const sin = real(null);
+		expect(sin.visitasTiendaOnline).toBe('todavía no hubo visitas medidas');
+		expect(sin.ultimos7Dias.conversionPorcentaje).toBe('no se mide todavía');
+	});
+
 	it('simulado responde con los datos', () => {
 		const x = datos();
 		const ayer = x.contexto.ventasPorDia.at(-2)!;

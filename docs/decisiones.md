@@ -641,3 +641,38 @@ URL, para que no quede en el historial ni en logs.
   de pedidos.
 - **Interruptor**: Notificaciones › Venta nueva › Email (`preferencias.canales.matriz["venta:email"]`),
   prendido por defecto; el worker lo mira al mandar. Sin columna nueva.
+
+## 36. Visitas propias de la tienda, sin cookies (migración 00054)
+
+- **Quién cuenta**: el servidor de la web, sin scripts de terceros. La carga completa de una página
+  de la tienda (inicio, catálogo, producto, carrito, checkout) la cuenta `hooks.server.ts` al
+  responder 200 a un pedido de documento; la navegación dentro de la tienda (que sólo pide
+  `__data.json`, igual que el preload por hover) la avisa el layout de `/t/[tienda]` con
+  `sendBeacon` a `/t/<slug>/vista` desde `afterNavigate`, que no corre en los preload ni al
+  revalidar. Un evento por página vista.
+- **Visitante del día**: sha256(sal + IP + navegador + tienda), 16 bytes. La sal es al azar, vive en
+  la memoria del proceso y rota con el día de Argentina: nunca se guarda, así que no hay forma de
+  volver a la persona ni de unir días. Por eso «visitas» de 7 o 30 días es la suma de las personas
+  distintas de cada día. Si el proceso se reinicia en el día, alguien puede contar dos veces: se
+  acepta. No hay cookies, así que no va en el aviso de cookies.
+- **No cuentan**: user agents de bots y de vistas previas (WhatsApp, Facebook, Telegram, Slack…),
+  Lighthouse y navegadores sin cabeza, clientes HTTP de programa, prefetch/prerender
+  (`Sec-Purpose`/`Purpose`), la vista del equipo (`mirada`) y la dueña o su equipo con la sesión
+  del panel en su propia tienda (la web pregunta a Go de qué tienda es la sesión, en segundo plano y
+  con caché de 10 min; si no lo sabe, no cuenta). En un dominio propio no hay cookie del panel: ahí
+  la dueña sí cuenta.
+- **Sin latencia ni caídas**: `Medidor` (`lib/server/visitas.ts`) junta en memoria y manda lotes
+  cada 5 s a `POST /v1/interno/visitas` (sólo con la clave del BFF) con timeout de 3 s; si la API
+  no responde, el lote se pierde. Topes: 120 vistas por visitante y 600 por IP por hora, cola de
+  10.000 y mapas acotados.
+- **Qué se guarda** (Go, paquete `visitas`, con RLS): `visitas` = una fila por tienda, día, página
+  y producto con vistas y visitantes (`pagina = 'tienda'` es el total del día); `visitas_vistos`
+  (UNLOGGED) = los hashes del día para contar únicos, que el worker borra cada hora si son de días
+  anteriores (`app.purgar_visitas`), junto con las visitas de más de 400 días. Sólo cuentan tiendas
+  publicadas y productos que existen (por slug).
+- **Dónde se ve**: el Resumen (visitas de hoy contra ayer, 7 y 30 días contra los anteriores,
+  páginas, más vistos) y la conversión real = pedidos web no cancelados / visitas, por días; sin
+  visitas en el período anterior no se muestra variación. Informes suma la pestaña «Visitas» por mes
+  desde que se mide. Tincho recibe las visitas en su contexto (`ContextoHornero.visitas`). Sin
+  ninguna visita, el panel lo dice y la conversión queda en «—». La demo sigue con su «Ahora en tu
+  tienda» de ejemplo.

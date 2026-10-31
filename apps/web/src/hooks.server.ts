@@ -7,6 +7,7 @@ import { COOKIE_SESION, COOKIE_SESION_VIEJA } from '#lib/server/auth/sesion.ts';
 import { COOKIE_EQUIPO, COOKIE_MIRADA } from '#lib/server/staff/index.ts';
 import { redireccionTienda } from '#lib/server/tienda/redireccion.ts';
 import { slugDeDominio } from '#lib/server/tienda/dominio.ts';
+import { contarVista } from '#lib/server/tienda/vistas.ts';
 import { esDominioPropio, GLOBALES_EN_DOMINIO } from '#lib/tienda/dominio.ts';
 
 /**
@@ -54,6 +55,12 @@ function secure(res: Response): Response {
 		// Encabezados inmutables (respuesta de fetch o de la caché): se copia.
 		return set(new Response(res.body, res));
 	}
+}
+
+/** Un pedido de página (no un fetch, una imagen ni un iframe de otro sitio). */
+function esDocumento(h: Headers) {
+	const dest = h.get('sec-fetch-dest');
+	return dest ? dest === 'document' : (h.get('accept') ?? '').includes('text/html');
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -115,6 +122,16 @@ export const handle: Handle = async ({ event, resolve }) => {
 		event.locals.sandbox = await leer(dbSandbox(env.SANDBOX), event.cookies.get(COOKIE));
 	}
 	let res = secure(await resolve(event));
+	// Visitas de la tienda (decisiones §36): la carga completa de una página se cuenta acá, en
+	// segundo plano (no suma latencia). La navegación dentro de la tienda la avisa el layout.
+	if (
+		event.request.method === 'GET' &&
+		res.status === 200 &&
+		!event.isDataRequest &&
+		event.route.id?.startsWith('/t/[tienda]') &&
+		esDocumento(event.request.headers)
+	)
+		contarVista(event, event.route.id, event.params.id);
 	// Sesión vencida o inválida al abrir una página del panel: en vez de la página de error, se borra
 	// la cookie y se va a ingresar, que después vuelve a donde estaba.
 	if (

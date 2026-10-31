@@ -34,10 +34,13 @@
 	const ui = getUi();
 	const t = $derived(data.tablero);
 	/**
-	 * Las visitas (conversión, "ahora en tu tienda") y las acreditaciones sólo existen en la demo: la
-	 * API real todavía no las mide, así que ahí no se muestra un cero que parezca un dato.
+	 * "Ahora en tu tienda" y las acreditaciones sólo existen en la demo: la API real no las mide, así
+	 * que ahí no se muestra un cero que parezca un dato. Las visitas sí: las cuenta Tu Local Web sin
+	 * cookies (decisiones §36), y la conversión es real desde el primer día con visitas.
 	 */
 	const mide = $derived(data.demo);
+	const visitas = $derived(data.demo ? null : (t.visitas ?? null));
+	const midoVisitas = $derived(data.demo || !!visitas?.desde);
 	const ahora = new Date();
 
 	const PERIODOS = [
@@ -105,9 +108,17 @@
 		{
 			label: 'Conversión',
 			icon: I.phFunnelSimple,
-			valor: mide ? porcentaje(t.kpis.conversion.actual) : '—',
-			delta: mide ? puntos(t.kpis.conversion.actual, t.kpis.conversion.anterior) : null,
-			nota: mide ? 'puntos' : 'Todavía no medimos visitas'
+			valor: midoVisitas ? porcentaje(t.kpis.conversion.actual) : '—',
+			// Sin visitas en el período anterior (se empezó a medir hace poco) no hay con qué comparar.
+			delta:
+				data.demo || visitas?.visitantes.anterior
+					? puntos(t.kpis.conversion.actual, t.kpis.conversion.anterior)
+					: null,
+			nota: !midoVisitas
+				? 'Sin visitas todavía'
+				: data.demo || visitas?.visitantes.anterior
+					? 'puntos'
+					: 'pedidos web por cada 100 visitas'
 		},
 		{
 			label: 'Clientes nuevos',
@@ -117,6 +128,41 @@
 			nota: CONTRA[t.periodo]
 		}
 	]);
+	const PAGINAS: Record<string, string> = {
+		inicio: 'Inicio',
+		catalogo: 'Catálogo',
+		producto: 'Productos',
+		carrito: 'Carrito',
+		checkout: 'Checkout'
+	};
+	/** "30 de octubre": la fecha (YYYY-MM-DD) desde la que se miden las visitas. */
+	const fechaCorta = (d: string) =>
+		new Date(`${d}T12:00:00Z`).toLocaleDateString('es-AR', { day: 'numeric', month: 'long' });
+	const visitasPeriodos = $derived(
+		visitas
+			? [
+					{
+						label: 'Hoy',
+						actual: visitas.hoy.actual,
+						delta: null,
+						sin: `ayer ${visitas.hoy.anterior.toLocaleString('es-AR')}`
+					},
+					{
+						label: '7 días',
+						actual: visitas.dias7.actual,
+						delta: variacion(visitas.dias7.actual, visitas.dias7.anterior),
+						sin: 'sin comparar'
+					},
+					{
+						label: '30 días',
+						actual: visitas.dias30.actual,
+						delta: variacion(visitas.dias30.actual, visitas.dias30.anterior),
+						sin: 'sin comparar'
+					}
+				]
+			: []
+	);
+	const maxVistos = $derived(Math.max(1, ...(visitas?.masVistos ?? []).map((p) => p.vistas)));
 	const metaPct = $derived(
 		t.meta.objetivo ? Math.round((t.meta.actual / t.meta.objetivo) * 100) : 0
 	);
@@ -493,15 +539,46 @@
 		<div class="tarjeta col">
 			<div class="fila-cab">
 				<div class="titulo">Visitas de tu tienda</div>
+				{#if visitas?.desde}<span class="nota">sin cookies</span>{/if}
 			</div>
-			<div class="sin-dato">
-				<img src="/hornero/grafico.webp" alt="" width="72" height="72" />
-				<p>
-					Todavía no medimos quién entra a tu tienda. Con Google Analytics conectado, las visitas
-					las ves en tu cuenta de Google.
+			{#if visitas?.desde}
+				<div class="visitas">
+					{#each visitasPeriodos as v (v.label)}
+						<div class="vi">
+							<span class="vi-l">{v.label}</span>
+							<span class="vi-n">{v.actual.toLocaleString('es-AR')}</span>
+							<span class="vi-d" class:sube={!!v.delta} class:baja={v.delta?.startsWith('−')}
+								>{v.delta ?? v.sin}</span
+							>
+						</div>
+					{/each}
+				</div>
+				<div class="paginas">
+					{#each visitas.paginas as p (p.pagina)}
+						<div>
+							<span class="pg-n">{PAGINAS[p.pagina] ?? p.pagina}</span><span class="pg-v"
+								>{plural(p.vistas, 'vista', 'vistas')}</span
+							>
+						</div>
+					{:else}
+						<div><span class="pg-n">Sin visitas en este período</span></div>
+					{/each}
+				</div>
+				<p class="vi-pie">
+					Una visita es una persona distinta en el día. Medimos desde el {fechaCorta(
+						visitas.desde
+					)}.
 				</p>
-			</div>
-			<a class="b-borde abajo" href={rutaDe('Integraciones')}>Conectar Google Analytics</a>
+			{:else}
+				<div class="sin-dato">
+					<img src="/hornero/grafico.webp" alt="" width="72" height="72" />
+					<p>
+						Todavía no entró nadie a tu tienda. Contamos cada visita sin cookies: compartí el link y
+						las vas a ver acá.
+					</p>
+				</div>
+				<a class="b-borde abajo" href={rutaDe('Mi tienda')}>Ver mi tienda</a>
+			{/if}
 		</div>
 	{:else}
 		<div class="tarjeta col">
@@ -763,6 +840,39 @@
 			{/each}
 		</div>
 	</div>
+
+	{#if visitas?.desde}
+		<div class="tarjeta">
+			<div class="fila-cab">
+				<div class="titulo">Más vistos</div>
+				<span class="nota">{ETIQUETA[t.periodo]}</span>
+			</div>
+			<div class="tops">
+				{#each visitas.masVistos as p (p.productoId)}
+					<div class="top">
+						{#if p.foto}<img
+								src={unsplash(p.foto, 96, '&h=96')}
+								alt=""
+								width="40"
+								height="40"
+							/>{/if}
+						<div class="tp-txt">
+							<div class="tp-cab">
+								<span class="tp-n">{p.nombre}</span><span class="tp-u"
+									>{plural(p.vistas, 'vista', 'vistas')}</span
+								>
+							</div>
+							<div class="tp-barra">
+								<div style:width="{(p.vistas / maxVistos) * 100}%"></div>
+							</div>
+						</div>
+					</div>
+				{:else}
+					<div class="vacio chico">Cuando miren tus productos, acá ves cuáles interesan más.</div>
+				{/each}
+			</div>
+		</div>
+	{/if}
 
 	<div class="tarjeta col">
 		<div class="fila-cab">
@@ -1515,6 +1625,48 @@
 		margin: 0;
 		max-width: 260px;
 		font-size: 13px;
+		line-height: 1.45;
+		color: var(--fa);
+		text-wrap: pretty;
+	}
+	/* Visitas (medición propia) */
+	.visitas {
+		margin-top: 12px;
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 10px;
+	}
+	.vi {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+	.vi-l {
+		font-size: 12.5px;
+		color: var(--mu);
+	}
+	.vi-n {
+		font-size: 28px;
+		font-weight: 600;
+		letter-spacing: -0.04em;
+	}
+	.vi-d {
+		font-size: 12.5px;
+		color: var(--fa);
+		white-space: nowrap;
+	}
+	.vi-d.sube {
+		font-weight: 600;
+		color: #237550;
+	}
+	.vi-d.baja {
+		color: #8a5f0e;
+	}
+	.vi-pie {
+		margin: auto 0 0;
+		padding-top: 14px;
+		font-size: 12.5px;
 		line-height: 1.45;
 		color: var(--fa);
 		text-wrap: pretty;

@@ -12,15 +12,18 @@
 	let { data } = $props();
 	const ui = getUi();
 
-	const SERIES = [
+	const TODAS = [
 		['ventas', 'Ventas', 'Ventas por mes'],
 		['productos', 'Productos', 'Unidades vendidas'],
 		['clientes', 'Clientes', 'Clientes nuevos'],
-		['margen', 'Margen', 'Margen bruto %']
+		['margen', 'Margen', 'Margen bruto %'],
+		// Sólo desde que se miden (medición propia, sin cookies): sin visitas, no hay pestaña.
+		['visitas', 'Visitas', 'Visitas a tu tienda online']
 	] as const;
+	const SERIES = $derived(TODAS.filter(([id]) => id !== 'visitas' || data.series.visitas));
 	let serie = $state(0);
-	const s = $derived(SERIES[serie]);
-	const valores = $derived(data.series[s[0]].map((v) => v ?? 0));
+	const s = $derived(SERIES[serie] ?? SERIES[0]);
+	const valores = $derived((data.series[s[0]] ?? []).map((v) => v ?? 0));
 	const max = $derived(Math.max(1, ...valores));
 	/** Etiqueta de cada barra: "1,2 M", "15,2 mil" o "850" (antes, todo en millones: "0"). */
 	const etiqueta = (v: number) =>

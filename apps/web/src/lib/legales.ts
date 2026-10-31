@@ -204,19 +204,20 @@ export const LEGALES: Legal[] = [
 		corto: 'Política de privacidad',
 		miga: 'Privacidad',
 		descripcion: 'Legales de Tu Local Web, claros y sin letra chica.',
-		chips: ['Vigente desde el 1 de octubre de 2026', 'Versión 2.4', '2 min de lectura'],
+		chips: ['Vigente desde el 30 de octubre de 2026', 'Versión 2.5', '2 min de lectura'],
 		ilustracion: 'portapapeles',
 		indice: [
 			['s1', '1. Responsable'],
 			['s2', '2. Qué datos juntamos'],
-			['s3', '3. Para qué los usamos'],
-			['s4', '4. Con quién los compartimos'],
-			['s5', '5. Transferencias internacionales'],
-			['s6', '6. Tus derechos'],
-			['s7', '7. Cuánto tiempo los guardamos'],
-			['s8', '8. Seguridad'],
-			['s9', '9. Inteligencia artificial'],
-			['s10', '10. Cambios']
+			['s2b', '3. Visitas a las tiendas'],
+			['s3', '4. Para qué los usamos'],
+			['s4', '5. Con quién los compartimos'],
+			['s5', '6. Transferencias internacionales'],
+			['s6', '7. Tus derechos'],
+			['s7', '8. Cuánto tiempo los guardamos'],
+			['s8', '9. Seguridad'],
+			['s9', '10. Inteligencia artificial'],
+			['s10', '11. Cambios']
 		],
 		bloques: [
 			{
@@ -251,7 +252,27 @@ export const LEGALES: Legal[] = [
 						ul: [
 							'De tu cuenta: nombre, email, teléfono, CUIT y datos de facturación.',
 							'De uso: páginas del panel que visitás, dispositivo y dirección IP, para seguridad y para mejorar el producto.',
-							'De tus clientes: los que vos cargás o recibís en tus ventas. Ahí sos el responsable y Tu Local Web actúa como encargado (ver Tratamiento de datos).'
+							'De tus clientes: los que vos cargás o recibís en tus ventas. Ahí sos el responsable y Tu Local Web actúa como encargado (ver Tratamiento de datos).',
+							'De quienes visitan las tiendas: sólo cuántas veces se vio cada página, sin cookies y sin guardar la IP ni el navegador (ver Visitas a las tiendas).'
+						]
+					}
+				]
+			},
+			{
+				t: 'seccion',
+				id: 's2b',
+				n: '03',
+				titulo: 'Visitas a las tiendas',
+				cuerpo: [
+					{
+						p: 'Para que cada comercio sepa cuánta gente entra a su tienda, Tu Local Web cuenta las páginas vistas desde su propio servidor, sin cookies, sin guardar nada en el navegador y sin servicios de terceros.'
+					},
+					{
+						ul: [
+							'Para no contar dos veces a la misma persona en un día, calculamos un código (hash) con la IP, el navegador, la tienda y una clave al azar que cambia todos los días y nunca se guarda. Con la clave borrada, ese código no permite saber quién sos ni unir tus visitas de distintos días.',
+							'No guardamos la IP ni el navegador. Lo que queda es el total por tienda, día y página (por ejemplo, «el mate se vio 40 veces el martes»).',
+							'El código del día se borra al día siguiente; los totales, a los 400 días.',
+							'No cuentan los buscadores ni los robots, las vistas previas de links (WhatsApp, Facebook, Telegram) ni la dueña de la tienda mirando la suya con su cuenta.'
 						]
 					}
 				]
@@ -259,7 +280,7 @@ export const LEGALES: Legal[] = [
 			{
 				t: 'seccion',
 				id: 's3',
-				n: '03',
+				n: '04',
 				titulo: 'Para qué los usamos',
 				cuerpo: [
 					{
@@ -270,7 +291,7 @@ export const LEGALES: Legal[] = [
 			{
 				t: 'seccion',
 				id: 's4',
-				n: '04',
+				n: '05',
 				titulo: 'Con quién los compartimos',
 				cuerpo: [
 					{
@@ -281,7 +302,7 @@ export const LEGALES: Legal[] = [
 			{
 				t: 'seccion',
 				id: 's5',
-				n: '05',
+				n: '06',
 				titulo: 'Transferencias internacionales',
 				cuerpo: [
 					{
@@ -292,7 +313,7 @@ export const LEGALES: Legal[] = [
 			{
 				t: 'seccion',
 				id: 's6',
-				n: '06',
+				n: '07',
 				titulo: 'Tus derechos',
 				cuerpo: [
 					{
@@ -306,7 +327,7 @@ export const LEGALES: Legal[] = [
 			{
 				t: 'seccion',
 				id: 's7',
-				n: '07',
+				n: '08',
 				titulo: 'Cuánto tiempo los guardamos',
 				cuerpo: [
 					{
@@ -317,7 +338,7 @@ export const LEGALES: Legal[] = [
 			{
 				t: 'seccion',
 				id: 's8',
-				n: '08',
+				n: '09',
 				titulo: 'Seguridad',
 				cuerpo: [
 					{
@@ -328,7 +349,7 @@ export const LEGALES: Legal[] = [
 			{
 				t: 'seccion',
 				id: 's9',
-				n: '09',
+				n: '10',
 				titulo: 'Inteligencia artificial',
 				cuerpo: [
 					{
@@ -339,7 +360,7 @@ export const LEGALES: Legal[] = [
 			{
 				t: 'seccion',
 				id: 's10',
-				n: '10',
+				n: '11',
 				titulo: 'Cambios',
 				cuerpo: [
 					{
@@ -359,13 +380,14 @@ export const LEGALES: Legal[] = [
 		corto: 'Política de cookies',
 		miga: 'Cookies',
 		descripcion: 'Legales de Tu Local Web, claros y sin letra chica.',
-		chips: ['Vigente desde el 1 de octubre de 2026', 'Versión 1.3', '2 min de lectura'],
+		chips: ['Vigente desde el 30 de octubre de 2026', 'Versión 1.4', '2 min de lectura'],
 		ilustracion: 'portapapeles',
 		indice: [
 			['s1', '1. Qué son las cookies'],
 			['s2', '2. Qué cookies usamos'],
 			['s3', '3. Cómo gestionarlas'],
-			['s4', '4. Cookies en las tiendas']
+			['s4', '4. Cookies en las tiendas'],
+			['s5', '5. Visitas medidas sin cookies']
 		],
 		bloques: [
 			{
@@ -373,7 +395,8 @@ export const LEGALES: Legal[] = [
 				items: [
 					'Usamos cookies necesarias para que el sitio funcione; esas no se pueden apagar.',
 					'Las analíticas y de marketing solo se activan si las aceptás.',
-					'Podés cambiar tu elección cuando quieras desde el botón de abajo o el pie de la página.'
+					'Podés cambiar tu elección cuando quieras desde el botón de abajo o el pie de la página.',
+					'Las visitas a las tiendas las contamos sin cookies: no hace falta aceptar nada.'
 				]
 			},
 			{
@@ -467,6 +490,20 @@ export const LEGALES: Legal[] = [
 				cuerpo: [
 					{
 						p: 'Cada tienda creada con Tu Local Web puede sumar sus propios píxeles (por ejemplo, de Meta o Google) para medir sus campañas. En ese caso el responsable es el comercio. Tu Local Web incluye en todas las tiendas un aviso de cookies configurable para que cumplan la normativa.'
+					}
+				]
+			},
+			{
+				t: 'seccion',
+				id: 's5',
+				n: '05',
+				titulo: 'Visitas medidas sin cookies',
+				cuerpo: [
+					{
+						p: 'Tu Local Web cuenta cuántas personas entran a cada tienda desde su propio servidor, sin cookies ni nada guardado en el navegador, y sin scripts de terceros. Por eso esa medición no aparece en el aviso de cookies ni necesita tu permiso.'
+					},
+					{
+						p: 'Para no contar dos veces a la misma persona en el día usamos un código calculado con la IP, el navegador, la tienda y una clave al azar que cambia cada día y no se guarda. No guardamos la IP ni el navegador, y el código se borra al día siguiente: no sirve para identificarte ni para seguirte entre días o tiendas. Más detalle en la Política de privacidad.'
 					}
 				]
 			}

@@ -7,9 +7,17 @@
 
 	// La medición de la tienda (GA4 y píxel de Meta, sólo con consentimiento): una página vista por
 	// navegación. Las plantillas no saben nada de esto.
-	afterNavigate(() => {
+	afterNavigate(({ type, from, to }) => {
 		preparar(data.tienda);
 		pagina();
+		// Visitas propias, sin cookies (decisiones §36): la carga completa ya la contó el servidor;
+		// cada página nueva dentro de la tienda se avisa sin esperar respuesta.
+		if (type === 'enter' || data.tienda.vitrina || !to?.route.id) return;
+		if (from?.url.pathname === to.url.pathname) return;
+		navigator.sendBeacon?.(
+			`/t/${data.tienda.slug}/vista`,
+			JSON.stringify({ r: to.route.id, p: to.params?.id ?? '' })
+		);
 	});
 
 	import { page } from '$app/state';
