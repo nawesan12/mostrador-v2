@@ -110,12 +110,12 @@
 					<div class="f-n">{pedido.comprador.nombre}</div>
 					<div class="f-s">
 						<!-- Cada dato entero en su renglón: el «·» nunca arranca uno. -->
-						<span class="nw">Cliente desde {anio(pedido.comprador.desde)}</span>
+						<span class="nw">Cliente desde {anio(pedido.comprador.desde)} ·</span>
 						<span class="nw"
-							>· {pedido.comprador.pedidos}
-							{pedido.comprador.pedidos === 1 ? 'pedido' : 'pedidos'}</span
+							>{pedido.comprador.pedidos}
+							{pedido.comprador.pedidos === 1 ? 'pedido' : 'pedidos'} ·</span
 						>
-						<span class="nw">· {pesos(pedido.comprador.gastado)}</span>
+						<span class="nw">{pesos(pedido.comprador.gastado)}</span>
 					</div>
 				</div>
 				{#if wa}

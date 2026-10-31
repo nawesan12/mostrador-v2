@@ -122,9 +122,12 @@
 		}
 	}
 	@media (max-width: 760px) {
+		/* En el celular, arriba: abajo tapaba la barra de navegación y el botón de guardar de las hojas. */
 		.pila {
 			right: 12px;
 			left: 12px;
+			top: calc(env(safe-area-inset-top) + 10px);
+			bottom: auto;
 			align-items: stretch;
 		}
 		.toast {

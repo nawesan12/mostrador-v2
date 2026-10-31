@@ -154,7 +154,14 @@
 					aria-controls="cmdk-lista"
 					aria-activedescendant="cmdk-{sel}"
 				/>
-				<kbd>esc</kbd>
+				<!-- En la compu, la pista de la tecla; en el celular, un botón para cerrar. -->
+				<button
+					type="button"
+					class="cerrar"
+					aria-label="Cerrar"
+					onclick={() => (shell.cmdk = false)}
+					><kbd>esc</kbd><span class="c-x"><Icon icon={I.phXBold} size={14} /></span></button
+				>
 			</div>
 			<div class="lista" id="cmdk-lista" role="listbox" aria-label="Resultados">
 				<button
@@ -356,6 +363,31 @@
 	}
 	.esp {
 		flex: 1;
+	}
+	.cerrar {
+		flex: none;
+		border: 0;
+		padding: 0;
+		background: transparent;
+		color: var(--mu);
+		cursor: pointer;
+	}
+	.c-x {
+		display: none;
+	}
+	/* Pantallas táctiles: sin pistas de teclado; el cerrar, de 44 px. */
+	@media (pointer: coarse) {
+		kbd {
+			display: none;
+		}
+		.c-x {
+			display: grid;
+			place-items: center;
+			width: 44px;
+			height: 44px;
+			margin: -8px -10px -8px 0;
+			border-radius: 50%;
+		}
 	}
 	@media (max-width: 759px) {
 		:global(.cmdk) {
