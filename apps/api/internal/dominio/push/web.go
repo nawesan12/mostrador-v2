@@ -15,7 +15,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/webpush"
 )
 
-// Push web del panel instalado como app (docs/decisiones.md §41): la misma lógica que el iPhone,
+// Push web del panel instalado como app (docs/decisiones.md §42): la misma lógica que el iPhone,
 // con la suscripción de Web Push del navegador en vez del token de APNs. Se activa desde
 // Notificaciones › «Push en este celular»; en el iPhone sólo anda con el panel instalado (iOS 16.4+).
 

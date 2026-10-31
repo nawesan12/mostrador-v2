@@ -53,7 +53,7 @@ type Config struct {
 	// al .p8 (nunca en el repo) y el topic (el bundle id de la app). Sin Key ID, Team ID o clave, el
 	// worker no manda pushes.
 	APNsKeyID, APNsTeamID, APNsClave, APNsTopic string
-	// Web Push del panel instalado (docs/decisiones.md §41): el par VAPID en base64url (`go run
+	// Web Push del panel instalado (docs/decisiones.md §42): el par VAPID en base64url (`go run
 	// ./cmd/vapid`) y el sujeto (mailto: o https:). Sin las tres, no hay push web.
 	VAPIDPublica, VAPIDPrivada, VAPIDSujeto string
 }

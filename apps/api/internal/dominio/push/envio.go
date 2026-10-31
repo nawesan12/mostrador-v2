@@ -33,7 +33,7 @@ type EnviadorWeb interface {
 type Servicio struct {
 	Pool Pool
 	APNs Enviador
-	// Web: el push web del panel instalado como app (§41). nil: apagado.
+	// Web: el push web del panel instalado como app (§42). nil: apagado.
 	Web EnviadorWeb
 	Log *slog.Logger
 }

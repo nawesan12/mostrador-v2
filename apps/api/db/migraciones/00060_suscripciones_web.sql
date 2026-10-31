@@ -1,5 +1,5 @@
 -- +goose Up
--- Push web del panel instalado como app (docs/decisiones.md §41). Hermana de auth.dispositivos
+-- Push web del panel instalado como app (docs/decisiones.md §42). Hermana de auth.dispositivos
 -- (§40): cada navegador donde alguien activó los avisos guarda su suscripción de Web Push, atada a
 -- esa sesión y a esa persona. Si la sesión se cierra, la fila se va con ella (ON DELETE CASCADE); si
 -- vence, el worker no la elige. RLS forzada por persona (app.usuario_actual(), db.EnUsuario).

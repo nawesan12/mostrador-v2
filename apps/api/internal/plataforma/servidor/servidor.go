@@ -78,7 +78,7 @@ type Dependencias struct {
 	Equipo *equipo.Servicio
 	// Importar la tienda desde otra plataforma (el avance lo hace el worker). nil: no se monta.
 	Importacion *importacion.Servicio
-	// Clave pública VAPID del push web del panel instalado (vacía: apagado; §41).
+	// Clave pública VAPID del push web del panel instalado (vacía: apagado; §42).
 	VAPIDPublica string
 }
 
