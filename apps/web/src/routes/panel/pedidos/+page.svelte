@@ -36,6 +36,7 @@
 		textoEstado
 	} from '#lib/panel/pedidos/nombres.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
+	import { escucharTiempoReal } from '#lib/tiempo-real/panel.svelte.ts';
 	import type { components } from '@mostrador/contrato/esquema';
 
 	type Fila = components['schemas']['PedidoFila'];
@@ -253,6 +254,23 @@
 			ui.toast({ k: 'warn', title: 'Ese pedido no existe', desc: `No encontramos el #${numero}.` });
 		}
 	}
+	// Tiempo real (§44): la hoja abierta se actualiza sola cuando alguien del equipo (o un pago que
+	// se acredita, un envío, una factura) cambia ese pedido. La lista se recarga por su `depends`.
+	async function refrescar(numero: number) {
+		const r = await fetch(`/panel/pedidos/${numero}`).catch(() => null);
+		if (r?.ok && hoja && detalle?.numero === numero) detalle = await r.json();
+	}
+	escucharTiempoReal((e) => {
+		const d = detalle;
+		if (!hoja || !d) return;
+		const deEste = e.lote || e.id === String(d.numero);
+		if (
+			e.tipo === 'resincronizar' ||
+			e.tipo.startsWith('comprobante.') ||
+			(/^(pedido|pago|envio)\./.test(e.tipo) && deEste)
+		)
+			void refrescar(d.numero);
+	});
 	$effect(() => {
 		// El Resumen manda a /panel/pedidos?pedido=1048.
 		const n = Number(page.url.searchParams.get('pedido'));

@@ -6,7 +6,9 @@ import type { PageServerLoad } from './$types';
  * Pedidos: la primera ventana de la lista con los filtros de la URL, y dónde y cuándo se retira
  * (para el WhatsApp de «listo para retirar»).
  */
-export const load: PageServerLoad = async ({ locals, url }) => {
+export const load: PageServerLoad = async ({ locals, url, depends }) => {
+	// Tiempo real (§44): pedidos nuevos y cambios de estado o pago aparecen solos.
+	depends('tienda:pedidos');
 	const f = leerFiltros(url.searchParams);
 	const datos = datosDe(locals);
 	const [lista, entregas] = await Promise.all([

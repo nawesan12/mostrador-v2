@@ -16,6 +16,7 @@
 	import { page } from '$app/state';
 	import { getShell } from '#lib/panel/shell.svelte.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
+	import { getTiempoReal } from '#lib/tiempo-real/panel.svelte.ts';
 
 	/**
 	 * Crear pedido. El handoff no lo diseña: se arma con las piezas del punto de venta (grilla, ticket,
@@ -23,6 +24,7 @@
 	 */
 	let { data } = $props();
 	const ui = getUi();
+	const tiempoReal = getTiempoReal();
 	const shell = getShell();
 
 	// ---- Cliente ----
@@ -181,6 +183,8 @@
 			return ui.toast({ k: 'err', title: 'No se creó el pedido', desc: m ?? 'Probá de nuevo.' });
 		}
 		const { numero, total } = (await r.json()) as { numero: number; total: number };
+		// Lo cargó esta pestaña: el tiempo real no lo avisa como «pedido nuevo» (§44).
+		tiempoReal?.actual?.propio('pedido.nuevo', numero);
 		// Con link, se vuelve a la lista (el pedido queda arriba, sin pagar) y se arma el link; si ya
 		// estaba pagado, se abre el pedido.
 		// eslint-disable-next-line svelte/no-navigation-without-resolve -- ruta del panel con query

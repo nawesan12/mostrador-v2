@@ -10,6 +10,7 @@
 	import { pesos, saludo, variacion } from './formato.ts';
 	import { rutaDe } from './navegacion.ts';
 	import { getShell } from './shell.svelte.ts';
+	import { escucharTiempoReal } from '#lib/tiempo-real/panel.svelte.ts';
 
 	/**
 	 * Tincho (handoff: panel lateral `ovAi`): cómo viene el día, sus ideas para aprobar y la charla.
@@ -46,6 +47,16 @@
 			shell.preguntaPendiente = null;
 			void enviar(p);
 		}
+	});
+
+	// Tiempo real (§44): con Tincho abierto, sus ideas (carritos, stock, promos) y el día se ponen al
+	// día solos cuando cambia algo de eso.
+	let recarga: ReturnType<typeof setTimeout> | undefined;
+	escucharTiempoReal((e) => {
+		if (!shell.ia || !/^(pedido|pago|carrito|producto|cupon|tarea|resincronizar)\b/.test(e.tipo))
+			return;
+		clearTimeout(recarga);
+		recarga = setTimeout(() => void cargar(), 1000);
 	});
 
 	const bajar = async () => {

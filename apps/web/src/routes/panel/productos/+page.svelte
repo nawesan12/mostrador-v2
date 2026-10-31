@@ -13,6 +13,7 @@
 	import { configProductos, type ProductoFila } from '#lib/panel/listas/productos.ts';
 	import { SITE } from '#lib/site.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
+	import { escucharTiempoReal } from '#lib/tiempo-real/panel.svelte.ts';
 	import type { components } from '@mostrador/contrato/esquema';
 
 	type Producto = components['schemas']['Producto'];
@@ -161,6 +162,15 @@
 			if (activa(cola)) void seguir();
 		}
 	}
+	// Tiempo real (§44): el avance de una importación que corre en otra pestaña, en otra persona del
+	// equipo o en el worker se ve sin tocar nada (sólo se muestra: no se empuja desde acá).
+	escucharTiempoReal(async (e) => {
+		if (!e.tipo.startsWith('importacion.') || !importando || siguiendo) return;
+		const r = await fetch('/panel/importaciones').catch(() => null);
+		if (!r?.ok) return;
+		const d = (await r.json()) as { importacion: Importacion | null };
+		if (d.importacion && (activa(d.importacion) || cola)) cola = d.importacion;
+	});
 	let siguiendo = false;
 	async function seguir() {
 		if (siguiendo) return;

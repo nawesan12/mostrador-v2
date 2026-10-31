@@ -6,7 +6,9 @@ import type { PageServerLoad } from './$types';
  * La primera ventana de la lista con los filtros de la URL, y el recargo de Mercado Libre para el
  * editor: sólo si está conectado (con la API, la lista «ml» aparece sólo con la cuenta conectada).
  */
-export const load: PageServerLoad = async ({ locals, url }) => {
+export const load: PageServerLoad = async ({ locals, url, depends }) => {
+	// Tiempo real (§44): stock, altas, cambios de otra persona del equipo e importaciones.
+	depends('tienda:productos');
 	const datos = datosDe(locals);
 	const [lista, precios] = await Promise.all([
 		datos.listar('productos', { ...leer(url.searchParams), desde: 0, cuantos: 60 }),
