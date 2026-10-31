@@ -4,19 +4,23 @@ const MAILPIT = process.env.E2E_MAILPIT ?? 'http://127.0.0.1:8026';
 const listo = (page: Page) => page.locator('html[data-listo]').waitFor({ state: 'attached' });
 
 /** Último mail que llegó a Mailpit para esa dirección (texto plano). */
-async function ultimoMail(para: string): Promise<string> {
-	for (let i = 0; i < 20; i++) {
+/**
+ * El mail más nuevo a `para` que cumple `busca`: a la misma casilla llegan otros (bienvenida, «Entraron
+ * a tu cuenta») y el que se espera puede tardar un poco más.
+ */
+async function ultimoMail(para: string, busca: RegExp = /./): Promise<string> {
+	for (let i = 0; i < 40; i++) {
 		const r = await fetch(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:${para}`)}`);
 		const j = (await r.json()) as { messages: { ID: string }[] };
-		if (j.messages?.length) {
-			const m = (await (await fetch(`${MAILPIT}/api/v1/message/${j.messages[0].ID}`)).json()) as {
+		for (const { ID } of j.messages ?? []) {
+			const m = (await (await fetch(`${MAILPIT}/api/v1/message/${ID}`)).json()) as {
 				Text: string;
 			};
-			return m.Text;
+			if (busca.test(m.Text)) return m.Text;
 		}
 		await new Promise((res) => setTimeout(res, 250));
 	}
-	throw new Error(`No llegó ningún mail a ${para}`);
+	throw new Error(`No llegó el mail esperado a ${para}`);
 }
 
 test('registro, salir, recuperar por mail, contraseña nueva e ingreso', async ({
@@ -75,7 +79,7 @@ test('registro, salir, recuperar por mail, contraseña nueva e ingreso', async (
 	await page.getByRole('textbox', { name: 'Email de tu cuenta' }).fill(email);
 	await page.getByRole('button', { name: 'Mandame el link' }).click();
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Revisá tu email');
-	const texto = await ultimoMail(email);
+	const texto = await ultimoMail(email, /m=restablecer&token=/);
 	const link = texto.match(/https?:\/\/\S+m=restablecer&token=[A-Za-z0-9_-]+/)?.[0];
 	expect(link).toBeTruthy();
 
