@@ -715,3 +715,35 @@ URL, para que no quede en el historial ni en logs.
   tiendas de la persona (`app.tiendas_de_usuario`, que fija cada tienda de sus membresías para leerla
   con RLS forzada); `PUT /v1/auth/tienda` cambia la de la sesión. En la barra lateral aparece un
   selector simple cuando hay más de una.
+
+## 38. La dirección de la tienda se cambia y la vieja anda para siempre (migración 00056)
+
+- **Dónde**: al registrarse con Google, Apple o Mercado Pago la tienda nace como «La tienda de
+  <nombre>». El paso «Tu negocio» del onboarding (con la API) pregunta «¿Cómo se llama tu tienda?»
+  con ese nombre como sugerencia que invita a cambiarlo, y debajo la dirección
+  `tulocalweb.com.ar/t/<slug>`, que se arma sola con el nombre hasta que se la toca. Se guardan al
+  seguir (primero la dirección, que es lo que puede fallar). Después, en Configuración › Negocio ›
+  Dirección de tu tienda, con «Deshacer» en el aviso. `CampoDireccion.svelte` es el mismo campo en
+  los dos lados y pregunta la disponibilidad mientras se escribe (350 ms de pausa).
+- **Regla**: de 2 a 60 letras minúsculas, números o guiones, sin guion al principio ni al final (el
+  CHECK de `tiendas.slug` pasó de 48 a 60). Los reservados (rutas, marcas y las vitrinas de las
+  plantillas) están en `packages/contrato/direccion.json` con sus casos; Go (`tiendas.Reservados`) y
+  la web (`lib/tienda/direccion.ts`) se comparan con ese archivo en sus tests.
+- **Una dirección no vuelve a estar libre**: `app.slugs` ya registraba cada slug tomado; el viejo se
+  queda ahí, así que ninguna otra tienda puede tomarlo. `app.slugs_anteriores` dice de qué tienda
+  era. La misma tienda sí puede volver a una suya (aunque hoy esté reservada: las tiendas de la demo
+  arrancan con la de una vitrina). Las tablas viven en `app`, sin permisos para la app; sólo las
+  tocan `app.estado_slug`, `app.cambiar_slug` (decide la tienda con `app.tienda_actual()`, bloquea su
+  fila y deja que `app.slugs` resuelva quién gana si dos piden la misma) y `app.slug_vigente`.
+- **Tope**: 5 cambios por tienda en 24 h (`app.slugs_cambios`, que además deja el historial).
+- **Redirección**: ante un 404 de un GET en `/t/<slug>/…`, el hook pregunta primero
+  `GET /v1/publico/slugs/{slug}` y, si fue de una tienda, responde 301 a `/t/<nuevo>/…` con la misma
+  consulta (las vueltas de Mercado Pago de pedidos ya hechos traen la suya). Cubre la portada,
+  producto, catálogo, carrito, pedido, la imagen para compartir y el feed. Recién si no, mira las
+  redirecciones de la tienda importada. Las páginas que existen no consultan nada.
+- **Lo que depende del slug** se arma siempre con el vigente: sitemap, og:image, QR del onboarding y
+  del panel, mails y back_urls de Mercado Pago nuevas. Lo ya mandado con el viejo cae en la
+  redirección. Los dominios propios van por el id de la tienda; si un isolate todavía tenía guardado
+  el slug viejo de un dominio (5 min), lo olvida y responde 307 a la misma URL.
+- **Demo**: el sandbox guarda la dirección como cambio de la tienda (`tienda/direccion` con las
+  anteriores y los cambios del día); la vieja redirige sólo para el visitante dueño de ese sandbox.
