@@ -16,7 +16,7 @@ import (
 )
 
 // Los permisos por rol con la API entera (sesiones de verdad, las rutas reales): lo sensible
-// responde 403 a quien no le toca, aunque la web no lo muestre (docs/decisiones.md §36).
+// responde 403 a quien no le toca, aunque la web no lo muestre (docs/decisiones.md §37).
 func TestPermisosPorRol(t *testing.T) {
 	ctx := context.Background()
 	b := pruebadb.Nueva(t)

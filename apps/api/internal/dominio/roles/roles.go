@@ -1,4 +1,4 @@
-// Package roles: qué puede hacer cada persona del equipo de una tienda (docs/decisiones.md §36).
+// Package roles: qué puede hacer cada persona del equipo de una tienda (docs/decisiones.md §37).
 //
 // Cuatro roles fijos, sin matriz editable: dueña (todo), administración (todo menos el plan, la
 // facturación de Tu Local Web y el equipo), ventas (pedidos, clientes y productos, sin precios,

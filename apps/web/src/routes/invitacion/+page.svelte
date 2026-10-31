@@ -8,7 +8,7 @@
 	import { NOMBRE_ROL, QUE_HACE } from '#lib/panel/permisos.ts';
 
 	/**
-	 * Aceptar una invitación al equipo de una tienda (docs/decisiones.md §36). Misma estética que
+	 * Aceptar una invitación al equipo de una tienda (docs/decisiones.md §37). Misma estética que
 	 * /ingresar. Con sesión: «Sumarme». Si el email ya tiene cuenta: ingresar y volver acá. Si no:
 	 * crear la cuenta (con clave o con Google/Apple), sin tienda propia.
 	 */

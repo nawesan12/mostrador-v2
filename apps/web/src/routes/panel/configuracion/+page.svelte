@@ -23,7 +23,7 @@
 	const demo = $derived(!!page.data.demo);
 	const ui = getUi();
 
-	// Cada pestaña con el permiso que pide (docs/decisiones.md §36): la seguridad y las sesiones son
+	// Cada pestaña con el permiso que pide (docs/decisiones.md §37): la seguridad y las sesiones son
 	// de cada persona, así que las ve cualquiera del equipo.
 	const TODAS = [
 		['negocio', I.phStorefrontFill, 'Negocio', 'tienda'],

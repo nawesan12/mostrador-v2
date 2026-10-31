@@ -4,7 +4,7 @@
 
 	/**
 	 * Error dentro del panel (con el menú alrededor). El 403 es una sección que el rol de la persona
-	 * no puede ver (docs/decisiones.md §36): se dice por qué, sin «algo salió mal».
+	 * no puede ver (docs/decisiones.md §37): se dice por qué, sin «algo salió mal».
 	 */
 	const sinPermiso = $derived(page.status === 403);
 	// La sesión venció navegando el panel: a ingresar, que después vuelve acá.

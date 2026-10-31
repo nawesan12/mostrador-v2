@@ -1,5 +1,5 @@
 -- +goose Up
--- Equipo de cada tienda (docs/decisiones.md §36): roles fijos aplicados en Go e invitaciones por
+-- Equipo de cada tienda (docs/decisiones.md §37): roles fijos aplicados en Go e invitaciones por
 -- mail con link de un solo uso.
 
 -- «Depósito» pasa a «Local» (punto de venta y pedidos). Nadie podía aceptar una invitación, así

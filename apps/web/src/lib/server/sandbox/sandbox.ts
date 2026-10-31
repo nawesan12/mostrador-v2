@@ -2003,7 +2003,7 @@ export class DatosSandbox implements Datos {
 			avisos: g('avisos', {}),
 			cerradas: new Set(g<string[]>('cerradas', [])),
 			quitados: new Set(g<string[]>('quitados', [])),
-			// «Depósito» pasó a «Local» (docs/decisiones.md §36): lo guardado antes se lee con el nombre nuevo.
+			// «Depósito» pasó a «Local» (docs/decisiones.md §37): lo guardado antes se lee con el nombre nuevo.
 			roles: new Map(
 				Object.entries(g<Record<string, string>>('roles', {})).map(([k, r]) => [
 					k,

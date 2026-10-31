@@ -21,7 +21,7 @@
 
 	/**
 	 * Usuarios y permisos (design/PanelCuenta.dc.html, sUsers): el equipo, las invitaciones y qué puede
-	 * cada rol. Los roles son fijos (docs/decisiones.md §36): la matriz editable del handoff se cambió
+	 * cada rol. Los roles son fijos (docs/decisiones.md §37): la matriz editable del handoff se cambió
 	 * por la explicación de cada uno, porque Go aplica esos cuatro y nada más.
 	 */
 	let { data } = $props();

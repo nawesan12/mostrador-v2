@@ -8,7 +8,7 @@ import { cuentasDe, usaSandbox } from '#lib/server/datos/index.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 /**
- * El link de una invitación al equipo de una tienda (docs/decisiones.md §36). Con sesión, «Sumarme»;
+ * El link de una invitación al equipo de una tienda (docs/decisiones.md §37). Con sesión, «Sumarme»;
  * sin sesión, ingresar (si el email ya tiene cuenta) o crear la cuenta acá mismo, con clave o con
  * Google/Apple. Para Google y Apple el token viaja en una cookie corta: el ida y vuelta pasa por
  * otro sitio y /ingresar/clerk lo usa al volver.

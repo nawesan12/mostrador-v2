@@ -32,7 +32,7 @@ type Editable struct {
 	Opciones []Opcion `json:"opciones"`
 	// Variantes: sólo las combinaciones que se quieren tocar; las demás se conservan o se generan.
 	Variantes []VarianteEditable `json:"variantes"`
-	// SinPrecios: quien guarda no puede tocar precios ni costos (rol Ventas, docs/decisiones.md §36):
+	// SinPrecios: quien guarda no puede tocar precios ni costos (rol Ventas, docs/decisiones.md §37):
 	// quedan los que había, también los de las variantes. No viene del cliente.
 	SinPrecios bool `json:"-"`
 }

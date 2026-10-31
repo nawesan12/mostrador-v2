@@ -4618,7 +4618,7 @@ export interface components {
             tiendaId: string;
             /** @enum {string} */
             rol: "duenio" | "admin" | "ventas" | "local";
-            /** @description Qué puede el rol (docs/decisiones.md §36). Go responde 403 a lo demás. */
+            /** @description Qué puede el rol (docs/decisiones.md §37). Go responde 403 a lo demás. */
             permisos: ("panel" | "pedidos" | "clientes" | "productos" | "catalogo" | "finanzas" | "tienda" | "cuenta")[];
             tiendas: {
                 id: string;

@@ -51,7 +51,7 @@
 	let descripcion = $state('');
 	let precio = $state(0);
 	let costo = $state(0);
-	// Ventas edita el producto pero no los precios ni los costos (docs/decisiones.md §36): se ven sin
+	// Ventas edita el producto pero no los precios ni los costos (docs/decisiones.md §37): se ven sin
 	// poder cambiarlos y el costo no se muestra. Go igual conserva los que había.
 	const conPrecios = $derived((page.data.acceso?.permisos ?? ['catalogo']).includes('catalogo'));
 	let stock = $state(0);

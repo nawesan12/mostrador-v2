@@ -4802,7 +4802,7 @@ components:
         rol: { type: string, enum: [duenio, admin, ventas, local] }
         permisos:
           type: array
-          description: 'Qué puede el rol (docs/decisiones.md §36). Go responde 403 a lo demás.'
+          description: 'Qué puede el rol (docs/decisiones.md §37). Go responde 403 a lo demás.'
           items: { type: string, enum: [panel, pedidos, clientes, productos, catalogo, finanzas, tienda, cuenta] }
         tiendas:
           type: array

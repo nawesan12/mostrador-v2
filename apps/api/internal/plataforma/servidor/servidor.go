@@ -121,7 +121,7 @@ func Nuevo(d Dependencias) http.Handler {
 				d.Cuentas.SesionEquipo = d.Equipo.ParaCuentas
 				conGuardia = equipo.SoloLectura(conGuardia)
 			}
-			// El rol de cada persona del equipo, en cada ruta del panel (docs/decisiones.md §36).
+			// El rol de cada persona del equipo, en cada ruta del panel (docs/decisiones.md §37).
 			conGuardia = roles.Guardia(func(r *http.Request) (string, bool) {
 				s, ok := cuentas.SesionDe(r)
 				return s.Rol, ok && s.TiendaID != ""

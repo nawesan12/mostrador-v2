@@ -1,5 +1,5 @@
 /**
- * Roles fijos del equipo de una tienda (docs/decisiones.md §36). Go los aplica en cada ruta del
+ * Roles fijos del equipo de una tienda (docs/decisiones.md §37). Go los aplica en cada ruta del
  * panel (403 si no); acá sólo se decide qué mostrar. La tabla de qué puede cada rol es la misma que
  * la de Go: el test la compara con apps/api/internal/dominio/roles/testdata/roles.json.
  */
