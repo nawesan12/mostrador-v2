@@ -13,7 +13,10 @@ async function demo(page: Page) {
 	return (await page.locator('.t-d').first().textContent())!.split('/t/')[1].trim();
 }
 
-test('variantes: se cargan en el panel y se compran eligiendo el talle', async ({ page }) => {
+test('variantes: se cargan en el panel y se compran eligiendo el talle', async ({
+	page,
+	isMobile
+}) => {
 	const slug = await demo(page);
 	await page.goto('/panel/productos');
 	await listo(page);
@@ -46,7 +49,9 @@ test('variantes: se cargan en el panel y se compran eligiendo el talle', async (
 	await page.locator('.fila', { hasText: 'Buzo de prueba' }).locator('.abrir').click();
 	const otra = page.getByRole('dialog');
 	await expect(otra.getByLabel('Stock de M · Negro')).toHaveValue('5');
-	await otra.getByRole('button', { name: 'Cancelar' }).click();
+	// En el celular, editando, cierra la cruz de arriba (no hay «Cancelar» abajo).
+	await otra.getByRole('button', { name: isMobile ? 'Cerrar' : 'Cancelar' }).click();
+	await expect(otra).toBeHidden();
 
 	// En la tienda (la yerba de la demo viene en 500 g y 1 kg): hay que elegir la presentación y el
 	// carrito lleva la variante.

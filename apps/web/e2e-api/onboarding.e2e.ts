@@ -42,8 +42,13 @@ test('se retoma donde quedó, el atrás vuelve un paso y terminado va al panel',
 	await expect(titulo(page)).toHaveText(/Elegí cómo se ve/);
 	await page.goBack();
 	await expect(titulo(page)).toHaveText(/otra plataforma/);
+	// Cada cambio de paso se guarda en segundo plano: se espera el del paso al que se volvió.
+	const guardado = page.waitForResponse(
+		(r) => r.request().method() === 'POST' && r.url().includes('?/paso')
+	);
 	await page.goForward();
 	await expect(titulo(page)).toHaveText(/Elegí cómo se ve/);
+	expect((await guardado).ok()).toBe(true);
 
 	// Otro navegador con la misma sesión y sin nada guardado: retoma en el mismo paso.
 	const otro = await browser.newContext();
