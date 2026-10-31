@@ -15,8 +15,9 @@
 	const ui = getUi();
 	let prefs = $derived({ ...data, matriz: { ...data.matriz } });
 	/**
-	 * Con la API real, a la tienda le salen hoy dos avisos de venta nueva: el mail (Venta nueva ›
-	 * Email, prendido por defecto) y Telegram si lo vinculó. La matriz se guarda, pero no se promete
+	 * Con la API real, a la tienda le salen hoy tres avisos de venta nueva: el mail (Venta nueva ›
+	 * Email, prendido por defecto), el push al iPhone (Venta nueva › Celular, prendido por defecto;
+	 * docs/decisiones.md §40) y Telegram si lo vinculó. La matriz se guarda, pero no se promete
 	 * un resumen diario, un «no molestar» ni una prueba que no mandan nada (la prueba era un toast
 	 * con una venta inventada).
 	 */
@@ -98,6 +99,22 @@
 					checked={activo(prefs.matriz, 'venta', 'email')}
 					label="Venta nueva por email"
 					onchange={() => alternar('venta', 'email')}
+				/>
+			</div>
+			<div class="activo">
+				<span class="a-ico" style:color={CANAL.celular[1]}
+					><Icon icon={CANAL.celular[0]} size={20} /></span
+				>
+				<span class="a-txt"
+					><b>Push en el iPhone</b><span class="d"
+						>«Nueva venta» al instante, en el iPhone de quien entró a la app de
+						Tu&nbsp;Local&nbsp;Web. El monto lo ve sólo quien tiene acceso a&nbsp;finanzas.</span
+					></span
+				>
+				<Interruptor
+					checked={activo(prefs.matriz, 'venta', 'celular')}
+					label="Venta nueva por push en el iPhone"
+					onchange={() => alternar('venta', 'celular')}
 				/>
 			</div>
 			<a class="activo" href={resolve('/panel/integraciones')}>
