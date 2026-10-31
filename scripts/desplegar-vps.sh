@@ -16,7 +16,7 @@ if [ "$QUE" = todo ] || [ "$QUE" = api ]; then
 	done
 	rm -rf "$SAL"
 	ssh "$VPS" 'cd /opt/tulocalweb/bin && for c in api worker mostradorctl; do mv $c.nuevo $c; done &&
-		cd .. && docker compose run --rm --no-deps -T api /app/mostradorctl migrar && docker compose restart api worker'
+		cd .. && docker compose run --rm --no-deps -T api /app/mostradorctl migrar && docker compose up -d --force-recreate --no-deps api worker'
 fi
 
 if [ "$QUE" = todo ] || [ "$QUE" = web ]; then
@@ -24,7 +24,7 @@ if [ "$QUE" = todo ] || [ "$QUE" = web ]; then
 	rsync -a --delete "$RAIZ/apps/web/build/" "$VPS:/opt/tulocalweb/web/build/"
 	rsync -a --delete "$RAIZ/apps/web/migraciones-sandbox/" "$VPS:/opt/tulocalweb/web/migraciones/sandbox/"
 	rsync -a --delete "$RAIZ/apps/web/migraciones-estado/" "$VPS:/opt/tulocalweb/web/migraciones/estado/"
-	ssh "$VPS" 'cd /opt/tulocalweb && docker compose up -d web && docker compose restart web'
+	ssh "$VPS" 'cd /opt/tulocalweb && docker compose up -d --force-recreate --no-deps web'
 fi
 
 sleep 4
