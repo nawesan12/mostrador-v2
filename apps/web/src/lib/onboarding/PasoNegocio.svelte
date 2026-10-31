@@ -1,4 +1,5 @@
 <script lang="ts">
+	import RUBROS from '@mostrador/contrato/rubros.json';
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
 	import { DATOS_NEGOCIO, HALLAZGOS, OBJETIVOS } from './datos.ts';
@@ -86,10 +87,30 @@
 		><span class="r-2">Yerba mate y accesorios</span><span class="r-mas">+ Agregar</span>
 	</div>
 {:else}
-	<Etiqueta rotulo="Tu negocio" titulo="¿Qué querés resolver primero?" />
+	<Etiqueta rotulo="Tu negocio" titulo="Contanos un poco de tu negocio." />
+	<div class="objetivos">
+		<div class="o-t">¿Qué vendés?</div>
+		<div class="o-d">
+			Te recomendamos plantillas pensadas para eso. Elegí el que más se parezca.
+		</div>
+		<div class="o-g rubros">
+			{#each RUBROS as r (r.id)}
+				{@const on = o.e.rubro === r.id}
+				<button
+					type="button"
+					class:on
+					aria-pressed={on}
+					onclick={() => o.elegirRubro(r.id, r.plantilla)}
+				>
+					<span class="o-x">{r.nombre}</span>
+					{#if on}<Icon icon={I.phCheckCircleFill} size={18} style="color:#b0441d;flex:none" />{/if}
+				</button>
+			{/each}
+		</div>
+	</div>
 {/if}
 <div class="objetivos">
-	{#if o.demo}<div class="o-t">¿Qué querés resolver primero?</div>{/if}
+	<div class="o-t">¿Qué querés resolver primero?</div>
 	<div class="o-d">Ordenamos tu panel y tus primeras tareas según esto. Elegí las que quieras.</div>
 	<div class="o-g">
 		{#each OBJETIVOS as [ico, t], i (t)}
@@ -311,6 +332,13 @@
 		transition:
 			border-color 0.2s,
 			background 0.2s;
+	}
+	.o-g.rubros {
+		grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+	}
+	.o-g.rubros button {
+		padding: 11px 12px;
+		justify-content: space-between;
 	}
 	.o-g button.on {
 		border-color: #d2582f;

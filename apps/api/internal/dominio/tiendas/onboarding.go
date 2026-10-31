@@ -40,13 +40,22 @@ func GuardarOnboarding(ctx context.Context, pool interface {
 	if !json.Valid(o.Elecciones) || len(o.Elecciones) > 16<<10 {
 		return errors.New("elecciones inválidas")
 	}
+	// El rubro que eligió en «Tu negocio» (si eligió uno conocido) pasa a ser el de la tienda.
+	var e struct {
+		Rubro string `json:"rubro"`
+	}
+	_ = json.Unmarshal(o.Elecciones, &e)
+	if _, ok := BuscarRubro(e.Rubro); !ok {
+		e.Rubro = ""
+	}
 	return pool.EnTienda(ctx, tiendaID, func(tx pgx.Tx) error {
 		_, err := tx.Exec(ctx, `
 			UPDATE tiendas SET
 				onboarding = $2::jsonb,
 				plantilla = coalesce(nullif($3, ''), plantilla),
+				rubro = coalesce(nullif($5, ''), rubro),
 				onboarding_terminado_en = CASE WHEN $4 THEN coalesce(onboarding_terminado_en, now()) ELSE onboarding_terminado_en END
-			WHERE id = $1`, tiendaID, string(o.Elecciones), o.Plantilla, o.Terminado)
+			WHERE id = $1`, tiendaID, string(o.Elecciones), o.Plantilla, o.Terminado, e.Rubro)
 		return err
 	})
 }

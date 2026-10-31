@@ -17,6 +17,8 @@ export type Elecciones = {
 	instagram: boolean;
 	secciones: Record<Seccion, boolean>;
 	objetivos: number[];
+	/** Qué vende (id de packages/contrato/rubros.json); con la API pasa a ser el rubro de la tienda. */
+	rubro: string | null;
 	conexiones: Partial<Record<Conexion, EstadoConexion>>;
 	conflicto: string | null;
 	config: Record<string, boolean>;
@@ -34,6 +36,7 @@ export const INICIAL: Elecciones = {
 	instagram: true,
 	secciones: { dest: true, cat: true, ig: true, res: true },
 	objetivos: [1, 2],
+	rubro: null,
 	conexiones: { mp: 'on' },
 	conflicto: null,
 	config: {
@@ -180,6 +183,13 @@ export class Onboarding {
 			if (rec && (this.e.conexiones[k] ?? 'off') === 'off')
 				setTimeout(() => this.conectar(k), i * 260);
 		});
+	}
+
+	/** El rubro propone su plantilla como punto de partida (se cambia en «Tu tienda»). */
+	elegirRubro(id: string, plantilla: string) {
+		this.e.rubro = id;
+		this.e.plantilla = plantilla;
+		this.guardar();
 	}
 
 	alternarObjetivo(i: number) {

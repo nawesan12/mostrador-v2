@@ -4,6 +4,7 @@
 	import Interruptor from '#lib/components/Interruptor.svelte';
 	import TplMini from '#lib/components/TplMini.svelte';
 	import * as I from '#lib/icons.ts';
+	import RUBROS from '@mostrador/contrato/rubros.json';
 	import { PLANTILLAS, plantilla } from '#lib/plantillas.ts';
 	import { DE_INSTAGRAM, PARA_EMPEZAR, RECOMENDADAS, SECCIONES } from './datos.ts';
 	import Etiqueta from './Etiqueta.svelte';
@@ -32,8 +33,19 @@
 	);
 	// En la demo, las del rubro del handoff; en una tienda real todavía no sabemos el rubro (el registro
 	// no lo pregunta): tres estilos bien distintos para empezar, sin decir que son de su rubro.
+	// Con el rubro elegido en «Tu negocio», su plantilla primero y dos estilos distintos al lado.
+	const delRubro = $derived(
+		o.demo ? null : (RUBROS.find((r) => r.id === o.e.rubro)?.plantilla ?? null)
+	);
 	const recomendadas = $derived(
-		(o.demo ? RECOMENDADAS : PARA_EMPEZAR).map((id) => plantilla(id)).filter((t) => !!t)
+		(o.demo
+			? [...RECOMENDADAS]
+			: delRubro
+				? [delRubro, ...PARA_EMPEZAR.filter((id) => id !== delRubro)].slice(0, 3)
+				: [...PARA_EMPEZAR]
+		)
+			.map((id) => plantilla(id))
+			.filter((t) => !!t)
 	);
 	const mob = $derived(o.dispositivo === 'mob');
 
@@ -94,7 +106,7 @@
 		<div class="caja">
 			<div class="c-cab">
 				<Icon icon={I.phSparkleFill} size={15} style="color:#b0441d" /><span
-					>{o.demo ? 'Recomendadas para tu rubro' : 'Para empezar'}</span
+					>{o.demo || delRubro ? 'Recomendadas para tu rubro' : 'Para empezar'}</span
 				>
 			</div>
 			<div class="recos">

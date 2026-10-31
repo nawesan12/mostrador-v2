@@ -64,6 +64,19 @@ func TestGuardarOnboarding(t *testing.T) {
 	if err := tiendas.GuardarOnboarding(ctx, b.App, una, tiendas.Onboarding{Plantilla: "inventada"}); !errors.Is(err, tiendas.ErrPlantilla) {
 		t.Fatalf("err = %v", err)
 	}
+	// El rubro elegido pasa a la tienda; uno desconocido no pisa el que tenía.
+	if err := tiendas.GuardarOnboarding(ctx, b.App, una, tiendas.Onboarding{Elecciones: json.RawMessage(`{"rubro":"belleza"}`)}); err != nil {
+		t.Fatal(err)
+	}
+	if tu, _ = tiendas.Obtener(ctx, b.App, una); tu.Rubro != "belleza" {
+		t.Fatalf("rubro %q", tu.Rubro)
+	}
+	if err := tiendas.GuardarOnboarding(ctx, b.App, una, tiendas.Onboarding{Elecciones: json.RawMessage(`{"rubro":"inventado"}`)}); err != nil {
+		t.Fatal(err)
+	}
+	if tu, _ = tiendas.Obtener(ctx, b.App, una); tu.Rubro != "belleza" {
+		t.Fatalf("rubro pisado: %q", tu.Rubro)
+	}
 }
 
 func TestResumenSinDatosTodavia(t *testing.T) {
