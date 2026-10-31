@@ -29,3 +29,22 @@ func SlugDeDominio(ctx context.Context, pool tx, dominio string) (string, error)
 	}
 	return *slug, nil
 }
+
+// SlugVigente: la dirección actual de la tienda que antes se llamaba slug (decisiones §38), para
+// que /t/<viejo>/… responda 301 a /t/<nuevo>/…. ErrNoExiste si ese slug no fue de ninguna tienda o
+// la tienda está cerrada o pausada.
+func SlugVigente(ctx context.Context, pool tx, slug string) (string, error) {
+	if !slugValido.MatchString(slug) {
+		return "", ErrNoExiste
+	}
+	var nuevo *string
+	if err := pool.EnTx(ctx, func(t pgx.Tx) error {
+		return t.QueryRow(ctx, `SELECT app.slug_vigente($1)`, slug).Scan(&nuevo)
+	}); err != nil {
+		return "", err
+	}
+	if nuevo == nil {
+		return "", ErrNoExiste
+	}
+	return *nuevo, nil
+}

@@ -92,6 +92,7 @@ func Rutas(mux *http.ServeMux, pool *db.Pool, tienda func(*http.Request) string)
 		escribir(w, t)
 	})
 	rutasOnboarding(mux, pool, tienda)
+	rutasDireccion(mux, pool, tienda)
 	rutasResumen(mux, pool, tienda)
 	rutasTablero(mux, pool, tienda)
 }

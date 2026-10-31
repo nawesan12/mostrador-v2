@@ -48,6 +48,19 @@ func Rutas(mux *http.ServeMux, pool tx, mp Pagador, sitio string, dev *devolucio
 		}
 		escribir(w, http.StatusOK, map[string]string{"slug": slug})
 	})
+	// Una dirección vieja de una tienda (la cambió): la web responde 301 a la vigente.
+	mux.HandleFunc("GET /v1/publico/slugs/{slug}", func(w http.ResponseWriter, r *http.Request) {
+		slug, err := SlugVigente(r.Context(), pool, r.PathValue("slug"))
+		if errors.Is(err, ErrNoExiste) {
+			problema.Escribir(w, problema.NoEncontrado("Esa dirección no fue de ninguna tienda."))
+			return
+		}
+		if err != nil {
+			error404(w, err)
+			return
+		}
+		escribir(w, http.StatusOK, map[string]string{"slug": slug})
+	})
 	// Para el sitemap de la web: lo público de todas las tiendas.
 	mux.HandleFunc("GET /v1/publico/sitemap", func(w http.ResponseWriter, r *http.Request) {
 		e, err := Sitemap(r.Context(), pool)

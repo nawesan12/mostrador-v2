@@ -1,0 +1,29 @@
+{
+  "descripcion": "La dirección de la tienda (tulocalweb.com.ar/t/<slug>): los slugs que nadie puede elegir y los casos de validación. La misma lista está en Go (tiendas.Reservados) y la usa la web (#lib/tienda/direccion.ts); los tests de los dos lados la comparan con este archivo. Las vitrinas son las tiendas de ejemplo de las plantillas.",
+  "reservados": [
+    "admin", "api", "app", "ayuda", "blog", "carrito", "checkout", "compartir", "contacto", "cuenta",
+    "demo", "ejemplo", "email", "estado", "facturacion", "google", "apple", "help", "ingresar", "legales",
+    "login", "mail", "mercadopago", "mercado-pago", "mercadolibre", "mercado-libre", "mi-tienda", "mitienda",
+    "mostrador", "null", "oficial", "onboarding", "panel", "partners", "precios", "prueba", "registro",
+    "soporte", "staff", "test", "tienda", "tiendas", "tulocalweb", "tu-local-web", "undefined", "www",
+    "tienda-lumbre", "cafe-bruma", "almacen-verde", "pmpa-store", "rosa-mosqueta", "casa-nido", "sonido-sur",
+    "vinoteca-tres", "huellitas", "panaderia-lola", "panaderia-lola-clasica", "madera-viva",
+    "relojeria-norte", "mate-y-co", "estudio-arcilla", "navaja", "optica-faro"
+  ],
+  "casos": [
+    { "slug": "cafe-de-ana", "motivo": "libre" },
+    { "slug": "a1", "motivo": "libre" },
+    { "slug": "2026", "motivo": "libre" },
+    { "slug": "a", "motivo": "invalido" },
+    { "slug": "-cafe", "motivo": "invalido" },
+    { "slug": "cafe-", "motivo": "invalido" },
+    { "slug": "Cafe", "motivo": "invalido" },
+    { "slug": "café", "motivo": "invalido" },
+    { "slug": "cafe ana", "motivo": "invalido" },
+    { "slug": "cafe_ana", "motivo": "invalido" },
+    { "slug": "abcdefghij-abcdefghij-abcdefghij-abcdefghij-abcdefghij-abcdef", "motivo": "invalido" },
+    { "slug": "abcdefghij-abcdefghij-abcdefghij-abcdefghij-abcdefghij-abcde", "motivo": "libre" },
+    { "slug": "panel", "motivo": "reservado" },
+    { "slug": "cafe-bruma", "motivo": "reservado" }
+  ]
+}

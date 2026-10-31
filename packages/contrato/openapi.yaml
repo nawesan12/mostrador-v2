@@ -2292,6 +2292,48 @@ paths:
           content:
             application/problem+json:
               schema: { $ref: '#/components/schemas/Problema' }
+  /v1/panel/tienda/direccion:
+    get:
+      operationId: disponibilidadDireccion
+      summary: 'Si la tienda puede pasar a usar la dirección tulocalweb.com.ar/t/{slug} (formato, reservados, ya usada por otra tienda).'
+      parameters:
+        - { name: slug, in: query, required: true, schema: { type: string, maxLength: 100 } }
+      responses:
+        '200':
+          description: Disponibilidad
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DisponibilidadDireccion' }
+        '401': { $ref: '#/components/responses/Problema' }
+    put:
+      operationId: cambiarDireccion
+      summary: 'Cambia la dirección de la tienda. La anterior redirige para siempre (301) y ninguna otra tienda puede tomarla. Hasta 5 cambios por día.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [slug]
+              properties:
+                slug: { type: string, pattern: '^[a-z0-9][a-z0-9-]{0,58}[a-z0-9]$' }
+      responses:
+        '200':
+          description: Cambiada (o ya era esa)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [slug, anterior]
+                properties:
+                  slug: { type: string }
+                  anterior: { type: string }
+        '400': { $ref: '#/components/responses/Problema' }
+        '409':
+          description: 'code: usado, reservado o tope'
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problema' }
   /v1/panel/turnos/ajustes:
     get:
       operationId: ajustesTurnos
@@ -2727,6 +2769,20 @@ paths:
           content:
             application/json:
               schema: { type: object, required: [hacia], properties: { hacia: { type: string } } }
+        '404': { $ref: '#/components/responses/Problema' }
+  /v1/publico/slugs/{slug}:
+    get:
+      operationId: slugVigente
+      summary: 'Una dirección vieja de una tienda que la cambió: devuelve la vigente (la web responde 301 de /t/{viejo}/… a /t/{nuevo}/…).'
+      security: []
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: La dirección vigente
+          content:
+            application/json:
+              schema: { type: object, required: [slug], properties: { slug: { type: string } } }
         '404': { $ref: '#/components/responses/Problema' }
   /v1/telegram/vincular:
     post:
@@ -4855,12 +4911,21 @@ components:
       required: [id, slug, nombre, rubro, plantilla, plan, creadaEn]
       properties:
         id: { type: string, format: uuid }
-        slug: { type: string, pattern: '^[a-z0-9]([a-z0-9-]{0,46}[a-z0-9])?$' }
+        slug: { type: string, pattern: '^[a-z0-9]([a-z0-9-]{0,58}[a-z0-9])?$' }
         nombre: { type: string }
         rubro: { type: string }
         plantilla: { type: string }
         plan: { $ref: '#/components/schemas/Plan' }
         creadaEn: { type: string, format: date-time }
+    DisponibilidadDireccion:
+      type: object
+      description: 'libre y propio (una que la tienda ya usó) se pueden elegir; actual es la que tiene.'
+      required: [slug, disponible, motivo, mensaje]
+      properties:
+        slug: { type: string }
+        disponible: { type: boolean }
+        motivo: { type: string, enum: [libre, actual, propio, invalido, reservado, usado] }
+        mensaje: { type: string }
     Franja:
       type: object
       description: 'Un tramo de atención de un día de la semana, en hora de Argentina (UTC−3)'

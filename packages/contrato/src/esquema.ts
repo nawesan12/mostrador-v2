@@ -2310,6 +2310,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/tienda/direccion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Si la tienda puede pasar a usar la dirección tulocalweb.com.ar/t/{slug} (formato, reservados, ya usada por otra tienda). */
+        get: operations["disponibilidadDireccion"];
+        /** Cambia la dirección de la tienda. La anterior redirige para siempre (301) y ninguna otra tienda puede tomarla. Hasta 5 cambios por día. */
+        put: operations["cambiarDireccion"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/turnos/ajustes": {
         parameters: {
             query?: never;
@@ -2664,6 +2682,23 @@ export interface paths {
         };
         /** Un link de la tienda vieja: 301 con Location = el path en Tu Local Web, relativo a la tienda. Lo pide el BFF cuando un path de /t/{slug} no existe. */
         get: operations["redireccionTienda"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/publico/slugs/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Una dirección vieja de una tienda que la cambió: devuelve la vigente (la web responde 301 de /t/{viejo}/… a /t/{nuevo}/…). */
+        get: operations["slugVigente"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4679,6 +4714,14 @@ export interface components {
             plan: components["schemas"]["Plan"];
             /** Format: date-time */
             creadaEn: string;
+        };
+        /** @description libre y propio (una que la tienda ya usó) se pueden elegir; actual es la que tiene. */
+        DisponibilidadDireccion: {
+            slug: string;
+            disponible: boolean;
+            /** @enum {string} */
+            motivo: "libre" | "actual" | "propio" | "invalido" | "reservado" | "usado";
+            mensaje: string;
         };
         /** @description Un tramo de atención de un día de la semana, en hora de Argentina (UTC−3) */
         Franja: {
@@ -9212,6 +9255,68 @@ export interface operations {
             };
         };
     };
+    disponibilidadDireccion: {
+        parameters: {
+            query: {
+                slug: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Disponibilidad */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DisponibilidadDireccion"];
+                };
+            };
+            401: components["responses"]["Problema"];
+        };
+    };
+    cambiarDireccion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    slug: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Cambiada (o ya era esa) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        slug: string;
+                        anterior: string;
+                    };
+                };
+            };
+            400: components["responses"]["Problema"];
+            /** @description code: usado, reservado o tope */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problema"];
+                };
+            };
+        };
+    };
     ajustesTurnos: {
         parameters: {
             query?: never;
@@ -10039,6 +10144,31 @@ export interface operations {
                 content: {
                     "application/json": {
                         hacia: string;
+                    };
+                };
+            };
+            404: components["responses"]["Problema"];
+        };
+    };
+    slugVigente: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description La dirección vigente */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        slug: string;
                     };
                 };
             };

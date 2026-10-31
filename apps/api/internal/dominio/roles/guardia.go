@@ -117,6 +117,8 @@ var Rutas = map[string]Permiso{
 	"PUT /v1/panel/configuracion/entregas":               Tienda,
 	"PUT /v1/panel/onboarding":                           Tienda,
 	"PUT /v1/panel/tienda/origen":                        Tienda,
+	"GET /v1/panel/tienda/direccion":                     Tienda,
+	"PUT /v1/panel/tienda/direccion":                     Tienda,
 	"POST /v1/panel/actividad/{id}/deshacer":             Tienda,
 	"GET /v1/panel/datos":                                Tienda,
 	"GET /v1/panel/datos/{tipo}":                         Tienda,
