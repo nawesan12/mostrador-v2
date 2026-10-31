@@ -831,6 +831,8 @@
 					? 'el carrito'
 					: `los ${t.hornero.carritos} carritos`}
 				{mide ? 'por WhatsApp' : 'por mail'}. Si alguien vuelve y compra, lo ves en Carritos.
+			{:else if pasos?.productos === 0}
+				Cuando cargues tus productos y entren las primeras visitas, te aviso acá cómo vender más.
 			{:else}
 				Todo en orden por ahora. Cuando vea algo para vender más, te aviso acá.
 			{/if}
