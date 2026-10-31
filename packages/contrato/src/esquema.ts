@@ -3057,6 +3057,26 @@ export interface components {
                 canal: string;
                 ventas: number;
             }[];
+            /** @description Visitas de la tienda online (medición propia, sin cookies). No viene si todavía no se mide ninguna. */
+            visitas?: {
+                /** Format: date */
+                medidasDesde: string;
+                visitasPorDia: {
+                    /** Format: date */
+                    fecha: string;
+                    visitas: number;
+                }[];
+                visitas30d: number;
+                visitas30dAnteriores: number;
+                paginasVistas30d: number;
+                /** @description Pedidos web por cada 100 visitas */
+                conversion30d: number;
+                masVistos30d: {
+                    nombre: string;
+                    vistas: number;
+                    visitas: number;
+                }[];
+            };
         };
         /** @enum {string} */
         NombreLista: "clientes" | "productos" | "inventario" | "facturacion" | "envios";
@@ -3534,6 +3554,8 @@ export interface components {
                 productos: number[];
                 clientes: number[];
                 margen: (number | null)[];
+                /** @description Visitas por mes (medición propia); null antes de empezar a medir. No viene si todavía no se mide ninguna. */
+                visitas?: (number | null)[];
             };
             kpis: {
                 ventas: number;
@@ -4088,7 +4110,7 @@ export interface components {
             kpis: {
                 pedidos: components["schemas"]["Comparado"];
                 ticket: components["schemas"]["Comparado"];
-                /** @description Porcentaje (3.4 = 3,4 %) */
+                /** @description Porcentaje (3.4 = 3,4 %): pedidos web por cada 100 visitas, por días */
                 conversion: components["schemas"]["Comparado"];
                 clientesNuevos: components["schemas"]["Comparado"];
             };
@@ -4208,6 +4230,35 @@ export interface components {
                     /** @description Si todos van a la misma ciudad */
                     ciudad: string | null;
                     proximo: boolean;
+                }[];
+            };
+            /** @description Visitas de la tienda online, medidas por Tu Local Web sin cookies (decisiones §36). Una visita es una persona distinta en un día: las de varios días se suman. Opcional: la demo no la trae. */
+            visitas?: {
+                /**
+                 * Format: date
+                 * @description Primer día con visitas (null: todavía ninguna)
+                 */
+                desde: string | null;
+                /** @description Hoy contra ayer completo */
+                hoy: components["schemas"]["Comparado"];
+                dias7: components["schemas"]["Comparado"];
+                dias30: components["schemas"]["Comparado"];
+                /** @description Visitas del período del tablero */
+                visitantes: components["schemas"]["Comparado"];
+                /** @description Páginas vistas del período del tablero */
+                vistas: components["schemas"]["Comparado"];
+                paginas: {
+                    /** @enum {string} */
+                    pagina: "inicio" | "catalogo" | "producto" | "carrito" | "checkout";
+                    vistas: number;
+                }[];
+                /** @description Los 5 productos más vistos del período */
+                masVistos: {
+                    productoId: string;
+                    nombre: string;
+                    foto: string | null;
+                    vistas: number;
+                    visitantes: number;
                 }[];
             };
         };

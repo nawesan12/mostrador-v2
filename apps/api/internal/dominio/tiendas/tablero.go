@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ventas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/visitas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
@@ -28,8 +29,9 @@ type comparado struct {
 }
 
 // Tablero es el Resumen del panel (components/schemas/Tablero). Ventas, pedidos, canales, meta,
-// para hacer y más vendidos salen de los pedidos (tablero_ventas.go); lo que todavía no se mide
-// (visitas, caja, bandeja) va en cero y vacío, nunca inventado.
+// para hacer y más vendidos salen de los pedidos (tablero_ventas.go); las visitas y la conversión,
+// de la medición propia (paquete visitas); lo que todavía no se mide (en vivo, bandeja) va en cero
+// y vacío, nunca inventado.
 type Tablero struct {
 	Periodo string    `json:"periodo"`
 	Desde   time.Time `json:"desde"`
@@ -98,6 +100,7 @@ type Tablero struct {
 		Paquetes int   `json:"paquetes"`
 		Retiros  []any `json:"retiros"`
 	} `json:"envios"`
+	Visitas visitas.Resumen `json:"visitas"`
 }
 
 // Ventana devuelve desde y hasta del período (hoy, 7d o 30d) en hora de Argentina.
@@ -147,12 +150,32 @@ func ObtenerTablero(ctx context.Context, pool interface {
 		if err := llenarCaja(ctx, tx, tiendaID, &t, ahora); err != nil {
 			return err
 		}
+		if err := llenarVisitas(ctx, tx, tiendaID, &t, ahora); err != nil {
+			return err
+		}
 		// Carritos abandonados de la semana para recordar (Hornero los ofrece en el tablero).
 		return tx.QueryRow(ctx, `SELECT count(*), coalesce(sum(total), 0), bool_or(recordado_en IS NOT NULL) IS TRUE
 			FROM carritos WHERE tienda_id = $1 AND recuperado_en IS NULL AND actualizado > now() - interval '7 days'`, tiendaID).
 			Scan(&t.Hornero.Carritos, &t.Hornero.CarritosMonto, &t.Hornero.Recordados)
 	})
 	return t, err
+}
+
+// llenarVisitas: las visitas de la tienda online y la conversión real (pedidos web por cada 100
+// visitas, por días de Argentina). Sin visitas medidas, la conversión queda en cero y
+// `visitas.desde` en null: el panel lo dice en vez de mostrar un 0 %.
+func llenarVisitas(ctx context.Context, tx pgx.Tx, tiendaID string, t *Tablero, ahora time.Time) error {
+	v, err := visitas.Leer(ctx, tx, tiendaID, t.Periodo, ahora)
+	if err != nil {
+		return err
+	}
+	t.Visitas = v
+	if v.Desde == nil {
+		return nil
+	}
+	conv, err := visitas.Conversion(ctx, tx, tiendaID, v.Visitantes, ahora, visitas.DiasDe(t.Periodo))
+	t.Kpis.Conversion = comparado{conv.Actual, conv.Anterior}
+	return err
 }
 
 // llenarResenas: el promedio de las reseñas visibles y las últimas tres sin responder de la tienda
@@ -223,8 +246,9 @@ func GuardarMeta(ctx context.Context, pool interface {
 }
 
 // ContextoHornero es lo que Hornero sabe de la tienda además del tablero (el panel y Telegram usan
-// el mismo): las ventas de los últimos 14 días, el catálogo con lo vendido, los clientes y los
-// canales del mes. Si algo falla, va vacío: Tincho dice que no sabe, no inventa.
+// el mismo): las ventas de los últimos 14 días, el catálogo con lo vendido, los clientes, los
+// canales del mes y, si ya se miden, las visitas de la tienda online.
+// Si algo falla, va vacío: Tincho dice que no sabe, no inventa.
 func ContextoHornero(ctx context.Context, pool interface {
 	EnTienda(context.Context, string, func(pgx.Tx) error) error
 }, tiendaID string) map[string]any {
@@ -324,7 +348,19 @@ func contextoHornero(ctx context.Context, pool interface {
 		}
 		return filas.Err()
 	})
-	return map[string]any{"ventasPorDia": dias, "productos": productos, "clientes": clientes, "canales30d": canales}, err
+	if err != nil {
+		return nil, err
+	}
+	c := map[string]any{"ventasPorDia": dias, "productos": productos, "clientes": clientes, "canales30d": canales}
+	// Las visitas, si ya se miden (si no, no va la clave: Tincho dice que no las tiene).
+	_ = pool.EnTienda(ctx, tiendaID, func(tx pgx.Tx) error {
+		v, err := visitas.ParaHornero(ctx, tx, tiendaID, ahora)
+		if err == nil && v != nil {
+			c["visitas"] = v
+		}
+		return err
+	})
+	return c, nil
 }
 
 func rutasTablero(mux *http.ServeMux, pool interface {

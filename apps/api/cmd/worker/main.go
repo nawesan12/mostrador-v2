@@ -16,6 +16,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ia"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/importacion"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ventas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/visitas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/telegram"
@@ -109,6 +110,22 @@ func correr() error {
 		for {
 			if err := iaS.Purgar(ctx); err != nil && ctx.Err() == nil {
 				slog.Error("ia: purgar", "error", err)
+			}
+			select {
+			case <-ctx.Done():
+				return
+			case <-t.C:
+			}
+		}
+	}()
+	// Visitas de las tiendas: cada hora se borran los vistos de días anteriores (con la sal del día
+	// perdida ya no sirven) y las visitas de hace más de 400 días.
+	go func() {
+		t := time.NewTicker(time.Hour)
+		defer t.Stop()
+		for {
+			if _, err := visitas.Purgar(ctx, app); err != nil && ctx.Err() == nil {
+				slog.Error("visitas: purgar", "error", err)
 			}
 			select {
 			case <-ctx.Done():

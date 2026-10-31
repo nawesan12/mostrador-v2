@@ -32,6 +32,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/turnos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ventas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/vidriera"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/visitas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/correoargentino"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
@@ -195,6 +196,8 @@ func Nuevo(d Dependencias) http.Handler {
 			d.CorreoArgentino.Rutas(mux, d.App, ip)
 		}
 		vidriera.Rutas(mux, d.App, pagador, d.Sitio, dev, ip, correo)
+		// Las visitas de las tiendas las manda la web por lotes, con su clave.
+		visitas.Rutas(mux, d.App, d.ClaveBFF, d.Log)
 		if d.Arrepentimiento != nil {
 			d.Arrepentimiento.Rutas(mux, ip)
 		}

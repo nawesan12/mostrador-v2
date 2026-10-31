@@ -14,6 +14,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/visitas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
@@ -124,6 +125,7 @@ func Informes(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (m
 	pedidos := make([]int64, 12)
 	margen := make([]*int, 12)
 	var primero *time.Time
+	var visitasMes []*int64
 	// Meses calendario en hora de Argentina: el 11 es el mes en curso. (Antes eran tramos de 30
 	// días desde hoy, y un mes podía repetirse y otro faltar en el eje.)
 	local := ahora.In(argentina)
@@ -159,6 +161,9 @@ func Informes(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (m
 		if err := filas.Err(); err != nil {
 			return err
 		}
+		if visitasMes, err = visitas.PorMes(ctx, t, tiendaID, inicio); err != nil {
+			return err
+		}
 		return t.QueryRow(ctx, `SELECT min(creado_en) FROM pedidos WHERE tienda_id = $1`, tiendaID).Scan(&primero)
 	})
 	if err != nil {
@@ -187,9 +192,14 @@ func Informes(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (m
 		p := primero.In(argentina)
 		historia = (local.Year()-p.Year())*12 + int(local.Month()-p.Month()) + 1
 	}
+	series := map[string]any{"ventas": ventas, "productos": unidades, "clientes": clientes, "margen": margen}
+	// Las visitas, sólo si ya se miden (null en los meses de antes de empezar a medir).
+	if visitasMes != nil {
+		series["visitas"] = visitasMes
+	}
 	return map[string]any{
 		"meses":  nombres,
-		"series": map[string]any{"ventas": ventas, "productos": unidades, "clientes": clientes, "margen": margen},
+		"series": series,
 		"kpis": map[string]any{
 			"ventas": ventas[11], "ventasVs": vs(ventas[11], ventas[10]),
 			"ticket": ticket(11), "ticketVs": vs(ticket(11), ticket(10)),

@@ -3109,6 +3109,33 @@ components:
             properties:
               canal: { type: string }
               ventas: { type: integer }
+        visitas:
+          type: object
+          description: 'Visitas de la tienda online (medición propia, sin cookies). No viene si todavía no se mide ninguna.'
+          required: [medidasDesde, visitasPorDia, visitas30d, visitas30dAnteriores, paginasVistas30d, conversion30d, masVistos30d]
+          properties:
+            medidasDesde: { type: string, format: date }
+            visitasPorDia:
+              type: array
+              items:
+                type: object
+                required: [fecha, visitas]
+                properties:
+                  fecha: { type: string, format: date }
+                  visitas: { type: integer }
+            visitas30d: { type: integer }
+            visitas30dAnteriores: { type: integer }
+            paginasVistas30d: { type: integer }
+            conversion30d: { type: number, description: 'Pedidos web por cada 100 visitas' }
+            masVistos30d:
+              type: array
+              items:
+                type: object
+                required: [nombre, vistas, visitas]
+                properties:
+                  nombre: { type: string }
+                  vistas: { type: integer }
+                  visitas: { type: integer }
     NombreLista:
       type: string
       enum: [clientes, productos, inventario, facturacion, envios]
@@ -3641,6 +3668,10 @@ components:
             productos: { type: array, items: { type: integer } }
             clientes: { type: array, items: { type: integer } }
             margen: { type: array, items: { type: [integer, 'null'] } }
+            visitas:
+              type: array
+              description: 'Visitas por mes (medición propia); null antes de empezar a medir. No viene si todavía no se mide ninguna.'
+              items: { type: [integer, 'null'] }
         kpis:
           type: object
           required: [ventas, ventasVs, ticket, ticketVs, margen, margenVs, ahorro, mesAnterior]
@@ -4249,7 +4280,7 @@ components:
           properties:
             pedidos: { $ref: '#/components/schemas/Comparado' }
             ticket: { $ref: '#/components/schemas/Comparado' }
-            conversion: { $ref: '#/components/schemas/Comparado', description: 'Porcentaje (3.4 = 3,4 %)' }
+            conversion: { $ref: '#/components/schemas/Comparado', description: 'Porcentaje (3.4 = 3,4 %): pedidos web por cada 100 visitas, por días' }
             clientesNuevos: { $ref: '#/components/schemas/Comparado' }
         canales:
           type: array
@@ -4404,6 +4435,39 @@ components:
                   paquetes: { type: integer }
                   ciudad: { type: [string, 'null'], description: 'Si todos van a la misma ciudad' }
                   proximo: { type: boolean }
+        visitas:
+          type: object
+          description: >-
+            Visitas de la tienda online, medidas por Tu Local Web sin cookies (decisiones §36). Una visita es
+            una persona distinta en un día: las de varios días se suman. Opcional: la demo no la trae.
+          required: [desde, hoy, dias7, dias30, visitantes, vistas, paginas, masVistos]
+          properties:
+            desde: { type: [string, 'null'], format: date, description: 'Primer día con visitas (null: todavía ninguna)' }
+            hoy: { $ref: '#/components/schemas/Comparado', description: 'Hoy contra ayer completo' }
+            dias7: { $ref: '#/components/schemas/Comparado' }
+            dias30: { $ref: '#/components/schemas/Comparado' }
+            visitantes: { $ref: '#/components/schemas/Comparado', description: 'Visitas del período del tablero' }
+            vistas: { $ref: '#/components/schemas/Comparado', description: 'Páginas vistas del período del tablero' }
+            paginas:
+              type: array
+              items:
+                type: object
+                required: [pagina, vistas]
+                properties:
+                  pagina: { type: string, enum: [inicio, catalogo, producto, carrito, checkout] }
+                  vistas: { type: integer }
+            masVistos:
+              type: array
+              description: 'Los 5 productos más vistos del período'
+              items:
+                type: object
+                required: [productoId, nombre, foto, vistas, visitantes]
+                properties:
+                  productoId: { type: string }
+                  nombre: { type: string }
+                  foto: { type: [string, 'null'] }
+                  vistas: { type: integer }
+                  visitantes: { type: integer }
     EstadoPedido:
       type: string
       enum: [Sin pagar, Para preparar, Listo para despachar, En camino, Entregado, Cancelado]
