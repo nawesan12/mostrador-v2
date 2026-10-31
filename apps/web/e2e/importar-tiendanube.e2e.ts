@@ -4,6 +4,10 @@ import { expect, test, type Page } from '@playwright/test';
  * Importar desde Tiendanube en la demo, de punta a punta: el OAuth real del Worker contra un
  * Tiendanube falso (e2e/tiendanube-falso.ts) y la autorización interceptada en el navegador.
  */
+// El service worker del panel (app instalable) atiende las navegaciones de /panel, y lo que pasa
+// por él no llega a page.route: sin bloquearlo, la ida a Tiendanube no se intercepta.
+test.use({ serviceWorkers: 'block' });
+
 const listo = (page: Page) => page.locator('html[data-listo]').waitFor({ state: 'attached' });
 const sinDesborde = (page: Page) =>
 	page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
