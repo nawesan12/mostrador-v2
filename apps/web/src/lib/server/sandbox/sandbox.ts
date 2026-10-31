@@ -83,6 +83,7 @@ import type {
 	Dominios,
 	MisDatos,
 	PreferenciasAvisos,
+	EstadoPushWeb,
 	Acceso,
 	PlanCuenta,
 	Configuracion,
@@ -2699,6 +2700,18 @@ export class DatosSandbox implements Datos {
 
 	async guardarPreferenciasAvisos(p: PreferenciasAvisos) {
 		await guardarCambio(this.db, this.sb.id, 'cuenta', 'avisos-canales', p);
+	}
+
+	// La demo no manda avisos al celular: sin clave, el panel dice que no está disponible.
+	async pushWeb(): Promise<EstadoPushWeb> {
+		return { clave: '', suscripta: false };
+	}
+	async suscribirPushWeb(): Promise<Resultado> {
+		return 'no-se-puede';
+	}
+	async bajaPushWeb() {}
+	async probarPushWeb(): Promise<Resultado> {
+		return 'no-se-puede';
 	}
 
 	private async inactivos() {

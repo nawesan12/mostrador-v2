@@ -78,6 +78,9 @@ export type ArcaPrueba = { ok: boolean; ultimo: number; detalle: string };
  */
 export type ArcaPedido = { pedido: string } | { demo: true } | { error: string };
 export type PreferenciasAvisos = components['schemas']['PreferenciasAvisos'];
+/** Push web del panel instalado (docs/decisiones.md §42): clave VAPID (vacía: apagado) y si esta sesión está suscripta. */
+export type EstadoPushWeb = components['schemas']['EstadoPushWeb'];
+export type SuscripcionWeb = components['schemas']['SuscripcionWeb'];
 export type MisDatos = components['schemas']['MisDatos'];
 export type TipoExport =
 	'productos' | 'clientes' | 'pedidos' | 'facturas' | 'resenas' | 'conversaciones';
@@ -234,6 +237,13 @@ export interface Datos {
 	quitarDominio(nombre: string): Promise<Resultado>;
 	preferenciasAvisos(): Promise<PreferenciasAvisos>;
 	guardarPreferenciasAvisos(p: PreferenciasAvisos): Promise<void>;
+	/** Push web en este celular: la clave pública y si esta sesión ya se suscribió. */
+	pushWeb(): Promise<EstadoPushWeb>;
+	/** Guarda la suscripción del navegador atada a la sesión ('no-se-puede': apagado o inválida). */
+	suscribirPushWeb(s: SuscripcionWeb): Promise<Resultado>;
+	bajaPushWeb(): Promise<void>;
+	/** «Mandame un aviso de prueba» ('no-se-puede': esta sesión no está suscripta). */
+	probarPushWeb(): Promise<Resultado>;
 	misDatos(): Promise<MisDatos>;
 	exportar(tipo: TipoExport): Promise<(string | number | null)[][]>;
 	/** Anota una descarga en "Exportaciones recientes" ("todo" es la exportación completa). */

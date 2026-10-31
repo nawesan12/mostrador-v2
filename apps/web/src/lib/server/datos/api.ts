@@ -36,6 +36,8 @@ import type {
 	Dominios,
 	MisDatos,
 	PreferenciasAvisos,
+	EstadoPushWeb,
+	SuscripcionWeb,
 	TipoExport,
 	Acceso,
 	PlanCuenta,
@@ -409,6 +411,18 @@ export class DatosApi implements Datos {
 	}
 	async guardarPreferenciasAvisos(p: PreferenciasAvisos) {
 		await this.pedir<void>('/v1/panel/notificaciones/preferencias', 'PUT', p);
+	}
+	pushWeb() {
+		return this.pedir<EstadoPushWeb>('/v1/panel/push-web');
+	}
+	async suscribirPushWeb(s: SuscripcionWeb) {
+		return resultado(await this.intentar('/v1/panel/push-web', 'POST', s, [400]));
+	}
+	async bajaPushWeb() {
+		await this.pedir<void>('/v1/panel/push-web', 'DELETE');
+	}
+	async probarPushWeb() {
+		return resultado(await this.intentar('/v1/panel/push-web/prueba', 'POST'));
 	}
 	misDatos() {
 		return this.pedir<MisDatos>('/v1/panel/datos');

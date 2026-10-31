@@ -4,6 +4,7 @@
 	import { deslizable } from '#lib/panel/deslizable.ts';
 	import Icon from '#lib/components/Icon.svelte';
 	import Interruptor from '#lib/components/Interruptor.svelte';
+	import PushEsteCelular from '#lib/panel/PushEsteCelular.svelte';
 	import Seo from '#lib/components/Seo.svelte';
 	import * as I from '#lib/icons.ts';
 	import { anim } from '#lib/panel/anim.ts';
@@ -16,8 +17,8 @@
 	let prefs = $derived({ ...data, matriz: { ...data.matriz } });
 	/**
 	 * Con la API real, a la tienda le salen hoy tres avisos de venta nueva: el mail (Venta nueva ›
-	 * Email, prendido por defecto), el push al iPhone (Venta nueva › Celular, prendido por defecto;
-	 * docs/decisiones.md §40) y Telegram si lo vinculó. Y «Sin stock» por mail y push (§41). La matriz se guarda, pero no se promete
+	 * Email, prendido por defecto), el push al celular (Venta nueva › Celular, prendido por defecto;
+	 * docs/decisiones.md §40 y §42) y Telegram si lo vinculó. Y «Sin stock» por mail y push (§41). La matriz se guarda, pero no se promete
 	 * un resumen diario, un «no molestar» ni una prueba que no mandan nada (la prueba era un toast
 	 * con una venta inventada).
 	 */
@@ -106,14 +107,15 @@
 					><Icon icon={CANAL.celular[0]} size={20} /></span
 				>
 				<span class="a-txt"
-					><b>Push en el iPhone</b><span class="d"
-						>«Nueva venta» al instante, en el iPhone de quien entró a la app de
-						Tu&nbsp;Local&nbsp;Web. El monto lo ve sólo quien tiene acceso a&nbsp;finanzas.</span
+					><b>Venta nueva por push al celular</b><span class="d"
+						>«Nueva venta» al instante en los celulares del equipo que activaron los avisos: el
+						panel instalado o la app de iPhone. El monto lo ve sólo quien tiene acceso
+						a&nbsp;finanzas.</span
 					></span
 				>
 				<Interruptor
 					checked={activo(prefs.matriz, 'venta', 'celular')}
-					label="Venta nueva por push en el iPhone"
+					label="Venta nueva por push al celular"
 					onchange={() => alternar('venta', 'celular')}
 				/>
 			</div>
@@ -128,11 +130,11 @@
 					><span class="canales-a">
 						{#each ['email', 'celular'] as const as c (c)}
 							<span class="c-a"
-								><Icon icon={CANAL[c][0]} size={15} style="color:{CANAL[c][1]}" />{c === 'celular'
-									? 'iPhone'
-									: CANAL[c][2]}<Interruptor
+								><Icon icon={CANAL[c][0]} size={15} style="color:{CANAL[c][1]}" />{CANAL[
+									c
+								][2]}<Interruptor
 									checked={activo(prefs.matriz, 'sinstock', c)}
-									label="Sin stock por {c === 'celular' ? 'push en el iPhone' : 'email'}"
+									label="Sin stock por {c === 'celular' ? 'push al celular' : 'email'}"
 									onchange={() => alternar('sinstock', c)}
 								/></span
 							>
@@ -140,6 +142,8 @@
 					</span></span
 				>
 			</div>
+			<!-- Este aparato: activar el push web y probarlo (decisiones §42). -->
+			<PushEsteCelular />
 			<a class="activo" href={resolve('/panel/integraciones')}>
 				<span class="a-ico" style:color="#229ED9"><Icon icon={I.logosTelegram} size={20} /></span>
 				<span class="a-txt"
@@ -250,7 +254,8 @@
 		font-size: 13px;
 		font-weight: 600;
 	}
-	.activo + .activo {
+	.activo + .activo,
+	.tarjeta :global(.push + .activo) {
 		border-top: 1px solid var(--ln);
 	}
 	.a-ico {
