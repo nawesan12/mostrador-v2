@@ -40,8 +40,21 @@ async function bytes(src: string): Promise<Uint8Array | null> {
 	return bajar(src);
 }
 
+/** workerd se presenta así; Node (el VPS) dice «Node.js/…». */
+export const enWorkers = () =>
+	typeof navigator !== 'undefined' && navigator.userAgent === 'Cloudflare-Workers';
+
+const sinImagen = () =>
+	new Response('No pudimos armar la imagen. Probá en un rato.', {
+		status: 503,
+		headers: { 'cache-control': 'no-store', 'retry-after': '60' }
+	});
+
 /** La imagen como respuesta HTTP, con el cache-control que corresponde a su URL. */
 export async function responderImagen(tarjeta: Tarjeta, prefijo: string, cacheControl: string) {
+	// En el motor de prueba (wrangler dev, los e2e) no se puede dibujar: no hay vips ni procesos, y
+	// el yoga de satori busca `self.location`, que workerd no tiene. Sólo se dibuja en el VPS (Node).
+	if (enWorkers()) return sinImagen();
 	const clave = `${prefijo}-${versionDe(tarjeta)}`.toLowerCase().replace(/[^a-z0-9-]/g, '-');
 	let jpeg: Uint8Array;
 	try {
@@ -51,10 +64,7 @@ export async function responderImagen(tarjeta: Tarjeta, prefijo: string, cacheCo
 	} catch (e) {
 		// Sin vips (o con un error al dibujar): que WhatsApp vuelva a probar más tarde.
 		console.error('compartir: no se pudo dibujar', e);
-		return new Response('No pudimos armar la imagen. Probá en un rato.', {
-			status: 503,
-			headers: { 'cache-control': 'no-store', 'retry-after': '60' }
-		});
+		return sinImagen();
 	}
 	return new Response(jpeg as BodyInit, {
 		headers: {

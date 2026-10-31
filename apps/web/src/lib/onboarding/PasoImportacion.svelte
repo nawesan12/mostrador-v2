@@ -194,7 +194,7 @@
 					</div>
 				{/each}
 				{#if !o.importacionLista}
-					<div class="puntos" aria-label="Tincho sigue trabajando">
+					<div class="puntos" role="status" aria-label="Tincho sigue trabajando">
 						<span></span><span></span><span></span>
 					</div>
 				{/if}

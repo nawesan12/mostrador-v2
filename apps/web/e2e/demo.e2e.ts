@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 test('sin demo, el panel manda a elegir rubro', async ({ page }) => {
 	await page.goto('/panel');
-	await expect(page).toHaveURL(/\/demo$/);
+	await expect(page).toHaveURL(/\/prueba$/);
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Probá Tu Local Web');
 	await expect(page.getByRole('button', { name: /^Mostaza/ })).toBeVisible();
 	const desborde = await page.evaluate(
@@ -22,7 +22,7 @@ test('elegir un rubro arma la tienda y la recuerda', async ({ page, context }) =
 	expect(cookie?.httpOnly).toBe(true);
 	expect(cookie?.sameSite).toBe('Lax');
 
-	// Volver a /demo marca el rubro actual; elegir otro cambia la tienda.
+	// Volver a /prueba marca el rubro actual; elegir otro cambia la tienda.
 	await page.goto('/prueba');
 	await page.locator('html[data-listo]').waitFor({ state: 'attached' });
 	await expect(page.getByRole('button', { name: /^Mostaza/ })).toContainText('Elegida');
@@ -40,7 +40,7 @@ test('elegir un rubro arma la tienda y la recuerda', async ({ page, context }) =
 test('una cookie inventada no entra al panel', async ({ page, context, baseURL }) => {
 	await context.addCookies([{ name: 'mostrador_demo', value: 'inventada', url: baseURL! }]);
 	await page.goto('/panel');
-	await expect(page).toHaveURL(/\/demo$/);
+	await expect(page).toHaveURL(/\/prueba$/);
 });
 
 test('el cron interno exige el secreto', async ({ request }) => {

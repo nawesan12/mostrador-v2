@@ -102,7 +102,7 @@
 						{/if}
 					{/each}
 					{#if escribiendo}
-						<div class="puntos" aria-label="Tincho está escribiendo">
+						<div class="puntos" role="status" aria-label="Tincho está escribiendo">
 							<span use:anim={'dots'}></span><span use:anim={{ t: 'dots', delay: 180 }}></span><span
 								use:anim={{ t: 'dots', delay: 360 }}
 							></span>

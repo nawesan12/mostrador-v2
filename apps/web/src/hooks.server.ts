@@ -14,7 +14,7 @@ import { esDominioPropio, GLOBALES_EN_DOMINIO } from '#lib/tienda/dominio.ts';
  * Rutas que usan el sandbox de la demo: sólo ahí se lee D1 (la landing no gasta lecturas).
  * /partners/panel es el panel de partners de ejemplo. /oauth/autorizar ata la IA al sandbox del visitante; /api/mcp lo saca del token, no de la cookie.
  */
-const CON_SANDBOX = /^\/(demo|panel|integraciones|oauth|partners\/panel)(\/|$)/;
+const CON_SANDBOX = /^\/(prueba|panel|integraciones|oauth|partners\/panel)(\/|$)/;
 
 /**
  * CSP de la tienda online (/t/...): los scripts y las conexiones sólo pueden ir al propio sitio y a

@@ -53,10 +53,11 @@
 	<button
 		type="button"
 		class="cuenta"
-		aria-label="Tu cuenta"
+		aria-label="Tu cuenta, {iniciales}"
 		aria-expanded={menu}
 		onclick={() => (menu = !menu)}
 	>
+		<!-- El nombre accesible incluye lo que se ve (WCAG 2.5.3: quien dicta «M&» lo encuentra). -->
 		<span class="yo ini">{iniciales}</span>
 	</button>
 	{#if menu}
