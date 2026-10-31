@@ -86,6 +86,7 @@ jobs:
       MOSTRADOR_BASE_DE_DATOS: postgres://mostrador_app@localhost:5432/mostrador_dev?sslmode=disable
       # Sin esta, en desarrollo la API busca el rol del backoffice en el Postgres de compose (:5440).
       MOSTRADOR_BASE_DE_DATOS_STAFF: postgres://mostrador_staff@localhost:5432/mostrador_dev?sslmode=disable
+      MOSTRADOR_BASE_DE_DATOS_WORKER: postgres://mostrador_worker@localhost:5432/mostrador_dev?sslmode=disable
       MOSTRADOR_SMTP: 127.0.0.1:1025
       MOSTRADOR_CLAVE_BFF: clave-bff-e2e
       MOSTRADOR_DIRECCION: ':4000'
@@ -107,6 +108,7 @@ jobs:
           /tmp/api > /tmp/api.log 2>&1 &
           # El worker manda lo que sale por el outbox (invitaciones, avisos): sin él esos mails no llegan.
           /tmp/worker > /tmp/worker.log 2>&1 &
+          sleep 2; if ! kill -0 $! 2>/dev/null; then cat /tmp/worker.log; exit 1; fi
           for i in $(seq 1 30); do curl -sf localhost:4000/salud/listo && break; sleep 1; done
           # Si la API no arrancó, que falle acá y no en los e2e (con «Network connection lost»).
           curl -sf localhost:4000/salud/listo || (cat /tmp/api.log; exit 1)
