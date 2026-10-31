@@ -25,7 +25,7 @@ import (
 )
 
 // Cada acción que importa anota quién la hizo, qué y sobre qué, en la misma transacción
-// (docs/decisiones.md §38). Sin autor en el contexto (el worker, la tienda online), no se anota.
+// (docs/decisiones.md §39). Sin autor en el contexto (el worker, la tienda online), no se anota.
 func TestCadaAccionQuedaEnLaActividad(t *testing.T) {
 	b := pruebadb.Nueva(t)
 	cs := &cuentas.Servicio{Pool: b.App, Correo: &correo.Memoria{}, Sitio: "https://tulocalweb.test"}

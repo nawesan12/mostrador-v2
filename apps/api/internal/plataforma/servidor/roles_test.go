@@ -102,7 +102,7 @@ func TestPermisosPorRol(t *testing.T) {
 		{"GET", "/v1/panel/configuracion", "", []string{"duenio", "admin", "ventas", "local"}, false},
 		{"PUT", "/v1/panel/configuracion/seguridad/avisoIngreso", `{"activo":true}`, []string{"duenio", "admin", "ventas", "local"}, false},
 		{"PUT", "/v1/panel/configuracion/avisos/venta", `{"activo":true}`, []string{"duenio", "admin"}, false},
-		// Actividad: quién hizo qué, sólo la dueña y administración (docs/decisiones.md §38).
+		// Actividad: quién hizo qué, sólo la dueña y administración (docs/decisiones.md §39).
 		{"GET", "/v1/panel/actividad", "", []string{"duenio", "admin"}, false},
 		{"GET", "/v1/panel/actividad/exportar", "", []string{"duenio", "admin"}, false},
 	}

@@ -747,3 +747,39 @@ URL, para que no quede en el historial ni en logs.
   el slug viejo de un dominio (5 min), lo olvida y responde 307 a la misma URL.
 - **Demo**: el sandbox guarda la dirección como cambio de la tienda (`tienda/direccion` con las
   anteriores y los cambios del día); la vieja redirige sólo para el visitante dueño de ese sandbox.
+
+## 39. Actividad: quién del equipo hizo qué (migración 00057)
+
+Con equipo en las tiendas (§37), la dueña necesita saber quién hizo cada cosa. Antes la tabla
+`auditoria` sólo la escribían las acciones del soporte de Tu Local Web.
+
+- **Se anota en Go, donde se hace la acción**, en la misma transacción
+  (`auditoria.Registrar(ctx, tx, tienda, registros...)`): si no se puede anotar, el cambio tampoco
+  queda. Nunca desde la web.
+- **El autor sale del contexto**: después de resolver la sesión, `servidor.conActor` deja en el
+  contexto la persona (id, nombre y rol de ese momento, IP y agente) o la IA conectada (su nombre y
+  quién la conectó), sólo para `/v1/panel/`. Lo que corre sin autor (worker, webhooks, importación,
+  la tienda online) no se anota. Una mirada del soporte es de sólo lectura y no lleva autor.
+  `auditoria.Silenciar` evita doble registro cuando una acción reusa otra (duplicar no es «creó»).
+- **Una tabla, la de siempre**: `auditoria` (no `equipo.auditoria`, que es la bitácora interna del
+  backoffice). La 00057 suma `actor_nombre`, `actor_rol`, `actor_ia`, `texto` (la frase sin el
+  sujeto, ya escrita en castellano) y `actor_tipo = 'ia'`. El tipo (filtro) es el prefijo de
+  `accion`: producto, pedido, venta (punto de venta), promocion, cobros, negocio, envios, dominio,
+  integracion, personas, plan, datos, sesion, mitienda; lo del soporte (`actor_tipo = 'staff'`) es
+  «soporte» y se lee con frases fijas.
+- **Qué se anota**: productos (crear, precio/costo/stock con antes → después, nombre, publicar,
+  pausar, borrar, duplicar, aumentos), pedidos (estado, marcar pagado y deshacerlo, cancelar, cargar a
+  mano), cobros del punto de venta, cupones y promociones automáticas, alias/CBU/titular, nombre y
+  dirección de la tienda, envíos y retiro, dominios, Mercado Pago, Mercado Libre, Correo y ARCA,
+  equipo (invitar, reenviar, cambiar rol, quitar, cancelar), plan y packs, exportaciones (también la
+  de la Actividad), cierre de sesiones y publicar el diseño de Mi tienda.
+- **Nada sensible entero**: ni claves ni tokens; del CBU sólo los últimos 4 (`auditoria.Final`).
+- **La ven la dueña y administración** (`roles.Tienda` en `GET /v1/panel/actividad` y `/exportar`);
+  ventas y local reciben 403 y no la ven en el menú. RLS por tienda como el resto.
+- **Lectura**: de a 50, del más nuevo al más viejo, con cursor (creado_en, id); filtros por persona,
+  tipo y fecha (días de Argentina, inclusive). CSV con los mismos filtros (hasta 20.000 filas, sin
+  fórmulas: lo que empieza con `= + - @` va con comilla).
+- **Retención: un año.** `app.purgar_auditoria()` (SECURITY DEFINER, como `app.purgar_visitas`) la
+  corre el worker una vez por día. La app sigue sin poder borrar ni reescribir registros.
+- Lo anterior a esta migración no tiene autor ni frase: la pantalla lo dice («Lo de antes no se
+  guardó»).

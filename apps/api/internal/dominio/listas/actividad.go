@@ -10,7 +10,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 )
 
-// Lo que anotan los productos en la Actividad (docs/decisiones.md §38).
+// Lo que anotan los productos en la Actividad (docs/decisiones.md §39).
 
 // antesProducto: lo que había antes de editar, para anotar el antes → después.
 type antesProducto struct {

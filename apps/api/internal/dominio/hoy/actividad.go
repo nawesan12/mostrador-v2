@@ -16,7 +16,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 )
 
-// Actividad (docs/decisiones.md §38): lo que anotó cada sección en la auditoría, con quién lo hizo.
+// Actividad (docs/decisiones.md §39): lo que anotó cada sección en la auditoría, con quién lo hizo.
 // La ven la dueña y administración (roles.Tienda); se guarda un año (app.purgar_auditoria).
 
 // Evento es components/schemas/Evento.

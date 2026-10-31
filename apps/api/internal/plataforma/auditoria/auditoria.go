@@ -1,5 +1,5 @@
 // Package auditoria anota quién hizo qué, en la misma transacción que el cambio. Es la base de la
-// pantalla Actividad (docs/decisiones.md §38): guarda quién (persona del equipo o IA conectada, con
+// pantalla Actividad (docs/decisiones.md §39): guarda quién (persona del equipo o IA conectada, con
 // su nombre y su rol de ese momento), qué (la acción y una frase en castellano), sobre qué y cuándo,
 // con el antes y el después.
 //

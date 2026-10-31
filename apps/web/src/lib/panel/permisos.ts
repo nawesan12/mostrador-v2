@@ -76,7 +76,7 @@ export const AREAS: Record<Rol, string[]> = {
  * que no está acá lo ve cualquiera del equipo.
  */
 export const PERMISO_SECCION: Record<string, Permiso> = {
-	// Quién hizo qué: la dueña y administración (docs/decisiones.md §38).
+	// Quién hizo qué: la dueña y administración (docs/decisiones.md §39).
 	Actividad: 'tienda',
 	Pedidos: 'pedidos',
 	Turnos: 'pedidos',

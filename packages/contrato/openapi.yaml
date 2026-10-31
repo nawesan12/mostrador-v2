@@ -1818,7 +1818,7 @@ paths:
     get:
       operationId: actividad
       summary: >-
-        Quién hizo qué en la tienda (docs/decisiones.md §38): lo que anota cada sección, del más nuevo al más viejo,
+        Quién hizo qué en la tienda (docs/decisiones.md §39): lo que anota cada sección, del más nuevo al más viejo,
         de a 50. Sólo la dueña y administración (403 a ventas y local). Se guarda un año.
       parameters:
         - { name: persona, in: query, schema: { type: string }, description: 'Id de la persona (de `personas`) o «soporte»' }

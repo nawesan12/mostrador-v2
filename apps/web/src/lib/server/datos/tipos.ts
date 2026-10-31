@@ -180,7 +180,7 @@ export interface Datos {
 	listasPrecio(): Promise<ListasPrecio>;
 	cupones(): Promise<Cupones>;
 	marketing(): Promise<Marketing>;
-	/** Actividad (§38): una página con los filtros. */
+	/** Actividad (§39): una página con los filtros. */
 	actividad(f?: FiltroActividad): Promise<PaginaActividad>;
 	/** Las filas del CSV de la actividad (la primera es el encabezado). */
 	exportarActividad(f?: FiltroActividad): Promise<string[][]>;

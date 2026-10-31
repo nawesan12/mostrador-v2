@@ -1803,7 +1803,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Quién hizo qué en la tienda (docs/decisiones.md §38): lo que anota cada sección, del más nuevo al más viejo, de a 50. Sólo la dueña y administración (403 a ventas y local). Se guarda un año. */
+        /** Quién hizo qué en la tienda (docs/decisiones.md §39): lo que anota cada sección, del más nuevo al más viejo, de a 50. Sólo la dueña y administración (403 a ventas y local). Se guarda un año. */
         get: operations["actividad"];
         put?: never;
         post?: never;

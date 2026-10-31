@@ -1,5 +1,5 @@
 -- +goose Up
--- Actividad de la tienda (docs/decisiones.md §38): cada sección anota en `auditoria` quién hizo qué.
+-- Actividad de la tienda (docs/decisiones.md §39): cada sección anota en `auditoria` quién hizo qué.
 -- Se guarda el nombre y el rol de quien lo hizo en ese momento (si después la quitan del equipo, el
 -- registro sigue diciendo quién fue), la IA si fue una IA conectada, y la frase ya escrita.
 ALTER TABLE auditoria DROP CONSTRAINT auditoria_actor_tipo_check;

@@ -1,5 +1,5 @@
 /**
- * Actividad (docs/decisiones.md §38): quién hizo qué en la tienda. Los tipos (de qué se trata cada
+ * Actividad (docs/decisiones.md §39): quién hizo qué en la tienda. Los tipos (de qué se trata cada
  * evento) con su nombre, para el filtro y el CSV. Es la misma lista que `hoy.Categorias` en Go.
  */
 import type { components } from '@mostrador/contrato/esquema';

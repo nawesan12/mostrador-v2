@@ -18,7 +18,7 @@
 	import { getUi } from '#lib/ui.svelte.ts';
 
 	/**
-	 * Actividad (design/PanelCrecer.dc.html, sAct; docs/decisiones.md §38): quién del equipo hizo qué,
+	 * Actividad (design/PanelCrecer.dc.html, sAct; docs/decisiones.md §39): quién del equipo hizo qué,
 	 * sobre qué y cuándo. Lo anota Go donde se hace cada acción; acá se lee, se filtra y se baja.
 	 * Sólo la dueña y administración llegan hasta acá (Go responde 403 al resto).
 	 */
