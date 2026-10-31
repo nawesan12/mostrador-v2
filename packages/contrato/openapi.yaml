@@ -406,6 +406,16 @@ paths:
         '204': { description: Dado de baja }
         '422': { $ref: '#/components/responses/Problema' }
   /v1/panel/onboarding:
+    get:
+      operationId: leerOnboarding
+      summary: Lo guardado del onboarding (para retomarlo en otro dispositivo) y si ya terminó.
+      responses:
+        '200':
+          description: Onboarding
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Onboarding' }
+        '401': { $ref: '#/components/responses/Problema' }
     put:
       operationId: guardarOnboarding
       summary: Guarda lo elegido en el onboarding (y si terminó). La plantilla pasa a ser la de la tienda.

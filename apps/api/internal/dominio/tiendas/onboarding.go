@@ -60,9 +60,37 @@ func GuardarOnboarding(ctx context.Context, pool interface {
 	})
 }
 
+// LeerOnboarding: lo guardado del onboarding de la tienda, para retomarlo donde quedó (también desde
+// otro dispositivo) y para no volver a mostrarlo a quien ya lo terminó.
+func LeerOnboarding(ctx context.Context, pool interface {
+	EnTienda(context.Context, string, func(pgx.Tx) error) error
+}, tiendaID string) (Onboarding, error) {
+	var o Onboarding
+	var el []byte
+	err := pool.EnTienda(ctx, tiendaID, func(tx pgx.Tx) error {
+		return tx.QueryRow(ctx, `SELECT plantilla, onboarding, onboarding_terminado_en IS NOT NULL FROM tiendas WHERE id = $1`, tiendaID).
+			Scan(&o.Plantilla, &el, &o.Terminado)
+	})
+	o.Elecciones = el
+	return o, err
+}
+
 func rutasOnboarding(mux *http.ServeMux, pool interface {
 	EnTienda(context.Context, string, func(pgx.Tx) error) error
 }, tienda func(*http.Request) string) {
+	mux.HandleFunc("GET /v1/panel/onboarding", func(w http.ResponseWriter, r *http.Request) {
+		id := tienda(r)
+		if id == "" {
+			problema.Escribir(w, problema.SinSesion())
+			return
+		}
+		o, err := LeerOnboarding(r.Context(), pool, id)
+		if err != nil {
+			problema.Escribir(w, problema.Interno())
+			return
+		}
+		escribir(w, o)
+	})
 	mux.HandleFunc("PUT /v1/panel/onboarding", func(w http.ResponseWriter, r *http.Request) {
 		id := tienda(r)
 		if id == "" {

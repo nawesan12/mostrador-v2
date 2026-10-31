@@ -114,6 +114,7 @@ var Rutas = map[string]Permiso{
 	"PUT /v1/panel/configuracion/negocio":                Tienda, // incluye alias y CBU
 	"PUT /v1/panel/configuracion/{grupo}/{clave}":        Tienda, // avisos de la tienda
 	"PUT /v1/panel/configuracion/entregas":               Tienda,
+	"GET /v1/panel/onboarding":                           Tienda,
 	"PUT /v1/panel/onboarding":                           Tienda,
 	"PUT /v1/panel/tienda/origen":                        Tienda,
 	"GET /v1/panel/tienda/direccion":                     Tienda,

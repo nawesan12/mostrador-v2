@@ -602,6 +602,17 @@ export class DatosSandbox implements Datos {
 		return dir.anteriores.includes(slug) ? (await this.tienda()).slug : null;
 	}
 
+	async onboarding(): Promise<Onboarding> {
+		const g = (await cambiosDe(this.db, this.sb.id, 'onboarding')).get('estado') as
+			| { elecciones?: Record<string, unknown>; terminado?: boolean }
+			| undefined;
+		return {
+			plantilla: (await this.tienda()).plantilla,
+			elecciones: g?.elecciones ?? {},
+			terminado: g?.terminado ?? false
+		};
+	}
+
 	/** La plantilla ya la fija el sandbox al crearse; acá queda el resto de lo elegido. */
 	async guardarOnboarding(o: Onboarding) {
 		await guardarCambio(this.db, this.sb.id, 'onboarding', 'estado', {

@@ -109,6 +109,8 @@ export interface Datos {
 	rubros(): Promise<Rubro[]>;
 	/** La tienda de la sesión. */
 	tienda(): Promise<Tienda>;
+	/** Lo guardado del onboarding, para retomarlo donde quedó, y si ya terminó. */
+	onboarding(): Promise<Onboarding>;
 	/** Lo elegido en el onboarding (y si terminó). */
 	guardarOnboarding(o: Onboarding): Promise<void>;
 	/** Si la tienda puede pasar a tulocalweb.com.ar/t/<slug> (decisiones §38). */

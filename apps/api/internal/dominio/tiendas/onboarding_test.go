@@ -61,6 +61,14 @@ func TestGuardarOnboarding(t *testing.T) {
 	if tono != "cercano" || !terminado {
 		t.Fatalf("tono %q terminado %v", tono, terminado)
 	}
+	// Se lee para retomarlo: lo guardado, la plantilla de la tienda y si terminó; la otra tienda, nueva.
+	l, err := tiendas.LeerOnboarding(ctx, b.App, una)
+	if err != nil || !l.Terminado || l.Plantilla != "yerbal" || string(l.Elecciones) != `{"tono": "cercano", "objetivos": [1, 2]}` {
+		t.Fatalf("leído %+v (%s) err %v", l, l.Elecciones, err)
+	}
+	if l, err = tiendas.LeerOnboarding(ctx, b.App, otra); err != nil || l.Terminado || string(l.Elecciones) != "{}" {
+		t.Fatalf("otra %+v (%s) err %v", l, l.Elecciones, err)
+	}
 	if err := tiendas.GuardarOnboarding(ctx, b.App, una, tiendas.Onboarding{Plantilla: "inventada"}); !errors.Is(err, tiendas.ErrPlantilla) {
 		t.Fatalf("err = %v", err)
 	}

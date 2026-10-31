@@ -140,6 +140,10 @@ export class DatosApi implements Datos {
 		return this.pedir<Tienda>('/v1/panel/tienda');
 	}
 
+	onboarding() {
+		return this.pedir<Onboarding>('/v1/panel/onboarding');
+	}
+
 	guardarOnboarding(o: Onboarding) {
 		return this.pedir<void>('/v1/panel/onboarding', 'PUT', o);
 	}

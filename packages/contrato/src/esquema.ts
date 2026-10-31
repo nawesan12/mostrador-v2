@@ -489,7 +489,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Lo guardado del onboarding (para retomarlo en otro dispositivo) y si ya terminó. */
+        get: operations["leerOnboarding"];
         /** Guarda lo elegido en el onboarding (y si terminó). La plantilla pasa a ser la de la tienda. */
         put: operations["guardarOnboarding"];
         post?: never;
@@ -5975,6 +5976,27 @@ export interface operations {
                 content?: never;
             };
             422: components["responses"]["Problema"];
+        };
+    };
+    leerOnboarding: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Onboarding */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Onboarding"];
+                };
+            };
+            401: components["responses"]["Problema"];
         };
     };
     guardarOnboarding: {
