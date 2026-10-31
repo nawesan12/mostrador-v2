@@ -30,6 +30,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/geoip"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/servidor"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/tiemporeal"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/webpush"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/whatsapp"
 )
@@ -99,6 +100,11 @@ func correr() error {
 		cs.Geo = geo
 	}
 
+	// Tiempo real (§42): una conexión dedicada con LISTEN y el hub que reparte por tienda y rol.
+	hub := tiemporeal.NuevoHub()
+	go hub.Correr(ctx)
+	go (&tiemporeal.Escucha{URL: cfg.BaseApp, Hub: hub}).Correr(ctx)
+
 	srv := &http.Server{
 		Addr: cfg.Direccion,
 		Handler: servidor.Nuevo(servidor.Dependencias{
@@ -113,19 +119,25 @@ func correr() error {
 				cfg.MPSecretoWebhook, cfg.Sitio, cfg.ClaveCifrado, slog.Default()),
 			MercadoLibre: mercadolibre.DesdeConfig(app, cfg.OAuth["mercadolibre"][0], cfg.OAuth["mercadolibre"][1],
 				cfg.Sitio, cfg.ClaveCifrado, slog.Default()),
-			CorreoArgentino: correoargentino.DesdeConfig(app, cfg.CAUsuario, cfg.CAClave, cfg.CAPruebas, cfg.ClaveCifrado, slog.Default()),
-			IA:              &ia.Servicio{Pool: app},
-			Facturacion:     facturacionDe(app, cfg.ClaveCifrado),
-			Telegram:        &telegram.Servicio{Pool: app},
-			Equipo:          eq,
-			Importacion:     importacionDe(app, cfg.ClaveCifrado, cfg.OAuth["tiendanube"]),
-			VAPIDPublica:    vapidPublica(cfg),
+			CorreoArgentino:    correoargentino.DesdeConfig(app, cfg.CAUsuario, cfg.CAClave, cfg.CAPruebas, cfg.ClaveCifrado, slog.Default()),
+			IA:                 &ia.Servicio{Pool: app},
+			Facturacion:        facturacionDe(app, cfg.ClaveCifrado),
+			Telegram:           &telegram.Servicio{Pool: app},
+			Equipo:             eq,
+			Importacion:        importacionDe(app, cfg.ClaveCifrado, cfg.OAuth["tiendanube"]),
+			VAPIDPublica:       vapidPublica(cfg),
+			TiempoReal:         hub,
+			TiempoRealOrigenes: cfg.TiempoRealOrigenes,
+			Desarrollo:         cfg.Desarrollo(),
 		}),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
 		WriteTimeout:      30 * time.Second,
 		IdleTimeout:       90 * time.Second,
 	}
+	// Al apagar, los WebSocket (conexiones tomadas, que Shutdown no espera) se cierran con «la API
+	// se reinicia» y los navegadores reconectan solos.
+	srv.RegisterOnShutdown(hub.Cerrar)
 	errs := make(chan error, 1)
 	go func() {
 		slog.Info("api escuchando", "direccion", cfg.Direccion, "entorno", cfg.Entorno)

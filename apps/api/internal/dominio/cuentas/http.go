@@ -37,18 +37,25 @@ func token(r *http.Request) string {
 	return ""
 }
 
+// Resolver: de quién es un token, en orden: una sesión de persona, una IA conectada o una mirada
+// del soporte. ErrSinSesion si no es de nadie.
+func (s *Servicio) Resolver(ctx context.Context, t string) (Datos, error) {
+	d, err := s.Sesion(ctx, t)
+	if errors.Is(err, ErrSinSesion) && s.SesionIA != nil {
+		d, err = s.SesionIA(ctx, t)
+	}
+	if errors.Is(err, ErrSinSesion) && s.SesionEquipo != nil {
+		d, err = s.SesionEquipo(ctx, t)
+	}
+	return d, err
+}
+
 // Autenticar resuelve la sesión del Bearer (si viene) y la deja en el contexto. No exige sesión:
 // cada ruta decide.
 func (s *Servicio) Autenticar(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if t := token(r); t != "" {
-			d, err := s.Sesion(r.Context(), t)
-			if errors.Is(err, ErrSinSesion) && s.SesionIA != nil {
-				d, err = s.SesionIA(r.Context(), t)
-			}
-			if errors.Is(err, ErrSinSesion) && s.SesionEquipo != nil {
-				d, err = s.SesionEquipo(r.Context(), t)
-			}
+			d, err := s.Resolver(r.Context(), t)
 			if err == nil {
 				r = r.WithContext(context.WithValue(r.Context(), claveCtx{}, d))
 			} else if !errors.Is(err, ErrSinSesion) {

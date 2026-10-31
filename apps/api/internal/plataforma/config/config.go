@@ -56,6 +56,9 @@ type Config struct {
 	// Web Push del panel instalado (docs/decisiones.md §43): el par VAPID en base64url (`go run
 	// ./cmd/vapid`) y el sujeto (mailto: o https:). Sin las tres, no hay push web.
 	VAPIDPublica, VAPIDPrivada, VAPIDSujeto string
+	// Tiempo real (docs/decisiones.md §42): orígenes extra que pueden abrir el WebSocket del panel,
+	// además de MOSTRADOR_SITIO (separados por coma; admiten comodines como https://*.ejemplo.com).
+	TiempoRealOrigenes []string
 }
 
 // Desarrollo dice si se está corriendo en local.
@@ -84,26 +87,27 @@ func Leer() (Config, error) {
 			"mercadolibre": {os.Getenv("MOSTRADOR_ML_CLIENT_ID"), os.Getenv("MOSTRADOR_ML_SECRETO")},
 			"tiendanube":   {os.Getenv("MOSTRADOR_TN_CLIENT_ID"), os.Getenv("MOSTRADOR_TN_SECRETO")},
 		},
-		ClerkSecreto:     os.Getenv("MOSTRADOR_CLERK_SECRETO"),
-		ClerkPublicable:  os.Getenv("MOSTRADOR_CLERK_PUBLICABLE"),
-		ClerkOrigenes:    lista(os.Getenv("MOSTRADOR_CLERK_ORIGENES")),
-		WhatsAppToken:    os.Getenv("MOSTRADOR_WHATSAPP_TOKEN"),
-		WhatsAppNumeroID: os.Getenv("MOSTRADOR_WHATSAPP_NUMERO_ID"),
-		MPToken:          os.Getenv("MOSTRADOR_MP_TOKEN"),
-		MPSecretoWebhook: os.Getenv("MOSTRADOR_MP_SECRETO_WEBHOOK"),
-		ClaveCifrado:     os.Getenv("MOSTRADOR_CLAVE_CIFRADO"),
-		TelegramToken:    os.Getenv("MOSTRADOR_TELEGRAM_BOT_TOKEN"),
-		CAUsuario:        os.Getenv("MOSTRADOR_CA_USUARIO"),
-		CAClave:          os.Getenv("MOSTRADOR_CA_CLAVE"),
-		CAPruebas:        os.Getenv("MOSTRADOR_CA_AMBIENTE") == "pruebas",
-		GeoIP:            os.Getenv("MOSTRADOR_GEOIP"),
-		APNsKeyID:        os.Getenv("MOSTRADOR_APNS_KEY_ID"),
-		APNsTeamID:       os.Getenv("MOSTRADOR_APNS_TEAM_ID"),
-		APNsClave:        os.Getenv("MOSTRADOR_APNS_CLAVE"),
-		APNsTopic:        valor("MOSTRADOR_APNS_TOPIC", "ar.com.tulocalweb.app"),
-		VAPIDPublica:     os.Getenv("MOSTRADOR_VAPID_PUBLICA"),
-		VAPIDPrivada:     os.Getenv("MOSTRADOR_VAPID_PRIVADA"),
-		VAPIDSujeto:      os.Getenv("MOSTRADOR_VAPID_SUJETO"),
+		ClerkSecreto:       os.Getenv("MOSTRADOR_CLERK_SECRETO"),
+		ClerkPublicable:    os.Getenv("MOSTRADOR_CLERK_PUBLICABLE"),
+		ClerkOrigenes:      lista(os.Getenv("MOSTRADOR_CLERK_ORIGENES")),
+		WhatsAppToken:      os.Getenv("MOSTRADOR_WHATSAPP_TOKEN"),
+		WhatsAppNumeroID:   os.Getenv("MOSTRADOR_WHATSAPP_NUMERO_ID"),
+		MPToken:            os.Getenv("MOSTRADOR_MP_TOKEN"),
+		MPSecretoWebhook:   os.Getenv("MOSTRADOR_MP_SECRETO_WEBHOOK"),
+		ClaveCifrado:       os.Getenv("MOSTRADOR_CLAVE_CIFRADO"),
+		TelegramToken:      os.Getenv("MOSTRADOR_TELEGRAM_BOT_TOKEN"),
+		CAUsuario:          os.Getenv("MOSTRADOR_CA_USUARIO"),
+		CAClave:            os.Getenv("MOSTRADOR_CA_CLAVE"),
+		CAPruebas:          os.Getenv("MOSTRADOR_CA_AMBIENTE") == "pruebas",
+		GeoIP:              os.Getenv("MOSTRADOR_GEOIP"),
+		APNsKeyID:          os.Getenv("MOSTRADOR_APNS_KEY_ID"),
+		APNsTeamID:         os.Getenv("MOSTRADOR_APNS_TEAM_ID"),
+		APNsClave:          os.Getenv("MOSTRADOR_APNS_CLAVE"),
+		APNsTopic:          valor("MOSTRADOR_APNS_TOPIC", "ar.com.tulocalweb.app"),
+		VAPIDPublica:       os.Getenv("MOSTRADOR_VAPID_PUBLICA"),
+		VAPIDPrivada:       os.Getenv("MOSTRADOR_VAPID_PRIVADA"),
+		VAPIDSujeto:        os.Getenv("MOSTRADOR_VAPID_SUJETO"),
+		TiempoRealOrigenes: lista(os.Getenv("MOSTRADOR_TIEMPO_REAL_ORIGENES")),
 	}
 	switch c.Entorno {
 	case "desarrollo", "staging", "produccion":

@@ -4,6 +4,7 @@ package servidor
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -45,6 +46,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/geoip"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/limite"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/tiemporeal"
 )
 
 // Dependencias del servidor. App puede ser nil en tests que no tocan la base.
@@ -80,6 +82,12 @@ type Dependencias struct {
 	Importacion *importacion.Servicio
 	// Clave pública VAPID del push web del panel instalado (vacía: apagado; §43).
 	VAPIDPublica string
+	// Tiempo real (§42): el hub que reparte los avisos de Postgres. nil: no se monta.
+	TiempoReal *tiemporeal.Hub
+	// De dónde se acepta el WebSocket del panel (además del Sitio).
+	TiempoRealOrigenes []string
+	// Desarrollo: el tiempo real acepta las cookies sin __Host- y los orígenes de localhost.
+	Desarrollo bool
 }
 
 // Nuevo devuelve el handler raíz de la API.
@@ -216,8 +224,47 @@ func Nuevo(d Dependencias) http.Handler {
 		if d.Equipo != nil {
 			d.Equipo.Rutas(mux)
 		}
+		if d.TiempoReal != nil && d.Cuentas != nil {
+			rutasTiempoReal(mux, d, ip)
+		}
 	}
 	return recuperar(d.Log, h)
+}
+
+// rutasTiempoReal monta el WebSocket del panel y el de la tienda online (docs/decisiones.md §42).
+func rutasTiempoReal(mux *http.ServeMux, d Dependencias, ip func(*http.Request) string) {
+	origenes := append([]string{strings.TrimRight(d.Sitio, "/")}, d.TiempoRealOrigenes...)
+	if d.Desarrollo {
+		origenes = append(origenes, "http://localhost:*", "http://127.0.0.1:*")
+	}
+	tiemporeal.Rutas(mux, tiemporeal.Config{
+		Hub:        d.TiempoReal,
+		Origenes:   origenes,
+		Desarrollo: d.Desarrollo,
+		IP:         ip,
+		Log:        d.Log,
+		Autenticar: func(ctx context.Context, token string) (tiemporeal.Quien, error) {
+			s, err := d.Cuentas.Resolver(ctx, token)
+			if errors.Is(err, cuentas.ErrSinSesion) {
+				return tiemporeal.Quien{}, tiemporeal.ErrNoExiste
+			}
+			if err != nil {
+				return tiemporeal.Quien{}, err
+			}
+			return tiemporeal.Quien{Usuario: s.Usuario.ID, Sesion: s.SesionID, Tienda: s.TiendaID, Rol: s.Rol,
+				VenceEn: s.VenceEn, IA: s.IA != ""}, nil
+		},
+		Publico: func(ctx context.Context, slug, codigo string) (string, string, error) {
+			t, p, err := vidriera.TiendaYPedido(ctx, d.App, slug, codigo)
+			if errors.Is(err, vidriera.ErrNoExiste) {
+				return "", "", tiemporeal.ErrNoExiste
+			}
+			return t, p, err
+		},
+		SlugDeDominio: func(ctx context.Context, dominio string) (string, error) {
+			return vidriera.SlugDeDominio(ctx, d.App, dominio)
+		},
+	})
 }
 
 // conActor deja en el contexto quién hace el pedido, para que cada dominio lo anote en la Actividad
