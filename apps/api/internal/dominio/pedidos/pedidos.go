@@ -61,10 +61,12 @@ type tx interface {
 
 // Item es un producto del pedido, tal como se vendió.
 type Item struct {
-	Nombre   string  `json:"nombre"`
-	Foto     *string `json:"foto"`
-	Cantidad int     `json:"cantidad"`
-	Precio   int64   `json:"precio"`
+	// El producto de la tienda (para «Volver a vender»); los pedidos de antes no lo guardaban.
+	ProductoID *string `json:"productoId"`
+	Nombre     string  `json:"nombre"`
+	Foto       *string `json:"foto"`
+	Cantidad   int     `json:"cantidad"`
+	Precio     int64   `json:"precio"`
 	// La variante vendida y su texto ("Talle M · Color Negro"), copiado al vender: sobrevive a que
 	// la variante se borre o cambie.
 	VarianteID *string `json:"varianteId"`
@@ -163,6 +165,10 @@ type Fila struct {
 	VIP               bool       `json:"vip"`
 	Hornero           bool       `json:"hornero"`
 	Mayorista         bool       `json:"mayorista"`
+	// Telefono: el WhatsApp de quien compró, para escribirle desde la lista.
+	Telefono *string `json:"telefono"`
+	// Codigo: el público de la confirmación (ahí se deja la reseña); null si se cargó a mano.
+	Codigo *string `json:"codigo"`
 }
 
 // Lista es la respuesta de la lista.
@@ -220,13 +226,13 @@ func condiciones(f Filtros, ahora time.Time, sin string) (string, []any) {
 }
 
 const columnasFila = `numero, comprador->>'nombre', comprador->>'foto', ciudad_envio, canal, pago, envio, estado,
-	total, creado_en, items, vip, hornero, mayorista`
+	total, creado_en, items, vip, hornero, mayorista, nullif(comprador->>'telefono', ''), codigo_publico`
 
 func escanearFila(r pgx.Row) (Fila, error) {
 	var f Fila
 	var items []Item
 	err := r.Scan(&f.Numero, &f.Cliente, &f.Foto, &f.Ciudad, &f.Canal, &f.Pago, &f.Envio, &f.Estado,
-		&f.Total, &f.Creado, &items, &f.VIP, &f.Hornero, &f.Mayorista)
+		&f.Total, &f.Creado, &items, &f.VIP, &f.Hornero, &f.Mayorista, &f.Telefono, &f.Codigo)
 	f.CantidadProductos = len(items)
 	f.Productos = []Producto{}
 	for i, it := range items {
@@ -348,7 +354,7 @@ func Obtener(ctx context.Context, pool tx, tiendaID string, numero int) (Detalle
 				seguimiento, nota, estados_en, entrega, descuentos
 			FROM pedidos WHERE tienda_id = $1 AND numero = $2`, tiendaID, numero).Scan(
 			&d.Numero, &d.Cliente, &d.Foto, &d.Ciudad, &d.Canal, &d.Pago, &d.Envio, &d.Estado, &d.Total, &d.Creado,
-			&d.Items, &d.VIP, &d.Hornero, &d.Mayorista, &comprador, &d.Subtotal, &d.CostoEnvio, &d.EstadoPago,
+			&d.Items, &d.VIP, &d.Hornero, &d.Mayorista, &d.Telefono, &d.Codigo, &comprador, &d.Subtotal, &d.CostoEnvio, &d.EstadoPago,
 			&d.Factura, &d.Seguimiento, &d.Nota, &estadosEn, &d.Entrega, &d.Descuentos)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return ErrNoExiste

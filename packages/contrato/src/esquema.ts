@@ -4508,6 +4508,10 @@ export interface components {
             /** @description Lo vendió Hornero */
             hornero: boolean;
             mayorista: boolean;
+            /** @description El WhatsApp de quien compró, tal como lo cargó */
+            telefono: string | null;
+            /** @description Código público de la confirmación (/t/<tienda>/pedido/<codigo>, donde se deja la reseña); null si se cargó a mano */
+            codigo: string | null;
         };
         ListaPedidos: {
             /** @description Pedidos que cumplen los filtros */
@@ -4533,6 +4537,8 @@ export interface components {
         };
         PedidoDetalle: components["schemas"]["PedidoFila"] & {
             items: {
+                /** @description El producto de la tienda; null en los pedidos de antes de guardarlo */
+                productoId: string | null;
                 nombre: string;
                 foto: string | null;
                 cantidad: number;

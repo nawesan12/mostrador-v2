@@ -663,14 +663,23 @@ export class DatosSandbox implements Datos {
 		return new Map([...c].filter(([, v]) => v).map(([k, v]) => [Number(k), v as CambioPedido]));
 	}
 
+	/** Como en Go: sólo lo comprado en la tienda online tiene la confirmación (y ahí, la reseña). */
+	private async conCodigo<F extends { numero: number; canal: string; codigo: string | null }>(
+		f: F
+	) {
+		return f.canal === 'web' ? { ...f, codigo: await codigoPedido(this.sb.id, f.numero) } : f;
+	}
+
 	async listarPedidos(f: FiltrosPedidos): Promise<ListaPedidos> {
 		const d = await this.base();
-		return listarDemo(d, await this.cambiosPedidos(), f, Date.now());
+		const l = listarDemo(d, await this.cambiosPedidos(), f, Date.now());
+		return { ...l, filas: await Promise.all(l.filas.map((x) => this.conCodigo(x))) };
 	}
 
 	async pedido(numero: number): Promise<PedidoDetalle | null> {
 		const d = await this.base();
-		return detalleDemo(d, await this.cambiosPedidos(), numero, Date.now());
+		const p = detalleDemo(d, await this.cambiosPedidos(), numero, Date.now());
+		return p && this.conCodigo(p);
 	}
 
 	/** Cambia el estado de un pedido (avanzar, deshacer o cancelar). */

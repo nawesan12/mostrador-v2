@@ -4729,7 +4729,7 @@ components:
       enum: [Sin pagar, Para preparar, Listo para despachar, En camino, Entregado, Cancelado]
     PedidoFila:
       type: object
-      required: [numero, cliente, foto, ciudad, canal, pago, envio, estado, total, creado, productos, cantidadProductos, vip, hornero, mayorista]
+      required: [numero, cliente, foto, ciudad, canal, pago, envio, estado, total, creado, productos, cantidadProductos, vip, hornero, mayorista, telefono, codigo]
       properties:
         numero: { type: integer }
         cliente: { type: string }
@@ -4754,6 +4754,8 @@ components:
         vip: { type: boolean }
         hornero: { type: boolean, description: 'Lo vendió Hornero' }
         mayorista: { type: boolean }
+        telefono: { type: [string, 'null'], description: 'El WhatsApp de quien compró, tal como lo cargó' }
+        codigo: { type: [string, 'null'], description: 'Código público de la confirmación (/t/<tienda>/pedido/<codigo>, donde se deja la reseña); null si se cargó a mano' }
     ListaPedidos:
       type: object
       required: [total, suma, filas, etapas, facetas]
@@ -4783,8 +4785,9 @@ components:
               type: array
               items:
                 type: object
-                required: [nombre, foto, cantidad, precio, varianteId, variante]
+                required: [productoId, nombre, foto, cantidad, precio, varianteId, variante]
                 properties:
+                  productoId: { type: [string, 'null'], description: 'El producto de la tienda; null en los pedidos de antes de guardarlo' }
                   nombre: { type: string }
                   foto: { type: [string, 'null'] }
                   cantidad: { type: integer }

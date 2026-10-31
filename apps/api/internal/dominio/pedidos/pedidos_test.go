@@ -21,13 +21,18 @@ func nuevo(nombre, canal, pago, envio, estado string, precio int64, hace time.Du
 	}
 }
 
+func conTelefono(n pedidos.Nuevo, tel string) pedidos.Nuevo {
+	n.Comprador.Telefono = &tel
+	return n
+}
+
 func TestListarFiltraYCuentaFacetas(t *testing.T) {
 	b := pruebadb.Nueva(t)
 	una := pruebadb.CrearTienda(t, b.App, "una")
 	otra := pruebadb.CrearTienda(t, b.App, "otra")
 	for _, n := range []pedidos.Nuevo{
 		nuevo("Lucía Fernández", "wa", "mp", "andreani", "Para preparar", 42900, time.Hour),
-		nuevo("Martín Gómez", "ml", "mp", "oca", "En camino", 21990, 30*time.Hour),
+		conTelefono(nuevo("Martín Gómez", "ml", "mp", "oca", "En camino", 21990, 30*time.Hour), "11 5555 0000"),
 		nuevo("Norma Ruiz", "wa", "transf", "retiro", "Sin pagar", 8000, 50*time.Hour),
 	} {
 		if _, err := pedidos.Crear(ctx, b.App, una, n); err != nil {
@@ -51,7 +56,7 @@ func TestListarFiltraYCuentaFacetas(t *testing.T) {
 		t.Fatalf("facetas: %+v etapas %+v", wa.Facetas.Canal, wa.Etapas)
 	}
 	q, _ := pedidos.Listar(ctx, b.App, una, pedidos.Filtros{Q: "gómez"}, time.Now())
-	if q.Total != 1 || q.Filas[0].Cliente != "Martín Gómez" {
+	if q.Total != 1 || q.Filas[0].Cliente != "Martín Gómez" || q.Filas[0].Telefono == nil || *q.Filas[0].Telefono != "11 5555 0000" {
 		t.Fatalf("búsqueda: %+v", q.Filas)
 	}
 	hoy, _ := pedidos.Listar(ctx, b.App, una, pedidos.Filtros{Fecha: "hoy", Minimo: 10000}, time.Now())
@@ -83,6 +88,10 @@ func TestEstadosYLote(t *testing.T) {
 	d, _ := pedidos.Obtener(ctx, b.App, id, n1)
 	if d.Estado != "Listo para despachar" || !d.Historial[2].Hecho || d.Comprador.Pedidos != 1 {
 		t.Fatalf("detalle: %s %+v", d.Estado, d.Historial)
+	}
+	// Cargado a mano: sin código público (no hay link para reseñar) y sin teléfono.
+	if d.Codigo != nil || d.Telefono != nil {
+		t.Fatalf("código y teléfono: %v %v", d.Codigo, d.Telefono)
 	}
 	if err := pedidos.CambiarEstado(ctx, b.App, id, n1, "Para preparar"); err != nil {
 		t.Fatalf("deshacer: %v", err)

@@ -64,6 +64,10 @@ func TestVentaPorVariante(t *testing.T) {
 	if it := d.Items[0]; it.Variante == nil || *it.Variante != "Talle M · Color Negro" || *it.VarianteID != mNegro || it.Precio != 22000 {
 		t.Fatalf("ítem: %+v", it)
 	}
+	// «Volver a vender» necesita el producto de cada ítem.
+	if it := d.Items[0]; it.ProductoID == nil || *it.ProductoID != p.ID {
+		t.Fatalf("el ítem no guardó el producto: %+v", it)
+	}
 	p, _ = listas.Obtener(ctx, b.App, luna, p.ID, time.Now())
 	if p.Stock != 2 {
 		t.Fatalf("stock del producto (suma): %d", p.Stock)

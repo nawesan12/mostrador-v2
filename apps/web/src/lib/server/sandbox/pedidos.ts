@@ -193,7 +193,10 @@ function fila(
 		cantidadProductos: p.items.length,
 		vip: vips.has(p.clienteId),
 		hornero: deHornero(p),
-		mayorista: c.mayorista
+		mayorista: c.mayorista,
+		telefono: c.telefono,
+		// El código firmado de la confirmación lo pone sandbox.ts (necesita el id del sandbox).
+		codigo: null
 	};
 }
 
@@ -292,6 +295,7 @@ export function detalleDemo(
 	return {
 		...fila(p, clientes, productos, vipsDe(d)),
 		items: p.items.map((i) => ({
+			productoId: i.productoId,
 			nombre: i.nombre,
 			foto:
 				d.variantes?.get(i.productoId)?.variantes.find((v) => v.id === i.varianteId)?.foto ??

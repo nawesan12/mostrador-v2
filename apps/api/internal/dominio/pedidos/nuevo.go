@@ -247,7 +247,7 @@ func lineasDescuento(n PedidoNuevo) []Descuento {
 // hay con dos cajas a la vez) y devuelve el ítem con el precio y la foto de la tienda, y cuántas
 // unidades quedan (del producto o de la variante).
 func descontar(ctx context.Context, t pgx.Tx, tiendaID string, i Linea) (Item, int, error) {
-	var it Item
+	it := Item{ProductoID: &i.ProductoID}
 	var quedan int
 	if i.VarianteID == "" {
 		err := t.QueryRow(ctx, `UPDATE productos SET stock = stock - $3
