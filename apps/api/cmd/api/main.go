@@ -18,6 +18,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/formularios"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ia"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/importacion"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/tincho"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/conversiones"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/correoargentino"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
@@ -30,6 +31,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/geoip"
+	pia "github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/ia"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/servidor"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/tiemporeal"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/webpush"
@@ -111,6 +113,14 @@ func correr() error {
 	go hub.Correr(ctx)
 	go (&tiemporeal.Escucha{URL: cfg.BaseApp, Hub: hub}).Correr(ctx)
 
+	// Tincho con Claude: sin ANTHROPIC_API_KEY responde sólo el motor del BFF.
+	tg := &telegram.Servicio{Pool: app}
+	tin := &tincho.Servicio{Pool: app, Modelo: pia.Nuevo(cfg.AnthropicClave), Cache: pia.NuevoCache(),
+		Presupuesto: int64(cfg.IAPresupuestoUSD) * 1_000_000, TiendaDelChat: tg.TiendaDelChat, Log: slog.Default()}
+	if cfg.AnthropicClave == "" {
+		slog.Warn("tincho: sin ANTHROPIC_API_KEY, Tincho responde sólo con el motor")
+	}
+
 	srv := &http.Server{
 		Addr: cfg.Direccion,
 		Handler: servidor.Nuevo(servidor.Dependencias{
@@ -129,7 +139,8 @@ func correr() error {
 			CorreoArgentino:    correoargentino.DesdeConfig(app, cfg.CAUsuario, cfg.CAClave, cfg.CAPruebas, cfg.ClaveCifrado, slog.Default()),
 			IA:                 &ia.Servicio{Pool: app},
 			Facturacion:        facturacionDe(app, cfg.ClaveCifrado),
-			Telegram:           &telegram.Servicio{Pool: app},
+			Telegram:           tg,
+			Tincho:             tin,
 			Equipo:             eq,
 			Importacion:        importacionDe(app, cfg.ClaveCifrado, cfg.OAuth["tiendanube"]),
 			Conversiones:       conversionesDe(app, cfg.ClaveCifrado),

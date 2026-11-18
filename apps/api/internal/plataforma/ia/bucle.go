@@ -61,7 +61,7 @@ func Conversar(ctx context.Context, m Modelo, p anthropic.MessageNewParams, ejec
 				texto.WriteString(v.Text)
 			case anthropic.ToolUseBlock:
 				r.Herramientas = append(r.Herramientas, v.Name)
-				if resp.StopReason != anthropic.StopReasonToolUse {
+				if resp.StopReason != anthropic.StopReasonToolUse || ejecutar == nil {
 					continue
 				}
 				res, esError := ejecutar(ctx, v.Name, json.RawMessage(v.JSON.Input.Raw()))

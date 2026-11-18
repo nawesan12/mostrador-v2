@@ -21,6 +21,9 @@
 //	                         pasa a v2 (tienda en bloques) los diseños v1 de todas las tiendas, borrador y
 //	                         publicado, en una transacción (mitienda.MigrarBase; idempotente). Con --seco
 //	                         sólo lista qué tiendas cambiarían. Antes, una copia de la base.
+//	mostradorctl ia-uso [AAAA-MM]
+//	                         lo que gastó Tincho (Claude) en el mes: total de la plataforma y por tienda y
+//	                         ruta (respuestas, tokens, caché leído y costo en dólares). Con el rol staff.
 //
 // Las claves de los roles salen de MOSTRADOR_CLAVE_<ROL> (vacías en desarrollo).
 package main
@@ -162,6 +165,18 @@ func correr(cmd string) error {
 			return err
 		}
 		return disenoV2(ctx, cfg.BaseMigrador, seco)
+	case "ia-uso":
+		mes := time.Now().In(time.FixedZone("ART", -3*3600)).Format("2006-01")
+		if len(os.Args) == 3 {
+			mes = os.Args[2]
+		}
+		if _, err := time.Parse("2006-01", mes); err != nil || len(os.Args) > 3 {
+			return fmt.Errorf("uso: mostradorctl ia-uso [AAAA-MM]")
+		}
+		if err := cfg.Exigir("BaseStaff"); err != nil {
+			return err
+		}
+		return iaUso(ctx, cfg.BaseStaff, mes)
 	default:
 		return fmt.Errorf("comando desconocido %q", cmd)
 	}
@@ -246,4 +261,40 @@ func listarPurga(ctx context.Context, url string) error {
 	}
 	fmt.Printf("%d tiendas para borrar\n", len(l))
 	return nil
+}
+
+// iaUso muestra el gasto de la IA del mes: el de la plataforma (el que mira el tope global) y el
+// detalle por tienda y ruta, de la que más gastó a la que menos.
+func iaUso(ctx context.Context, url, mes string) error {
+	conn, err := pgx.Connect(ctx, url)
+	if err != nil {
+		return err
+	}
+	defer conn.Close(ctx)
+	var costo int64
+	var pedidos int
+	if err := conn.QueryRow(ctx, `SELECT coalesce(sum(costo), 0), coalesce(sum(pedidos), 0) FROM ia_gasto WHERE mes = $1`, mes).
+		Scan(&costo, &pedidos); err != nil {
+		return err
+	}
+	fmt.Printf("%s · plataforma: %d respuestas con IA, USD %.4f\n\n", mes, pedidos, float64(costo)/1e6)
+	filas, err := conn.Query(ctx, `SELECT t.slug, u.ruta, sum(u.pedidos), sum(u.entrada), sum(u.cache_leido),
+			sum(u.cache_escrito), sum(u.salida), sum(u.costo)
+		FROM ia_uso u JOIN tiendas t ON t.id = u.tienda_id
+		WHERE u.dia >= ($1 || '-01')::date AND u.dia < ($1 || '-01')::date + interval '1 month'
+		GROUP BY 1, 2 ORDER BY sum(sum(u.costo)) OVER (PARTITION BY t.slug) DESC, 1, 2`, mes)
+	if err != nil {
+		return err
+	}
+	defer filas.Close()
+	fmt.Printf("%-28s %-9s %8s %10s %10s %10s %9s %10s\n", "tienda", "ruta", "resp.", "entrada", "leído", "escrito", "salida", "USD")
+	for filas.Next() {
+		var slug, ruta string
+		var n, ent, leido, escrito, sal, c int64
+		if err := filas.Scan(&slug, &ruta, &n, &ent, &leido, &escrito, &sal, &c); err != nil {
+			return err
+		}
+		fmt.Printf("%-28s %-9s %8d %10d %10d %10d %9d %10.4f\n", slug, ruta, n, ent, leido, escrito, sal, float64(c)/1e6)
+	}
+	return filas.Err()
 }

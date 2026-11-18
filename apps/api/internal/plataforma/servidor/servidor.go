@@ -39,6 +39,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/roles"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/suscripciones"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/tiendas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/tincho"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/turnos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ventas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/vidriera"
@@ -86,6 +87,8 @@ type Dependencias struct {
 	CorreoEquipo string
 	// Hornero en Telegram: vínculo del chat (panel) y lo que pide el bot por el BFF.
 	Telegram *telegram.Servicio
+	// Tincho con Claude (panel, apps y Telegram). nil: no se monta (el BFF responde con el motor).
+	Tincho *tincho.Servicio
 	// Backoffice del equipo (/v1/equipo/*) y "ver la tienda" de sólo lectura. nil: no se monta.
 	Equipo *equipo.Servicio
 	// Importar la tienda desde otra plataforma (el avance lo hace el worker). nil: no se monta.
@@ -234,6 +237,9 @@ func Nuevo(d Dependencias) http.Handler {
 			}})
 		if d.Telegram != nil {
 			d.Telegram.Rutas(mux, d.ClaveBFF)
+		}
+		if d.Tincho != nil {
+			d.Tincho.Rutas(mux, d.ClaveBFF)
 		}
 		if d.Importacion != nil {
 			d.Importacion.Rutas(mux)

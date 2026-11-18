@@ -14,6 +14,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/abono"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/roles"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/ia"
 )
 
 func mes(t time.Time) string { return t.In(time.FixedZone("ART", -3*3600)).Format("2006-01") }
@@ -121,6 +122,10 @@ func Plan(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (map[s
 			FROM tiendas WHERE id = $1`, tiendaID).Scan(&packs, &negocio, &productos, &personas); err != nil {
 			return err
 		}
+		consumo, err := ia.ConsumoEnTx(ctx, t, tiendaID, ahora)
+		if err != nil {
+			return err
+		}
 		ben, usado, err := abono.LeerBeneficio(ctx, t, tiendaID)
 		if err != nil {
 			return err
@@ -175,8 +180,9 @@ func Plan(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (map[s
 			"cotizaciones":   abono.Todas(e, ahora),
 			"beneficio":      beneficio,
 			"beneficioUsado": usado,
-			// Las respuestas de Hornero se cuentan cuando Hornero corra en la API.
-			"uso":         map[string]any{"productos": productos, "personas": personas, "hornero": 0, "packs": packs[mes(ahora)], "sinIa": 0},
+			// Tincho: las respuestas con IA del mes (las que cuentan para el plan) y las del motor.
+			"uso": map[string]any{"productos": productos, "personas": personas, "hornero": consumo.Mes, "packs": packs[mes(ahora)],
+				"sinIa": consumo.SinIA},
 			"medio":       nil,
 			"facturacion": map[string]any{"razonSocial": negocio.RazonSocial, "cuit": negocio.Cuit, "tipo": tipo},
 			"facturas":    facturas,

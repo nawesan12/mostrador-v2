@@ -24,6 +24,9 @@ var Rutas = map[string]Permiso{
 	"PUT /v1/panel/para-hacer/{id}":                 Panel,
 	"GET /v1/panel/hornero/contexto":                Panel,
 	"POST /v1/panel/hornero/ideas/{idea}":           Panel,
+	"POST /v1/panel/tincho/preguntar":               Panel, // cada herramienta mira el permiso de su ruta
+	"POST /v1/panel/tincho/mejorar":                 Panel,
+	"POST /v1/panel/tincho/motor":                   Panel,
 	"GET /v1/panel/configuracion":                   Panel, // sin negocio ni equipo para quien no puede (configuracion.Leer)
 	"PUT /v1/panel/configuracion/seguridad/{clave}": Panel, // la seguridad es de la persona
 	"DELETE /v1/panel/sesiones":                     Panel,

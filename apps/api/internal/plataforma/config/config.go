@@ -5,6 +5,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -68,6 +69,10 @@ type Config struct {
 	// La carpeta de archivos de la web (su DATOS_DIR/archivos, montada en el worker): de ahí se borran
 	// las fotos de las tiendas purgadas (fotos/<tienda>/). Vacía: las fotos no se tocan.
 	DirArchivos string
+	// Tincho con Claude (docs-ia/asistente-ia.md): la clave de la API de Anthropic (vacía: sólo el
+	// motor, sin IA) y la parte del presupuesto mensual de Tu Local Web en dólares (por defecto 40).
+	AnthropicClave   string
+	IAPresupuestoUSD int
 }
 
 // Desarrollo dice si se está corriendo en local.
@@ -75,6 +80,7 @@ func (c Config) Desarrollo() bool { return c.Entorno == "desarrollo" }
 
 // Leer arma la configuración desde las variables MOSTRADOR_*.
 func Leer() (Config, error) {
+	presupuesto := valor("MOSTRADOR_IA_PRESUPUESTO_USD", "40")
 	c := Config{
 		Entorno:      valor("MOSTRADOR_ENTORNO", "desarrollo"),
 		Direccion:    valor("MOSTRADOR_DIRECCION", ":4000"),
@@ -120,6 +126,8 @@ func Leer() (Config, error) {
 		TiempoRealOrigenes: lista(os.Getenv("MOSTRADOR_TIEMPO_REAL_ORIGENES")),
 		PurgaTiendas:       os.Getenv("MOSTRADOR_PURGA_TIENDAS") == "1",
 		DirArchivos:        os.Getenv("MOSTRADOR_DIR_ARCHIVOS"),
+		AnthropicClave:     os.Getenv("ANTHROPIC_API_KEY"),
+		IAPresupuestoUSD:   40,
 	}
 	switch c.Entorno {
 	case "desarrollo", "staging", "produccion":
@@ -144,6 +152,11 @@ func Leer() (Config, error) {
 			c.ClerkOrigenes = []string{c.Sitio}
 		}
 	}
+	n, err := strconv.Atoi(presupuesto)
+	if err != nil || n < 0 {
+		return c, fmt.Errorf("config: MOSTRADOR_IA_PRESUPUESTO_USD tiene que ser un entero (dólares por mes): %q", presupuesto)
+	}
+	c.IAPresupuestoUSD = n
 	return c, nil
 }
 
