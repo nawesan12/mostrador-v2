@@ -48,8 +48,8 @@ func Registrar(ctx context.Context, b Base, tiendaID, ruta string, u Uso, ahora 
 		if ruta == RutaMotor {
 			return nil
 		}
-		_, err := t.Exec(ctx, `INSERT INTO ia_gasto (mes, costo, pedidos) VALUES ($1, $2, 1)
-			ON CONFLICT (mes) DO UPDATE SET costo = ia_gasto.costo + EXCLUDED.costo, pedidos = ia_gasto.pedidos + 1`,
+		_, err := t.Exec(ctx, `INSERT INTO app.ia_gasto (mes, costo, pedidos) VALUES ($1, $2, 1)
+			ON CONFLICT (mes) DO UPDATE SET costo = app.ia_gasto.costo + EXCLUDED.costo, pedidos = app.ia_gasto.pedidos + 1`,
 			Mes(ahora), costo)
 		return err
 	})
@@ -78,7 +78,7 @@ func ConsumoEnTx(ctx context.Context, t pgx.Tx, tiendaID string, ahora time.Time
 func Gastado(ctx context.Context, b Base, ahora time.Time) (int64, error) {
 	var n int64
 	err := b.EnTx(ctx, func(t pgx.Tx) error {
-		err := t.QueryRow(ctx, `SELECT costo FROM ia_gasto WHERE mes = $1`, Mes(ahora)).Scan(&n)
+		err := t.QueryRow(ctx, `SELECT costo FROM app.ia_gasto WHERE mes = $1`, Mes(ahora)).Scan(&n)
 		if err == pgx.ErrNoRows {
 			return nil
 		}

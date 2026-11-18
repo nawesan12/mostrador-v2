@@ -21,16 +21,16 @@ SELECT app.aplicar_rls('ia_uso');
 GRANT SELECT, INSERT, UPDATE ON ia_uso TO mostrador_app;
 
 -- El gasto de toda la plataforma en el mes: el tope global (la parte del presupuesto de Tu Local
--- Web) se mira acá sin sumar todas las tiendas, que RLS no deja ver juntas. No tiene datos de
--- ninguna tienda: sólo el mes y la plata.
-CREATE TABLE ia_gasto (
+-- Web) se mira acá sin sumar todas las tiendas, que RLS no deja ver juntas. Fuera de public y sin
+-- datos de ninguna tienda (como app.slugs): sólo el mes y la plata.
+CREATE TABLE app.ia_gasto (
 	mes text PRIMARY KEY CHECK (mes ~ '^[0-9]{4}-[0-9]{2}$'),
 	costo bigint NOT NULL DEFAULT 0 CHECK (costo >= 0),
 	pedidos int NOT NULL DEFAULT 0 CHECK (pedidos >= 0)
 );
-GRANT SELECT, INSERT, UPDATE ON ia_gasto TO mostrador_app;
-GRANT SELECT ON ia_gasto TO mostrador_staff;
+GRANT SELECT, INSERT, UPDATE ON app.ia_gasto TO mostrador_app;
+GRANT SELECT ON app.ia_gasto TO mostrador_staff;
 
 -- +goose Down
-DROP TABLE ia_gasto;
+DROP TABLE app.ia_gasto;
 DROP TABLE ia_uso;

@@ -273,7 +273,7 @@ func iaUso(ctx context.Context, url, mes string) error {
 	defer conn.Close(ctx)
 	var costo int64
 	var pedidos int
-	if err := conn.QueryRow(ctx, `SELECT coalesce(sum(costo), 0), coalesce(sum(pedidos), 0) FROM ia_gasto WHERE mes = $1`, mes).
+	if err := conn.QueryRow(ctx, `SELECT coalesce(sum(costo), 0), coalesce(sum(pedidos), 0) FROM app.ia_gasto WHERE mes = $1`, mes).
 		Scan(&costo, &pedidos); err != nil {
 		return err
 	}
