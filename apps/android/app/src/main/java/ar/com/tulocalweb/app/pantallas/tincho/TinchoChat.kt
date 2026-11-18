@@ -35,6 +35,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -87,6 +88,9 @@ private data class Mensaje(
     val id: String = UUID.randomUUID().toString(),
 )
 
+/** Estado de una propuesta de Tincho ya tocada. */
+private enum class EstadoPropuesta { enviando, hecha, descartada }
+
 private val iniciales = listOf("¿Cómo vengo hoy?", "¿Qué tengo pendiente?", "¿Qué tengo que reponer?", "¿Qué es lo que más se vende?", "Ideas para vender más", "¿Cómo creo un cupón?")
 
 private val formaTincho = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomEnd = 20.dp, bottomStart = 6.dp)
@@ -95,7 +99,8 @@ private val formaPersona = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, 
 /** 6a · Chat con Tincho. Al abrir, cómo viene el día (cifras y pendientes). Cada respuesta trae el texto y, cuando
  *  corresponde, gráficos, tablas, listas, botones que llevan a la sección y preguntas para seguir. El motor vive en la
  *  web (/panel/hornero, formato «bloques»), que la app llama con su token; las preguntas de todos los días se responden
- *  con los datos, sin IA. */
+ *  con los datos, sin IA. Lo demás lo contesta la IA (Claude, en la API): lo que pide hacer llega como propuesta que la
+ *  persona confirma acá. */
 @Composable
 fun TinchoChat() {
     val estado = LocalEstado.current
@@ -112,6 +117,8 @@ fun TinchoChat() {
     /** La respuesta nueva aparece de a poco, con cursor (6a): su id y cuántos caracteres van. */
     var revelando by remember { mutableStateOf<Pair<String, Int>?>(null) }
     val dictado = remember { Dictado(ctx, estado) }
+    /** Estado de cada propuesta («mensaje-índice»): enviando, hecha o descartada. */
+    val propuestas = remember { mutableStateMapOf<String, EstadoPropuesta>() }
     val lista = rememberLazyListState()
     val anima = animacionesActivas()
 
@@ -187,6 +194,23 @@ fun TinchoChat() {
             estado.avisar("Copiamos la respuesta. Mandala a $CASILLA_REPORTE para que la revisemos.")
         }
     }
+
+    fun confirmar(p: PropuestaTincho, clave: String) {
+        if (propuestas[clave] != null) return
+        Haptico.seleccion()
+        propuestas[clave] = EstadoPropuesta.enviando
+        alcance.launch {
+            val error = Web.confirmarTincho(p, estado.api.token)
+            if (error != null) {
+                propuestas.remove(clave)
+                estado.avisar(error, ok = false)
+            } else {
+                propuestas[clave] = EstadoPropuesta.hecha
+                estado.avisar("Listo: ${p.titulo}.")
+            }
+        }
+    }
+    fun descartar(clave: String) { propuestas[clave] = EstadoPropuesta.descartada; Haptico.seleccion() }
 
     fun ir(destino: String) {
         Haptico.seleccion()
@@ -269,9 +293,9 @@ fun TinchoChat() {
         // un corte de color (igual que iOS).
         Box(Modifier.weight(1f).fillMaxWidth()) {
         LazyColumn(Modifier.fillMaxSize(), state = lista, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            item { BurbujaTincho(Mensaje(true, saludo), revelando, ::ir, ::reportar) }
+            item { BurbujaTincho(Mensaje(true, saludo), revelando, ::ir, ::reportar, propuestas, ::confirmar, ::descartar) }
             items(visibles, key = { it.id }) { m ->
-                Box(Modifier.animateItem()) { if (m.deTincho) BurbujaTincho(m, revelando, ::ir, ::reportar) else BurbujaPersona(m) }
+                Box(Modifier.animateItem()) { if (m.deTincho) BurbujaTincho(m, revelando, ::ir, ::reportar, propuestas, ::confirmar, ::descartar) else BurbujaPersona(m) }
             }
             if (escribiendo) item(key = "escribiendo") { EscribiendoAhora() }
             if (sinConexion && !escribiendo) item(key = "desenchufado") {
@@ -341,7 +365,10 @@ private fun EscribiendoAhora() {
 }
 
 @Composable
-private fun BurbujaTincho(m: Mensaje, revelando: Pair<String, Int>?, ir: (String) -> Unit, reportar: (Mensaje) -> Unit) {
+private fun BurbujaTincho(
+    m: Mensaje, revelando: Pair<String, Int>?, ir: (String) -> Unit, reportar: (Mensaje) -> Unit,
+    propuestas: Map<String, EstadoPropuesta>, confirmar: (PropuestaTincho, String) -> Unit, descartar: (String) -> Unit,
+) {
     val texto = m.respuesta?.texto ?: m.texto
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         if (texto.isNotEmpty()) {
@@ -373,11 +400,59 @@ private fun BurbujaTincho(m: Mensaje, revelando: Pair<String, Int>?, ir: (String
                         }
                     }
                 }
+                (r.propuestas ?: emptyList()).forEachIndexed { i, p ->
+                    val clave = "${m.id}-$i"
+                    TarjetaPropuesta(p, propuestas[clave], { confirmar(p, clave) }, { descartar(clave) })
+                }
+                // Sin cupo de IA: el texto lo explica y el botón lleva al plan.
+                if (r.tope == "plan") {
+                    Row(Modifier.height(36.dp).clip(Capsula).background(C.primario).clickable { ir("plan") }.padding(horizontal = 14.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Texto("Ver mi plan", Estilo.footnoteFuerte, Color.White)
+                        Icono("arrow.right", 11f, Color.White)
+                    }
+                }
                 // Las respuestas son de IA: cualquiera se puede reportar (políticas de Google y Apple).
                 Row(Modifier.clip(Capsula).clickable { reportar(m) }.padding(vertical = 4.dp, horizontal = 2.dp),
                     horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icono("flag", 12f, C.texto3)
                     Texto("Reportar respuesta", Estilo.footnote, C.texto3)
+                }
+            }
+        }
+    }
+}
+
+/** Una propuesta de Tincho: qué haría y «Confirmar» / «Descartar». No se hace nada sin el toque. */
+@Composable
+private fun TarjetaPropuesta(p: PropuestaTincho, e: EstadoPropuesta?, confirmar: () -> Unit, descartar: () -> Unit) {
+    val forma = RoundedCornerShape(18.dp)
+    Column(Modifier.fillMaxWidth().clip(forma).background(C.superficie).border(1.dp, C.anillo, forma).padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
+            Box(Modifier.size(38.dp).clip(RoundedCornerShape(12.dp)).background(C.acento.copy(alpha = 0.12f)), contentAlignment = Alignment.Center) {
+                Icono("sparkles", 17f, C.acento)
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Texto(p.titulo, Estilo.subheadFuerte, C.texto)
+                p.detalle?.let { Texto(it, Estilo.footnote, C.texto2) }
+            }
+        }
+        when (e) {
+            EstadoPropuesta.hecha -> Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icono("checkmark.circle.fill", 15f, C.ok)
+                Texto("Hecho", Estilo.footnoteFuerte, C.ok)
+            }
+            EstadoPropuesta.descartada -> Texto("Descartada", Estilo.footnote, C.texto3)
+            else -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                val enviando = e == EstadoPropuesta.enviando
+                Box(Modifier.weight(1f).height(44.dp).clip(Capsula).background(C.texto).clickable(enabled = !enviando, onClick = confirmar),
+                    contentAlignment = Alignment.Center) {
+                    Texto(if (enviando) "Haciendo…" else "Confirmar", Estilo.footnoteFuerte, Color.White)
+                }
+                Box(Modifier.height(44.dp).clip(Capsula).border(1.dp, C.anillo, Capsula).clickable(enabled = !enviando, onClick = descartar)
+                    .padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
+                    Texto("Descartar", Estilo.footnoteFuerte, C.texto)
                 }
             }
         }

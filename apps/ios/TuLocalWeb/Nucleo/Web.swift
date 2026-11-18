@@ -103,7 +103,8 @@ enum Web {
     /// Una pregunta a Tincho: va devolviendo el texto a medida que llega.
     /// Tincho con bloques (cifras, gráficos, tablas, botones y sugerencias): la respuesta entera en JSON.
     static func tinchoConBloques(_ mensajes: [(rol: String, texto: String)], token: String?) async throws -> RespuestaTincho {
-        var r = URLRequest(url: base.appending(path: "panel/hornero"), timeoutInterval: 40)
+        // Lo que el motor no sabe lo contesta la IA (hasta 4 vueltas): más margen que una pregunta común.
+        var r = URLRequest(url: base.appending(path: "panel/hornero"), timeoutInterval: 75)
         r.httpMethod = "POST"
         r.setValue("application/json", forHTTPHeaderField: "Content-Type")
         if let token { r.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
@@ -113,6 +114,25 @@ enum Web {
         let (d, resp) = try await URLSession.shared.data(for: r)
         guard let h = resp as? HTTPURLResponse, (200..<300).contains(h.statusCode) else { throw ErrorApi.desconocido }
         return try JSONDecoder().decode(RespuestaTincho.self, from: d)
+    }
+
+    /// «Confirmar» una propuesta de Tincho. nil si salió; si no, el motivo para mostrar.
+    static func confirmarTincho(_ p: PropuestaTincho, token: String?) async -> String? {
+        var r = URLRequest(url: base.appending(path: "panel/hornero/confirmar"), timeoutInterval: 30)
+        r.httpMethod = "POST"
+        r.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if let token { r.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
+        struct C: Encodable { var herramienta: String; var argumentos: [String: ValorJSON] }
+        struct R: Decodable { var ok: Bool?; var error: String? }
+        do {
+            r.httpBody = try JSONEncoder().encode(C(herramienta: p.herramienta, argumentos: p.argumentos))
+            let (d, resp) = try await URLSession.shared.data(for: r)
+            let j = try? JSONDecoder().decode(R.self, from: d)
+            if let h = resp as? HTTPURLResponse, (200..<300).contains(h.statusCode), j?.ok == true { return nil }
+            return j?.error ?? "No se pudo hacer. Probá de nuevo en un rato."
+        } catch {
+            return "No hay conexión. Probá de nuevo."
+        }
     }
 
     static func tincho(_ mensajes: [(rol: String, texto: String)], token: String?) -> AsyncThrowingStream<String, Error> {

@@ -72,6 +72,21 @@ data class RespuestaTincho(
     val bloques: List<@Serializable(with = BloqueSerializer::class) BloqueTincho>? = null,
     val acciones: List<AccionTincho>? = null,
     val sugerencias: List<String>? = null,
+    /** Lo que pidió hacer Tincho con IA (cupón, estado, stock, link de pago): no se hizo, la persona lo confirma
+     *  (POST /panel/hornero/confirmar). */
+    val propuestas: List<PropuestaTincho>? = null,
+    /** La IA no respondió por un tope (plan, dia o plataforma): el texto lo explica. */
+    val tope: String? = null,
+)
+
+/** Una acción propuesta por Tincho. Herramienta y argumentos son los del MCP de la web, que la ejecuta con la sesión
+ *  de la persona al confirmar. */
+@Serializable
+data class PropuestaTincho(
+    val herramienta: String,
+    val argumentos: Map<String, ValorJSON> = emptyMap(),
+    val titulo: String,
+    val detalle: String? = null,
 )
 
 @Serializable data class AccionTincho(val texto: String, val ir: String)

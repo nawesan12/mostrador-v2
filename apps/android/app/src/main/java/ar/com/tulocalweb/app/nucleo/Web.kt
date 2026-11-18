@@ -1,6 +1,7 @@
 package ar.com.tulocalweb.app.nucleo
 
 import ar.com.tulocalweb.app.BuildConfig
+import ar.com.tulocalweb.app.pantallas.tincho.PropuestaTincho
 import ar.com.tulocalweb.app.pantallas.tincho.RespuestaTincho
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -107,11 +108,30 @@ object Web {
         val c = CuerpoBloques(mensajes.takeLast(12).map { M(it.first, it.second.take(1000)) })
         val r = Request.Builder().url("$base/panel/hornero").post(Api.json.encodeToString(c).toRequestBody("application/json".toMediaType()))
         token?.let { r.header("Authorization", "Bearer $it") }
-        val largo = http.newBuilder().readTimeout(40, TimeUnit.SECONDS).callTimeout(40, TimeUnit.SECONDS).build()
+        // Lo que el motor no sabe lo contesta la IA (hasta 4 vueltas): más margen que una pregunta común.
+        val largo = http.newBuilder().readTimeout(75, TimeUnit.SECONDS).callTimeout(75, TimeUnit.SECONDS).build()
         val texto = try {
             largo.newCall(r.build()).execute().use { if (!it.isSuccessful) throw ErrorApi.desconocido; it.body?.string().orEmpty() }
         } catch (e: java.io.IOException) { throw ErrorApi.sinRed }
         runCatching { Api.json.decodeFromString<RespuestaTincho>(texto) }.getOrNull() ?: throw ErrorApi.desconocido
+    }
+
+    @Serializable private data class Confirmar(val herramienta: String, val argumentos: Map<String, ValorJSON>)
+    @Serializable private data class Confirmado(val ok: Boolean? = null, val error: String? = null)
+
+    /** «Confirmar» una propuesta de Tincho. null si salió; si no, el motivo para mostrar. */
+    suspend fun confirmarTincho(p: PropuestaTincho, token: String?): String? = withContext(Dispatchers.IO) {
+        val c = Confirmar(p.herramienta, p.argumentos)
+        val r = Request.Builder().url("$base/panel/hornero/confirmar").post(Api.json.encodeToString(c).toRequestBody("application/json".toMediaType()))
+        token?.let { r.header("Authorization", "Bearer $it") }
+        try {
+            http.newCall(r.build()).execute().use {
+                val j = runCatching { Api.json.decodeFromString<Confirmado>(it.body?.string().orEmpty()) }.getOrNull()
+                if (it.isSuccessful && j?.ok == true) null else j?.error ?: "No se pudo hacer. Probá de nuevo en un rato."
+            }
+        } catch (e: java.io.IOException) {
+            "No hay conexión. Probá de nuevo."
+        }
     }
 
     /** Una pregunta a Tincho: va devolviendo el texto a medida que llega. */

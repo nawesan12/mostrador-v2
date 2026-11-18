@@ -314,6 +314,23 @@ class PantallasTest {
         montar("BloquesDeTincho", espera = 1000) { EnHoja { (r.bloques ?: emptyList()).forEach { VistaBloque(it) } } }
     }
 
+    @Test fun propuestasDeTincho() {
+        val json = """
+        {"texto": "Te dejé el cupón **VERANO15** para confirmar.", "propuestas": [
+          {"herramienta": "crear_cupon", "argumentos": {"codigo": "VERANO15", "tipo": "porcentaje", "valor": 15, "vigencia": "7"},
+           "titulo": "Crear el cupón VERANO15", "detalle": "15 % de descuento · 7 días"}], "uso": {"usadas": 3, "tope": 100}}
+        """
+        val r = Api.json.decodeFromString(RespuestaTincho.serializer(), json)
+        val p = r.propuestas!!.first()
+        assertEquals("crear_cupon", p.herramienta)
+        // Al confirmar, los argumentos vuelven tal cual (enteros como enteros).
+        assertEquals("15", p.argumentos["valor"].toString())
+        val tope = Api.json.decodeFromString(RespuestaTincho.serializer(),
+            """{"texto": "Ya usaste las 100 respuestas con IA de tu plan.", "tope": "plan", "sugerencias": ["¿Cómo vengo hoy?"]}""")
+        assertEquals("plan", tope.tope)
+        assertNull(tope.propuestas)
+    }
+
     @Test fun estadisticas() = montar("Estadisticas") { Estadisticas() }
     @Test fun integraciones() = montar("Integraciones") { Integraciones() }
     @Test fun hojaHistoria() = montar("HojaHistoria") { ComoHoja { HojaHistoria(tienda) } }

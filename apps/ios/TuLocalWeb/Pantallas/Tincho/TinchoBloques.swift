@@ -9,6 +9,23 @@ struct RespuestaTincho: Decodable, Equatable {
     var bloques: [BloqueTincho]?
     var acciones: [AccionTincho]?
     var sugerencias: [String]?
+    /// Lo que pidió hacer Tincho con IA (cupón, estado, stock, link de pago): no se hizo, la persona
+    /// lo confirma (POST /panel/hornero/confirmar).
+    var propuestas: [PropuestaTincho]?
+    /// La IA no respondió por un tope (plan, dia o plataforma): el texto lo explica.
+    var tope: String?
+}
+
+/// Una acción propuesta por Tincho. Herramienta y argumentos son los del MCP de la web, que la
+/// ejecuta con la sesión de la persona al confirmar.
+struct PropuestaTincho: Codable, Equatable, Hashable {
+    var herramienta: String
+    var argumentos: [String: ValorJSON]
+    var titulo: String
+    var detalle: String?
+
+    static func == (a: Self, b: Self) -> Bool { a.herramienta == b.herramienta && a.titulo == b.titulo && a.detalle == b.detalle }
+    func hash(into h: inout Hasher) { h.combine(herramienta); h.combine(titulo); h.combine(detalle) }
 }
 
 struct AccionTincho: Decodable, Equatable, Hashable { var texto: String; var ir: String }

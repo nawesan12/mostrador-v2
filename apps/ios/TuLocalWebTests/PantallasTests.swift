@@ -202,6 +202,22 @@ final class PantallasTests: XCTestCase {
         XCTAssertEqual(VistaBloque.corto(1_250_000, "pesos"), "$\u{202F}1,2 M")
         montar(ScrollView { VStack { ForEach(Array((r.bloques ?? []).enumerated()), id: \.offset) { _, b in VistaBloque(bloque: b) } } })
     }
+    func testPropuestasDeTincho() throws {
+        let json = """
+        {"texto": "Te dejé el cupón **VERANO15** para confirmar.", "propuestas": [
+          {"herramienta": "crear_cupon", "argumentos": {"codigo": "VERANO15", "tipo": "porcentaje", "valor": 15, "vigencia": "7"},
+           "titulo": "Crear el cupón VERANO15", "detalle": "15 % de descuento · 7 días"}], "uso": {"usadas": 3, "tope": 100}}
+        """
+        let r = try JSONDecoder().decode(RespuestaTincho.self, from: Data(json.utf8))
+        XCTAssertEqual(r.propuestas?.first?.argumentos["valor"]?.entero, 15)
+        XCTAssertEqual(r.propuestas?.first?.herramienta, "crear_cupon")
+        // Al confirmar, los argumentos vuelven tal cual (enteros como enteros).
+        let vuelta = String(data: try JSONEncoder().encode(r.propuestas![0].argumentos), encoding: .utf8)!
+        XCTAssertTrue(vuelta.contains("\"valor\":15"))
+        let tope = try JSONDecoder().decode(RespuestaTincho.self, from: Data(#"{"texto": "Ya usaste las 100 respuestas con IA de tu plan.", "tope": "plan", "sugerencias": ["¿Cómo vengo hoy?"]}"#.utf8))
+        XCTAssertEqual(tope.tope, "plan")
+        XCTAssertNil(tope.propuestas)
+    }
     func testEstadisticas() { montar(Estadisticas()) }
     func testIntegraciones() { montar(Integraciones()) }
     func testHojaHistoria() { montar(HojaHistoria(tienda: Self.tienda)) }

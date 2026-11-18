@@ -3,7 +3,8 @@ import SwiftUI
 /// 6a · Chat con Tincho. Al abrir, cómo viene el día (cifras y pendientes). Cada respuesta trae el
 /// texto y, cuando corresponde, gráficos, tablas, listas, botones que llevan a la sección y preguntas
 /// para seguir. El motor vive en la web (/panel/hornero, formato «bloques»), que la app llama con su
-/// token; las preguntas de todos los días se responden con los datos, sin IA.
+/// token; las preguntas de todos los días se responden con los datos, sin IA. Lo demás lo contesta la
+/// IA (Claude, en la API): lo que pide hacer llega como propuesta que la persona confirma acá.
 struct TinchoChat: View {
     @Environment(Estado.self) private var estado
     @Environment(Navegacion.self) private var nav
@@ -17,6 +18,10 @@ struct TinchoChat: View {
     /// La respuesta nueva aparece de a poco, con cursor (6a): su id y cuántos caracteres van.
     @State private var revelando: (id: UUID, n: Int)?
     @State private var dictado = Dictado()
+    /// Estado de cada propuesta («\(mensaje)-\(índice)»): enviando, hecha o descartada.
+    @State private var propuestas: [String: EstadoPropuesta] = [:]
+
+    enum EstadoPropuesta { case enviando, hecha, descartada }
     @FocusState private var foco: Bool
 
     struct Mensaje: Identifiable, Equatable {
@@ -192,6 +197,22 @@ struct TinchoChat: View {
                             }
                         }
                     }
+                    ForEach(Array((r.propuestas ?? []).enumerated()), id: \.offset) { i, p in
+                        tarjetaPropuesta(p, clave: "\(m.id)-\(i)")
+                    }
+                    // Sin cupo de IA: el texto lo explica y el botón lleva al plan.
+                    if r.tope == "plan" {
+                        Button { ir("plan") } label: {
+                            HStack(spacing: 6) {
+                                Text("Ver mi plan")
+                                Image(systemName: "arrow.right").font(.system(size: 11, weight: .bold))
+                            }
+                            .estilo(.footnoteFuerte).foregroundStyle(.white)
+                            .padding(.horizontal, 14).frame(height: 36)
+                            .background(C.primario, in: Capsule())
+                        }
+                        .buttonStyle(.plain)
+                    }
                     // Las respuestas son de IA: cualquiera se puede reportar (políticas de Apple y Google).
                     Button { reportar(m) } label: {
                         Label("Reportar respuesta", systemImage: "flag")
@@ -201,6 +222,63 @@ struct TinchoChat: View {
                     .buttonStyle(.plain)
                 }
                 .padding(.leading, 36)
+            }
+        }
+    }
+
+    /// Una propuesta de Tincho: qué haría y «Confirmar» / «Descartar». No se hace nada sin el toque.
+    private func tarjetaPropuesta(_ p: PropuestaTincho, clave: String) -> some View {
+        let e = propuestas[clave]
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "sparkles").font(.system(size: 17, weight: .semibold)).foregroundStyle(C.acento)
+                    .frame(width: 38, height: 38)
+                    .background(C.acento.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(p.titulo).estilo(.subheadFuerte).foregroundStyle(C.texto)
+                    if let d = p.detalle { Text(d).estilo(.footnote).foregroundStyle(C.texto2) }
+                }
+                Spacer(minLength: 0)
+            }
+            switch e {
+            case .hecha:
+                Label("Hecho", systemImage: "checkmark.circle.fill").estilo(.footnoteFuerte).foregroundStyle(C.ok)
+            case .descartada:
+                Text("Descartada").estilo(.footnote).foregroundStyle(C.texto3)
+            default:
+                HStack(spacing: 8) {
+                    Button { confirmar(p, clave: clave) } label: {
+                        Text(e == .enviando ? "Haciendo…" : "Confirmar").estilo(.footnoteFuerte).foregroundStyle(.white)
+                            .frame(maxWidth: .infinity).frame(height: 44)
+                            .background(C.texto, in: Capsule())
+                    }
+                    .buttonStyle(.plain).disabled(e == .enviando)
+                    Button { propuestas[clave] = .descartada; Haptico.seleccion() } label: {
+                        Text("Descartar").estilo(.footnoteFuerte).foregroundStyle(C.texto)
+                            .padding(.horizontal, 16).frame(height: 44)
+                            .overlay(Capsule().strokeBorder(C.anillo, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain).disabled(e == .enviando)
+                }
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(C.superficie, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(C.anillo, lineWidth: 1))
+    }
+
+    private func confirmar(_ p: PropuestaTincho, clave: String) {
+        guard propuestas[clave] == nil else { return }
+        Haptico.seleccion()
+        propuestas[clave] = .enviando
+        Task {
+            if let error = await Web.confirmarTincho(p, token: estado.api.token) {
+                propuestas[clave] = nil
+                estado.avisar(error, ok: false)
+            } else {
+                propuestas[clave] = .hecha
+                estado.avisar("Listo: \(p.titulo).")
             }
         }
     }
