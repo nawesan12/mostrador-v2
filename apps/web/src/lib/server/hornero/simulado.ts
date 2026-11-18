@@ -1,6 +1,6 @@
 /**
- * Tincho sin modelo (desarrollo y pruebas, HORNERO=simulado): respuestas armadas con los mismos datos,
- * para no llamar a Workers AI desde las pruebas.
+ * Tincho sin IA en la demo (sandbox) y las pruebas: respuestas armadas con los mismos datos,
+ * para lo que el motor no entiende (en la demo no hay IA).
  */
 import type { DatosHornero } from './contexto.ts';
 

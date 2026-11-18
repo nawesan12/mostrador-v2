@@ -40,7 +40,8 @@ export type Legal = {
  */
 const SUBENCARGADOS = [
 	'Hostinger (Brasil): el servidor donde corren Tu Local Web, la base de datos, las fotos de los productos y el correo.',
-	'Cloudflare (Estados Unidos): el DNS y el proxy por el que pasa todo el tráfico del sitio, y Workers AI, que procesa los textos de Tincho, el asistente.',
+	'Cloudflare (Estados Unidos): el DNS y el proxy por el que pasa todo el tráfico del sitio.',
+	'Anthropic (Estados Unidos): Claude, la inteligencia artificial con la que responde Tincho, el asistente, cuando la pregunta no sale de sus respuestas automáticas. Recibe sólo los datos del negocio que hacen falta para esa pregunta y no los usa para entrenar sus modelos.',
 	'Clerk (Estados Unidos): el ingreso con Google, Apple y otras cuentas.',
 	'Google (Firebase Cloud Messaging) y Apple (Apple Push Notification service): los avisos al celular.',
 	'GitHub (Estados Unidos): guarda las copias de seguridad diarias de las bases, que salen cifradas de nuestro servidor.',
@@ -222,7 +223,7 @@ export const LEGALES: Legal[] = [
 		corto: 'Política de privacidad',
 		miga: 'Privacidad',
 		descripcion: 'Legales de Tu Local Web, claros y sin letra chica.',
-		chips: ['Vigente desde el 15 de noviembre de 2026', 'Versión 2.7', '3 min de lectura'],
+		chips: ['Vigente desde el 18 de noviembre de 2026', 'Versión 2.8', '3 min de lectura'],
 		ilustracion: 'portapapeles',
 		indice: [
 			['s1', '1. Responsable'],
@@ -330,7 +331,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Transferencias internacionales',
 				cuerpo: [
 					{
-						p: 'Algunos proveedores alojan datos fuera de la Argentina, principalmente en Brasil (Hostinger) y en Estados Unidos (Cloudflare, Clerk, GitHub y, sólo si aceptás las cookies de marketing, Meta). En esos casos usamos cláusulas contractuales que garantizan un nivel de protección adecuado.'
+						p: 'Algunos proveedores alojan datos fuera de la Argentina, principalmente en Brasil (Hostinger) y en Estados Unidos (Cloudflare, Clerk, GitHub, Anthropic y, sólo si aceptás las cookies de marketing, Meta). En esos casos usamos cláusulas contractuales que garantizan un nivel de protección adecuado.'
 					}
 				]
 			},
@@ -383,7 +384,10 @@ export const LEGALES: Legal[] = [
 				titulo: 'Inteligencia artificial',
 				cuerpo: [
 					{
-						p: 'Cuando Tincho responde un mensaje, el texto se procesa solo para generar esa respuesta, con Workers AI de Cloudflare, que no usa esos datos para entrenar sus modelos.'
+						p: 'Tincho, el asistente del panel, de la app y de Telegram, habla sólo con vos y tu equipo, nunca con tus clientes. Las preguntas de todos los días las responde solo, con tus datos y sin inteligencia artificial. Las demás las responde Claude, de Anthropic (Estados Unidos): para eso le mandamos tu pregunta, la charla reciente y un resumen de tu negocio (ventas, pedidos, productos y stock), y sólo lo que haga falta de tus pedidos y clientes (nombre, ciudad, lo que compraron), nunca su email, teléfono, DNI ni contraseñas. «Mejorar con Tincho» manda el nombre y la descripción del producto.'
+					},
+					{
+						p: 'Anthropic procesa esos datos sólo para generar la respuesta, no los usa para entrenar sus modelos y los borra según sus plazos de retención. Es una transferencia internacional a Estados Unidos, con las mismas garantías que el resto de nuestros proveedores (ver Transferencias internacionales). Tincho no hace nada por su cuenta: si propone crear un cupón, cambiar un pedido o ajustar el stock, sólo pasa cuando tocás «Confirmar».'
 					}
 				]
 			},
@@ -758,7 +762,7 @@ export const LEGALES: Legal[] = [
 		corto: 'Tratamiento de datos (para tiendas)',
 		miga: 'Tratamiento de datos',
 		descripcion: 'Legales de Tu Local Web, claros y sin letra chica.',
-		chips: ['Vigente desde el 12 de noviembre de 2026', 'Versión 1.3', '2 min de lectura'],
+		chips: ['Vigente desde el 18 de noviembre de 2026', 'Versión 1.4', '2 min de lectura'],
 		ilustracion: 'portapapeles',
 		indice: [
 			['s1', '1. Roles'],

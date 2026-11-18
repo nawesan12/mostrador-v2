@@ -2,6 +2,25 @@
 
 Última actualización: 6/11/2026. Plan completo: `~/.claude/plans/claude-vamos-con-algo-encapsulated-alpaca.md`.
 
+## 18/11/2026: Tincho con Claude Haiku (rama tincho-claude, sin desplegar, migración 00089)
+
+Diseño común: `~/Trabajo/vimo/docs-ia/asistente-ia.md`. Workers AI sale del todo (binding `AI`, `HORNERO`,
+`CF_IA_TOKEN`). El motor del BFF sigue primero (y cada respuesta suya se cuenta como «sin IA»); lo que no
+resuelve va a Go: `POST /v1/panel/tincho/preguntar` (y `/mejorar`, `/motor`, `POST /v1/telegram/preguntar`).
+- `internal/plataforma/ia`: cliente del SDK (`claude-haiku-5-5`, esfuerzo low, 25 s, 1 reintento), prompt con
+  caché (system fijo + herramientas por nombre, datos del negocio como primer bloque con breakpoint, caché
+  automático), bucle de 4 vueltas, `ia_uso`/`ia_gasto` (00089), topes y caché de respuestas de 10 min.
+- `internal/dominio/tincho`: herramientas de lectura (las consultas del panel, 20 filas, sin email ni teléfono,
+  permiso por rol) y de acción que devuelven una **propuesta**; la web y las apps la muestran con «Confirmar»
+  y la ejecuta el BFF con la herramienta del MCP (`/panel/hornero/confirmar`). Topes: plan (100 / 1.000 / 3.000
+  / 15.000, Gratis en prueba = Pro, +2.000 por pack), día (un décimo, mínimo 25) y plataforma (USD 40/mes).
+- Plan y facturación ya muestra lo medido (`uso.hornero`, `uso.sinIa`). `mostradorctl ia-uso [AAAA-MM]`.
+- Privacidad v2.8 y Acuerdo de tratamiento v1.4: Anthropic como proveedor (EE. UU.).
+- Para prender: `ANTHROPIC_API_KEY` (y opcional `MOSTRADOR_IA_PRESUPUESTO_USD`) en el `api.conf` del VPS,
+  `mostradorctl migrar`, y correr a mano `TINCHO_PRUEBA_REAL=1 go test -run TestCacheReal -v ./internal/dominio/tincho/`.
+  Falta: el límite de gasto en la consola de Anthropic, la modificación en la AAIP y las fichas de las tiendas
+  (Datos de la app / Data safety) con Anthropic.
+
 ## 18/11/2026: revisión de bugs (desplegado, 355bf8d, migración 00087)
 
 Reembolsar desde el panel fallaba siempre; un rechazo posterior pisaba el pago aprobado; cancelar a mano
@@ -329,7 +348,7 @@ una cuenta de servicio por producto con rol FCM. La de Tu Local Web está en `/o
 
 - Panel lateral (`lib/panel/Hornero.svelte`, handoff `ovAi`): saludo con ventas de hoy contra ayer, ideas (recuperar carritos, pausar sin stock, promo de fin de semana) con Aprobar / Editar / Deshacer, charla con chips y streaming. Se abre desde el rail, la barra de abajo, el Resumen y el ⌘K (opción 0; Enter va a la sección si lo escrito coincide con una).
 - Servidor: `lib/server/hornero/` y `routes/panel/hornero/`. Modelo `@cf/google/gemma-4-26b-a4b-it` con `chat_template_kwargs.enable_thinking = false` (si razona, se gasta los tokens y responde vacío).
-- **Límite gratis de Workers AI (10.000 neurons por día, toda la cuenta):** topes de 15 preguntas por visitante y 200 por día para toda la demo (`cupo.ts`). Pasado el tope de la demo, contesta con las respuestas armadas, sin llamar al modelo. Pedido de Nahuel: probar el modelo real sólo dentro del límite gratis, con pocas preguntas.
+- **Demo de Tincho:** 15 preguntas por visitante por día (`cupo.ts`), sin IA (motor y respuestas armadas). Workers AI ya no se usa (18/11: Claude en la API Go).
 - Al modelo se le pasa "ayer completo" (`ayerDiaCompleto`), no "ayer a esta hora": con ese dato confundía el total del día.
 - En modo API (Go) todavía no hay topes por plan: llegan con Cuenta / Plan.
 
