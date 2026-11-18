@@ -30,6 +30,11 @@ export type PaginaNotificaciones = components['schemas']['PaginaNotificaciones']
 export type Tablero = components['schemas']['Tablero'];
 export type Periodo = Tablero['periodo'];
 export type ContextoHornero = components['schemas']['ContextoHornero'];
+/** Lo que responde Tincho con IA (la API Go, Claude Haiku). */
+export type RespuestaTincho = components['schemas']['RespuestaTincho'];
+export type PropuestaTincho = components['schemas']['PropuestaTincho'];
+/** Un turno de la charla con Tincho. */
+export type TurnoTincho = { rol: 'persona' | 'hornero'; texto: string };
 export type Idea = 'carritos' | 'stock' | 'promo';
 export type ListaPedidos = components['schemas']['ListaPedidos'];
 export type PedidoDetalle = components['schemas']['PedidoDetalle'];
@@ -153,6 +158,21 @@ export interface Datos {
 	recordarCarritos(): Promise<number>;
 	/** Lo que Tincho sabe de la tienda para responder. */
 	contextoHornero(): Promise<ContextoHornero>;
+	/**
+	 * Tincho con IA para lo que el motor no resolvió. 'no-disponible': la IA no está o no respondió
+	 * (el BFF contesta con el motor). En la demo no hay IA: siempre 'no-disponible'.
+	 */
+	preguntarTincho(
+		pregunta: string,
+		historial: TurnoTincho[]
+	): Promise<RespuestaTincho | 'no-disponible'>;
+	/** «Mejorar con Tincho»: la descripción nueva de un producto (o el aviso del tope). */
+	mejorarDescripcion(
+		nombre: string,
+		descripcion: string
+	): Promise<RespuestaTincho | 'no-disponible'>;
+	/** Cuenta una respuesta del motor (sin IA) para Plan y facturación. */
+	contarMotorTincho(): Promise<void>;
 	/** Aprueba (o deshace) una idea de Tincho. */
 	marcarIdea(idea: Idea, hecha: boolean): Promise<void>;
 	listarPedidos(f: FiltrosPedidos): Promise<ListaPedidos>;

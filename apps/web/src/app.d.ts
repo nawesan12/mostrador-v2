@@ -46,10 +46,6 @@ declare global {
 			CLAVE_BFF?: string;
 			/** Secreto del timer tulocalweb-cron del VPS para /api/internal/*. */
 			INTERNAL_SECRET: string;
-			/** Workers AI (Tincho). */
-			AI?: Ai;
-			/** workers-ai en producción; simulado en desarrollo y pruebas (no llama al modelo). */
-			HORNERO?: 'workers-ai' | 'simulado';
 			/**
 			 * Clave publicable de Clerk (pk_live_… / pk_test_…): de ella sale la Frontend API para
 			 * seguir con Google o Apple. No es secreta. Vacía: no se muestran esos botones.

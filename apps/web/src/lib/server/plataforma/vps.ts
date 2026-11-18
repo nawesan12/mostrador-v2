@@ -4,7 +4,6 @@
  * Cloudflare y la app no se entera:
  * - D1 (SANDBOX, ESTADO): SQLite con node:sqlite, un archivo por base, con sus migraciones.
  * - R2 (FILES): una carpeta en disco, con la metadata al lado.
- * - AI: la API de Workers AI por HTTP (Tincho sigue en Cloudflare: es la única excepción).
  * - El resto (texto): variables de entorno.
  */
 import { DatabaseSync, type StatementSync } from 'node:sqlite';
@@ -217,27 +216,6 @@ class ArchivosLocales {
 	}
 }
 
-// ---- Workers AI por HTTP ----
-
-const ia = {
-	async run(modelo: string, entrada: Record<string, unknown>) {
-		const r = await fetch(
-			`https://api.cloudflare.com/client/v4/accounts/${process.env.CF_CUENTA}/ai/run/${modelo}`,
-			{
-				method: 'POST',
-				headers: {
-					authorization: `Bearer ${process.env.CF_IA_TOKEN}`,
-					'content-type': 'application/json'
-				},
-				body: JSON.stringify(entrada)
-			}
-		);
-		if (!r.ok) throw new Error(`Workers AI ${r.status}`);
-		if (entrada.stream) return r.body;
-		return ((await r.json()) as { result: unknown }).result;
-	}
-};
-
 // ---- env ----
 
 let sandbox: BaseLocal | undefined;
@@ -248,8 +226,7 @@ const BINDINGS: Record<string, () => unknown> = {
 	SANDBOX: () =>
 		(sandbox ??= new BaseLocal(join(DATOS, 'sandbox.db'), join(MIGRACIONES, 'sandbox'))),
 	ESTADO: () => (estado ??= new BaseLocal(join(DATOS, 'estado.db'), join(MIGRACIONES, 'estado'))),
-	FILES: () => (archivos ??= new ArchivosLocales(join(DATOS, 'archivos'))),
-	AI: () => (process.env.CF_IA_TOKEN ? ia : undefined)
+	FILES: () => (archivos ??= new ArchivosLocales(join(DATOS, 'archivos')))
 };
 
 export const env = new Proxy({} as Record<string, unknown>, {

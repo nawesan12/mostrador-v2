@@ -19,7 +19,7 @@ export default defineConfig({
 	use: { baseURL: `http://localhost:${PUERTO}`, viewport: { width: 1440, height: 900 } },
 	webServer: {
 		// La base local del monitor (/estado) también en modo API: el sitio la lee igual.
-		command: `wrangler d1 migrations apply mostrador-estado --local >/dev/null && wrangler dev --local --var HORNERO:simulado .svelte-kit/cloudflare/_worker.js --port ${PUERTO} --var DATA_SOURCE:api --var API_URL:${API} --var CLAVE_BFF:clave-bff-e2e --var TIEMPO_REAL_ORIGEN:${TIEMPO_REAL}`,
+		command: `wrangler d1 migrations apply mostrador-estado --local >/dev/null && wrangler dev --local .svelte-kit/cloudflare/_worker.js --port ${PUERTO} --var DATA_SOURCE:api --var API_URL:${API} --var CLAVE_BFF:clave-bff-e2e --var TIEMPO_REAL_ORIGEN:${TIEMPO_REAL}`,
 		url: `http://localhost:${PUERTO}`,
 		reuseExistingServer: false
 	}

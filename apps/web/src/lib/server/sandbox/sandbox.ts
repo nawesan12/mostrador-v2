@@ -142,6 +142,7 @@ import type {
 	Producto,
 	ProductoEditable,
 	ContextoHornero,
+	RespuestaTincho,
 	Datos,
 	ListaPedidos,
 	PedidoDetalle,
@@ -4641,6 +4642,15 @@ export class DatosSandbox implements Datos {
 		if (hecha) await guardarCambio(this.db, this.sb.id, 'hornero', idea, { en: Date.now() });
 		else await borrarCambio(this.db, this.sb.id, 'hornero', idea);
 	}
+
+	/** En la demo no hay IA: el BFF responde con el motor y las respuestas armadas (simulado.ts). */
+	async preguntarTincho(): Promise<RespuestaTincho | 'no-disponible'> {
+		return 'no-disponible';
+	}
+	async mejorarDescripcion(): Promise<RespuestaTincho | 'no-disponible'> {
+		return 'no-disponible';
+	}
+	async contarMotorTincho() {}
 
 	async contextoHornero(): Promise<ContextoHornero> {
 		const c = contextoDemo(await this.demo(), Date.now());

@@ -34,17 +34,14 @@
 	],
 	// Fotos de productos (lib/server/archivos.ts, con topes). En desarrollo, el R2 local.
 	"r2_buckets": [{ "binding": "FILES", "bucket_name": "mostrador-files" }],
-	// Hornero: Workers AI (siempre remoto). En desarrollo y en las pruebas no se llama: el preview
-	// corre con --local y HORNERO=simulado.
-	"ai": { "binding": "AI", "remote": true },
 	"vars": {
 		"PUBLIC_SITE_URL": "http://localhost:4173",
 		// sandbox: el motor de prueba (datos por visitante en D1 local). api: la API Go del VPS.
 		"DATA_SOURCE": "sandbox",
 		// URL de la API Go cuando DATA_SOURCE=api (VPS). Vacía en pruebas.
-		"API_URL": "",
-		// Hornero: workers-ai (el modelo) o simulado (respuestas armadas, sin llamar al modelo).
-		"HORNERO": "workers-ai"
+		"API_URL": ""
+		// Tincho no usa Cloudflare: con DATA_SOURCE=api la IA la llama la API Go (Claude); en la demo
+		// (sandbox) responde el motor con respuestas armadas.
 	},
 	"env": {
 		"produccion": {
@@ -69,12 +66,10 @@
 				}
 			],
 			"r2_buckets": [{ "binding": "FILES", "bucket_name": "mostrador-files" }],
-			"ai": { "binding": "AI", "remote": true },
 			"vars": {
 				"PUBLIC_SITE_URL": "https://tulocalweb.com.ar",
 				"DATA_SOURCE": "api",
-				"API_URL": "https://api.tulocalweb.com.ar",
-				"HORNERO": "workers-ai"
+				"API_URL": "https://api.tulocalweb.com.ar"
 			}
 		}
 	}

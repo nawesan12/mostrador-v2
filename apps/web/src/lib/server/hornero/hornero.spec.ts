@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { demoDe } from '../sandbox/demo.ts';
 import { contextoDemo, tableroDemo } from '../sandbox/tablero.ts';
-import { datosParaElModelo, sistema, type DatosHornero } from './contexto.ts';
+import type { DatosHornero } from './contexto.ts';
 import { ideasDe } from './ideas.ts';
-import { soloTexto } from './modelo.ts';
-import { contextoSinMontos, sinMontos } from '../datos/montos.ts';
+import { sinMontos } from '../datos/montos.ts';
 import { responderSimulado } from './simulado.ts';
+import { conIa, paraTelegram } from './tincho.ts';
 
 const BASE = Date.parse('2026-10-20T15:00:00Z');
 const AHORA = BASE + 30 * 60_000;
@@ -39,50 +39,6 @@ describe('Tincho', () => {
 		expect(c.clientes.conWhatsApp).toBe(tab().hornero.audiencia);
 	});
 
-	it('el mensaje de sistema lleva la tienda, la regla de no inventar y los datos', () => {
-		const s = sistema(datos(), new Date(AHORA));
-		expect(s).toContain('«Mate & Co»');
-		expect(s).toContain('nunca inventes');
-		expect(s).toContain('"ventasPorDia"');
-		expect(s.length).toBeLessThan(12_000);
-	});
-
-	it('le pasa al modelo ayer completo, no "ayer a esta hora" (lo confundía con el total)', () => {
-		const x = datosParaElModelo(datos());
-		expect(x.ayerDiaCompleto).toEqual(datos().contexto.ventasPorDia.at(-2));
-		expect(JSON.stringify(x)).not.toContain('MismaHora');
-	});
-
-	it('con la API real le pasa las visitas medidas, o que todavía no hubo, sin un 0 % inventado', () => {
-		const real = (desde: string | null) => {
-			const x = datos();
-			const visitas = {
-				desde,
-				hoy: { actual: 12, anterior: 30 },
-				dias7: { actual: 140, anterior: 120 },
-				dias30: { actual: 500, anterior: 0 },
-				visitantes: { actual: 140, anterior: 120 },
-				vistas: { actual: 420, anterior: 300 },
-				paginas: [],
-				masVistos: [{ productoId: 'p1', nombre: 'Mate', foto: null, vistas: 50, visitantes: 40 }]
-			};
-			x.semana = {
-				...x.semana,
-				visitas,
-				kpis: { ...x.semana.kpis, conversion: { actual: desde ? 2.1 : 0, anterior: 0 } }
-			};
-			x.hoy = { ...x.hoy, visitas };
-			return datosParaElModelo(x);
-		};
-		const con = real('2026-10-01');
-		expect(con.visitasTiendaOnline).toMatchObject({ ayer: 30, ultimos7Dias: 140 });
-		expect(con.ultimos7Dias.conversionPorcentaje).toBe(2.1);
-		expect(JSON.stringify(con)).not.toContain('costoMensajeWhatsApp');
-		const sin = real(null);
-		expect(sin.visitasTiendaOnline).toBe('todavía no hubo visitas medidas');
-		expect(sin.ultimos7Dias.conversionPorcentaje).toBe('no se mide todavía');
-	});
-
 	it('simulado responde con los datos', () => {
 		const x = datos();
 		const ayer = x.contexto.ventasPorDia.at(-2)!;
@@ -95,39 +51,39 @@ describe('Tincho', () => {
 		);
 	});
 
-	it('pasa los dos formatos de stream de Workers AI a texto', async () => {
-		const enc = new TextEncoder();
-		const sse = new ReadableStream<Uint8Array>({
-			start(c) {
-				c.enqueue(enc.encode('data: {"response":"Hola, "}\n\ndata: {"choices":[{"delta":{"con'));
-				c.enqueue(enc.encode('tent":"Valeria"}}]}\n\n'));
-				c.enqueue(
-					enc.encode('data: {"choices":[{"delta":{"reasoning_content":"x"}}]}\n\ndata: [DONE]\n\n')
-				);
-				c.close();
-			}
-		});
-		const texto = await new Response(soloTexto(sse)).text();
-		expect(texto).toBe('Hola, Valeria');
-	});
-
-	it('sin montos, al modelo no le llega ningún monto y sabe que no tiene que darlos', () => {
-		const x = datos();
-		const sin: DatosHornero = {
-			...x,
-			hoy: sinMontos(x.hoy),
-			semana: sinMontos(x.semana),
-			contexto: contextoSinMontos(x.contexto)
-		};
-		const m = JSON.stringify(datosParaElModelo(sin));
-		expect(m).not.toContain(`"ventas":`);
-		expect(m).not.toContain('ticketPromedio');
-		expect(m).not.toContain('transferenciasMonto');
-		expect(m).not.toContain(`"monto":`);
-		expect(m).not.toContain('objetivo');
-		expect(sistema(sin)).toContain('nunca des montos en pesos');
-		expect(sistema(x)).not.toContain('nunca des montos en pesos');
+	it('sin montos, las ideas no muestran plata', () => {
 		const carritos = ideasDe(sinMontos(tab()), true).find((i) => i.id === 'carritos');
 		expect(carritos?.detalle).not.toContain('$');
+	});
+
+	it('la respuesta con IA trae las propuestas para confirmar', () => {
+		const p = {
+			herramienta: 'crear_cupon' as const,
+			argumentos: { codigo: 'VERANO15', tipo: 'porcentaje', valor: 15 },
+			titulo: 'Crear el cupón VERANO15',
+			detalle: '15 % de descuento · 7 días'
+		};
+		const r = conIa({
+			texto: 'Te dejé el cupón **VERANO15** para confirmar.',
+			propuestas: [p],
+			fuente: 'ia'
+		});
+		expect(r.propuestas).toEqual([p]);
+		expect(paraTelegram({ texto: r.texto, propuestas: [p], fuente: 'ia' })).toBe(
+			'Te dejé el cupón VERANO15 para confirmar.\n\n• Crear el cupón VERANO15 (15 % de descuento · 7 días)\nConfirmalo desde Tincho en la app o el panel.'
+		);
+	});
+
+	it('con el cupo agotado avisa y sugiere lo que el motor sí responde', () => {
+		const r = conIa({
+			texto: 'Ya usaste las 100 respuestas con IA de tu plan este mes.',
+			propuestas: [],
+			fuente: 'tope',
+			tope: 'plan',
+			uso: { usadas: 100, tope: 100 }
+		});
+		expect(r.tope).toBe('plan');
+		expect(r.texto).toContain('100 respuestas');
+		expect(r.sugerencias?.length).toBeGreaterThan(0);
 	});
 });

@@ -1,13 +1,13 @@
 import { env } from 'cloudflare:workers';
-import { error, json } from '@sveltejs/kit';
+import { error, isHttpError, json } from '@sveltejs/kit';
 import * as v from 'valibot';
 import { datosDe, usaSandbox } from '#lib/server/datos/index.ts';
-import { sistema, type DatosHornero } from '#lib/server/hornero/contexto.ts';
-import { cupoDemo, diaAr, POR_VISITANTE } from '#lib/server/hornero/cupo.ts';
+import type { DatosHornero } from '#lib/server/hornero/contexto.ts';
+import { diaAr, POR_VISITANTE } from '#lib/server/hornero/cupo.ts';
 import { ideasDe } from '#lib/server/hornero/ideas.ts';
-import { responderConIa, type Mensaje } from '#lib/server/hornero/modelo.ts';
+import { conIa, NO_DISPONIBLE } from '#lib/server/hornero/tincho.ts';
 import { responderSimulado } from '#lib/server/hornero/simulado.ts';
-import { ayuda, ayudaConBotones, responder } from '#lib/server/hornero/motor.ts';
+import { ayudaConBotones, responder } from '#lib/server/hornero/motor.ts';
 import { dbSandbox, sumarUsoHornero } from '#lib/server/sandbox/sandbox.ts';
 import type { RequestHandler } from './$types';
 
@@ -35,7 +35,10 @@ const Pedido = v.object({
 		v.maxLength(12),
 		v.check((m) => m[m.length - 1].rol === 'persona', 'El último mensaje es de la persona.')
 	),
-	/** «bloques»: la respuesta en JSON, con cifras, gráficos, tablas, botones y sugerencias. */
+	/**
+	 * «bloques»: la respuesta en JSON, con cifras, gráficos, tablas, botones, sugerencias y las
+	 * propuestas de Tincho para confirmar. «texto»: sólo el texto (clientes viejos).
+	 */
 	formato: v.optional(v.picklist(['texto', 'bloques']), 'texto')
 });
 
@@ -43,22 +46,27 @@ const texto = (t: string) =>
 	new Response(t, {
 		headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' }
 	});
+const NO_STORE = { headers: { 'cache-control': 'no-store' } };
 
-/** Una pregunta a Tincho: responde en texto, a medida que el modelo escribe. */
-export const POST: RequestHandler = async ({ locals, request }) => {
+/**
+ * Una pregunta a Tincho: primero el motor propio (sin IA, al instante); lo que no resuelve va a la
+ * API Go (Claude Haiku, con los cupos del plan). En la demo no hay IA: respuestas armadas.
+ */
+export const POST: RequestHandler = async ({ locals, request, platform }) => {
 	const cuerpo = v.safeParse(Pedido, await request.json().catch(() => null));
 	if (!cuerpo.success) error(400, 'Escribile algo a Tincho.');
 	const datos = datosDe(locals);
+	const bloques = cuerpo.output.formato === 'bloques';
+	const enviar = (r: { texto: string }) => (bloques ? json(r, NO_STORE) : texto(r.texto));
 
-	// En la demo pública hay topes: por visitante y para todos (ver cupo.ts).
-	let conModelo = env.HORNERO === 'workers-ai' && !!env.AI;
+	// En la demo pública, un tope por visitante (ver cupo.ts).
 	if (usaSandbox() && locals.sandbox) {
 		const n = await sumarUsoHornero(dbSandbox(env.SANDBOX), locals.sandbox.id, diaAr());
 		if (n > POR_VISITANTE)
-			return texto(
-				'Por hoy ya charlamos un montón en la demo. Mañana sigo respondiendo; mientras, recorré el panel con los datos de ejemplo.'
-			);
-		if (conModelo && !(await cupoDemo())) conModelo = false;
+			return enviar({
+				texto:
+					'Por hoy ya charlamos un montón en la demo. Mañana sigo respondiendo; mientras, recorré el panel con los datos de ejemplo.'
+			});
 	}
 
 	const [tienda, hoy, semana, mes, contexto] = await Promise.all([
@@ -75,43 +83,25 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 		.slice(0, -1)
 		.filter((m) => m.rol === 'persona')
 		.map((m) => m.texto);
-	const bloques = cuerpo.output.formato === 'bloques';
 
 	// Primero el motor propio: las preguntas de todos los días salen de los datos, sin IA.
 	const directa = responder(pregunta, d, anteriores);
-	if (directa)
-		return bloques
-			? json(directa, { headers: { 'cache-control': 'no-store' } })
-			: texto(directa.texto);
-	if (!conModelo || !env.AI) {
-		if (env.HORNERO === 'simulado') {
-			const t = responderSimulado(pregunta, d);
-			return bloques ? json({ texto: t }) : texto(t);
+	if (directa) {
+		if (!usaSandbox()) {
+			// Se cuenta para «Respuestas automáticas sin IA»; no hace falta esperarlo.
+			const cuenta = datos.contarMotorTincho().catch(() => {});
+			if (platform?.ctx) platform.ctx.waitUntil(cuenta);
 		}
-		return bloques ? json(ayudaConBotones()) : texto(ayuda());
+		return enviar(directa);
 	}
+	if (usaSandbox()) return enviar({ ...ayudaConBotones(), texto: responderSimulado(pregunta, d) });
 
-	const conversacion: Mensaje[] = [
-		{ role: 'system', content: sistema(d) },
-		...mensajes.map((m): Mensaje => ({
-			role: m.rol === 'persona' ? 'user' : 'assistant',
-			content: m.texto
-		}))
-	];
-	try {
-		// Con bloques, la respuesta del modelo va entera en el JSON (sin streaming).
-		if (bloques) {
-			const t = await new Response(await responderConIa(env.AI, conversacion)).text();
-			return json({
-				texto: t.trim() || ayudaConBotones().texto,
-				sugerencias: ayudaConBotones().sugerencias
-			});
-		}
-		return new Response(await responderConIa(env.AI, conversacion), {
-			headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' }
-		});
-	} catch (e) {
-		console.error('hornero', e);
-		return texto('Uy, se me cortó la conexión. ¿Me lo preguntás de nuevo?');
-	}
+	const r = await datos.preguntarTincho(pregunta, mensajes.slice(0, -1)).catch((e) => {
+		// La sesión vencida sigue siendo un 401: el panel manda a ingresar.
+		if (isHttpError(e) && e.status === 401) throw e;
+		console.error('tincho', e instanceof Error ? e.message : e);
+		return 'no-disponible' as const;
+	});
+	if (r === 'no-disponible') return enviar({ ...ayudaConBotones(), texto: NO_DISPONIBLE });
+	return enviar(conIa(r));
 };

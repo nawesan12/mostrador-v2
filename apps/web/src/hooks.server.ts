@@ -80,6 +80,7 @@ const RUTAS_APP = new Set([
 	'/panel/fotos',
 	'/panel/archivos',
 	'/panel/hornero',
+	'/panel/hornero/confirmar',
 	'/panel/mi-tienda/vista'
 ]);
 

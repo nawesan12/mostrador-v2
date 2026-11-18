@@ -2,8 +2,16 @@
  * Estado del armazón del panel: qué está abierto (barra lateral, notificaciones, ⌘K) y las
  * preferencias de la persona (tema y modo), que se guardan en cookies para el primer render.
  */
+import type { PropuestaTincho } from '#lib/server/datos/tipos.ts';
 import { getContext, setContext } from 'svelte';
 import { PERMISOS } from './permisos.ts';
+
+/** Un mensaje de la charla con Tincho; las propuestas (con IA) se confirman desde el globo. */
+export type MensajeTincho = {
+	rol: 'persona' | 'hornero';
+	texto: string;
+	propuestas?: (PropuestaTincho & { estado: 'pendiente' | 'enviando' | 'hecha' | 'descartada' })[];
+};
 
 export type Tema = 'light' | 'dark';
 export type Modo = 'simple' | 'completo';
@@ -56,7 +64,7 @@ export class Shell {
 	/** Pregunta que llega de afuera (⌘K) para mandarle a Tincho al abrir. */
 	preguntaPendiente = $state<string | null>(null);
 	/** La charla con Tincho (queda mientras se navega por el panel). */
-	charla = $state<{ rol: 'persona' | 'hornero'; texto: string }[]>([]);
+	charla = $state<MensajeTincho[]>([]);
 
 	/** Abre Tincho (y, si viene, le manda la pregunta). */
 	hornero(pregunta?: string) {

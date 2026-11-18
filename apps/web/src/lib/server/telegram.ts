@@ -3,17 +3,19 @@
  * uso (Integraciones › Telegram › Vincular), le pregunta en lenguaje natural y recibe un aviso por
  * cada venta. En la demo vive sobre el sandbox; con la API real (DATA_SOURCE=api), el vínculo y el
  * contexto de la tienda salen de Go (`TelegramApi`) y el aviso de cada venta lo manda el worker de Go.
- * El webhook es uno solo y las respuestas con IA salen siempre del Worker, con los mismos topes.
+ * El webhook es uno solo: el motor responde acá; lo que no resuelve lo contesta Go con IA (Claude),
+ * con los cupos del plan. En la demo no hay IA: respuestas armadas.
  *
  * Seguridad: Telegram manda el secreto del webhook en X-Telegram-Bot-Api-Secret-Token (se compara en
  * tiempo constante) y el chat sólo ve la tienda a la que se vinculó.
  */
 import { env } from 'cloudflare:workers';
-import { sistema, type DatosHornero } from './hornero/contexto.ts';
+import type { DatosHornero } from './hornero/contexto.ts';
+import type { RespuestaTincho } from './datos/tipos.ts';
 import { usaSandbox } from './datos/index.ts';
-import { cupoDemo, diaAr, POR_VISITANTE } from './hornero/cupo.ts';
-import { responderConIa, type Mensaje } from './hornero/modelo.ts';
+import { diaAr, POR_VISITANTE } from './hornero/cupo.ts';
 import { responderSimulado } from './hornero/simulado.ts';
+import { NO_DISPONIBLE, paraTelegram } from './hornero/tincho.ts';
 import { responderSinIa } from './hornero/motor.ts';
 import {
 	borrarCambio,
@@ -234,36 +236,36 @@ async function procesarApi({ chat, texto, nombre, cod, responder }: Entrante) {
 		texto,
 		{ tienda, hola: hoy.hola, hoy, semana, contexto },
 		usos,
-		responder
+		responder,
+		{
+			preguntar: async () => (await go.preguntar(chat, texto)) ?? 'no-disponible',
+			contarMotor: () => go.contarMotor(chat)
+		}
 	);
 }
 
-/** La respuesta de Tincho: Workers AI con los topes de cupo.ts, o la simulada. */
+/** La IA de Go (sólo con la API real; en la demo no hay). */
+type ConIa = {
+	preguntar: () => Promise<RespuestaTincho | 'no-disponible'>;
+	contarMotor: () => Promise<void>;
+};
+
+/** La respuesta de Tincho: primero el motor; lo que no resuelve, la IA de Go o (en la demo) la armada. */
 async function responderHornero(
 	texto: string,
 	d: DatosHornero,
 	usos: number,
-	responder: (t: string) => Promise<string>
+	responder: (t: string) => Promise<string>,
+	ia?: ConIa
 ) {
 	if (usos > POR_VISITANTE) return responder(BASTA);
-	let conModelo = env.HORNERO === 'workers-ai' && !!env.AI;
-	if (conModelo && !(await cupoDemo())) conModelo = false;
 	// El motor propio primero; Telegram va en texto plano, sin las negritas del panel.
 	const directa = responderSinIa(texto, d);
-	if (directa) return responder(directa.replace(/\*\*/g, ''));
-	if (!conModelo || !env.AI) return responder(responderSimulado(texto, d));
-	const conversacion: Mensaje[] = [
-		{
-			role: 'system',
-			content: sistema(d) + '\nRespondés por Telegram: texto plano, corto, sin tablas ni markdown.'
-		},
-		{ role: 'user', content: texto }
-	];
-	try {
-		const flujo = await responderConIa(env.AI, conversacion);
-		const t = await new Response(flujo).text();
-		return responder(t.trim() || responderSimulado(texto, d));
-	} catch {
-		return responder(responderSimulado(texto, d));
+	if (directa) {
+		await ia?.contarMotor().catch(() => {});
+		return responder(directa.replace(/\*\*/g, ''));
 	}
+	if (!ia) return responder(responderSimulado(texto, d));
+	const r = await ia.preguntar().catch(() => 'no-disponible' as const);
+	return responder(r === 'no-disponible' ? NO_DISPONIBLE : paraTelegram(r));
 }

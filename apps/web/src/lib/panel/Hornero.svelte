@@ -9,12 +9,14 @@
 	import { getUi } from '#lib/ui.svelte.ts';
 	import { pesos, saludo, variacion } from './formato.ts';
 	import { rutaDe } from './navegacion.ts';
-	import { getShell } from './shell.svelte.ts';
+	import { getShell, type MensajeTincho } from './shell.svelte.ts';
+	import type { PropuestaTincho } from '#lib/server/datos/tipos.ts';
 	import { escucharTiempoReal } from '#lib/tiempo-real/panel.svelte.ts';
 
 	/**
 	 * Tincho (handoff: panel lateral `ovAi`): cómo viene el día, sus ideas para aprobar y la charla.
-	 * Responde con Workers AI sobre los datos de la tienda.
+	 * Responde el motor con los datos de la tienda y, lo que no sabe, la IA (Claude, en la API Go):
+	 * sus acciones llegan como propuestas que la persona confirma acá.
 	 */
 	const shell = getShell();
 	const ui = getUi();
@@ -75,19 +77,18 @@
 			const r = await fetch('/panel/hornero', {
 				method: 'POST',
 				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({ mensajes: shell.charla.slice(-12) })
+				body: JSON.stringify({
+					mensajes: shell.charla.slice(-12).map(({ rol, texto }) => ({ rol, texto })),
+					formato: 'bloques'
+				})
 			});
-			if (!r.ok || !r.body) throw new Error(String(r.status));
-			shell.charla.push({ rol: 'hornero', texto: '' });
-			const yo = shell.charla[shell.charla.length - 1];
-			const lector = r.body.pipeThrough(new TextDecoderStream()).getReader();
-			for (;;) {
-				const { done, value } = await lector.read();
-				if (done) break;
-				yo.texto += value;
-				void bajar();
-			}
-			if (!yo.texto.trim()) yo.texto = 'No me salió la respuesta. ¿Me lo preguntás de otra forma?';
+			if (!r.ok) throw new Error(String(r.status));
+			const j = (await r.json()) as { texto?: string; propuestas?: PropuestaTincho[] };
+			shell.charla.push({
+				rol: 'hornero',
+				texto: j.texto?.trim() || 'No me salió la respuesta. ¿Me lo preguntás de otra forma?',
+				propuestas: j.propuestas?.map((p) => ({ ...p, estado: 'pendiente' as const }))
+			});
 		} catch {
 			shell.charla.push({
 				rol: 'hornero',
@@ -120,6 +121,32 @@
 					? {}
 					: { action: 'Deshacer', onAction: () => marcar(idea, false) })
 			});
+	}
+
+	type Propuesta = NonNullable<MensajeTincho['propuestas']>[number];
+
+	/** «Confirmar» una propuesta de Tincho: la hace la persona, con sus permisos. */
+	async function confirmar(p: Propuesta) {
+		if (p.estado !== 'pendiente') return;
+		p.estado = 'enviando';
+		const r = await fetch('/panel/hornero/confirmar', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ herramienta: p.herramienta, argumentos: p.argumentos })
+		}).catch(() => null);
+		const j = (await r?.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
+		if (!r?.ok || !j?.ok) {
+			p.estado = 'pendiente';
+			ui.toast({
+				k: 'err',
+				title: 'No se pudo hacer',
+				desc: j?.error ?? 'Probá de nuevo en un rato.'
+			});
+			return;
+		}
+		p.estado = 'hecha';
+		ui.toast({ k: 'ai', title: 'Listo', desc: p.titulo });
+		await invalidateAll();
 	}
 
 	/** "**dato**" en negrita, sin interpretar HTML. */
@@ -230,8 +257,40 @@
 							{#each partes(m.texto) as p, j (j)}{#if p.b}<b>{p.t}</b>{:else}{p.t}{/if}{/each}
 						</div>
 					{/if}
+					{#each m.propuestas ?? [] as p, j (j)}
+						<div class="idea">
+							<div class="i-fila">
+								<span class="i-ico"><Icon icon={I.phSparkleFill} size={19} /></span>
+								<div class="i-txt">
+									<div class="i-t">{p.titulo}</div>
+									{#if p.detalle}<div class="i-d">{p.detalle}</div>{/if}
+								</div>
+							</div>
+							{#if p.estado === 'hecha'}
+								<div class="hecho"><Icon icon={I.phCheckCircleFill} size={16} />Hecho</div>
+							{:else if p.estado === 'descartada'}
+								<div class="i-n">Descartada</div>
+							{:else}
+								<div class="i-acc">
+									<button
+										type="button"
+										class="aprobar"
+										disabled={p.estado === 'enviando'}
+										onclick={() => confirmar(p)}
+										>{p.estado === 'enviando' ? 'Haciendo…' : 'Confirmar'}</button
+									>
+									<button
+										type="button"
+										class="editar"
+										disabled={p.estado === 'enviando'}
+										onclick={() => (p.estado = 'descartada')}>Descartar</button
+									>
+								</div>
+							{/if}
+						</div>
+					{/each}
 				{/each}
-				{#if escribiendo && !shell.charla.at(-1)?.texto}
+				{#if escribiendo}
 					<div class="globo hornero cargando" aria-label="Tincho está escribiendo">
 						<span></span><span></span><span></span>
 					</div>

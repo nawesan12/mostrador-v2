@@ -606,6 +606,68 @@ paths:
         '204': { description: Hecho }
         '401': { $ref: '#/components/responses/Problema' }
         '404': { $ref: '#/components/responses/Problema' }
+  /v1/panel/tincho/preguntar:
+    post:
+      operationId: preguntarTincho
+      summary: 'Una pregunta a Tincho que el motor del BFF no resolvió (Claude Haiku con herramientas de lectura). Las acciones vuelven como propuestas para confirmar; con el cupo del plan, del día o de la plataforma agotado responde fuente "tope".'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pregunta]
+              properties:
+                pregunta: { type: string, minLength: 1, maxLength: 1000 }
+                historial:
+                  type: array
+                  maxItems: 24
+                  description: 'La charla anterior (se usan los últimos 8 turnos, hasta 600 letras cada uno)'
+                  items:
+                    type: object
+                    required: [rol, texto]
+                    properties:
+                      rol: { type: string, enum: [persona, hornero] }
+                      texto: { type: string }
+      responses:
+        '200':
+          description: Respuesta
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RespuestaTincho' }
+        '400': { $ref: '#/components/responses/Problema' }
+        '401': { $ref: '#/components/responses/Problema' }
+        '503': { $ref: '#/components/responses/Problema' }
+  /v1/panel/tincho/mejorar:
+    post:
+      operationId: mejorarDescripcion
+      summary: '«Mejorar con Tincho»: reescribe la descripción de un producto (cuenta en el mismo cupo que la charla).'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre, descripcion]
+              properties:
+                nombre: { type: string, minLength: 2, maxLength: 120 }
+                descripcion: { type: string, maxLength: 4000 }
+      responses:
+        '200':
+          description: La descripción nueva (o el aviso del tope)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RespuestaTincho' }
+        '400': { $ref: '#/components/responses/Problema' }
+        '401': { $ref: '#/components/responses/Problema' }
+        '503': { $ref: '#/components/responses/Problema' }
+  /v1/panel/tincho/motor:
+    post:
+      operationId: contarMotorTincho
+      summary: 'El motor del BFF respondió sin IA: se cuenta para «Respuestas automáticas sin IA».'
+      responses:
+        '204': { description: Contada }
+        '401': { $ref: '#/components/responses/Problema' }
   /v1/panel/pedidos:
     get:
       operationId: listarPedidos
@@ -3721,6 +3783,32 @@ paths:
               schema: { $ref: '#/components/schemas/ContextoTelegram' }
         '403': { $ref: '#/components/responses/Problema' }
         '404': { $ref: '#/components/responses/Problema' }
+  /v1/telegram/preguntar:
+    post:
+      operationId: preguntarTinchoTelegram
+      summary: 'Tincho con IA para el chat vinculado (como la dueña, texto plano). Con motor en true sólo cuenta una respuesta del motor (204). Sólo el BFF.'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [chat]
+              properties:
+                chat: { type: integer, format: int64 }
+                pregunta: { type: string, maxLength: 1000 }
+                motor: { type: boolean }
+      responses:
+        '200':
+          description: Respuesta
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RespuestaTincho' }
+        '204': { description: Contada (motor) }
+        '403': { $ref: '#/components/responses/Problema' }
+        '404': { $ref: '#/components/responses/Problema' }
+        '503': { $ref: '#/components/responses/Problema' }
   /v1/equipo/ingresar:
     post:
       operationId: equipoIngresar
@@ -4007,6 +4095,32 @@ components:
       properties:
         codigo: { type: string, description: '8 letras y números (sin 0, 1, I ni O)' }
         venceEn: { type: string, format: date-time }
+    RespuestaTincho:
+      type: object
+      required: [texto, propuestas, fuente]
+      properties:
+        texto: { type: string, description: 'Con **negritas** (en Telegram, texto plano)' }
+        propuestas:
+          type: array
+          items: { $ref: '#/components/schemas/PropuestaTincho' }
+        fuente: { type: string, enum: [ia, cache, tope] }
+        tope: { type: string, enum: [plan, dia, plataforma], description: 'Por qué no respondió la IA (sólo con fuente tope)' }
+        uso:
+          type: object
+          required: [usadas, tope]
+          description: 'Respuestas con IA del mes y las del plan (con los packs)'
+          properties:
+            usadas: { type: integer }
+            tope: { type: integer }
+    PropuestaTincho:
+      type: object
+      description: 'Una acción que pidió Tincho y no se hizo: la persona la confirma y el BFF la ejecuta con la herramienta del MCP del mismo nombre.'
+      required: [herramienta, argumentos, titulo]
+      properties:
+        herramienta: { type: string, enum: [cambiar_estado_pedido, ajustar_producto, crear_cupon, crear_link_de_pago] }
+        argumentos: { type: object, additionalProperties: true }
+        titulo: { type: string }
+        detalle: { type: string }
     ContextoTelegram:
       type: object
       required: [tienda, hoy, semana, contexto, usos]
@@ -5390,9 +5504,9 @@ components:
           properties:
             productos: { type: integer }
             personas: { type: integer }
-            hornero: { type: integer, description: 'Respuestas con IA este mes' }
+            hornero: { type: integer, description: 'Respuestas de Tincho con IA este mes (ia_uso; las del caché no cuentan)' }
             packs: { type: integer }
-            sinIa: { type: integer }
+            sinIa: { type: integer, description: 'Respuestas del motor de Tincho (sin IA) este mes' }
         medio:
           type: [object, 'null']
           required: [marca, ultimos, vence]

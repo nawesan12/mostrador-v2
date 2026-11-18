@@ -721,6 +721,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/tincho/preguntar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Una pregunta a Tincho que el motor del BFF no resolvió (Claude Haiku con herramientas de lectura). Las acciones vuelven como propuestas para confirmar; con el cupo del plan, del día o de la plataforma agotado responde fuente "tope". */
+        post: operations["preguntarTincho"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/tincho/mejorar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** «Mejorar con Tincho»: reescribe la descripción de un producto (cuenta en el mismo cupo que la charla). */
+        post: operations["mejorarDescripcion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/panel/tincho/motor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** El motor del BFF respondió sin IA: se cuenta para «Respuestas automáticas sin IA». */
+        post: operations["contarMotorTincho"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/pedidos": {
         parameters: {
             query?: never;
@@ -3527,6 +3578,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/telegram/preguntar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tincho con IA para el chat vinculado (como la dueña, texto plano). Con motor en true sólo cuenta una respuesta del motor (204). Sólo el BFF. */
+        post: operations["preguntarTinchoTelegram"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/equipo/ingresar": {
         parameters: {
             query?: never;
@@ -3869,6 +3937,33 @@ export interface components {
             /** Format: date-time */
             venceEn: string;
         };
+        RespuestaTincho: {
+            /** @description Con **negritas** (en Telegram, texto plano) */
+            texto: string;
+            propuestas: components["schemas"]["PropuestaTincho"][];
+            /** @enum {string} */
+            fuente: "ia" | "cache" | "tope";
+            /**
+             * @description Por qué no respondió la IA (sólo con fuente tope)
+             * @enum {string}
+             */
+            tope?: "plan" | "dia" | "plataforma";
+            /** @description Respuestas con IA del mes y las del plan (con los packs) */
+            uso?: {
+                usadas: number;
+                tope: number;
+            };
+        };
+        /** @description Una acción que pidió Tincho y no se hizo: la persona la confirma y el BFF la ejecuta con la herramienta del MCP del mismo nombre. */
+        PropuestaTincho: {
+            /** @enum {string} */
+            herramienta: "cambiar_estado_pedido" | "ajustar_producto" | "crear_cupon" | "crear_link_de_pago";
+            argumentos: {
+                [key: string]: unknown;
+            };
+            titulo: string;
+            detalle?: string;
+        };
         ContextoTelegram: {
             tienda: components["schemas"]["Tienda"];
             hoy: components["schemas"]["Tablero"];
@@ -4027,14 +4122,15 @@ export interface components {
             valores: {
                 [key: string]: string;
             };
+            /** @description Sin mandar: el que tenía; vacío lo borra */
             sku?: string;
-            /** @description null: usa el precio del producto */
+            /** @description null: usa el precio del producto. Sin mandar: el que tenía */
             precio?: number | null;
-            /** @description null: usa el precio mayorista del producto (§49) */
+            /** @description null: usa el precio mayorista del producto (§49). Sin mandar: el que tenía */
             precioMayorista?: number | null;
             /** @description Sin mandar: el que tenía (0 si es nueva) */
             stock?: number;
-            /** @description Una de las fotos del producto */
+            /** @description Una de las fotos del producto; null la saca. Sin mandar: la que tenía */
             foto?: string | null;
             /** @description Sin mandar: la que tenía (true si es nueva) */
             activa?: boolean;
@@ -5166,9 +5262,10 @@ export interface components {
             uso: {
                 productos: number;
                 personas: number;
-                /** @description Respuestas con IA este mes */
+                /** @description Respuestas de Tincho con IA este mes (ia_uso; las del caché no cuentan) */
                 hornero: number;
                 packs: number;
+                /** @description Respuestas del motor de Tincho (sin IA) este mes */
                 sinIa: number;
             };
             medio: {
@@ -7861,6 +7958,90 @@ export interface operations {
             };
             401: components["responses"]["Problema"];
             404: components["responses"]["Problema"];
+        };
+    };
+    preguntarTincho: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    pregunta: string;
+                    /** @description La charla anterior (se usan los últimos 8 turnos, hasta 600 letras cada uno) */
+                    historial?: {
+                        /** @enum {string} */
+                        rol: "persona" | "hornero";
+                        texto: string;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            /** @description Respuesta */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RespuestaTincho"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            401: components["responses"]["Problema"];
+            503: components["responses"]["Problema"];
+        };
+    };
+    mejorarDescripcion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    nombre: string;
+                    descripcion: string;
+                };
+            };
+        };
+        responses: {
+            /** @description La descripción nueva (o el aviso del tope) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RespuestaTincho"];
+                };
+            };
+            400: components["responses"]["Problema"];
+            401: components["responses"]["Problema"];
+            503: components["responses"]["Problema"];
+        };
+    };
+    contarMotorTincho: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Contada */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problema"];
         };
     };
     listarPedidos: {
@@ -13307,6 +13488,45 @@ export interface operations {
             };
             403: components["responses"]["Problema"];
             404: components["responses"]["Problema"];
+        };
+    };
+    preguntarTinchoTelegram: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: int64 */
+                    chat: number;
+                    pregunta?: string;
+                    motor?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Respuesta */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RespuestaTincho"];
+                };
+            };
+            /** @description Contada (motor) */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            403: components["responses"]["Problema"];
+            404: components["responses"]["Problema"];
+            503: components["responses"]["Problema"];
         };
     };
     equipoIngresar: {

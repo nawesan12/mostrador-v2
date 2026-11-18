@@ -88,6 +88,8 @@ import type {
 	Producto,
 	ProductoEditable,
 	ContextoHornero,
+	RespuestaTincho,
+	TurnoTincho,
 	EstadoPedido,
 	FiltrosPedidos,
 	ListaPedidos,
@@ -210,6 +212,29 @@ export class DatosApi implements Datos {
 
 	contextoHornero() {
 		return this.pedir<ContextoHornero>('/v1/panel/hornero/contexto');
+	}
+	async preguntarTincho(pregunta: string, historial: TurnoTincho[]) {
+		const r = await this.intentar(
+			'/v1/panel/tincho/preguntar',
+			'POST',
+			{ pregunta, historial },
+			[503]
+		);
+		if (r.status === 503) return 'no-disponible' as const;
+		return (await r.json()) as RespuestaTincho;
+	}
+	async mejorarDescripcion(nombre: string, descripcion: string) {
+		const r = await this.intentar(
+			'/v1/panel/tincho/mejorar',
+			'POST',
+			{ nombre, descripcion },
+			[503]
+		);
+		if (r.status === 503) return 'no-disponible' as const;
+		return (await r.json()) as RespuestaTincho;
+	}
+	async contarMotorTincho() {
+		await this.intentar('/v1/panel/tincho/motor', 'POST', {});
 	}
 	marcarIdea(idea: Idea, hecha: boolean) {
 		return this.pedir<void>(`/v1/panel/hornero/ideas/${idea}`, 'POST', { hecha });

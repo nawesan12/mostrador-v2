@@ -4,6 +4,7 @@
  * sección del panel y preguntas para seguir. La app y el panel dibujan los bloques; Telegram y los
  * clientes viejos usan sólo el texto.
  */
+import type { PropuestaTincho } from '../../datos/tipos.ts';
 
 /** Adónde lleva un botón (la app y la web lo traducen a su pantalla). */
 export type Destino =
@@ -75,6 +76,12 @@ export type Respuesta = {
 	sugerencias?: string[];
 	/** Lo que entendió (para seguir la charla: «¿y ayer?»). */
 	tema?: string;
+	/** Acciones que propuso Tincho con IA: no se hicieron, la persona las confirma. */
+	propuestas?: PropuestaTincho[];
+	/** La IA no respondió por un tope (plan, día o plataforma): el texto lo explica. */
+	tope?: 'plan' | 'dia' | 'plataforma';
+	/** Respuestas con IA del mes y las del plan. */
+	uso?: { usadas: number; tope: number };
 };
 
 /** Con espacio fino que no se corta, como en todo el panel: «$ 12.345». */

@@ -1,14 +1,15 @@
 /**
  * Tincho en Telegram con la API real (DATA_SOURCE=api): el vínculo del chat vive en Go
  * (integraciones/telegram). Las rutas del panel van con la sesión de la tienda; las del bot, sólo con
- * la clave del BFF (el webhook ya verificó el secreto de Telegram). El modelo sigue en el Worker: Go
- * devuelve el contexto de la tienda del chat y cuántos mensajes lleva hoy.
+ * la clave del BFF (el webhook ya verificó el secreto de Telegram). Go devuelve el contexto de la
+ * tienda del chat (para el motor) y, lo que el motor no resuelve, lo responde con IA (Claude).
  */
 import type { components } from '@mostrador/contrato/esquema';
 import { ClienteBff, ErrorApi } from './bff.ts';
 
 export type EstadoTelegram = components['schemas']['EstadoTelegram'];
 export type ContextoTelegram = components['schemas']['ContextoTelegram'];
+type RespuestaTincho = components['schemas']['RespuestaTincho'];
 
 /** Cómo terminó el /start con un código. */
 export type Vinculo =
@@ -77,5 +78,25 @@ export class TelegramApi extends ClienteBff {
 			if (es404(e)) return null;
 			throw e;
 		}
+	}
+	/** Tincho con IA para el chat ('no-disponible' si la IA no está o falló; null si no está vinculado). */
+	async preguntar(
+		chat: number,
+		pregunta: string
+	): Promise<RespuestaTincho | 'no-disponible' | null> {
+		try {
+			return await this.pedir<RespuestaTincho>('POST', '/v1/telegram/preguntar', {
+				chat,
+				pregunta
+			});
+		} catch (e) {
+			if (es404(e)) return null;
+			if (e instanceof ErrorApi && e.estado === 503) return 'no-disponible';
+			throw e;
+		}
+	}
+	/** Cuenta una respuesta del motor (sin IA) para Plan y facturación. */
+	async contarMotor(chat: number) {
+		await this.pedir<void>('POST', '/v1/telegram/preguntar', { chat, motor: true });
 	}
 }
