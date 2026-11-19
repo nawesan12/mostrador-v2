@@ -448,6 +448,8 @@ struct EditorProducto: View {
         guard let id, original.isEmpty else {
             if let sku, codigo.isEmpty { codigo = sku }
             if id == nil && tipo == nil { eligiendoTipo = true }
+            // Uno nuevo arranca con 1: con 0 queda «Sin stock» y no se puede comprar.
+            if id == nil && stock.isEmpty { stock = "1" }
             return
         }
         guard let v: ValorJSON = try? await estado.api.get("/v1/panel/productos/\(id)"), case let .objeto(o) = v else {
@@ -544,12 +546,14 @@ struct EditorProducto: View {
                 .mapValues { .texto($0.trimmingCharacters(in: .whitespaces)) })
         }
         do {
+            // Sin stock no se puede comprar: el aviso lo dice en vez de festejar.
+            let sinStock = combos.isEmpty && (Int(stock.filter(\.isNumber)) ?? 0) == 0
             if let id {
                 try await estado.api.hacer("PUT", "/v1/panel/productos/\(id)", ValorJSON.objeto(o))
-                estado.avisar("Guardamos los cambios")
+                estado.avisar(sinStock ? "Guardado, pero sin stock: todavía no se puede comprar" : "Guardamos los cambios", ok: !sinStock)
             } else {
                 try await estado.api.hacer("POST", "/v1/panel/productos", ValorJSON.objeto(o))
-                estado.avisar("¡Producto cargado!")
+                estado.avisar(sinStock ? "Cargado, pero sin stock: todavía no se puede comprar" : "¡Producto cargado!", ok: !sinStock)
             }
             Haptico.exito()
             cerrar()

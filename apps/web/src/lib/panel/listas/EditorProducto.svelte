@@ -158,7 +158,8 @@
 		precioMayor = p?.precioMayorista ?? 0;
 		costo = p?.costo ?? 0;
 		iva = (p?.iva as Iva | undefined) ?? IVA_INICIAL;
-		stock = p?.stock ?? 0;
+		// Uno nuevo arranca con 1: con 0 queda «Sin stock» y no se puede comprar (y nada lo decía).
+		stock = p?.stock ?? 1;
 		categoria = p?.categoria ?? '';
 		canales = { web: true, ml: false, ig: false, google: false, ...(p?.canales ?? {}) };
 		opciones = (p?.opciones ?? []).map((o) => ({ nombre: o.nombre, valores: [...o.valores] }));

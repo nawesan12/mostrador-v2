@@ -485,6 +485,20 @@
 	mayorista={data.mayorista}
 	guardado={async (p, nuevo) => {
 		await invalidateAll();
+		// Sin stock no se puede comprar: el aviso lo dice en vez de «publicado».
+		if ((p.stock ?? 0) <= 0) {
+			ui.toast({
+				k: 'warn',
+				title: nuevo ? 'Producto creado, pero sin stock' : 'Guardado, pero sin stock',
+				desc: 'Todavía no se puede comprar',
+				action: 'Cargar stock',
+				onAction: () => {
+					producto = p;
+					editor = true;
+				}
+			});
+			return;
+		}
 		ui.toast({
 			k: 'ok',
 			title: nuevo ? 'Producto creado' : 'Producto guardado',

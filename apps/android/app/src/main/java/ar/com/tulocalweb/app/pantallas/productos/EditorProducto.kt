@@ -154,6 +154,8 @@ fun EditorProducto(id: String?, sku: String? = null) {
             if (id == null || original.isNotEmpty()) {
                 if (sku != null && codigo.isEmpty()) codigo = sku
                 if (id == null && tipo == null) eligiendoTipo = true
+                // Uno nuevo arranca con 1: con 0 queda «Sin stock» y no se puede comprar.
+                if (id == null && stock.isEmpty()) stock = "1"
                 return
             }
             val v = estado.api.opcional<ValorJSON>("/v1/panel/productos/$id")
@@ -235,12 +237,14 @@ fun EditorProducto(id: String?, sku: String? = null) {
                 val campos = t.campos.map { it.name }.toSet()
                 o["atributos"] = Valor.objeto(atributos.filter { it.key in campos && it.value.trim().isNotEmpty() }.mapValues { Valor.texto(it.value.trim()) })
             }
+            // Sin stock no se puede comprar: el aviso lo dice en vez de festejar.
+            val sinStock = combos.isEmpty() && (num(stock) ?: 0) == 0
             if (id != null) {
                 estado.api.hacer("PUT", "/v1/panel/productos/$id", Valor.objeto(o))
-                estado.avisar("Guardamos los cambios")
+                estado.avisar(if (sinStock) "Guardado, pero sin stock: todavía no se puede comprar" else "Guardamos los cambios", ok = !sinStock)
             } else {
                 estado.api.hacer("POST", "/v1/panel/productos", Valor.objeto(o))
-                estado.avisar("¡Producto cargado!")
+                estado.avisar(if (sinStock) "Cargado, pero sin stock: todavía no se puede comprar" else "¡Producto cargado!", ok = !sinStock)
             }
             Haptico.exito()
             nav.volver()
