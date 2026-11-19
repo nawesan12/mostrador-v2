@@ -122,7 +122,7 @@
 				return {
 					ico: I.phCheckBold,
 					titulo: `¡Gracias, ${pedido.nombre}!`,
-					texto: `Recibimos tu pedido ${n}. Transferí ${precio(pedido.total)} y lo preparamos apenas se acredite.`
+					texto: `Recibimos tu pedido ${n}. Transferí ${plata(pedido.total)} y lo preparamos apenas se acredite.`
 				};
 			if (estado === 'Para preparar' || estado === 'Sin pagar')
 				return {
@@ -184,6 +184,16 @@
 	}
 
 	const items = $derived(pedido.items ?? []);
+	// Lo que bajó el total (transferencia, cupón, combo): si no, la línea y el total no cerraban.
+	const sumaItems = $derived(items.reduce((t, l) => t + l.precio * l.cantidad, 0));
+	const descuento = $derived(
+		Math.max(
+			0,
+			(pedido.subtotal ?? sumaItems) + (retiro ? 0 : (pedido.costoEnvio ?? 0)) - pedido.total
+		)
+	);
+	// «$ 10.710» nunca se corta entre el signo y el número.
+	const plata = (n: number) => precio(n).replace('$ ', '$\u00a0');
 	const donde = $derived.by(() => {
 		if (retiro) {
 			const d = tienda.envios.retiroDireccion?.trim();
@@ -297,6 +307,10 @@
 					{#if pedido.subtotal !== undefined}<div>
 							<dt>Subtotal</dt>
 							<dd>{precio(pedido.subtotal)}</dd>
+						</div>{/if}
+					{#if descuento > 0}<div class="tv-ok">
+							<dt>Descuentos</dt>
+							<dd>− {precio(descuento)}</dd>
 						</div>{/if}
 					{#if pedido.costoEnvio !== undefined && !retiro}<div>
 							<dt>Envío</dt>

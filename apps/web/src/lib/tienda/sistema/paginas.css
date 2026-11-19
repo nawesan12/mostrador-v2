@@ -2166,6 +2166,21 @@
 	justify-content: center;
 	margin: 4px 0 0;
 }
+/* En el celular los cuatro pasos van en una fila pareja, con el nombre debajo (sin uno solo abajo). */
+@media (max-width: 559px) {
+	.tv-confirma-pasos {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		width: 100%;
+		gap: 6px;
+		font-size: 12.5px;
+	}
+	.tv-confirma-pasos li {
+		flex-direction: column;
+		text-align: center;
+		gap: 4px;
+	}
+}
 .tv-confirma-caja .tv-h3 {
 	margin: 0 0 6px;
 }
