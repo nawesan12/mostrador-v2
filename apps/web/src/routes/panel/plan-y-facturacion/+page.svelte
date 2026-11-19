@@ -15,9 +15,13 @@
 	import {
 		BENEFICIOS,
 		conDescuento,
+		DESTACADO,
+		PACK_TINCHO,
 		PLANES,
 		planVigente,
 		precioAnual,
+		SIN_COMISION,
+		totalAnual,
 		type IdPlan
 	} from '#lib/panel/planes.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
@@ -45,7 +49,7 @@
 	const indice = (id: string) => PLANES.findIndex((p) => p.id === id);
 	const nombre = (id: string) => PLANES[indice(id)]?.nombre ?? id;
 	const actual = $derived(PLANES[indice(data.actual)]);
-	// Durante la prueba gratis, una tienda en Gratis usa Pro: los límites son los de Pro.
+	// Durante la prueba gratis, una tienda en Gratis usa Crece: los límites son los de Crece.
 	const probando = $derived(data.enPrueba && data.actual === 'gratis');
 	const vigente = $derived(PLANES[indice(planVigente(data.actual, data.enPrueba))]);
 	const programado = $derived(data.abono.programado);
@@ -199,6 +203,30 @@
 			replaceState(resolve('/panel/plan-y-facturacion'), page.state);
 			return;
 		}
+		// La vuelta del pago del pack de Tincho.
+		const pk = q.get('pack');
+		if (pk) {
+			if (pk === 'error')
+				ui.toast({
+					k: 'err',
+					title: 'El pago del pack no se completó',
+					desc: 'No te cobramos nada. Podés probar de nuevo.'
+				});
+			else
+				ui.toast({
+					k: 'ai',
+					title:
+						pk === 'ok'
+							? `Sumaste ${PACK_TINCHO.respuestas.toLocaleString('es-AR')} respuestas para Tincho`
+							: 'Tu pago está pendiente',
+					desc:
+						pk === 'ok'
+							? 'Valen para este mes.'
+							: 'Cuando Mercado Pago lo acredite, el pack se suma solo.'
+				});
+			replaceState(resolve('/panel/plan-y-facturacion'), page.state);
+			return;
+		}
 		const pago = q.get('pago');
 		const vuelta = q.get('suscripcion') === 'vuelta';
 		if (!pago && !vuelta) return;
@@ -229,39 +257,40 @@
 		replaceState(resolve('/panel/plan-y-facturacion'), page.state);
 	});
 
-	// ---- Uso ----
-	const tope = $derived(vigente.hornero + data.uso.packs * 2000);
-	/**
-	 * Con la API real las respuestas de Tincho todavía no se cuentan (Go devuelve 0) y el pack de
-	 * respuestas no se cobra en ninguna factura: no se muestra un medidor en cero ni se vende algo
-	 * que no se cobra. En la demo siguen como en el handoff.
-	 */
-	const demo = $derived(!!page.data.demo);
-	const USO = $derived(
-		demo
-			? ([
-					['Productos', data.uso.productos, null],
-					['Personas en el equipo', data.uso.personas, vigente.personas],
-					['Respuestas de Tincho con IA', data.uso.hornero, tope],
-					['Respuestas automáticas sin IA', data.uso.sinIa, null]
-				] as const)
-			: ([
-					['Productos', data.uso.productos, null],
-					['Personas en el equipo', data.uso.personas, vigente.personas]
-				] as const)
+	// ---- Uso (los topes del plan que rige; 0 es sin tope) ----
+	const tope = $derived(vigente.tincho + data.uso.packs * PACK_TINCHO.respuestas);
+	const sinTope = (n: number) => (n === 0 ? null : n);
+	const USO = $derived([
+		['Productos', data.uso.productos, sinTope(vigente.productos)],
+		['Personas en el equipo', data.uso.personas, sinTope(vigente.personas)],
+		['Respuestas de Tincho con IA', data.uso.hornero, tope],
+		['Respuestas automáticas sin IA', data.uso.sinIa, null]
+	] as const);
+	// Lo que quedó fuera del plan después de bajar (no se borró nada).
+	const fuera = $derived(
+		(data as { fuera?: { productos: number; personas: number } }).fuera ?? {
+			productos: 0,
+			personas: 0
+		}
 	);
+	// El pack se paga con Mercado Pago y se suma cuando se aprueba (en la demo, en el momento).
+	let comprandoPack = $state(false);
 	async function pack() {
-		if (!(await pedir('/panel/cuenta/pack', 'POST'))) return;
+		if (comprandoPack) return;
+		comprandoPack = true;
+		const r = await pedir('/panel/cuenta/pack', 'POST');
+		if (!r) return void (comprandoPack = false);
+		const { url } = (await r.json()) as { url: string };
+		if (url) {
+			location.href = url;
+			return;
+		}
+		comprandoPack = false;
 		await invalidateAll();
 		ui.toast({
 			k: 'ai',
-			title: '2.000 respuestas más para Tincho',
-			desc: 'Se suman a este mes · $ 4.900 en tu próxima factura',
-			action: 'Deshacer',
-			onAction: async () => {
-				await pedir('/panel/cuenta/pack', 'DELETE');
-				await invalidateAll();
-			}
+			title: `${PACK_TINCHO.respuestas.toLocaleString('es-AR')} respuestas más para Tincho`,
+			desc: 'Se suman a este mes.'
 		});
 	}
 
@@ -401,8 +430,8 @@
 			<h1>Plan y facturación</h1>
 			<div class="c-s">
 				{#if probando}
-					Estás probando <b>el plan Pro gratis</b> hasta el {fecha(data.finPrueba)}. Después seguís
-					en Gratis, salvo que elijas&nbsp;otro.
+					Estás probando <b>el plan Crece gratis</b> hasta el {fecha(data.finPrueba)}. Después
+					seguís en Gratis, salvo que elijas&nbsp;otro.
 				{:else}
 					Estás en <b
 						>plan {actual.nombre}{data.actual === 'gratis'
@@ -424,10 +453,31 @@
 		<div class="ciclos" role="group" aria-label="Ciclo">
 			<button type="button" aria-pressed={!anual} onclick={() => (ciclo = 'mes')}>Mensual</button>
 			<button type="button" aria-pressed={anual} onclick={() => (ciclo = 'anio')}
-				>Anual<span>−25 %</span></button
+				>Anual<span>2 meses gratis</span></button
 			>
 		</div>
 	</div>
+
+	{#if fuera.productos || fuera.personas}
+		<div class="programado fuera" use:anim={{ t: 'rise' }}>
+			<Icon icon={I.phWarningCircleFill} size={22} style="color:#b0441d;flex:none" />
+			<div>
+				<b>Tenés más de lo que entra en {vigente.nombre}</b>
+				<span
+					>{[
+						fuera.productos
+							? `${fuera.productos} ${fuera.productos === 1 ? 'producto quedó oculto' : 'productos quedaron ocultos'} en la tienda`
+							: '',
+						fuera.personas
+							? `${fuera.personas} ${fuera.personas === 1 ? 'persona quedó' : 'personas quedaron'} en sólo lectura`
+							: ''
+					]
+						.filter(Boolean)
+						.join(' y ')}. No se borró nada: vuelve todo al subir de plan o al liberar&nbsp;lugar.</span
+				>
+			</div>
+		</div>
+	{/if}
 
 	{#if programado}
 		<div class="programado" use:anim={{ t: 'rise' }}>
@@ -466,7 +516,7 @@
 			{#each PLANES as p (p.id)}
 				{@const cur = p.id === data.actual}
 				{@const sel = p.id === elegido}
-				{@const oscuro = p.id === 'pro'}
+				{@const oscuro = p.id === DESTACADO}
 				{@const mensual = anual ? precioAnual(p.precio) : p.precio}
 				{@const bloqueado = !permitido(p)}
 				<button
@@ -480,13 +530,13 @@
 					class:bloqueado
 					onclick={() => elegir(p)}
 				>
-					<!-- En la prueba se usa Pro y la cuenta sigue en Gratis: cada uno con su fecha, sin «Tu plan». -->
-					{#if probando && p.id === 'pro'}<span class="tuyo"
+					<!-- En la prueba se usa Crece y la cuenta sigue en Gratis: cada uno con su fecha, sin «Tu plan». -->
+					{#if probando && p.id === DESTACADO}<span class="tuyo"
 							>En prueba · hasta el {fecha(data.finPrueba)}</span
 						>{:else if probando && cur}<span class="tuyo tuyo-suave"
 							>Desde el {fecha(data.finPrueba)}</span
-						>{:else if cur}<span class="tuyo">Tu plan</span>{:else if p.id === 'pro'}<span
-							class="tuyo popular">El más elegido</span
+						>{:else if cur}<span class="tuyo">Tu plan</span>{:else if p.id === DESTACADO}<span
+							class="tuyo popular">Recomendado</span
 						>{/if}
 					<span class="p-cab">
 						<span>
@@ -501,8 +551,8 @@
 						<b>{p.precio ? pesos(mensual) : 'Gratis'}</b>{#if p.precio}<span>/ mes</span>{/if}
 					</span>
 					<span class="p-anual"
-						>{#if !p.precio}Para siempre, sin tarjeta{:else if anual}{pesos(mensual * 12)} por año · ahorrás
-							{pesos((p.precio - mensual) * 12)}{:else}IVA incluido · sin permanencia{/if}</span
+						>{#if !p.precio}Para siempre, sin tarjeta{:else if anual}{pesos(totalAnual(p.precio))} por
+							año · 2 meses de regalo{:else}Precio final · sin permanencia{/if}</span
 					>
 					<span class="p-incluye">
 						{#each p.incluye as f (f)}<span><Icon icon={I.phCheckBold} size={14} />{f}</span>{/each}
@@ -674,8 +724,8 @@
 				{/if}
 			{/if}
 			<div class="r-pie">
-				<Icon icon={I.phShieldCheck} size={14} />Precios en pesos argentinos, IVA incluido. Tu Local
-				Web nunca ve tu tarjeta.
+				<Icon icon={I.phShieldCheck} size={14} />Precios finales en pesos argentinos, IVA incluido y
+				{SIN_COMISION}. Tu Local Web nunca ve tu tarjeta.
 			</div>
 		</aside>
 	</div>
@@ -696,12 +746,11 @@
 		<div class="tarjeta uso">
 			<div class="u-cab">
 				<span>Uso de este mes</span>
-				{#if demo}
-					<button type="button" onclick={pack}
-						><Icon icon={I.phSparkleFill} size={13} style="color:#b0441d" />+2.000 respuestas · $
-						4.900</button
-					>
-				{/if}
+				<button type="button" onclick={pack} disabled={comprandoPack}
+					><Icon icon={I.phSparkleFill} size={13} style="color:#b0441d" />{comprandoPack
+						? 'Un momento…'
+						: `+${PACK_TINCHO.respuestas.toLocaleString('es-AR')} respuestas · ${pesos(PACK_TINCHO.precio)}`}</button
+				>
 			</div>
 			{#each USO as [t, v, max] (t)}
 				{@const w = max ? Math.min(100, (v / max) * 100) : v ? 18 : 0}
@@ -710,7 +759,7 @@
 						<span>{t}</span><span
 							><b>{v.toLocaleString('es-AR')}</b> de {max
 								? max.toLocaleString('es-AR')
-								: 'ilimitado'}</span
+								: 'sin tope'}</span
 						>
 					</div>
 					<div class="u-b">

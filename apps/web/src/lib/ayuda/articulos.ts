@@ -101,7 +101,7 @@ export const ARTICULOS: Articulo[] = [
 				x: [
 					'Entrá a Crear mi tienda y elegí cómo ingresar: email, Google, Mercado Pago o Mercado Libre.',
 					'Contanos qué vendés. Si tenés CUIT, traemos tu razón social y tu condición fiscal desde ARCA.',
-					'Conectá los canales que ya usás: WhatsApp, Instagram o Mercado Libre.',
+					'Conectá Mercado Pago para cobrar y, si ya vendés ahí, Mercado Libre.',
 					'Importá tus productos desde Excel, Tiendanube o Mercado Libre. Si un precio no coincide, elegís cuál queda.',
 					'Elegí una plantilla, cómo cobrás y cómo enviás.',
 					'Elegí el tono de Tincho y publicá. Te queda el QR de la tienda para imprimir o compartir.'
@@ -649,15 +649,19 @@ export const ARTICULOS: Articulo[] = [
 			{
 				t: 'lista',
 				x: [
-					'Gratis: para empezar a vender.',
-					'Emprende: $ 19.900 por mes.',
-					'Pro: $ 49.900 por mes.',
-					'Negocio: $ 149.900 por mes.'
+					'Gratis: hasta 20 productos, 1 persona y la dirección de Tu Local Web. Lleva «Hecho con Tu Local Web» en el pie.',
+					'Emprende, $ 14.900 por mes: hasta 150 productos, 2 personas, dominio propio, factura de ARCA, Correo Argentino y cupones.',
+					'Crece, $ 34.900 por mes: hasta 500 productos, 5 personas con roles, venta en el local con QR, Mercado Libre, newsletter y estadísticas.',
+					'Negocio, $ 79.900 por mes: productos y personas sin tope, venta mayorista y listas de precio.'
 				]
 			},
 			{
 				t: 'p',
-				x: 'Pagando anual tenés 25 % de descuento. Todos los planes arrancan con 14 días de prueba y ninguno cobra comisión por venta. Si Tincho se te queda corto, sumás el pack de 2.000 respuestas por $ 4.900.'
+				x: 'Son precios finales, con IVA incluido. Pagando anual pagás 10 meses y usás 12. Los 14 días de prueba son con Crece y ningún plan cobra comisión por venta. Si Tincho se te queda corto, sumás un pack de 2.000 respuestas por $ 4.900, que se paga con Mercado Pago.'
+			},
+			{
+				t: 'p',
+				x: 'Si bajás de plan no se borra nada: lo que no entra queda oculto en la tienda (y en sólo lectura en el panel) hasta que subas o liberes lugar.'
 			},
 			{
 				t: 'p',
@@ -674,7 +678,7 @@ export const ARTICULOS: Articulo[] = [
 		cuerpo: [
 			{
 				t: 'p',
-				x: 'En Cuenta › Usuarios invitás por email o WhatsApp y elegís qué puede hacer cada uno: por ejemplo, alguien en la caja del local que cobra pero no ve finanzas, o quien atiende la bandeja sin tocar precios.'
+				x: 'En Cuenta › Usuarios invitás por email y, desde el plan Crece, elegís qué puede hacer cada uno: por ejemplo, alguien en la caja del local que cobra pero no ve finanzas, o quien atiende la bandeja sin tocar precios. En Emprende, quien se suma entra como Administración.'
 			},
 			{
 				t: 'p',

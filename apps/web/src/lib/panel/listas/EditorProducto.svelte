@@ -30,6 +30,8 @@
 	import { compartirProducto } from '../compartir.ts';
 	import { subir } from '../fotos.ts';
 	import { pesos } from '../formato.ts';
+	import { planDe, planDeTienda } from '../planes.ts';
+	import { avisarTopeDe, hrefPlan } from '../tope.ts';
 	import LanzamientoProducto from './LanzamientoProducto.svelte';
 
 	type Producto = components['schemas']['Producto'];
@@ -61,6 +63,14 @@
 		borrado: (nombre: string) => void;
 	} = $props();
 	const ui = getUi();
+	// Las fotos por producto del plan (3, 5, 8 o 10): el servidor las topa igual; acá se avisa antes.
+	const plan = $derived(page.data.tienda ? planDeTienda(page.data.tienda) : planDe('negocio'));
+	const maxFotos = $derived(Math.min(MAX_FOTOS, plan.fotos));
+	const planMasFotos = $derived(
+		plan.fotos < MAX_FOTOS
+			? planDe(plan.id === 'gratis' ? 'emprende' : plan.id === 'emprende' ? 'pro' : 'negocio')
+			: null
+	);
 
 	let nombre = $state('');
 	let descripcion = $state('');
@@ -122,6 +132,7 @@
 		});
 		guardando = false;
 		if (!r.ok) {
+			await avisarTopeDe(ui, r);
 			error = await mensaje(r, 'No pudimos duplicarlo.');
 			return;
 		}
@@ -390,6 +401,7 @@
 		});
 		if (!r.ok) {
 			guardando = false;
+			await avisarTopeDe(ui, r);
 			error =
 				((await r.json().catch(() => null)) as { message?: string } | null)?.message ??
 				'No pudimos guardarlo.';
@@ -422,7 +434,7 @@
 
 	/** Sube las fotos elegidas (de a una, hasta completar la galería). */
 	async function sumarFotos(archivos: FileList | null) {
-		const lista = [...(archivos ?? [])].slice(0, MAX_FOTOS - fotos.length);
+		const lista = [...(archivos ?? [])].slice(0, Math.max(0, maxFotos - fotos.length));
 		if (elegirFoto) elegirFoto.value = '';
 		for (const a of lista) {
 			subiendo++;
@@ -506,7 +518,7 @@
 						></button
 					>
 				{/each}
-				{#if fotos.length && fotos.length < MAX_FOTOS}<button
+				{#if fotos.length && fotos.length < maxFotos}<button
 						type="button"
 						class="f-mas"
 						aria-label={subiendo ? 'Subiendo la foto' : 'Sumar una foto'}
@@ -515,6 +527,15 @@
 						><Icon icon={subiendo ? I.phSpinnerGap : I.phPlusBold} size={18} /></button
 					>{/if}
 			</div>
+			{#if fotos.length >= maxFotos && planMasFotos}
+				<p class="tope-fotos">
+					Tu plan {plan.nombre} permite {plan.fotos}&nbsp;fotos por producto.
+					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- hrefPlan ya pasa por resolve -->
+					<a href={hrefPlan(planMasFotos.id)}
+						>Con {planMasFotos.nombre}, hasta&nbsp;{planMasFotos.fotos}</a
+					>
+				</p>
+			{/if}
 
 			<div class="tarjeta campos">
 				<div class="tipo-actual">
@@ -991,6 +1012,17 @@
 	.c-fila {
 		display: flex;
 		justify-content: space-between;
+	}
+	.tope-fotos {
+		margin: 8px 0 0;
+		font-size: 13px;
+		line-height: 1.4;
+		color: var(--mu);
+		text-wrap: pretty;
+	}
+	.tope-fotos a {
+		color: var(--ac, inherit);
+		font-weight: 600;
 	}
 	.hornero {
 		border: 0;

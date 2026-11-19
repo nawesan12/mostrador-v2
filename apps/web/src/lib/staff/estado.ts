@@ -30,7 +30,7 @@ export function estadoDe(t: {
 	return 'activa';
 }
 
-/** Centavos por mes del abono (el anual, con el 25 % menos). */
+/** Centavos por mes del abono (el anual: 10 meses repartidos en 12). */
 export function abonoMensual(plan: Plan, ciclo: 'mes' | 'anio') {
 	const p = PLANES.find((x) => x.id === plan)?.precio ?? 0;
 	return (ciclo === 'anio' ? precioAnual(p) : p) * 100;

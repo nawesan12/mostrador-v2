@@ -16,7 +16,7 @@ const DIA = 24 * HORA;
 const AR = -3 * HORA;
 /** Lo que cuesta en promedio un envío que paga la tienda. */
 const COSTO_ENVIO = 4200;
-const PLAN_PRO = 49_900;
+const PLAN_PRO = 34_900; // Crece (lib/panel/planes.ts)
 
 const diaAr = (t: number) => new Date(t + AR);
 const fecha = (t: number) =>
@@ -147,7 +147,7 @@ export function finanzasDemo(
 		{
 			id: 'plan',
 			tipo: 'gasto',
-			titulo: 'Plan Pro · Tu Local Web',
+			titulo: 'Plan Crece · Tu Local Web',
 			detalle: `${fecha(fin)} · cuando termina la prueba`,
 			monto: -PLAN_PRO,
 			en: fin

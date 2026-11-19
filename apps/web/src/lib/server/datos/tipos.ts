@@ -317,8 +317,8 @@ export interface Datos {
 	borrarInactivos(): Promise<number>;
 	frenarBorrado(): Promise<void>;
 	cerrarCuenta(confirmacion: string): Promise<Resultado>;
-	comprarPack(): Promise<void>;
-	devolverPack(): Promise<Resultado>;
+	/** El pack extra de Tincho ($ 4.900): la URL de Mercado Pago, o '' si ya quedó sumado (demo). */
+	comprarPack(): Promise<{ url: string }>;
 	cancelarPlan(
 		motivo: number,
 		accion: 'cancelar' | 'oferta'

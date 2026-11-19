@@ -625,7 +625,7 @@ const disenoDe = (x: unknown, plantilla: string, ciudad: string): DisenoV2 =>
 const NOMBRE_PLAN: Record<Plan, string> = {
 	gratis: 'Gratis',
 	emprende: 'Emprende',
-	pro: 'Pro',
+	pro: 'Crece',
 	negocio: 'Negocio'
 };
 
@@ -2853,6 +2853,7 @@ export class DatosSandbox implements Datos {
 		};
 	}
 
+	/** En la demo el pack se suma sin pasar por Mercado Pago (no se cobra nada de verdad). */
 	async comprarPack() {
 		const e = await this.estadoCuenta();
 		const mes = this.mes();
@@ -2860,17 +2861,7 @@ export class DatosSandbox implements Datos {
 			...e.packs,
 			[mes]: (e.packs[mes] ?? 0) + 1
 		});
-	}
-
-	async devolverPack(): Promise<Resultado> {
-		const e = await this.estadoCuenta();
-		const mes = this.mes();
-		if (!e.packs[mes]) return 'no-existe';
-		await guardarCambio(this.db, this.sb.id, 'cuenta', 'packs', {
-			...e.packs,
-			[mes]: e.packs[mes] - 1
-		});
-		return 'ok';
+		return { url: '' };
 	}
 
 	async cancelarPlan(motivo: number, accion: 'cancelar' | 'oferta') {

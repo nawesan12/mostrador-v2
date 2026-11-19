@@ -502,7 +502,7 @@ function auditoriaDemo(ts: Tienda[], ahora: number): T.AuditoriaEquipo['registro
 		['extender_prueba', 'm-joaquin', (t) => `Extendió la prueba de ${t.nombre} 7 días`],
 		['regalar_pack', 'm-camila', (t) => `Regaló un pack de Tincho a ${t.nombre}`],
 		['nota', 'm-joaquin', (t) => `Dejó una nota en ${t.nombre}`],
-		['cambiar_plan', 'm-tomas', (t) => `Cambió el plan de ${t.nombre} a Pro`],
+		['cambiar_plan', 'm-tomas', (t) => `Cambió el plan de ${t.nombre} a Crece`],
 		['aplicar_credito', 'm-tomas', (t) => `Aplicó $ 19.900 de crédito a ${t.nombre}`],
 		['mirar_tienda', 'm-tomas', (t) => `Entró a ver la tienda ${t.nombre}`],
 		['pausar', 'm-lucia', (t) => `Pausó ${t.nombre}`]
@@ -599,7 +599,7 @@ export class EquipoDemo implements T.DatosEquipo {
 				.map(([t]) => ({
 					tipo: 'cobro_rechazado' as const,
 					titulo: `Cobro rechazado: ${t.nombre}`,
-					detalle: `Mercado Pago pausó el abono ${t.plan === 'negocio' ? 'Negocio' : t.plan === 'pro' ? 'Pro' : 'Emprende'}. Escribile a ${t.titular.split(' ')[0]} para actualizar la tarjeta.`,
+					detalle: `Mercado Pago pausó el abono ${t.plan === 'negocio' ? 'Negocio' : t.plan === 'pro' ? 'Crece' : 'Emprende'}. Escribile a ${t.titular.split(' ')[0]} para actualizar la tarjeta.`,
 					tiendaId: t.id,
 					consulta: null
 				})),

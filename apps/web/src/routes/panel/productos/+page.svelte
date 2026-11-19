@@ -11,6 +11,8 @@
 	import MotorLista from '#lib/panel/listas/MotorLista.svelte';
 	import { compartirProducto } from '#lib/panel/compartir.ts';
 	import { configProductos, type ProductoFila } from '#lib/panel/listas/productos.ts';
+	import { PLANES, planDeTienda, tope } from '#lib/panel/planes.ts';
+	import { avisarTope } from '#lib/panel/tope.ts';
 	import { SITE } from '#lib/site.ts';
 	import { pesos } from '#lib/panel/formato.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
@@ -35,11 +37,24 @@
 	let producto = $state<Producto | null>(null);
 	let porcentaje = $state<string[]>([]);
 	let cambiandoPrecio = $state(false);
+	// El tope de productos del plan: si ya está lleno, se avisa antes de abrir el editor (el servidor
+	// lo topa igual al guardar).
+	const plan = $derived(planDeTienda(page.data.tienda as { plan: string; creadaEn: string }));
+	function abrirNuevo() {
+		if (plan.productos && data.lista.total >= plan.productos) {
+			const sube = PLANES.find((p) => p.productos === 0 || p.productos > plan.productos)!;
+			avisarTope(ui, {
+				code: 'tope_plan',
+				plan: sube.id,
+				message: `Tu plan ${plan.nombre} llega hasta ${plan.productos} productos. Con ${sube.nombre} cargás ${tope(sube.productos)}.`
+			});
+			return;
+		}
+		producto = null;
+		editor = true;
+	}
 	const config = configProductos(
-		() => {
-			producto = null;
-			editor = true;
-		},
+		() => abrirNuevo(),
 		(ids) => {
 			porcentaje = ids;
 			cambiandoPrecio = true;
@@ -243,8 +258,7 @@
 		if (nuevoAbierto || !page.url.searchParams.has('nuevo')) return;
 		nuevoAbierto = true;
 		replaceState(resolve('/panel/productos'), {});
-		producto = null;
-		editor = true;
+		abrirNuevo();
 	});
 	// ?editar=<id> (el botón «Reponer stock» del aviso de sin stock): abre ese producto.
 	$effect(() => {

@@ -15,6 +15,8 @@ declare global {
 		interface Error {
 			message: string;
 			code?: string;
+			/** Con code tope_plan (402): el plan que lo habilita. */
+			plan?: string;
 		}
 		interface Platform {
 			/** El contexto del Worker (adapter-cloudflare): waitUntil para terminar después de responder. */

@@ -145,8 +145,16 @@ export class DatosApi implements Datos {
 			body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo)
 		});
 		if (!res.ok) {
-			const p = (await res.json().catch(() => null)) as { detail?: string; code?: string } | null;
-			error(res.status, { message: p?.detail ?? 'La API no respondió bien.', code: p?.code });
+			const p = (await res.json().catch(() => null)) as {
+				detail?: string;
+				code?: string;
+				plan?: string;
+			} | null;
+			error(res.status, {
+				message: p?.detail ?? 'La API no respondió bien.',
+				code: p?.code,
+				plan: p?.plan
+			});
 		}
 		if (res.status === 204) return undefined as T;
 		return (await res.json()) as T;
@@ -529,11 +537,9 @@ export class DatosApi implements Datos {
 	planCuenta() {
 		return this.pedir<PlanCuenta>('/v1/panel/cuenta/plan');
 	}
-	async comprarPack() {
-		await this.pedir<void>('/v1/panel/cuenta/pack', 'POST');
-	}
-	async devolverPack() {
-		return resultado(await this.intentar('/v1/panel/cuenta/pack', 'DELETE'));
+	/** El pack extra de Tincho se paga con Mercado Pago: la URL del pago ('' si quedó sumado). */
+	comprarPack() {
+		return this.pedir<{ url: string }>('/v1/panel/cuenta/pack', 'POST');
 	}
 	cancelarPlan(motivo: number, accion: 'cancelar' | 'oferta') {
 		return this.pedir<{ hasta?: string | null; beneficio?: Beneficio }>(
@@ -1053,8 +1059,16 @@ export class DatosApi implements Datos {
 			body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo)
 		});
 		if (!res.ok && res.status !== 404 && res.status !== 409 && !aceptar.includes(res.status)) {
-			const p = (await res.json().catch(() => null)) as { detail?: string; code?: string } | null;
-			error(res.status, { message: p?.detail ?? 'La API no respondió bien.', code: p?.code });
+			const p = (await res.json().catch(() => null)) as {
+				detail?: string;
+				code?: string;
+				plan?: string;
+			} | null;
+			error(res.status, {
+				message: p?.detail ?? 'La API no respondió bien.',
+				code: p?.code,
+				plan: p?.plan
+			});
 		}
 		return res;
 	}

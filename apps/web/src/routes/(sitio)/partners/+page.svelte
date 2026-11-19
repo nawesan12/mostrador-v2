@@ -113,11 +113,11 @@
 		<div class="ejemplo">
 			<Icon icon={I.phCalculatorFill} size={30} style="color:#b0441d;flex:none" />
 			<div class="ej-txt">
-				<b>Ejemplo: 12 tiendas en plan Pro</b>
-				<div>Nivel Plata, 25&nbsp;% de comisión sobre $&nbsp;49.900 por mes</div>
+				<b>Ejemplo: 12 tiendas en plan Crece</b>
+				<div>Nivel Plata, 25&nbsp;% de comisión sobre $&nbsp;34.900 por mes</div>
 			</div>
 			<div class="ej-v">
-				<div class="v">$&nbsp;149.700</div>
+				<div class="v">$&nbsp;104.700</div>
 				<div class="d">por mes, mientras sigan activas</div>
 			</div>
 		</div>

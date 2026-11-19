@@ -5,7 +5,7 @@
  * (testdata/comisiones.json). Lo demás (resumen, próximo pago, tareas) sale de los datos del panel.
  */
 import type { components } from '@mostrador/contrato/esquema';
-import { PLANES } from '#lib/panel/planes.ts';
+import { MESES_PAGOS_DEL_ANIO, PLANES } from '#lib/panel/planes.ts';
 import { SITE } from '#lib/site.ts';
 
 export type PanelPartner = components['schemas']['PanelPartner'];
@@ -67,7 +67,7 @@ export function finComision(alta: string) {
 /** Lo que paga la tienda por mes (el anual, dividido 12), en pesos. */
 export function precioMensual(plan: string, ciclo: string) {
 	const p = PLANES.find((x) => x.id === plan)?.precio ?? 0;
-	return ciclo === 'anio' ? Math.floor(Math.floor((p * 12 * 3) / 4) / 12) : p;
+	return ciclo === 'anio' ? Math.floor((p * MESES_PAGOS_DEL_ANIO) / 12) : p;
 }
 
 /** Comisión de una tienda en un mes, en pesos, redondeada al peso. */

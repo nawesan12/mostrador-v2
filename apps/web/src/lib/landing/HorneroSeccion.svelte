@@ -39,7 +39,7 @@
 				<div class="sello"><Icon icon={I.phSparkleFill} size={15} />Asistente con IA</div>
 				<h2>Conocé a Tincho. Atiende y vende las 24&nbsp;horas.</h2>
 				<p>
-					Contesta en WhatsApp, Instagram y Telegram con tus precios y tu stock reales. Lo
+					Te responde en el panel, la app y Telegram con tus precios y tu stock reales. Lo
 					importante te lo&nbsp;consulta.
 				</p>
 				<ul class="hace">

@@ -20,10 +20,10 @@ test('plan: elegir no cobra, el resumen muestra lo que se paga y la baja se prog
 	const resumen = page.locator('#resumen');
 	await expect(page.getByText('Elegí un plan para ver el detalle')).toBeVisible();
 	await page.getByRole('group', { name: 'Ciclo' }).getByRole('button', { name: /Anual/ }).click();
-	await expect(page.locator('.plan.cur')).toContainText('$ 37.425');
-	await expect(resumen).toContainText('Pro anual');
-	await expect(resumen).toContainText('$ 449.100 por año');
-	await expect(page.locator('.c-s')).toContainText('plan Pro mensual');
+	await expect(page.locator('.plan.cur')).toContainText('$ 29.083');
+	await expect(resumen).toContainText('Crece anual');
+	await expect(resumen).toContainText('$ 349.000 por año');
+	await expect(page.locator('.c-s')).toContainText('plan Crece mensual');
 	await page.getByRole('group', { name: 'Ciclo' }).getByRole('button', { name: 'Mensual' }).click();
 	await expect(page.getByText('Elegí un plan para ver el detalle')).toBeVisible();
 
@@ -31,7 +31,7 @@ test('plan: elegir no cobra, el resumen muestra lo que se paga y la baja se prog
 	await page.getByRole('radio', { name: /Negocio/ }).click();
 	await expect(resumen).toContainText('Total hoy');
 	await expect(resumen).toContainText('no pagás nada hasta');
-	await expect(resumen).toContainText('$ 149.900 por mes');
+	await expect(resumen).toContainText('$ 79.900 por mes');
 	await expect(resumen).toContainText('IVA incluido');
 	await resumen.getByRole('button', { name: 'Seguir a Mercado Pago' }).click();
 	await expect(page.getByText('Ya tenés el plan Negocio')).toBeVisible();

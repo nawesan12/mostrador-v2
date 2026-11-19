@@ -30,14 +30,6 @@ export const INTEG = [
 		'Bot de pedidos y avisos'
 	],
 	[
-		'Instagram',
-		'canales',
-		{
-			icon: I.logosInstagramIcon
-		},
-		'Mensajes en la bandeja'
-	],
-	[
 		'Facebook',
 		'canales',
 		{
@@ -255,77 +247,6 @@ export const CATS = [
 	['cobros', 'Cobros'],
 	['envios', 'Envíos'],
 	['gestion', 'Gestión y marketing']
-] as const;
-
-export const LPLANS = [
-	[
-		'Gratis',
-		'Para probar y empezar',
-		0,
-		[
-			'Productos ilimitados',
-			'Mercado Pago, transferencia y retiro',
-			'Tincho: 100 respuestas con IA',
-			'Respuestas automáticas sin límite',
-			'1 persona · subdominio de Tu Local Web'
-		],
-		'Crear tienda gratis'
-	],
-	[
-		'Emprende',
-		'Para vender todos los días',
-		19900,
-		[
-			'Dominio propio y sin marca Tu Local Web',
-			'Todos los medios de pago y envío',
-			'Factura de ARCA automática',
-			'Tincho: 1.000 respuestas con IA',
-			'Carritos abandonados · 2 personas'
-		],
-		'Probar 14 días'
-	],
-	[
-		'Pro',
-		'El más elegido',
-		49900,
-		[
-			'Mercado Libre e Instagram con un solo stock',
-			'Punto de venta · 1 caja',
-			'Tincho: 3.000 respuestas con IA',
-			'Acciones masivas y estadísticas',
-			'5 personas con permisos'
-		],
-		'Probar 14 días',
-		true
-	],
-	[
-		'Negocio',
-		'Varias sucursales',
-		149900,
-		[
-			'Sucursales, depósitos y cajas ilimitadas',
-			'Listas mayoristas, API y webhooks',
-			'Tincho: 15.000 respuestas con IA',
-			'Personas ilimitadas',
-			'Gerente de cuenta'
-		],
-		'Probar 14 días'
-	]
-] as const;
-
-export const CMP = [
-	['Plan para empezar', 'Gratis', 'Gratis (Inicial)', 1, 1],
-	['Plan para vender todos los días', 'Emprende · $ 19.900', 'Esencial · $ 27.999', 1, 1],
-	['Plan para crecer', 'Pro · $ 49.900', 'Impulso · $ 79.999', 1, 1],
-	['Plan para varias sucursales', 'Negocio · $ 149.900', 'Escala · $ 244.999', 1, 1],
-	['Atención por WhatsApp', 'Desde Emprende', 'Desde Impulso', 1, 2],
-	['Acciones masivas', 'Desde Pro', 'Desde Impulso', 1, 2],
-	['Usuarios con permisos', 'Desde Pro', 'Desde Escala', 1, 2],
-	['Migración asistida', 'Gratis en todos', 'En Evolución (a consultar)', 1, 2],
-	['Asistente de IA en tu panel', 'En todos (según plan)', 'No figura en el plan', 1, 0],
-	['Factura de ARCA automática', 'Desde Emprende', 'No figura en el plan', 1, 0],
-	['Punto de venta en el local', 'Desde Pro', 'No figura en el plan', 1, 0],
-	['Copia diaria de tus datos y aviso de cada ingreso', 'En todos', 'No figura en el plan', 1, 0]
 ] as const;
 
 export const CHAT = [

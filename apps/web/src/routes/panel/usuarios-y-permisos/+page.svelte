@@ -16,7 +16,8 @@
 		ROLES,
 		type RolInvitable
 	} from '#lib/panel/permisos.ts';
-	import { PLANES } from '#lib/panel/planes.ts';
+	import { planCon, planDe, PLANES, tope } from '#lib/panel/planes.ts';
+	import { avisarTope } from '#lib/panel/tope.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 
 	/**
@@ -28,8 +29,28 @@
 	const ui = getUi();
 	type M = (typeof data.equipo)[number];
 
-	const lugares = $derived(PLANES.find((p) => p.id === data.plan)?.personas ?? null);
+	// El plan que rige (en la prueba, Crece): cuántas personas entran (0 es sin tope) y si se pueden
+	// elegir roles con menos permisos. El servidor lo topa igual; acá se avisa antes.
+	const plan = $derived(planDe(data.plan));
+	const lugares = $derived(plan.personas === 0 ? null : plan.personas);
 	const libres = $derived(lugares === null ? null : Math.max(0, lugares - data.equipo.length));
+	const conRoles = $derived((plan.funciones as readonly string[]).includes('roles'));
+	const planRoles = planCon('roles');
+	// Sin roles en el plan, quien se suma entra como Administración.
+	const rolPermitido = (r: RolInvitable) => conRoles || r === 'admin';
+	function abrirInvitar() {
+		if (libres === 0) {
+			const sube = PLANES.find((p) => p.personas === 0 || p.personas > plan.personas)!;
+			avisarTope(ui, {
+				code: 'tope_plan',
+				plan: sube.id,
+				message: `Tu plan ${plan.nombre} es para ${plan.personas} ${plan.personas === 1 ? 'persona' : 'personas'}. Con ${sube.nombre}, ${tope(sube.personas).replace('sin tope', 'las que necesites')}.`
+			});
+			return;
+		}
+		if (!conRoles) nuevoRol = 'admin';
+		invitando = true;
+	}
 
 	async function pedir(url: string, method: string, cuerpo?: unknown) {
 		const r = await fetch(url, {
@@ -38,8 +59,13 @@
 			body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo)
 		});
 		if (!r.ok) {
-			const m = ((await r.json().catch(() => null)) as { message?: string } | null)?.message;
-			ui.toast({ k: 'err', title: 'No se pudo', desc: m ?? 'Probá de nuevo.' });
+			const p = (await r.json().catch(() => null)) as {
+				message?: string;
+				code?: string;
+				plan?: string;
+			} | null;
+			if (!avisarTope(ui, p))
+				ui.toast({ k: 'err', title: 'No se pudo', desc: p?.message ?? 'Probá de nuevo.' });
 		}
 		return r.ok;
 	}
@@ -148,7 +174,7 @@
 					: ` · ${libres} ${libres === 1 ? 'lugar libre' : 'lugares libres'} en tu plan`}
 			</div>
 		</div>
-		<button type="button" class="invitar" onclick={() => (invitando = true)}
+		<button type="button" class="invitar" onclick={abrirInvitar}
 			><Icon icon={I.phUserPlusBold} size={15} />Invitar persona</button
 		>
 	</div>
@@ -183,8 +209,18 @@
 				{:else}
 					<span class="roles" role="group" aria-label="Rol de {m.nombre}" use:deslizable>
 						{#each INVITABLES as r (r)}
-							<button type="button" aria-pressed={m.rol === r} onclick={() => rol(m, r)}
-								>{NOMBRE_ROL[r]}</button
+							<button
+								type="button"
+								aria-pressed={m.rol === r}
+								aria-disabled={!rolPermitido(r) && m.rol !== r}
+								onclick={() =>
+									rolPermitido(r) || m.rol === r
+										? rol(m, r)
+										: avisarTope(ui, {
+												code: 'tope_plan',
+												plan: planRoles.id,
+												message: `Los roles con menos permisos están desde el plan ${planRoles.nombre}. En ${plan.nombre}, el equipo entra como Administración.`
+											})}>{NOMBRE_ROL[r]}</button
 							>
 						{/each}
 					</span>
@@ -256,13 +292,22 @@
 		<div class="m-r">Rol</div>
 		<div class="m-roles" role="group" aria-label="Rol">
 			{#each INVITABLES as id (id)}
-				<button type="button" aria-pressed={nuevoRol === id} onclick={() => (nuevoRol = id)}
+				<button
+					type="button"
+					aria-pressed={nuevoRol === id}
+					disabled={!rolPermitido(id)}
+					onclick={() => (nuevoRol = id)}
 					><Icon icon={ICONO[id]} size={20} /><span
 						><b>{NOMBRE_ROL[id]}</b><span>{QUE_HACE[id]}</span></span
 					></button
 				>
 			{/each}
 		</div>
+		{#if !conRoles}
+			<p class="m-plan">
+				En {plan.nombre} quien se suma entra como Administración. Los roles Ventas y Local están desde&nbsp;{planRoles.nombre}.
+			</p>
+		{/if}
 		<div class="m-acc">
 			<button type="button" class="b-sec" onclick={() => (invitando = false)}>Cancelar</button>
 			<button class="b-pri" disabled={email.trim().length < 6 || mandando}
@@ -273,6 +318,20 @@
 </Modal>
 
 <style>
+	.m-plan {
+		margin: 4px 0 0;
+		font-size: 13px;
+		line-height: 1.4;
+		color: var(--mu);
+		text-wrap: pretty;
+	}
+	.m-roles button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+	.roles button[aria-disabled='true'] {
+		opacity: 0.5;
+	}
 	.pagina {
 		display: flex;
 		flex-direction: column;

@@ -17,10 +17,13 @@ export const LIMITES = {
 	subida: 15 * 1024 * 1024,
 	/** Por foto, ya optimizada (1600 px en WebP pesa bastante menos). */
 	archivo: 1024 * 1024,
-	/** Por dueño: la tienda (o el visitante de la demo). */
+	/**
+	 * Por dueño, si no se pasa otro: el visitante de la demo. Cada tienda tiene el de su plan
+	 * (lib/panel/planes.ts › fotosMB: 15, 150, 600 o 2.048 MB).
+	 */
 	porDuenio: 15 * 1024 * 1024,
-	/** Tu Local Web entero. */
-	total: 1024 * 1024 * 1024
+	/** Tu Local Web entero (el disco del VPS; un freno, no un tope de plan). */
+	total: 20 * 1024 * 1024 * 1024
 };
 
 /** Archivos para descargar (el premio «descarga» de una captación): PDF, EPUB o ZIP, sin tocar. */
@@ -116,7 +119,9 @@ export async function subirFoto(
 	db: DbSandbox,
 	duenio: string,
 	bytes: Uint8Array,
-	sandbox: string | null = null
+	sandbox: string | null = null,
+	/** El espacio para fotos del plan de la tienda, en bytes. */
+	porDuenio: number = LIMITES.porDuenio
 ) {
 	if (!tipoDe(bytes)) error(415, 'Subí una foto en JPG, PNG o WebP.');
 	if (bytes.byteLength > LIMITES.subida) error(413, 'La foto pesa más de 15 MB.');
@@ -130,8 +135,11 @@ export async function subirFoto(
 		})
 		.from(archivos)
 		.where(sql`${archivos.clave} like 'fotos/%'`);
-	if (Number(uso?.duenio ?? 0) + bytes.byteLength > LIMITES.porDuenio)
-		error(413, 'Llegaste al límite de 15 MB de fotos.');
+	if (Number(uso?.duenio ?? 0) + bytes.byteLength > porDuenio)
+		error(
+			413,
+			`Llegaste a los ${Math.round(porDuenio / 1024 / 1024).toLocaleString('es-AR')} MB de fotos de tu plan. Borrá fotos que ya no uses o pasá a un plan más grande.`
+		);
 	if (Number(uso?.total ?? 0) + bytes.byteLength > LIMITES.total)
 		error(507, 'Subir fotos está pausado por un rato. Probá más tarde.');
 	const clave = `fotos/${duenio}/${crypto.randomUUID()}.${EXT[tipo]}`;

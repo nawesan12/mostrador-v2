@@ -20,8 +20,8 @@ describe('comisión de partners', () => {
 		it(`${c.asignado} con ${c.activas} activas es ${c.nivel}`, () =>
 			expect(nivelEfectivo(c.asignado, c.activas)).toBe(c.nivel));
 
-	it('el ejemplo de la landing: 12 tiendas Pro en Plata = $ 149.700', () =>
-		expect(12 * comision('plata', 'pro', 'mes', '2026-03-10T15:00:00Z', '2026-03')).toBe(149_700));
+	it('el ejemplo de la landing: 12 tiendas Crece en Plata = $ 104.700', () =>
+		expect(12 * comision('plata', 'pro', 'mes', '2026-03-10T15:00:00Z', '2026-03')).toBe(104_700));
 
 	it('fechas: fin de la comisión y día de pago', () => {
 		expect(finComision('2026-01-01T02:00:00Z')).toBe('2026-12-01');
@@ -81,7 +81,7 @@ describe('resumen del inicio', () => {
 				estado: 'activa' as const,
 				alta: '2026-05-10',
 				finComision: i === 0 ? '2026-11-01' : '2027-05-01',
-				comisionMes: 12_475
+				comisionMes: 8_725
 			})),
 			{
 				id: 'p',
@@ -132,7 +132,7 @@ describe('resumen del inicio', () => {
 
 	it('suma, cuenta y arma el progreso a Oro', () => {
 		const r = resumen(base);
-		expect(r.estimado).toBe(6 * 12_475);
+		expect(r.estimado).toBe(6 * 8_725);
 		expect([r.activas, r.prueba, r.perdidas]).toEqual([6, 1, 1]);
 		expect(r.proximo).toMatchObject({
 			monto: 74_850,
@@ -158,7 +158,7 @@ describe('resumen del inicio', () => {
 		expect(r.proximo).toMatchObject({
 			estado: 'estimado',
 			cuando: `se paga el 10 de${String.fromCharCode(160)}noviembre`,
-			monto: 6 * 12_475
+			monto: 6 * 8_725
 		});
 	});
 });

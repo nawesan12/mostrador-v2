@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { PLANES } from '#lib/panel/planes.ts';
+	import { PLANES, precioAnual, SIN_COMISION, totalAnual } from '#lib/panel/planes.ts';
 	import { resolve } from '$app/paths';
 	import Icon from '#lib/components/Icon.svelte';
 	import { anim } from '#lib/anim.ts';
 	import * as I from '#lib/icons.ts';
-	import { LPLANS } from './datos.ts';
+	import { LPLANS } from './planes.ts';
 	import { fmt } from './formato.ts';
 
 	/** Precios de la landing (handoff: #precios y #planes): los planes. */
@@ -24,9 +24,13 @@
 				f,
 				cta,
 				hi: !!hi,
-				price: p === 0 ? 'Gratis' : fmt(yr ? p * 0.75 : p),
+				price: p === 0 ? 'Gratis' : fmt(yr ? precioAnual(p) : p),
 				per: p === 0 ? 'para siempre' : '/ mes',
-				note: yr ? fmt(p * 0.75 * 12) + ' por año' : p === 0 ? 'Sin tarjeta' : '14 días gratis'
+				note: yr
+					? fmt(totalAnual(p)) + ' por año · 2 meses de regalo'
+					: p === 0
+						? 'Sin tarjeta'
+						: '14 días gratis'
 			};
 		})
 	);
@@ -45,7 +49,7 @@
 			<div class="ciclo" role="group" aria-label="Ciclo de facturación">
 				<button type="button" aria-pressed={!anual} onclick={() => (anual = false)}>Mensual</button>
 				<button type="button" aria-pressed={anual} onclick={() => (anual = true)}
-					>Anual<span>−25 %</span></button
+					>Anual<span>2 meses gratis</span></button
 				>
 			</div>
 		</div>
@@ -70,6 +74,9 @@
 				</div>
 			{/each}
 		</div>
+		<p class="sin-comision" use:anim={'reveal'}>
+			Precios finales en pesos, IVA incluido. {SIN_COMISION} en todos los planes.
+		</p>
 		<div class="empresa" use:anim={'reveal'}>
 			<Icon icon={I.phBuildingsFill} size={24} style="color:#F5B796" />
 			<div class="e-txt">
@@ -85,6 +92,13 @@
 </section>
 
 <style>
+	.sin-comision {
+		margin: 18px 0 0;
+		font-size: 14px;
+		color: #e9d7c8;
+		text-align: center;
+		text-wrap: balance;
+	}
 	section {
 		background: #2a140c;
 		color: #fbf7f2;

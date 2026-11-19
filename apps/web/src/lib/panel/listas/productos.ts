@@ -28,6 +28,11 @@ export type ProductoFila = {
 	star: boolean;
 	/** Cuántos pidieron «Avisame cuando vuelva» y todavía esperan (§60). */
 	esperan?: number;
+	/**
+	 * Quedó fuera del tope de productos del plan (después de bajar): no se ve en la tienda y no se
+	 * edita hasta subir de plan o borrar otro. Nada se borra.
+	 */
+	fueraDePlan?: boolean;
 };
 
 /** Ícono de cada canal en la fila (handoff `CHI`). */
@@ -43,6 +48,9 @@ const ESTADO = {
 	paused: ['Pausado', 'var(--chip)', 'var(--mu)'],
 	draft: ['Borrador', 'rgba(62,107,253,.12)', '#3E6BFD']
 } as const;
+
+/** El chip de un producto que quedó fuera del plan: oculto en la tienda y en sólo lectura. */
+const FUERA_DE_PLAN = ['Fuera de tu plan', 'rgba(210,88,47,.12)', '#A8401C'] as const;
 
 export function configProductos(
 	nuevo: () => void,
@@ -125,7 +133,11 @@ export function configProductos(
 		],
 		fila: (p) => {
 			const mx = Math.max(1, ...p.ventas);
-			const e = p.estado in ESTADO ? ESTADO[p.estado as keyof typeof ESTADO] : null;
+			const e = p.fueraDePlan
+				? FUERA_DE_PLAN
+				: p.estado in ESTADO
+					? ESTADO[p.estado as keyof typeof ESTADO]
+					: null;
 			return {
 				img: p.foto ? unsplash(p.foto, 96, '&h=96') : null,
 				ini: p.nombre.slice(0, 2).toUpperCase(),

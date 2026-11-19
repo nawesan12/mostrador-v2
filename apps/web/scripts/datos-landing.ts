@@ -20,8 +20,6 @@ const NOMBRES = [
 	'FEED',
 	'INTEG',
 	'CATS',
-	'LPLANS',
-	'CMP',
 	'CHAT',
 	'SERIES',
 	'NOTIFS',
@@ -45,6 +43,8 @@ const out = ctx.__out as Record<string, unknown>;
 // (piden contrato o volumen), y Tango, HubSpot, Klaviyo, Notion, Slack y Gmail (licencia paga,
 // auditoría paga o fuera del comercio chico).
 const SIN_INTEGRACION = [
+	// 19/11: sin conexión con Instagram (los pedidos de ahí se cargan a mano con su canal).
+	'Instagram',
 	'Naranja X',
 	'MODO',
 	'PedidosYa',

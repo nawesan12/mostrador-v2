@@ -4,7 +4,7 @@
  * (apps/api/internal/dominio/abono/testdata/cotizar.json). La API manda las cotizaciones hechas; esto lo
  * usa el sandbox de la demo.
  */
-import { PLANES, precioAnual, type IdPlan } from './planes.ts';
+import { PLANES, totalAnual, type IdPlan } from './planes.ts';
 
 export type Ciclo = 'mes' | 'anio';
 export type TipoCambio =
@@ -46,7 +46,7 @@ export class ErrorCotizar extends Error {
 const NOMBRES: Record<IdPlan, string> = {
 	gratis: 'Gratis',
 	emprende: 'Emprende',
-	pro: 'Pro',
+	pro: 'Crece',
 	negocio: 'Negocio'
 };
 
@@ -54,7 +54,7 @@ const NOMBRES: Record<IdPlan, string> = {
 export const precioDe = (plan: IdPlan, ciclo: Ciclo) => {
 	const p = PLANES.find((x) => x.id === plan);
 	if (!p) return null;
-	return ciclo === 'anio' ? precioAnual(p.precio) * 12 : p.precio;
+	return ciclo === 'anio' ? totalAnual(p.precio) : p.precio;
 };
 
 const D = 86_400_000;

@@ -56,7 +56,7 @@ test('el chat de Tincho avanza solo', async ({ page }) => {
 
 test('las tres etapas usan los precios de los planes', async ({ page }) => {
 	await page.goto('/');
-	for (const p of ['$ 19.900', '$ 49.900', '$ 149.900'])
+	for (const p of ['$ 14.900', '$ 34.900', '$ 79.900'])
 		await expect(page.getByText(p).first()).toBeAttached();
 });
 
@@ -152,10 +152,10 @@ test('precios: el ciclo anual cambia los montos', async ({ page }) => {
 	await page.goto('/');
 	await listo(page);
 	const sec = page.locator('section#precios');
-	await expect(sec.getByText('$ 149.900').first()).toBeVisible();
+	await expect(sec.getByText('$ 79.900').first()).toBeVisible();
 	await sec.getByRole('button', { name: /Anual/ }).click();
-	await expect(sec.getByText('$ 112.425').first()).toBeVisible();
-	await expect(sec.getByText('$ 1.349.100 por año')).toBeVisible();
+	await expect(sec.getByText('$ 66.583').first()).toBeVisible();
+	await expect(sec.getByText('$ 799.000 por año')).toBeVisible();
 });
 
 test('el widget de Tincho arranca cerrado, se abre y se minimiza', async ({ page }) => {

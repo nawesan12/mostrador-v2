@@ -102,6 +102,6 @@ export function resumenDemo(
 			)
 		],
 		canales: ['wa', 'ml', 'mp', 'ig', 'tg'],
-		prueba: { plan: 'Pro', diasRestantes: DIAS_DE_PRUEBA, diasTotales: 14 }
+		prueba: { plan: 'Crece', diasRestantes: DIAS_DE_PRUEBA, diasTotales: 14 }
 	};
 }

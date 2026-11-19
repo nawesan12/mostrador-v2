@@ -3,6 +3,7 @@ import { error, json } from '@sveltejs/kit';
 import { LIMITES, subirFoto } from '#lib/server/archivos.ts';
 import { datosDe, usaSandbox } from '#lib/server/datos/index.ts';
 import { golpe } from '#lib/server/limite.ts';
+import { planDeTienda } from '#lib/panel/planes.ts';
 import { dbSandbox } from '#lib/server/sandbox/sandbox.ts';
 import type { RequestHandler } from './$types';
 
@@ -19,10 +20,12 @@ export const POST: RequestHandler = async (event) => {
 	const db = dbSandbox(env.SANDBOX);
 	// La tienda es la dueña (su id va en la URL). El id del sandbox es la cookie del visitante: no se
 	// publica, sólo se guarda para borrar las fotos cuando la demo vence.
-	const tienda = (await datosDe(event.locals).tienda()).id;
+	const t = await datosDe(event.locals).tienda();
+	const tienda = t.id;
 	if (!(await golpe(db, `fotos:${tienda}`, 60, 3600))) error(429, 'Subiste muchas fotos seguidas.');
 	const sandbox = usaSandbox() ? (event.locals.sandbox?.id ?? null) : null;
-	const clave = await subirFoto(db, tienda, bytes, sandbox);
+	// El espacio para fotos del plan que rige (en la prueba, el de Crece).
+	const clave = await subirFoto(db, tienda, bytes, sandbox, planDeTienda(t).fotosMB * 1024 * 1024);
 	// La ruta: el navegador le pone su origen (https://tulocalweb.com.ar o, en las pruebas,
 	// localhost; en wrangler dev el origen del pedido es el de producción).
 	return json({ ruta: `/f/${clave}` }, { status: 201 });

@@ -16,9 +16,9 @@ describe('estado de una tienda', () => {
 		expect(estadoDe({ ...base, pausadaEn: ahora, canceladaEn: ahora })).toBe('pausada');
 		expect(estadoDe({ ...base, cerradaEn: ahora, pausadaEn: ahora })).toBe('cerrada');
 	});
-	it('el abono anual tiene el 25 % menos y va en centavos', () => {
-		expect(abonoMensual('pro', 'mes')).toBe(4_990_000);
-		expect(abonoMensual('pro', 'anio')).toBe(3_742_500);
+	it('el abono anual son 10 meses repartidos en 12 y va en centavos', () => {
+		expect(abonoMensual('pro', 'mes')).toBe(3_490_000);
+		expect(abonoMensual('pro', 'anio')).toBe(2_908_300);
 		expect(abonoMensual('gratis', 'mes')).toBe(0);
 	});
 });

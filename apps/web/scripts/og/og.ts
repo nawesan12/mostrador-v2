@@ -110,10 +110,10 @@ const OGS: Og[] = [
 		titulo: 'Empezás gratis.',
 		acento: 'Crecés sin sorpresas.',
 		texto:
-			'Un plan gratis para arrancar y planes pagos desde $\u00a019.900 por mes. Probá todo 14 días sin tarjeta.',
+			'Un plan gratis para arrancar y planes pagos desde $\u00a014.900 por mes, sin comisión por venta. Probá 14 días sin tarjeta.',
 		tincho: 'ticket',
 		fondo: 'oscuro',
-		pie: chips(['Gratis', 'Emprende $ 19.900', 'Pro $ 49.900', 'Negocio $ 149.900'])
+		pie: chips(['Gratis', 'Emprende $ 14.900', 'Crece $ 34.900', 'Negocio $ 79.900'])
 	},
 	{
 		id: 'seguridad',

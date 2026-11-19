@@ -6,7 +6,8 @@ import type { OpcionProducto } from './tipos.ts';
 
 export const MAX_OPCIONES = 3;
 export const MAX_VALORES = 20;
-export const MAX_FOTOS = 8;
+/** Fotos por producto del plan más grande (cada plan tiene las suyas: lib/panel/planes.ts). */
+export const MAX_FOTOS = 10;
 /** Lo mismo que admite Mercado Libre por publicación (y la API Go). */
 export const MAX_VARIANTES = 100;
 

@@ -29,13 +29,6 @@ export const NOVEDADES: [string, Novedad[]][] = [
 		'Septiembre 2026',
 		[
 			{
-				tipo: 'nuevo',
-				titulo: 'Tincho responde en Instagram',
-				foto: '1611162617213-7d7a39e9b1d7',
-				texto:
-					'El asistente ahora contesta mensajes directos de Instagram con el stock y los precios reales de tu tienda.'
-			},
-			{
 				tipo: 'mejora',
 				titulo: 'Plantillas con diseño propio',
 				texto: 'Sumamos 10 plantillas completamente nuevas, cada una pensada para un rubro.'
@@ -55,7 +48,7 @@ export const NOVEDADES: [string, Novedad[]][] = [
 				tipo: 'mejora',
 				titulo: 'Onboarding en 10 minutos',
 				texto:
-					'Ahora importamos productos desde Instagram, Mercado Libre o un Excel mientras creás la cuenta.'
+					'Ahora importamos productos desde Tiendanube, Mercado Libre o un Excel mientras creás la cuenta.'
 			}
 		]
 	]

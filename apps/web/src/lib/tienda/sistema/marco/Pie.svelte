@@ -10,7 +10,7 @@
 	/**
 	 * El pie de la tienda (estilo.pie), igual en todas las páginas:
 	 * - `simple` (A-vacia, C-moda): una línea con el botón de arrepentimiento, los legales, los medios
-	 *   de pago y «Hecha con Tu Local Web».
+	 *   de pago y «Hecho con Tu Local Web» (sólo en el plan Gratis).
 	 * - `columnas` (A-moda, B-moda): el nombre con la newsletter (o el WhatsApp), Tienda, Ayuda y El
 	 *   local; abajo, la línea legal.
 	 * - `grande` (A-cafe): el nombre en grande, los links en fila y la línea legal.
@@ -82,9 +82,13 @@
 		{#if medios && v !== 'grande' && !(v === 'columnas' && !local.length && !wa)}<span
 				class="tv-pie-medios">{medios}</span
 			>{/if}
-		<a class="tv-pie-hecha" href="https://tulocalweb.com.ar" target="_blank" rel="noopener"
-			>Hecha con Tu Local Web</a
-		>
+		<!-- «Hecho con Tu Local Web» va en el plan Gratis (la API lo dice con hechoCon); los pagos, sin marca. -->
+		{#if t.hechoCon ?? true}<a
+				class="tv-pie-hecha"
+				href="https://tulocalweb.com.ar"
+				target="_blank"
+				rel="noopener">Hecho con Tu Local Web</a
+			>{/if}
 	</div>
 {/snippet}
 

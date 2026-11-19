@@ -3,7 +3,7 @@
  * legales salen de `legales.ts`, los planes de `panel/planes.ts` y la comparación con Tiendanube de
  * la landing, así una pieza nunca dice algo distinto del sitio.
  */
-import { CMP } from '#lib/landing/datos.ts';
+import { CMP } from '#lib/landing/planes.ts';
 import { fmt } from '#lib/landing/formato.ts';
 import { LEGALES } from '#lib/legales.ts';
 import { PLANES, precioAnual } from '#lib/panel/planes.ts';
@@ -53,12 +53,12 @@ export const DESCUENTO_ANUAL = Math.round(100 - precioAnual(100));
 
 const plan = (id: (typeof PLANES)[number]['id']) => PLANES.find((x) => x.id === id)!;
 export const PLAN = { emprende: plan('emprende'), pro: plan('pro'), negocio: plan('negocio') };
-/** El plan pago más barato: "Desde $ 19.900 por mes". */
+/** El plan pago más barato: "Desde $ 14.900 por mes". */
 export const DESDE = Math.min(...PLANES.filter((x) => x.precio > 0).map((x) => x.precio));
 
 /**
  * Cada plan pago contra su par de Tiendanube, como la tabla de la landing (`CMP`):
- * "Emprende · $ 19.900" | "Esencial · $ 27.999".
+ * "Emprende · $ 14.900" | "Esencial · $ 27.999".
  */
 export const VERSUS = CMP.slice(1, 4).map(([, nuestro, ellos]) => {
 	const [nombre] = nuestro.split(' · ');

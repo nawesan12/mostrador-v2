@@ -176,6 +176,8 @@ export type TiendaPublica = {
 	 * venir) si la tienda no vende por mayor.
 	 */
 	mayorista?: MinimoMayorista | null;
+	/** El plan Gratis lleva «Hecho con Tu Local Web» en el pie; los pagos, no (sin venir: sí). */
+	hechoCon?: boolean;
 };
 
 /** Lo que muestra la portada de los turnos: los libres de hoy y el próximo libre de cada uno. */
