@@ -375,7 +375,7 @@
 		{#if paso > 0 && id !== 'listo'}
 			<div class="pie">
 				{#if paso > 1}
-					<button type="button" class="atras" onclick={() => o.ir(paso - 1)}
+					<button type="button" class="atras" aria-label="Atrás" onclick={() => o.ir(paso - 1)}
 						><Icon icon={I.phArrowLeftBold} size={14} /><span class="atras-t">Atrás</span></button
 					>
 				{/if}

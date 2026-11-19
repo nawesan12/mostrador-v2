@@ -91,7 +91,7 @@ internal object Simbolos {
         "person.crop.circle.badge.plus" to '\uea4d', // person_add
         "person.crop.circle.badge.xmark" to '\uef66', // person_remove
         "person.crop.circle" to '\uf20b', // account_circle
-        "person.fill.xmark" to '\uef66', // person_remove
+        "person.xmark" to '\uef66', // person_remove
         "phone" to '\uf0d4', // call
         "photo.badge.plus" to '\ue43e', // add_photo_alternate
         "photo.on.rectangle" to '\ue413', // photo_library
@@ -118,6 +118,7 @@ internal object Simbolos {
         "star" to '\uf09a', // star
         "stop" to '\ue047', // stop
         "storefront" to '\uea12', // storefront
+        "safari" to '\uea12', // storefront
         "tag" to '\uf05b', // sell
         "textformat.size" to '\ue245', // format_size
         "textformat" to '\ue262', // text_fields
