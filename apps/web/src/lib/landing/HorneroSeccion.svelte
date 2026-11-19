@@ -94,7 +94,7 @@
 									>
 									<div class="pago-txt">
 										<div class="a">Pagar $ 44.600</div>
-										<div class="b">Hasta 6 cuotas sin interés</div>
+										<div class="b">Link de pago de Mercado Pago</div>
 									</div>
 									<Icon icon={I.phArrowUpRightBold} size={15} style="color:#b0441d" />
 								</div>

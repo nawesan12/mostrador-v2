@@ -238,22 +238,22 @@ export const CHAT = [
 	},
 	{
 		k: 'h',
-		t: 'Llevás $ 186.400 en 9 ventas: 6 online y 3 en el local. Lo que más salió es el termo de 1 L, y te quedan 3:'
+		t: 'Llevás $\u00a0186.400 en 9 ventas: 6 online y 3 en el local. Lo que más salió es el termo de 1 L, y te quedan 3:'
 	},
 	{
 		k: 'prod'
 	},
 	{
 		k: 'c',
-		t: 'Subí 10 % los mates y los termos'
+		t: 'Subí 10\u00a0% los mates y los termos'
 	},
 	{
 		k: 'h',
-		t: 'Listo: subí 24 productos un 10 %, redondeado a la centena. Ya se ven así en la tienda y en el local.'
+		t: 'Listo: subí 24 productos un 10\u00a0%, redondeado a la centena. Ya se ven así en la tienda y en el local.'
 	},
 	{
 		k: 'c',
-		t: 'Haceme un link de pago de $ 44.600 para Lucía'
+		t: 'Haceme un link de pago de $\u00a044.600 para Lucía'
 	},
 	{
 		k: 'h',
@@ -264,7 +264,7 @@ export const CHAT = [
 	},
 	{
 		k: 'sys',
-		t: 'Lucía pagó $ 44.600 · se acreditó en Mercado Pago'
+		t: 'Lucía pagó $\u00a044.600 · se acreditó en Mercado Pago'
 	}
 ] as const;
 
