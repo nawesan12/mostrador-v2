@@ -58,6 +58,7 @@ describe('Tincho', () => {
 
 	it('la respuesta con IA trae las propuestas para confirmar', () => {
 		const p = {
+			id: 'p_000000000001',
 			herramienta: 'crear_cupon' as const,
 			argumentos: { codigo: 'VERANO15', tipo: 'porcentaje', valor: 15 },
 			titulo: 'Crear el cupón VERANO15',
