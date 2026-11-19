@@ -77,7 +77,8 @@ export function sinViuda(t: string): string {
 			// pegado a lo anterior.
 			const s = r
 				.trim()
-				.replace(/[^\S\n]+/g, ' ')
+				// Los espacios duros que ya venían («$ 10.710», «de 11 a 20») se respetan.
+				.replace(/[^\S\n\u00a0]+/g, ' ')
 				.replace(/ ([·•|–—]) /g, '\u00a0$1 ');
 			const i = s.lastIndexOf(' ');
 			// Si la última palabra es larga y la anterior también, igual conviene pegarlas: el título

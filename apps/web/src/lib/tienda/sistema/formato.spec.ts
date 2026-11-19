@@ -53,3 +53,12 @@ describe('formato', () => {
 		expect(urlFoto(null, 400)).toBeNull();
 	});
 });
+
+describe('sinViuda respeta los espacios duros', () => {
+	test('«$ 10.710» no se separa', async () => {
+		const { sinViuda, precio } = await import('./formato.ts');
+		expect(sinViuda(`Transferí ${precio(10710)} y lo preparamos apenas se acredite.`)).toContain(
+			'$ 10.710'
+		);
+	});
+});

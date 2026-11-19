@@ -192,8 +192,8 @@
 			(pedido.subtotal ?? sumaItems) + (retiro ? 0 : (pedido.costoEnvio ?? 0)) - pedido.total
 		)
 	);
-	// «$ 10.710» nunca se corta entre el signo y el número.
-	const plata = (n: number) => precio(n).replace('$ ', '$\u00a0');
+	// precio() ya pega el signo al número (sinViuda respeta ese espacio duro).
+	const plata = precio;
 	const donde = $derived.by(() => {
 		if (retiro) {
 			const d = tienda.envios.retiroDireccion?.trim();
