@@ -252,13 +252,15 @@ func (s *Servicio) tokenDe(ctx context.Context, tiendaID string) (string, int64,
 	return tk.AccessToken, usuario, nil
 }
 
-// reverificadoSiConectada: si la tienda ya tiene una cuenta conectada, el pedido tiene que traer el
-// permiso de haberse vuelto a verificar (cuentas.Reverificado). Sin cuenta, no hace falta.
+// reverificadoSiConectada: si la tienda ya tiene (o tuvo) una cuenta conectada, el pedido tiene que
+// traer el permiso de haberse vuelto a verificar (cuentas.Reverificado). Sólo la primera conexión (el
+// alta) no lo pide: si no, «Desconectar» y conectar otra se salteaba la verificación.
 func (s *Servicio) reverificadoSiConectada(ctx context.Context, d cuentas.Datos, token string) (bool, error) {
 	ok := true
 	err := s.Pool.EnTienda(ctx, d.TiendaID, func(t pgx.Tx) error {
 		var conectada bool
-		if err := t.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM mp_conexiones WHERE tienda_id = $1)`, d.TiendaID).Scan(&conectada); err != nil {
+		if err := t.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM mp_conexiones WHERE tienda_id = $1)
+			OR EXISTS (SELECT 1 FROM auth.cobros_cambios WHERE tienda_id = $1 AND tipo = 'mercadopago')`, d.TiendaID).Scan(&conectada); err != nil {
 			return err
 		}
 		if !conectada {
