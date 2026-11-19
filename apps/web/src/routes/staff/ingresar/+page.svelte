@@ -22,7 +22,7 @@
 			enviando = true;
 			return async ({ update }) => {
 				enviando = false;
-				await update();
+				await update({ navigate: false });
 			};
 		}}
 	>

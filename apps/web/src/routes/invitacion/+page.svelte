@@ -49,8 +49,8 @@
 	}
 	const conEnvio = () => {
 		enviando = true;
-		return async ({ update }: { update: () => Promise<void> }) => {
-			await update();
+		return async ({ update }: { update: (o?: { navigate?: boolean }) => Promise<void> }) => {
+			await update({ navigate: false });
 			enviando = false;
 		};
 	};

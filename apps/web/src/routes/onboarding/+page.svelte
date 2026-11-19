@@ -415,7 +415,7 @@
 	use:enhance={() => {
 		terminando = true;
 		return async ({ update }) => {
-			await update();
+			await update({ navigate: false });
 			terminando = false;
 		};
 	}}

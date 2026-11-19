@@ -83,7 +83,7 @@
 		use:enhance={({ formData }) => {
 			eligiendo = String(formData.get('plantilla'));
 			return async ({ update }) => {
-				await update();
+				await update({ navigate: false });
 				eligiendo = null;
 			};
 		}}

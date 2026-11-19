@@ -134,8 +134,10 @@
 
 	const conEnvio = () => {
 		enviando = true;
-		return async ({ update }: { update: () => Promise<void> }) => {
-			await update();
+		return async ({ update }: { update: (o?: { navigate?: boolean }) => Promise<void> }) => {
+			// Sin navegar: si la URL tiene ?m=, ?token= o ?volver=, navegar al resultado vacía `form`
+			// (SvelteKit 3) y se pierden el modo, los errores y lo escrito.
+			await update({ navigate: false });
 			enviando = false;
 		};
 	};
