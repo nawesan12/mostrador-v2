@@ -64,7 +64,7 @@ func TestPropuestaDeCupon(t *testing.T) {
 }
 
 func TestTopes(t *testing.T) {
-	if TopeDelMes("gratis", true, 0) != 3000 || TopeDelMes("gratis", false, 1) != 2100 || TopeDelMes("negocio", false, 0) != 15000 {
+	if TopeDelMes("gratis", true, 0) != 2000 || TopeDelMes("gratis", false, 1) != 2050 || TopeDelMes("negocio", false, 0) != 8000 {
 		t.Fatal("tope del mes")
 	}
 	if TopeDelDia(100) != 25 || TopeDelDia(15000) != 1500 {

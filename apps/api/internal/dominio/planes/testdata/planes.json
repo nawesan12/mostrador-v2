@@ -1,0 +1,70 @@
+[
+  {
+    "id": "gratis",
+    "nombre": "Gratis",
+    "mensual": 0,
+    "productos": 20,
+    "personas": 1,
+    "fotos": 3,
+    "fotosMB": 15,
+    "tincho": 50,
+    "funciones": []
+  },
+  {
+    "id": "emprende",
+    "nombre": "Emprende",
+    "mensual": 14900,
+    "productos": 150,
+    "personas": 2,
+    "fotos": 5,
+    "fotosMB": 150,
+    "tincho": 500,
+    "funciones": [
+      "dominio",
+      "arca",
+      "correo",
+      "cupones"
+    ]
+  },
+  {
+    "id": "pro",
+    "nombre": "Crece",
+    "mensual": 34900,
+    "productos": 500,
+    "personas": 5,
+    "fotos": 8,
+    "fotosMB": 600,
+    "tincho": 2000,
+    "funciones": [
+      "dominio",
+      "arca",
+      "correo",
+      "cupones",
+      "roles",
+      "local",
+      "mercadolibre",
+      "newsletter"
+    ]
+  },
+  {
+    "id": "negocio",
+    "nombre": "Negocio",
+    "mensual": 79900,
+    "productos": 0,
+    "personas": 0,
+    "fotos": 10,
+    "fotosMB": 2048,
+    "tincho": 8000,
+    "funciones": [
+      "dominio",
+      "arca",
+      "correo",
+      "cupones",
+      "roles",
+      "local",
+      "mercadolibre",
+      "newsletter",
+      "mayorista"
+    ]
+  }
+]

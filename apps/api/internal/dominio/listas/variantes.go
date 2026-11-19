@@ -16,7 +16,7 @@ const (
 	MaxOpciones  = 3
 	MaxValores   = 20
 	MaxVariantes = 100
-	MaxFotos     = 8
+	MaxFotos     = 10 // la del plan más grande (dominio/planes: 3, 5, 8 o 10 según el plan)
 )
 
 // Opcion es una opción del producto: "Talle" con sus valores ("S", "M", "L").

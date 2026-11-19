@@ -4,6 +4,7 @@ package problema
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 )
 
@@ -17,6 +18,25 @@ type Problema struct {
 	Campos  []Campo `json:"issues,omitempty"`
 	// Restantes: intentos que quedan antes del bloqueo (sólo en el ingreso con contraseña).
 	Restantes *int `json:"restantes,omitempty"`
+	// Tope de plan (code tope_plan, 402): el plan que lo habilita y qué se topó (productos, personas,
+	// fotos o una función como dominio o mercadolibre).
+	Plan    string `json:"plan,omitempty"`
+	Funcion string `json:"funcion,omitempty"`
+}
+
+// ConProblema: un error de dominio que sabe cómo contarse al cliente (por ejemplo, un tope de plan).
+type ConProblema interface {
+	error
+	Problema() *Problema
+}
+
+// De devuelve el problema de un error que lo trae (nil si no).
+func De(err error) *Problema {
+	var c ConProblema
+	if errors.As(err, &c) {
+		return c.Problema()
+	}
+	return nil
 }
 
 // Campo es un error de validación de un campo puntual.

@@ -95,7 +95,7 @@ func TestPermisosPorRol(t *testing.T) {
 		{"POST", "/v1/panel/datos/exportaciones", `{"tipo":"clientes"}`, []string{"duenio", "admin"}, true},
 		// Plan y equipo: sólo la dueña.
 		{"GET", "/v1/panel/cuenta/plan", "", []string{"duenio"}, false},
-		{"PUT", "/v1/panel/plan", `{"plan":"emprende"}`, []string{"duenio"}, false},
+		{"PUT", "/v1/panel/plan", `{"plan":"negocio"}`, []string{"duenio"}, false}, // negocio: el equipo de 4 entra
 		{"POST", "/v1/panel/cuenta/cancelacion", `{"motivo":0,"accion":"oferta"}`, []string{"duenio"}, true},
 		{"DELETE", "/v1/panel/cuenta", `{"confirmacion":"sol"}`, []string{"duenio"}, true},
 		{"POST", "/v1/panel/equipo", `{"contacto":"nueva@sol.com","rol":"ventas"}`, []string{"duenio"}, false},

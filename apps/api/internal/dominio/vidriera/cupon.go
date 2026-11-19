@@ -10,6 +10,9 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/planes"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
 // CuponTienda es un cupón como lo evalúa la tienda online (lib/tienda/cupon.ts hace lo mismo para
@@ -199,6 +202,13 @@ func EvaluarCupon(ctx context.Context, pool tx, tienda, codigo, email string, li
 	var h Historial
 	email = strings.ToLower(strings.TrimSpace(email))
 	err := pool.EnTienda(ctx, tienda, func(t pgx.Tx) error {
+		// Con un plan sin cupones (después de bajar), los que había no se aplican.
+		if err := planes.Exigir(ctx, t, tienda, planes.Cupones); err != nil {
+			if problema.De(err) != nil {
+				return pgx.ErrNoRows
+			}
+			return err
+		}
 		var alcance []byte
 		err := t.QueryRow(ctx, `SELECT codigo, tipo, valor, pausado, usos, limite, canales, empieza, termina, minimo,
 				quien, por_cliente, alcance, coalesce((opciones->>'combinable')::boolean, false)

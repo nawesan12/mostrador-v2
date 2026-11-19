@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cobros"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/planes"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 )
 
@@ -72,6 +73,9 @@ type Producto struct {
 	Tipo      *string           `json:"tipo"`
 	Atributos map[string]string `json:"atributos"`
 	IVA       float64           `json:"iva"`
+	// FueraDePlan: quedó fuera del tope de productos del plan (después de bajar): no se ve en la
+	// tienda y no se edita hasta subir de plan o borrar otro.
+	FueraDePlan bool `json:"fueraDePlan,omitempty"`
 }
 
 // Validar revisa lo que se carga.
@@ -152,10 +156,20 @@ func GuardarEnTx(ctx context.Context, t pgx.Tx, tiendaID, id string, e Editable)
 	}
 	opciones, fotos := []Opcion{}, []string{}
 	var antes antesProducto
+	// El plan (dominio/planes): el tope de productos al crear; uno que quedó fuera del plan después de
+	// bajar no se edita (se puede borrar para liberar lugar).
+	if id == "" {
+		if err := planes.ExigirProductoNuevo(ctx, t, tiendaID); err != nil {
+			return "", err
+		}
+	} else if err := planes.ExigirEditarProducto(ctx, t, tiendaID, id); err != nil {
+		return "", err
+	}
 	if id != "" {
 		err := t.QueryRow(ctx, `SELECT opciones, fotos, nombre, precio, costo, stock, publicado
 			FROM productos WHERE tienda_id = $1 AND id::text = $2 FOR UPDATE`,
 			tiendaID, id).Scan(&opciones, &fotos, &antes.nombre, &antes.precio, &antes.costo, &antes.stock, &antes.publicado)
+		antes.fotos = fotos
 		if errors.Is(err, pgx.ErrNoRows) {
 			return "", ErrNoExiste
 		}
@@ -176,6 +190,17 @@ func GuardarEnTx(ctx context.Context, t pgx.Tx, tiendaID, id string, e Editable)
 			}
 		}
 		fotos = append([]string{*e.Foto}, resto...)
+	}
+	// Fotos por producto según el plan: no se suman más del tope; las que ya tenía (de un plan más
+	// grande) se conservan, y la tienda muestra sólo las del plan.
+	if len(fotos) > len(antes.fotos) {
+		p, err := planes.Vigente(ctx, t, tiendaID, time.Now())
+		if err != nil {
+			return "", err
+		}
+		if err := planes.ExigirFotos(p, len(fotos)); err != nil {
+			return "", err
+		}
 	}
 	var foto *string
 	if len(fotos) > 0 {
@@ -310,6 +335,15 @@ func Productos(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (
 		if err := ef.Err(); err != nil {
 			return err
 		}
+		// Los que quedaron fuera del plan (después de bajar): ocultos en la tienda y en sólo lectura.
+		plan, err := planes.Vigente(ctx, t, tiendaID, ahora)
+		if err != nil {
+			return err
+		}
+		fuera, err := planes.FueraDelPlan(ctx, t, tiendaID, plan)
+		if err != nil {
+			return err
+		}
 		filas, err := t.Query(ctx, `SELECT id, nombre, descripcion, categoria, precio, costo, sku, stock, foto, canales, publicado, fotos, opciones, slug,
 				precio_mayorista, tipo, atributos, iva
 			FROM productos WHERE tienda_id = $1 ORDER BY creado_en DESC`, tiendaID)
@@ -323,6 +357,7 @@ func Productos(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (
 				return err
 			}
 			p.Variantes = porProducto[p.ID]
+			p.FueraDePlan = fuera[p.ID]
 			if p.Variantes == nil {
 				p.Variantes = []Variante{}
 			}
@@ -369,7 +404,7 @@ func Productos(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (
 				"margen": margen, "stock": p.Stock,
 				"ventas": ventas, "vendidos30": p.Vendidos30d, "canales": canales, "publicado": p.Publicado,
 				"estado": estado, "lowm": lowm, "star": p.Vendidos30d > 60, "variantes": resumen, "slug": p.Slug, "_ficha": p,
-				"esperan": esperan[p.ID], "iva": p.IVA,
+				"esperan": esperan[p.ID], "iva": p.IVA, "fueraDePlan": p.FueraDePlan,
 			})
 		}
 		return filas.Err()

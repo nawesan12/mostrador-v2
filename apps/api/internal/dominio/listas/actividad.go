@@ -18,6 +18,7 @@ type antesProducto struct {
 	precio, costo int64
 	stock         int
 	publicado     bool
+	fotos         []string
 }
 
 type publicacion struct {

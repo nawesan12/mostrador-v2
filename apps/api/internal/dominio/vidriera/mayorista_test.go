@@ -25,6 +25,13 @@ func TestVentaMayorista(t *testing.T) {
 	ctx := context.Background()
 	b := pruebadb.Nueva(t)
 	luna := pruebadb.CrearTienda(t, b.App, "luna")
+	// La venta mayorista es del plan Negocio (dominio/planes).
+	if err := b.App.EnTienda(ctx, luna, func(tx pgx.Tx) error {
+		_, err := tx.Exec(ctx, `UPDATE tiendas SET plan = 'negocio' WHERE id = $1`, luna)
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
 	if err := configuracion.GuardarNegocio(ctx, b.App, luna, configuracion.Negocio{Nombre: "Luna", Alias: "luna.tienda"}); err != nil {
 		t.Fatal(err)
 	}

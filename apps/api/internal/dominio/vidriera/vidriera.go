@@ -28,6 +28,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/mitienda"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/newsletter"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/planes"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/suscripciones"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/turnos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ventas"
@@ -154,6 +155,10 @@ type Tienda struct {
 	Dominio *string `json:"dominio"`
 	// Mayorista: el mínimo del carrito para los precios mayoristas (§49); null si no vende por mayor.
 	Mayorista *MinimoMayorista `json:"mayorista"`
+	// HechoCon: el plan Gratis lleva «Hecho con Tu Local Web» en el pie (dominio/planes).
+	HechoCon bool `json:"hechoCon"`
+	// sinCupones: el plan no incluye cupones ni combos (el checkout no los aplica).
+	sinCupones bool
 }
 
 // MinimoMayorista: unidades y/o monto (a precio minorista); con los dos, tienen que cumplirse los dos.
@@ -245,10 +250,17 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 			&out.Medicion.GA4, &out.Medicion.Pixel, &autos, &out.Vitrina); err != nil {
 			return err
 		}
+		// El plan (dominio/planes): lo que no incluye no se ofrece, y lo que quedó fuera al bajar se oculta.
+		plan, err := planes.Vigente(ctx, t, id, time.Now())
+		if err != nil {
+			return err
+		}
+		out.HechoCon, out.sinCupones = plan.ID == "gratis", !plan.Tiene(planes.Cupones)
 		// Correo Argentino se ofrece sólo con la cuenta de MiCorreo conectada (cotiza la API, nunca una tabla).
 		if err := t.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM ca_conexiones WHERE tienda_id = $1)`, id).Scan(&out.Envios.Correo); err != nil {
 			return err
 		}
+		out.Envios.Correo = out.Envios.Correo && plan.Tiene(planes.Correo)
 		// Retiro y moto: lo que configuró la tienda (sin configurar, retiro en el local con la dirección del negocio).
 		ent, err := configuracion.EntregasEnTx(ctx, t, id)
 		if err != nil {
@@ -264,7 +276,13 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 			id).Scan(&out.Dominio); err != nil && !errors.Is(err, pgx.ErrNoRows) {
 			return err
 		}
+		if !plan.Tiene(planes.Dominio) {
+			out.Dominio = nil
+		}
 		d := mitienda.LeerDiseno(diseno, out.Plantilla)
+		if out.sinCupones {
+			sinDescuentoEnCombos(&d)
+		}
 		out.Diseno, out.Paleta, out.Logo, out.Secciones = d, d.Paleta, d.Logo, d.SeccionesV1()
 		out.Compartir = Compartir{d.CompartirTitulo, d.CompartirDescripcion, d.CompartirFoto}
 		out.Estilo = json.RawMessage(`{}`)
@@ -322,6 +340,8 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 		if err != nil {
 			return err
 		}
+		// La venta mayorista es del plan Negocio: después de bajar, no se publica (queda guardada).
+		may.Activa = may.Activa && plan.Tiene(planes.Mayorista)
 		if may.Activa {
 			out.Mayorista = &MinimoMayorista{Unidades: may.Unidades, Monto: may.Monto}
 		}
@@ -354,10 +374,10 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 		ahora := time.Now()
 		// Todo el catálogo visible (los 500 más nuevos) y, si los bloques nombran alguno más viejo
 		// (destacado, combo, elegidos a mano, links prod:), también ese.
-		const columnas = `SELECT id::text, slug, nombre, descripcion, categoria, precio, foto, stock, fotos, opciones,
+		columnas := `SELECT id::text, slug, nombre, descripcion, categoria, precio, foto, stock, fotos, opciones,
 				lanzamiento, reserva_sena, encargo_sena, oferta_precio, oferta_hasta, precio_mayorista, creado_en, iva FROM productos
-			WHERE tienda_id = $1 AND publicado AND coalesce((canales->>'web')::boolean, true)`
-		filas, err := t.Query(ctx, columnas+` ORDER BY creado_en DESC LIMIT 500`, id)
+			WHERE tienda_id = $1 AND publicado AND coalesce((canales->>'web')::boolean, true) AND ` + planes.SQLVisibles("$2")
+		filas, err := t.Query(ctx, columnas+` ORDER BY creado_en DESC LIMIT 500`, id, plan.Productos)
 		if err != nil {
 			return err
 		}
@@ -371,12 +391,18 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 			}
 		}
 		if len(faltan) > 0 {
-			filas, err := t.Query(ctx, columnas+` AND id = ANY($2::uuid[])`, id, faltan)
+			filas, err := t.Query(ctx, columnas+` AND id = ANY($3::uuid[])`, id, plan.Productos, faltan)
 			if err != nil {
 				return err
 			}
 			if err := leerProductos(filas, &out, variantes, soloSi, mp, ahora); err != nil {
 				return err
+			}
+		}
+		// Las fotos de cada producto que entran en el plan (las demás quedan guardadas).
+		for i := range out.Productos {
+			if f := out.Productos[i].Fotos; len(f) > plan.Fotos {
+				out.Productos[i].Fotos = f[:plan.Fotos]
 			}
 		}
 		// Reseñas visibles (las 60 últimas) y su promedio; preguntas respondidas.
@@ -695,7 +721,10 @@ func ComprarConCorreo(ctx context.Context, pool tx, mp Pagador, correo Correo, s
 		v := l.VarianteID
 		lc[i] = LineaCombo{ID: l.ID, VarianteID: &v, Cantidad: l.Cantidad, Combo: l.Combo, Precio: precios[i]}
 	}
-	descCombo := DescuentoCombos(CombosDe(t.Diseno), lc)
+	var descCombo int64
+	if !t.sinCupones {
+		descCombo = DescuentoCombos(CombosDe(t.Diseno), lc)
+	}
 	descCombo, descCupon = combinarDescuentos(subtotal, descCombo, descCupon, combinable)
 	n.Pago = "transf"
 	if c.Pago == "mercadopago" {

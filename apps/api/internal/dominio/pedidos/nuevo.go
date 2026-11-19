@@ -13,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/listas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/planes"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
@@ -135,6 +136,12 @@ func CrearDesdeProductos(ctx context.Context, pool tx, tiendaID string, n Pedido
 		return strings.Compare(x.ProductoID+":"+x.VarianteID, y.ProductoID+":"+y.VarianteID)
 	})
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		// La venta en el local (punto de venta) es de los planes que la incluyen.
+		if n.Canal == "pos" {
+			if err := planes.Exigir(ctx, t, tiendaID, planes.Local); err != nil {
+				return err
+			}
+		}
 		items := make([]Item, len(n.Items))
 		for _, k := range orden {
 			i := n.Items[k]
@@ -321,6 +328,8 @@ func rutasNuevo(mux *http.ServeMux, pool tx, con func(func(http.ResponseWriter, 
 		}
 		numero, total, err := CrearDesdeProductos(r.Context(), pool, id, n)
 		switch {
+		case problema.De(err) != nil:
+			problema.Escribir(w, problema.De(err))
 		case errors.Is(err, ErrSinStock):
 			problema.Escribir(w, problema.Conflicto("sin_stock", "No alcanza el stock de algún producto."))
 		case errors.Is(err, ErrProducto):

@@ -220,6 +220,8 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, fact 
 		e.SinPrecios = !conPrecios(r)
 		p, err := Guardar(r.Context(), pool, tiendaID, id, e)
 		switch {
+		case problema.De(err) != nil:
+			problema.Escribir(w, problema.De(err))
 		case errors.Is(err, ErrNoExiste):
 			problema.Escribir(w, problema.NoEncontrado("Ese producto no existe."))
 		case err != nil:
@@ -250,6 +252,8 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, fact 
 	mux.HandleFunc("POST /v1/panel/productos/{id}/duplicar", con(func(w http.ResponseWriter, r *http.Request, id string) {
 		p, err := Duplicar(r.Context(), pool, id, r.PathValue("id"), time.Now())
 		switch {
+		case problema.De(err) != nil:
+			problema.Escribir(w, problema.De(err))
 		case errors.Is(err, ErrNoExiste):
 			problema.Escribir(w, problema.NoEncontrado("Ese producto no existe."))
 		case err != nil:

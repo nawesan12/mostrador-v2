@@ -20,6 +20,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cobros"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/mayorista"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/planes"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/roles"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/geoip"
@@ -41,7 +42,7 @@ var (
 	ErrDuenia    = errors.New("a la dueña no se la quita ni se le cambia el rol")
 	ErrVos       = errors.New("no podés cambiarte a vos")
 	avisosDef    = map[string]bool{"venta": true, "chats": true, "stock": true, "diario": true, "ideas": true, "novedades": false}
-	planes       = []string{"gratis", "emprende", "pro", "negocio"}
+	idsPlan      = []string{"gratis", "emprende", "pro", "negocio"}
 	emailValido  = regexp.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`)
 )
 
@@ -481,6 +482,13 @@ func Invitar(ctx context.Context, pool tx, sitio, tiendaID string, q Quien, cont
 		return m, ErrInvalido
 	}
 	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		// El plan: cuántas personas entran y si se puede elegir un rol con menos permisos.
+		if err := exigirRol(ctx, t, tiendaID, rol); err != nil {
+			return err
+		}
+		if err := planes.ExigirPersonaNueva(ctx, t, tiendaID); err != nil {
+			return err
+		}
 		var ya bool
 		if err := t.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM auth.membresias mm JOIN auth.usuarios u ON u.id = mm.usuario_id
 			WHERE mm.tienda_id = $1 AND u.email = $2)`, tiendaID, contacto).Scan(&ya); err != nil {
@@ -506,6 +514,15 @@ func Invitar(ctx context.Context, pool tx, sitio, tiendaID string, q Quien, cont
 			Despues: map[string]string{"rol": rol}})
 	})
 	return m, err
+}
+
+// exigirRol: los roles con menos permisos (Ventas, Local) son de los planes con roles y permisos; en
+// los demás, quien se suma entra como Administración.
+func exigirRol(ctx context.Context, t pgx.Tx, tiendaID, rol string) error {
+	if rol == roles.Admin {
+		return nil
+	}
+	return planes.Exigir(ctx, t, tiendaID, planes.Roles)
 }
 
 // mandar arma el link nuevo de la invitación y encola el mail. Devuelve cuándo vence.
@@ -565,7 +582,7 @@ func permitidoInvitar(ctx context.Context, pool tx, tiendaID string) error {
 
 // CambiarPlan guarda el plan elegido. El cobro llega con Mercado Pago Suscripciones.
 func CambiarPlan(ctx context.Context, pool tx, tiendaID, plan, ciclo string) error {
-	if !slices.Contains(planes, plan) || (ciclo != "" && ciclo != "mes" && ciclo != "anio") {
+	if !slices.Contains(idsPlan, plan) || (ciclo != "" && ciclo != "mes" && ciclo != "anio") {
 		return ErrInvalido
 	}
 	return pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
@@ -586,10 +603,10 @@ func CambiarPlan(ctx context.Context, pool tx, tiendaID, plan, ciclo string) err
 }
 
 func nombrePlan(p string) string {
-	if p == "" {
-		return p
+	if n, ok := abono.Nombres[p]; ok {
+		return n
 	}
-	return strings.ToUpper(p[:1]) + p[1:]
+	return p
 }
 
 // Rutas del panel. cobraAbono: con Mercado Pago activo, un plan pago sólo se activa por la
@@ -609,6 +626,8 @@ func Rutas(mux *http.ServeMux, pool tx, geo geoip.Ubicador, sitio string, cobraA
 		switch {
 		case err == nil:
 			w.WriteHeader(http.StatusNoContent)
+		case problema.De(err) != nil:
+			problema.Escribir(w, problema.De(err))
 		case errors.Is(err, ErrNoExiste):
 			problema.Escribir(w, problema.NoEncontrado("No existe."))
 		case errors.Is(err, ErrRepetido):

@@ -9,8 +9,10 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cupones"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/planes"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/outbox"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
 // Recordatorios del carrito abandonado (docs/decisiones.md §62, migración 00084): hasta tres mails
@@ -179,6 +181,14 @@ func recordarPaso(ctx context.Context, pool tx, tienda, id string, ahora time.Ti
 	err := pool.EnTienda(ctx, tienda, func(t pgx.Tx) error {
 		r, err := recordatoriosEnTx(ctx, t, tienda)
 		if err != nil || !r.Activo {
+			return err
+		}
+		// Los recordatorios de carritos son de los planes con cupones y carritos abandonados: después
+		// de bajar, quedan configurados pero no salen.
+		if err := planes.Exigir(ctx, t, tienda, planes.Cupones); err != nil {
+			if problema.De(err) != nil {
+				return nil
+			}
 			return err
 		}
 		var paso int

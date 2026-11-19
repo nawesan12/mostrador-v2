@@ -8,13 +8,16 @@ import (
 	"log/slog"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/listas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/planes"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/vidriera"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/outbox"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
 // Paso es el manejador de `importacion.paso`: lee una página de la fuente (fuera de la transacción,
@@ -278,10 +281,18 @@ func guardarProducto(ctx context.Context, t pgx.Tx, tienda, origen string, x Pro
 	var corto bool
 	e.Nombre, corto = cortar(e.Nombre, 120)
 	c := []bool{corto, cortarPtr(e.Descripcion, 4000), cortarPtr(e.Categoria, 60), cortarPtr(e.SKU, 40)}
-	if len(e.Fotos) > 8 {
-		e.Fotos, c = e.Fotos[:8], append(c, true)
+	// Las fotos que entran en el plan (las demás se recortan, como el resto de lo que no entra).
+	plan, err := planes.Vigente(ctx, t, tienda, time.Now())
+	if err != nil {
+		return err
+	}
+	if len(e.Fotos) > plan.Fotos {
+		e.Fotos, c = e.Fotos[:plan.Fotos], append(c, true)
 	}
 	id, err := listas.GuardarEnTx(ctx, t, tienda, "", e)
+	if p := problema.De(err); p != nil {
+		return validacion(p.Detalle)
+	}
 	if err != nil {
 		return validacion(primeraMayuscula(err.Error()) + ".")
 	}

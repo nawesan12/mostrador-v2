@@ -13,7 +13,9 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/planes"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/arca"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
 const maxIntentos = 8
@@ -93,7 +95,17 @@ func (s *Servicio) ProcesarTienda(ctx context.Context, tienda string, ahora time
 	var cert *string
 	var amb arca.Ambiente
 	var pendientes []pendiente
+	sinPlan := false
 	err = s.Pool.EnTienda(ctx, tienda, func(t pgx.Tx) error {
+		// La factura con ARCA es de los planes que la incluyen: después de bajar, lo pendiente espera
+		// (no se pierde) hasta volver a un plan con ARCA.
+		if err := planes.Exigir(ctx, t, tienda, planes.ARCA); err != nil {
+			if problema.De(err) != nil {
+				sinPlan = true
+				return nil
+			}
+			return err
+		}
 		var err error
 		cuit, clave, cert, amb, _, err = s.clave(ctx, t, tienda)
 		if err != nil {
@@ -123,6 +135,9 @@ func (s *Servicio) ProcesarTienda(ctx context.Context, tienda string, ahora time
 		}
 		return filas.Err()
 	})
+	if err == nil && sinPlan {
+		return nil
+	}
 	if errors.Is(err, ErrSinARCA) || (err == nil && cert == nil) {
 		return s.marcarTodos(ctx, tienda, "La tienda todavía no conectó ARCA.")
 	}

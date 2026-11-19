@@ -18,16 +18,23 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/abono"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/planes"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/roles"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/ia"
 )
 
-// Lo que prometen los planes (apps/web/src/lib/panel/planes.ts): respuestas con IA por mes. Cada
-// pack extra suma 2.000.
-var PorPlan = map[string]int{"gratis": 100, "emprende": 1000, "pro": 3000, "negocio": 15000}
+// Lo que prometen los planes (dominio/planes y apps/web/src/lib/panel/planes.ts): respuestas con IA
+// por mes. Cada pack extra (pago, $ 4.900) suma 2.000.
+var PorPlan = func() map[string]int {
+	m := map[string]int{}
+	for _, p := range planes.Todos {
+		m[p.ID] = p.Tincho
+	}
+	return m
+}()
 
-const PorPack = 2000
+const PorPack = planes.PackTincho
 
 // Presupuesto de la plataforma por defecto: la parte de Tu Local Web de los USD 100 (40).
 const PresupuestoUSD = 40
@@ -129,10 +136,10 @@ func miles(n int) string {
 	return s
 }
 
-// TopeDelMes: el del plan vigente (en la prueba gratis, Gratis usa Pro) más los packs del mes.
+// TopeDelMes: el del plan vigente (en la prueba gratis, Gratis usa Crece) más los packs del mes.
 func TopeDelMes(plan string, enPrueba bool, packs int) int {
 	if plan == "gratis" && enPrueba {
-		plan = "pro"
+		plan = planes.DePrueba
 	}
 	n, ok := PorPlan[plan]
 	if !ok {

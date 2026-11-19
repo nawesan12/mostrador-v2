@@ -93,3 +93,30 @@ func DescuentoCombos(combos []Combo, lineas []LineaCombo) int64 {
 	}
 	return total
 }
+
+// sinDescuentoEnCombos: con un plan sin cupones ni combos, los bloques «combo» se ven como una
+// selección de productos, sin descuento (el diseño guardado no cambia).
+func sinDescuentoEnCombos(d *mitienda.Diseno) {
+	limpiar := func(bs []mitienda.Bloque) {
+		for i := range bs {
+			if bs[i].Tipo != "combo" || bs[i].Datos == nil {
+				continue
+			}
+			datos := make(map[string]any, len(bs[i].Datos))
+			for k, v := range bs[i].Datos {
+				datos[k] = v
+			}
+			datos["descuento"] = float64(0)
+			bs[i].Datos = datos
+		}
+	}
+	limpiar(d.Inicio)
+	if d.Paginas != nil {
+		if d.Paginas.Producto != nil {
+			limpiar(d.Paginas.Producto.Bloques)
+		}
+		if d.Paginas.Nosotros != nil {
+			limpiar(d.Paginas.Nosotros.Bloques)
+		}
+	}
+}

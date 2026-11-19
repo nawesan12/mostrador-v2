@@ -33,6 +33,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/notificaciones"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/partners"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/planes"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/precios"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/promos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/push"
@@ -149,6 +150,12 @@ func Nuevo(d Dependencias) http.Handler {
 				d.Cuentas.SesionEquipo = d.Equipo.ParaCuentas
 				conGuardia = equipo.SoloLectura(conGuardia)
 			}
+			// El plan (19/11/2026): las funciones de cada plan y el equipo que quedó fuera al bajar. Corre
+			// después del rol (lo envuelve): a quien no tiene permiso no le importa el plan.
+			conGuardia = planes.Guardia(d.App, func(r *http.Request) (string, string, string, bool) {
+				s, ok := cuentas.SesionDe(r)
+				return s.TiendaID, s.Usuario.ID, s.Rol, ok && s.TiendaID != "" && !s.Mirada
+			}, conGuardia)
 			// El rol de cada persona del equipo, en cada ruta del panel (docs/decisiones.md §37).
 			conGuardia = roles.Guardia(func(r *http.Request) (string, bool) {
 				s, ok := cuentas.SesionDe(r)
@@ -194,6 +201,9 @@ func Nuevo(d Dependencias) http.Handler {
 		ganchos := configuracion.Ganchos{}
 		if d.MercadoPago != nil {
 			ganchos.Beneficio = d.MercadoPago.AplicarBeneficio
+			if d.MercadoPago.Config.TokenPlataforma != "" {
+				ganchos.ComprarPack = d.MercadoPago.ComprarPack
+			}
 		}
 		if d.Correo != nil && d.CorreoEquipo != "" {
 			ganchos.Contacto = func(ctx context.Context, asunto, texto string) error {

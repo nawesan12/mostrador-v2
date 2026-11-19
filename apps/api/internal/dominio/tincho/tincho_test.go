@@ -122,7 +122,7 @@ func TestPreguntarConHerramientasPropuestaYCache(t *testing.T) {
 	r := leer[tincho.Respuesta](t, a.pedir("POST", "/v1/panel/tincho/preguntar",
 		`{"pregunta":"Armame un cupón del 15 para lo que menos sale","historial":[{"rol":"hornero","texto":"¡Hola!"}]}`, s.Token, false), 200)
 	if r.Fuente != "ia" || len(r.Propuestas) != 1 || r.Propuestas[0].Herramienta != "crear_cupon" ||
-		r.Propuestas[0].Argumentos["codigo"] != "VERANO15" || r.Uso == nil || r.Uso.Usadas != 1 || r.Uso.Tope != 3000 {
+		r.Propuestas[0].Argumentos["codigo"] != "VERANO15" || r.Uso == nil || r.Uso.Usadas != 1 || r.Uso.Tope != 2000 {
 		t.Fatalf("respuesta: %+v", r)
 	}
 	if len(m.recibidos) != 3 {
@@ -190,14 +190,14 @@ func TestTopeDelPlanYFallas(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := b.App.EnTienda(context.Background(), tienda, func(tx pgx.Tx) error {
-		_, err := tx.Exec(context.Background(), `UPDATE ia_uso SET pedidos = 3000, dia = dia - 1 WHERE tienda_id = $1`, tienda)
+		_, err := tx.Exec(context.Background(), `UPDATE ia_uso SET pedidos = 2000, dia = dia - 1 WHERE tienda_id = $1`, tienda)
 		return err
 	}); err != nil {
 		t.Fatal(err)
 	}
 	m.err, m.recibidos = nil, nil
 	r := leer[tincho.Respuesta](t, a.pedir("POST", "/v1/panel/tincho/preguntar", `{"pregunta":"¿qué hago con el stock?"}`, s.Token, false), 200)
-	if r.Fuente != "tope" || r.Tope != "plan" || !strings.Contains(r.Texto, "3.000 respuestas") || len(m.recibidos) != 0 {
+	if r.Fuente != "tope" || r.Tope != "plan" || !strings.Contains(r.Texto, "2.000 respuestas") || len(m.recibidos) != 0 {
 		t.Fatalf("tope: %+v", r)
 	}
 	r = leer[tincho.Respuesta](t, a.pedir("POST", "/v1/panel/tincho/mejorar", `{"nombre":"Mate imperial","descripcion":""}`, s.Token, false), 200)
