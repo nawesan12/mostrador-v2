@@ -14,7 +14,6 @@
 	import { arrancarAppCelular } from '#lib/panel/app-celular.svelte.ts';
 	import { AREAS, ubicar } from '#lib/panel/navegacion.ts';
 	import { Shell, setShell } from '#lib/panel/shell.svelte.ts';
-	import { SITE } from '#lib/site.ts';
 	import {
 		crearTiempoReal,
 		LugarTiempoReal,
@@ -71,7 +70,7 @@
 	});
 	const donde = $derived(ubicar(page.url.pathname) ?? { seccion: 'Resumen', area: AREAS[0] });
 	const sinLeer = $derived(data.notificaciones.sinLeer);
-	const dominio = $derived(`${SITE.replace(/^https?:\/\//, '')}/t/${data.tienda.slug}`);
+	const dominio = $derived(data.direccionTienda);
 	const iniciales = $derived(
 		data.tienda.nombre
 			.split(/\s+/)

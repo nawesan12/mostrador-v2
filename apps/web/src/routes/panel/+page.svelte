@@ -766,8 +766,8 @@
 				<div class="pie">
 					<div class="armando">
 						<b>{plural(t.enVivo.carritos, 'carrito', 'carritos')}</b>
-						armándose ahora{#if t.enVivo.carritosMonto !== undefined}
-							por <b>{pesos(t.enVivo.carritosMonto)}</b>{/if}
+						armándose ahora{#if t.enVivo.carritosMonto !== undefined}{' '}por
+							<b>{pesos(t.enVivo.carritosMonto)}</b>{/if}
 					</div>
 				</div>
 			{/if}

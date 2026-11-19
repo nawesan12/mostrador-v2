@@ -679,8 +679,9 @@
 										>
 										<!-- En el celular el monto pasa a este renglón: el nombre y los botones de 44 px entran. -->
 										<span class="q-s"
-											>#{p.numero} · {#if celu}{pesos(p.total)} ·
-											{/if}{hace(p.creado)} · {p.ciudad}</span
+											>#{p.numero} · {#if celu}{pesos(p.total)} ·{' '}{/if}{hace(
+												p.creado
+											)}{#if !celu && p.ciudad}{' '}· {p.ciudad}{/if}</span
 										>
 									</span>
 									{#if amplio}

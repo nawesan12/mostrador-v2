@@ -3,6 +3,7 @@ import { datosDe, usaSandbox } from '#lib/server/datos/index.ts';
 import { plantilla } from '#lib/plantillas.ts';
 import type { PaginaNotificaciones, ResumenPanel } from '#lib/server/datos/tipos.ts';
 import { unsplash } from '#lib/landing/formato.ts';
+import { SITE } from '#lib/site.ts';
 import type { LayoutServerLoad } from './$types';
 
 /** El logo de Mi tienda (una foto subida, que es una URL, o un id de Unsplash), listo para un <img>. */
@@ -37,8 +38,12 @@ export const load: LayoutServerLoad = async ({ locals, cookies, depends }) => {
 		// El rol de la persona y sus tiendas: el menú muestra sólo lo que puede (Go igual responde 403).
 		datos.acceso()
 	]);
+	// La misma dirección que Mi tienda, el QR y el alta (el subdominio); en la demo, la de /t/.
+	const host = SITE.replace(/^https?:\/\//, '');
+	const direccionTienda = usaSandbox() ? `${host}/t/${tienda.slug}` : `${tienda.slug}.${host}`;
 	return {
 		tienda,
+		direccionTienda,
 		resumen,
 		notificaciones,
 		acceso,

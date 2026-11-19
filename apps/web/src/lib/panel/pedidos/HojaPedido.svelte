@@ -197,8 +197,7 @@
 							>{/if}
 						<span class="i-txt"
 							><span class="i-n">{it.nombre}</span><span class="i-q"
-								>{#if it.variante}{it.variante} ·
-								{/if}{it.cantidad} × {pesos(it.precio)}</span
+								>{#if it.variante}{it.variante} ·{' '}{/if}{it.cantidad} × {pesos(it.precio)}</span
 							></span
 						>
 						<span class="i-t">{pesos(it.cantidad * it.precio)}</span>

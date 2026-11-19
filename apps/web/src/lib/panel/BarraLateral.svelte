@@ -117,8 +117,8 @@
 					aria-hidden="true">{iniciales}</span
 				>{/if}
 			<span class="t-txt"
-				><span class="t-n">{tienda}</span><span class="t-d"
-					><span class="vivo"></span>{dominio}</span
+				><span class="t-n">{tienda}</span><span class="t-d" title={dominio}
+					><span class="vivo"></span><span class="t-dir">{dominio}</span></span
 				></span
 			>
 			{#if shell.tiendas.length > 1}
@@ -365,6 +365,12 @@
 		color: var(--mu);
 		white-space: nowrap;
 		overflow: hidden;
+	}
+	/* Si no entra, se corta al final con «…» (el slug va primero) y el title la muestra entera. */
+	.t-dir {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 	.vivo {
 		width: 6px;
