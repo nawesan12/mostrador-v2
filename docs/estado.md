@@ -2,6 +2,22 @@
 
 Última actualización: 6/11/2026. Plan completo: `~/.claude/plans/claude-vamos-con-algo-encapsulated-alpaca.md`.
 
+## 19/11/2026: cierre del comité de revisión (rama comite-revision, sin desplegar, migraciones 00090–00095)
+
+- **Plata**: pago que llega con el pedido cancelado → sin factura y aviso `pago.tarde`; segundo pago aprobado
+  → `pagos_extra` y `pago.doble` (00090, 00091); «Pagar» reusa la preferencia; pagar otra vez desde el
+  checkout reusa (o reemplaza) el pedido que esperaba; total $ 0 sin Mercado Pago; reembolso siempre total.
+- **Cuenta**: cambiar alias/CBU/titular o reconectar Mercado Pago pide «Confirmá que sos vos» (contraseña,
+  app o código por mail) y le avisa a la dueña con «No fui yo» (`/revertir-cobro`, 00092); tope de códigos
+  de dos pasos por persona; sesiones sin uso 30 días se cierran; Telegram de una persona (00095).
+- **Tincho**: confirmar una sola vez (00093), «Comprobar» si se cortó, link creado con Copiar/Compartir,
+  órdenes al modelo, `ajustar_precios`, cupo reservado antes del modelo (00094), datos de terceros sin control.
+- **Tienda**: página del pedido con estado, pasos, líneas, entrega y transferencia con «Copiar»; sin medios de
+  cobro → «Pedir por WhatsApp»; checkout con Mercado Pago primero, errores por campo y sin perder lo escrito;
+  sólo retiro sin CP; borde de campos 3:1; caché de la vidriera en Go (30 s, se olvida con el tiempo real).
+- Pendiente: CSP del panel con nonce (kit.csp + app.html), prender `color-contrast` en la e2e del panel,
+  medir la hidratación de las opciones de la ficha, avisar a las dueñas del cambio de privacidad (v2.9).
+
 ## 18/11/2026: Tincho con Claude Haiku (rama tincho-claude, sin desplegar, migración 00089)
 
 Diseño común: `~/Trabajo/vimo/docs-ia/asistente-ia.md`. Workers AI sale del todo (binding `AI`, `HORNERO`,
