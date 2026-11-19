@@ -104,7 +104,8 @@
 		if (!shell.cmdk) q = '';
 	});
 
-	const EJEMPLO = '¿Cuánto vendí ayer por Mercado Libre?';
+	// Una pregunta que sirve en cualquier tienda, también en una recién abierta.
+	const EJEMPLO = '¿Cómo vengo hoy?';
 	function preguntar() {
 		shell.hornero(q.trim() || EJEMPLO);
 	}

@@ -99,6 +99,18 @@ function contexto(p: Pregunta, d: DatosHornero, ahora: Date): I.Ctx {
 
 const SUGERENCIAS = ['¿Cómo vengo hoy?', '¿Qué tengo que reponer?', 'Ideas para vender más'];
 
+/** Imperativos rioplatenses de acción (ya sin tildes), con o sin pronombre: «subí», «subile», «pausalo». */
+const IMPERATIVO =
+	/^(?:(?:che|tincho|dale|porfa|por favor|bueno|ok|ahora)[, ]+)*(sub[ií]|baj[aá]|pon[eé]|cambi[aá]|arm[aá]|cre[aá]|paus[aá]|activ[aá]|desactiv[aá]|carg[aá]|sum[aá]|sac[aá]|cancel[aá]|marc[aá]|aument[aá]|descont[aá]|hac[eé]|mand[aá]|gener[aá]|agreg[aá]|borr[aá]|reactiv[aá]|apag[aá]|prend[eé])(?:le|les|lo|la|los|las|me|melo|mela)?\b/;
+/** Un imperativo de precio con un porcentaje en cualquier lugar: «a las gaseosas aumentales un 10 %» (no «necesito subir…», que es una guía). */
+const AJUSTE =
+	/\b(sub[ií]|baj[aá]|aument[aá]|descont[aá]|rebaj[aá])(le|les|lo|la|los|las)?\b.*\d+\s*(%|por ?ciento)|\d+\s*(%|por ?ciento).*\b(sub[ií]|baj[aá]|aument[aá]|descont[aá]|rebaj[aá])(le|les|lo|la|los|las)?\b/;
+
+/** Si la pregunta es una orden (va al modelo, que propone la acción). */
+export function esOrden(q: string): boolean {
+	return IMPERATIVO.test(q) || AJUSTE.test(q);
+}
+
 /**
  * Responde con los datos. `anteriores`: las preguntas previas de la persona (la última al final),
  * para entender los seguimientos («¿y ayer?», «¿y del mate?»).
@@ -111,6 +123,10 @@ export function responder(
 ): Respuesta | null {
 	const p = entender(pregunta);
 	if (!p.q) return null;
+	// Una orden («subí 10 % las gaseosas», «pausá el cupón», «ponele 4000 a la yerba») no es una
+	// consulta: la contesta el modelo, que es el único que puede proponer el cambio con «Confirmar».
+	// Si el motor la agarraba, repetía la respuesta anterior o mostraba el stock como si fuera eso.
+	if (esOrden(p.q)) return null;
 	const corta = p.palabras.length <= 4;
 
 	if (corta && tiene(p, 'gracias') && p.conceptos.size <= 2)

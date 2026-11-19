@@ -5,7 +5,8 @@
 import type { Idea, Tablero } from '../datos/tipos.ts';
 
 export type IdeaHornero = {
-	id: Idea;
+	/** Las de la tienda vacía (primer producto, cobro) llevan a su sección: no se aprueban en el chat. */
+	id: Idea | 'primer-producto' | 'cobro';
 	titulo: string;
 	detalle: string;
 	/** Costo o impacto (handoff: la línea ámbar). */
@@ -29,8 +30,34 @@ const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno
  * `real`: la tienda usa la API (no la demo). Ahí los recordatorios de carritos van por mail (gratis) y
  * no hay WhatsApp para campañas, así que Tincho no promete costos ni recuperos que no existen.
  */
-export function ideasDe(t: Tablero, real = false): IdeaHornero[] {
+/** Lo que el tablero no trae y hace falta para guiar una tienda recién abierta (null: no se sabe). */
+export type PrimerosPasos = { productos: number | null; cobra: boolean | null };
+
+export function ideasDe(t: Tablero, real = false, pasos?: PrimerosPasos): IdeaHornero[] {
 	const ideas: IdeaHornero[] = [];
+	// Tienda recién abierta: primero lo que la deja vender (como «Para hacer hoy» en Inicio).
+	if (pasos?.productos === 0)
+		ideas.push({
+			id: 'primer-producto',
+			titulo: 'Cargá tu primer producto',
+			detalle: 'Con foto, precio y stock: un minuto desde el celular',
+			nota: 'Sin productos, la tienda no vende',
+			hecha: false,
+			listo: { titulo: 'Producto cargado', detalle: 'Ya se ve en tu tienda' },
+			seccion: 'Productos',
+			aprobable: false
+		});
+	if (pasos?.cobra === false)
+		ideas.push({
+			id: 'cobro',
+			titulo: 'Elegí cómo te pagan',
+			detalle: 'Tu alias o CBU, o Mercado Pago para tarjeta y QR',
+			nota: 'Sin un medio de pago, nadie puede comprarte',
+			hecha: false,
+			listo: { titulo: 'Listo para cobrar', detalle: 'Tus clientes ya pueden pagarte' },
+			seccion: 'Configuración',
+			aprobable: false
+		});
 	const hechas = new Set(t.hornero.ideasHechas);
 	const { carritos, carritosMonto, costoMensaje, audiencia } = t.hornero;
 	if (carritos)

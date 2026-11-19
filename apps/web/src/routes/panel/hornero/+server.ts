@@ -13,13 +13,31 @@ import type { RequestHandler } from './$types';
 
 /** Lo que muestra Tincho al abrirse: cómo viene el día y sus ideas. */
 export const GET: RequestHandler = async ({ locals }) => {
-	const t = await datosDe(locals).tablero('hoy');
+	const d = datosDe(locals);
+	const real = !usaSandbox();
+	// Con la API, los primeros pasos (como «Para hacer hoy»): si tiene productos y cómo cobrar. Si
+	// algo falla, esa idea no sale (mejor callar que decir algo que no es).
+	const [t, productos, config, integ] = await Promise.all([
+		d.tablero('hoy'),
+		real
+			? d
+					.listar('productos', { desde: 0, cuantos: 1 })
+					.then((l) => l.total)
+					.catch(() => null)
+			: null,
+		real ? d.configuracion().catch(() => null) : null,
+		real ? d.integraciones().catch(() => null) : null
+	]);
+	const cobra =
+		config && integ ? !!(config.negocio.alias || config.negocio.cbu || integ.conectadas.mp) : null;
 	// Sin montos (Ventas, Local): Tincho saluda con los pedidos de hoy, no con lo vendido.
 	return json({
 		hola: t.hola,
 		pedidosHoy: t.kpis.pedidos.actual,
 		...(t.ventas ? { ventasHoy: t.ventas.actual, ventasAyer: t.ventas.anterior } : {}),
-		ideas: ideasDe(t, !usaSandbox())
+		vacia: productos === 0,
+		conVentas: t.kpis.pedidos.actual > 0 || (t.masVendidos?.length ?? 0) > 0,
+		ideas: ideasDe(t, real, { productos, cobra })
 	});
 };
 

@@ -506,8 +506,14 @@ export function unProducto(x: Ctx): Respuesta | null {
 				!x.p.conceptos.has(w as never) &&
 				!nombre.includes(w.replace(/(es|s)$/, ''))
 		)
-		.filter((w) => !/^(cuant|preci|stock|quedan|tengo|tiene|vend|sale|hay|cuesta|vale)/.test(w));
-	const aviso = sobran.length ? `No encontré «${sobran.join(' ')}»; lo más parecido es esto. ` : '';
+		.filter(
+			(w) =>
+				!/^(cuant|preci|stock|quedan|tengo|tiene|vend|sale|hay|cuesta|vale|sub|baj|pon|aument|cambi|carg|sum|sac)/.test(
+					w
+				)
+		);
+	// Nunca las palabras crudas del motor («No encontré «subi»»): sólo que es lo más parecido.
+	const aviso = sobran.length ? 'Te muestro lo más parecido. ' : '';
 	const pide = tiene(x.p, 'precio')
 		? 'precio'
 		: alguno(x.p, 'vender', 'pedido')

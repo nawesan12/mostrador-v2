@@ -29,13 +29,23 @@
 		/** No vienen si el rol no ve montos (Ventas, Local). */
 		ventasHoy?: number;
 		ventasAyer?: number;
+		/** La tienda todavía no tiene productos. */
+		vacia?: boolean;
+		conVentas?: boolean;
 		ideas: IdeaHornero[];
 	};
 	let inicio = $state<Inicio | null>(null);
 	let escribiendo = $state(false);
 	let texto = $state('');
 	let lista = $state<HTMLElement>();
-	const SUGERENCIAS = ['¿Cuánto vendí ayer?', '¿Qué está sin stock?', 'Clientes que no vuelven'];
+	// Las sugerencias dependen de la tienda: una recién abierta no tiene ventas ni clientes que mirar.
+	const SUGERENCIAS = $derived(
+		inicio?.vacia
+			? ['¿Cómo cargo un producto?', '¿Cómo cobro con Mercado Pago?', '¿Cómo comparto mi tienda?']
+			: inicio && !inicio.conVentas
+				? ['¿Cómo comparto mi tienda?', '¿Qué tengo pendiente?', 'Ideas para vender más']
+				: ['¿Cuánto vendí ayer?', '¿Qué está sin stock?', 'Clientes que no vuelven']
+	);
 
 	async function cargar() {
 		const r = await fetch('/panel/hornero');
@@ -206,6 +216,14 @@
 			: pend === 0
 				? 'Ya aprobaste todo lo que te propuse. Preguntame lo que quieras.'
 				: `Encontré ${pend === 1 ? 'una cosa' : `${pend} cosas`} para hacer:`;
+		if (inicio.vacia)
+			return {
+				saludo: `${saludo(new Date())}${nombre}.`,
+				ventas: null,
+				pedidos: null,
+				comp: '',
+				cierre: 'Tu tienda todavía no tiene productos: arranquemos por ahí.'
+			};
 		return {
 			saludo: `${saludo(new Date())}${nombre}.`,
 			ventas: inicio.ventasHoy === undefined ? null : pesos(inicio.ventasHoy),
@@ -238,6 +256,8 @@
 					<div class="globo hornero">
 						{#if encabezado.ventas}
 							{encabezado.saludo} Hoy vendiste <b>{encabezado.ventas}</b>{encabezado.comp}. {encabezado.cierre}
+						{:else if !encabezado.pedidos}
+							{encabezado.saludo} {encabezado.cierre}
 						{:else}
 							{encabezado.saludo} Hoy entraron <b>{encabezado.pedidos}</b>. {encabezado.cierre}
 						{/if}
@@ -251,7 +271,11 @@
 											? I.phShoppingCartSimpleFill
 											: idea.id === 'stock'
 												? I.phPackageFill
-												: I.phMegaphoneFill}
+												: idea.id === 'primer-producto'
+													? I.phCameraFill
+													: idea.id === 'cobro'
+														? I.phBankFill
+														: I.phMegaphoneFill}
 										size={19}
 									/></span
 								>

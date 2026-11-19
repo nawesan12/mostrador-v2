@@ -8,7 +8,7 @@ import type { RespuestaTincho } from '../datos/tipos.ts';
 import { ayudaConBotones, type Respuesta } from './motor.ts';
 
 /** Si la IA falla, el motor contesta lo que puede y lo dice. */
-export const NO_DISPONIBLE = 'No pude consultar a la IA, probá de nuevo.';
+export const NO_DISPONIBLE = 'Ahora no pude responder eso. Probá de nuevo en un rato.';
 
 /** La respuesta de la API como la dibujan el panel y las apps. */
 export function conIa(r: RespuestaTincho): Respuesta {

@@ -64,6 +64,28 @@ describe('Tincho sin IA: entiende', () => {
 		).toContain(otro.nombre);
 	});
 
+	it('las órdenes van al modelo (el único que propone el cambio), nunca a la respuesta anterior', () => {
+		const x = datos();
+		const antes = ['¿cuánto vendí esta semana?'];
+		for (const q of [
+			'subí 10% las gaseosas',
+			'Subí 10% el precio de la yerba',
+			'pausá el cupón',
+			'ponele 4000 al yerba',
+			'subí el precio del yerba',
+			'subile 10% al yerba',
+			'armame un cupón del 15',
+			'che, cargá 10 de stock al mate',
+			'a las gaseosas aumentales un 10 %'
+		]) {
+			expect(r(q, x, antes), q).toBeNull();
+			expect(r(q, x), q).toBeNull();
+		}
+		// Las consultas siguen en el motor.
+		expect(r('¿cuánto vendí esta semana?', x)).not.toBeNull();
+		expect(r('¿qué marca vende más?', x)?.texto ?? '').not.toContain('No encontré');
+	});
+
 	it('el resumen del día, pendientes, ideas, clientes, canales, visitas', () => {
 		const x = datos();
 		expect(r('¿cómo vengo hoy?', x)?.tema).toBe('resumen');
@@ -92,7 +114,7 @@ describe('Tincho sin IA: entiende', () => {
 		expect(r('cuanto vale todo mi stock', x)?.tema).toBe('catalogo');
 		expect(r('necesito subir los precios un 10%', x)?.tema).toBe('guia');
 		expect(r('como cambio los colores de la tienda', x)?.acciones?.[0].ir).toBe('mi-tienda');
-		expect(r('precio del mate imperial', x)?.texto).toContain('No encontré «imperial»');
+		expect(r('precio del mate imperial', x)?.texto).toContain('lo más parecido');
 		expect(r('y de bombillas?', x, ['cuanto stock hay de termos'])?.texto).not.toContain(
 			'No encontré'
 		);
