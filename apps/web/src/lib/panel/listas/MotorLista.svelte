@@ -522,7 +522,6 @@
 									{/if}
 									{#if v.chip}<span
 											class="chip-f"
-											class:siempre={v.chip.siempre}
 											style:background={v.chip.bg}
 											style:color={v.chip.fg}>{v.chip.t}</span
 										>{/if}
@@ -1378,13 +1377,8 @@
 		.lote {
 			bottom: 92px;
 		}
-		.chip-f:not(.siempre) {
+		.chip-f {
 			display: none;
-		}
-		.chip-f.siempre {
-			flex: none;
-			font-size: 11px;
-			padding-inline: 7px;
 		}
 		/* Con acción por fila (compartir, pedir…) el nombre necesita cada píxel: el monto ocupa lo
 		   suyo y la acción es sólo el ícono (el área de toque sigue siendo de 44 px). */

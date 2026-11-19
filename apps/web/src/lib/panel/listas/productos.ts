@@ -148,7 +148,7 @@ export function configProductos(
 		fila: (p) => {
 			const mx = Math.max(1, ...p.ventas);
 			const e = p.fueraDePlan
-				? ([...FUERA_DE_PLAN, true] as const)
+				? FUERA_DE_PLAN
 				: p.estado in ESTADO
 					? ESTADO[p.estado as keyof typeof ESTADO]
 					: null;
@@ -163,7 +163,10 @@ export function configProductos(
 					.filter((k) => ICONO_CANAL[k])
 					.map((k) => ({ icon: ICONO_CANAL[k][0], col: ICONO_CANAL[k][1], t: ICONO_CANAL[k][2] })),
 				// Sin costo cargado, «margen sin dato» sólo ocupa lugar (y cortaba el stock a 375 px).
-				sub: `${p.sku ? `${p.sku} · ` : ''}${p.stock} en stock${p.margen === null ? '' : ` · margen ${p.margen} %`}`,
+				// Fuera del plan se dice en la bajada: en el celular el chip no entra al lado del nombre.
+				sub: p.fueraDePlan
+					? 'Fuera de tu plan'
+					: `${p.sku ? `${p.sku} · ` : ''}${p.stock} en stock${p.margen === null ? '' : ` · margen ${p.margen} %`}`,
 				spark: p.ventas.map((x) => ({
 					h: Math.max(3, (x / mx) * 22),
 					c: x ? '#D2582F' : 'var(--sf3)'
@@ -174,7 +177,7 @@ export function configProductos(
 					: `${p.vendidos30} vendidos en 30 días`,
 				vC: p.esperan ? '#B83A2E' : 'var(--mu)',
 				vI: p.esperan ? I.phBellRingingFill : p.star ? I.phFireFill : undefined,
-				chip: e ? { t: e[0], bg: e[1], fg: e[2], siempre: e.length > 3 } : undefined,
+				chip: e ? { t: e[0], bg: e[1], fg: e[2] } : undefined,
 				v: pesos(p.precio),
 				vs: 'precio',
 				// Fuera del plan: oculto en la tienda aunque esté publicado, y no se cambia desde acá.

@@ -25,8 +25,7 @@ export type VistaFila = {
 	vL: string;
 	vC: string;
 	vI?: IconData;
-	/** siempre: se ve también en el celular (donde los chips de estado se ocultan para ganar lugar). */
-	chip?: { t: string; bg: string; fg: string; siempre?: boolean };
+	chip?: { t: string; bg: string; fg: string };
 	v: string;
 	vs: string;
 	/** disabled: no se puede cambiar (por ejemplo, un producto fuera del plan). */
