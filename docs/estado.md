@@ -2,6 +2,15 @@
 
 Última actualización: 6/11/2026. Plan completo: `~/.claude/plans/claude-vamos-con-algo-encapsulated-alpaca.md`.
 
+## 19/11/2026: planes y precios nuevos DESPLEGADOS (API, web y worker 52b4455a, migraciones 00096–00098; iOS build 2611191834; Android 150)
+
+- **Integración:** `planes-precios` entró a main por avance rápido (no había trabajo nuevo en main).
+- **Copia previa:** `/var/backups/tulocalweb/antes-planes-202611192129.sql.gz`.
+- **Despliegue:** `scripts/desplegar-vps.sh` desde `~/Trabajo/vimo/.wt/desplegar` en origin/main. `goose_db_version` quedó en 98; la home muestra $ 14.900 / 34.900 / 79.900 y `/salud/listo` responde «listo».
+- **iOS:** `testflight-local.sh … tulocalweb` (build 2611191834) y `ultima.py` (mandada a la revisión beta de Socios).
+- **Android:** espejo publicado desde la copia limpia (`[skip ci]`), workflow «Android» corrida 50 y `subir_aab.py`: 150 en la prueba cerrada, mandado a revisión.
+- **Pendiente (lo decide Nahuel):** no hay productos de suscripción en App Store ni Play; las apps no venden planes.
+
 ## 19/11/2026: planes y precios nuevos que se cobran y se cumplen (rama planes-precios, sin desplegar, migración 00096)
 
 - **Precios** (ARS por mes, precio final, 0 % de comisión): Gratis $ 0 · Emprende $ 14.900 · Crece $ 34.900
