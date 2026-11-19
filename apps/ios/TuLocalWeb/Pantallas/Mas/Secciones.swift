@@ -1058,7 +1058,7 @@ struct HojaInvitar: View {
             if conRoles {
                 Segmentado(opciones: UsuariosYPermisos.roles.map { ($0.0, $0.1) }, elegido: $rol)
             } else {
-                Text("Entra con Administración. Los roles Ventas y Local están desde Crece.")
+                Text(Formato.sinViudas("Entra con Administración. Los roles Ventas y Local están desde Crece."))
                     .estilo(.footnote).foregroundStyle(C.texto2).fixedSize(horizontal: false, vertical: true)
             }
             Button(enviando ? "Enviando…" : "Mandar invitación") {

@@ -770,7 +770,7 @@ fun HojaInvitar(conRoles: Boolean = true, listo: suspend () -> Unit) {
         Entrada(email, { email = it }, "Email", Modifier.fillMaxWidth().clip(forma).background(C.superficie).border(1.dp, C.linea2, forma).padding(14.dp),
             estilo = Estilo.body16, teclado = KeyboardType.Email)
         if (conRoles) Segmentado(rolesEquipo, rol, { rol = it })
-        else Texto("Entra con Administración. Los roles Ventas y Local están desde Crece.", Estilo.footnote, C.texto2)
+        else Texto(Formato.sinViudas("Entra con Administración. Los roles Ventas y Local están desde Crece."), Estilo.footnote, C.texto2)
         BotonPrincipal(if (enviando) "Enviando…" else "Mandar invitación", {
             alcance.launch {
                 enviando = true
