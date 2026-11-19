@@ -195,7 +195,7 @@ fun EditorProducto(id: String?, sku: String? = null) {
         val datos = Fotos.achicar(ctx, uri, 1600, 85) ?: return
         subiendo += 1
         try { fotos.add(Web.subirFoto(datos, estado.api.token)) } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Web.ErrorSubida) {
-            if (e.tope) estado.avisarTope(ErrorApi(402, "tope_plan", "", e.mensaje)) else estado.avisar(e.mensaje, ok = false)
+            if (e.tope) estado.avisarTope(ErrorApi(402, "tope_plan", "", e.mensaje, plan = e.plan)) else estado.avisar(e.mensaje, ok = false)
         } catch (e: Exception) {
             estado.avisar("No pudimos subir la foto", ok = false)
         } finally { subiendo -= 1 }

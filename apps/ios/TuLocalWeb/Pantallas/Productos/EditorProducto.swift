@@ -537,7 +537,7 @@ struct EditorProducto: View {
         do {
             fotos.append(try await Web.subirFoto(datos, token: estado.api.token))
         } catch let e as Web.ErrorSubida where e.tope {
-            estado.avisarTope(ErrorApi(estado: 402, codigo: "tope_plan", titulo: "", detalle: e.mensaje))
+            estado.avisarTope(ErrorApi(estado: 402, codigo: "tope_plan", titulo: "", detalle: e.mensaje, plan: e.plan))
         } catch let e as Web.ErrorSubida {
             estado.avisar(e.mensaje, ok: false)
         } catch {

@@ -1,9 +1,9 @@
 /**
  * Fotos de productos: en producción, una carpeta en el disco del VPS (plataforma/vps.ts reemplaza al
- * binding FILES de Cloudflare); en wrangler dev, R2 local. Topes duros: el disco es uno solo. Toda foto que llega (JPG, PNG o WebP, aunque sea una grande
- * de iPhone) se pasa a WebP de 1600 px como máximo, calidad 80, girada según la cámara y sin
- * metadatos, con vips en el VPS: todas quedan iguales y livianas. Sin vips (pruebas locales), se
- * guarda como llegó.
+ * binding FILES de Cloudflare); en wrangler dev, R2 local. Topes duros: el disco es uno solo. Toda
+ * foto que llega (JPG, PNG o WebP, aunque sea una grande de iPhone) se pasa a WebP de 1600 px como
+ * máximo, calidad 80, girada según la cámara y sin metadatos, con vips en el VPS: todas quedan
+ * iguales y livianas. Sin vips (pruebas locales), se guarda como llegó.
  */
 import { env } from 'cloudflare:workers';
 import { error } from '@sveltejs/kit';
@@ -11,6 +11,7 @@ import { sql } from 'drizzle-orm';
 import { inArray } from './sandbox/sql.ts';
 import type { DbSandbox } from './sandbox/sandbox.ts';
 import { archivos } from './sandbox/schema.ts';
+import { PLANES } from '#lib/panel/planes.ts';
 
 export const LIMITES = {
 	/** Lo que se acepta subir (una foto grande de iPhone); se guarda ya optimizada. */
@@ -149,12 +150,9 @@ export async function subirFoto(
 		})
 		.from(archivos)
 		.where(sql`${archivos.clave} like 'fotos/%'`);
-	// 402 como todo tope de plan (las apps lo avisan con «Ver mi plan»).
-	if (Number(uso?.duenio ?? 0) + bytes.byteLength > porDuenio)
-		error(
-			402,
-			`Llegaste a los ${Math.round(porDuenio / 1024 / 1024).toLocaleString('es-AR')} MB de fotos de tu plan. Borrá fotos que ya no uses o pasá a un plan más grande.`
-		);
+	// 402 tope_plan como todo tope de plan, con el plan que da más espacio: el panel lo avisa con
+	// «Pasar a X» y las apps con «Ver mi plan». En Negocio no hay más grande: sólo liberar lugar.
+	if (Number(uso?.duenio ?? 0) + bytes.byteLength > porDuenio) error(402, topeDeFotos(porDuenio));
 	const total = Number(uso?.total ?? 0) + bytes.byteLength;
 	if (total > LIMITES.total * LIMITES.aviso && !avisado) {
 		avisado = true;
@@ -172,6 +170,27 @@ export async function subirFoto(
 		.insert(archivos)
 		.values({ clave, duenio, sandboxId: sandbox, bytes: bytes.byteLength, creadoEn: Date.now() });
 	return clave;
+}
+
+/** El problema del espacio de fotos lleno (como los topes de la API: code tope_plan y el plan que sube). */
+export function topeDeFotos(porDuenio: number): {
+	message: string;
+	code: 'tope_plan';
+	plan?: string;
+	title: string;
+} {
+	const mb = Math.round(porDuenio / 1024 / 1024);
+	const espacio =
+		mb >= 1024 ? `${Math.round(mb / 1024)}\u00a0GB` : `${mb.toLocaleString('es-AR')}\u00a0MB`;
+	const sube = PLANES.find((p) => p.fotosMB * 1024 * 1024 > porDuenio);
+	return {
+		code: 'tope_plan',
+		plan: sube?.id,
+		title: 'Llegaste al tope de tu plan',
+		message: sube
+			? `Llegaste a los ${espacio} de fotos de tu plan. Borrá fotos que ya no uses o pasá a ${sube.nombre}.`
+			: `Llegaste a los ${espacio} de fotos de tu plan. Borrá fotos que ya no uses para liberar lugar.`
+	};
 }
 
 /** Lo que ocupan las fotos de un dueño (la tienda), en bytes: lo que cuenta para el espacio del plan. */

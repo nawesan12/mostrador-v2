@@ -51,10 +51,11 @@ enum Web {
         let (d, resp) = try await URLSession.shared.data(for: r)
         guard let h = resp as? HTTPURLResponse else { throw ErrorApi.desconocido }
         guard (200..<300).contains(h.statusCode) else {
-            // Lo que dijo la web («Llegaste a los 15 MB de fotos de tu plan…»); 402 es un tope de plan.
-            struct M: Decodable { var message: String }
-            throw ErrorSubida(mensaje: (try? JSONDecoder().decode(M.self, from: d))?.message ?? "Probá de nuevo en un rato.",
-                              tope: h.statusCode == 402)
+            // Lo que dijo la web («Llegaste a los 15 MB de fotos de tu plan…»); 402 es un tope de plan, con
+            // el plan que da más espacio.
+            struct M: Decodable { var message: String; var plan: String? }
+            let m = try? JSONDecoder().decode(M.self, from: d)
+            throw ErrorSubida(mensaje: m?.message ?? "Probá de nuevo en un rato.", tope: h.statusCode == 402, plan: m?.plan)
         }
         struct R: Decodable { var ruta: String }
         let ruta = try JSONDecoder().decode(R.self, from: d).ruta
@@ -88,6 +89,8 @@ enum Web {
         var mensaje: String
         /// Es un tope del plan (el espacio de fotos, o la persona quedó en sólo lectura).
         var tope = false
+        /// Con tope: el plan que lo habilita (nil en el más grande o en sólo lectura).
+        var plan: String? = nil
     }
 
     /// El nombre que ve quien lo baja: sin la extensión, hasta 60 letras (nombreDeArchivo en la web).

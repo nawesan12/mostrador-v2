@@ -60,13 +60,16 @@ object Web {
     suspend fun subirFoto(datos: ByteArray, token: String?): String = withContext(Dispatchers.IO) {
         val r = Request.Builder().url("$base/panel/fotos").post(datos.toRequestBody("image/jpeg".toMediaType()))
         token?.let { r.header("Authorization", "Bearer $it") }
-        @Serializable data class E(val message: String)
+        @Serializable data class E(val message: String, val plan: String? = null)
         val texto = try {
             http.newCall(r.build()).execute().use {
                 val cuerpo = it.body?.string().orEmpty()
-                // Lo que dijo la web («Llegaste a los 15 MB de fotos de tu plan…»); 402 es un tope de plan.
-                if (!it.isSuccessful) throw ErrorSubida(runCatching { Api.json.decodeFromString<E>(cuerpo).message }.getOrNull() ?: "Probá de nuevo en un rato.",
-                    tope = it.code == 402)
+                // Lo que dijo la web («Llegaste a los 15 MB de fotos de tu plan…»); 402 es un tope de plan, con
+                // el plan que da más espacio.
+                if (!it.isSuccessful) {
+                    val m = runCatching { Api.json.decodeFromString<E>(cuerpo) }.getOrNull()
+                    throw ErrorSubida(m?.message ?: "Probá de nuevo en un rato.", tope = it.code == 402, plan = m?.plan)
+                }
                 cuerpo
             }
         } catch (e: java.io.IOException) { throw ErrorApi.sinRed }
@@ -79,7 +82,13 @@ object Web {
     const val maximoArchivo = 20 * 1024 * 1024
 
     /** Lo que dijo la web al rechazar un archivo («El archivo pesa más de 20 MB.»). */
-    class ErrorSubida(val mensaje: String, /** Es un tope del plan (el espacio de fotos, o la persona quedó en sólo lectura). */ val tope: Boolean = false) : Exception(mensaje)
+    class ErrorSubida(
+        val mensaje: String,
+        /** Es un tope del plan (el espacio de fotos, o la persona quedó en sólo lectura). */
+        val tope: Boolean = false,
+        /** Con tope: el plan que lo habilita (null en el más grande o en sólo lectura). */
+        val plan: String? = null,
+    ) : Exception(mensaje)
 
     /** Sube un archivo para descargar (el premio «descarga»: PDF, EPUB o ZIP de hasta 20 MB, tal cual) y devuelve su
      *  URL pública (https://tulocalweb.com.ar/f/archivos/…). El tipo lo mira la web por los primeros bytes. Si la web lo

@@ -7,7 +7,8 @@ import {
 	LIMITES_DOCUMENTO,
 	subirDocumento,
 	tipoDe,
-	tipoDocumentoDe
+	tipoDocumentoDe,
+	topeDeFotos
 } from './archivos.ts';
 import { d1Local } from './sandbox/d1-local.ts';
 import { dbSandbox } from './sandbox/sandbox.ts';
@@ -148,5 +149,23 @@ describe('archivos para descargar', () => {
 		// Otra tienda sí puede.
 		const otra = '8d3e2f10-aaaa-4bbb-8ccc-0123456789ab';
 		expect(await status(subirDocumento(db, otra, PDF, null, r2))).toBe(0);
+	});
+});
+
+describe('espacio de fotos del plan', () => {
+	it('es un tope de plan con el plan que da más espacio', () => {
+		const t = topeDeFotos(15 * 1024 * 1024);
+		expect(t).toMatchObject({ code: 'tope_plan', plan: 'emprende' });
+		expect(t.message).toBe(
+			'Llegaste a los 15\u00a0MB de fotos de tu plan. Borrá fotos que ya no uses o pasá a Emprende.'
+		);
+		expect(topeDeFotos(600 * 1024 * 1024).plan).toBe('negocio');
+	});
+	it('en Negocio no ofrece un plan más grande', () => {
+		const t = topeDeFotos(2048 * 1024 * 1024);
+		expect(t.plan).toBeUndefined();
+		expect(t.message).toBe(
+			'Llegaste a los 2\u00a0GB de fotos de tu plan. Borrá fotos que ya no uses para liberar lugar.'
+		);
 	});
 });
