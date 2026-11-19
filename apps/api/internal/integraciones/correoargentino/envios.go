@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
 	"math"
 	"regexp"
 	"sort"
@@ -14,6 +13,8 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
 )
 
 // Opcion cotizada por Correo: el precio en pesos enteros (redondeado para arriba) y el plazo en días
