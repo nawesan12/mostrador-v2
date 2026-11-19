@@ -27,6 +27,9 @@
 		tactil = matchMedia('(pointer: coarse)').matches && typeof navigator.share === 'function';
 	});
 	const importa = $derived(o.e.importar);
+	// Sin productos ni importación en curso, compartir la tienda llevaría a una vidriera vacía: primero
+	// el producto, y el link queda en segundo plano.
+	const vacia = $derived(!importa && (page.data.productos as number | null) === 0);
 	const conSesion = $derived(!!page.data.conSesion);
 	// Con la API, la tienda de verdad; en la demo, la del handoff.
 	const real = $derived(page.data.tienda as { nombre: string; slug: string } | null);
@@ -199,12 +202,27 @@
 		</div>
 	{:else}
 		<!-- Con la API: el link de verdad para compartir y el siguiente paso, nada más. -->
-		<h1>Tu tienda ya está en línea.</h1>
+		<h1>{vacia ? 'Falta tu primer producto.' : 'Tu tienda ya está en línea.'}</h1>
 		<p class="bajada">
-			{importa
-				? 'Compartí el link cuando quieras y traé tus productos: empieza apenas sigas.'
-				: 'Compartí el link con tus clientes y cargá tu primer producto.'}
+			{vacia
+				? 'Cargalo con foto, precio y stock: después compartí el link con tus clientes.'
+				: importa
+					? 'Compartí el link cuando quieras y traé tus productos: empieza apenas sigas.'
+					: 'Compartí el link con tus clientes y cargá tu primer producto.'}
 		</p>
+		{#if vacia}
+			<div class="ctas">
+				<button
+					type="button"
+					class="pri"
+					disabled={terminando}
+					onclick={() => terminar('producto')}
+					>{terminando ? 'Abriendo…' : 'Cargar mi primer producto'}
+					<Icon icon={I.phArrowRightBold} size={16} /></button
+				>
+			</div>
+			<p class="nota-vacia">Compartila cuando tengas tu primer producto.</p>
+		{/if}
 		<div class="online real-online">
 			<!-- El QR real del link de la tienda: tocándolo se descarga para imprimir. -->
 			<!-- eslint-disable svelte/no-navigation-without-resolve -- descarga de un data: URL -->
@@ -247,10 +265,11 @@
 				</div>
 			</div>
 		</div>
-		<div class="ctas">
+		<div class="ctas" class:sin-pri={vacia}>
 			<button
 				type="button"
 				class="pri"
+				hidden={vacia}
 				disabled={terminando}
 				onclick={() => terminar(importa ? 'panel' : 'producto')}
 				>{terminando ? 'Abriendo…' : importa ? 'Traer mis productos' : 'Cargar mi primer producto'}
@@ -268,6 +287,12 @@
 </div>
 
 <style>
+	.nota-vacia {
+		margin: 4px 0 0;
+		font-size: 13.5px;
+		color: #7a6252;
+	}
+
 	.todo {
 		position: relative;
 		text-align: center;

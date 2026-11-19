@@ -51,7 +51,7 @@ export const load: PageServerLoad = async (event) => {
 	const datos = conCuenta ? datosDe(locals) : null;
 	// Con la API: la tienda de verdad (nombre y dirección), lo guardado del onboarding para retomarlo
 	// donde quedó, y lo que ya está configurado para cobrar y entregar (se edita en el paso Cobros).
-	const [tienda, guardado, mp, negocio, entregas] = datos
+	const [tienda, guardado, mp, negocio, entregas, productos] = datos
 		? await Promise.all([
 				datos
 					.tienda()
@@ -66,9 +66,14 @@ export const load: PageServerLoad = async (event) => {
 					.configuracion()
 					.then((c) => c.negocio)
 					.catch(() => null),
-				datos.entregas().catch(() => null)
+				datos.entregas().catch(() => null),
+				// Cuántos productos tiene: «Tu tienda ya está en línea» con 0 invitaba a compartir una vacía.
+				datos
+					.listar('productos', { desde: 0, cuantos: 1 })
+					.then((l) => l.total)
+					.catch(() => null)
 			])
-		: [null, null, false, null, null];
+		: [null, null, false, null, null, null];
 	// Ya lo terminó: el onboarding no se repite, se sigue en el panel. Sólo «¡Listo!» se puede
 	// recargar (ahí están el QR y el link para compartir).
 	if (guardado?.terminado && paso !== PASOS_REALES.indexOf('listo')) redirect(303, '/panel');
@@ -81,6 +86,7 @@ export const load: PageServerLoad = async (event) => {
 		clerk: usaSandbox() ? null : fapiDe(env.CLERK_PUBLISHABLE_KEY),
 		conSesion: !!locals.token,
 		tienda,
+		productos,
 		paso: Number.isInteger(paso) && paso >= 0 && paso <= 7 ? paso : null
 	};
 };
