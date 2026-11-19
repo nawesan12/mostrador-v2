@@ -10,17 +10,20 @@
 	 */
 	let {
 		t: base,
-		paleta = null
+		paleta = null,
+		movil = false
 	}: {
 		t: Plantilla;
 		/** Colores que pisan los de la plantilla (handoff: "Con tus colores", "Probá otros colores"). */
 		paleta?: { bg: string; tx: string; ac: string } | null;
+		/** Cómo la ven en el celular: una columna, menú cerrado y dos productos por fila (los tres layouts). */
+		movil?: boolean;
 	} = $props();
 	const t = $derived(paleta ? { ...base, ...paleta } : base);
 	const onAc = $derived(sobreAcento(t.ac));
 </script>
 
-<div class="mini" style:background={t.bg} style:color={t.tx} style:font-family={t.ff}>
+<div class="mini" class:movil style:background={t.bg} style:color={t.tx} style:font-family={t.ff}>
 	<div class="nav">
 		<span class="logo" style:background={t.ac}></span>
 		<b>{t.tienda}</b><span class="esp"></span>
@@ -113,6 +116,23 @@
 </div>
 
 <style>
+	/* Celular: el menú del encabezado y el lateral del catálogo se cierran; los productos van de a dos. */
+	.movil .tenue,
+	.movil .ca-menu {
+		display: none;
+	}
+	.movil .nav {
+		padding: 12px 12px;
+		font-size: 10px;
+	}
+	.movil .ed-prods,
+	.movil .gr-prods,
+	.movil .ca-prods {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	.movil .ca {
+		flex-direction: column;
+	}
 	.mini {
 		height: 100%;
 		display: flex;

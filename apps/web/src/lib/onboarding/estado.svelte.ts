@@ -137,7 +137,10 @@ export class Onboarding {
 	revelado = $state(0);
 	/** Paso 3: avance de la importación, de 0 a 100. */
 	importado = $state(0);
-	dispositivo = $state<'desk' | 'mob'>('desk');
+	// Desde el teléfono arranca en «Celular»: es como la van a ver sus clientes.
+	dispositivo = $state<'desk' | 'mob'>(
+		typeof matchMedia === 'function' && matchMedia('(max-width: 640px)').matches ? 'mob' : 'desk'
+	);
 	galeria = $state(false);
 	consejo = $state(false);
 	/**

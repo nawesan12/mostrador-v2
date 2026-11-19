@@ -27,29 +27,29 @@ export const MARCAS = {
 	web: { icon: I.phGlobeSimpleFill, col: '#D2582F', bg: '#FCEDE5' },
 	pos: { icon: I.phStorefrontFill, col: '#8A5A3E', bg: '#F3E9DF' },
 	transf: { icon: I.phBankFill, col: '#6B5244', bg: '#F1E9DF' },
-	efectivo: { icon: I.phMoneyFill, col: '#2F8F63', bg: '#E9F5EE' },
+	efectivo: { icon: I.phMoneyFill, col: '#237550', bg: '#E9F5EE' },
 	payway: { sigla: 'PW', col: '#fff', bg: '#0E1E4A' },
 	modo: { sigla: 'MODO', col: '#fff', bg: '#00A88F' },
 	uala: { sigla: 'ualá', col: '#fff', bg: '#3E6BFD' },
 	oca: { sigla: 'OCA', col: '#fff', bg: '#4B2A85' },
 	correo: { sigla: 'CA', col: '#003DA5', bg: '#FFCE00' },
-	moto: { icon: I.phMopedFill, col: '#9A6A10', bg: '#FDF3DD' },
+	moto: { icon: I.phMopedFill, col: '#8A5F0E', bg: '#FDF3DD' },
 	ga: { icon: I.logosGoogleAnalytics, bg: '#FFF4E5' },
 	meta: { icon: I.logosMetaIcon, bg: '#EEF4FD' },
 	zap: { icon: I.logosZapier, bg: '#FFF1EB' },
 	gg: { icon: I.logosGoogleIcon, bg: '#EEF4FD' },
-	caja: { icon: I.phWalletFill, col: '#2F8F63', bg: '#E9F5EE' },
+	caja: { icon: I.phWalletFill, col: '#237550', bg: '#E9F5EE' },
 	retiro: { icon: I.phStorefrontFill, col: '#8A5A3E', bg: '#F3E9DF' },
 	visa: { icon: I.logosVisa, bg: '#fff' },
 	master: { icon: I.logosMastercard, bg: '#fff' },
 	sys: { icon: I.phGearSixFill, col: '#6B5244', bg: '#F1E9DF' },
 	star: { icon: I.phStarFill, col: '#C98A12', bg: '#FDF3DD' },
-	ok: { icon: I.phCheckCircleFill, col: '#2F8F63', bg: 'rgba(47,143,99,.14)' },
-	warn: { icon: I.phWarningFill, col: '#9A6A10', bg: 'rgba(227,169,59,.2)' },
+	ok: { icon: I.phCheckCircleFill, col: '#237550', bg: 'rgba(47,143,99,.14)' },
+	warn: { icon: I.phWarningFill, col: '#8A5F0E', bg: 'rgba(227,169,59,.2)' },
 	err: { icon: I.phXCircleFill, col: '#B83A2E', bg: 'rgba(184,58,46,.12)' },
-	info: { icon: I.phInfoFill, col: '#C24E25', bg: 'rgba(210,88,47,.12)' },
+	info: { icon: I.phInfoFill, col: '#B0441D', bg: 'rgba(210,88,47,.12)' },
 	ai: { icon: I.phSparkleFill, col: '#fff', bg: 'linear-gradient(140deg,#E8875F,#C24E25)' },
-	link: { icon: I.phLinkBold, col: '#C24E25', bg: 'rgba(210,88,47,.12)' }
+	link: { icon: I.phLinkBold, col: '#B0441D', bg: 'rgba(210,88,47,.12)' }
 } satisfies Record<string, Marca>;
 
 export type ClaveMarca = keyof typeof MARCAS;
@@ -58,7 +58,7 @@ export const marca = (k: string): Marca => MARCAS[k as ClaveMarca] ?? MARCAS.sys
 
 /** Color de la barra de vida de un toast según su tipo (handoff: `BAR`). */
 export const BARRA: Partial<Record<ClaveMarca, string>> = {
-	ok: '#2F8F63',
+	ok: '#237550',
 	warn: '#E3A93B',
 	err: '#B83A2E',
 	info: '#D2582F',
@@ -67,16 +67,16 @@ export const BARRA: Partial<Record<ClaveMarca, string>> = {
 
 /** Estados de pedido: fondo y color del chip (handoff: `ST` y la fila "Botones y estados"). */
 export const ESTADOS = {
-	'Sin pagar': ['rgba(227,169,59,.18)', '#9A6A10'],
-	'Pago pendiente': ['rgba(227,169,59,.18)', '#9A6A10'],
+	'Sin pagar': ['rgba(227,169,59,.18)', '#8A5F0E'],
+	'Pago pendiente': ['rgba(227,169,59,.18)', '#8A5F0E'],
 	// Mercado Pago de la tienda online sin acreditar: todavía no es una venta.
-	'Esperando pago': ['rgba(126,102,86,.12)', '#7E6656'],
-	'Para preparar': ['rgba(210,88,47,.13)', '#C24E25'],
-	Pagado: ['rgba(47,143,99,.13)', '#2F8F63'],
-	'Listo para despachar': ['rgba(201,138,18,.16)', '#9A6A10'],
-	Enviado: ['rgba(227,169,59,.18)', '#9A6A10'],
-	'En camino': ['rgba(227,169,59,.18)', '#9A6A10'],
-	Entregado: ['rgba(126,102,86,.14)', '#7E6656'],
+	'Esperando pago': ['rgba(126,102,86,.12)', '#6B5244'],
+	'Para preparar': ['rgba(210,88,47,.13)', '#B0441D'],
+	Pagado: ['rgba(47,143,99,.13)', '#237550'],
+	'Listo para despachar': ['rgba(201,138,18,.16)', '#8A5F0E'],
+	Enviado: ['rgba(227,169,59,.18)', '#8A5F0E'],
+	'En camino': ['rgba(227,169,59,.18)', '#8A5F0E'],
+	Entregado: ['rgba(126,102,86,.14)', '#6B5244'],
 	Cancelado: ['rgba(184,58,46,.1)', '#B83A2E']
 } as const satisfies Record<string, readonly [string, string]>;
 

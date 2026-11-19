@@ -312,7 +312,7 @@
 		display: grid;
 		place-items: center;
 		background: rgba(210, 88, 47, 0.12);
-		color: #c24e25;
+		color: #B0441D;
 		font-size: 14px;
 		font-weight: 700;
 	}

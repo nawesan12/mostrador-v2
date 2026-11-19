@@ -2304,7 +2304,7 @@
 	.estrellas-prom {
 		font-size: 13px;
 		font-weight: 600;
-		color: #c98a12;
+		color: #8A5F0E;
 	}
 	.resena {
 		padding: 10px 0;

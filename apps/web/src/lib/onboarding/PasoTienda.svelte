@@ -98,7 +98,7 @@
 						>
 					</div>
 				{/if}
-				<div class="zoom" class:mob><TplMini t={actual} {paleta} /></div>
+				<div class="zoom" class:mob><TplMini t={actual} {paleta} movil={mob} /></div>
 			</div>
 		</div>
 	</div>
@@ -106,7 +106,7 @@
 		<div class="caja">
 			<div class="c-cab">
 				<Icon icon={I.phSparkleFill} size={15} style="color:#b0441d" /><span
-					>{o.demo || delRubro ? 'Recomendadas para tu rubro' : 'Para empezar'}</span
+					>{o.demo || delRubro ? 'La de tu rubro y dos estilos más' : 'Para empezar'}</span
 				>
 			</div>
 			<div class="recos">

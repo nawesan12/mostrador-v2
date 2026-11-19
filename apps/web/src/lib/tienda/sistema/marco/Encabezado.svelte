@@ -54,6 +54,9 @@
 			!ctx.nav.some((n) => n.href.includes('cat='))
 	);
 	const lupa = $derived(!conBuscador && t.productos.length > 1 && ctx.dir !== 'pedido');
+	// En la ficha del celular el buscador fijo empujaba el precio fuera de la primera pantalla (el
+	// handoff B-celular no lo lleva): va la lupa.
+	const enFicha = $derived(ctx.pagina === 'producto' && conBuscador);
 	let buscando = $state(false);
 	const linea = $derived(
 		[
@@ -88,9 +91,10 @@
 {/snippet}
 
 {#snippet lupaBoton()}
-	{#if lupa}<button
+	{#if lupa || enFicha}<button
 			type="button"
 			class="tv-enc-lupa"
+			class:tv-solo-movil={enFicha}
 			aria-label={buscando ? 'Cerrar la búsqueda' : 'Buscar productos'}
 			aria-expanded={buscando}
 			onclick={() => {
@@ -170,10 +174,10 @@
 			</div>
 		</div>
 	{/if}
-	{#if lupa && buscando}<div class="tv-enc-buscar-abierto">
+	{#if (lupa || enFicha) && buscando}<div class="tv-enc-buscar-abierto">
 			<div class="tv-ancho"><Buscador id="tv-buscar-a" /></div>
 		</div>{/if}
-	{#if conBuscador}<div class="tv-enc-buscar-movil tv-solo-movil">
+	{#if conBuscador && !enFicha}<div class="tv-enc-buscar-movil tv-solo-movil">
 			<Buscador id="tv-buscar-m" />
 		</div>{/if}
 </header>

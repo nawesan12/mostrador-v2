@@ -127,7 +127,7 @@ export function configClientes(
 				id: 'vip',
 				t: 'VIP',
 				icon: I.phCrownSimpleFill,
-				color: '#C98A12',
+				color: '#8A5F0E',
 				filtros: { seg: ['vip'] }
 			},
 			{

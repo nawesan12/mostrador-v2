@@ -1466,6 +1466,12 @@
 	.tv-ficha-pista {
 		border-radius: 0;
 	}
+	/* El carrusel no pasa de ~55 % del alto: título, precio y la primera opción entran en la primera
+	   pantalla (B-celular). La proporción de las tarjetas no cambia. */
+	.tv-ficha-pista :is(img, .tv-foto) {
+		max-height: 55svh;
+		object-fit: cover;
+	}
 	.tv-ficha-info {
 		position: static;
 		gap: 16px;

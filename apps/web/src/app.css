@@ -385,6 +385,10 @@ html.lenis body {
 	background: var(--chip-bg);
 	color: var(--chip-fg);
 }
+/* En oscuro, el mismo tono aclarado: los de estado (pensados para el claro) no llegaban a 3:1. */
+[data-theme='dark'] .chip-estado {
+	color: color-mix(in srgb, var(--chip-fg) 45%, #fbf7f2);
+}
 .chip-estado::before {
 	content: '';
 	width: 6px;

@@ -684,7 +684,7 @@
 											><span class="q-c">{p.cliente}</span>{#if p.vip}<Icon
 													icon={I.phCrownSimpleFill}
 													size={13}
-													style="color:#C98A12;flex:none"
+													style="color:#8A5F0E;flex:none"
 												/>{/if}{#if p.hornero}<span class="q-ai" title="Lo vendió Tincho">✦</span
 												>{/if}</span
 										>

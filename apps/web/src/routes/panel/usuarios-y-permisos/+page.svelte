@@ -495,7 +495,7 @@
 		gap: 7px;
 	}
 	.rf li.si :global(svg) {
-		color: #2f8f63;
+		color: #237550;
 		flex: none;
 	}
 	.rf li.no {

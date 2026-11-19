@@ -86,7 +86,7 @@ export function configProductos(
 				id: 'estrellas',
 				t: 'Estrellas',
 				icon: I.phStarFill,
-				color: '#C98A12',
+				color: '#8A5F0E',
 				filtros: { banderas: ['star'] }
 			},
 			{

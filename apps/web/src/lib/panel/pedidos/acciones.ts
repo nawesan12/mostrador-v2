@@ -61,7 +61,7 @@ export function accionRapida(p: ConEstado): AccionRapida | null {
 						a: 'En camino',
 						icono: I.phTruckFill,
 						fondo: 'rgba(210,88,47,.14)',
-						color: '#C24E25'
+						color: '#B0441D'
 					};
 		case 'En camino':
 			return {
