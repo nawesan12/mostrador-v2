@@ -3182,8 +3182,8 @@ export class DatosSandbox implements Datos {
 			retiroDireccion: e.retiroDireccion || conf.negocio.direccion || '',
 			retiroHorario: e.retiroHorario || conf.negocio.horario || '',
 			correo: false,
-			// Como Go: el envío gratis sólo con algo que enviar (la demo no tiene Correo: la moto).
-			gratisDesde: gratis.activa && e.moto ? gratis.monto : null,
+			// Lo configurado (como configuracion.Entregas en Go). La tienda pública lo filtra abajo.
+			gratisDesde: gratis.activa ? gratis.monto : null,
 			envioGratis: gratis.activa,
 			envioGratisMonto: gratis.monto
 		};
@@ -3887,6 +3887,8 @@ export class DatosSandbox implements Datos {
 			// Lo de Envíos y retiro. Correo Argentino: la demo no tiene cuenta de MiCorreo, y sin
 			// cotización real no se ofrece.
 			envios: {
+				// Como Go (vidriera.Publica): el envío gratis sólo con algo que enviar (la demo no tiene
+				// Correo: la moto). Con sólo retiro, la barra y la ficha prometían un envío que no hay.
 				gratisDesde: entregas.moto ? entregas.gratisDesde : null,
 				retiro: entregas.retiro,
 				retiroDireccion: entregas.retiro ? entregas.retiroDireccion : '',
