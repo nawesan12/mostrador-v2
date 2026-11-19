@@ -166,6 +166,7 @@ fun NegocioCobro() {
     var cargado by remember { mutableStateOf(false) }
     var guardando by remember { mutableStateOf(false) }
     val campos = remember { mutableStateMapOf<String, String>() }
+    var verificar by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         estado.api.opcional<ValorJSON>("/v1/panel/configuracion")?.get("negocio")?.objeto?.let { n ->
@@ -175,7 +176,7 @@ fun NegocioCobro() {
         cargado = true
     }
 
-    suspend fun guardar() {
+    suspend fun guardar(permiso: String? = null) {
         val n = negocio.toMutableMap()
         camposNegocio.forEach { (k, _, _) ->
             var t = (campos[k] ?: "").trim()
@@ -185,16 +186,18 @@ fun NegocioCobro() {
         listOf("razonSocial", "cuit", "condicion").forEach { k -> if (n[k] == null) n[k] = Valor.texto("") }
         guardando = true
         try {
-            estado.api.hacer("PUT", "/v1/panel/configuracion/negocio", Valor.objeto(n))
+            estado.api.hacer("PUT", "/v1/panel/configuracion/negocio", Valor.objeto(n),
+                encabezados = permiso?.let { mapOf("Reverificacion" to it) } ?: emptyMap())
             negocio = n
             Haptico.exito()
             estado.avisar("Guardamos los datos")
             cerrar()
-        } catch (e: ErrorApi) { estado.avisar(e.detalle, ok = false) } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Exception) {
+        } catch (e: ErrorApi) { if (e.pideVerificarse && permiso == null) verificar = true else estado.avisar(e.detalle, ok = false) } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Exception) {
             estado.avisar("No pudimos guardarlos", ok = false)
         } finally { guardando = false }
     }
 
+    Hoja(verificar, { verificar = false }) { Reverificar { permiso -> alcance.launch { guardar(permiso) } } }
     ConBarraAccion({
         if (cargado) BotonPrincipal(if (guardando) "Guardando…" else "Guardar", { alcance.launch { guardar() } }, habilitado = !guardando)
     }, Modifier.background(C.fondo).imePadding()) { abajo ->

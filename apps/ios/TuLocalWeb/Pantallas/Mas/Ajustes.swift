@@ -117,6 +117,7 @@ struct NegocioCobro: View {
     @State private var cargado = false
     @State private var guardando = false
     @State private var campos: [String: String] = [:]
+    @State private var verificar = false
 
     private static let lista: [(String, String, UIKeyboardType)] = [
         ("nombre", "Nombre del negocio", .default), ("whatsapp", "WhatsApp", .phonePad), ("email", "Mail", .emailAddress),
@@ -161,6 +162,10 @@ struct NegocioCobro: View {
         }
         .background(C.fondo.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $verificar) {
+            Reverificar { permiso in Task { await guardar(permiso: permiso) } }
+                .hojaTLW([.large])
+        }
         .task {
             if let v: ValorJSON = try? await estado.api.get("/v1/panel/configuracion"), case let .objeto(n)? = v["negocio"] {
                 negocio = n
@@ -170,7 +175,7 @@ struct NegocioCobro: View {
         }
     }
 
-    private func guardar() async {
+    private func guardar(permiso: String? = nil) async {
         var n = negocio
         for (k, _, _) in NegocioCobro.lista {
             var t = (campos[k] ?? "").trimmingCharacters(in: .whitespaces)
@@ -181,11 +186,14 @@ struct NegocioCobro: View {
         guardando = true
         defer { guardando = false }
         do {
-            try await estado.api.hacer("PUT", "/v1/panel/configuracion/negocio", ValorJSON.objeto(n))
+            try await estado.api.hacer("PUT", "/v1/panel/configuracion/negocio", ValorJSON.objeto(n),
+                                        encabezados: permiso.map { ["Reverificacion": $0] } ?? [:])
             negocio = n
             Haptico.exito()
             estado.avisar("Guardamos los datos")
             cerrar()
+        } catch let e as ErrorApi where e.pideVerificarse && permiso == nil {
+            verificar = true
         } catch let e as ErrorApi {
             estado.avisar(e.detalle, ok: false)
         } catch {

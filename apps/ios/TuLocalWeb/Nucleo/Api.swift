@@ -13,6 +13,8 @@ struct ErrorApi: Error, Equatable {
 
     var sinConexion: Bool { codigo == "sin_conexion" }
     var sinSesion: Bool { estado == 401 && codigo == "sin_sesion" }
+    /// Cambiar adónde llega la plata pide volver a verificarse (hoja Reverificar).
+    var pideVerificarse: Bool { estado == 403 && codigo == "reverificar" }
 
     static let sinRed = ErrorApi(estado: 0, codigo: "sin_conexion", titulo: "Sin conexión",
                                  detalle: "No hay internet. Revisá la conexión y probá de nuevo.")
@@ -112,8 +114,8 @@ final class Api: @unchecked Sendable {
     }
 
     /// Un pedido sin respuesta (204).
-    func hacer<C: Encodable>(_ metodo: String, _ ruta: String, _ cuerpo: C) async throws {
-        _ = try await pedir(metodo, ruta, cuerpo: Api.codificador.encode(cuerpo))
+    func hacer<C: Encodable>(_ metodo: String, _ ruta: String, _ cuerpo: C, encabezados: [String: String] = [:]) async throws {
+        _ = try await pedir(metodo, ruta, cuerpo: Api.codificador.encode(cuerpo), encabezados: encabezados)
     }
 
     func hacer(_ metodo: String, _ ruta: String, encabezados: [String: String] = [:]) async throws {

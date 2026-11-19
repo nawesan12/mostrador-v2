@@ -37,6 +37,8 @@ data class ErrorApi(
 ) : Exception(detalle) {
     val sinConexion: Boolean get() = codigo == "sin_conexion"
     val sinSesion: Boolean get() = estado == 401 && codigo == "sin_sesion"
+    /** Cambiar adónde llega la plata pide volver a verificarse (hoja Reverificar). */
+    val pideVerificarse: Boolean get() = estado == 403 && codigo == "reverificar"
 
     companion object {
         val sinRed = ErrorApi(0, "sin_conexion", "Sin conexión", "No hay internet. Revisá la conexión y probá de nuevo.")
@@ -95,8 +97,8 @@ class Api(val base: String, @Volatile var token: String? = null, val http: OkHtt
         decodificar(pedir(metodo, ruta, cuerpo = json.encodeToString(cuerpo).toByteArray()))
 
     /** Un pedido sin respuesta (204). */
-    suspend inline fun <reified B> hacer(metodo: String, ruta: String, cuerpo: B) {
-        pedir(metodo, ruta, cuerpo = json.encodeToString(cuerpo).toByteArray())
+    suspend inline fun <reified B> hacer(metodo: String, ruta: String, cuerpo: B, encabezados: Map<String, String> = emptyMap()) {
+        pedir(metodo, ruta, cuerpo = json.encodeToString(cuerpo).toByteArray(), encabezados = encabezados)
     }
 
     suspend fun hacer(metodo: String, ruta: String, encabezados: Map<String, String> = emptyMap()) { pedir(metodo, ruta, encabezados = encabezados) }
