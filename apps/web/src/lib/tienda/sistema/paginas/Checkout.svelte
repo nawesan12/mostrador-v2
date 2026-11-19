@@ -391,8 +391,10 @@
 							)} pagando con transferencia
 						</p>{/if}
 					<p class="tv-chico tv-suave tv-carrito-seguro">
-						<Icon icon={I.phShieldCheck} size={16} />Compra protegida · 10 días
-						para&nbsp;arrepentirte
+						<Icon icon={I.phArrowUUpLeft} size={16} /><a
+							class="tv-link"
+							href="{base}/arrepentimiento">Botón de arrepentimiento</a
+						>&nbsp;· 10 días para&nbsp;devolverlo
 					</p>
 				</aside>
 

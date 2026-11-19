@@ -15,7 +15,8 @@ import {
 	type Icono,
 	type SeleccionProductos
 } from './catalogo.ts';
-import { cuantos, precio } from './formato.ts';
+import { envia } from '../envio.ts';
+import { cuantos, precio, sinViuda } from './formato.ts';
 import { ofreceDe } from './cobros.ts';
 
 export type Tienda = TiendaPublica;
@@ -157,7 +158,8 @@ export type Beneficio = { icono: Icono; titulo: string; texto: string };
 export function beneficiosAuto(t: Tienda): Beneficio[] {
 	const out: Beneficio[] = [];
 	const e = t.envios;
-	if (e.gratisDesde)
+	// Envío gratis sólo si la tienda envía.
+	if (e.gratisDesde && envia(e))
 		out.push({ icono: 'envio', titulo: 'Envío gratis', texto: `Desde ${precio(e.gratisDesde)}` });
 	else if (e.correo)
 		out.push({ icono: 'envio', titulo: 'Envíos a todo el país', texto: 'Por Correo Argentino' });
@@ -184,10 +186,14 @@ export function beneficiosAuto(t: Tienda): Beneficio[] {
 		out.push({
 			icono: 'retiro',
 			titulo: 'Retiro sin cargo',
-			texto: e.retiroDireccion || t.ciudad || 'En el local'
+			texto: sinViuda(e.retiroDireccion || t.ciudad || 'En el local')
 		});
 	if (out.length < 4)
-		out.push({ icono: 'cambios', titulo: 'Compra protegida', texto: '10 días para arrepentirte' });
+		out.push({
+			icono: 'cambios',
+			titulo: 'Botón de arrepentimiento',
+			texto: '10 días para devolverlo'
+		});
 	return out.slice(0, 4);
 }
 
@@ -360,17 +366,27 @@ export function botonesPortada(t: Tienda, b: Bloque): { t: string; href: string 
 	const out: { t: string; href: string }[] = [];
 	if (n === 1) out.push({ t: 'Ver el producto', href: productoHref(t, t.productos[0]) });
 	else if (n > 1) out.push({ t: 'Ver los productos', href: `${base}/catalogo` });
-	const cats = t.categorias.filter((c) => c.cantidad > 0);
-	if (cats.length >= 2) out.push({ t: cats[0].nombre, href: categoriaHref(t, cats[0].nombre) });
+	// El segundo con verbo y con una intención: las ofertas si hay, si no escribir por WhatsApp. Si
+	// nada de eso aplica, un solo botón (un nombre de categoría suelto no dice qué pasa al tocarlo).
+	const ofertas = t.productos.some((p) => p.anterior && p.anterior > p.precio);
+	if (ofertas && n > 1) out.push({ t: 'Ver ofertas', href: `${base}/catalogo?ofertas=1` });
 	else if (numeroWa(t)) out.push({ t: 'Escribinos', href: waHref(t) });
 	return out.slice(0, 2);
 }
+
+/** «de 11 a 20» nunca se corta en el medio: los rangos horarios van con espacios duros. */
+export const horarioDuro = (h: string) =>
+	h
+		.replace(/(\d{1,2}(?:[:.]\d{2})?)\s*(a|-|–)\s*(\d{1,2}(?:[:.]\d{2})?)/g, '$1\u00a0$2\u00a0$3')
+		.replace(/\b(de|a)\s+(\d)/g, '$1\u00a0$2');
 
 /** La línea de abajo de la portada partida: dónde retirar (si hay retiro). */
 export function retiroDe(t: Tienda): string {
 	const e = t.envios;
 	if (!e.retiro || !e.retiroDireccion) return '';
-	return `Retiro sin cargo en ${e.retiroDireccion}${e.retiroHorario ? ` · ${e.retiroHorario}` : ''}`;
+	return sinViuda(
+		`Retiro sin cargo en ${e.retiroDireccion}${e.retiroHorario ? ` · ${horarioDuro(e.retiroHorario)}` : ''}`
+	);
 }
 
 // ---- Oferta, video, turnos ---------------------------------------------------------------

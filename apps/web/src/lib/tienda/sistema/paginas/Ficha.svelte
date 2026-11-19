@@ -21,6 +21,7 @@
 		conEnvioGratis,
 		ivaDe,
 		ofreceDe,
+		vende,
 		precioTransferencia,
 		textoCuotas,
 		textoSinImpuestos
@@ -75,6 +76,8 @@
 	let cantidad = $state(1);
 	// El botón principal: gris sólo si no se puede tocar (sin stock, próximamente o la vitrina).
 	const sePuede = $derived(!tienda.vitrina && !sel.proximo && sel.stock > 0);
+	// Una tienda que todavía no puede cobrar en la web (las vitrinas de ejemplo siguen como están).
+	const sinCobro = $derived(!tienda.vitrina && !vende(tienda));
 
 	const verbo = $derived(
 		dir === 'mostrador'
@@ -169,9 +172,8 @@
 	}
 
 	// Calcular el envío por código postal.
-	const calcula = $derived(
-		op.producto.calcularEnvio && (envia(tienda.envios) || tienda.envios.retiro)
-	);
+	// Sólo si la tienda envía: con sólo retiro, un código postal no cambia nada.
+	const calcula = $derived(op.producto.calcularEnvio && envia(tienda.envios));
 	let cp = $state('');
 	let cotizado = $state<OpcionEnvio[] | null>(null);
 	let cotizando = $state(false);
@@ -262,7 +264,7 @@
 		envio: I.phTruck,
 		garantia: I.phShieldCheck,
 		cambios: I.phArrowsClockwise,
-		protegida: I.phSealCheck
+		arrepentimiento: I.phArrowUUpLeft
 	} as const;
 </script>
 
@@ -363,12 +365,23 @@
 {/snippet}
 
 {#snippet botonPrincipal(clase: string)}
-	<button
-		type="button"
-		class="tv-btn tv-btn--primario tv-btn--bloque tv-ficha-agregar {clase}"
-		disabled={!sePuede}
-		onclick={agregar}>{textoBoton}</button
-	>
+	{#if sinCobro}
+		<!-- Sin Mercado Pago ni transferencia no hay checkout: el pedido va por WhatsApp (o se consulta). -->
+		<a
+			class="tv-btn tv-btn--primario tv-btn--bloque tv-ficha-agregar {clase}"
+			href={wa || `${base}/nosotros`}
+			target={wa ? '_blank' : undefined}
+			rel={wa ? 'noopener' : undefined}
+			>{#if wa}<Icon icon={I.phWhatsappLogo} size={18} />Pedir por WhatsApp{:else}Consultar{/if}</a
+		>
+	{:else}
+		<button
+			type="button"
+			class="tv-btn tv-btn--primario tv-btn--bloque tv-ficha-agregar {clase}"
+			disabled={!sePuede}
+			onclick={agregar}>{textoBoton}</button
+		>
+	{/if}
 {/snippet}
 
 <Tienda {tienda} pagina="producto" sinWhatsApp>
@@ -480,7 +493,7 @@
 					{#if dir === 'pedido' && cobros.mercadoPago && sePuede}
 						<Boton tipo="suave" bloque onclick={comprarYa}>Comprar ahora con Mercado Pago</Boton>
 					{/if}
-					{#if wa}
+					{#if wa && !sinCobro}
 						<Boton href={wa} tipo={dir === 'mostrador' ? 'wa' : 'secundario'} bloque externo
 							><Icon icon={I.phWhatsappLogo} size={18} />Consultar por WhatsApp</Boton
 						>
@@ -538,7 +551,11 @@
 							<li>
 								<Icon icon={ICONO_CONFIANZA[c.tipo]} size={20} />
 								<span
-									><b>{c.titulo}</b>{#each c.lineas as l (l)}<span>{l}</span>{/each}</span
+									>{#if c.tipo === 'arrepentimiento'}<a
+											class="tv-link"
+											href="{base}/arrepentimiento"><b>{c.titulo}</b></a
+										>{:else}<b>{c.titulo}</b>{/if}{#each c.lineas as l (l)}<span>{sinViuda(l)}</span
+										>{/each}</span
 								>
 							</li>
 						{/each}
@@ -570,7 +587,7 @@
 	<!-- Celular: el botón principal fijo abajo (reserva su lugar al final: regla 8). Va acá, antes
 	que los relacionados, así es el primero de la página para el teclado y los lectores. -->
 	{#if fija}<div class="tv-ficha-barra tv-solo-movil">
-			{#if dir === 'mostrador' && numeroWa(tienda)}
+			{#if dir === 'mostrador' && numeroWa(tienda) && !sinCobro}
 				<a
 					class="tv-ficha-wa"
 					href={wa}

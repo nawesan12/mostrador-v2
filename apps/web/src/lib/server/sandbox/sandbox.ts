@@ -3182,7 +3182,8 @@ export class DatosSandbox implements Datos {
 			retiroDireccion: e.retiroDireccion || conf.negocio.direccion || '',
 			retiroHorario: e.retiroHorario || conf.negocio.horario || '',
 			correo: false,
-			gratisDesde: gratis.activa ? gratis.monto : null,
+			// Como Go: el envío gratis sólo con algo que enviar (la demo no tiene Correo: la moto).
+			gratisDesde: gratis.activa && e.moto ? gratis.monto : null,
 			envioGratis: gratis.activa,
 			envioGratisMonto: gratis.monto
 		};
@@ -3886,7 +3887,7 @@ export class DatosSandbox implements Datos {
 			// Lo de Envíos y retiro. Correo Argentino: la demo no tiene cuenta de MiCorreo, y sin
 			// cotización real no se ofrece.
 			envios: {
-				gratisDesde: entregas.gratisDesde,
+				gratisDesde: entregas.moto ? entregas.gratisDesde : null,
 				retiro: entregas.retiro,
 				retiroDireccion: entregas.retiro ? entregas.retiroDireccion : '',
 				retiroHorario: entregas.retiro ? entregas.retiroHorario : '',

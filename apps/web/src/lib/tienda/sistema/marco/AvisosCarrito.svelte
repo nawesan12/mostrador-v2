@@ -2,6 +2,7 @@
 	import { avisoMayorista, type LineaDetalle } from '../../lineas.ts';
 	import { textoAviso } from '../../mayorista.ts';
 	import { usarTienda } from '../contexto.ts';
+	import { ofreceDe } from '../cobros.ts';
 	import { precio } from '../formato.ts';
 
 	/**
@@ -14,7 +15,10 @@
 	const t = $derived(ctx.tienda);
 	const subtotal = $derived(lineas.reduce((s, l) => s + l.subtotal, 0));
 	// La página lo muestra (paginas.carrito.envioGratisDesde) y la tienda no lo apagó (conversion).
-	const desde = $derived(envioGratis && ctx.conversion.envioGratis ? t.envios.gratisDesde : null);
+	// Sólo si la tienda envía (ofreceDe ya lo filtra: con sólo retiro no hay envío gratis).
+	const desde = $derived(
+		envioGratis && ctx.conversion.envioGratis ? ofreceDe(t).envioGratis : null
+	);
 	const falta = $derived(desde ? Math.max(0, desde - subtotal) : 0);
 	const mayor = $derived(avisoMayorista(lineas, t.mayorista ?? null));
 	const textoMayor = $derived(mayor && textoAviso(mayor, precio));

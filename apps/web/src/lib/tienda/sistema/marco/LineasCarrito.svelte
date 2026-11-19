@@ -38,7 +38,7 @@
 <ul class="tv-lineas" class:tv-lineas--compacta={compacta} aria-label="Productos del carrito">
 	{#each lineas as l (l.clave)}
 		{@const f = faltan.get(l.clave)}
-		<li class="tv-linea" class:tv-linea--falta={!!f}>
+		<li class="tv-linea" class:tv-linea--falta={!!f} data-linea={l.clave}>
 			<a
 				class="tv-linea-foto"
 				href={productoHref(ctx.tienda, l.producto)}
@@ -68,22 +68,30 @@
 					<p class="tv-linea-aviso" role="alert">
 						{f.quedan ? `Quedan ${f.quedan}: ajustá la cantidad.` : 'Se agotó: sacalo para seguir.'}
 						<button type="button" onclick={() => ctx.carrito.fijar(l.clave, f.quedan)}
-							>{f.quedan ? 'Ajustar' : 'Sacar'}</button
+							>{f.quedan ? 'Ajustar' : 'Sacar'}<span class="tv-oculto">
+								{l.producto.nombre}</span
+							></button
 						>
 					</p>
 				{/if}
-				<div class="tv-linea-pie">
-					<Cantidad
-						valor={l.cantidad}
-						max={l.producto.stock}
-						nombre={l.producto.nombre}
-						alCambiar={(n) => ctx.carrito.fijar(l.clave, n)}
-					/>
-					<b class="tv-linea-total">{precio(l.subtotal)}</b>
-				</div>
-				<button type="button" class="tv-linea-quitar" onclick={() => ctx.carrito.fijar(l.clave, 0)}
-					>Quitar<span class="tv-oculto"> {l.producto.nombre}</span></button
-				>
+				<!-- Agotada: sólo el aviso con «Sacar» (sin cantidad ni un segundo «Quitar» que diga lo mismo). -->
+				{#if !f || f.quedan > 0}
+					<div class="tv-linea-pie">
+						<Cantidad
+							valor={l.cantidad}
+							max={l.producto.stock}
+							nombre={l.producto.nombre}
+							alCambiar={(n) => ctx.carrito.fijar(l.clave, n)}
+						/>
+						<b class="tv-linea-total">{precio(l.subtotal)}</b>
+					</div>
+					<button
+						type="button"
+						class="tv-linea-quitar"
+						onclick={() => ctx.carrito.fijar(l.clave, 0)}
+						>Quitar<span class="tv-oculto"> {l.producto.nombre}</span></button
+					>
+				{/if}
 			</div>
 		</li>
 	{/each}

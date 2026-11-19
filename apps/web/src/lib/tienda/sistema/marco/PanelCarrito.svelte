@@ -12,6 +12,7 @@
 	} from '../cobros.ts';
 	import { panelCarrito } from '../panel.svelte.ts';
 	import Boton from '../primitivas/Boton.svelte';
+	import BotonFinalizar from './BotonFinalizar.svelte';
 	import AvisosCarrito from './AvisosCarrito.svelte';
 	import LineasCarrito from './LineasCarrito.svelte';
 
@@ -105,9 +106,7 @@
 				<div class="tv-cuentas-total"><span>Subtotal</span><b>{precio(total)}</b></div>
 				{#if extra.length}<p class="tv-chico tv-suave">o {extra.join(' · ')}</p>{/if}
 				{#if sinImp}<p class="tv-chico tv-suave">{sinImp}</p>{/if}
-				<Boton href="{ctx.base}/checkout" bloque onclick={() => (panelCarrito.abierto = false)}
-					>Finalizar compra</Boton
-				>
+				<BotonFinalizar alIr={() => (panelCarrito.abierto = false)} />
 				<a class="tv-link" href="{ctx.base}/carrito" onclick={() => (panelCarrito.abierto = false)}
 					>Ver el carrito</a
 				>

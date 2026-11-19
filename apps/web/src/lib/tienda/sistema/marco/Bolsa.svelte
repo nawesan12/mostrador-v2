@@ -28,9 +28,11 @@
 	const total = $derived(lineas.reduce((s, l) => s + l.subtotal, 0));
 	const unidades = $derived(lineas.reduce((s, l) => s + l.cantidad, 0));
 	const titulo = $derived(ctx.estilo.gastronomia ? 'Tu pedido' : 'Tu bolsa');
-	const gratis = $derived(t.envios.gratisDesde && total >= t.envios.gratisDesde);
-	const falta = $derived(t.envios.gratisDesde ? Math.max(0, t.envios.gratisDesde - total) : 0);
 	const ofrece = $derived(ofreceDe(t));
+	// Envío gratis sólo si la tienda envía (ofreceDe ya lo filtra).
+	const desde = $derived(ofrece.envioGratis);
+	const gratis = $derived(desde !== null && total >= desde);
+	const falta = $derived(desde !== null ? Math.max(0, desde - total) : 0);
 	const extra = $derived(
 		[textoCuotas(ofrece, total), textoTransferencia(ofrece, total)].filter(Boolean).join(' · ')
 	);
@@ -80,7 +82,7 @@
 				</li>
 			{/each}
 		</ul>
-		{#if t.envios.gratisDesde && ctx.conversion.envioGratis}
+		{#if desde !== null && ctx.conversion.envioGratis}
 			<div class="tv-aviso-barra tv-bolsa-aviso" class:tv-aviso-barra--ok={!falta}>
 				<p>
 					{#if falta}Te faltan <b>{precio(falta)}</b> para el envío&nbsp;gratis.{:else}<b
@@ -88,15 +90,14 @@
 						>{/if}
 				</p>
 				{#if falta}<span class="tv-progreso" aria-hidden="true"
-						><span style:width="{Math.min(100, (total / t.envios.gratisDesde) * 100)}%"
-						></span></span
+						><span style:width="{Math.min(100, (total / (desde ?? 1)) * 100)}%"></span></span
 					>{/if}
 			</div>
 		{/if}
 		<div class="tv-bolsa-total">
-			{#if t.envios.gratisDesde}<div class="tv-bolsa-fila">
+			{#if desde !== null}<div class="tv-bolsa-fila">
 					<span>Envío</span>{#if gratis}<b class="tv-ok">Gratis</b>{:else}<span class="tv-suave"
-							>Gratis desde {precio(t.envios.gratisDesde)}</span
+							>Gratis desde {precio(desde)}</span
 						>{/if}
 				</div>{/if}
 			<div class="tv-bolsa-fila tv-bolsa-fila--total"><span>Total</span><b>{precio(total)}</b></div>

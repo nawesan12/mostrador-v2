@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import CookieBanner from '#lib/components/CookieBanner.svelte';
+	import ErrorMinimo from '#lib/components/ErrorMinimo.svelte';
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
 	import SitioFooter from '#lib/sitio/SitioFooter.svelte';
@@ -11,6 +12,9 @@
 	 * otros errores se usa la misma pantalla con otro texto.
 	 */
 	const es404 = $derived(page.status === 404);
+	// En el panel y el alta (un load de layout que falló cae acá, no en panel/+error.svelte): sin la
+	// cabecera del sitio ni «Crear mi tienda gratis», que es para quien todavía no es cliente.
+	const interno = $derived(/^\/(panel|onboarding)(\/|$)/.test(page.url.pathname));
 	// La sesión venció navegando el panel: a ingresar, que después vuelve acá.
 	$effect(() => {
 		if (page.status === 401 && /^\/(panel|onboarding)(\/|$)/.test(page.url.pathname))
@@ -32,45 +36,49 @@
 </svelte:head>
 
 <!-- eslint-disable svelte/no-navigation-without-resolve -- rutas públicas fijas -->
-<div class="sitio">
-	<SitioHeader />
-	<main>
-		<div class="ancho">
-			<div class="in">
-				<div class="txt">
-					<div class="codigo">{page.status}</div>
-					<h1>{es404 ? 'El horno está vacío.' : 'Algo se nos quemó.'}</h1>
-					<p>
-						{#if es404}
-							Buscamos por todos lados y esta página no existe, o la movimos. Probá con alguna de
-							estas:
-						{:else}
-							No pudimos mostrar esta página. Ya nos avisaron; probá de nuevo en un rato o andá a
-							alguna de estas:
-						{/if}
-					</p>
-					<form class="buscar" action="/ayuda" method="GET" role="search">
-						<Icon icon={I.phMagnifyingGlassBold} size={18} style="color:#7A6252;flex:none" />
-						<input
-							name="q"
-							placeholder="¿Qué estabas buscando?"
-							aria-label="¿Qué estabas buscando?"
-						/>
-						<button type="submit">Buscar</button>
-					</form>
-					<div class="accesos">
-						{#each ACCESOS as [href, ico, t] (href)}
-							<a {href}><Icon icon={ico} size={19} style="color:#b0441d" />{t}</a>
-						{/each}
+{#if interno && page.status !== 401}
+	<ErrorMinimo volver="/panel" textoVolver="Volver al inicio del panel" />
+{:else}
+	<div class="sitio">
+		<SitioHeader />
+		<main>
+			<div class="ancho">
+				<div class="in">
+					<div class="txt">
+						<div class="codigo">{page.status}</div>
+						<h1>{es404 ? 'El horno está vacío.' : 'Algo se nos quemó.'}</h1>
+						<p>
+							{#if es404}
+								Buscamos por todos lados y esta página no existe, o la movimos. Probá con alguna de
+								estas:
+							{:else}
+								No pudimos mostrar esta página. Ya nos avisaron; probá de nuevo en un rato o andá a
+								alguna de estas:
+							{/if}
+						</p>
+						<form class="buscar" action="/ayuda" method="GET" role="search">
+							<Icon icon={I.phMagnifyingGlassBold} size={18} style="color:#7A6252;flex:none" />
+							<input
+								name="q"
+								placeholder="¿Qué estabas buscando?"
+								aria-label="¿Qué estabas buscando?"
+							/>
+							<button type="submit">Buscar</button>
+						</form>
+						<div class="accesos">
+							{#each ACCESOS as [href, ico, t] (href)}
+								<a {href}><Icon icon={ico} size={19} style="color:#b0441d" />{t}</a>
+							{/each}
+						</div>
 					</div>
+					<img src="/hornero/horno-vacio.webp" alt="" width="400" height="400" />
 				</div>
-				<img src="/hornero/horno-vacio.webp" alt="" width="400" height="400" />
 			</div>
-		</div>
-	</main>
-	<SitioFooter />
-</div>
-<CookieBanner />
+		</main>
+		<SitioFooter />
+	</div>
+	<CookieBanner />
+{/if}
 
 <style>
 	.sitio {

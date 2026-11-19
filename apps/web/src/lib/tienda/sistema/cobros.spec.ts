@@ -21,7 +21,7 @@ const tienda = (cobros: Partial<TiendaPublica['cobros']>, gratisDesde: number | 
 			datosTransferencia: null,
 			...cobros
 		},
-		envios: { gratisDesde }
+		envios: { gratisDesde, moto: true, correo: false }
 	}) as unknown as TiendaPublica;
 
 describe('lo que la tienda ofrece al cobrar', () => {
@@ -60,6 +60,11 @@ describe('lo que la tienda ofrece al cobrar', () => {
 				{ subtotal: 1_105, iva: 10.5 }
 			])
 		).toBe('Total sin impuestos nacionales $ 11.000,00');
+	});
+	it('con sólo retiro no hay envío gratis que prometer', () => {
+		const t = tienda({}, 50_000);
+		t.envios.moto = false;
+		expect(ofreceDe(t).envioGratis).toBeNull();
 	});
 	it('los mensajes automáticos de la barra no repiten lo que ya dicen los propios', () => {
 		const o = ofreceDe(

@@ -6,6 +6,7 @@
  * nada se promete si la tienda no lo configuró.
  */
 import { IVA_INICIAL, IVAS, sinImpuestos } from '../cobros.ts';
+import { envia } from '../envio.ts';
 import type { ProductoPublico, TiendaPublica } from '../tipos.ts';
 import { CUOTAS_DESDE, conTransferencia, cuota, miles, precio } from './formato.ts';
 
@@ -30,12 +31,21 @@ export type Ofrece = {
 const entero = (x: unknown, def: number) =>
 	typeof x === 'number' && Number.isFinite(x) ? Math.round(x) : def;
 
+/**
+ * Si la tienda puede cobrar en la web (Mercado Pago o transferencia). Sin ninguno, la ficha, el
+ * carrito y el checkout cambian la compra por «Pedir por WhatsApp» (o «Consultar»): no se llega al
+ * final con todos los datos cargados para enterarse de que no se puede pagar.
+ */
+export const vende = (t: ConCobros) => !!t.cobros?.mercadoPago || !!t.cobros?.datosTransferencia;
+
 export function ofreceDe(t: ConCobros): Ofrece {
 	const c = t.cobros;
 	const mp = !!c?.mercadoPago;
 	const n = entero(c?.cuotas, 0);
 	const acepta = !!c?.datosTransferencia;
-	const gratis = t.envios?.gratisDesde;
+	// Envío gratis sólo si la tienda envía: con sólo retiro no hay envío que regalar (Go ya lo filtra;
+	// el sandbox y los datos viejos, no).
+	const gratis = t.envios && envia(t.envios) ? t.envios.gratisDesde : null;
 	return {
 		cuotas: mp && n > 1 ? Math.min(n, 24) : 0,
 		cuotasDesde: Math.max(0, entero(c?.cuotasDesde, CUOTAS_DESDE)),

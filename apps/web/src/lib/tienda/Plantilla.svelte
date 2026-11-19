@@ -36,6 +36,7 @@
 		| 'nosotros'
 		| 'favoritos'
 		| 'no-existe'
+		| 'error'
 		| 'listo'
 		| 'turnos'
 		| 'turno'
@@ -102,6 +103,8 @@
 	<Suscripciones {tienda} />
 {:else if pagina === 'mi-suscripcion' && suscripcion}
 	<MiSuscripcion {tienda} {suscripcion} {aviso} {demo} {error} />
+{:else if pagina === 'error'}
+	<NoExiste {tienda} error />
 {:else}
 	<NoExiste {tienda} />
 {/if}

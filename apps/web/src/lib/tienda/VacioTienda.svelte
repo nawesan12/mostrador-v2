@@ -17,7 +17,8 @@
 	}: {
 		tienda: TiendaPublica;
 		tema: TemaOpiniones;
-		motivo: 'sin-productos' | 'no-existe';
+		/** `error`: la página no se pudo cargar (la API falló o tardó): el carrito sigue guardado. */
+		motivo: 'sin-productos' | 'no-existe' | 'error';
 	} = $props();
 
 	const base = $derived(tienda.base ?? `/t/${tienda.slug}`);
@@ -29,15 +30,17 @@
 	);
 	const hay = $derived(tienda.productos.length > 0);
 	const texto = $derived(
-		motivo === 'no-existe'
-			? hay
-				? 'Puede que lo hayan sacado o que el link esté mal escrito. Fijate en el resto de los productos.'
-				: 'Puede que lo hayan sacado o que el link esté mal escrito.'
-			: linkWa
-				? 'Muy pronto vas a poder comprar desde acá. Si buscás algo, escribinos.'
-				: tienda.envios.retiro && tienda.direccion
-					? `Muy pronto vas a poder comprar desde acá. Mientras tanto, te esperamos en ${tienda.direccion}.`
-					: 'Muy pronto vas a poder comprar desde acá.'
+		motivo === 'error'
+			? 'Tu carrito sigue guardado. Probá de nuevo en un momento.'
+			: motivo === 'no-existe'
+				? hay
+					? 'Puede que lo hayan sacado o que el link esté mal escrito. Fijate en el resto de los productos.'
+					: 'Puede que lo hayan sacado o que el link esté mal escrito.'
+				: linkWa
+					? 'Muy pronto vas a poder comprar desde acá. Si buscás algo, escribinos.'
+					: tienda.envios.retiro && tienda.direccion
+						? `Muy pronto vas a poder comprar desde acá. Mientras tanto, te esperamos en ${tienda.direccion}.`
+						: 'Muy pronto vas a poder comprar desde acá.'
 	);
 </script>
 
@@ -45,23 +48,40 @@
 <div class="vacio" style={varsTema(tema)}>
 	<span class="icono"
 		><Icon
-			icon={motivo === 'no-existe' ? I.phMagnifyingGlassBold : I.phStorefrontFill}
+			icon={motivo === 'error'
+				? I.phArrowClockwiseBold
+				: motivo === 'no-existe'
+					? I.phMagnifyingGlassBold
+					: I.phStorefrontFill}
 			size={26}
 		/></span
 	>
 	<h2>
-		{motivo === 'no-existe' ? 'No encontramos este producto' : 'Estamos cargando los productos'}
+		{motivo === 'error'
+			? 'No pudimos cargar esto'
+			: motivo === 'no-existe'
+				? 'No encontramos este producto'
+				: 'Estamos cargando los productos'}
 	</h2>
 	<p>{texto}</p>
 	<div class="acciones">
-		{#if motivo === 'no-existe' && hay}
+		{#if motivo === 'error'}
+			<button type="button" class="principal" onclick={() => location.reload()}>Reintentar</button>
+			{#if linkWa}
+				<a class="segundo" href={linkWa} target="_blank" rel="noopener"
+					><Icon icon={I.phWhatsappLogoFill} size={18} />Escribinos</a
+				>
+			{/if}
+		{:else if motivo === 'no-existe' && hay}
 			<a class="principal" href="{base}/catalogo">Ver los productos</a>
 		{:else if linkWa}
 			<a class="principal" href={linkWa} target="_blank" rel="noopener"
 				><Icon icon={I.phWhatsappLogoFill} size={18} />Escribinos por WhatsApp</a
 			>
 		{/if}
-		{#if motivo === 'no-existe'}
+		{#if motivo === 'error'}
+			<!-- Reintentar y WhatsApp alcanzan -->
+		{:else if motivo === 'no-existe'}
 			<a class={hay || linkWa ? 'segundo' : 'principal'} href={base || '/'}>Volver al inicio</a>
 		{:else}
 			<a class={linkWa ? 'segundo' : 'principal'} href="{base}/nosotros">Conocé la tienda</a>
@@ -116,7 +136,10 @@
 		flex-wrap: wrap;
 		gap: 10px;
 	}
-	a {
+	a,
+	button {
+		border: 0;
+		cursor: pointer;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;

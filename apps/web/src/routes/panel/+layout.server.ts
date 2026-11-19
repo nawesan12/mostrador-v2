@@ -1,7 +1,7 @@
 import { env } from 'cloudflare:workers';
 import { datosDe, usaSandbox } from '#lib/server/datos/index.ts';
 import { plantilla } from '#lib/plantillas.ts';
-import type { PaginaNotificaciones } from '#lib/server/datos/tipos.ts';
+import type { PaginaNotificaciones, ResumenPanel } from '#lib/server/datos/tipos.ts';
 import { unsplash } from '#lib/landing/formato.ts';
 import type { LayoutServerLoad } from './$types';
 
@@ -18,7 +18,16 @@ export const load: LayoutServerLoad = async ({ locals, cookies, depends }) => {
 	const datos = datosDe(locals);
 	const [tienda, resumen, notificaciones, ajustes, acceso] = await Promise.all([
 		datos.tienda(),
-		datos.resumen(),
+		// Las insignias y la prueba son secundarias: si fallan, el panel anda sin ellas (si no, el
+		// error lo atendía la página de error del sitio, con su cabecera y su «Creá tu tienda»).
+		datos.resumen().catch(
+			(): ResumenPanel => ({
+				insignias: { pedidos: 0, carritos: 0, whatsapp: 0, paraHacer: 0 },
+				notificaciones: [],
+				canales: [],
+				prueba: { plan: '', diasRestantes: 0, diasTotales: 0 }
+			})
+		),
 		// Si la API no responde la campanita, el panel anda igual (la campanita queda vacía).
 		datos
 			.notificaciones()

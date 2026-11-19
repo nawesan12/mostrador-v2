@@ -12,7 +12,7 @@
 	 * Un producto o una página que no existe, con el marco de la tienda (no la página de error de Tu
 	 * Local Web): qué pasó, cómo seguir y, si hay, los más vendidos para no quedar en blanco.
 	 */
-	let { tienda }: { tienda: TiendaPublica } = $props();
+	let { tienda, error = false }: { tienda: TiendaPublica; error?: boolean } = $props();
 	const diseno = $derived(disenoDeTienda(tienda));
 	const dir = $derived(estiloFinal(tienda.plantilla, diseno.paleta, diseno.estilo).direccion);
 	const sugeridos: Bloque[] = [
@@ -26,6 +26,8 @@
 </script>
 
 <Tienda {tienda} pagina="no-existe">
-	<div class="tv-ancho tv-pag"><VacioTienda {tienda} tema={temaDe(dir)} motivo="no-existe" /></div>
+	<div class="tv-ancho tv-pag">
+		<VacioTienda {tienda} tema={temaDe(dir)} motivo={error ? 'error' : 'no-existe'} />
+	</div>
 	{#if tienda.productos.length > 1}<Bloques bloques={sugeridos} suscripciones={false} />{/if}
 </Tienda>

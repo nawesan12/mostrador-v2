@@ -2,15 +2,16 @@
  * La caja de confianza de la ficha (paginas.producto.confianza, tienda-nivel-tiendanube.md) y la
  * fecha estimada de llegada al cotizar. El envío se arma solo con la configuración real de envíos
  * (moto con su zona y demora, correo, retiro, envío gratis desde $ X) salvo que la tienda haya
- * escrito el suyo; garantía y cambios salen sólo si la tienda los escribió. La compra protegida
+ * escrito el suyo; garantía y cambios salen sólo si la tienda los escribió. El arrepentimiento
  * (10 días para arrepentirse, Ley 24.240) vale para toda tienda: siempre va.
  */
+import { envia, unir } from '../envio.ts';
 import type { EnviosTienda, TiendaPublica } from '../tipos.ts';
 import type { Confianza } from './catalogo.ts';
 import { precio } from './formato.ts';
 
 export type LineaConfianza = {
-	tipo: 'envio' | 'garantia' | 'cambios' | 'protegida';
+	tipo: 'envio' | 'garantia' | 'cambios' | 'arrepentimiento';
 	titulo: string;
 	lineas: string[];
 };
@@ -26,7 +27,9 @@ const limpio = (x: unknown, max = 120) =>
 /** Las líneas de envío que salen de la configuración (vacío: no envía ni tiene retiro). */
 export function envioAuto(e: EnviosTienda): string[] {
 	const out: string[] = [];
-	if (e.gratisDesde && e.gratisDesde > 0) out.push(`Envío gratis desde ${precio(e.gratisDesde)}`);
+	// Envío gratis sólo si la tienda envía (con sólo retiro no hay envío que regalar).
+	if (envia(e) && e.gratisDesde && e.gratisDesde > 0)
+		out.push(`Envío gratis desde ${precio(e.gratisDesde)}`);
 	if (e.moto) {
 		const zona = e.motoZona.trim();
 		const demora = e.motoDemora.trim();
@@ -39,7 +42,10 @@ export function envioAuto(e: EnviosTienda): string[] {
 	if (e.correo) out.push('A todo el país por Correo Argentino');
 	if (e.retiro) {
 		const donde = e.retiroDireccion.trim();
-		out.push(donde ? `Retiro sin cargo en ${donde}` : 'Retiro sin cargo en el local');
+		const horario = e.retiroHorario.trim();
+		// Con sólo retiro, la línea dice dónde y cuándo (el título ya es «Retiro en el local»).
+		if (!envia(e)) out.push(donde ? unir(donde, horario) : 'Coordinás el retiro por WhatsApp');
+		else out.push(donde ? `Retiro sin cargo en ${donde}` : 'Retiro sin cargo en el local');
 	}
 	return out;
 }
@@ -52,15 +58,21 @@ export function confianzaDe(
 	const envio = limpio(c?.envio);
 	const auto = envioAuto(t.envios);
 	if (envio || auto.length)
-		out.push({ tipo: 'envio', titulo: 'Envíos', lineas: envio ? [envio] : auto });
+		out.push({
+			tipo: 'envio',
+			titulo: envia(t.envios) || envio ? 'Envíos' : 'Retiro en el local',
+			lineas: envio ? [envio] : auto
+		});
 	const garantia = limpio(c?.garantia);
 	if (garantia) out.push({ tipo: 'garantia', titulo: 'Garantía', lineas: [garantia] });
 	const cambios = limpio(c?.cambios);
 	if (cambios) out.push({ tipo: 'cambios', titulo: 'Cambios', lineas: [cambios] });
+	// Lo único garantizado es el derecho de arrepentimiento (legal, con su página): nada de un sello
+	// de «compra protegida» que sugiere una garantía que no existe cuando se paga por transferencia.
 	out.push({
-		tipo: 'protegida',
-		titulo: 'Compra protegida',
-		lineas: ['10 días para arrepentirte de la compra']
+		tipo: 'arrepentimiento',
+		titulo: 'Botón de arrepentimiento',
+		lineas: ['10 días para devolverlo']
 	});
 	return out;
 }

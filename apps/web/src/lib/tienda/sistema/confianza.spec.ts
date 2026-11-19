@@ -28,14 +28,22 @@ describe('caja de confianza', () => {
 	});
 	it('garantía y cambios sólo si la tienda los escribió', () => {
 		const sin = confianzaDe({ envios }, {});
-		expect(sin.map((x) => x.tipo)).toEqual(['envio', 'protegida']);
+		expect(sin.map((x) => x.tipo)).toEqual(['envio', 'arrepentimiento']);
 		const con = confianzaDe({ envios }, { envio: 'Despachamos en 24 h', garantia: '6 meses' });
-		expect(con.map((x) => x.tipo)).toEqual(['envio', 'garantia', 'protegida']);
+		expect(con.map((x) => x.tipo)).toEqual(['envio', 'garantia', 'arrepentimiento']);
 		expect(con[0].lineas).toEqual(['Despachamos en 24 h']);
+	});
+	it('con sólo retiro, ni envío gratis ni «Envíos»: dónde y cuándo se retira', () => {
+		const retiro = { ...envios, moto: false, correo: false };
+		expect(envioAuto(retiro)).toEqual(['Gorriti 4500']);
+		const caja = confianzaDe({ envios: retiro }, null);
+		expect(caja[0].titulo).toBe('Retiro en el local');
+		const sinDir = { ...retiro, retiroDireccion: '' };
+		expect(envioAuto(sinDir)).toEqual(['Coordinás el retiro por WhatsApp']);
 	});
 	it('sin envíos ni retiro no promete envío', () => {
 		const nada = { ...envios, gratisDesde: null, retiro: false, moto: false, correo: false };
-		expect(confianzaDe({ envios: nada }, null).map((x) => x.tipo)).toEqual(['protegida']);
+		expect(confianzaDe({ envios: nada }, null).map((x) => x.tipo)).toEqual(['arrepentimiento']);
 	});
 });
 
