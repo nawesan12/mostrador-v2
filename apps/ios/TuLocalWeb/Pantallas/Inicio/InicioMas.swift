@@ -230,6 +230,8 @@ struct PasosPrimeraVenta: View {
     @Environment(Navegacion.self) private var nav
     @State private var conProductos: Bool?
     @State private var mpConectada = false
+    /// El retiro viene prendido: sin la dirección del local nadie sabe dónde retirar (como en el panel).
+    @State private var faltaDireccion = false
     @AppStorage(PrimerosPasos.claveCompartido) private var compartidos = ""
     @AppStorage(PrimerosPasos.claveOcultos) private var ocultos = ""
 
@@ -238,22 +240,26 @@ struct PasosPrimeraVenta: View {
         let id = estado.tienda?.id ?? ""
         let compartio = PrimerosPasos.contiene(compartidos, id)
         let hechos = 1 + (conProductos == true ? 1 : 0) + (mp ? 1 : 0) + (compartio ? 1 : 0)
+        let total = faltaDireccion ? 5 : 4
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
                 Text("Para tu primera venta").estilo(.seccion).foregroundStyle(C.texto).accessibilityAddTraits(.isHeader)
                 Spacer(minLength: 8)
-                Text("\(hechos) de 4").estilo(Estilo(tamano: 14, peso: .bold, relativo: .footnote)).foregroundStyle(paleta.tinta).monospacedDigit()
+                Text("\(hechos) de \(total)").estilo(Estilo(tamano: 14, peso: .bold, relativo: .footnote)).foregroundStyle(paleta.tinta).monospacedDigit()
             }
             GeometryReader { g in
                 Capsule().fill(C.pista)
-                    .overlay(alignment: .leading) { Capsule().fill(paleta.acento).frame(width: g.size.width * CGFloat(hechos) / 4) }
+                    .overlay(alignment: .leading) { Capsule().fill(paleta.acento).frame(width: g.size.width * CGFloat(hechos) / CGFloat(total)) }
             }
             .frame(height: 8)
-            .accessibilityElement().accessibilityLabel("Avance").accessibilityValue("\(hechos) de 4")
+            .accessibilityElement().accessibilityLabel("Avance").accessibilityValue("\(hechos) de \(total)")
             VStack(spacing: 0) {
                 paso("Creaste tu tienda", hecho: true, accion: nil) {}
                 paso("Cargá tu primer producto", hecho: conProductos == true, accion: "Cargar") { nav.inicio.append(.nuevoProducto(nil)) }
                 paso("Conectá Mercado Pago", hecho: mp, accion: "Conectar") { nav.inicio.append(.integraciones) }
+                if faltaDireccion {
+                    paso("Poné la dirección de tu local", hecho: false, accion: "Poner") { nav.inicio.append(.envios) }
+                }
                 ShareLink(item: estado.tienda?.url ?? URL(string: "https://tulocalweb.com.ar")!) {
                     filaPaso("Mandá el link a tus clientes", hecho: compartio, accion: "Compartir")
                 }
@@ -261,7 +267,7 @@ struct PasosPrimeraVenta: View {
                 // Tocar «Compartir» alcanza para darlo por hecho (iOS no avisa si se mandó).
                 .simultaneousGesture(TapGesture().onEnded { compartidos = PrimerosPasos.sumar(compartidos, id) })
             }
-            Button(hechos == 4 ? "Listo, ir al tablero" : "Ocultar estos pasos") {
+            Button(hechos == total ? "Listo, ir al tablero" : "Ocultar estos pasos") {
                 withAnimation { ocultos = PrimerosPasos.sumar(ocultos, id) }
                 estado.version += 1
             }
@@ -274,6 +280,10 @@ struct PasosPrimeraVenta: View {
             if let m: MP = try? await estado.api.get("/v1/panel/integraciones/mercadopago") { mpConectada = m.conectada ?? false }
             if let l: PaginaProductos = try? await estado.api.get("/v1/panel/listas/productos", query: [URLQueryItem(name: "cuantos", value: "1")]) {
                 conProductos = l.total > 0
+            }
+            struct Entregas: Decodable { var retiro: Bool?; var retiroDireccion: String? }
+            if let e: Entregas = try? await estado.api.get("/v1/panel/configuracion/entregas") {
+                faltaDireccion = (e.retiro ?? false) && (e.retiroDireccion ?? "").trimmingCharacters(in: .whitespaces).isEmpty
             }
         }
     }

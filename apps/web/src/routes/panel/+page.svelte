@@ -291,6 +291,15 @@
 								href: `${rutaDe('Configuración')}?tab=negocio`
 							},
 						puedeTienda &&
+							pasos.direccionRetiro === false && {
+								icon: I.phStorefrontFill,
+								title: 'Poné la dirección de tu local',
+								sub: 'Para que sepan dónde retirar',
+								bg: 'rgba(210,88,47,.13)',
+								fg: '#b0441d',
+								href: '/panel/envios/configurar'
+							},
+						puedeTienda &&
 							pasos.mercadoPago === false && {
 								icon: I.phHandCoinsFill,
 								title: 'Conectá Mercado Pago',

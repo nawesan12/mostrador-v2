@@ -37,6 +37,16 @@
 		retiro = en?.retiro ?? true;
 		moto = en?.moto ?? false;
 	});
+	// El retiro viene prendido: sin la dirección del local, nadie sabe dónde retirar (ni el mail ni el
+	// checkout lo dicen). Se pide a la vista, sin esconderla en «Editar».
+	const faltaDireccion = $derived(!!en?.retiro && !en.retiroDireccion?.trim());
+	let abrirUnaVez = true;
+	$effect.pre(() => {
+		if (abrirUnaVez && faltaDireccion) {
+			abrirUnaVez = false;
+			abierto = 'entregas';
+		}
+	});
 
 	// Validación amable: se avisa al salir del campo (y después, mientras lo corrige), no en cada letra.
 	let alias = $state('');
@@ -248,7 +258,9 @@
 				<Logo k={COBROS_REALES.envios.k} tam={36} icono={18} radio={11} />
 				<span class="r-txt"
 					><span class="r-t">{COBROS_REALES.envios.t}</span><span class="r-d"
-						>{en
+						>{en && faltaDireccion
+							? 'Falta la dirección de tu local'
+							: en
 							? [
 									en.retiro && 'Retiro en el local',
 									en.moto && 'Moto',
@@ -274,11 +286,12 @@
 					>
 					{#if retiro}
 						<label
-							><span>Dirección de retiro <em>(opcional)</em></span><input
+							><span>Dirección de tu local</span><input
 								name="retiroDireccion"
 								value={en?.retiroDireccion ?? ''}
-								placeholder="Si la dejás vacía, va la del negocio"
+								placeholder="Calle y número, localidad"
 								autocomplete="street-address"
+								required
 							/></label
 						>
 						<label

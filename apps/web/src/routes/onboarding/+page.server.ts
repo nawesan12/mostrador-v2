@@ -270,6 +270,11 @@ export const actions: Actions = {
 			motoZona: campo(f, 'motoZona', 160),
 			motoDemora: campo(f, 'motoDemora', 60)
 		};
+		if (e.retiro && !e.retiroDireccion)
+			return fail(400, {
+				donde: 'entregas',
+				error: 'Poné la dirección de tu local para que sepan dónde retirar.'
+			});
 		if (moto && !e.motoZona)
 			return fail(400, {
 				donde: 'entregas',

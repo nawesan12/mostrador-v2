@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -228,22 +229,27 @@ fun PasosPrimeraVenta(paleta: PaletaTienda) {
     val ctx = LocalContext.current
     var conProductos by remember { mutableStateOf<Boolean?>(null) }
     var mpConectada by remember { mutableStateOf(false) }
+    // El retiro viene prendido: sin la dirección del local nadie sabe dónde retirar (como en el panel).
+    var faltaDireccion by remember { mutableStateOf(false) }
     var compartidos by remember { mutableStateOf(Preferencias.texto(PrimerosPasos.claveCompartido) ?: "") }
     val mp = mpConectada || (estado.resumen?.canales?.contains("mp") ?: false)
     val id = estado.tienda?.id ?: ""
     val compartio = PrimerosPasos.contiene(compartidos, id)
     val hechos = 1 + (if (conProductos == true) 1 else 0) + (if (mp) 1 else 0) + (if (compartio) 1 else 0)
+    val total = if (faltaDireccion) 5 else 4
 
     @Serializable data class MP(val conectada: Boolean? = null)
+    @Serializable data class Entregas(val retiro: Boolean? = null, val retiroDireccion: String? = null)
     LaunchedEffect(estado.version) {
         estado.api.opcional<MP>("/v1/panel/integraciones/mercadopago")?.let { mpConectada = it.conectada ?: false }
         estado.api.opcional<PaginaProductos>("/v1/panel/listas/productos", listOf("cuantos" to "1"))?.let { conProductos = it.total > 0 }
+        estado.api.opcional<Entregas>("/v1/panel/configuracion/entregas")?.let { faltaDireccion = it.retiro == true && it.retiroDireccion.orEmpty().isBlank() }
     }
 
     @Composable
     fun Paso(t: String, hecho: Boolean, accion: String?, alTocar: (() -> Unit)?) {
         Row(Modifier.fillMaxWidth().heightIn(min = 44.dp)
-            .then(if (!hecho && alTocar != null) Modifier.clickable(onClick = alTocar) else Modifier)
+            .then(if (!hecho && alTocar != null) Modifier.clickable(role = Role.Button, onClick = alTocar) else Modifier)
             .semantics(mergeDescendants = true) { if (hecho) stateDescription = "Hecho" },
             horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
             if (hecho) {
@@ -259,15 +265,16 @@ fun PasosPrimeraVenta(paleta: PaletaTienda) {
     Column(Modifier.fillMaxWidth().relieve().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Texto("Para tu primera venta", Estilo.seccion, C.texto, Modifier.weight(1f).semantics { heading() })
-            Texto("$hechos de 4", Estilo(14f, Peso.bold), paleta.tinta, numeros = true)
+            Texto("$hechos de $total", Estilo(14f, Peso.bold), paleta.tinta, numeros = true)
         }
-        BoxWithConstraints(Modifier.fillMaxWidth().height(8.dp).clip(Capsula).background(C.pista).semantics { contentDescription = "Avance"; stateDescription = "$hechos de 4" }) {
-            Box(Modifier.width(maxWidth * hechos / 4).fillMaxHeight().clip(Capsula).background(paleta.acento))
+        BoxWithConstraints(Modifier.fillMaxWidth().height(8.dp).clip(Capsula).background(C.pista).semantics { contentDescription = "Avance"; stateDescription = "$hechos de $total" }) {
+            Box(Modifier.width(maxWidth * hechos / total).fillMaxHeight().clip(Capsula).background(paleta.acento))
         }
         Column {
             Paso("Creaste tu tienda", true, null, null)
             Paso("Cargá tu primer producto", conProductos == true, "Cargar") { nav.inicio.add(Destino.nuevoProducto(null)) }
             Paso("Conectá Mercado Pago", mp, "Conectar") { nav.inicio.add(Destino.integraciones) }
+            if (faltaDireccion) Paso("Poné la dirección de tu local", false, "Poner") { nav.inicio.add(Destino.envios) }
             // Tocar «Compartir» alcanza para darlo por hecho (no hay forma de saber si se mandó).
             Paso("Mandá el link a tus clientes", compartio, "Compartir") {
                 compartidos = PrimerosPasos.sumar(compartidos, id)
@@ -275,7 +282,7 @@ fun PasosPrimeraVenta(paleta: PaletaTienda) {
                 compartirTexto(ctx, estado.tienda?.url ?: "https://tulocalweb.com.ar")
             }
         }
-        BotonTexto(if (hechos == 4) "Listo, ir al tablero" else "Ocultar estos pasos", {
+        BotonTexto(if (hechos == total) "Listo, ir al tablero" else "Ocultar estos pasos", {
             Preferencias.ponerTexto(PrimerosPasos.claveOcultos, PrimerosPasos.sumar(Preferencias.texto(PrimerosPasos.claveOcultos) ?: "", id))
             estado.version += 1
         }, alto = 44.dp, color = paleta.tinta)

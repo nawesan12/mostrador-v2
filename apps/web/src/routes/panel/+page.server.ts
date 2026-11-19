@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ locals, url, depends }) => {
 	const periodo = PERIODOS.includes(p as Periodo) ? (p as Periodo) : '7d';
 	const d = datosDe(locals);
 	const real = !usaSandbox();
-	const [tablero, estado, productos, config] = await Promise.all([
+	const [tablero, estado, productos, config, entregas] = await Promise.all([
 		d.tablero(periodo),
 		// Con la API, la tarjeta de Integraciones muestra lo que de verdad está conectado (el tablero
 		// de Go no lo trae). Si falla, la tarjeta invita a conectar en vez de tirar el Resumen.
@@ -27,13 +27,16 @@ export const load: PageServerLoad = async ({ locals, url, depends }) => {
 					.then((l) => l.total)
 					.catch(() => null)
 			: null,
-		real ? d.configuracion().catch(() => null) : null
+		real ? d.configuracion().catch(() => null) : null,
+		real ? d.entregas().catch(() => null) : null
 	]);
 	const pasos = real
 		? {
 				productos,
 				mercadoPago: estado ? !!estado.conectadas.mp : null,
-				transferencia: config ? !!(config.negocio.alias || config.negocio.cbu) : null
+				transferencia: config ? !!(config.negocio.alias || config.negocio.cbu) : null,
+				// Retiro prendido sin dirección (ni la de retiro ni la del negocio): nadie sabe dónde ir.
+				direccionRetiro: entregas ? !entregas.retiro || !!entregas.retiroDireccion?.trim() : null
 			}
 		: null;
 	const conectadas = estado
