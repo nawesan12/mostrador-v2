@@ -141,6 +141,7 @@
 			"Cafés",
 			"Panadería",
 			"Salado",
+			"Bebidas",
 			"Café en grano"
 		],
 		"productos": [
@@ -237,7 +238,7 @@
 			{
 				"id": "jugo-de-naranja",
 				"nombre": "Jugo de naranja",
-				"categoria": "Salado",
+				"categoria": "Bebidas",
 				"precio": 3600,
 				"anterior": null,
 				"foto": "1600271886742-f049cd451bba",

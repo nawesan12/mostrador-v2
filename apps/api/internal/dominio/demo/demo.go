@@ -284,17 +284,17 @@ func Diseno(t Tienda) mitienda.Diseno {
 	}
 	d.Plantilla, d.Titulo, d.Lema, d.Portada = t.Plantilla, t.Nombre, t.Lema, t.Portada
 	d.CompartirTitulo, d.CompartirDescripcion = t.Nombre, t.Lema
+	// Lo que prometen las demos es lo que tienen configurado (Envíos y retiro, y el alias de abajo): moto
+	// en su ciudad, retiro y transferencia. Sin Correo Argentino ni Mercado Pago, que no tienen.
 	beneficios := []any{
-		map[string]any{"icono": "envio", "titulo": "Envíos a todo el país", "texto": "Por Correo Argentino"},
-		// Sin «cuotas sin interés»: las tiendas de demostración no tienen Mercado Pago ni eligieron cuotas en
-		// Configuración › Cobros, así que la vidriera las manda en 0 y la demo no promete lo que no ofrece.
-		map[string]any{"icono": "cuotas", "titulo": "Pagás como quieras", "texto": "Mercado Pago o transferencia"},
+		map[string]any{"icono": "envio", "titulo": "Envío en moto", "texto": "En el día en " + t.Ciudad},
+		map[string]any{"icono": "transferencia", "titulo": "Pagás por transferencia", "texto": "Te mostramos el alias al confirmar"},
 		map[string]any{"icono": "retiro", "titulo": "Retiro en el local", "texto": "Sin cargo, en " + t.Ciudad},
 		map[string]any{"icono": "cambios", "titulo": "Cambios sin vueltas", "texto": "Hasta 30 días"},
 	}
 	preguntas := []any{
-		map[string]any{"p": "¿Hacen envíos?", "r": "Sí, a todo el país por Correo Argentino y en moto en " + t.Ciudad + "."},
-		map[string]any{"p": "¿Cómo pago?", "r": "Con Mercado Pago, tarjeta o transferencia."},
+		map[string]any{"p": "¿Hacen envíos?", "r": "Sí, en moto en " + t.Ciudad + ", en el día. También podés retirar sin cargo."},
+		map[string]any{"p": "¿Cómo pago?", "r": "Por transferencia: al confirmar el pedido te mostramos el alias."},
 		map[string]any{"p": "¿Puedo retirar?", "r": "Sí: " + t.Direccion + ". " + t.Horario + "."},
 	}
 	banner := map[string]any{"titulo": "Nueva temporada", "texto": "Lo último que llegó, antes que nadie.",
@@ -348,7 +348,8 @@ func tienda(b *strings.Builder, t Tienda, c Catalogo, dueno string, ahora time.T
 	d := Diseno(t)
 	negocio := map[string]string{
 		"nombre": t.Nombre, "razonSocial": "", "cuit": "", "condicion": "monotributo", "direccion": t.Direccion + ", " + t.Ciudad,
-		"whatsapp": t.Whatsapp, "email": "", "horario": t.Horario, "alias": "", "cbu": "", "titular": "", "politica": "",
+		"whatsapp": t.Whatsapp, "email": "", "horario": t.Horario, "alias": recortarAlias(t.Slug + ".demo"), "cbu": "",
+		"titular": t.Nombre, "politica": "",
 	}
 	fmt.Fprintf(b, `INSERT INTO tiendas (id, slug, nombre, rubro, plantilla, plan, creada_en, onboarding_terminado_en, meta_mensual,
 	diseno_borrador, diseno_publicado, negocio, prueba_hasta, demo)
@@ -357,6 +358,9 @@ VALUES (%s, %s, %s, %s, %s, 'pro', %s, %s, %d, %s, %s, %s, %s, true);
 		j(d), j(d), j(negocio), ts(ahora.AddDate(0, 2, 0)))
 	fmt.Fprintf(b, "INSERT INTO auth.membresias (usuario_id, tienda_id, rol) SELECT id, %s, 'duenio' FROM auth.usuarios WHERE email = %s;\n",
 		q(tid), q(dueno))
+	// Envíos y retiro de verdad: lo que dicen los beneficios y las preguntas.
+	fmt.Fprintf(b, "INSERT INTO entregas (tienda_id, retiro, retiro_direccion, retiro_horario, moto, moto_costo, moto_zona, moto_demora) VALUES (%s, true, %s, %s, true, 2500, %s, 'En el día');\n",
+		q(tid), q(t.Direccion+", "+t.Ciudad), q(t.Horario), q(t.Ciudad))
 
 	// Catálogo.
 	var prods []producto
@@ -784,4 +788,12 @@ var preguntas = map[string][][2]string{
 		{"¿Tienen precios por mayor?", "Sí, desde 5 kg por producto. Escribinos por WhatsApp y te pasamos la lista."},
 		{"¿Las almendras son tostadas?", "Son naturales, sin tostar ni salar."},
 	},
+}
+
+// recortarAlias: un alias válido (6 a 20 letras, números, puntos o guiones).
+func recortarAlias(a string) string {
+	if len(a) > 20 {
+		a = a[:20]
+	}
+	return strings.Trim(a, ".-")
 }
