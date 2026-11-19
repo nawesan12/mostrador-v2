@@ -294,6 +294,12 @@ func TestGeneracionPorEventoYRol(t *testing.T) {
 		if roles(ns) != "duenio" || ns["duenio"].titulo != "Terminó tu prueba gratis" || !strings.Contains(ns["duenio"].detalle, "5 productos quedaron ocultos") {
 			t.Fatalf("prueba: %s %+v", roles(ns), ns)
 		}
+		// Uno solo: el verbo concuerda.
+		e.evento(t, 111, e.luna, "prueba.termina", `{"dias":0,"productos":1,"personas":0}`)
+		ns = e.de(t, e.luna, "prueba:111")
+		if !strings.Contains(ns["duenio"].detalle, "1 producto quedó oculto en la tienda") {
+			t.Fatalf("prueba (1): %+v", ns)
+		}
 	})
 }
 

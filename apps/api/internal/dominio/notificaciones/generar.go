@@ -517,18 +517,19 @@ func pruebaTermina(_ context.Context, _ pgx.Tx, ev outbox.Evento) (Hecho, error)
 	if json.Unmarshal(ev.Datos, &d) != nil {
 		return Hecho{}, nil
 	}
-	fuera := ""
+	// fuera: lo que se oculta, con el verbo que concuerda («1 producto quedó oculto», «5 productos quedaron ocultos»).
+	fuera, quedo, seOculta := "", "", ""
 	switch {
 	case d.Productos == 1:
-		fuera = "1 producto"
+		fuera, quedo, seOculta = "1 producto", "quedó oculto", "se oculta"
 	case d.Productos > 1:
-		fuera = fmt.Sprintf("%d productos", d.Productos)
+		fuera, quedo, seOculta = fmt.Sprintf("%d productos", d.Productos), "quedaron ocultos", "se ocultan"
 	}
 	tx := Texto{Tipo: "warn", Grupo: "sistema", Ruta: "/panel/plan-y-facturacion"}
 	switch {
 	case d.Dias == 0 && fuera != "":
 		tx.Titulo = "Terminó tu prueba gratis"
-		tx.Detalle = "Ahora rige Gratis: " + fuera + " quedaron ocultos en la tienda, sin borrarse. Elegí un plan para mostrarlos."
+		tx.Detalle = "Ahora rige Gratis: " + fuera + " " + quedo + " en la tienda, sin borrarse. Elegí un plan para volver a mostrarlo todo."
 	case d.Dias == 0:
 		tx.Titulo = "Terminó tu prueba gratis"
 		tx.Detalle = "Ahora rige Gratis: lo de Crece quedó apagado, sin borrarse. Elegí un plan para seguir con todo."
@@ -539,7 +540,7 @@ func pruebaTermina(_ context.Context, _ pgx.Tx, ev outbox.Evento) (Hecho, error)
 		}
 		tx.Detalle = "Después rige Gratis y se apaga lo de Crece. Elegí tu plan para seguir con todo."
 		if fuera != "" {
-			tx.Detalle = "Después rige Gratis: " + fuera + " se ocultan en la tienda (no se borran). Elegí tu plan para seguir con todo."
+			tx.Detalle = "Después rige Gratis: " + fuera + " " + seOculta + " en la tienda, sin borrarse. Elegí tu plan para seguir con todo."
 		}
 	}
 	return Hecho{Clave: fmt.Sprintf("prueba:%d", ev.ID), Para: solo(tx, roles.Cuenta)}, nil
