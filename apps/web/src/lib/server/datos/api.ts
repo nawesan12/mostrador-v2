@@ -578,6 +578,19 @@ export class DatosApi implements Datos {
 			reverificacion ? { reverificacion } : {}
 		);
 	}
+	tomarConfirmacion(id: string) {
+		return this.pedir<{ estado: 'tomada' | 'en_curso' | 'hecha'; resultado?: Record<string, unknown> }>(
+			`/v1/panel/tincho/confirmaciones/${encodeURIComponent(id)}`,
+			'POST',
+			{}
+		);
+	}
+	async terminarConfirmacion(id: string, hecha: boolean, resultado?: unknown) {
+		await this.pedir<void>(`/v1/panel/tincho/confirmaciones/${encodeURIComponent(id)}`, 'PUT', {
+			hecha,
+			resultado: resultado ?? {}
+		});
+	}
 	metodosReverificar() {
 		return this.pedir<MetodosReverificar>('/v1/auth/reverificar');
 	}

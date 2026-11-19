@@ -117,20 +117,34 @@ object Web {
     }
 
     @Serializable private data class Confirmar(val herramienta: String, val argumentos: Map<String, ValorJSON>)
-    @Serializable private data class Confirmado(val ok: Boolean? = null, val error: String? = null)
+    @Serializable private data class ResultadoConfirmado(val url: String? = null)
+    @Serializable private data class Confirmado(val ok: Boolean? = null, val error: String? = null, val incierto: Boolean? = null, val resultado: ResultadoConfirmado? = null)
 
-    /** «Confirmar» una propuesta de Tincho. null si salió; si no, el motivo para mostrar. */
-    suspend fun confirmarTincho(p: PropuestaTincho, token: String?): String? = withContext(Dispatchers.IO) {
+    /** Cómo salió «Confirmar»: hecha (con el link si creó uno), no se pudo (el motivo) o no sabemos (se cortó la red o se
+     *  está haciendo): repetirla con la misma clave es seguro. */
+    sealed interface Confirmacion {
+        data class Hecha(val url: String?) : Confirmacion
+        data class Fallo(val motivo: String) : Confirmacion
+        data object Incierta : Confirmacion
+    }
+
+    /** «Confirmar» una propuesta de Tincho, con su id como Idempotency-Key: repetirla no la hace dos veces. */
+    suspend fun confirmarTincho(p: PropuestaTincho, token: String?): Confirmacion = withContext(Dispatchers.IO) {
         val c = Confirmar(p.herramienta, p.argumentos)
         val r = Request.Builder().url("$base/panel/hornero/confirmar").post(Api.json.encodeToString(c).toRequestBody("application/json".toMediaType()))
         token?.let { r.header("Authorization", "Bearer $it") }
+        p.id?.let { r.header("Idempotency-Key", it) }
         try {
             http.newCall(r.build()).execute().use {
                 val j = runCatching { Api.json.decodeFromString<Confirmado>(it.body?.string().orEmpty()) }.getOrNull()
-                if (it.isSuccessful && j?.ok == true) null else j?.error ?: "No se pudo hacer. Probá de nuevo en un rato."
+                when {
+                    it.isSuccessful && j?.ok == true -> Confirmacion.Hecha(j.resultado?.url)
+                    it.code >= 500 || j?.incierto == true -> Confirmacion.Incierta
+                    else -> Confirmacion.Fallo(j?.error ?: "No se pudo hacer. Probá de nuevo en un rato.")
+                }
             }
         } catch (e: java.io.IOException) {
-            "No hay conexión. Probá de nuevo."
+            Confirmacion.Incierta
         }
     }
 

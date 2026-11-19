@@ -53,6 +53,7 @@ import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
@@ -67,10 +68,13 @@ import ar.com.tulocalweb.app.app.Destino
 import ar.com.tulocalweb.app.app.LocalEstado
 import ar.com.tulocalweb.app.app.LocalNavegacion
 import ar.com.tulocalweb.app.app.Pestana
+import ar.com.tulocalweb.app.nucleo.Formato
 import ar.com.tulocalweb.app.nucleo.Tincho
 import ar.com.tulocalweb.app.nucleo.Web
+import ar.com.tulocalweb.app.nucleo.compartirTexto
 import ar.com.tulocalweb.app.nucleo.copiar
 import ar.com.tulocalweb.app.tema.*
+import ar.com.tulocalweb.app.widgets.Widgets
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -89,7 +93,12 @@ private data class Mensaje(
 )
 
 /** Estado de una propuesta de Tincho ya tocada. */
-private enum class EstadoPropuesta { enviando, hecha, descartada }
+private sealed interface EstadoPropuesta {
+    data object Enviando : EstadoPropuesta
+    data class Hecha(val url: String?) : EstadoPropuesta
+    data object Descartada : EstadoPropuesta
+    data object Incierta : EstadoPropuesta
+}
 
 private val iniciales = listOf("¿Cómo vengo hoy?", "¿Qué tengo pendiente?", "¿Qué tengo que reponer?", "¿Qué es lo que más se vende?", "Ideas para vender más", "¿Cómo creo un cupón?")
 
@@ -196,21 +205,30 @@ fun TinchoChat() {
     }
 
     fun confirmar(p: PropuestaTincho, clave: String) {
-        if (propuestas[clave] != null) return
+        val actual = propuestas[clave]
+        if (actual != null && actual != EstadoPropuesta.Incierta) return
         Haptico.seleccion()
-        propuestas[clave] = EstadoPropuesta.enviando
+        propuestas[clave] = EstadoPropuesta.Enviando
         alcance.launch {
-            val error = Web.confirmarTincho(p, estado.api.token)
-            if (error != null) {
-                propuestas.remove(clave)
-                estado.avisar(error, ok = false)
-            } else {
-                propuestas[clave] = EstadoPropuesta.hecha
-                estado.avisar("Listo: ${p.titulo}.")
+            when (val r = Web.confirmarTincho(p, estado.api.token)) {
+                is Web.Confirmacion.Hecha -> {
+                    propuestas[clave] = EstadoPropuesta.Hecha(r.url)
+                    Haptico.exito()
+                    estado.avisar("Listo: ${p.titulo}.")
+                    // Lo que cambió (pedidos, stock, links) se ve en el resumen, las insignias y el widget.
+                    estado.version += 1
+                    estado.refrescarResumen()
+                    Widgets.actualizar(ctx)
+                }
+                is Web.Confirmacion.Fallo -> {
+                    propuestas.remove(clave)
+                    estado.avisar(r.motivo, ok = false)
+                }
+                Web.Confirmacion.Incierta -> propuestas[clave] = EstadoPropuesta.Incierta
             }
         }
     }
-    fun descartar(clave: String) { propuestas[clave] = EstadoPropuesta.descartada; Haptico.seleccion() }
+    fun descartar(clave: String) { propuestas[clave] = EstadoPropuesta.Descartada; Haptico.seleccion() }
 
     fun ir(destino: String) {
         Haptico.seleccion()
@@ -283,7 +301,7 @@ fun TinchoChat() {
                 }
                 if (mensajes.any { !it.oculto }) {
                     // Queda el resumen del día (la pregunta oculta y su respuesta).
-                    Box(Modifier.size(40.dp).clickable { val dos = mensajes.take(2); mensajes.clear(); mensajes.addAll(dos) }.semantics { contentDescription = "Charla nueva" },
+                    Box(Modifier.size(40.dp).clickable(role = Role.Button) { val dos = mensajes.take(2); mensajes.clear(); mensajes.addAll(dos) }.semantics { contentDescription = "Charla nueva" },
                         contentAlignment = Alignment.Center) { Icono("square.and.pencil", 17f, C.primarioTexto) }
                 }
             }
@@ -316,7 +334,7 @@ fun TinchoChat() {
             LazyRow(Modifier.fillMaxWidth().padding(top = 8.dp), contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(ultimas.ifEmpty { iniciales }) { s ->
                     Texto(s, Estilo.footnoteFuerte, C.primarioTinta, Modifier.clip(Capsula).background(C.crema2).border(1.dp, C.linea2, Capsula)
-                        .clickable { preguntar(s) }.padding(horizontal = 12.dp, vertical = 8.dp), lineas = 1)
+                        .clickable(role = Role.Button) { preguntar(s) }.padding(horizontal = 12.dp, vertical = 8.dp), lineas = 1)
                 }
             }
         }
@@ -341,7 +359,7 @@ fun TinchoChat() {
 private fun BotonRedondoChat(simbolo: String, etiqueta: String, lleno: Boolean, pulsar: Boolean = false, accion: () -> Unit) {
     val a = if (pulsar) rememberInfiniteTransition(label = "onda").animateFloat(0.5f, 1f, infiniteRepeatable(tween(500), RepeatMode.Reverse), label = "a").value else 1f
     Box(Modifier.size(44.dp).clip(CircleShape).then(if (lleno) Modifier.background(C.primario) else Modifier.background(C.crema))
-        .clickable(onClick = accion).semantics { contentDescription = etiqueta }, contentAlignment = Alignment.Center) {
+        .clickable(role = Role.Button, onClick = accion).semantics { contentDescription = etiqueta }, contentAlignment = Alignment.Center) {
         Icono(simbolo, 17f, if (lleno) Color.White else C.primarioTexto, Modifier.alpha(a))
     }
 }
@@ -392,7 +410,7 @@ private fun BurbujaTincho(
                 if (!acciones.isNullOrEmpty()) {
                     Fluir {
                         acciones.forEach { a ->
-                            Row(Modifier.height(36.dp).clip(Capsula).background(C.primario).clickable { ir(a.ir) }.padding(horizontal = 14.dp),
+                            Row(Modifier.height(36.dp).clip(Capsula).background(C.primario).clickable(role = Role.Button) { ir(a.ir) }.padding(horizontal = 14.dp),
                                 horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Texto(a.texto, Estilo.footnoteFuerte, Color.White)
                                 Icono("arrow.right", 11f, Color.White)
@@ -402,18 +420,20 @@ private fun BurbujaTincho(
                 }
                 (r.propuestas ?: emptyList()).forEachIndexed { i, p ->
                     val clave = "${m.id}-$i"
-                    TarjetaPropuesta(p, propuestas[clave], { confirmar(p, clave) }, { descartar(clave) })
+                    TarjetaPropuesta(p, propuestas[clave], { confirmar(p, clave) }, { descartar(clave) }, { url ->
+                        copiar(ctx, url); Haptico.exito(); estado.avisar("Link copiado")
+                    }, { url -> compartirTexto(ctx, url) })
                 }
                 // Sin cupo de IA: el texto lo explica y el botón lleva al plan.
                 if (r.tope == "plan") {
-                    Row(Modifier.height(36.dp).clip(Capsula).background(C.primario).clickable { ir("plan") }.padding(horizontal = 14.dp),
+                    Row(Modifier.height(36.dp).clip(Capsula).background(C.primario).clickable(role = Role.Button) { ir("plan") }.padding(horizontal = 14.dp),
                         horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                         Texto("Ver mi plan", Estilo.footnoteFuerte, Color.White)
                         Icono("arrow.right", 11f, Color.White)
                     }
                 }
                 // Las respuestas son de IA: cualquiera se puede reportar (políticas de Google y Apple).
-                Row(Modifier.clip(Capsula).clickable { reportar(m) }.padding(vertical = 4.dp, horizontal = 2.dp),
+                Row(Modifier.clip(Capsula).clickable(role = Role.Button) { reportar(m) }.padding(vertical = 4.dp, horizontal = 2.dp),
                     horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icono("flag", 12f, C.texto3)
                     Texto("Reportar respuesta", Estilo.footnote, C.texto3)
@@ -425,7 +445,8 @@ private fun BurbujaTincho(
 
 /** Una propuesta de Tincho: qué haría y «Confirmar» / «Descartar». No se hace nada sin el toque. */
 @Composable
-private fun TarjetaPropuesta(p: PropuestaTincho, e: EstadoPropuesta?, confirmar: () -> Unit, descartar: () -> Unit) {
+private fun TarjetaPropuesta(p: PropuestaTincho, e: EstadoPropuesta?, confirmar: () -> Unit, descartar: () -> Unit,
+                             copiarLink: (String) -> Unit, compartirLink: (String) -> Unit) {
     val forma = RoundedCornerShape(18.dp)
     Column(Modifier.fillMaxWidth().clip(forma).background(C.superficie).border(1.dp, C.anillo, forma).padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -434,25 +455,48 @@ private fun TarjetaPropuesta(p: PropuestaTincho, e: EstadoPropuesta?, confirmar:
                 Icono("sparkles", 17f, C.acento)
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Texto(p.titulo, Estilo.subheadFuerte, C.texto)
-                p.detalle?.let { Texto(it, Estilo.footnote, C.texto2) }
+                Texto(Formato.sinViudas(p.titulo), Estilo.subheadFuerte, C.texto)
+                p.detalle?.let { Texto(Formato.sinViudas(it), Estilo.footnote, C.texto2) }
             }
         }
         when (e) {
-            EstadoPropuesta.hecha -> Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icono("checkmark.circle.fill", 15f, C.ok)
-                Texto("Hecho", Estilo.footnoteFuerte, C.ok)
-            }
-            EstadoPropuesta.descartada -> Texto("Descartada", Estilo.footnote, C.texto3)
-            else -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                val enviando = e == EstadoPropuesta.enviando
-                Box(Modifier.weight(1f).height(44.dp).clip(Capsula).background(C.texto).clickable(enabled = !enviando, onClick = confirmar),
-                    contentAlignment = Alignment.Center) {
-                    Texto(if (enviando) "Haciendo…" else "Confirmar", Estilo.footnoteFuerte, Color.White)
+            is EstadoPropuesta.Hecha -> {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icono("checkmark.circle.fill", 15f, C.ok)
+                    Texto("Hecho", Estilo.footnoteFuerte, C.ok)
                 }
-                Box(Modifier.height(44.dp).clip(Capsula).border(1.dp, C.anillo, Capsula).clickable(enabled = !enviando, onClick = descartar)
-                    .padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
-                    Texto("Descartar", Estilo.footnoteFuerte, C.texto)
+                e.url?.let { url ->
+                    // El link de pago recién creado, para mandarlo sin salir del chat (como en Links).
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Texto(url.removePrefix("https://"), Estilo.footnote, C.texto2, Modifier.weight(1f), lineas = 1)
+                        Tocable({ copiarLink(url) }, Modifier.height(44.dp).clip(Capsula).border(1.dp, C.anillo, Capsula), descripcion = "Copiar el link de pago") {
+                            Box(Modifier.height(44.dp).padding(horizontal = 14.dp), contentAlignment = Alignment.Center) { Texto("Copiar", Estilo.footnoteFuerte, C.texto) }
+                        }
+                        Tocable({ compartirLink(url) }, Modifier.height(44.dp).clip(Capsula).background(C.primario), descripcion = "Compartir el link de pago") {
+                            Box(Modifier.height(44.dp).padding(horizontal = 14.dp), contentAlignment = Alignment.Center) { Texto("Compartir", Estilo.footnoteFuerte, Color.White) }
+                        }
+                    }
+                }
+            }
+            EstadoPropuesta.Descartada -> Texto("Descartada", Estilo.footnote, C.texto3)
+            else -> {
+                val enviando = e == EstadoPropuesta.Enviando
+                val incierta = e == EstadoPropuesta.Incierta
+                if (incierta) Texto(Formato.sinViudas("No sabemos si se hizo: revisalo antes de repetir."), Estilo.footnoteFuerte, C.avisoTinta)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // C.primario con blanco: C.texto se invierte en oscuro (blanco sobre crema).
+                    Tocable(confirmar, Modifier.weight(1f).height(44.dp).clip(Capsula).background(C.primario), habilitado = !enviando,
+                        descripcion = "${if (incierta) "Comprobar" else "Confirmar"}: ${p.titulo}") {
+                        Box(Modifier.fillMaxWidth().height(44.dp), contentAlignment = Alignment.Center) {
+                            Texto(if (enviando) "Haciendo…" else if (incierta) "Comprobar" else "Confirmar", Estilo.footnoteFuerte, Color.White)
+                        }
+                    }
+                    Tocable(descartar, Modifier.height(44.dp).clip(Capsula).border(1.dp, C.anillo, Capsula), habilitado = !enviando,
+                        descripcion = "Descartar: ${p.titulo}") {
+                        Box(Modifier.height(44.dp).padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
+                            Texto("Descartar", Estilo.footnoteFuerte, C.texto)
+                        }
+                    }
                 }
             }
         }

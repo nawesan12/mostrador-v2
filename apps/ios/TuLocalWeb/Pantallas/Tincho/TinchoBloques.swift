@@ -19,6 +19,8 @@ struct RespuestaTincho: Decodable, Equatable {
 /// Una acción propuesta por Tincho. Herramienta y argumentos son los del MCP de la web, que la
 /// ejecuta con la sesión de la persona al confirmar.
 struct PropuestaTincho: Codable, Equatable, Hashable {
+    /// La clave para confirmarla una sola vez (Idempotency-Key).
+    var id: String?
     var herramienta: String
     var argumentos: [String: ValorJSON]
     var titulo: String

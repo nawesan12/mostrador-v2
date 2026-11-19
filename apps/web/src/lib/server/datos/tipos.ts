@@ -335,6 +335,15 @@ export interface Datos {
 	reenviarInvitacion(id: string): Promise<Resultado>;
 	/** Cambiar el alias, el CBU o el titular que ya estaban pide `reverificacion` (si no, 403 «reverificar»). */
 	guardarNegocio(n: Negocio, reverificacion?: string): Promise<void>;
+	/**
+	 * «Confirmar» una propuesta de Tincho una sola vez (id de la propuesta): «tomada» se ejecuta,
+	 * «en_curso» la está haciendo otro pedido, «hecha» ya se hizo (con el resultado guardado).
+	 */
+	tomarConfirmacion(id: string): Promise<{
+		estado: 'tomada' | 'en_curso' | 'hecha';
+		resultado?: Record<string, unknown>;
+	}>;
+	terminarConfirmacion(id: string, hecha: boolean, resultado?: unknown): Promise<void>;
 	/** Volver a verificarse antes de cambiar adónde llega la plata. */
 	metodosReverificar(): Promise<MetodosReverificar>;
 	pedirCodigoReverificar(): Promise<void>;

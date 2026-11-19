@@ -2686,6 +2686,11 @@ export class DatosSandbox implements Datos {
 		await guardarCambio(this.db, this.sb.id, 'automatica', 'mayorista', { activa: !!m.activa });
 	}
 
+	// La demo no guarda las confirmaciones de Tincho: cada una se ejecuta (es por visitante y se borra).
+	async tomarConfirmacion() {
+		return { estado: 'tomada' as const };
+	}
+	async terminarConfirmacion() {}
 	// La demo no pide volver a verificarse: no hay plata de verdad.
 	async metodosReverificar() {
 		return { clave: true, totp: false, email: 'vos@ejemplo.com' };

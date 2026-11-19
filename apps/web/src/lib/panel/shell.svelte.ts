@@ -10,7 +10,11 @@ import { PERMISOS } from './permisos.ts';
 export type MensajeTincho = {
 	rol: 'persona' | 'hornero';
 	texto: string;
-	propuestas?: (PropuestaTincho & { estado: 'pendiente' | 'enviando' | 'hecha' | 'descartada' })[];
+	propuestas?: (PropuestaTincho & {
+		estado: 'pendiente' | 'enviando' | 'hecha' | 'descartada' | 'incierta';
+		/** El link de pago creado al confirmar «crear_link_de_pago». */
+		url?: string;
+	})[];
 };
 
 export type Tema = 'light' | 'dark';

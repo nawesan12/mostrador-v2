@@ -116,22 +116,30 @@ enum Web {
         return try JSONDecoder().decode(RespuestaTincho.self, from: d)
     }
 
-    /// «Confirmar» una propuesta de Tincho. nil si salió; si no, el motivo para mostrar.
-    static func confirmarTincho(_ p: PropuestaTincho, token: String?) async -> String? {
+    /// Cómo salió «Confirmar»: hecha (con el link si creó uno), no se pudo (el motivo) o no sabemos
+    /// (se cortó la red o se está haciendo): repetirla con la misma clave es seguro.
+    enum Confirmacion: Equatable { case hecha(url: String?), error(String), incierta }
+
+    /// «Confirmar» una propuesta de Tincho, con su id como Idempotency-Key: repetirla no la hace dos veces.
+    static func confirmarTincho(_ p: PropuestaTincho, token: String?) async -> Confirmacion {
         var r = URLRequest(url: base.appending(path: "panel/hornero/confirmar"), timeoutInterval: 30)
         r.httpMethod = "POST"
         r.setValue("application/json", forHTTPHeaderField: "Content-Type")
         if let token { r.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
+        if let id = p.id { r.setValue(id, forHTTPHeaderField: "Idempotency-Key") }
         struct C: Encodable { var herramienta: String; var argumentos: [String: ValorJSON] }
-        struct R: Decodable { var ok: Bool?; var error: String? }
+        struct Res: Decodable { var url: String? }
+        struct R: Decodable { var ok: Bool?; var error: String?; var incierto: Bool?; var resultado: Res? }
         do {
             r.httpBody = try JSONEncoder().encode(C(herramienta: p.herramienta, argumentos: p.argumentos))
             let (d, resp) = try await URLSession.shared.data(for: r)
             let j = try? JSONDecoder().decode(R.self, from: d)
-            if let h = resp as? HTTPURLResponse, (200..<300).contains(h.statusCode), j?.ok == true { return nil }
-            return j?.error ?? "No se pudo hacer. Probá de nuevo en un rato."
+            let estado = (resp as? HTTPURLResponse)?.statusCode ?? 0
+            if (200..<300).contains(estado), j?.ok == true { return .hecha(url: j?.resultado?.url) }
+            if estado >= 500 || j?.incierto == true { return .incierta }
+            return .error(j?.error ?? "No se pudo hacer. Probá de nuevo en un rato.")
         } catch {
-            return "No hay conexión. Probá de nuevo."
+            return .incierta
         }
     }
 

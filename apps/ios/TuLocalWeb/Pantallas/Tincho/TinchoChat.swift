@@ -21,7 +21,7 @@ struct TinchoChat: View {
     /// Estado de cada propuesta («\(mensaje)-\(índice)»): enviando, hecha o descartada.
     @State private var propuestas: [String: EstadoPropuesta] = [:]
 
-    enum EstadoPropuesta { case enviando, hecha, descartada }
+    enum EstadoPropuesta: Equatable { case enviando, hecha(url: String?), descartada, incierta }
     @FocusState private var foco: Bool
 
     struct Mensaje: Identifiable, Equatable {
@@ -235,30 +235,64 @@ struct TinchoChat: View {
                     .frame(width: 38, height: 38)
                     .background(C.acento.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(p.titulo).estilo(.subheadFuerte).foregroundStyle(C.texto)
-                    if let d = p.detalle { Text(d).estilo(.footnote).foregroundStyle(C.texto2) }
+                    Text(Formato.sinViudas(p.titulo)).estilo(.subheadFuerte).foregroundStyle(C.texto)
+                    if let d = p.detalle { Text(Formato.sinViudas(d)).estilo(.footnote).foregroundStyle(C.texto2) }
                 }
                 Spacer(minLength: 0)
             }
             switch e {
-            case .hecha:
+            case let .hecha(url):
                 Label("Hecho", systemImage: "checkmark.circle.fill").estilo(.footnoteFuerte).foregroundStyle(C.ok)
+                if let url, let link = URL(string: url) {
+                    // El link de pago recién creado, para mandarlo sin salir del chat (como en Links).
+                    HStack(spacing: 8) {
+                        Text(url.replacingOccurrences(of: "https://", with: "")).estilo(.footnote).foregroundStyle(C.texto2)
+                            .lineLimit(1).truncationMode(.middle)
+                        Spacer(minLength: 0)
+                        Button {
+                            UIPasteboard.general.string = url
+                            Haptico.exito()
+                            estado.avisar("Link copiado")
+                        } label: {
+                            Text("Copiar").estilo(.footnoteFuerte).foregroundStyle(C.texto)
+                                .padding(.horizontal, 14).frame(height: 44)
+                                .overlay(Capsule().strokeBorder(C.anillo, lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Copiar el link de pago")
+                        ShareLink(item: link) {
+                            Text("Compartir").estilo(.footnoteFuerte).foregroundStyle(.white)
+                                .padding(.horizontal, 14).frame(height: 44)
+                                .background(C.primario, in: Capsule())
+                        }
+                        .accessibilityLabel("Compartir el link de pago")
+                    }
+                }
             case .descartada:
                 Text("Descartada").estilo(.footnote).foregroundStyle(C.texto3)
             default:
+                if e == .incierta {
+                    Text(Formato.sinViudas("No sabemos si se hizo: revisalo antes de repetir."))
+                        .estilo(.footnoteFuerte).foregroundStyle(C.avisoTinta)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 HStack(spacing: 8) {
                     Button { confirmar(p, clave: clave) } label: {
-                        Text(e == .enviando ? "Haciendo…" : "Confirmar").estilo(.footnoteFuerte).foregroundStyle(.white)
+                        // C.primario con blanco: C.texto se invierte en oscuro (blanco sobre crema).
+                        Text(e == .enviando ? "Haciendo…" : e == .incierta ? "Comprobar" : "Confirmar")
+                            .estilo(.footnoteFuerte).foregroundStyle(.white)
                             .frame(maxWidth: .infinity).frame(height: 44)
-                            .background(C.texto, in: Capsule())
+                            .background(C.primario, in: Capsule())
                     }
                     .buttonStyle(.plain).disabled(e == .enviando)
+                    .accessibilityLabel(e == .incierta ? "Comprobar: \(p.titulo)" : "Confirmar: \(p.titulo)")
                     Button { propuestas[clave] = .descartada; Haptico.seleccion() } label: {
                         Text("Descartar").estilo(.footnoteFuerte).foregroundStyle(C.texto)
                             .padding(.horizontal, 16).frame(height: 44)
                             .overlay(Capsule().strokeBorder(C.anillo, lineWidth: 1))
                     }
                     .buttonStyle(.plain).disabled(e == .enviando)
+                    .accessibilityLabel("Descartar: \(p.titulo)")
                 }
             }
         }
@@ -269,16 +303,23 @@ struct TinchoChat: View {
     }
 
     private func confirmar(_ p: PropuestaTincho, clave: String) {
-        guard propuestas[clave] == nil else { return }
+        guard propuestas[clave] == nil || propuestas[clave] == .incierta else { return }
         Haptico.seleccion()
         propuestas[clave] = .enviando
         Task {
-            if let error = await Web.confirmarTincho(p, token: estado.api.token) {
-                propuestas[clave] = nil
-                estado.avisar(error, ok: false)
-            } else {
-                propuestas[clave] = .hecha
+            switch await Web.confirmarTincho(p, token: estado.api.token) {
+            case let .hecha(url):
+                propuestas[clave] = .hecha(url: url)
+                Haptico.exito()
                 estado.avisar("Listo: \(p.titulo).")
+                // Lo que cambió (pedidos, stock, links) se ve en el resumen, las insignias y el widget.
+                estado.version += 1
+                Task { await estado.refrescarResumen() }
+            case let .error(motivo):
+                propuestas[clave] = nil
+                estado.avisar(motivo, ok: false)
+            case .incierta:
+                propuestas[clave] = .incierta
             }
         }
     }

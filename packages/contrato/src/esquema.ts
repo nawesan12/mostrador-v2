@@ -1919,6 +1919,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/panel/tincho/confirmaciones/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Guarda cómo salió la propuesta (hecha con su resultado, o fallo para poder repetirla). */
+        put: operations["terminarConfirmacionTincho"];
+        /** Toma una propuesta de Tincho para ejecutarla una sola vez. «tomada»: ejecutala; «en_curso»: otro pedido la está haciendo; «hecha»: ya se hizo (con el resultado). */
+        post: operations["tomarConfirmacionTincho"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/panel/pedidos/{numero}/reembolso": {
         parameters: {
             query?: never;
@@ -3956,6 +3974,8 @@ export interface components {
         };
         /** @description Una acción que pidió Tincho y no se hizo: la persona la confirma y el BFF la ejecuta con la herramienta del MCP del mismo nombre. */
         PropuestaTincho: {
+            /** @description La clave para confirmarla una sola vez (Idempotency-Key de /panel/hornero/confirmar) */
+            id: string;
             /** @enum {string} */
             herramienta: "cambiar_estado_pedido" | "ajustar_producto" | "crear_cupon" | "crear_link_de_pago";
             argumentos: {
@@ -10402,6 +10422,63 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    terminarConfirmacionTincho: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    hecha: boolean;
+                    resultado?: {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Guardado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    tomarConfirmacionTincho: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cómo está */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        estado: "tomada" | "en_curso" | "hecha";
+                        resultado?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
             };
         };
     };

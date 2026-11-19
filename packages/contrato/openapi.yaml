@@ -2060,6 +2060,40 @@ paths:
         - { name: referencia, in: path, required: true, schema: { type: string } }
       responses:
         '204': { description: Cancelada }
+  /v1/panel/tincho/confirmaciones/{id}:
+    post:
+      operationId: tomarConfirmacionTincho
+      summary: 'Toma una propuesta de Tincho para ejecutarla una sola vez. «tomada»: ejecutala; «en_curso»: otro pedido la está haciendo; «hecha»: ya se hizo (con el resultado).'
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Cómo está
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [estado]
+                properties:
+                  estado: { type: string, enum: [tomada, en_curso, hecha] }
+                  resultado: { type: object, additionalProperties: true }
+    put:
+      operationId: terminarConfirmacionTincho
+      summary: Guarda cómo salió la propuesta (hecha con su resultado, o fallo para poder repetirla).
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [hecha]
+              properties:
+                hecha: { type: boolean }
+                resultado: { type: object, additionalProperties: true }
+      responses:
+        '204': { description: Guardado }
   /v1/panel/pedidos/{numero}/reembolso:
     post:
       operationId: reembolsarPedido
@@ -4111,8 +4145,9 @@ components:
     PropuestaTincho:
       type: object
       description: 'Una acción que pidió Tincho y no se hizo: la persona la confirma y el BFF la ejecuta con la herramienta del MCP del mismo nombre.'
-      required: [herramienta, argumentos, titulo]
+      required: [id, herramienta, argumentos, titulo]
       properties:
+        id: { type: string, description: 'La clave para confirmarla una sola vez (Idempotency-Key de /panel/hornero/confirmar)' }
         herramienta: { type: string, enum: [cambiar_estado_pedido, ajustar_producto, crear_cupon, crear_link_de_pago] }
         argumentos: { type: object, additionalProperties: true }
         titulo: { type: string }

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { copiar } from '#lib/panel/compartir.ts';
 	import { Dialog } from 'bits-ui';
 	import { tick } from 'svelte';
 	import { goto, invalidateAll } from '$app/navigation';
@@ -125,17 +126,34 @@
 
 	type Propuesta = NonNullable<MensajeTincho['propuestas']>[number];
 
-	/** «Confirmar» una propuesta de Tincho: la hace la persona, con sus permisos. */
+	/**
+	 * «Confirmar» una propuesta de Tincho: la hace la persona, con sus permisos. Va con el id de la
+	 * propuesta como Idempotency-Key: repetirla no la hace dos veces. Si se corta la red no sabemos si
+	 * se hizo: la tarjeta lo dice y «Comprobar» repite con la misma clave (devuelve lo que pasó).
+	 */
 	async function confirmar(p: Propuesta) {
-		if (p.estado !== 'pendiente') return;
+		if (p.estado !== 'pendiente' && p.estado !== 'incierta') return;
 		p.estado = 'enviando';
 		const r = await fetch('/panel/hornero/confirmar', {
 			method: 'POST',
-			headers: { 'content-type': 'application/json' },
+			headers: {
+				'content-type': 'application/json',
+				...(p.id ? { 'idempotency-key': p.id } : {})
+			},
 			body: JSON.stringify({ herramienta: p.herramienta, argumentos: p.argumentos })
 		}).catch(() => null);
-		const j = (await r?.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
-		if (!r?.ok || !j?.ok) {
+		const j = (await r?.json().catch(() => null)) as {
+			ok?: boolean;
+			error?: string;
+			incierto?: boolean;
+			resultado?: { url?: string };
+		} | null;
+		// Sin respuesta (red, servidor caído) o «se está haciendo»: no sabemos si se hizo.
+		if (!r || r.status >= 500 || j?.incierto) {
+			p.estado = 'incierta';
+			return;
+		}
+		if (!r.ok || !j?.ok) {
 			p.estado = 'pendiente';
 			ui.toast({
 				k: 'err',
@@ -145,8 +163,26 @@
 			return;
 		}
 		p.estado = 'hecha';
+		if (typeof j.resultado?.url === 'string') p.url = j.resultado.url;
 		ui.toast({ k: 'ai', title: 'Listo', desc: p.titulo });
 		await invalidateAll();
+	}
+
+	async function compartirLink(url: string) {
+		if (navigator.share) {
+			try {
+				await navigator.share({ url });
+				return;
+			} catch (e) {
+				if ((e as DOMException)?.name === 'AbortError') return;
+			}
+		}
+		const ok = await copiar(url);
+		ui.toast({
+			k: 'link',
+			title: ok ? 'Link copiado' : 'El link',
+			desc: url.replace(/^https?:\/\//, '')
+		});
 	}
 
 	/** "**dato**" en negrita, sin interpretar HTML. */
@@ -268,6 +304,36 @@
 							</div>
 							{#if p.estado === 'hecha'}
 								<div class="hecho"><Icon icon={I.phCheckCircleFill} size={16} />Hecho</div>
+								{#if p.url}
+									<div class="link-hecho">
+										<span class="link-url">{p.url.replace(/^https?:\/\//, '')}</span>
+										<button
+											type="button"
+											class="editar"
+											aria-label="Copiar el link de pago"
+											onclick={async () => {
+												const ok = await copiar(p.url ?? '');
+												ui.toast({ k: 'link', title: ok ? 'Link copiado' : 'No pudimos copiarlo' });
+											}}>Copiar</button
+										>
+										<button
+											type="button"
+											class="aprobar"
+											aria-label="Compartir el link de pago"
+											onclick={() => compartirLink(p.url ?? '')}>Compartir</button
+										>
+									</div>
+								{/if}
+							{:else if p.estado === 'incierta'}
+								<p class="i-n" role="status">No sabemos si se hizo: revisalo antes de repetir.</p>
+								<div class="i-acc">
+									<button type="button" class="aprobar" onclick={() => confirmar(p)}
+										>Comprobar</button
+									>
+									<button type="button" class="editar" onclick={() => (p.estado = 'descartada')}
+										>Descartar</button
+									>
+								</div>
 							{:else if p.estado === 'descartada'}
 								<div class="i-n">Descartada</div>
 							{:else}
@@ -276,6 +342,7 @@
 										type="button"
 										class="aprobar"
 										disabled={p.estado === 'enviando'}
+										aria-label="Confirmar: {p.titulo}"
 										onclick={() => confirmar(p)}
 										>{p.estado === 'enviando' ? 'Haciendo…' : 'Confirmar'}</button
 									>
@@ -283,6 +350,7 @@
 										type="button"
 										class="editar"
 										disabled={p.estado === 'enviando'}
+										aria-label="Descartar: {p.titulo}"
 										onclick={() => (p.estado = 'descartada')}>Descartar</button
 									>
 								</div>
@@ -557,6 +625,20 @@
 		font-size: 13px;
 		font-weight: 600;
 		color: #237550;
+	}
+	.link-hecho {
+		margin-top: 10px;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-wrap: wrap;
+	}
+	.link-url {
+		flex: 1 1 140px;
+		min-width: 0;
+		font-size: 13px;
+		color: var(--mu);
+		overflow-wrap: anywhere;
 	}
 	.pie {
 		padding: 12px 14px 14px;

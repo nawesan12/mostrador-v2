@@ -338,6 +338,7 @@ func (h *herramientas) proponer(p Propuesta) (any, error) {
 	if len(h.propuestas) >= 3 {
 		return nil, errHerramienta("Ya hay 3 propuestas en esta respuesta: que la persona confirme esas primero.")
 	}
+	p.ID = idPropuesta()
 	h.propuestas = append(h.propuestas, p)
 	return map[string]any{"propuesta": "lista", "titulo": p.Titulo,
 		"importante": "Todavía NO se hizo: la persona ve un botón «Confirmar». No digas que quedó hecho."}, nil

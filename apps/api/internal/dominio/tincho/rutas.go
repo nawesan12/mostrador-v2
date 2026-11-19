@@ -83,6 +83,7 @@ func (s *Servicio) Rutas(mux *http.ServeMux, claveBFF string) {
 			h(w, r, d)
 		}
 	}
+	s.rutasConfirmaciones(mux, panel)
 	mux.HandleFunc("POST /v1/panel/tincho/preguntar", panel(func(w http.ResponseWriter, r *http.Request, d cuentas.Datos) {
 		var p pregunta
 		if !leer(w, r, &p) {

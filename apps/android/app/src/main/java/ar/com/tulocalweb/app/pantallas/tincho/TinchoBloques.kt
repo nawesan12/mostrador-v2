@@ -83,6 +83,8 @@ data class RespuestaTincho(
  *  de la persona al confirmar. */
 @Serializable
 data class PropuestaTincho(
+    /** La clave para confirmarla una sola vez (Idempotency-Key). */
+    val id: String? = null,
     val herramienta: String,
     val argumentos: Map<String, ValorJSON> = emptyMap(),
     val titulo: String,

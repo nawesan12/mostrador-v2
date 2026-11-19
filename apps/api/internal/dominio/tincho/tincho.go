@@ -79,6 +79,8 @@ type Consulta struct {
 // Propuesta es una acción que pidió Tincho y que la persona tiene que confirmar. Herramienta y
 // Argumentos son los de las herramientas del MCP del BFF, que es quien la ejecuta al confirmar.
 type Propuesta struct {
+	// ID: la clave para confirmarla una sola vez (Idempotency-Key en /panel/hornero/confirmar).
+	ID          string         `json:"id"`
 	Herramienta string         `json:"herramienta"`
 	Argumentos  map[string]any `json:"argumentos"`
 	Titulo      string         `json:"titulo"`
