@@ -188,13 +188,16 @@ struct VentaLocal: View {
                     .estilo(.footnote).monospacedDigit().foregroundStyle(C.texto2)
             }
             Spacer(minLength: 6)
+            // El dibujo del handoff (cápsula de 34) con el área de toque de 44: se usa rápido y con una mano.
             HStack(spacing: 0) {
-                Button { cambiar(l, -1) } label: { Text("−").frame(width: 34, height: 34) }
+                Button { cambiar(l, -1) } label: { Text("−").frame(width: 44, height: 44).contentShape(Rectangle()) }
+                    .accessibilityLabel("Uno menos")
                 Text("\(l.cantidad)").font(Estilo(tamano: 16, peso: .bold, relativo: .body).font).monospacedDigit().frame(minWidth: 18)
-                Button { cambiar(l, 1) } label: { Text("+").frame(width: 34, height: 34) }
+                Button { cambiar(l, 1) } label: { Text("+").frame(width: 44, height: 44).contentShape(Rectangle()) }
+                    .accessibilityLabel("Uno más")
             }
             .font(.system(size: 20)).foregroundStyle(C.primarioTexto)
-            .background(C.pista, in: Capsule())
+            .background(Capsule().fill(C.pista).frame(height: 34))
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 14).padding(.vertical, 11)

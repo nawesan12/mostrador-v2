@@ -45,6 +45,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
@@ -229,12 +233,17 @@ private fun Ticket(lineas: androidx.compose.runtime.snapshots.SnapshotStateList<
                                         else if (l.cantidad > 1) "${Formato.pesos(l.precio)} c/u · ${Formato.pesos(l.precio * l.cantidad)}" else Formato.pesos(l.precio),
                                         Estilo.footnote, C.texto2, numeros = true)
                                 }
-                                Row(Modifier.clip(Capsula).background(C.pista), verticalAlignment = Alignment.CenterVertically) {
-                                    Box(Modifier.size(34.dp).clickable { cambiar(l, -1) }.semantics { contentDescription = "Uno menos" }, contentAlignment = Alignment.Center) {
+                                // El dibujo del handoff (cápsula de 34) con el área de toque de 48: se usa rápido y con una mano.
+                                val pista = C.pista
+                                Row(Modifier.drawBehind {
+                                    val alto = 34.dp.toPx()
+                                    drawRoundRect(pista, topLeft = Offset(0f, (size.height - alto) / 2), size = Size(size.width, alto), cornerRadius = CornerRadius(alto / 2))
+                                }, verticalAlignment = Alignment.CenterVertically) {
+                                    Box(Modifier.size(48.dp).clickable(role = Role.Button) { cambiar(l, -1) }.semantics { contentDescription = "Uno menos" }, contentAlignment = Alignment.Center) {
                                         Texto("−", Estilo(20f, Peso.regular), C.primarioTexto)
                                     }
                                     Texto("${l.cantidad}", Estilo(16f, Peso.bold), C.primarioTexto, Modifier.widthIn(min = 18.dp), alinear = TextAlign.Center, numeros = true)
-                                    Box(Modifier.size(34.dp).clickable { cambiar(l, 1) }.semantics { contentDescription = "Uno más" }, contentAlignment = Alignment.Center) {
+                                    Box(Modifier.size(48.dp).clickable(role = Role.Button) { cambiar(l, 1) }.semantics { contentDescription = "Uno más" }, contentAlignment = Alignment.Center) {
                                         Texto("+", Estilo(20f, Peso.regular), C.primarioTexto)
                                     }
                                 }
