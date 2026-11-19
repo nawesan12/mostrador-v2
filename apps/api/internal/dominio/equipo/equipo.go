@@ -18,6 +18,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/abono"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadopago"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
@@ -178,7 +179,7 @@ func (t tienda) estado(ahora time.Time) string {
 	return "activa"
 }
 
-// Mensual en centavos del plan (el anual, mensualizado con el 25 % menos). Gratis: 0.
+// Mensual en centavos del plan (el anual, 10 meses repartidos en 12). Gratis: 0.
 func Mensual(plan, ciclo string) int64 {
 	v, ok := mercadopago.PrecioDe(plan, ciclo)
 	if !ok {
@@ -249,7 +250,7 @@ func pesos(c int64) string {
 	return "$ " + b.String()
 }
 
-var nombresPlan = map[string]string{"gratis": "Gratis", "emprende": "Emprende", "pro": "Pro", "negocio": "Negocio"}
+var nombresPlan = abono.Nombres
 
 // anotar deja un registro en la auditoría del equipo, en la transacción del acceso.
 func anotar(ctx context.Context, tx pgx.Tx, m Miembro, cl cuentas.Cliente, accion, texto, tiendaID string, detalle any) error {

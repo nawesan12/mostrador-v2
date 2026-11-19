@@ -57,9 +57,9 @@ func TestNivelEfectivo(t *testing.T) {
 }
 
 func TestElEjemploDeLaLanding(t *testing.T) {
-	// "12 tiendas en plan Pro, nivel Plata, 25 % sobre $ 49.900 = $ 149.700 por mes".
+	// "12 tiendas en plan Crece, nivel Plata, 25 % sobre $ 34.900 = $ 104.700 por mes".
 	alta := time.Date(2026, 3, 10, 12, 0, 0, 0, zona)
-	if got := 12 * Comision("plata", "pro", "mes", alta, alta); got != 149_700 {
+	if got := 12 * Comision("plata", "pro", "mes", alta, alta); got != 104_700 {
 		t.Fatalf("%d", got)
 	}
 }

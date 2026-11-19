@@ -77,7 +77,7 @@ func normal(c Cotizacion) map[string]any {
 }
 
 func TestPrecio(t *testing.T) {
-	if p, _ := Precio("pro", "anio"); p != 49_900*9 {
+	if p, _ := Precio("pro", "anio"); p != 34_900*10 {
 		t.Fatalf("anual: %d", p)
 	}
 	if _, ok := Precio("pro", "semana"); ok {

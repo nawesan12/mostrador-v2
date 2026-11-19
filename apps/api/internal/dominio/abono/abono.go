@@ -11,12 +11,25 @@ import (
 	"time"
 )
 
-// Precios por mes, en pesos, IVA incluido (lib/panel/planes.ts). El anual es 25 % menos, cobrado una
-// vez por año.
-var precios = map[string]int64{"emprende": 19_900, "pro": 49_900, "negocio": 149_900}
+// Precios por mes, en pesos, precio final (IVA incluido, sin comisión por venta). Son los del 19/11/2026
+// (lib/panel/planes.ts y dominio/planes). El anual se paga como 10 meses y se usa 12, cobrado una vez
+// por año. El id "pro" es el plan Crece (el id quedó de antes; no se muestra).
+var precios = map[string]int64{"emprende": 14_900, "pro": 34_900, "negocio": 79_900}
+
+// MesesPagosDelAnio: el anual cobra 10 meses (dos de regalo).
+const MesesPagosDelAnio = 10
 
 // Nombres para mostrar.
-var Nombres = map[string]string{"gratis": "Gratis", "emprende": "Emprende", "pro": "Pro", "negocio": "Negocio"}
+var Nombres = map[string]string{"gratis": "Gratis", "emprende": "Emprende", "pro": "Crece", "negocio": "Negocio"}
+
+// PrecioMensual: el de lista de un plan (0 el gratis, false si no existe).
+func PrecioMensual(plan string) (int64, bool) {
+	if plan == "gratis" {
+		return 0, true
+	}
+	p, ok := precios[plan]
+	return p, ok
+}
 
 // DiasDePrueba de la prueba gratis, desde el alta de la tienda.
 const DiasDePrueba = 14
@@ -40,7 +53,7 @@ func Precio(plan, ciclo string) (int64, bool) {
 		return 0, false
 	}
 	if ciclo == "anio" {
-		return p * 12 * 3 / 4, true
+		return p * MesesPagosDelAnio, true
 	}
 	return p, true
 }

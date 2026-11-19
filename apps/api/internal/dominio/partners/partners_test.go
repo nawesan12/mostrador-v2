@@ -143,8 +143,8 @@ func TestComisionDelMesYNivelPorTiendas(t *testing.T) {
 		total += x.ComisionMes
 		estados[x.Estado]++
 	}
-	if total != 4*12_475 {
-		t.Fatalf("comisión del mes: %d, quería %d (la de 400 días ya no cuenta)", total, 4*12_475)
+	if total != 4*8_725 {
+		t.Fatalf("comisión del mes: %d, quería %d (la de 400 días ya no cuenta)", total, 4*8_725)
 	}
 	if estados["activa"] != 5 || estados["prueba"] != 1 || estados["gratis"] != 1 || estados["baja"] != 1 {
 		t.Fatalf("estados: %v", estados)
@@ -153,7 +153,7 @@ func TestComisionDelMesYNivelPorTiendas(t *testing.T) {
 	// La liquidación congela el detalle; la factura se sube hasta que se paga.
 	mes := time.Now().Format("2006-01")
 	g, err := partners.Liquidar(ctx, b.App, "ana@pampacode.com.ar", mes, time.Now())
-	if err != nil || g.Monto != 4*12_475 || len(g.Detalle) != 4 {
+	if err != nil || g.Monto != 4*8_725 || len(g.Detalle) != 4 {
 		t.Fatalf("liquidar: %+v %v", g, err)
 	}
 	if err := partners.SubirFactura(ctx, b.App, ana, mes, "http://inseguro.com/f.pdf"); err == nil {
@@ -209,7 +209,7 @@ func TestDosPartnersNoSeCruzan(t *testing.T) {
 		if pa.Partner.Cobro != nil || pb.Partner.Cobro == nil {
 			t.Fatal("el cobro de Beto se ve en Ana")
 		}
-		if pb.Partner.Porcentaje != 30 || pb.Tiendas[0].ComisionMes != 14_970 {
+		if pb.Partner.Porcentaje != 30 || pb.Tiendas[0].ComisionMes != 10_470 {
 			t.Fatalf("beto oro: %+v", pb)
 		}
 	})

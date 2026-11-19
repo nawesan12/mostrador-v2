@@ -253,7 +253,7 @@ func TestMercadoPagoDePuntaAPunta(t *testing.T) {
 	}
 	cuerpo := f.cuerpos["POST /preapproval"]
 	rec := cuerpo["auto_recurring"].(map[string]any)
-	if cuerpo["status"] != "pending" || rec["transaction_amount"].(float64) != 449100 || rec["frequency"].(float64) != 12 {
+	if cuerpo["status"] != "pending" || rec["transaction_amount"].(float64) != 349000 || rec["frequency"].(float64) != 12 {
 		t.Fatalf("preapproval: %v", cuerpo)
 	}
 	plan := func() string {
@@ -301,7 +301,7 @@ func TestPrecios(t *testing.T) {
 	for _, c := range []struct {
 		plan, ciclo string
 		precio      int64
-	}{{"emprende", "mes", 19900}, {"pro", "mes", 49900}, {"negocio", "anio", 1349100}} {
+	}{{"emprende", "mes", 14900}, {"pro", "mes", 34900}, {"negocio", "anio", 799000}} {
 		if p, ok := mercadopago.PrecioDe(c.plan, c.ciclo); !ok || p != c.precio {
 			t.Fatalf("%s %s: %d", c.plan, c.ciclo, p)
 		}
