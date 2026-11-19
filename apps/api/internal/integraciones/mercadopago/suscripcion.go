@@ -251,7 +251,7 @@ func (s *Servicio) ComprarPack(ctx context.Context, tiendaID string) (string, er
 		Items: []item{{Title: fmt.Sprintf("Tu Local Web: pack extra de Tincho (+%s respuestas con IA)", miles(planes.PackTincho)),
 			Quantity: 1, UnitPrice: planes.PrecioPackTincho, CurrencyID: "ARS"}},
 		ExternalReference: fmt.Sprintf("pack:%s:%d", tiendaID, planes.PrecioPackTincho),
-		BackURLs:          map[string]string{"success": vuelta + "?pago=ok", "pending": vuelta + "?pago=pendiente", "failure": vuelta + "?pago=error"},
+		BackURLs:          map[string]string{"success": vuelta + "?pack=ok", "pending": vuelta + "?pack=pendiente", "failure": vuelta + "?pack=error"},
 		StatementDesc:     "TU LOCAL WEB",
 	}
 	if s.publico() {

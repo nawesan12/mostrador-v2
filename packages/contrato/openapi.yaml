@@ -2854,16 +2854,19 @@ paths:
   /v1/panel/cuenta/pack:
     post:
       operationId: comprarPack
-      summary: Suma 2.000 respuestas de Hornero este mes ($ 4.900).
+      summary: 'El pack extra de Tincho: +2.000 respuestas este mes por $ 4.900, pago con Mercado Pago.'
+      description: 'Devuelve la URL del pago; el pack se suma cuando Mercado Pago lo aprueba (una sola vez). Sin Mercado Pago en el servidor (desarrollo), se suma en el momento y la URL viene vacía. Un pack pago no se devuelve.'
       responses:
-        '204': { description: Sumado }
+        '200':
+          description: La URL del pago
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [url]
+                properties:
+                  url: { type: string }
         '409': { $ref: '#/components/responses/Problema' }
-    delete:
-      operationId: devolverPack
-      summary: Deshace el último pack de este mes.
-      responses:
-        '204': { description: Devuelto }
-        '404': { $ref: '#/components/responses/Problema' }
   /v1/panel/cuenta/cancelacion:
     post:
       operationId: cancelarPlan
@@ -5494,10 +5497,41 @@ components:
             ciclo: { type: string, enum: [mes, anio] }
             enPrueba: { type: boolean }
             diasPrueba: { type: integer }
+    PlanCatalogo:
+      type: object
+      required: [id, nombre, mensual, productos, personas, fotos, fotosMB, tincho, funciones]
+      properties:
+        id: { type: string, enum: [gratis, emprende, pro, negocio] }
+        nombre: { type: string }
+        mensual: { type: integer, description: 'Pesos por mes, precio final. El anual cobra 10.' }
+        productos: { type: integer }
+        personas: { type: integer }
+        fotos: { type: integer, description: 'Fotos por producto' }
+        fotosMB: { type: integer }
+        tincho: { type: integer, description: 'Respuestas con IA por mes' }
+        funciones:
+          type: array
+          items: { type: string, enum: [dominio, arca, correo, cupones, roles, local, mercadolibre, newsletter, mayorista] }
     PlanCuenta:
       type: object
       required: [actual, ciclo, enPrueba, diasPrueba, finPrueba, proximoCobro, abono, cotizaciones, beneficio, beneficioUsado, uso, medio, facturacion, facturas, cancelado]
       properties:
+        vigente: { type: string, enum: [gratis, emprende, pro, negocio], description: 'El plan que rige hoy (en la prueba gratis, pro = Crece)' }
+        planes:
+          type: array
+          description: 'Los planes con sus topes (dominio/planes): 0 es sin tope'
+          items: { $ref: '#/components/schemas/PlanCatalogo' }
+        fuera:
+          type: object
+          description: 'Lo que quedó fuera del plan después de bajar (oculto o en sólo lectura; no se borró)'
+          properties:
+            productos: { type: integer }
+            personas: { type: integer }
+        pack:
+          type: object
+          properties:
+            respuestas: { type: integer }
+            precio: { type: integer }
         actual: { type: string, enum: [gratis, emprende, pro, negocio] }
         ciclo: { type: string, enum: [mes, anio] }
         enPrueba: { type: boolean }
@@ -6801,6 +6835,8 @@ components:
         detail: { type: string }
         code: { type: string }
         restantes: { type: integer, description: 'Ingreso con contraseña: intentos que quedan antes de pausarlo' }
+        plan: { type: string, description: 'Con code tope_plan (402): el plan que lo habilita' }
+        funcion: { type: string, description: 'Con code tope_plan: qué se topó (productos, personas, fotos o la función: dominio, arca, correo, cupones, roles, local, mercadolibre, newsletter, mayorista)' }
         issues:
           type: array
           items:

@@ -2748,10 +2748,12 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Suma 2.000 respuestas de Hornero este mes ($ 4.900). */
+        /**
+         * El pack extra de Tincho: +2.000 respuestas este mes por $ 4.900, pago con Mercado Pago.
+         * @description Devuelve la URL del pago; el pack se suma cuando Mercado Pago lo aprueba (una sola vez). Sin Mercado Pago en el servidor (desarrollo), se suma en el momento y la URL viene vacía. Un pack pago no se devuelve.
+         */
         post: operations["comprarPack"];
-        /** Deshace el último pack de este mes. */
-        delete: operations["devolverPack"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -5236,7 +5238,38 @@ export interface components {
                 diasPrueba: number;
             };
         };
+        PlanCatalogo: {
+            /** @enum {string} */
+            id: "gratis" | "emprende" | "pro" | "negocio";
+            nombre: string;
+            /** @description Pesos por mes, precio final. El anual cobra 10. */
+            mensual: number;
+            productos: number;
+            personas: number;
+            /** @description Fotos por producto */
+            fotos: number;
+            fotosMB: number;
+            /** @description Respuestas con IA por mes */
+            tincho: number;
+            funciones: ("dominio" | "arca" | "correo" | "cupones" | "roles" | "local" | "mercadolibre" | "newsletter" | "mayorista")[];
+        };
         PlanCuenta: {
+            /**
+             * @description El plan que rige hoy (en la prueba gratis, pro = Crece)
+             * @enum {string}
+             */
+            vigente?: "gratis" | "emprende" | "pro" | "negocio";
+            /** @description Los planes con sus topes (dominio/planes): 0 es sin tope */
+            planes?: components["schemas"]["PlanCatalogo"][];
+            /** @description Lo que quedó fuera del plan después de bajar (oculto o en sólo lectura; no se borró) */
+            fuera?: {
+                productos?: number;
+                personas?: number;
+            };
+            pack?: {
+                respuestas?: number;
+                precio?: number;
+            };
             /** @enum {string} */
             actual: "gratis" | "emprende" | "pro" | "negocio";
             /** @enum {string} */
@@ -6514,6 +6547,10 @@ export interface components {
             code?: string;
             /** @description Ingreso con contraseña: intentos que quedan antes de pausarlo */
             restantes?: number;
+            /** @description Con code tope_plan (402): el plan que lo habilita */
+            plan?: string;
+            /** @description Con code tope_plan: qué se topó (productos, personas, fotos o la función: dominio, arca, correo, cupones, roles, local, mercadolibre, newsletter, mayorista) */
+            funcion?: string;
             issues?: {
                 path: string;
                 message: string;
@@ -11792,33 +11829,18 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Sumado */
-            204: {
+            /** @description La URL del pago */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        url: string;
+                    };
+                };
             };
             409: components["responses"]["Problema"];
-        };
-    };
-    devolverPack: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Devuelto */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: components["responses"]["Problema"];
         };
     };
     cancelarPlan: {
