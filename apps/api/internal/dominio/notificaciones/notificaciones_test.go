@@ -288,6 +288,12 @@ func TestGeneracionPorEventoYRol(t *testing.T) {
 		if roles(e.de(t, e.luna, "plan:109")) != "duenio" {
 			t.Fatal("plan pausado")
 		}
+		// El fin de la prueba: lo que se oculta, a la dueña.
+		e.evento(t, 110, e.luna, "prueba.termina", `{"dias":0,"productos":5,"personas":0}`)
+		ns = e.de(t, e.luna, "prueba:110")
+		if roles(ns) != "duenio" || ns["duenio"].titulo != "Terminó tu prueba gratis" || !strings.Contains(ns["duenio"].detalle, "5 productos quedaron ocultos") {
+			t.Fatalf("prueba: %s %+v", roles(ns), ns)
+		}
 	})
 }
 

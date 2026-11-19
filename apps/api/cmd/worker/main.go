@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/abono"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/planes"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/avisos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/avisostock"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/configuracion"
@@ -184,6 +185,10 @@ func correr() error {
 		for {
 			if _, err := abono.AplicarProgramados(ctx, app); err != nil && ctx.Err() == nil {
 				slog.Error("abono: cambios programados", "error", err)
+			}
+			// El aviso del fin de la prueba gratis (a 3 días y el día que termina).
+			if _, err := planes.AvisarFinDePrueba(ctx, app, time.Now()); err != nil && ctx.Err() == nil {
+				slog.Error("planes: avisar el fin de la prueba", "error", err)
 			}
 			select {
 			case <-ctx.Done():

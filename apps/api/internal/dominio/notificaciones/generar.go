@@ -56,6 +56,7 @@ func (g *Generador) generadores() map[string]generador {
 		"equipo.aceptada":         aceptada,
 		"plan.activado":           planActivado,
 		"plan.pausado":            planPausado,
+		"prueba.termina":          pruebaTermina,
 		"arca.vence":              arcaVence,
 		"suscripcion.alta":        suscripcionAlta,
 		"suscripcion.baja":        suscripcionBaja,
@@ -507,6 +508,41 @@ func planPausado(_ context.Context, _ pgx.Tx, ev outbox.Evento) (Hecho, error) {
 	return Hecho{Clave: fmt.Sprintf("plan:%d", ev.ID), Para: solo(Texto{Tipo: "err", Grupo: "sistema",
 		Titulo: "Se pausó el cobro de tu plan", Detalle: "Mercado Pago pausó la suscripción. Revisá el medio de pago.",
 		Ruta: "/panel/plan-y-facturacion"}, roles.Cuenta)}, nil
+}
+
+// pruebaTermina: prueba.termina (planes.AvisarFinDePrueba), a 3 días del fin de la prueba gratis y el
+// día que termina, con lo que se oculta al pasar a Gratis (nada se borra). A Cuenta.
+func pruebaTermina(_ context.Context, _ pgx.Tx, ev outbox.Evento) (Hecho, error) {
+	var d struct{ Dias, Productos, Personas int }
+	if json.Unmarshal(ev.Datos, &d) != nil {
+		return Hecho{}, nil
+	}
+	fuera := ""
+	switch {
+	case d.Productos == 1:
+		fuera = "1 producto"
+	case d.Productos > 1:
+		fuera = fmt.Sprintf("%d productos", d.Productos)
+	}
+	tx := Texto{Tipo: "warn", Grupo: "sistema", Ruta: "/panel/plan-y-facturacion"}
+	switch {
+	case d.Dias == 0 && fuera != "":
+		tx.Titulo = "Terminó tu prueba gratis"
+		tx.Detalle = "Ahora rige Gratis: " + fuera + " quedaron ocultos en la tienda, sin borrarse. Elegí un plan para mostrarlos."
+	case d.Dias == 0:
+		tx.Titulo = "Terminó tu prueba gratis"
+		tx.Detalle = "Ahora rige Gratis: lo de Crece quedó apagado, sin borrarse. Elegí un plan para seguir con todo."
+	default:
+		tx.Titulo = fmt.Sprintf("Tu prueba gratis termina en %d días", d.Dias)
+		if d.Dias == 1 {
+			tx.Titulo = "Tu prueba gratis termina mañana"
+		}
+		tx.Detalle = "Después rige Gratis y se apaga lo de Crece. Elegí tu plan para seguir con todo."
+		if fuera != "" {
+			tx.Detalle = "Después rige Gratis: " + fuera + " se ocultan en la tienda (no se borran). Elegí tu plan para seguir con todo."
+		}
+	}
+	return Hecho{Clave: fmt.Sprintf("prueba:%d", ev.ID), Para: solo(tx, roles.Cuenta)}, nil
 }
 
 // Las suscripciones de la tienda (§51), a quien tiene Pedidos; el precio, sólo con Finanzas. Nunca
