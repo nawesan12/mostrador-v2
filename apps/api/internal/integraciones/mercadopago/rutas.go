@@ -143,15 +143,16 @@ func (s *Servicio) Rutas(mux *http.ServeMux) {
 			problema.Escribir(w, problema.Invalido("Falta la Idempotency-Key."))
 			return
 		}
+		// Siempre el total: una devolución parcial dejaba el pedido «Aprobado» por todo.
 		var b struct{ Monto int64 }
 		if r.ContentLength > 0 && !leer(w, r, &b) {
 			return
 		}
-		if b.Monto < 0 {
-			s.Problema(w, ErrInvalido)
+		if b.Monto != 0 {
+			problema.Escribir(w, problema.Invalido("Por ahora se devuelve el pago entero."))
 			return
 		}
-		s.Problema(w, s.Reembolsar(r.Context(), d.TiendaID, n, b.Monto, d.TiendaID+":"+clave))
+		s.Problema(w, s.Reembolsar(r.Context(), d.TiendaID, n, d.TiendaID+":"+clave))
 	}))
 	// El abono (§56): cualquier pase de plan o ciclo, con su cotización. url vacía: quedó hecho; si no,
 	// hay que pasar por Mercado Pago (cargar la tarjeta del débito o pagar la diferencia).

@@ -1928,7 +1928,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Devuelve el pago del pedido por Mercado Pago (total, o parcial con monto). Pide Idempotency-Key. */
+        /** Devuelve el pago entero del pedido por Mercado Pago (no hay devolución parcial). Pide Idempotency-Key. */
         post: operations["reembolsarPedido"];
         delete?: never;
         options?: never;
@@ -10416,13 +10416,7 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    monto?: number;
-                };
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description Devuelto */
             204: {

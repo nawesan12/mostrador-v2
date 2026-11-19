@@ -49,6 +49,8 @@ func (g *Generador) generadores() map[string]generador {
 		"push.pregunta_ml":        preguntaML,
 		"tienda.resena":           resena,
 		"pago.aprobado":           pagoAprobado,
+		"pago.tarde":              pagoTarde,
+		"pago.doble":              pagoDoble,
 		"integracion.reautorizar": reautorizar,
 		"equipo.aceptada":         aceptada,
 		"plan.activado":           planActivado,
@@ -343,6 +345,72 @@ func pagoAprobado(ctx context.Context, t pgx.Tx, ev outbox.Evento) (Hecho, error
 		}}, nil
 	}
 	return Hecho{}, nil
+}
+
+// pagoTarde: pago.tarde, Mercado Pago aprobó el pago (o la seña) de un pedido que ya estaba cancelado:
+// el stock y el cupón volvieron, no se factura y la tienda tiene que devolverlo o reabrir el pedido.
+// A quien tiene Pedidos o Finanzas; el monto, sólo con Finanzas.
+func pagoTarde(_ context.Context, _ pgx.Tx, ev outbox.Evento) (Hecho, error) {
+	var d struct {
+		Numero int   `json:"numero"`
+		Monto  int64 `json:"monto"`
+		Sena   bool  `json:"sena"`
+	}
+	if json.Unmarshal(ev.Datos, &d) != nil || d.Numero <= 0 {
+		return Hecho{}, nil
+	}
+	return Hecho{Clave: fmt.Sprintf("pago-tarde:%d", ev.ID), Para: func(m Miembro) (Texto, bool) {
+		if !roles.Puede(m.Rol, roles.Pedidos) && !roles.Puede(m.Rol, roles.Finanzas) {
+			return Texto{}, false
+		}
+		return TextoPagoTarde(m.Rol, d.Numero, d.Monto, d.Sena), true
+	}}, nil
+}
+
+// TextoPagoTarde: el aviso de pago.tarde (campanita y push), con el monto sólo para Finanzas.
+func TextoPagoTarde(rol string, numero int, monto int64, sena bool) Texto {
+	que := "el pedido"
+	if sena {
+		que = "la seña del pedido"
+	}
+	detalle := "Devolvé el pago o reabrí el pedido."
+	if roles.Puede(rol, roles.Finanzas) && monto > 0 {
+		detalle = auditoria.Pesos(monto) + " · " + detalle
+	}
+	return Texto{Tipo: "mp", Grupo: "ventas", Titulo: fmt.Sprintf("Te pagaron %s #%d, que estaba cancelado", que, numero),
+		Detalle: detalle, Ruta: RutaPedido(numero)}
+}
+
+// pagoDoble: pago.doble, el mismo pedido (o link) se pagó dos veces por Mercado Pago. El segundo
+// pago queda anotado aparte: la tienda lo devuelve desde Mercado Pago.
+func pagoDoble(_ context.Context, _ pgx.Tx, ev outbox.Evento) (Hecho, error) {
+	var d struct {
+		Tipo   string `json:"tipo"`
+		Numero int    `json:"numero"`
+		Monto  int64  `json:"monto"`
+	}
+	if json.Unmarshal(ev.Datos, &d) != nil {
+		return Hecho{}, nil
+	}
+	return Hecho{Clave: fmt.Sprintf("pago-doble:%d", ev.ID), Para: func(m Miembro) (Texto, bool) {
+		if !roles.Puede(m.Rol, roles.Pedidos) && !roles.Puede(m.Rol, roles.Finanzas) {
+			return Texto{}, false
+		}
+		return TextoPagoDoble(m.Rol, d.Tipo, d.Numero, d.Monto), true
+	}}, nil
+}
+
+// TextoPagoDoble: el aviso de pago.doble.
+func TextoPagoDoble(rol, tipo string, numero int, monto int64) Texto {
+	tx := Texto{Tipo: "mp", Grupo: "ventas", Titulo: "Te pagaron dos veces un link", Ruta: "/panel/finanzas"}
+	if numero > 0 {
+		tx.Titulo, tx.Ruta = fmt.Sprintf("Te pagaron dos veces el pedido #%d", numero), RutaPedido(numero)
+	}
+	tx.Detalle = "Devolvé el pago que sobra desde Mercado Pago."
+	if roles.Puede(rol, roles.Finanzas) && monto > 0 {
+		tx.Detalle = auditoria.Pesos(monto) + " de más · " + tx.Detalle
+	}
+	return tx
 }
 
 // Nombres de las integraciones que pueden pedir reautorizar.

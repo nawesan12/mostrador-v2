@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/notificaciones"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/roles"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/apns"
@@ -132,6 +133,8 @@ func (s *Servicio) Manejadores() map[string]outbox.Manejador {
 		"cuenta.ingreso_push": s.ingreso,
 		"push.sin_stock":      s.sinStock,
 		"cuenta.push_prueba":  s.prueba,
+		"pago.tarde":          s.pagoRaro,
+		"pago.doble":          s.pagoRaro,
 	}
 }
 
@@ -484,6 +487,48 @@ func (s *Servicio) venta(ctx context.Context, ev outbox.Evento) error {
 			d.Numero, time.Now().UTC().Format(time.RFC3339))
 		return err
 	})
+}
+
+// pagoRaro: pago.tarde (pagaron un pedido ya cancelado) y pago.doble (lo pagaron dos veces). Plata que
+// la tienda tiene que devolver: a quien tiene Pedidos o Finanzas, con el monto sólo para Finanzas.
+func (s *Servicio) pagoRaro(ctx context.Context, ev outbox.Evento) error {
+	if !s.activo() {
+		return nil
+	}
+	var d struct {
+		Tipo   string `json:"tipo"`
+		Numero int    `json:"numero"`
+		Monto  int64  `json:"monto"`
+		Sena   bool   `json:"sena"`
+	}
+	if json.Unmarshal(ev.Datos, &d) != nil {
+		return nil
+	}
+	dest, err := s.deTienda(ctx, ev.TiendaID)
+	if err != nil {
+		return err
+	}
+	var envios []envio
+	for _, x := range dest {
+		if !roles.Puede(x.rol, roles.Pedidos) && !roles.Puede(x.rol, roles.Finanzas) {
+			continue
+		}
+		var tx notificaciones.Texto
+		if ev.Tipo == "pago.tarde" {
+			tx = notificaciones.TextoPagoTarde(x.rol, d.Numero, d.Monto, d.Sena)
+		} else {
+			tx = notificaciones.TextoPagoDoble(x.rol, d.Tipo, d.Numero, d.Monto)
+		}
+		a := Aviso{Titulo: tx.Titulo, Cuerpo: tx.Detalle, Hilo: HiloTienda(ev.TiendaID), Tienda: ev.TiendaID, Ruta: "notificaciones"}
+		if d.Numero > 0 {
+			a.Ruta = fmt.Sprintf("pedido/%d", d.Numero)
+		}
+		envios = append(envios, para(x, a, fmt.Sprintf("%s-%d", ev.Tipo, ev.ID), 72*time.Hour))
+	}
+	if len(envios) == 0 {
+		return nil
+	}
+	return s.mandar(ctx, envios)
 }
 
 // AvisoPreguntaML: el nombre del producto si se sabe; la pregunta no (puede traer datos de quien

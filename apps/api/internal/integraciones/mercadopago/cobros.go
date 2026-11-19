@@ -151,7 +151,19 @@ func (s *Servicio) PagarPedido(ctx context.Context, tiendaID string, numero int,
 	if err != nil {
 		return "", err
 	}
-	ref := nuevaReferencia(tiendaID)
+	// Como PagarLink: si el pedido ya tiene una preferencia pendiente por el mismo total, se reusa. Volver
+	// del checkout y tocar «Pagar» otra vez (o dos pestañas) no arma dos cobros que se puedan pagar a la vez.
+	var ref, url string
+	_ = s.Pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		return t.QueryRow(ctx, `SELECT referencia, coalesce(preferencia, '') FROM mp_cobros
+			WHERE tienda_id = $1 AND tipo = 'pedido' AND objetivo = $2 AND monto = $3 AND estado = 'pendiente'
+				AND preferencia IS NOT NULL AND creado_en > now() - interval '23 hours'
+			ORDER BY creado_en DESC LIMIT 1`, tiendaID, fmt.Sprint(numero), total).Scan(&ref, &url)
+	})
+	if url != "" {
+		return url, nil
+	}
+	ref = nuevaReferencia(tiendaID)
 	if err := s.Pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
 		_, err := t.Exec(ctx, `INSERT INTO mp_cobros (referencia, tienda_id, tipo, objetivo, monto) VALUES ($1, $2, 'pedido', $3, $4)`,
 			ref, tiendaID, fmt.Sprint(numero), total)
@@ -184,7 +196,11 @@ func (s *Servicio) PagarPedido(ctx context.Context, tiendaID string, numero int,
 	if r.InitPoint == "" {
 		return "", errors.New("mercadopago: la preferencia no trajo init_point")
 	}
-	return r.InitPoint, nil
+	err = s.Pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		_, err := t.Exec(ctx, `UPDATE mp_cobros SET preferencia = $2, actualizado_en = now() WHERE referencia = $1`, ref, r.InitPoint)
+		return err
+	})
+	return r.InitPoint, err
 }
 
 // PagarSena crea la preferencia por la seña de un pedido reservado o encargado (§52), con el monto
@@ -360,8 +376,9 @@ func (s *Servicio) aplicar(ctx context.Context, tiendaID, ref string, pagoID int
 		var tipo, objetivo, previo string
 		var esperado int64
 		var pagoPrevio *int64
-		err := t.QueryRow(ctx, `SELECT tipo, objetivo, monto, estado, pago FROM mp_cobros WHERE referencia = $1 FOR UPDATE`, ref).
-			Scan(&tipo, &objetivo, &esperado, &previo, &pagoPrevio)
+		var extra []int64
+		err := t.QueryRow(ctx, `SELECT tipo, objetivo, monto, estado, pago, pagos_extra FROM mp_cobros WHERE referencia = $1 FOR UPDATE`, ref).
+			Scan(&tipo, &objetivo, &esperado, &previo, &pagoPrevio, &extra)
 		if errors.Is(err, pgx.ErrNoRows) {
 			// El cobro de una suscripción de la tienda (§51), o un pago de la cuenta que no salió de
 			// Tu Local Web: ese no es nuestro.
@@ -378,6 +395,25 @@ func (s *Servicio) aplicar(ctx context.Context, tiendaID, ref string, pagoID int
 		sigueValiendo := estado == "approved" || estado == "processed" || estado == "refunded" || estado == "charged_back"
 		if yaAprobado && !sigueValiendo && pagoPrevio != nil && *pagoPrevio != pagoID {
 			return nil
+		}
+		otro := yaAprobado && pagoPrevio != nil && *pagoPrevio != pagoID
+		// Un pago extra (ya anotado) que cambia: si se devolvió, sale de la lista; nunca toca el original.
+		if otro && contiene(extra, pagoID) {
+			if estado == "refunded" || estado == "charged_back" {
+				_, err := t.Exec(ctx, `UPDATE mp_cobros SET pagos_extra = array_remove(pagos_extra, $2), actualizado_en = now()
+					WHERE referencia = $1`, ref, pagoID)
+				return err
+			}
+			return nil
+		}
+		// Un segundo pago aprobado de la misma preferencia: no pisa al primero (si no, su id se perdía y
+		// sólo se podía devolver uno). Se anota y se avisa para que la tienda devuelva el que sobra.
+		if otro && (estado == "approved" || estado == "processed") {
+			if _, err := t.Exec(ctx, `UPDATE mp_cobros SET pagos_extra = array_append(pagos_extra, $2), actualizado_en = now()
+				WHERE referencia = $1`, ref, pagoID); err != nil {
+				return err
+			}
+			return pagoDoble(ctx, t, tiendaID, tipo, objetivo, pagado)
 		}
 		if _, err := t.Exec(ctx, `UPDATE mp_cobros SET pago = $2, estado = $3, actualizado_en = now() WHERE referencia = $1`,
 			ref, pagoID, estado); err != nil {
@@ -404,18 +440,32 @@ func (s *Servicio) aplicar(ctx context.Context, tiendaID, ref string, pagoID int
 		case "pedido", "qr":
 			pedido = objetivo
 			// La seña de un pedido reservado o encargado (§52): no lo paga entero.
-			var conSena bool
-			if tipo == "pedido" {
-				if err := t.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM pedidos WHERE numero = $1::int AND sena IS NOT NULL)`,
-					objetivo).Scan(&conSena); err != nil {
-					return err
-				}
+			var conSena, cancelado, otraAprobada bool
+			if err := t.QueryRow(ctx, `SELECT sena IS NOT NULL AND $2 = 'pedido', estado = 'Cancelado',
+					EXISTS (SELECT 1 FROM mp_cobros c WHERE c.tipo IN ('pedido', 'qr') AND c.objetivo = $1
+						AND c.referencia <> $3 AND c.estado IN ('approved', 'processed'))
+				FROM pedidos WHERE numero = $1::int`, objetivo, tipo, ref).Scan(&conSena, &cancelado, &otraAprobada); err != nil &&
+				!errors.Is(err, pgx.ErrNoRows) {
+				return err
 			}
-			if conSena {
+			switch {
+			case conSena:
 				pedido = ""
 				if err := aplicarSena(ctx, t, tiendaID, objetivo, aprobado, devuelto); err != nil {
 					return err
 				}
+			case aprobado && otraAprobada:
+				// Otra preferencia del mismo pedido ya se cobró: este pago sobra. La fila queda con su
+				// id (para devolverlo) y el pedido sigue con el primero.
+				return pagoDoble(ctx, t, tiendaID, tipo, objetivo, pagado)
+			case aprobado && cancelado:
+				// Llegó tarde: el pedido ya se canceló (venció a las 24 h o lo cancelaron a mano) y el stock
+				// y el cupón volvieron. Queda anotado el pago (para poder devolverlo), sin factura (00090)
+				// ni «Nueva venta», y la tienda se entera de que tiene algo para devolver.
+				if _, err := t.Exec(ctx, `UPDATE pedidos SET estado_pago = 'Aprobado' WHERE numero = $1::int`, objetivo); err != nil {
+					return err
+				}
+				return pagoTarde(ctx, t, tiendaID, objetivo, pagado, false)
 			}
 		case "turno":
 			// Seña aprobada: el turno queda confirmado. Si alguien lo canceló mientras, o la reserva ya
@@ -459,6 +509,37 @@ func (s *Servicio) aplicar(ctx context.Context, tiendaID, ref string, pagoID int
 	})
 }
 
+// pagoTarde publica pago.tarde: Mercado Pago aprobó el pago (o la seña) de un pedido que ya estaba
+// cancelado. Lo ven quienes tienen Pedidos o Finanzas, con la ruta al pedido para devolverlo o reabrirlo.
+func pagoTarde(ctx context.Context, t pgx.Tx, tiendaID, numero string, monto int64, sena bool) error {
+	n, _ := strconv.Atoi(numero)
+	return outbox.Publicar(ctx, t, tiendaID, "pago.tarde", map[string]any{"numero": n, "monto": monto, "sena": sena})
+}
+
+// pagoDoble publica pago.doble: un pedido (o un link) se pagó dos veces por Mercado Pago.
+func pagoDoble(ctx context.Context, t pgx.Tx, tiendaID, tipo, objetivo string, monto int64) error {
+	d := map[string]any{"tipo": tipo, "objetivo": objetivo, "monto": monto}
+	if tipo == "link" {
+		var n *int
+		_ = t.QueryRow(ctx, `SELECT pedido FROM links WHERE codigo = $1`, objetivo).Scan(&n)
+		if n != nil {
+			d["numero"] = *n
+		}
+	} else if n, err := strconv.Atoi(objetivo); err == nil {
+		d["numero"] = n
+	}
+	return outbox.Publicar(ctx, t, tiendaID, "pago.doble", d)
+}
+
+func contiene(xs []int64, x int64) bool {
+	for _, y := range xs {
+		if y == x {
+			return true
+		}
+	}
+	return false
+}
+
 // carritoRecuperado: la compra de la tienda online con Mercado Pago recupera el carrito abandonado
 // de quien compró recién al acreditarse (§63), no al armar el pedido.
 func carritoRecuperado(ctx context.Context, t pgx.Tx, numero string) error {
@@ -488,8 +569,13 @@ func aplicarSena(ctx context.Context, t pgx.Tx, tiendaID, numero string, aprobad
 				estado = CASE WHEN estado = 'Sin pagar' THEN 'Para preparar' ELSE estado END,
 				estados_en = CASE WHEN estado = 'Sin pagar' THEN estados_en || jsonb_build_object('Para preparar', now()) ELSE estados_en END
 			WHERE numero = $1::int AND sena_pagada_en IS NULL RETURNING estado`, numero).Scan(&estado)
-		if errors.Is(err, pgx.ErrNoRows) || (err == nil && estado == "Cancelado") {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil
+		}
+		if err == nil && estado == "Cancelado" {
+			var sena int64
+			_ = t.QueryRow(ctx, `SELECT coalesce(sena, 0) FROM pedidos WHERE numero = $1::int`, numero).Scan(&sena)
+			return pagoTarde(ctx, t, tiendaID, numero, sena, true)
 		}
 		if err != nil {
 			return err
@@ -504,9 +590,10 @@ func aplicarSena(ctx context.Context, t pgx.Tx, tiendaID, numero string, aprobad
 	return nil
 }
 
-// Reembolsar devuelve el pago de un pedido (total si monto es 0). Idempotente por clave. Los cobros
+// Reembolsar devuelve el pago entero de un pedido. Idempotente por clave. No hay devolución parcial:
+// ninguna pantalla la pide y el pedido no tiene dónde mostrar lo devuelto (quedaba «Aprobado» por el total). Los cobros
 // con link o checkout se devuelven por Payments; los de QR, por la Orders API.
-func (s *Servicio) Reembolsar(ctx context.Context, tiendaID string, pedido int, montoParcial int64, clave string) error {
+func (s *Servicio) Reembolsar(ctx context.Context, tiendaID string, pedido int, clave string) error {
 	var tipo string
 	var pagoID *int64
 	var ordenID *string
@@ -530,11 +617,7 @@ func (s *Servicio) Reembolsar(ctx context.Context, tiendaID string, pedido int, 
 		return err
 	}
 	if tipo == "qr" && ordenID != nil {
-		cuerpo := map[string]any{}
-		if montoParcial > 0 {
-			cuerpo["transactions"] = []map[string]any{{"amount": monto(montoParcial)}}
-		}
-		if err := s.cliente().JSON(ctx, http.MethodPost, "/v1/orders/"+*ordenID+"/refund", token, "reembolso:"+clave, cuerpo, nil); err != nil {
+		if err := s.cliente().JSON(ctx, http.MethodPost, "/v1/orders/"+*ordenID+"/refund", token, "reembolso:"+clave, map[string]any{}, nil); err != nil {
 			return err
 		}
 		_, err = s.conciliarOrden(ctx, tiendaID, *ordenID)
@@ -543,12 +626,8 @@ func (s *Servicio) Reembolsar(ctx context.Context, tiendaID string, pedido int, 
 	if pagoID == nil {
 		return ErrNoExiste
 	}
-	cuerpo := map[string]any{}
-	if montoParcial > 0 {
-		cuerpo["amount"] = montoParcial
-	}
 	if err := s.cliente().JSON(ctx, http.MethodPost, fmt.Sprintf("/v1/payments/%d/refunds", *pagoID), token,
-		"reembolso:"+clave, cuerpo, nil); err != nil {
+		"reembolso:"+clave, map[string]any{}, nil); err != nil {
 		return err
 	}
 	return s.ConciliarPago(ctx, tiendaID, *pagoID)

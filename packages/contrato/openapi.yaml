@@ -2063,14 +2063,10 @@ paths:
   /v1/panel/pedidos/{numero}/reembolso:
     post:
       operationId: reembolsarPedido
-      summary: Devuelve el pago del pedido por Mercado Pago (total, o parcial con monto). Pide Idempotency-Key.
+      summary: Devuelve el pago entero del pedido por Mercado Pago (no hay devolución parcial). Pide Idempotency-Key.
       parameters:
         - { name: numero, in: path, required: true, schema: { type: integer } }
         - { name: Idempotency-Key, in: header, required: true, schema: { type: string, minLength: 8, maxLength: 255 } }
-      requestBody:
-        content:
-          application/json:
-            schema: { type: object, properties: { monto: { type: integer, minimum: 1 } } }
       responses:
         '204': { description: Devuelto }
         '404': { $ref: '#/components/responses/Problema' }

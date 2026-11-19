@@ -1504,3 +1504,14 @@ comprobante).
 - **Lo que queda igual**: el stock se reserva al crearse (lo que se vende tiene que estar), así que
   «Te quedaste sin stock» puede salir por una reserva; si vence, vuelve y avisa a quienes esperaban.
   La compra se mide en Meta (píxel y API de conversiones) al crearse, como hasta ahora.
+
+## 64. Pagos que llegan tarde o de más (migraciones 00090 y 00091, 18/11/2026)
+
+- **Pagado y cancelado**: si Mercado Pago aprueba un pago (o una seña) de un pedido ya cancelado, el
+  pedido queda «Cancelado» con el pago «Aprobado» para poder devolverlo, sin factura (`app.encolar_factura`
+  ignora los cancelados y encola al reabrir uno ya cobrado) ni «Nueva venta», y sale `pago.tarde`:
+  campanita y push a Pedidos y Finanzas, «Te pagaron el pedido #N, que estaba cancelado».
+- **Pagado dos veces**: «Pagar» reusa la preferencia pendiente del pedido (como los links). Un segundo
+  pago aprobado de la misma preferencia queda en `mp_cobros.pagos_extra` sin pisar el primero; el de otra
+  preferencia del mismo pedido queda en su fila. Los dos avisan `pago.doble` para devolver el que sobra.
+- **Sin devolución parcial**: `POST …/reembolso` devuelve siempre el total; con `monto` responde 400.
