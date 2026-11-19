@@ -480,7 +480,12 @@
 					class:bloqueado
 					onclick={() => elegir(p)}
 				>
-					{#if cur}<span class="tuyo">Tu plan</span>{:else if p.id === 'pro'}<span
+					<!-- En la prueba se usa Pro y la cuenta sigue en Gratis: cada uno con su fecha, sin «Tu plan». -->
+					{#if probando && p.id === 'pro'}<span class="tuyo"
+							>En prueba · hasta el {fecha(data.finPrueba)}</span
+						>{:else if probando && cur}<span class="tuyo tuyo-suave"
+							>Desde el {fecha(data.finPrueba)}</span
+						>{:else if cur}<span class="tuyo">Tu plan</span>{:else if p.id === 'pro'}<span
 							class="tuyo popular">El más elegido</span
 						>{/if}
 					<span class="p-cab">
@@ -502,10 +507,13 @@
 					<span class="p-incluye">
 						{#each p.incluye as f (f)}<span><Icon icon={I.phCheckBold} size={14} />{f}</span>{/each}
 					</span>
-					<span class="p-btn" class:actual={cur && !sel}
+					<!-- El plan vigente nunca va como botón lleno (parecía un CTA): borde y etiqueta. -->
+					<span class="p-btn" class:actual={cur}
 						>{sel
 							? cur
-								? 'Tu plan actual'
+								? probando
+									? 'Seguís en Gratis'
+									: 'Tu plan actual'
 								: 'Elegido'
 							: cur
 								? 'Volver a tu plan'
@@ -993,8 +1001,13 @@
 		box-shadow: 0 0 0 1px rgba(240, 165, 138, 0.4);
 	}
 	.oscuro .tuyo.popular {
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
+	}
+	.tuyo.tuyo-suave {
+		background: var(--sf);
+		color: var(--tx);
+		box-shadow: 0 0 0 1px var(--ln2);
 	}
 	.p-incluye span {
 		display: flex;
@@ -1013,8 +1026,9 @@
 		background: rgba(251, 247, 242, 0.12);
 		color: #fbf7f2;
 	}
+	/* #b0441d: blanco sobre #d2582f no llegaba a 4,5:1 en texto de 14 px. */
 	.sel .p-btn:not(.actual) {
-		background: #d2582f;
+		background: #b0441d;
 		color: #fff;
 	}
 	.programado {
@@ -1325,7 +1339,7 @@
 			padding: 0 22px;
 			border: 0;
 			border-radius: 999px;
-			background: #d2582f;
+			background: #b0441d;
 			color: #fff;
 			font:
 				600 14.5px 'Instrument Sans',
