@@ -8,7 +8,15 @@ import { irAfuera } from '#lib/server/afuera.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 /** La confirmación del pedido: el código lleva la firma, así nadie mira el pedido de otro. */
-export const load: PageServerLoad = async ({ params, cookies, url, depends, parent }) => {
+export const load: PageServerLoad = async ({
+	params,
+	cookies,
+	url,
+	depends,
+	parent,
+	request,
+	getClientAddress
+}) => {
 	// Tiempo real (§44): al acreditarse el pago (o cambiar el estado) la página se actualiza sola.
 	depends('tienda:pedido-publico');
 	// Con la API, la tienda ya la resolvió el layout (antes se pedía dos veces); la demo necesita sus datos.
@@ -79,6 +87,11 @@ export const load: PageServerLoad = async ({ params, cookies, url, depends, pare
 		)
 			await fetch(`${String(env.API_URL)}/v1/publico/tiendas/${r.tienda.slug}/pagos/${idPago}`, {
 				method: 'POST',
+				// La IP real de quien compra: el tope de la API es por IP (y no por tienda, que un tercero agotaba).
+				headers: {
+					'x-mostrador-bff': String(env.CLAVE_BFF ?? ''),
+					'x-cliente-ip': request.headers.get('cf-connecting-ip') ?? getClientAddress()
+				},
 				signal: AbortSignal.timeout(5000)
 			}).catch(() => null);
 		// Los datos para transferir son los que cargó la tienda (nunca inventados). Sin alias, el CBU/CVU.

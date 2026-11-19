@@ -49,12 +49,14 @@ type Config struct {
 
 // Servicio de Mercado Pago.
 type Servicio struct {
-	Pool    tx
-	Config  Config
-	Cliente *Cliente
-	Cifra   *cifrado.Cifrador
-	Log     *slog.Logger
-	Ahora   func() time.Time
+	Pool   tx
+	Config Config
+	// ClaveBFF: con ella se le cree al BFF la IP de quien compra (X-Cliente-IP), para el tope por IP.
+	ClaveBFF string
+	Cliente  *Cliente
+	Cifra    *cifrado.Cifrador
+	Log      *slog.Logger
+	Ahora    func() time.Time
 }
 
 func (s *Servicio) ahora() time.Time {

@@ -200,9 +200,15 @@ func (s *Servicio) Rutas(mux *http.ServeMux) {
 	// Webhook: primero la firma, después todo lo demás. Sin firma válida, 401 y nada se procesa.
 	// Quien compra vuelve de Mercado Pago: el pago se confirma sin esperar el webhook.
 	mux.HandleFunc("POST /v1/publico/tiendas/{slug}/pagos/{pago}", func(w http.ResponseWriter, r *http.Request) {
-		// Tope por tienda: nadie llena la cola de consultas a Mercado Pago con ids inventados.
+		// Primero por IP (quien manda ids inventados gasta su propio cupo) y después por tienda, más alto:
+		// con sólo el de la tienda, un tercero lo agotaba y los compradores reales esperaban el webhook.
 		if c, ok := s.Pool.(limite.Consultor); ok {
-			if ok, err := limite.Permitido(r.Context(), c, "mp:vuelta:"+r.PathValue("slug"), 120, time.Hour); err == nil && !ok {
+			ip := cuentas.ClienteDe(r, s.ClaveBFF).IP
+			if ok, err := limite.Permitido(r.Context(), c, "mp:vuelta:ip:"+ip, 20, time.Hour); err == nil && !ok {
+				w.WriteHeader(http.StatusTooManyRequests)
+				return
+			}
+			if ok, err := limite.Permitido(r.Context(), c, "mp:vuelta:"+r.PathValue("slug"), 600, time.Hour); err == nil && !ok {
 				w.WriteHeader(http.StatusTooManyRequests)
 				return
 			}

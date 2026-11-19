@@ -203,6 +203,7 @@ func Nuevo(d Dependencias) http.Handler {
 		}
 		configuracion.Rutas(mux, d.App, geo, d.Sitio, d.MercadoPago != nil && d.MercadoPago.Config.TokenPlataforma != "", ganchos)
 		if d.MercadoPago != nil {
+			d.MercadoPago.ClaveBFF = d.ClaveBFF
 			d.MercadoPago.Rutas(mux)
 		}
 		if d.MercadoLibre != nil {
