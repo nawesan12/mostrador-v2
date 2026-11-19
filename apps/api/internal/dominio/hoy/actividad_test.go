@@ -101,7 +101,7 @@ func TestCadaAccionQuedaEnLaActividad(t *testing.T) {
 		Moto: true, MotoCosto: 3500, MotoZona: "Palermo y Belgrano"}))
 	must(t, configuracion.ConectarDominio(comoVale, b.App, id, "lunadeco.com.ar"))
 	must(t, configuracion.QuitarDominio(comoVale, b.App, id, "lunadeco.com.ar"))
-	must(t, configuracion.CambiarPlan(comoVale, b.App, id, "emprende", "mes"))
+	must(t, configuracion.CambiarPlan(comoVale, b.App, id, "pro", "mes"))
 	must(t, configuracion.RegistrarExportacion(comoVale, b.App, id, "clientes", "csv", time.Now()))
 	q := configuracion.Quien{UsuarioID: yo, SesionID: "otra", Rol: "duenio"}
 	_, err = configuracion.CerrarOtras(comoVale, b.App, id, q)
@@ -175,7 +175,7 @@ func TestCadaAccionQuedaEnLaActividad(t *testing.T) {
 		{"Vos", "envios", "prendió el envío en moto a $ 3.500"},
 		{"Vos", "dominio", "conectó el dominio lunadeco.com.ar"},
 		{"Vos", "dominio", "quitó el dominio lunadeco.com.ar"},
-		{"Vos", "plan", "cambió el plan de Gratis a Emprende"},
+		{"Vos", "plan", "cambió el plan de Gratis a Crece"},
 		{"Vos", "datos", "bajó los clientes en CSV"},
 		{"Vos", "sesion", "cerró sus otras sesiones abiertas (1)"},
 		{"Vos", "mitienda", "publicó el diseño de la tienda (Mi tienda)"},
