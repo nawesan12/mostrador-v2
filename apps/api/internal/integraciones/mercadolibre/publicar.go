@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/planes"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 	"net/http"
 	"net/url"
 	"slices"
@@ -221,6 +223,46 @@ func (s *Servicio) Sincronizar(ctx context.Context, tiendaID, productoID string)
 	}
 	if estado == "closed" {
 		return nil
+	}
+	// Mercado Libre es desde Crece. Sin el plan (bajó o terminó la prueba) la publicación se pausa
+	// una vez y no se le manda ni precio ni stock: así no sigue vendiendo con datos viejos. Cada
+	// cambio de stock (una venta, una edición) pasa por acá, así que nada queda activo desactualizado.
+	// Las ventas y preguntas que llegan se siguen trayendo (ml.aviso). Al volver a un plan con
+	// Mercado Libre, la próxima sincronización la reactiva.
+	var sinPlan bool
+	if err := s.Pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		e := planes.Exigir(ctx, t, tiendaID, planes.MercadoLibre)
+		if problema.De(e) != nil {
+			sinPlan = true
+			return nil
+		}
+		return e
+	}); err != nil {
+		return err
+	}
+	if sinPlan {
+		if estado == "paused" {
+			return nil
+		}
+		token, _, err := s.tokenDe(ctx, tiendaID)
+		if errors.Is(err, ErrSinConexion) || errors.Is(err, ErrReautorizar) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if err := s.pedir(ctx, http.MethodPut, "/items/"+itemID, token, map[string]any{"status": "paused"}, nil); err != nil {
+			var em *ErrorML
+			if errors.As(err, &em) && em.Estado < 500 {
+				return nil
+			}
+			return err
+		}
+		return s.Pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+			_, err := t.Exec(ctx, `UPDATE ml_publicaciones SET estado = 'paused', sincronizado_en = now(),
+				error = 'Pausada: tu plan no incluye Mercado Libre.' WHERE tienda_id = $1 AND producto_id::text = $2`, tiendaID, productoID)
+			return err
+		})
 	}
 	p, recargo, pausar, err := s.leerProducto(ctx, tiendaID, productoID)
 	if errors.Is(err, ErrNoExiste) {

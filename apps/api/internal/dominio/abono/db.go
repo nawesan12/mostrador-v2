@@ -85,6 +85,15 @@ func Aplicar(ctx context.Context, t pgx.Tx, tiendaID, plan, ciclo, texto string)
 	if plan == "gratis" || plan == antes {
 		return nil
 	}
+	// Mercado Libre (desde Crece): al llegar a un plan que lo incluye, las publicaciones que se
+	// pausaron por el plan se vuelven a sincronizar (y se reactivan si el producto está publicado).
+	if (plan == "pro" || plan == "negocio") && antes != "pro" && antes != "negocio" {
+		if _, err := t.Exec(ctx, `INSERT INTO outbox (tienda_id, tipo, datos)
+			SELECT tienda_id, 'ml.sincronizar', jsonb_build_object('producto', producto_id)
+			FROM ml_publicaciones WHERE tienda_id = $1 AND estado = 'paused'`, tiendaID); err != nil {
+			return err
+		}
+	}
 	return outbox.Publicar(ctx, t, tiendaID, "plan.activado", map[string]string{"plan": plan})
 }
 

@@ -12,7 +12,8 @@ import (
 )
 
 // Rutas: las rutas del panel que necesitan una función del plan, con el mismo patrón con que se
-// registran. Sólo las que crean o prenden algo: mirar, apagar, desconectar y borrar siguen andando
+// registran. Sólo las que crean o prenden algo: mirar, apagar, desconectar, borrar y los ajustes de
+// un canal ya conectado (el recargo de Mercado Libre, pausar sin stock) siguen andando
 // después de bajar de plan (nada se pierde y se puede liberar). Los topes con cuenta (productos,
 // personas, fotos) y los que dependen del cuerpo (venta en el local, roles) los aplica cada dominio.
 var Rutas = map[string]Funcion{
@@ -32,7 +33,6 @@ var Rutas = map[string]Funcion{
 	"POST /v1/panel/carritos/{id}/recordar":                Cupones,
 	"POST /v1/panel/pedidos/{numero}/qr":                   Local,
 	"POST /v1/panel/integraciones/mercadopago/caja":        Local,
-	"PUT /v1/panel/integraciones/mercadolibre":             MercadoLibre,
 	"POST /v1/panel/integraciones/mercadolibre/conectar":   MercadoLibre,
 	"POST /v1/panel/integraciones/mercadolibre/vuelta":     MercadoLibre,
 	"POST /v1/panel/productos/{id}/mercadolibre":           MercadoLibre,

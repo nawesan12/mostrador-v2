@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/abono"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -252,6 +253,32 @@ func TestMercadoLibreDePuntaAPunta(t *testing.T) {
 	// Un recurso que no es de la lista no se procesa.
 	if c := aviso("orders_v2", "/users/1", "810"); c != 200 {
 		t.Fatal(c)
+	}
+
+	// Terminó la prueba en Gratis (sin Mercado Libre): el próximo cambio pausa la publicación y no
+	// manda precio ni stock; al pasar a Crece se vuelve a sincronizar y se reactiva.
+	admin, err := pgx.Connect(ctx, b.AdminURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer admin.Close(ctx)
+	if _, err := admin.Exec(ctx, `UPDATE tiendas SET plan = 'gratis', creada_en = now() - interval '30 days' WHERE id = $1`, luna); err != nil {
+		t.Fatal(err)
+	}
+	stock = 9
+	_, _ = listas.Guardar(ctx, b.App, luna, p.ID, listas.Editable{Nombre: p.Nombre, Precio: 50000, Stock: &stock})
+	_, _ = w.Pasada(ctx)
+	if put := f.cuerpo("PUT /items/MLA900"); put["status"] != "paused" || put["price"] != nil || put["available_quantity"] != nil {
+		t.Fatalf("sin el plan: %v", put)
+	}
+	if err := b.App.EnTienda(ctx, luna, func(tx pgx.Tx) error {
+		return abono.Aplicar(ctx, tx, luna, "pro", "mes", "pasó a Crece")
+	}); err != nil {
+		t.Fatal(err)
+	}
+	_, _ = w.Pasada(ctx)
+	if put := f.cuerpo("PUT /items/MLA900"); put["status"] != "active" || put["available_quantity"].(float64) != 9 {
+		t.Fatalf("de vuelta en Crece: %v", put)
 	}
 	_ = time.Second
 }
