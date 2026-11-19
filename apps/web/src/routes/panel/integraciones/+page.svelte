@@ -401,6 +401,7 @@
 	const hora = (ms: number) =>
 		new Date(ms).toLocaleTimeString('es-AR', {
 			hour: '2-digit',
+			hourCycle: 'h23',
 			minute: '2-digit',
 			timeZone: 'America/Argentina/Buenos_Aires'
 		});

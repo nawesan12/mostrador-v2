@@ -27,8 +27,8 @@ for p in pantallas:
     hoja.save(f'{sal}/hojas/{p}.jpg', quality=82)
     filas.append(p)
 with open(f'{sal}/index.html', 'w') as f:
-    f.write('<meta charset="utf-8"><title>iOS | Android</title><body style="font-family:system-ui;background:#f4eee2">')
-    f.write(f'<h1>Tengo Libre: iOS | Android</h1><p>{len(pantallas) - len(faltan)} de {len(pantallas)} pantallas en Android. Faltan: {html.escape(", ".join(faltan))}</p>')
+    f.write('<meta charset="utf-8"><title>Tu Local Web: iOS | Android</title><body style="font-family:system-ui;background:#f4eee2">')
+    f.write(f'<h1>Tu Local Web: iOS | Android</h1><p>{len(pantallas) - len(faltan)} de {len(pantallas)} pantallas en Android. Faltan: {html.escape(", ".join(faltan))}</p>')
     for p in filas:
         f.write(f'<h2>{html.escape(p)}</h2><img src="hojas/{html.escape(p)}.jpg" style="max-width:100%">')
 print(f'{len(pantallas) - len(faltan)}/{len(pantallas)} pantallas en Android; hojas en {sal}/hojas')

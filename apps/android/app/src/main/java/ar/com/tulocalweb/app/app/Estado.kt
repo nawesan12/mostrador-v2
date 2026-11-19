@@ -181,12 +181,12 @@ class Estado(api: Api? = null) {
         if (datos == null || acceso == null) {
             // Sin nada guardado no hay qué mostrar: la sesión queda y se vuelve a probar al abrir la app.
             fase = Fase.afuera
-            avisar(if (error.sinConexion) "No hay internet. Revisá la conexión y probá de nuevo." else "No pudimos cargar tu tienda. Probá de nuevo en un rato.", ok = false)
+            avisar(if (error.sinConexion) "No hay internet. Revisá la conexión y probá de nuevo." else "No pudimos conectar con Tu Local Web. Probá de nuevo en un rato.", ok = false)
             return
         }
         if (conFaceID) bloqueada = true
         fase = Fase.adentro
-        if (!error.sinConexion) avisar("No pudimos actualizar tu tienda. Ves lo último que se guardó.", ok = false)
+        if (!error.sinConexion) avisar("No pudimos actualizar tu tienda. Ves lo último guardado.", ok = false)
         tarea { refrescarResumen(); pedirTokenPushSiCorresponde() }
     }
 

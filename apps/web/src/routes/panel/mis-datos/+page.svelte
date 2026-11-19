@@ -45,6 +45,7 @@
 			day: 'numeric',
 			month: 'long',
 			hour: '2-digit',
+			hourCycle: 'h23',
 			minute: '2-digit',
 			timeZone: 'America/Argentina/Buenos_Aires'
 		});

@@ -88,6 +88,7 @@ export type Cambio = {
 const hora = (ms: number) =>
 	new Intl.DateTimeFormat('es-AR', {
 		hour: '2-digit',
+		hourCycle: 'h23',
 		minute: '2-digit',
 		timeZone: 'America/Argentina/Buenos_Aires'
 	}).format(ms);

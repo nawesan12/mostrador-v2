@@ -46,6 +46,7 @@
 		const hora = new Intl.DateTimeFormat('es-AR', {
 			timeZone: TZ,
 			hour: '2-digit',
+			hourCycle: 'h23',
 			minute: '2-digit'
 		}).format(d);
 		return dia === hoy

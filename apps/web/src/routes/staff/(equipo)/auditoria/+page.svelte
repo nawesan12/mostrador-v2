@@ -11,6 +11,7 @@
 			day: 'numeric',
 			month: 'short',
 			hour: '2-digit',
+			hourCycle: 'h23',
 			minute: '2-digit'
 		}).format(new Date(iso));
 	const acciones = $derived([...new Set(data.auditoria.registros.map((r) => r.accion))].sort());
