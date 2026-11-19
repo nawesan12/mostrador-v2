@@ -688,11 +688,11 @@
 												/>{/if}{#if p.hornero}<span class="q-ai" title="Lo vendió Tincho">✦</span
 												>{/if}</span
 										>
-										<!-- En el celular el monto pasa a este renglón: el nombre y los botones de 44 px entran. -->
+										<!-- En el celular el monto pasa a este renglón (y el tiempo va corto, «4 min»): el nombre y los botones de 44 px entran. -->
 										<span class="q-s"
-											>#{p.numero} · {#if celu}{pesos(p.total)} ·&nbsp;{/if}{hace(
-												p.creado
-											)}{#if !celu && p.ciudad}&nbsp;· {p.ciudad}{/if}</span
+											>#{p.numero} · {#if celu}{pesos(p.total)} ·&nbsp;{/if}{celu
+												? hace(p.creado).replace(/^hace /, '')
+												: hace(p.creado)}{#if !celu && p.ciudad}&nbsp;· {p.ciudad}{/if}</span
 										>
 									</span>
 									{#if amplio}
