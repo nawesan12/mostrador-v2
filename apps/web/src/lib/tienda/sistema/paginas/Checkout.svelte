@@ -89,8 +89,7 @@
 	);
 
 	const pagos = $derived([
-		// Con el total en $ 0 (un cupón que lo cubre todo) no hay nada que cobrar con Mercado Pago.
-		...(tienda.cobros.mercadoPago && cuenta.total > 0
+		...(tienda.cobros.mercadoPago
 			? [
 					{
 						id: 'mercadopago' as const,
@@ -145,11 +144,11 @@
 	const textoPagar = $derived(
 		tienda.vitrina
 			? 'Es una tienda de ejemplo'
-			: pago === 'mercadopago'
-				? `Pagar ${precio(cuenta.total)}`
-				: cuenta.total > 0
-					? `Confirmar pedido · ${precio(cuenta.total)}`
-					: 'Confirmar pedido'
+			: cuenta.total <= 0
+				? 'Confirmar pedido'
+				: pago === 'mercadopago'
+					? `Pagar ${precio(cuenta.total)}`
+					: `Confirmar pedido · ${precio(cuenta.total)}`
 	);
 	// Los datos: el mensaje debajo de cada campo (no el globo del navegador, uno por vez y en su idioma).
 	let tocado = $state(false);
@@ -399,7 +398,16 @@
 
 					<section class="tv-checkout-paso" aria-labelledby="tv-co-pago">
 						<h2 class="tv-h3" id="tv-co-pago">¿Cómo pagás?</h2>
-						<div class="tv-radios" role="radiogroup" aria-label="Forma de pago">
+						<!-- Un cupón que cubre todo: no hay nada que cobrar (Go no pasa por Mercado Pago). -->
+						{#if cuenta.total <= 0}<p class="tv-ok tv-chico">
+								No hay nada que pagar: tu cupón cubre todo.
+							</p>{/if}
+						<div
+							class="tv-radios"
+							role="radiogroup"
+							aria-label="Forma de pago"
+							hidden={cuenta.total <= 0}
+						>
 							{#each pagos as s (s.id)}
 								<label class="tv-radio tv-tarjeta" class:tv-radio--on={pago === s.id}>
 									<input type="radio" name="pago" value={s.id} bind:group={pago} />

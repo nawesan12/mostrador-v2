@@ -15,6 +15,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/configuracion"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cupones"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/listas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/vidriera"
@@ -185,5 +186,128 @@ func TestPagoTardeYDoble(t *testing.T) {
 	webhook(913, "OTRA1", dv.Total)
 	if n := contar(`SELECT count(*) FROM outbox WHERE tipo = 'pago.doble' AND (datos->>'numero')::int = $1`, v.Numero); n != 2 {
 		t.Fatalf("pago de otra preferencia del mismo pedido: %d avisos", n)
+	}
+}
+
+// Volver de Mercado Pago y tocar Pagar otra vez no arma otro pedido; cambiar el carrito cancela el
+// que esperaba (vuelven el stock y el cupón de un uso). Un cupón que cubre todo deja el pedido pago,
+// sin Mercado Pago. Cancelar una venta con cupón le resta al cupón lo vendido.
+func TestPagarOtraVezYTotalCero(t *testing.T) {
+	ctx := context.Background()
+	b := pruebadb.Nueva(t)
+	luna := pruebadb.CrearTienda(t, b.App, "luna")
+	var ana string
+	if err := b.App.EnTx(ctx, func(tx pgx.Tx) error {
+		return tx.QueryRow(ctx, `INSERT INTO auth.usuarios (email, nombre) VALUES ('ana@luna.com', 'Ana') RETURNING id::text`).Scan(&ana)
+	}); err != nil {
+		t.Fatal(err)
+	}
+	f := &mpFalso{cuerpos: map[string]map[string]any{}, pagos: map[string]map[string]any{}, susc: map[string]map[string]any{}, usuario: 779, refreshOK: true}
+	srv := httptest.NewServer(f)
+	defer srv.Close()
+	k := make([]byte, 32)
+	_, _ = rand.Read(k)
+	cif, _ := cifrado.Nuevo(base64.StdEncoding.EncodeToString(k))
+	ahora := time.Now()
+	s := &mercadopago.Servicio{Pool: b.App, Cifra: cif, Cliente: &mercadopago.Cliente{Base: srv.URL},
+		Ahora:  func() time.Time { return ahora },
+		Config: mercadopago.Config{AppID: "123", Secreto: "sec", SecretoWebhook: "whsec", Sitio: "https://tulocalweb.com.ar"}}
+	u, err := s.Conectar(ctx, luna, ana)
+	if err != nil {
+		t.Fatal(err)
+	}
+	q, _ := url.Parse(u)
+	if err := s.Volver(ctx, luna, ana, "codigo", q.Query().Get("state")); err != nil {
+		t.Fatal(err)
+	}
+	if err := configuracion.GuardarNegocio(ctx, b.App, luna, configuracion.Negocio{Nombre: "Luna", Alias: "luna.mates"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := configuracion.GuardarEntregas(ctx, b.App, luna, configuracion.Entregas{Retiro: true, RetiroDireccion: "Gorriti 4500"}); err != nil {
+		t.Fatal(err)
+	}
+	stock := 1
+	mate, err := listas.Guardar(ctx, b.App, luna, "", listas.Editable{Nombre: "Mate", Precio: 3000, Stock: &stock})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := cupones.Crear(ctx, b.App, luna, cupones.Nuevo{Codigo: "UNO10", Tipo: "pct", Valor: 10, Alcance: "todo",
+		Quien: "todos", Limite: 1, PorCliente: "1", Vigencia: "sin", Canales: []string{"web"}}, ahora); err != nil {
+		t.Fatal(err)
+	}
+	compra := func(pago, cupon string, cant int) (vidriera.Resultado, error) {
+		c := vidriera.Compra{Email: "lucia@ejemplo.com", Nombre: "Lucía Pérez", Telefono: "11 5555-0101", CP: "1414",
+			Envio: "retiro", Pago: pago, Cupon: cupon}
+		c.Carrito = append(c.Carrito, vidriera.LineaCarrito{ID: mate.ID, Cantidad: cant})
+		return vidriera.Comprar(ctx, b.App, s, s.Config.Sitio, "luna", c, ahora)
+	}
+	// Stock 1 y cupón de un uso: el segundo intento con lo mismo paga el mismo pedido.
+	r1, err := compra("mercadopago", "UNO10", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	r2, err := compra("mercadopago", "UNO10", 1)
+	if err != nil || r2.Numero != r1.Numero || r2.Codigo != r1.Codigo || r2.URL == "" {
+		t.Fatalf("pagar otra vez: %+v %v (antes %+v)", r2, err, r1)
+	}
+	// Sin el cupón: el de antes se cancela (vuelven el stock y el cupón) y sale uno nuevo.
+	r3, err := compra("mercadopago", "", 1)
+	if err != nil || r3.Numero == r1.Numero {
+		t.Fatalf("cambió el carrito: %+v %v", r3, err)
+	}
+	d1, _ := pedidos.Obtener(ctx, b.App, luna, r1.Numero)
+	if d1.Estado != "Cancelado" {
+		t.Fatalf("el pedido reemplazado quedó %s", d1.Estado)
+	}
+	admin, err := pgx.Connect(ctx, b.AdminURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer admin.Close(ctx)
+	var usos int
+	_ = admin.QueryRow(ctx, `SELECT usos FROM cupones WHERE codigo = 'UNO10'`).Scan(&usos)
+	if usos != 0 {
+		t.Fatalf("el cupón del pedido reemplazado no volvió: %d usos", usos)
+	}
+	if _, err := pedidos.CancelarReemplazado(ctx, b.App, luna, r3.Numero); err != nil {
+		t.Fatal(err)
+	}
+
+	// Un cupón fijo mayor que el carrito, con retiro: $ 0, pago y sin Mercado Pago.
+	if _, err := cupones.Crear(ctx, b.App, luna, cupones.Nuevo{Codigo: "REGALO", Tipo: "fijo", Valor: 5000, Alcance: "todo",
+		Quien: "todos", PorCliente: "libre", Vigencia: "sin", Canales: []string{"web"}}, ahora); err != nil {
+		t.Fatal(err)
+	}
+	prefs := len(f.vio("POST /checkout/preferences"))
+	r4, err := compra("mercadopago", "REGALO", 1)
+	if err != nil || r4.URL != "" || r4.Total != 0 {
+		t.Fatalf("total cero: %+v %v", r4, err)
+	}
+	if len(f.vio("POST /checkout/preferences")) != prefs {
+		t.Fatal("armó una preferencia de $ 0")
+	}
+	d4, _ := pedidos.Obtener(ctx, b.App, luna, r4.Numero)
+	if d4.Estado != "Para preparar" {
+		t.Fatalf("total cero quedó %s", d4.Estado)
+	}
+	// Cancelarlo (ya era una venta) le resta al cupón lo vendido y lo descontado.
+	var vendio, desconto int64
+	_ = admin.QueryRow(ctx, `SELECT vendio, desconto FROM cupones WHERE codigo = 'REGALO'`).Scan(&vendio, &desconto)
+	if desconto == 0 {
+		t.Fatalf("el cupón no sumó lo descontado: %d", desconto)
+	}
+	if err := pedidos.CambiarEstado(ctx, b.App, luna, r4.Numero, "Cancelado"); err != nil {
+		t.Fatal(err)
+	}
+	_ = admin.QueryRow(ctx, `SELECT vendio, desconto FROM cupones WHERE codigo = 'REGALO'`).Scan(&vendio, &desconto)
+	if vendio != 0 || desconto != 0 {
+		t.Fatalf("cancelado y el cupón sigue con vendió %d descontó %d", vendio, desconto)
+	}
+	if err := pedidos.CambiarEstado(ctx, b.App, luna, r4.Numero, "Para preparar"); err != nil {
+		t.Fatal(err)
+	}
+	_ = admin.QueryRow(ctx, `SELECT desconto FROM cupones WHERE codigo = 'REGALO'`).Scan(&desconto)
+	if desconto == 0 {
+		t.Fatal("reabrirlo no le volvió a sumar al cupón")
 	}
 }

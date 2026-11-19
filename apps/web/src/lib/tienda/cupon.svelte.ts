@@ -55,6 +55,21 @@ export class CuponCheckout {
 }
 
 /** Los totales del checkout, con la misma regla que el servidor (checkout/+page.server.ts y Go). */
+/**
+ * Un cupón «no combinable» no se suma a los combos: va el mayor de los dos (como promete el panel);
+ * combinable, los dos, sin pasar el subtotal. Gemelo de vidriera.combinarDescuentos en Go.
+ */
+export function combinarDescuentos(
+	subtotal: number,
+	combo: number,
+	cupon: number,
+	combinable: boolean
+): [number, number] {
+	if (!combinable && combo > 0 && cupon > 0) return cupon >= combo ? [0, cupon] : [combo, 0];
+	const c = Math.min(combo, subtotal);
+	return [c, Math.min(cupon, subtotal - c)];
+}
+
 export function totales(p: {
 	subtotal: number;
 	envio: number;
@@ -65,8 +80,12 @@ export function totales(p: {
 	combo?: number;
 }) {
 	const c = p.cupon.ok;
-	const descCombo = p.combo ?? 0;
-	const descCupon = c ? c.descuento : 0;
+	const [descCombo, descCupon] = combinarDescuentos(
+		p.subtotal,
+		p.combo ?? 0,
+		c ? c.descuento : 0,
+		!c || c.combinable
+	);
 	const envio = c?.envioGratis ? 0 : p.envio;
 	const transf =
 		p.pago === 'transferencia' && (!c || c.combinable)

@@ -651,6 +651,28 @@ func ComprarConCorreo(ctx context.Context, pool tx, mp Pagador, correo Correo, s
 			entrega = &pedidos.Entrega{Direccion: strings.TrimSpace(c.Direccion), CP: strings.TrimSpace(c.CP)}
 		}
 	}
+	// Volvió atrás desde Mercado Pago y tocó Pagar otra vez (o desde otra pestaña u otro dispositivo):
+	// si hay un pedido suyo esperando el pago, con lo mismo, se paga ése; si cambió algo, ése se
+	// cancela (vuelven el stock y el cupón) y se arma el nuevo. Va antes del cupón: el «una vez por
+	// cliente» contaba el pedido propio que esperaba el pago. Si no, el propio pedido abierto le
+	// bloqueaba el stock único o el cupón de un uso.
+	if c.Pago == "mercadopago" {
+		n.Cupon = strings.ToUpper(strings.TrimSpace(c.Cupon))
+		previo, err := pedidos.EsperandoPagoDe(ctx, pool, id, c.Email)
+		if err != nil {
+			return Resultado{}, err
+		}
+		if previo != nil {
+			if previo.Igual(n) {
+				r := Resultado{Numero: previo.Numero, Codigo: previo.Codigo, Total: previo.Total}
+				r.URL, err = mp.PagarPedido(ctx, id, previo.Numero, fmt.Sprintf("%s/t/%s/pedido/%s", sitio, slug, r.Codigo))
+				return r, err
+			}
+			if _, err := pedidos.CancelarReemplazado(ctx, pool, id, previo.Numero); err != nil {
+				return Resultado{}, err
+			}
+		}
+	}
 	// Cupón: se vuelve a evaluar acá con los precios y el historial del servidor.
 	var descCupon int64
 	combinable := true
@@ -674,6 +696,7 @@ func ComprarConCorreo(ctx context.Context, pool tx, mp Pagador, correo Correo, s
 		lc[i] = LineaCombo{ID: l.ID, VarianteID: &v, Cantidad: l.Cantidad, Combo: l.Combo, Precio: precios[i]}
 	}
 	descCombo := DescuentoCombos(CombosDe(t.Diseno), lc)
+	descCombo, descCupon = combinarDescuentos(subtotal, descCombo, descCupon, combinable)
 	n.Pago = "transf"
 	if c.Pago == "mercadopago" {
 		n.Pago = "mp"
@@ -682,7 +705,10 @@ func ComprarConCorreo(ctx context.Context, pool tx, mp Pagador, correo Correo, s
 	}
 	n.Descuento += descCombo + descCupon
 	n.DescuentoCupon = descCupon
-	f := false
+	// Un cupón que cubre todo (y retiro sin costo): no hay nada que cobrar. Queda pago y para preparar,
+	// sin pasar por Mercado Pago (que rechaza una preferencia de $ 0 y el pedido quedaba trabado).
+	sinCobrar := subtotal+costoEnvio-n.Descuento <= 0
+	f := sinCobrar
 	n.Pagado = &f
 	n.Cliente, n.Telefono = &c.Nombre, &c.Telefono
 	n.Email, n.CostoEnvio, n.CiudadEnvio = c.Email, costoEnvio, strings.TrimSpace(c.CP)
@@ -718,10 +744,28 @@ func ComprarConCorreo(ctx context.Context, pool tx, mp Pagador, correo Correo, s
 		medirCompra(ctx, pool, id, c, n, porID, numero, total, hoy)
 	}
 	r := Resultado{Numero: numero, Codigo: n.CodigoPublico, Total: total}
-	if c.Pago == "mercadopago" {
+	if c.Pago == "mercadopago" && !sinCobrar {
 		r.URL, err = mp.PagarPedido(ctx, id, numero, fmt.Sprintf("%s/t/%s/pedido/%s", sitio, slug, r.Codigo))
 	}
 	return r, err
+}
+
+// combinarDescuentos: un cupón «no combinable» no se suma a los combos (va el mayor de los dos, como
+// promete el panel); combinable, los dos, pero nunca más que el subtotal (el pedido se rechazaba).
+func combinarDescuentos(subtotal, combo, cupon int64, combinable bool) (int64, int64) {
+	if !combinable && combo > 0 && cupon > 0 {
+		if cupon >= combo {
+			return 0, cupon
+		}
+		return combo, 0
+	}
+	if combo > subtotal {
+		combo = subtotal
+	}
+	if cupon > subtotal-combo {
+		cupon = subtotal - combo
+	}
+	return combo, cupon
 }
 
 // medirCompra encola la compra para la API de conversiones de Meta. Si falla, la compra sigue (sólo

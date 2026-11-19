@@ -93,7 +93,7 @@ func CancelarSinSena(ctx context.Context, pool tx, tiendaID string, numero int, 
 			return err
 		}
 		// El stock vuelve y el cupón se libera (no fue una venta).
-		if err := devolver(ctx, t, tiendaID, items, cupon); err != nil {
+		if err := devolver(ctx, t, tiendaID, items, cupon, metricasCupon{}); err != nil {
 			return err
 		}
 		hecho = true

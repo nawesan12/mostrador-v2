@@ -1,0 +1,11 @@
+{
+  "$comentario": "Combo y cupón juntos (vidriera.combinarDescuentos en Go, cupon.svelte.ts › combinarDescuentos en la web). Un cupón no combinable no se suma a los combos: va el mayor. Combinable, los dos, sin pasar el subtotal.",
+  "casos": [
+    { "nombre": "no combinable: gana el cupón", "subtotal": 100000, "combo": 10000, "cupon": 15000, "combinable": false, "esperado": [0, 15000] },
+    { "nombre": "no combinable: gana el combo", "subtotal": 100000, "combo": 20000, "cupon": 15000, "combinable": false, "esperado": [20000, 0] },
+    { "nombre": "combinable: los dos", "subtotal": 100000, "combo": 10000, "cupon": 15000, "combinable": true, "esperado": [10000, 15000] },
+    { "nombre": "combinable: nunca más que el subtotal", "subtotal": 30000, "combo": 10000, "cupon": 25000, "combinable": true, "esperado": [10000, 20000] },
+    { "nombre": "un cupón fijo mayor que el carrito: el pedido queda en $ 0", "subtotal": 3000, "combo": 0, "cupon": 3000, "combinable": true, "esperado": [0, 3000] },
+    { "nombre": "sin combo: el cupón entero", "subtotal": 50000, "combo": 0, "cupon": 5000, "combinable": false, "esperado": [0, 5000] }
+  ]
+}

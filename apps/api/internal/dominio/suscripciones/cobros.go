@@ -149,19 +149,22 @@ func crearPedido(ctx context.Context, t pgx.Tx, tienda, id, plan string, precio 
 		pid := x.ProductoID
 		it.ProductoID = &pid
 		var opciones []listas.Opcion
-		err := t.QueryRow(ctx, `UPDATE productos SET stock = greatest(stock - $2, 0) WHERE id::text = $1
-			RETURNING nombre, foto, opciones`, x.ProductoID, x.Cantidad).Scan(&it.Nombre, &it.Foto, &opciones)
-		if errors.Is(err, pgx.ErrNoRows) {
+		if err := t.QueryRow(ctx, `SELECT nombre, foto, opciones FROM productos WHERE id::text = $1 FOR UPDATE`, x.ProductoID).
+			Scan(&it.Nombre, &it.Foto, &opciones); errors.Is(err, pgx.ErrNoRows) {
 			continue // lo borraron del catálogo: el plan sigue con el resto
-		}
-		if err != nil {
+		} else if err != nil {
 			return 0, err
 		}
+		// Se guarda cuánto bajó de verdad (acotado a 0): cancelar devuelve eso y no infla el stock.
+		descontado := 0
 		if x.VarianteID != "" {
+			// Con variante, se descuenta la variante y el total lo recalcula el trigger (variantes_stock).
 			var valores map[string]string
 			var foto *string
-			err := t.QueryRow(ctx, `UPDATE variantes SET stock = greatest(stock - $3, 0) WHERE id::text = $1 AND producto_id::text = $2
-				RETURNING valores, foto`, x.VarianteID, x.ProductoID, x.Cantidad).Scan(&valores, &foto)
+			err := t.QueryRow(ctx, `WITH antes AS (SELECT stock FROM variantes WHERE id::text = $1 AND producto_id::text = $2 FOR UPDATE)
+				UPDATE variantes v SET stock = greatest(v.stock - $3, 0) FROM antes
+				WHERE v.id::text = $1 AND v.producto_id::text = $2
+				RETURNING v.valores, v.foto, antes.stock - v.stock`, x.VarianteID, x.ProductoID, x.Cantidad).Scan(&valores, &foto, &descontado)
 			if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 				return 0, err
 			}
@@ -172,6 +175,19 @@ func crearPedido(ctx context.Context, t pgx.Tx, tienda, id, plan string, precio 
 					it.Foto = foto
 				}
 			}
+			// Sin la variante (se borró): no se toca el stock (el total de un producto con opciones lo
+			// arman sus variantes).
+		} else {
+			if err := t.QueryRow(ctx, `WITH antes AS (SELECT stock FROM productos WHERE id::text = $1)
+				UPDATE productos p SET stock = greatest(p.stock - $2, 0) FROM antes
+				WHERE p.id::text = $1 AND p.opciones = '[]'::jsonb RETURNING antes.stock - p.stock`, x.ProductoID, x.Cantidad).
+				Scan(&descontado); err != nil && !errors.Is(err, pgx.ErrNoRows) {
+				return 0, err
+			}
+		}
+		if descontado != x.Cantidad {
+			d := descontado
+			it.Descontado = &d
 		}
 		items = append(items, it)
 	}

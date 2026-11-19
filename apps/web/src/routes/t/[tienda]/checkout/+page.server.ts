@@ -10,6 +10,7 @@ import { cotizar, cpValido } from '#lib/tienda/envio.ts';
 import { proximamente } from '#lib/tienda/lanzamiento.ts';
 import { detalleLineas } from '#lib/tienda/lineas.ts';
 import { combosDe, descuentoCombos } from '#lib/tienda/combos.ts';
+import { combinarDescuentos } from '#lib/tienda/cupon.svelte.ts';
 import { disenoDeTienda } from '#lib/tienda/sistema/migrar.ts';
 import type { Actions, PageServerLoad } from './$types';
 import { irAfuera } from '#lib/server/afuera.ts';
@@ -192,12 +193,17 @@ export const actions: Actions = {
 		// Cupón: se vuelve a evaluar acá (el carrito sólo lo mostró).
 		const cupon = p.cupon ? await evaluarCupon(r, p.cupon, p.email, p.carrito) : null;
 		if (cupon && !cupon.ok) return fail(409, { error: cupon.motivo });
-		const descCupon = cupon?.ok ? cupon.descuento : 0;
-		// Los combos completos (bloque «combo» con descuento), con el precio que se cobra de cada línea.
-		const descCombo = descuentoCombos(
-			combosDe(disenoDeTienda(r.tienda)),
-			detalle.map((l) => ({ ...l, precio: l.producto.precio }))
-		).total;
+		// Los combos completos (bloque «combo» con descuento), con el precio que se cobra de cada línea;
+		// un cupón no combinable no se suma a ellos (cupon.svelte.ts › combinarDescuentos, como Go).
+		const [descCombo, descCupon] = combinarDescuentos(
+			subtotal,
+			descuentoCombos(
+				combosDe(disenoDeTienda(r.tienda)),
+				detalle.map((l) => ({ ...l, precio: l.producto.precio }))
+			).total,
+			cupon?.ok ? cupon.descuento : 0,
+			!cupon || (cupon.ok && cupon.combinable)
+		);
 		const envio = cupon?.ok && cupon.envioGratis ? 0 : opcion.precio;
 		const descuento =
 			descCombo +

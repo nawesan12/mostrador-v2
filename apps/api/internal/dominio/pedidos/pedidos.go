@@ -71,6 +71,9 @@ type Item struct {
 	// la variante se borre o cambie.
 	VarianteID *string `json:"varianteId"`
 	Variante   *string `json:"variante"`
+	// Descontado: cuánto stock bajó de verdad al vender, si fue menos que Cantidad (el pedido de una
+	// suscripción descuenta acotado a 0). Cancelar devuelve esto, no la cantidad entera.
+	Descontado *int `json:"descontado,omitempty"`
 }
 
 // Comprador es quien compró, copiado en el pedido.
@@ -467,11 +470,15 @@ var (
 // CambiarEstado avanza, vuelve atrás o cancela un pedido.
 func CambiarEstado(ctx context.Context, pool tx, tiendaID string, numero int, estado string) error {
 	return pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		var de, envio string
+		var de, envio, canal, pago, estadoPago string
 		var items []byte
 		var cupon *string
-		err := t.QueryRow(ctx, `SELECT estado, envio, items, cupon FROM pedidos WHERE tienda_id = $1 AND numero = $2 FOR UPDATE`, tiendaID, numero).
-			Scan(&de, &envio, &items, &cupon)
+		var m metricasCupon
+		err := t.QueryRow(ctx, `SELECT estado, envio, items, cupon, canal, pago, estado_pago, total,
+				coalesce((SELECT sum((d->>'monto')::bigint) FROM jsonb_array_elements(descuentos) d
+					WHERE d->>'concepto' = 'Cupón ' || cupon), 0)
+			FROM pedidos WHERE tienda_id = $1 AND numero = $2 FOR UPDATE`, tiendaID, numero).
+			Scan(&de, &envio, &items, &cupon, &canal, &pago, &estadoPago, &m.vendio, &m.desconto)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return ErrNoExiste
 		}
@@ -484,12 +491,15 @@ func CambiarEstado(ctx context.Context, pool tx, tiendaID string, numero int, es
 		// Cancelar devuelve el stock y libera el cupón, como la cancelación automática (antes sólo
 		// cambiaba la etapa y el stock quedaba abajo para siempre, aunque la app decía que volvía).
 		// Deshacer una cancelación lo vuelve a tomar, sólo si alcanza.
+		// Si ya era una venta (no esperaba el pago de Mercado Pago), el cupón ya había sumado lo vendido y
+		// lo descontado: cancelarlo los resta y reabrirlo los vuelve a sumar.
+		m.confirmado = !EsperaPago(canal, pago, estadoPago)
 		if estado == "Cancelado" {
-			if err := devolver(ctx, t, tiendaID, items, cupon); err != nil {
+			if err := devolver(ctx, t, tiendaID, items, cupon, m); err != nil {
 				return err
 			}
 		} else if de == "Cancelado" {
-			if err := retomar(ctx, t, tiendaID, items, cupon); err != nil {
+			if err := retomar(ctx, t, tiendaID, items, cupon, m); err != nil {
 				return err
 			}
 		}
