@@ -893,8 +893,8 @@
 		gap: 8px;
 		padding: 10px 16px;
 		border-radius: 999px;
-		background: var(--tx);
-		color: var(--sf);
+		background: linear-gradient(180deg, #c24e25, #b0441d);
+		color: #fff;
 		font-size: 13.5px;
 		font-weight: 600;
 		white-space: nowrap;

@@ -105,6 +105,7 @@
 				class:sugerido={automatico}
 				value={o.nombre}
 				oninput={(e) => o.cambiarNombre(e.currentTarget.value)}
+				onfocus={(e) => automatico && e.currentTarget.select()}
 				maxlength="80"
 				autocomplete="organization"
 				autocapitalize="words"
@@ -377,8 +378,9 @@
 	.ob-in:focus {
 		border-color: #d2582f;
 	}
+	/* Propuesto: borde punteado y la ayuda; el texto en el color normal (en gris parecía un ejemplo)
+	   y se selecciona entero al tocarlo, así tipear lo reemplaza. */
 	.ob-in.sugerido {
-		color: #7a6252;
 		border-style: dashed;
 	}
 	.sug {

@@ -448,9 +448,10 @@
 			<h1>Cupones y promociones</h1>
 			<div class="c-s">Creá descuentos, mirá cuánto venden y cortalos si no rinden.</div>
 		</div>
-		<button type="button" class="nuevo" onclick={abrir}
-			><Icon icon={I.phPlusBold} size={15} />Nuevo cupón</button
-		>
+		<!-- Sin cupones, el único llamado es el del vacío (no dos «Nuevo cupón»). -->
+		{#if data.cupones.length}<button type="button" class="nuevo" onclick={abrir}
+				><Icon icon={I.phPlusBold} size={15} />Nuevo cupón</button
+			>{/if}
 	</div>
 
 	<!-- Sin ningún cupón, los números serían todos cero: aparecen con el primero. -->
