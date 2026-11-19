@@ -740,11 +740,6 @@
 		flex: 1;
 		accent-color: #d2582f;
 	}
-	.m-rango b {
-		min-width: 52px;
-		text-align: right;
-		font-size: 18px;
-	}
 	.m-acc {
 		margin-top: 20px;
 		display: flex;
