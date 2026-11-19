@@ -112,18 +112,25 @@
 			{#if error}<p id="rv-err" class="rv-err" role="alert">{error}</p>{/if}
 			<div class="rv-otro">
 				{#if modo === 'clave'}
-					<button type="button" class="rv-link" onclick={() => ((modo = 'codigo'), (valor = ''), void mandarCodigo())}
+					<button
+						type="button"
+						class="rv-link"
+						onclick={() => ((modo = 'codigo'), (valor = ''), void mandarCodigo())}
 						>Mejor mandame un código por mail</button
 					>
 				{:else if !mandado}
-					<button type="button" class="rv-link" onclick={mandarCodigo}>Mandame un código por mail</button>
+					<button type="button" class="rv-link" onclick={mandarCodigo}
+						>Mandame un código por mail</button
+					>
 				{:else}
 					<button type="button" class="rv-link" onclick={mandarCodigo}>Mandármelo de nuevo</button>
 				{/if}
 			</div>
 			<div class="rv-acc">
-				<button type="button" class="btn btn-secondary" onclick={() => reverificacion.terminar(null)}
-					>Cancelar</button
+				<button
+					type="button"
+					class="btn btn-secondary"
+					onclick={() => reverificacion.terminar(null)}>Cancelar</button
 				>
 				<button type="submit" class="btn btn-primary" disabled={enviando}
 					>{enviando ? 'Verificando…' : 'Confirmar'}</button

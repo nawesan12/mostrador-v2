@@ -579,11 +579,10 @@ export class DatosApi implements Datos {
 		);
 	}
 	tomarConfirmacion(id: string) {
-		return this.pedir<{ estado: 'tomada' | 'en_curso' | 'hecha'; resultado?: Record<string, unknown> }>(
-			`/v1/panel/tincho/confirmaciones/${encodeURIComponent(id)}`,
-			'POST',
-			{}
-		);
+		return this.pedir<{
+			estado: 'tomada' | 'en_curso' | 'hecha';
+			resultado?: Record<string, unknown>;
+		}>(`/v1/panel/tincho/confirmaciones/${encodeURIComponent(id)}`, 'POST', {});
 	}
 	async terminarConfirmacion(id: string, hecha: boolean, resultado?: unknown) {
 		await this.pedir<void>(`/v1/panel/tincho/confirmaciones/${encodeURIComponent(id)}`, 'PUT', {

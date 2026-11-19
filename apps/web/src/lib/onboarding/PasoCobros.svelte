@@ -261,14 +261,14 @@
 						>{en && faltaDireccion
 							? 'Falta la dirección de tu local'
 							: en
-							? [
-									en.retiro && 'Retiro en el local',
-									en.moto && 'Moto',
-									en.correo && 'Correo Argentino'
-								]
-									.filter(Boolean)
-									.join(' · ') || 'Elegí cómo entregás'
-							: COBROS_REALES.envios.d}</span
+								? [
+										en.retiro && 'Retiro en el local',
+										en.moto && 'Moto',
+										en.correo && 'Correo Argentino'
+									]
+										.filter(Boolean)
+										.join(' · ') || 'Elegí cómo entregás'
+								: COBROS_REALES.envios.d}</span
 					></span
 				>
 				<button

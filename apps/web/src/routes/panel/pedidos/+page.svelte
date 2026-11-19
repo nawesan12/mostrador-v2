@@ -690,9 +690,9 @@
 										>
 										<!-- En el celular el monto pasa a este renglón: el nombre y los botones de 44 px entran. -->
 										<span class="q-s"
-											>#{p.numero} · {#if celu}{pesos(p.total)} ·{' '}{/if}{hace(
+											>#{p.numero} · {#if celu}{pesos(p.total)} ·&nbsp;{/if}{hace(
 												p.creado
-											)}{#if !celu && p.ciudad}{' '}· {p.ciudad}{/if}</span
+											)}{#if !celu && p.ciudad}&nbsp;· {p.ciudad}{/if}</span
 										>
 									</span>
 									{#if amplio}
@@ -720,7 +720,7 @@
 											<span class="p-e" style:color={e.c}
 												><Icon icon={e.i} size={13} />{textoEstado(p)}{#if u}<b
 														class="p-urg"
-														style:color={u[2]}>{' '}· {u[0]}</b
+														style:color={u[2]}>&nbsp;· {u[0]}</b
 													>{/if}</span
 											>
 										</span>

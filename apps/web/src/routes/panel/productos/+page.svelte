@@ -544,11 +544,8 @@
 		<div class="m-d">Subí o bajá todo de una. Redondeamos a&nbsp;$&nbsp;10.</div>
 		<div class="m-rapidos" role="group" aria-label="Porcentajes rápidos">
 			{#each RAPIDOS as r (r)}
-				<button
-					type="button"
-					class="m-rapido"
-					aria-pressed={pct === r}
-					onclick={() => (pct = r)}>{r > 0 ? '+' : '−'}{Math.abs(r)} %</button
+				<button type="button" class="m-rapido" aria-pressed={pct === r} onclick={() => (pct = r)}
+					>{r > 0 ? '+' : '−'}{Math.abs(r)} %</button
 				>
 			{/each}
 		</div>

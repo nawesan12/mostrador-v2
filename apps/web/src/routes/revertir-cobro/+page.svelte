@@ -33,7 +33,10 @@
 				<a class="cta" href={resolve('/ingresar')}>Ingresar</a>
 			{:else if !data.token}
 				<h1>Este link ya no sirve</h1>
-				<p class="bajada">Abrilo desde el último mail que te mandamos, o entrá a tu panel y revisá Configuración › Negocio.</p>
+				<p class="bajada">
+					Abrilo desde el último mail que te mandamos, o entrá a tu panel y revisá Configuración ›
+					Negocio.
+				</p>
 				<a class="cta" href={resolve('/ingresar')}>Ir a ingresar</a>
 			{:else}
 				<h1>¿No fuiste vos?</h1>

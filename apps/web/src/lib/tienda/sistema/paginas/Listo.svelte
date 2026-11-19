@@ -79,87 +79,87 @@
 			: ['Recibido', 'Preparando', 'En camino', 'Entregado']
 	);
 	const paso = $derived(
-		({
+		{
 			'Sin pagar': 0,
 			'Para preparar': 1,
 			'Listo para despachar': retiro ? 2 : 1,
 			'En camino': 2,
 			Entregado: 3,
 			Retirado: 3
-		})[estado] ?? 0
+		}[estado] ?? 0
 	);
 
-	const cab = $derived.by((): { ico: I.IconData; titulo: string; texto: string; alerta?: boolean } => {
-		const n = `#${pedido.numero}`;
-		if (pedido.sinDatos)
+	const cab = $derived.by(
+		(): { ico: I.IconData; titulo: string; texto: string; alerta?: boolean } => {
+			const n = `#${pedido.numero}`;
+			if (pedido.sinDatos)
+				return {
+					ico: I.phCheckBold,
+					titulo: 'Recibimos tu pedido',
+					texto: `Tu pedido ${n} quedó guardado. En un momento se actualiza esta página.`
+				};
+			if (cancelado)
+				return {
+					ico: I.phXBold,
+					titulo: 'Este pedido se canceló',
+					texto: `El pedido ${n} ya no sigue. Si lo pagaste, escribinos y te devolvemos la plata.`,
+					alerta: true
+				};
+			if (pedido.porPagar && pedido.rechazado)
+				return {
+					ico: I.phWarningBold,
+					titulo: 'El pago no se completó',
+					texto: `Tu pedido ${n} sigue guardado 24 horas. Probá de nuevo, con otra tarjeta o medio.`,
+					alerta: true
+				};
+			if (pedido.porPagar)
+				return {
+					ico: I.phClockBold,
+					titulo: 'Falta pagar tu pedido',
+					texto: `Te guardamos el pedido ${n} 24 horas para que lo pagues con Mercado Pago.`
+				};
+			if (transfiere)
+				return {
+					ico: I.phCheckBold,
+					titulo: `¡Gracias, ${pedido.nombre}!`,
+					texto: `Recibimos tu pedido ${n}. Transferí ${precio(pedido.total)} y lo preparamos apenas se acredite.`
+				};
+			if (estado === 'Para preparar' || estado === 'Sin pagar')
+				return {
+					ico: I.phCheckBold,
+					titulo: `¡Gracias, ${pedido.nombre}!`,
+					texto: `Tu pedido ${n} ya está pago y lo estamos preparando. Te escribimos por mail con cada novedad.`
+				};
+			if (estado === 'Listo para despachar')
+				return retiro
+					? {
+							ico: I.phStorefrontBold,
+							titulo: 'Ya podés pasar a buscarlo',
+							texto: `Tu pedido ${n} está listo para retirar.`
+						}
+					: {
+							ico: I.phPackageBold,
+							titulo: 'Tu pedido está listo',
+							texto: `Preparamos el pedido ${n}: sale en el próximo envío.`
+						};
+			if (estado === 'En camino')
+				return {
+					ico: I.phTruckBold,
+					titulo: 'Tu pedido está en camino',
+					texto: `El pedido ${n} ya salió.`
+				};
 			return {
 				ico: I.phCheckBold,
-				titulo: 'Recibimos tu pedido',
-				texto: `Tu pedido ${n} quedó guardado. En un momento se actualiza esta página.`
+				titulo: retiro ? 'Retiraste tu pedido' : 'Tu pedido llegó',
+				texto: `¡Gracias por comprar! Contanos qué te pareció.`
 			};
-		if (cancelado)
-			return {
-				ico: I.phXBold,
-				titulo: 'Este pedido se canceló',
-				texto: `El pedido ${n} ya no sigue. Si lo pagaste, escribinos y te devolvemos la plata.`,
-				alerta: true
-			};
-		if (pedido.porPagar && pedido.rechazado)
-			return {
-				ico: I.phWarningBold,
-				titulo: 'El pago no se completó',
-				texto: `Tu pedido ${n} sigue guardado 24 horas. Probá de nuevo, con otra tarjeta o medio.`,
-				alerta: true
-			};
-		if (pedido.porPagar)
-			return {
-				ico: I.phClockBold,
-				titulo: 'Falta pagar tu pedido',
-				texto: `Te guardamos el pedido ${n} 24 horas para que lo pagues con Mercado Pago.`
-			};
-		if (transfiere)
-			return {
-				ico: I.phCheckBold,
-				titulo: `¡Gracias, ${pedido.nombre}!`,
-				texto: `Recibimos tu pedido ${n}. Transferí ${precio(pedido.total)} y lo preparamos apenas se acredite.`
-			};
-		if (estado === 'Para preparar' || estado === 'Sin pagar')
-			return {
-				ico: I.phCheckBold,
-				titulo: `¡Gracias, ${pedido.nombre}!`,
-				texto: `Tu pedido ${n} ya está pago y lo estamos preparando. Te escribimos por mail con cada novedad.`
-			};
-		if (estado === 'Listo para despachar')
-			return retiro
-				? {
-						ico: I.phStorefrontBold,
-						titulo: 'Ya podés pasar a buscarlo',
-						texto: `Tu pedido ${n} está listo para retirar.`
-					}
-				: {
-						ico: I.phPackageBold,
-						titulo: 'Tu pedido está listo',
-						texto: `Preparamos el pedido ${n}: sale en el próximo envío.`
-					};
-		if (estado === 'En camino')
-			return {
-				ico: I.phTruckBold,
-				titulo: 'Tu pedido está en camino',
-				texto: `El pedido ${n} ya salió.`
-			};
-		return {
-			ico: I.phCheckBold,
-			titulo: retiro ? 'Retiraste tu pedido' : 'Tu pedido llegó',
-			texto: `¡Gracias por comprar! Contanos qué te pareció.`
-		};
-	});
+		}
+	);
 
 	const waComprobante = $derived(
 		waHref(tienda, `¡Hola! Te mando el comprobante del pedido #${pedido.numero}.`)
 	);
-	const waConsulta = $derived(
-		waHref(tienda, `¡Hola! Te escribo por el pedido #${pedido.numero}.`)
-	);
+	const waConsulta = $derived(waHref(tienda, `¡Hola! Te escribo por el pedido #${pedido.numero}.`));
 
 	// Los datos para transferir, cada uno con «Copiar» (desde el celular se pega en la app del banco).
 	const datos = $derived(
@@ -199,9 +199,10 @@
 		if (!e) return null;
 		return {
 			titulo: e.sucursal ? 'Retirás en la sucursal' : 'Lo mandamos a',
-			lineas: [e.sucursal || e.direccion, [e.localidad, e.cp && `CP ${e.cp}`].filter(Boolean).join(' · ')].filter(
-				Boolean
-			)
+			lineas: [
+				e.sucursal || e.direccion,
+				[e.localidad, e.cp && `CP ${e.cp}`].filter(Boolean).join(' · ')
+			].filter(Boolean)
 		};
 	});
 	const esCorreo = $derived(pedido.envio?.startsWith('correo') ?? false);
@@ -224,7 +225,9 @@
 						class:tv-paso--ahora={i === paso}
 						aria-current={i === paso ? 'step' : undefined}
 					>
-						<span>{#if i < paso}<Icon icon={I.phCheckBold} size={12} />{:else}{i + 1}{/if}</span>{p}
+						<span
+							>{#if i < paso}<Icon icon={I.phCheckBold} size={12} />{:else}{i + 1}{/if}</span
+						>{p}
 					</li>
 				{/each}
 			</ol>

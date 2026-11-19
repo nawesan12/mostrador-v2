@@ -11,7 +11,6 @@
 		textoTransferencia
 	} from '../cobros.ts';
 	import { panelCarrito } from '../panel.svelte.ts';
-	import Boton from '../primitivas/Boton.svelte';
 	import BotonFinalizar from './BotonFinalizar.svelte';
 	import AvisosCarrito from './AvisosCarrito.svelte';
 	import LineasCarrito from './LineasCarrito.svelte';

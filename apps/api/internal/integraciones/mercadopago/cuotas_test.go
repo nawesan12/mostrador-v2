@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"net/http/httptest"
 	"net/url"
 	"testing"
@@ -55,9 +56,13 @@ func TestCuotasDelPedido(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// Cada compra con otro email: la misma persona con el mismo carrito paga el pedido que ya esperaba
+	// (con su preferencia), no arma otro.
+	n := 0
 	comprar := func() map[string]any {
 		t.Helper()
-		c := vidriera.Compra{Email: "lucia@ejemplo.com", Nombre: "Lucía Pérez", Telefono: "11 5555-0101", CP: "1414",
+		n++
+		c := vidriera.Compra{Email: fmt.Sprintf("lucia%d@ejemplo.com", n), Nombre: "Lucía Pérez", Telefono: "11 5555-0101", CP: "1414",
 			Envio: "retiro", Pago: "mercadopago", Carrito: []vidriera.LineaCarrito{{ID: mate.ID, Cantidad: 1}}}
 		if _, err := vidriera.Comprar(ctx, b.App, s, s.Config.Sitio, "luna", c, ahora); err != nil {
 			t.Fatal(err)

@@ -4,7 +4,8 @@ import { datosDe } from '#lib/server/datos/index.ts';
 import type { RequestHandler } from './$types';
 
 /** Con qué puede volver a verificarse (contraseña, app autenticadora, código por mail). */
-export const GET: RequestHandler = async ({ locals }) => json(await datosDe(locals).metodosReverificar());
+export const GET: RequestHandler = async ({ locals }) =>
+	json(await datosDe(locals).metodosReverificar());
 
 const Pedido = v.union([
 	v.object({ accion: v.literal('codigo') }),

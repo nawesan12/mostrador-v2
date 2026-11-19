@@ -26,7 +26,9 @@
 	const uid = $props.id();
 	// Con todas las variantes agotadas, el aviso va a nivel producto (sin elegir talle ni color).
 	const todasAgotadas = $derived(
-		sel.conOpciones && producto.variantes.length > 0 && producto.variantes.every((v) => v.stock <= 0)
+		sel.conOpciones &&
+			producto.variantes.length > 0 &&
+			producto.variantes.every((v) => v.stock <= 0)
 	);
 	const toca = $derived(
 		!sel.proximo &&

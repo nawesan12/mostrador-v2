@@ -117,7 +117,7 @@
 		>
 	{:else if envio}
 		<div class="dato">
-			<Icon icon={I.phCheckCircleFill} size={14} /> Cargado en MiCorreo{#if envio.importado}{' '}el {fecha(
+			<Icon icon={I.phCheckCircleFill} size={14} /> Cargado en MiCorreo{#if envio.importado}&nbsp;el {fecha(
 					envio.importado
 				)}{/if}.
 			{#if !envio.seguimiento}Pagalo e imprimí el rótulo en

@@ -212,11 +212,7 @@
 		</p>
 		{#if vacia}
 			<div class="ctas">
-				<button
-					type="button"
-					class="pri"
-					disabled={terminando}
-					onclick={() => terminar('producto')}
+				<button type="button" class="pri" disabled={terminando} onclick={() => terminar('producto')}
 					>{terminando ? 'Abriendo…' : 'Cargar mi primer producto'}
 					<Icon icon={I.phArrowRightBold} size={16} /></button
 				>

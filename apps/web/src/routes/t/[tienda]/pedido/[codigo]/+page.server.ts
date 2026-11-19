@@ -57,7 +57,13 @@ export const load: PageServerLoad = async ({
 			estadoPago?: string;
 			envio: string;
 			seguimiento: string | null;
-			items?: { nombre: string; foto: string | null; variante: string | null; cantidad: number; precio: number }[];
+			items?: {
+				nombre: string;
+				foto: string | null;
+				variante: string | null;
+				cantidad: number;
+				precio: number;
+			}[];
 			subtotal?: number;
 			costoEnvio?: number;
 			entrega?: { direccion: string; cp: string; localidad?: string; sucursal?: string } | null;
@@ -110,7 +116,11 @@ export const load: PageServerLoad = async ({
 				// Los mismos estados de «pagado» que los mails a quien compra (Go, 00034).
 				pagado,
 				// Mercado Pago sin pagar todavía: la página ofrece pagarlo (si no, quedaba sin forma de pagar).
-				porPagar: c.pago === 'mercadopago' && c.estado === 'Sin pagar' && c.estadoPago === 'Pendiente' && !c.sena,
+				porPagar:
+					c.pago === 'mercadopago' &&
+					c.estado === 'Sin pagar' &&
+					c.estadoPago === 'Pendiente' &&
+					!c.sena,
 				rechazado: ['rejected', 'failure', 'null'].includes(
 					url.searchParams.get('status') ?? url.searchParams.get('collection_status') ?? ''
 				)
@@ -175,7 +185,8 @@ export const actions: Actions = {
 			}
 		).catch(() => null);
 		const g = res?.ok ? ((await res.json()) as { url?: string }) : null;
-		if (!g?.url) return fail(409, { error: 'Mercado Pago no respondió. Probá de nuevo en un rato.' });
+		if (!g?.url)
+			return fail(409, { error: 'Mercado Pago no respondió. Probá de nuevo en un rato.' });
 		irAfuera(g.url);
 	}
 };
