@@ -56,13 +56,7 @@ struct ListaProductos: View {
                     .padding(.top, 12).margenPantalla()
                 }
                 if let seg = carga.valor?.segmentos {
-                    TiraEstados(estados: [
-                        .init(titulo: "Publicados", numero: (seg["active"] ?? 0) + (seg["out"] ?? 0), color: C.ok, filtro: "active,out"),
-                        .init(titulo: "Sin stock", numero: seg["out"] ?? 0, color: C.errorTinta, filtro: "out"),
-                        .init(titulo: "Pausados", numero: (seg["paused"] ?? 0) + (seg["draft"] ?? 0), color: C.texto3, filtro: "paused,draft"),
-                    ] + ((seg["fuera"] ?? 0) > 0
-                        ? [TiraEstados.Estado(titulo: "Fuera del plan", numero: seg["fuera"] ?? 0, color: C.avisoTinta, filtro: "fuera")] : []),
-                        elegido: segmento) { segmento = $0 }
+                    TiraEstados(estados: estadosTira(seg), elegido: segmento) { segmento = $0 }
                     .padding(.top, 12)
                 }
                 Buscador(placeholder: "Nombre, SKU o código", texto: $busqueda)
@@ -222,6 +216,18 @@ struct ListaProductos: View {
         } catch {
             carga = .error(.desconocido)
         }
+    }
+
+    /// La tira de estados; «Fuera del plan» sólo si hay alguno (después de bajar de plan). Aparte, con el
+    /// tipo explícito, para que el compilador no tenga que inferir el array con el `+` y el ternario.
+    private func estadosTira(_ seg: [String: Int]) -> [TiraEstados.Estado] {
+        var e: [TiraEstados.Estado] = [
+            .init(titulo: "Publicados", numero: (seg["active"] ?? 0) + (seg["out"] ?? 0), color: C.ok, filtro: "active,out"),
+            .init(titulo: "Sin stock", numero: seg["out"] ?? 0, color: C.errorTinta, filtro: "out"),
+            .init(titulo: "Pausados", numero: (seg["paused"] ?? 0) + (seg["draft"] ?? 0), color: C.texto3, filtro: "paused,draft"),
+        ]
+        if let f = seg["fuera"], f > 0 { e.append(.init(titulo: "Fuera del plan", numero: f, color: C.avisoTinta, filtro: "fuera")) }
+        return e
     }
 
     /// Un producto nuevo: con el tope del plan lleno, se avisa antes de abrir el editor.
