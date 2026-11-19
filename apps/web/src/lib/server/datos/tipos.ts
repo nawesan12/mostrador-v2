@@ -293,7 +293,8 @@ export interface Datos {
 	/** Mercado Pago de la tienda (marketplace por OAuth). */
 	mercadoPago(): Promise<ConexionMP>;
 	/** Adónde mandar a la persona para autorizar (o null si la aplicación no tiene credenciales). */
-	conectarMercadoPago(): Promise<string | null>;
+	/** Con la cuenta ya conectada, cambiarla pide `reverificacion` (si no, 403 «reverificar»). */
+	conectarMercadoPago(reverificacion?: string): Promise<string | null>;
 	volverMercadoPago(codigo: string, estado: string): Promise<Resultado>;
 	desconectarMercadoPago(): Promise<void>;
 	dominios(): Promise<Dominios>;
@@ -332,7 +333,15 @@ export interface Datos {
 	quitarDelEquipo(id: string): Promise<Resultado>;
 	/** Manda otra vez la invitación con un link nuevo. */
 	reenviarInvitacion(id: string): Promise<Resultado>;
-	guardarNegocio(n: Negocio): Promise<void>;
+	/** Cambiar el alias, el CBU o el titular que ya estaban pide `reverificacion` (si no, 403 «reverificar»). */
+	guardarNegocio(n: Negocio, reverificacion?: string): Promise<void>;
+	/** Volver a verificarse antes de cambiar adónde llega la plata. */
+	metodosReverificar(): Promise<MetodosReverificar>;
+	pedirCodigoReverificar(): Promise<void>;
+	reverificar(a: {
+		clave?: string;
+		codigo?: string;
+	}): Promise<{ ok: true; token: string } | { ok: false; mensaje: string }>;
 	fijarOpcion(grupo: 'seguridad' | 'avisos', clave: string, activo: boolean): Promise<Resultado>;
 	cerrarSesion(id: string): Promise<Resultado>;
 	/** Cierra todas las sesiones de la persona menos la actual; devuelve cuántas cerró. */
@@ -434,4 +443,12 @@ export interface Datos {
 		cuotas: boolean;
 		pedido: number | null;
 	}): Promise<string>;
+}
+
+/** Con qué puede volver a verificarse la persona (el código por mail está siempre). */
+export interface MetodosReverificar {
+	clave: boolean;
+	totp: boolean;
+	/** El email de la cuenta, recortado: adónde llega el código. */
+	email: string;
 }

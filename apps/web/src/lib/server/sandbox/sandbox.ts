@@ -2686,6 +2686,14 @@ export class DatosSandbox implements Datos {
 		await guardarCambio(this.db, this.sb.id, 'automatica', 'mayorista', { activa: !!m.activa });
 	}
 
+	// La demo no pide volver a verificarse: no hay plata de verdad.
+	async metodosReverificar() {
+		return { clave: true, totp: false, email: 'vos@ejemplo.com' };
+	}
+	async pedirCodigoReverificar() {}
+	async reverificar() {
+		return { ok: true as const, token: 'demo' };
+	}
 	async guardarNegocio(n: Negocio) {
 		await guardarCambio(this.db, this.sb.id, 'cuenta', 'negocio', n);
 	}

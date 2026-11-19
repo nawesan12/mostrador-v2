@@ -9,6 +9,7 @@
 	import LinkPago from '#lib/panel/LinkPago.svelte';
 	import Notificaciones from '#lib/panel/Notificaciones.svelte';
 	import Rail from '#lib/panel/Rail.svelte';
+	import Reverificar from '#lib/panel/Reverificar.svelte';
 	import Topbar from '#lib/panel/Topbar.svelte';
 	import { arrancarAppCelular } from '#lib/panel/app-celular.svelte.ts';
 	import { AREAS, ubicar } from '#lib/panel/navegacion.ts';
@@ -163,6 +164,7 @@
 	<Cmdk />
 	<Hornero />
 	<LinkPago />
+	<Reverificar />
 </div>
 
 <style>

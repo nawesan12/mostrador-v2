@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { conVerificacion } from '#lib/panel/reverificar.svelte.ts';
 	import { deslizable } from '#lib/panel/deslizable.ts';
 	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -84,7 +85,20 @@
 			(negocio.politica ?? '') !== (data.negocio.politica ?? '')
 	);
 	async function guardarNegocio() {
-		if (!(await pedir('/panel/configuracion/negocio', 'PUT', negocio))) return;
+		// Cambiar el alias, el CBU o el titular pide volver a verificarse (lo abre conVerificacion).
+		const r = await conVerificacion((encabezados) =>
+			fetch('/panel/configuracion/negocio', {
+				method: 'PUT',
+				headers: { 'content-type': 'application/json', ...encabezados },
+				body: JSON.stringify(negocio)
+			})
+		).catch(() => null);
+		if (!r?.ok) {
+			const p = (await r?.json().catch(() => null)) as { message?: string; code?: string } | null;
+			if (p?.code === 'reverificar') return; // cerró la verificación: no es un error
+			ui.toast({ k: 'err', title: 'No se pudo', desc: p?.message ?? 'Probá de nuevo.' });
+			return;
+		}
 		await invalidateAll();
 		ui.toast({ k: 'ok', title: 'Datos guardados', desc: 'Se ven en la tienda y en tus facturas' });
 	}

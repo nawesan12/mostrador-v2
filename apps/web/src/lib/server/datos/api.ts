@@ -106,7 +106,7 @@ import type {
 	Tienda
 } from './tipos.ts';
 import type { Importacion, ImportacionNueva, PedidoHistorial } from '../importacion/fuente.ts';
-import type { ErrorVueltaTN } from './tipos.ts';
+import type { ErrorVueltaTN, MetodosReverificar } from './tipos.ts';
 import type { ConfigLanzamiento, LanzamientoProducto } from '#lib/tienda/lanzamiento.ts';
 import type { RolInvitable } from '#lib/panel/permisos.ts';
 
@@ -131,14 +131,16 @@ export class DatosApi implements Datos {
 	private async pedir<T>(
 		ruta: string,
 		metodo: 'GET' | 'PUT' | 'POST' | 'PATCH' | 'DELETE' = 'GET',
-		cuerpo?: unknown
+		cuerpo?: unknown,
+		extra: Record<string, string> = {}
 	): Promise<T> {
 		const res = await this.f(this.base + ruta, {
 			method: metodo,
 			headers: {
 				accept: 'application/json',
 				...(cuerpo === undefined ? {} : { 'content-type': 'application/json' }),
-				...(this.token ? { authorization: `Bearer ${this.token}` } : {})
+				...(this.token ? { authorization: `Bearer ${this.token}` } : {}),
+				...extra
 			},
 			body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo)
 		});
@@ -568,8 +570,29 @@ export class DatosApi implements Datos {
 	configuracion() {
 		return this.pedir<Configuracion>('/v1/panel/configuracion');
 	}
-	async guardarNegocio(n: Negocio) {
-		await this.pedir<void>('/v1/panel/configuracion/negocio', 'PUT', n);
+	async guardarNegocio(n: Negocio, reverificacion?: string) {
+		await this.pedir<void>(
+			'/v1/panel/configuracion/negocio',
+			'PUT',
+			n,
+			reverificacion ? { reverificacion } : {}
+		);
+	}
+	metodosReverificar() {
+		return this.pedir<MetodosReverificar>('/v1/auth/reverificar');
+	}
+	async pedirCodigoReverificar() {
+		await this.pedir<void>('/v1/auth/reverificar/codigo', 'POST', {});
+	}
+	async reverificar(a: { clave?: string; codigo?: string }) {
+		const res = await this.intentar('/v1/auth/reverificar', 'POST', a, [400, 429]);
+		const p = (await res.json().catch(() => null)) as {
+			token?: string;
+			detail?: string;
+		} | null;
+		return res.ok && p?.token
+			? { ok: true as const, token: p.token }
+			: { ok: false as const, mensaje: p?.detail ?? 'No pudimos verificarte. Probá de nuevo.' };
 	}
 	async fijarOpcion(grupo: 'seguridad' | 'avisos', clave: string, activo: boolean) {
 		return resultado(
@@ -716,8 +739,14 @@ export class DatosApi implements Datos {
 	mercadoPago() {
 		return this.pedir<ConexionMP>('/v1/panel/integraciones/mercadopago');
 	}
-	async conectarMercadoPago() {
-		const res = await this.intentar('/v1/panel/integraciones/mercadopago/conectar', 'POST');
+	async conectarMercadoPago(reverificacion?: string) {
+		const res = await this.intentar(
+			'/v1/panel/integraciones/mercadopago/conectar',
+			'POST',
+			undefined,
+			[],
+			reverificacion ? { reverificacion } : {}
+		);
 		if (!res.ok) return null;
 		return ((await res.json()) as { url: string }).url;
 	}
@@ -998,14 +1027,16 @@ export class DatosApi implements Datos {
 		metodo: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
 		cuerpo?: unknown,
 		/** Estados de error que resuelve quien llama, además de 404 y 409. */
-		aceptar: number[] = []
+		aceptar: number[] = [],
+		extra: Record<string, string> = {}
 	) {
 		const res = await this.f(this.base + ruta, {
 			method: metodo,
 			headers: {
 				accept: 'application/json',
 				...(cuerpo === undefined ? {} : { 'content-type': 'application/json' }),
-				...(this.token ? { authorization: `Bearer ${this.token}` } : {})
+				...(this.token ? { authorization: `Bearer ${this.token}` } : {}),
+				...extra
 			},
 			body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo)
 		});

@@ -4,10 +4,12 @@ import { guardarVuelta } from '#lib/server/volver.ts';
 import type { RequestHandler } from './$types';
 
 /** Conectar: adónde mandar a la persona (Mercado Pago, o la vuelta directa en la demo). */
-export const POST: RequestHandler = async ({ locals, url: pedido, cookies }) => {
+export const POST: RequestHandler = async ({ locals, url: pedido, cookies, request }) => {
 	// ?volver=/onboarding?paso=3: al terminar en el proveedor se vuelve ahí, no a Integraciones.
 	guardarVuelta(cookies, pedido.searchParams.get('volver'), pedido.protocol === 'https:');
-	const url = await datosDe(locals).conectarMercadoPago();
+	// Cambiar la cuenta ya conectada pide volver a verificarse (403 «reverificar» si falta).
+	const rev = request.headers.get('x-reverificacion')?.slice(0, 200) || undefined;
+	const url = await datosDe(locals).conectarMercadoPago(rev);
 	if (!url) error(409, 'La conexión con Mercado Pago todavía no está disponible.');
 	if (
 		!url.startsWith('https://auth.mercadopago.com/') &&

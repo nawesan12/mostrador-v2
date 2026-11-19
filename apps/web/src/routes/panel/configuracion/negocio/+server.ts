@@ -48,6 +48,8 @@ const Negocio = v.object({
 export const PUT: RequestHandler = async ({ locals, request }) => {
 	const r = v.safeParse(Negocio, await request.json().catch(() => null));
 	if (!r.success) error(400, r.issues[0].message);
-	await datosDe(locals).guardarNegocio(r.output);
+	// El permiso de haberse vuelto a verificar (lib/panel/reverificar.svelte.ts), si lo trae.
+	const rev = request.headers.get('x-reverificacion')?.slice(0, 200) || undefined;
+	await datosDe(locals).guardarNegocio(r.output, rev);
 	return new Response(null, { status: 204 });
 };

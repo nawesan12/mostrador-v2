@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { conVerificacion } from '#lib/panel/reverificar.svelte.ts';
 	import { haceCorto, plural } from '#lib/panel/formato.ts';
 	import { deslizable } from '#lib/panel/deslizable.ts';
 	import { invalidateAll, replaceState } from '$app/navigation';
@@ -80,9 +81,14 @@
 		ml: '/panel/integraciones/mercadolibre'
 	} as const;
 	async function conectarMP(id: 'mp' | 'ml' = 'mp') {
-		const r = await fetch(RUTA[id], { method: 'POST' });
+		// Cambiar la cuenta de Mercado Pago ya conectada pide volver a verificarse.
+		const r = await conVerificacion((encabezados) =>
+			fetch(RUTA[id], { method: 'POST', headers: encabezados })
+		);
 		if (!r.ok) {
-			const m = ((await r.json().catch(() => null)) as { message?: string } | null)?.message;
+			const p = (await r.json().catch(() => null)) as { message?: string; code?: string } | null;
+			if (p?.code === 'reverificar') return;
+			const m = p?.message;
 			return ui.toast({
 				k: 'warn',
 				title: id === 'mp' ? 'Mercado Pago' : 'Mercado Libre',

@@ -63,6 +63,12 @@ export class CuentasApi extends ClienteBff {
 			...(invitacion ? { invitacion } : {})
 		});
 	}
+	/** «No fui yo» del mail de cambio de cobros: vuelve atrás y cierra todas las sesiones del equipo. */
+	revertirCobro(token: string) {
+		return this.pedir<{ tipo: 'transferencia' | 'mercadopago' }>('POST', '/v1/cuenta/cobros/revertir', {
+			token
+		});
+	}
 	/** De qué tienda y con qué rol es la invitación (sin usarla). */
 	verInvitacion(token: string) {
 		return this.pedir<Invitacion>('POST', '/v1/auth/invitacion', { token });
