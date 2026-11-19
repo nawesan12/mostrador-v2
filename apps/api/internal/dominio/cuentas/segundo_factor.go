@@ -1,7 +1,6 @@
 package cuentas
 
 import (
-	"encoding/json"
 	"context"
 	"crypto/hmac"
 	"crypto/rand"
@@ -10,6 +9,7 @@ import (
 	"encoding/base32"
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"

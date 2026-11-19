@@ -85,6 +85,9 @@ type Hub struct {
 	MaxPorTipo int
 	// Espaciar: cada cuánto, como mucho, sale un aviso de esa familia por tienda.
 	Espaciar map[string]time.Duration
+	// AlAviso, si está, se llama con cada aviso que llega (antes de repartirlo): lo usa el caché de la
+	// vidriera para olvidar la tienda que cambió.
+	AlAviso func(Evento)
 
 	mu       sync.Mutex
 	tiendas  map[string]map[*Cliente]struct{}
@@ -199,6 +202,9 @@ func (h *Hub) Conexiones() int {
 // Publicar recibe un aviso de Postgres. Lo que corta conexiones (sesión cerrada, cambio de tienda,
 // cambio de rol) se aplica en el acto; el resto se junta hasta la próxima ventana.
 func (h *Hub) Publicar(e Evento) {
+	if h.AlAviso != nil && e.Tienda != "" {
+		h.AlAviso(e)
+	}
 	if !Conocido(e.Tipo) {
 		return
 	}

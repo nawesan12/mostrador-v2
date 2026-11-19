@@ -2,15 +2,19 @@ import { env } from 'cloudflare:workers';
 import { error, fail } from '@sveltejs/kit';
 import { COOKIE } from '#lib/server/sandbox/sandbox.ts';
 import { resolverTienda } from '#lib/server/tienda/publica.ts';
+import { usaSandbox } from '#lib/server/datos/index.ts';
 import { codigoPedido, cookiePendiente } from '#lib/server/tienda/pedido.ts';
 import { irAfuera } from '#lib/server/afuera.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 /** La confirmación del pedido: el código lleva la firma, así nadie mira el pedido de otro. */
-export const load: PageServerLoad = async ({ params, cookies, url, depends }) => {
+export const load: PageServerLoad = async ({ params, cookies, url, depends, parent }) => {
 	// Tiempo real (§44): al acreditarse el pago (o cambiar el estado) la página se actualiza sola.
 	depends('tienda:pedido-publico');
-	const r = await resolverTienda(params.tienda, cookies.get(COOKIE));
+	// Con la API, la tienda ya la resolvió el layout (antes se pedía dos veces); la demo necesita sus datos.
+	const r = usaSandbox()
+		? await resolverTienda(params.tienda, cookies.get(COOKIE))
+		: { tienda: (await parent()).tienda, datos: null, sandboxId: null };
 	// Con la API real, el código es el público del pedido.
 	if (r && !r.datos) {
 		// Con tope: es la página a la que vuelve Mercado Pago. Si la API no responde, un estado mínimo

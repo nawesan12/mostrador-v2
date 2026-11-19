@@ -80,7 +80,7 @@ func Rutas(mux *http.ServeMux, pool tx, mp Pagador, sitio string, dev *devolucio
 		escribir(w, http.StatusOK, e)
 	})
 	mux.HandleFunc("GET /v1/publico/tiendas/{slug}", func(w http.ResponseWriter, r *http.Request) {
-		t, err := Publica(r.Context(), pool, r.PathValue("slug"))
+		t, err := PublicaConCache(r.Context(), pool, r.PathValue("slug"))
 		if err != nil {
 			error404(w, err)
 			return

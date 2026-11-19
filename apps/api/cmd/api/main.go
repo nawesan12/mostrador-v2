@@ -19,6 +19,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ia"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/importacion"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/tincho"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/vidriera"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/conversiones"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/correoargentino"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/integraciones/mercadolibre"
@@ -110,6 +111,8 @@ func correr() error {
 
 	// Tiempo real (§44): una conexión dedicada con LISTEN y el hub que reparte por tienda y rol.
 	hub := tiemporeal.NuevoHub()
+	// La vidriera pública se cachea unos segundos y se olvida con cada aviso de su tienda.
+	hub.AlAviso = func(e tiemporeal.Evento) { vidriera.Olvidar(e.Tienda) }
 	go hub.Correr(ctx)
 	go (&tiemporeal.Escucha{URL: cfg.BaseApp, Hub: hub}).Correr(ctx)
 

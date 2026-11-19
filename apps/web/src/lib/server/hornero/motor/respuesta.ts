@@ -79,7 +79,7 @@ export type Respuesta = {
 	/** Acciones que propuso Tincho con IA: no se hicieron, la persona las confirma. */
 	propuestas?: PropuestaTincho[];
 	/** La IA no respondió por un tope (plan, día o plataforma): el texto lo explica. */
-	tope?: 'plan' | 'dia' | 'plataforma';
+	tope?: 'plan' | 'dia' | 'plataforma' | 'ocupado';
 	/** Respuestas con IA del mes y las del plan. */
 	uso?: { usadas: number; tope: number };
 };
