@@ -5937,6 +5937,10 @@ export interface components {
             total?: number;
             /** Format: date-time */
             creado: string;
+            /** @description retiro, moto, correo…: con retiro, «Listo para retirar» en vez de «Listo para despachar» */
+            envio?: string;
+            /** @description mp, transf…: «Esperando pago» en un Mercado Pago de la tienda online */
+            pago?: string;
         };
         Notificacion: {
             id: string;

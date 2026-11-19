@@ -111,23 +111,23 @@ func llenarVentas(ctx context.Context, tx pgx.Tx, tiendaID string, t *Tablero, d
 	t.Meta.Proyeccion = t.Meta.Actual * int64(diasMes) / int64(a.Day())
 
 	// Los últimos pedidos, de cualquier estado.
-	filas, err = tx.Query(ctx, `SELECT numero, comprador->>'nombre', comprador->>'foto', canal, estado, total, creado_en
+	filas, err = tx.Query(ctx, `SELECT numero, comprador->>'nombre', comprador->>'foto', canal, estado, total, creado_en, envio, pago
 		FROM pedidos WHERE tienda_id = $1 ORDER BY creado_en DESC LIMIT 5`, tiendaID)
 	if err != nil {
 		return err
 	}
 	for filas.Next() {
 		var numero int
-		var cliente, canal, estado string
+		var cliente, canal, estado, envio, pago string
 		var foto *string
 		var total int64
 		var creado time.Time
-		if err := filas.Scan(&numero, &cliente, &foto, &canal, &estado, &total, &creado); err != nil {
+		if err := filas.Scan(&numero, &cliente, &foto, &canal, &estado, &total, &creado, &envio, &pago); err != nil {
 			filas.Close()
 			return err
 		}
 		t.UltimosPedidos = append(t.UltimosPedidos, map[string]any{"numero": numero, "cliente": cliente, "foto": foto,
-			"canal": canal, "estado": estado, "total": total, "creado": creado})
+			"canal": canal, "estado": estado, "total": total, "creado": creado, "envio": envio, "pago": pago})
 	}
 	filas.Close()
 	if err := filas.Err(); err != nil {

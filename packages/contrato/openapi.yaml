@@ -6247,6 +6247,8 @@ components:
         estado: { $ref: '#/components/schemas/EstadoPedido' }
         total: { type: integer, description: 'No viene sin montos' }
         creado: { type: string, format: date-time }
+        envio: { type: string, description: 'retiro, moto, correo…: con retiro, «Listo para retirar» en vez de «Listo para despachar»' }
+        pago: { type: string, description: 'mp, transf…: «Esperando pago» en un Mercado Pago de la tienda online' }
     Notificacion:
       type: object
       required: [id, tipo, titulo, detalle, creada, leida, grupo]

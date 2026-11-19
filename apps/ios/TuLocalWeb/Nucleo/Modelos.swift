@@ -219,6 +219,9 @@ struct PedidoBreve: Codable, Identifiable {
     var estado: String
     var total: Int?
     var creado: Date
+    /// Con retiro, «Listo para retirar»; con Mercado Pago de la tienda online sin acreditar, «Esperando pago».
+    var envio: String?
+    var pago: String?
     var id: Int { numero }
 }
 

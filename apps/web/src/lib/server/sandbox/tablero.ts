@@ -244,7 +244,9 @@ export function tableroDemo(
 					canal: p.canal,
 					estado: p.estado,
 					total: p.total,
-					creado: new Date(p.creado).toISOString()
+					creado: new Date(p.creado).toISOString(),
+					envio: p.envio,
+					pago: p.pago
 				};
 			}),
 		paraHacer: ph,

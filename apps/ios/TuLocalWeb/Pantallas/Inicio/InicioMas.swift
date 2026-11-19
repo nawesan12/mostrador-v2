@@ -712,7 +712,7 @@ struct UltimosPedidos: View {
                                     Text(Formato.pesos(total)).estilo(Estilo(tamano: 15, peso: .bold, relativo: .subheadline))
                                         .monospacedDigit().foregroundStyle(C.texto)
                                 }
-                                ChipEstado(estado: p.estado)
+                                ChipEstado(estado: p.estado, envio: p.envio ?? "", pago: p.pago ?? "", canal: p.canal)
                             }
                         }
                         .padding(.horizontal, 16).padding(.vertical, 12)

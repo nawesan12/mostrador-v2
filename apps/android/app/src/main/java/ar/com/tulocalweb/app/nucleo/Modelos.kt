@@ -196,6 +196,9 @@ data class PedidoBreve(
     val estado: String = "",
     val total: Int? = null,
     val creado: FechaApi = Instant.EPOCH,
+    /** Con retiro, «Listo para retirar»; con Mercado Pago de la tienda online sin acreditar, «Esperando pago». */
+    val envio: String = "",
+    val pago: String = "",
 ) {
     val id: Int get() = numero
 }

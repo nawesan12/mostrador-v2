@@ -562,7 +562,7 @@ fun UltimosPedidos(t: Tablero, paleta: PaletaTienda) {
                     }
                     Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         p.total?.let { Texto(Formato.pesos(it), Estilo(15f, Peso.bold), C.texto, numeros = true) }
-                        ChipEstado(p.estado)
+                        ChipEstado(p.estado, envio = p.envio, pago = p.pago, canal = p.canal)
                     }
                 }
             }

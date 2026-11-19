@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { textoEstado } from '#lib/panel/pedidos/nombres.ts';
 	import { enhance } from '$app/forms';
 	import ChipEstado from '#lib/components/ChipEstado.svelte';
 	import Icon from '#lib/components/Icon.svelte';
@@ -48,6 +49,15 @@
 	 * y los rankings serían todos cero, así que el Inicio muestra sólo lo que sirve para arrancar.
 	 */
 	const sinPedidos = $derived(!data.demo && !t.ultimosPedidos.length);
+	/**
+	 * Ya entró algún pedido pero ninguno es una venta (espera la transferencia o el pago): los KPI y el
+	 * gráfico en cero quedaban arriba de lo que hay que hacer («1 transferencia para confirmar»).
+	 */
+	const sinVentas = $derived(
+		!data.demo &&
+			!sinPedidos &&
+			!t.ultimosPedidos.some((p) => p.estado !== 'Sin pagar' && p.estado !== 'Cancelado')
+	);
 	/**
 	 * Ventas y Local no ven montos de dinero (la API no los manda: `montos` en false). Sin montos no
 	 * aparecen las ventas con su gráfico, el ticket, la meta, la caja ni los totales: el Inicio queda
@@ -109,7 +119,8 @@
 	const ticket = $derived(t.kpis.ticket);
 	const kpis = $derived([
 		{
-			label: 'Pedidos',
+			// Cuenta sólo los vendidos (Go deja afuera «Sin pagar»): «Pedidos» contradecía el que esperaba.
+			label: 'Pedidos pagados',
 			icon: I.phPackage,
 			valor: t.kpis.pedidos.actual.toLocaleString('es-AR'),
 			delta: diferencia(t.kpis.pedidos.actual, t.kpis.pedidos.anterior),
@@ -422,7 +433,7 @@
 	const enviosAncho = $derived.by(() => {
 		if (montos) return 1;
 		const celdas = [
-			sinPedidos ? 2 : 3 + (t.ventas ? 2 : 0) + (t.meta ? 1 : 0),
+			sinPedidos ? 2 : 3 + (t.ventas && !sinVentas ? 2 : 0) + (t.meta ? 1 : 0),
 			1, // visitas o «Ahora en tu tienda»
 			1, // Tincho
 			mide || t.bandeja.length ? 1 : 0,
@@ -527,7 +538,7 @@
 	{/each}
 </div>
 
-{#if !sinPedidos}
+{#if !sinPedidos && !sinVentas}
 	<div class="kpis" class:tres={kpis.length === 3}>
 		{#each kpis as k (k.label)}
 			<div class="kpi" use:anim={{ t: 'rise' }}>
@@ -584,7 +595,7 @@
 	{#if sinPedidos}
 		{@render paraHacer(true)}
 	{:else}
-		{#if t.ventas && t.serie && c}
+		{#if t.ventas && t.serie && c && !sinVentas}
 			<div class="tarjeta ventas" use:anim={{ t: 'rise', delay: 60 }}>
 				<div class="v-cab">
 					<div>
@@ -682,7 +693,12 @@
 					<span class="o-canal"
 						><MarcaIcono k={o.canal} size={26} radius={8} />{CANALES[o.canal] ?? o.canal}</span
 					>
-					<span><ChipEstado estado={o.estado} /></span>
+					<span
+						><ChipEstado
+							estado={o.estado}
+							texto={o.envio ? textoEstado({ ...o, envio: o.envio }) : undefined}
+						/></span
+					>
 					{#if o.total !== undefined}<span class="o-total">{pesos(o.total)}</span>{/if}
 				</a>
 			{:else}
@@ -1283,15 +1299,15 @@
 	}
 
 	/* Accesos rápidos */
+	/* Grilla de columnas iguales y del mismo alto: nunca uno solo en la última fila con otro ancho. */
 	.accesos {
 		margin-top: 18px;
-		display: flex;
-		flex-wrap: wrap;
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		align-items: stretch;
 		gap: 12px;
 	}
 	.acceso {
-		/* Los cinco entran en una fila a 1280 px y más (sin uno solo abajo). */
-		flex: 1 1 170px;
 		min-width: 0;
 		display: flex;
 		align-items: center;
@@ -1317,12 +1333,19 @@
 	.q-txt {
 		min-width: 0;
 	}
+	/* Sin «…»: el título en un renglón corto y la bajada hasta en dos. */
 	.q-t,
 	.q-k {
 		display: block;
-		white-space: nowrap;
+		text-wrap: balance;
+	}
+	.q-k {
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
 		overflow: hidden;
-		text-overflow: ellipsis;
+		line-height: 1.3;
 	}
 	.q-t {
 		font-size: 14px;
@@ -2395,8 +2418,12 @@
 		.v-cab {
 			flex-wrap: wrap;
 		}
-		.acceso {
-			flex-basis: 150px;
+		.accesos {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+		/* Con un número impar, el último va a lo ancho: nunca uno solo a media fila. */
+		.acceso:last-child:nth-child(odd) {
+			grid-column: 1 / -1;
 		}
 		/* A lo angosto el título no se corta con «…»: baja de renglón, parejo. */
 		.q-t {
