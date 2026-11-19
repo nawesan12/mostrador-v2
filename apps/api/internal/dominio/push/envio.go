@@ -11,6 +11,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cobros"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/notificaciones"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
@@ -135,6 +136,7 @@ func (s *Servicio) Manejadores() map[string]outbox.Manejador {
 		"cuenta.push_prueba":  s.prueba,
 		"pago.tarde":          s.pagoRaro,
 		"pago.doble":          s.pagoRaro,
+		cobros.TipoCambioPush: s.cobrosCambio,
 	}
 }
 
@@ -524,6 +526,37 @@ func (s *Servicio) pagoRaro(ctx context.Context, ev outbox.Evento) error {
 			a.Ruta = fmt.Sprintf("pedido/%d", d.Numero)
 		}
 		envios = append(envios, para(x, a, fmt.Sprintf("%s-%d", ev.Tipo, ev.ID), 72*time.Hour))
+	}
+	if len(envios) == 0 {
+		return nil
+	}
+	return s.mandar(ctx, envios)
+}
+
+// cobrosCambio: push.cobros_cambio, cambió adónde llega la plata (alias, CBU, titular o la cuenta de
+// Mercado Pago). Sólo a la dueña, siempre: el mail trae el botón para volverlo atrás.
+func (s *Servicio) cobrosCambio(ctx context.Context, ev outbox.Evento) error {
+	if !s.activo() {
+		return nil
+	}
+	var d cobros.AvisoCambio
+	if json.Unmarshal(ev.Datos, &d) != nil {
+		return nil
+	}
+	dest, err := s.deTienda(ctx, ev.TiendaID)
+	if err != nil {
+		return err
+	}
+	a := Aviso{Titulo: "Cambiaron tus datos para transferencias", Hilo: "cuenta", Tienda: ev.TiendaID, Ruta: "cuenta/seguridad"}
+	a.Cuerpo = "Si no fuiste vos, abrí el mail que te mandamos y volvelo atrás."
+	if d.Tipo == cobros.CambioMercadoPago {
+		a.Titulo = "Cambió la cuenta de Mercado Pago"
+	}
+	var envios []envio
+	for _, x := range dest {
+		if x.rol == roles.Duenia {
+			envios = append(envios, para(x, a, fmt.Sprintf("cobros-%d", ev.ID), 72*time.Hour))
+		}
 	}
 	if len(envios) == 0 {
 		return nil

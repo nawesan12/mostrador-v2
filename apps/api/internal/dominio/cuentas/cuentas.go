@@ -60,9 +60,11 @@ func (e ErrInvalido) Error() string { return e.Campo + ": " + e.Mensaje }
 
 // Duraciones.
 const (
-	SesionCorta     = 12 * time.Hour
-	SesionLarga     = 365 * 24 * time.Hour
-	VidaRestablecer = 30 * time.Minute
+	SesionCorta = 12 * time.Hour
+	SesionLarga = 365 * 24 * time.Hour
+	// InactividadLarga: sin usarse este tiempo, cualquier sesión se cierra.
+	InactividadLarga = 30 * 24 * time.Hour
+	VidaRestablecer  = 30 * time.Minute
 )
 
 // Servicio de cuentas.
@@ -328,6 +330,10 @@ func (s *Servicio) sesionDeUsuario(ctx context.Context, usuario string, vida tim
 		if activo, err := segundoFactorActivo(ctx, tx, usuario); err != nil {
 			return err
 		} else if activo {
+			// Con el tope de códigos mal alcanzado no se abre otro desafío (la contraseña ya era correcta).
+			if bloq, err := segundoBloqueado(ctx, tx, usuario); err != nil || bloq {
+				return errOr(err, ErrDemasiadosIntentos)
+			}
 			ses, err = crearDesafio(ctx, tx, usuario, vida, cl)
 			return err
 		}
@@ -401,7 +407,9 @@ func (s *Servicio) Sesion(ctx context.Context, token string) (Datos, error) {
 	if err != nil {
 		return d, err
 	}
-	if cerrarInactivas && time.Since(visto) > Inactividad {
+	// «Recordarme» dura un año, pero sin usarse 30 días se cierra sola (aunque «inactivas» esté apagado):
+	// una sesión olvidada en una compu ajena no sirve para siempre.
+	if (cerrarInactivas && time.Since(visto) > Inactividad) || time.Since(visto) > InactividadLarga {
 		_, _ = s.Pool.Exec(ctx, `DELETE FROM auth.sesiones WHERE token_hash = $1`, hashToken(token))
 		return Datos{}, ErrSinSesion
 	}

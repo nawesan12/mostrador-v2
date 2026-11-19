@@ -17,6 +17,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cobros"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/mayorista"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/roles"
@@ -28,6 +29,7 @@ import (
 
 type tx interface {
 	EnTienda(context.Context, string, func(pgx.Tx) error) error
+	EnTx(context.Context, func(pgx.Tx) error) error
 }
 
 var (
@@ -119,7 +121,7 @@ type Sesion struct {
 }
 
 // Quien es la persona que mira (para "vos", sus sesiones y lo que su rol puede ver).
-type Quien struct{ UsuarioID, SesionID, Rol string }
+type Quien struct{ UsuarioID, SesionID, SesionHash, Rol string }
 
 func conDefecto(def, v map[string]bool) map[string]bool {
 	out := map[string]bool{}
@@ -266,8 +268,27 @@ func Leer(ctx context.Context, pool tx, geo geoip.Ubicador, tiendaID string, q Q
 	return res, err
 }
 
-// GuardarNegocio guarda los datos (el nombre va en la columna de la tienda).
+// Verificacion es quién pide el cambio desde el panel o las apps: su sesión y el permiso de haberse
+// vuelto a verificar (cuentas.CabeceraReverificacion).
+type Verificacion struct{ Usuario, Sesion, Token string }
+
+// ErrReverificar: cambiar el alias, el CBU o el titular que ya estaban pide volver a verificarse.
+var ErrReverificar = cuentas.ErrReverificar
+
+// GuardarNegocio guarda los datos (el nombre va en la columna de la tienda). Es el camino interno
+// (pruebas, alta): no pide verificación ni avisa. El panel y las apps usan GuardarNegocioDe.
 func GuardarNegocio(ctx context.Context, pool tx, tiendaID string, n Negocio) error {
+	return guardarNegocio(ctx, pool, tiendaID, n, nil)
+}
+
+// GuardarNegocioDe guarda los datos que manda una persona. Cambiar o sacar el alias, el CBU o el
+// titular que ya había pide haberse vuelto a verificar (una sesión robada no alcanza para desviar
+// las transferencias), y todo cambio de esos datos le avisa a la dueña con el link para volverlo atrás.
+func GuardarNegocioDe(ctx context.Context, pool tx, tiendaID string, n Negocio, v Verificacion) error {
+	return guardarNegocio(ctx, pool, tiendaID, n, &v)
+}
+
+func guardarNegocio(ctx context.Context, pool tx, tiendaID string, n Negocio, v *Verificacion) error {
 	n.Nombre = strings.TrimSpace(n.Nombre)
 	n.Alias, n.CBU, n.Titular = strings.TrimSpace(n.Alias), strings.ReplaceAll(strings.TrimSpace(n.CBU), " ", ""), strings.TrimSpace(n.Titular)
 	n.Politica = strings.TrimSpace(n.Politica)
@@ -287,11 +308,77 @@ func GuardarNegocio(ctx context.Context, pool tx, tiendaID string, n Negocio) er
 			Scan(&antes.Nombre, &antes.Alias, &antes.CBU, &antes.Titular); err != nil {
 			return err
 		}
+		cambia := antes.Alias != n.Alias || antes.CBU != n.CBU || antes.Titular != n.Titular
+		if v != nil && cambia {
+			// Cargarlos por primera vez (el alta) no pide verificación; cambiar o sacar lo que había, sí.
+			pisa := (antes.Alias != "" && antes.Alias != n.Alias) || (antes.CBU != "" && antes.CBU != n.CBU) ||
+				(antes.Titular != "" && antes.Titular != n.Titular)
+			if pisa {
+				ok, err := cuentas.Reverificado(ctx, t, v.Sesion, v.Token)
+				if err != nil {
+					return err
+				}
+				if !ok {
+					return ErrReverificar
+				}
+			}
+		}
 		if _, err := t.Exec(ctx, `UPDATE tiendas SET nombre = $2, negocio = $3 WHERE id = $1`, tiendaID, n.Nombre, resto); err != nil {
 			return err
 		}
+		if v != nil && cambia {
+			mostrar := func(x Negocio) map[string]string {
+				m := map[string]string{"alias": x.Alias, "titular": x.Titular}
+				if x.CBU != "" {
+					m["cbu"] = auditoria.Final(x.CBU)
+				}
+				return m
+			}
+			if err := cobros.AvisarCambio(ctx, t, tiendaID, v.Usuario, cobros.CambioTransferencia,
+				map[string]string{"alias": antes.Alias, "cbu": antes.CBU, "titular": antes.Titular},
+				map[string]string{"alias": n.Alias, "cbu": n.CBU, "titular": n.Titular}, mostrar(antes), mostrar(n)); err != nil {
+				return err
+			}
+		}
 		return auditoria.Registrar(ctx, t, tiendaID, registrosNegocio(tiendaID, antes, n)...)
 	})
+}
+
+// RevertirCambio vuelve atrás un cambio de adónde llega la plata (el link del mail a la dueña) y
+// cierra todas las sesiones de todo el equipo de la tienda: quien lo hizo ya no puede seguir.
+// Con Mercado Pago, lo vuelve atrás desconectando la cuenta nueva (la anterior se reconecta a mano).
+func RevertirCambio(ctx context.Context, pool tx, token string) (string, error) {
+	var tipo string
+	err := pool.EnTx(ctx, func(t pgx.Tx) error {
+		tiendaID, tp, antes, err := cobros.CambioARevertir(ctx, t, token)
+		if err != nil {
+			return err
+		}
+		tipo = tp
+		if _, err := t.Exec(ctx, "SELECT set_config('app.tienda_id', $1, true)", tiendaID); err != nil {
+			return err
+		}
+		texto := "volvió atrás el cambio de los datos para transferencias y cerró todas las sesiones"
+		switch tp {
+		case cobros.CambioTransferencia:
+			if _, err := t.Exec(ctx, `UPDATE tiendas SET negocio = coalesce(negocio, '{}'::jsonb) || jsonb_build_object('alias', $2::text, 'cbu', $3::text, 'titular', $4::text)
+				WHERE id = $1`, tiendaID, antes["alias"], antes["cbu"], antes["titular"]); err != nil {
+				return err
+			}
+		case cobros.CambioMercadoPago:
+			texto = "desconectó la cuenta de Mercado Pago recién conectada y cerró todas las sesiones"
+			if _, err := t.Exec(ctx, `DELETE FROM mp_conexiones WHERE tienda_id = $1`, tiendaID); err != nil {
+				return err
+			}
+		}
+		if _, err := t.Exec(ctx, `DELETE FROM auth.sesiones WHERE usuario_id IN (SELECT usuario_id FROM auth.membresias WHERE tienda_id = $1)`,
+			tiendaID); err != nil {
+			return err
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "cobros.revertir", Entidad: "tienda",
+			EntidadID: tiendaID, Texto: texto})
+	})
+	return tipo, err
 }
 
 // registrosNegocio: lo que se anota en la Actividad al guardar el negocio. El CBU nunca va entero:
@@ -515,7 +602,7 @@ func Rutas(mux *http.ServeMux, pool tx, geo geoip.Ubicador, sitio string, cobraA
 				problema.Escribir(w, problema.SinSesion())
 				return
 			}
-			h(w, r, d.TiendaID, Quien{UsuarioID: d.Usuario.ID, SesionID: d.SesionID, Rol: d.Rol})
+			h(w, r, d.TiendaID, Quien{UsuarioID: d.Usuario.ID, SesionID: d.SesionID, SesionHash: d.SesionHash, Rol: d.Rol})
 		}
 	}
 	errorDe := func(w http.ResponseWriter, err error) {
@@ -540,6 +627,8 @@ func Rutas(mux *http.ServeMux, pool tx, geo geoip.Ubicador, sitio string, cobraA
 			problema.Escribir(w, problema.Conflicto("actual", "Para cerrar esta, salí de la cuenta."))
 		case errors.Is(err, ErrInvalido):
 			problema.Escribir(w, problema.Invalido("Revisá los datos."))
+		case errors.Is(err, ErrReverificar):
+			problema.Escribir(w, cuentas.ProblemaReverificar())
 		case errors.Is(err, abono.ErrBeneficioUsado):
 			problema.Escribir(w, problema.Conflicto("beneficio_usado", "Ya usaste el descuento para quedarte."))
 		default:
@@ -568,12 +657,32 @@ func Rutas(mux *http.ServeMux, pool tx, geo geoip.Ubicador, sitio string, cobraA
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(v)
 	}))
-	mux.HandleFunc("PUT /v1/panel/configuracion/negocio", con(func(w http.ResponseWriter, r *http.Request, id string, _ Quien) {
+	mux.HandleFunc("PUT /v1/panel/configuracion/negocio", con(func(w http.ResponseWriter, r *http.Request, id string, q Quien) {
 		var n Negocio
 		if leer(w, r, &n) {
-			errorDe(w, GuardarNegocio(r.Context(), pool, id, n))
+			errorDe(w, GuardarNegocioDe(r.Context(), pool, id, n, Verificacion{Usuario: q.UsuarioID, Sesion: q.SesionHash,
+				Token: r.Header.Get(cuentas.CabeceraReverificacion)}))
 		}
 	}))
+	// El link del mail «Cambiaron adónde te llega la plata»: vuelve atrás el cambio y cierra todas las
+	// sesiones del equipo. Sin sesión: lo abre la dueña desde el mail, quizá sin poder entrar.
+	mux.HandleFunc("POST /v1/cuenta/cobros/revertir", func(w http.ResponseWriter, r *http.Request) {
+		var b struct{ Token string }
+		if !leer(w, r, &b) {
+			return
+		}
+		tipo, err := RevertirCambio(r.Context(), pool, b.Token)
+		if errors.Is(err, cobros.ErrCambioVencido) {
+			problema.Escribir(w, problema.Conflicto("vencido", "Este link ya se usó o venció. Entrá a tu panel y revisá Configuración › Negocio."))
+			return
+		}
+		if err != nil {
+			errorDe(w, err)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]string{"tipo": tipo})
+	})
 	mux.HandleFunc("PUT /v1/panel/configuracion/{grupo}/{clave}", con(func(w http.ResponseWriter, r *http.Request, id string, q Quien) {
 		var b struct {
 			Activo bool `json:"activo"`

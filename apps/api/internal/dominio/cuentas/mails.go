@@ -87,3 +87,23 @@ func mailIngreso(d ingreso, link string) correo.Mensaje {
 </div></body></html>`, n, tabla.String(), l),
 	}
 }
+
+// mailCodigosMal: probaron muchos códigos de la verificación en dos pasos con la contraseña correcta.
+func mailCodigosMal(para, nombre, link string) correo.Mensaje {
+	n := html.EscapeString(nombre)
+	l := html.EscapeString(link)
+	return correo.Mensaje{
+		Para:   para,
+		Asunto: "Alguien está probando entrar a tu cuenta de Tu Local Web",
+		Texto: fmt.Sprintf("Hola, %s.\n\nAlguien escribió bien tu contraseña y está probando códigos de tu app autenticadora. "+
+			"Por ahora frenamos los intentos. Cambiá tu contraseña ya:\n%s\n\nSi fuiste vos, esperá un rato y probá de nuevo.\n\nTu Local Web", nombre, link),
+		HTML: fmt.Sprintf(`<!doctype html><html lang="es-AR"><body style="margin:0;background:#FBF7F2;font-family:'Instrument Sans',Helvetica,Arial,sans-serif;color:#2A140C">
+<div style="max-width:560px;margin:0 auto;padding:32px 24px">
+<div style="font-size:22px;font-weight:700;letter-spacing:-.03em">Tu Local Web</div>
+<h1 style="margin:28px 0 0;font-size:28px;line-height:1.1;letter-spacing:-.03em;font-weight:600">Alguien tiene tu contraseña</h1>
+<p style="margin:12px 0 0;font-size:15.5px;line-height:1.5;color:#5C4536">Hola, %s. Alguien la escribió bien y está probando códigos de tu app autenticadora. Por ahora frenamos los&nbsp;intentos.</p>
+<p style="margin:24px 0"><a href="%s" style="display:inline-block;padding:14px 22px;border-radius:999px;background:#B0441D;color:#fff;font-weight:600;text-decoration:none">Cambiar mi contraseña</a></p>
+<p style="margin:0;font-size:13.5px;line-height:1.5;color:#7A6252">Si fuiste vos, esperá un rato y probá de&nbsp;nuevo.</p>
+</div></body></html>`, n, l),
+	}
+}

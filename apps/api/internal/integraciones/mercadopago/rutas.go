@@ -90,6 +90,15 @@ func (s *Servicio) Rutas(mux *http.ServeMux) {
 		escribir(w, http.StatusOK, e)
 	}))
 	mux.HandleFunc("POST /v1/panel/integraciones/mercadopago/conectar", sesion(true, func(w http.ResponseWriter, r *http.Request, d cuentas.Datos) {
+		// Cambiar la cuenta que ya cobra pide volver a verificarse: con una sesión robada se podía
+		// reconectar una cuenta ajena y los cobros iban a otro lado. Conectarla por primera vez, no.
+		if ok, err := s.reverificadoSiConectada(r.Context(), d, r.Header.Get(cuentas.CabeceraReverificacion)); err != nil {
+			s.Problema(w, err)
+			return
+		} else if !ok {
+			problema.Escribir(w, cuentas.ProblemaReverificar())
+			return
+		}
 		u, err := s.Conectar(r.Context(), d.TiendaID, d.Usuario.ID)
 		if err != nil {
 			s.Problema(w, err)

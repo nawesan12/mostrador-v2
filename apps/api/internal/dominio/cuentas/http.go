@@ -107,6 +107,7 @@ func ClienteDe(r *http.Request, claveBFF string) Cliente {
 func (s *Servicio) Rutas(mux *http.ServeMux, claveBFF string) {
 	s.rutasSociales(mux, claveBFF)
 	s.rutasSegundoFactor(mux, claveBFF)
+	s.rutasReverificar(mux)
 	mux.HandleFunc("POST /v1/auth/registro", func(w http.ResponseWriter, r *http.Request) {
 		var a struct{ Nombre, Tienda, Email, Clave string }
 		if !leer(w, r, &a) {

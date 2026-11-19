@@ -9,6 +9,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cobros"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/outbox"
 )
@@ -121,10 +123,10 @@ func (s *Servicio) Volver(ctx context.Context, tiendaID, usuarioID, codigo, esta
 	if tk.AccessToken == "" || tk.RefreshToken == "" || tk.UserID == 0 {
 		return errors.New("mercadopago: el canje no trajo tokens")
 	}
-	return s.guardarTokens(ctx, tiendaID, tk, true)
+	return s.guardarTokens(ctx, tiendaID, tk, true, usuarioID)
 }
 
-func (s *Servicio) guardarTokens(ctx context.Context, tiendaID string, tk tokens, nueva bool) error {
+func (s *Servicio) guardarTokens(ctx context.Context, tiendaID string, tk tokens, nueva bool, usuarioID ...string) error {
 	acceso, err := s.Cifra.Cifrar("mp:"+tiendaID, []byte(tk.AccessToken))
 	if err != nil {
 		return err
@@ -136,6 +138,11 @@ func (s *Servicio) guardarTokens(ctx context.Context, tiendaID string, tk tokens
 	vence := s.ahora().Add(time.Duration(tk.ExpiresIn) * time.Second)
 	return s.Pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
 		if nueva {
+			var previa int64
+			if err := t.QueryRow(ctx, `SELECT mp_usuario FROM mp_conexiones WHERE tienda_id = $1`, tiendaID).Scan(&previa); err != nil &&
+				!errors.Is(err, pgx.ErrNoRows) {
+				return err
+			}
 			// Otra cuenta de Mercado Pago reemplaza a la anterior (y la caja de QR era de esa cuenta).
 			_, err := t.Exec(ctx, `INSERT INTO mp_conexiones (tienda_id, mp_usuario, acceso, renovacion, vence_en, alcances)
 				VALUES ($1, $2, $3, $4, $5, $6)
@@ -146,6 +153,24 @@ func (s *Servicio) guardarTokens(ctx context.Context, tiendaID string, tk tokens
 				tiendaID, tk.UserID, acceso, renov, vence, tk.Scope)
 			if err != nil {
 				return err
+			}
+			if previa != tk.UserID {
+				// Adónde llegan los cobros cambió (o se conectó por primera vez): la dueña se entera.
+				quien := ""
+				if len(usuarioID) > 0 {
+					quien = usuarioID[0]
+				}
+				cuenta := func(id int64) map[string]string {
+					if id == 0 {
+						return map[string]string{"cuenta": ""}
+					}
+					return map[string]string{"cuenta": "n.º " + auditoria.Final(strconv.FormatInt(id, 10))}
+				}
+				if err := cobros.AvisarCambio(ctx, t, tiendaID, quien, cobros.CambioMercadoPago,
+					map[string]string{"cuenta": strconv.FormatInt(previa, 10)}, map[string]string{"cuenta": strconv.FormatInt(tk.UserID, 10)},
+					cuenta(previa), cuenta(tk.UserID)); err != nil {
+					return err
+				}
 			}
 			return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "integracion.mercadopago_conectar",
 				Entidad: "integracion", EntidadID: "mercadopago", Texto: "conectó Mercado Pago"})
@@ -225,4 +250,23 @@ func (s *Servicio) tokenDe(ctx context.Context, tiendaID string) (string, int64,
 		return "", 0, err
 	}
 	return tk.AccessToken, usuario, nil
+}
+
+// reverificadoSiConectada: si la tienda ya tiene una cuenta conectada, el pedido tiene que traer el
+// permiso de haberse vuelto a verificar (cuentas.Reverificado). Sin cuenta, no hace falta.
+func (s *Servicio) reverificadoSiConectada(ctx context.Context, d cuentas.Datos, token string) (bool, error) {
+	ok := true
+	err := s.Pool.EnTienda(ctx, d.TiendaID, func(t pgx.Tx) error {
+		var conectada bool
+		if err := t.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM mp_conexiones WHERE tienda_id = $1)`, d.TiendaID).Scan(&conectada); err != nil {
+			return err
+		}
+		if !conectada {
+			return nil
+		}
+		var err error
+		ok, err = cuentas.Reverificado(ctx, t, d.SesionHash, token)
+		return err
+	})
+	return ok, err
 }

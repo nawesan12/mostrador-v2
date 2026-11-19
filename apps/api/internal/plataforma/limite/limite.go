@@ -32,3 +32,11 @@ func Sumar(ctx context.Context, q Consultor, clave string, ventana time.Duration
 		RETURNING cantidad`, clave, ventana.String()).Scan(&n)
 	return n, err
 }
+
+// Cuantos dice cuántos intentos lleva la clave en la ventana, sin sumar uno.
+func Cuantos(ctx context.Context, q Consultor, clave string, ventana time.Duration) (int, error) {
+	var n int
+	err := q.QueryRow(ctx, `SELECT coalesce((SELECT cantidad FROM auth.intentos WHERE clave = $1 AND desde >= now() - $2::interval), 0)`,
+		clave, ventana.String()).Scan(&n)
+	return n, err
+}

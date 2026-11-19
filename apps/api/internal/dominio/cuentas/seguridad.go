@@ -203,6 +203,14 @@ func Manejadores(c correo.Correo, sitio string) map[string]outbox.Manejador {
 			}
 			return c.Enviar(ctx, mailIngreso(d, sitio+"/panel/configuracion?tab=seguridad"))
 		},
+		// Muchos códigos de la verificación en dos pasos mal: alguien tiene la contraseña.
+		"cuenta.codigos_mal": func(ctx context.Context, e outbox.Evento) error {
+			var d struct{ Para, Nombre string }
+			if err := json.Unmarshal(e.Datos, &d); err != nil || d.Para == "" {
+				return nil
+			}
+			return c.Enviar(ctx, mailCodigosMal(d.Para, d.Nombre, sitio+"/ingresar?m=recuperar"))
+		},
 		// La invitación al equipo de una tienda (configuracion.Invitar y Reenviar). El link viene armado.
 		"cuenta.invitacion": func(ctx context.Context, e outbox.Evento) error {
 			var d MailInvitacion

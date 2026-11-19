@@ -1,6 +1,7 @@
 package cuentas
 
 import (
+	"encoding/json"
 	"context"
 	"crypto/hmac"
 	"crypto/rand"
@@ -19,6 +20,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/limite"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
@@ -199,6 +201,11 @@ func (s *Servicio) CompletarSegundoFactor(ctx context.Context, desafio, codigo s
 		if err != nil {
 			return err
 		}
+		// El tope por persona (no por desafío ni por IP): con la contraseña se abren desafíos nuevos sin
+		// fin, y rotando IPs se probaban códigos sin límite. Se revisa antes de mirar el código.
+		if bloq, err := segundoBloqueado(ctx, tx, usuario); err != nil || bloq {
+			return errOr(err, ErrDemasiadosIntentos)
+		}
 		ok, err := s.verificarCodigo(ctx, tx, usuario, codigo)
 		if err != nil {
 			return err
@@ -206,8 +213,10 @@ func (s *Servicio) CompletarSegundoFactor(ctx context.Context, desafio, codigo s
 		if !ok {
 			// El intento se cuenta aunque la transacción siga: se guarda y se corta acá.
 			mal = true
-			_, err := tx.Exec(ctx, `UPDATE auth.desafios SET intentos = intentos + 1 WHERE token_hash = $1`, hashToken(desafio))
-			return err
+			if _, err := tx.Exec(ctx, `UPDATE auth.desafios SET intentos = intentos + 1 WHERE token_hash = $1`, hashToken(desafio)); err != nil {
+				return err
+			}
+			return sumarCodigoMal(ctx, tx, usuario)
 		}
 		if _, err := tx.Exec(ctx, `DELETE FROM auth.desafios WHERE token_hash = $1`, hashToken(desafio)); err != nil {
 			return err
@@ -235,6 +244,52 @@ func (s *Servicio) CompletarSegundoFactor(ctx context.Context, desafio, codigo s
 		return Sesion{}, ErrCodigo
 	}
 	return ses, err
+}
+
+// Topes de códigos mal por persona (CompletarSegundoFactor): no se borran con la contraseña correcta.
+const (
+	MaxCodigosMalHora = 10
+	MaxCodigosMalDia  = 20
+)
+
+// segundoBloqueado: la persona ya probó demasiados códigos mal en la última hora o en el día.
+func segundoBloqueado(ctx context.Context, tx pgx.Tx, usuario string) (bool, error) {
+	h, err := limite.Cuantos(ctx, tx, "segundo:mal:h:"+usuario, time.Hour)
+	if err != nil {
+		return false, err
+	}
+	d, err := limite.Cuantos(ctx, tx, "segundo:mal:d:"+usuario, 24*time.Hour)
+	return h >= MaxCodigosMalHora || d >= MaxCodigosMalDia, err
+}
+
+// sumarCodigoMal cuenta el código mal y, la primera vez que se llega a un tope, le avisa a la persona
+// por mail: si alguien prueba códigos es porque tiene su contraseña.
+func sumarCodigoMal(ctx context.Context, tx pgx.Tx, usuario string) error {
+	h, err := limite.Sumar(ctx, tx, "segundo:mal:h:"+usuario, time.Hour)
+	if err != nil {
+		return err
+	}
+	d, err := limite.Sumar(ctx, tx, "segundo:mal:d:"+usuario, 24*time.Hour)
+	if err != nil {
+		return err
+	}
+	if h != MaxCodigosMalHora && d != MaxCodigosMalDia {
+		return nil
+	}
+	// Uno por día como mucho.
+	if n, err := limite.Sumar(ctx, tx, "segundo:aviso:"+usuario, 24*time.Hour); err != nil || n > 1 {
+		return err
+	}
+	var a struct {
+		Para   string `json:"para"`
+		Nombre string `json:"nombre"`
+	}
+	if err := tx.QueryRow(ctx, `SELECT email, nombre FROM auth.usuarios WHERE id = $1`, usuario).Scan(&a.Para, &a.Nombre); err != nil {
+		return err
+	}
+	b, _ := json.Marshal(a)
+	_, err = tx.Exec(ctx, `INSERT INTO outbox (tienda_id, tipo, datos) VALUES (NULL, 'cuenta.codigos_mal', $1)`, b)
+	return err
 }
 
 // intervaloAGo pasa un interval de Postgres («8760:00:00» o «12:00:00») a una duración de Go.
