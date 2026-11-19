@@ -36,8 +36,9 @@ const Pedido = v.object({
 	nombre: v.pipe(v.string(), v.trim(), v.minLength(2, 'Poné tu nombre.'), v.maxLength(80)),
 	telefono: v.pipe(v.string(), v.trim(), v.regex(/^[\d\s+()-]{8,20}$/, 'Revisá el teléfono.')),
 	dni: v.pipe(v.string(), v.trim(), v.maxLength(12)),
-	cp: v.pipe(v.string(), v.trim(), v.maxLength(4)),
-	direccion: v.pipe(v.string(), v.trim(), v.maxLength(160)),
+	// Con sólo retiro el checkout no muestra CP ni dirección: pueden no venir.
+	cp: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(4)), ''),
+	direccion: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(160)), ''),
 	envio: v.picklist(
 		['andreani', 'correo-domicilio', 'correo-sucursal', 'moto', 'retiro'],
 		'Elegí cómo te llega.'

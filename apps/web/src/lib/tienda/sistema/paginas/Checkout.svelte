@@ -324,6 +324,7 @@
 							<!-- Una sola forma (sólo retiro): elegida y como dato, con dónde y cuándo una sola vez. -->
 							<div class="tv-radio tv-tarjeta tv-radio--on tv-radio--dato">
 								<input type="hidden" name="envio" value={unica.id} />
+								<input type="hidden" name="direccion" value="" />
 								<span class="tv-radio-txt"
 									><b>{unica.nombre}</b><span class="tv-chico tv-suave">{unica.detalle}</span></span
 								>
@@ -514,10 +515,10 @@
 							)} pagando con transferencia
 						</p>{/if}
 					<p class="tv-chico tv-suave tv-carrito-seguro">
-						<Icon icon={I.phArrowUUpLeft} size={16} /><a
-							class="tv-link"
-							href="{base}/arrepentimiento">Botón de arrepentimiento</a
-						>&nbsp;· 10 días para&nbsp;devolverlo
+						<Icon icon={I.phArrowUUpLeft} size={16} /><span
+							><a class="tv-link" href="{base}/arrepentimiento">Botón de arrepentimiento</a> · 10 días
+							para&nbsp;devolverlo</span
+						>
 					</p>
 				</aside>
 

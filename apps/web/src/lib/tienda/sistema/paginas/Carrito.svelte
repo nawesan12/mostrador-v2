@@ -225,10 +225,10 @@
 						</div>
 						<a class="tv-link tv-carrito-seguir" href="{base}/catalogo">Seguir comprando</a>
 						<p class="tv-chico tv-suave tv-carrito-seguro">
-							<Icon icon={I.phArrowUUpLeft} size={16} /><a
-								class="tv-link"
-								href="{base}/arrepentimiento">Botón de arrepentimiento</a
-							>&nbsp;· 10 días para&nbsp;devolverlo
+							<Icon icon={I.phArrowUUpLeft} size={16} /><span
+								><a class="tv-link" href="{base}/arrepentimiento">Botón de arrepentimiento</a> · 10 días
+								para&nbsp;devolverlo</span
+							>
 						</p>
 					</aside>
 				{/if}
