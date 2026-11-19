@@ -14,6 +14,12 @@ test('mi tienda en bloques: agregar, reordenar, variante, tocar en la vista, edi
 	await page.goto('/panel/mi-tienda');
 	await listo(page);
 	await expect(page.getByRole('button', { name: 'Todo publicado' })).toBeVisible();
+	// Sin desborde a lo ancho (a 375 la fila de pestañas y deshacer se pasaba 3 px).
+	expect(
+		await page.evaluate(
+			() => document.documentElement.scrollWidth - document.documentElement.clientWidth
+		)
+	).toBeLessThanOrEqual(0);
 
 	let guardados = 0;
 	page.on('response', (r) => {

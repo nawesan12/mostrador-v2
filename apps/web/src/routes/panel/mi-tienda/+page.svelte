@@ -783,9 +783,26 @@
 		margin-bottom: 2px;
 		border-bottom: 1px solid var(--ln);
 	}
+	.herramientas > :global(:first-child) {
+		min-width: 0;
+		flex: 1 1 auto;
+	}
 	.deshacer {
 		display: flex;
 		gap: 4px;
+		flex: none;
+	}
+	/* A lo angosto, deshacer y rehacer bajan a su renglón (a la derecha): la fila no se pasa de ancho. */
+	@media (max-width: 420px) {
+		.herramientas {
+			flex-wrap: wrap;
+		}
+		.herramientas > :global(:first-child) {
+			flex-basis: 100%;
+		}
+		.deshacer {
+			margin-left: auto;
+		}
 	}
 	.paginas {
 		display: flex;
