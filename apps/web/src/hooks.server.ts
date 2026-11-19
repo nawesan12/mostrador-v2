@@ -99,12 +99,19 @@ export const handle: Handle = async ({ event, resolve }) => {
 		const delDominio = await tiendaDeDominio(event.url.hostname).catch(() => undefined);
 		if (delDominio === undefined)
 			return secure(new Response('Probá de nuevo en un momento.', { status: 503 }));
-		// El plan ya no incluye dominio propio (Gratis o fin de la prueba): 301 a la dirección de Tu
-		// Local Web con el mismo camino y consulta, así los links compartidos siguen andando.
+		// El plan ya no incluye dominio propio (Gratis o fin de la prueba): 302 a la dirección de Tu
+		// Local Web con el mismo camino y consulta, así los links compartidos siguen andando. Temporal
+		// y sin caché: un 301 queda guardado en el navegador y, al volver a subir de plan, el dominio
+		// seguiría mandando al subdominio (y el subdominio al dominio: un bucle).
 		if (delDominio && !delDominio.propio && !GLOBALES_EN_DOMINIO.test(event.url.pathname)) {
 			const destino = new URL(event.url.pathname + event.url.search, SITE);
 			destino.hostname = `${delDominio.slug}.${destino.hostname}`;
-			return secure(new Response(null, { status: 301, headers: { location: destino.href } }));
+			return secure(
+				new Response(null, {
+					status: 302,
+					headers: { location: destino.href, 'cache-control': 'no-store' }
+				})
+			);
 		}
 		const slug = delDominio?.slug ?? null;
 		const suya =

@@ -4,8 +4,9 @@ import { usaSandbox } from '../datos/index.ts';
 
 /**
  * La tienda de un dominio: su slug y si el plan que rige incluye dominio propio. Sin el plan (Gratis,
- * o al terminar la prueba) el dominio sigue resolviendo, pero la web responde 301 a la dirección de
- * Tu Local Web con el mismo camino: los links compartidos no se rompen y al subir de plan vuelve.
+ * o al terminar la prueba) el dominio sigue resolviendo, pero la web responde 302 (temporal) a la
+ * dirección de Tu Local Web con el mismo camino: los links compartidos no se rompen y al subir de
+ * plan vuelve.
  */
 export type TiendaDeDominio = { slug: string; propio: boolean };
 

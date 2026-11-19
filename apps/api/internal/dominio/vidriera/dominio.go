@@ -16,7 +16,7 @@ var dominioValido = regexp.MustCompile(`^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+
 
 // SlugDeDominio: la tienda que se ve en un dominio propio ("www." vale como el dominio), sólo si
 // el dominio está verificado y la tienda abierta. ErrNoExiste si no. propio es false si el plan que
-// rige no incluye dominio propio (Gratis, o al terminar la prueba): la web responde 301 a la
+// rige no incluye dominio propio (Gratis, o al terminar la prueba): la web responde 302 a la
 // dirección de Tu Local Web con el mismo camino (los links compartidos siguen andando) y el dominio
 // queda guardado para cuando vuelva a subir.
 func SlugDeDominio(ctx context.Context, pool tx, dominio string) (slug string, propio bool, err error) {
