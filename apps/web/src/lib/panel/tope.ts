@@ -1,6 +1,6 @@
 import { goto } from '$app/navigation';
 import { resolve } from '$app/paths';
-import type { UiState } from '#lib/ui.svelte.ts';
+import { TITULO_TOPE, type UiState } from '#lib/ui.svelte.ts';
 import { planDe } from './planes.ts';
 
 /**
@@ -25,7 +25,7 @@ export function avisarTope(ui: UiState, p: ProblemaPlan): boolean {
 	const sube = p.plan ? planDe(p.plan) : null;
 	ui.toast({
 		k: 'info',
-		title: 'Llegaste al tope de tu plan',
+		title: TITULO_TOPE,
 		desc: p.message ?? 'Pasá a un plan más grande para seguir.',
 		action: sube ? `Pasar a ${sube.nombre}` : 'Ver planes',
 		// eslint-disable-next-line svelte/no-navigation-without-resolve -- hrefPlan ya pasa por resolve
@@ -42,4 +42,25 @@ export async function avisarTopeDe(ui: UiState, r: Response): Promise<boolean> {
 		.json()
 		.catch(() => null)) as ProblemaPlan;
 	return avisarTope(ui, p);
+}
+
+/**
+ * Todo el panel: cualquier pedido a /panel/ que vuelve con un tope de plan (crear un cupón, conectar
+ * Mercado Libre, un dominio, una venta en el local…) avisa con «Pasar a X», sin que cada pantalla lo
+ * tenga que saber. Devuelve cómo deshacerlo.
+ */
+export function escucharTopes(ui: UiState): () => void {
+	const original = window.fetch;
+	const envuelto: typeof fetch = async (entrada, init) => {
+		const r = await original(entrada, init);
+		const url =
+			typeof entrada === 'string' ? entrada : entrada instanceof URL ? entrada.href : entrada.url;
+		if (r.status === 402 && new URL(url, location.href).pathname.startsWith('/panel/'))
+			void avisarTopeDe(ui, r);
+		return r;
+	};
+	window.fetch = envuelto;
+	return () => {
+		if (window.fetch === envuelto) window.fetch = original;
+	};
 }

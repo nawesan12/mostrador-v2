@@ -20,6 +20,7 @@
 		setTiempoReal
 	} from '#lib/tiempo-real/panel.svelte.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
+	import { escucharTopes } from '#lib/panel/tope.ts';
 
 	/** Armazón del panel (design/Mostrador v4.dc.html, vista Panel). */
 	let { data, children } = $props();
@@ -103,6 +104,8 @@
 	});
 	// El panel instalable como app (§43): service worker con alcance /panel e invitación a instalar.
 	onMount(arrancarAppCelular);
+	// Los topes del plan (402 tope_plan) se avisan en el momento, con el botón para cambiar de plan.
+	onMount(() => escucharTopes(ui));
 </script>
 
 <!-- Escape cierra la barra lateral y las notificaciones (⌘K lo maneja su diálogo). -->

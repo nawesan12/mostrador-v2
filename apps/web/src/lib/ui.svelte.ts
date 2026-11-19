@@ -12,6 +12,9 @@ export type Toast = {
 	onAction?: () => void | Promise<void>;
 };
 
+/** El título del aviso de tope de plan (lib/panel/tope.ts). */
+export const TITULO_TOPE = 'Llegaste al tope de tu plan';
+
 /** Vida de un toast (handoff: barra que se vacía en 5,5 s). */
 export const VIDA_TOAST = 5500;
 /** Máximo de toasts a la vez (handoff: "máximo 3"). */
@@ -28,6 +31,13 @@ export class UiState {
 	#timers = new Map<number, ReturnType<typeof setTimeout>>();
 
 	toast(t: Omit<Toast, 'id'>) {
+		// Un tope de plan ya avisado (con «Pasar a X») no se repite, ni como el error genérico de la
+		// pantalla que hizo el pedido.
+		const repetido = this.toasts.find(
+			(x) =>
+				x.desc === t.desc && x.title === TITULO_TOPE && (t.k === 'err' || t.title === TITULO_TOPE)
+		);
+		if (repetido) return repetido.id;
 		const id = ++this.#seq;
 		this.toasts = [...this.toasts, { id, ...t }].slice(-MAX_TOASTS);
 		this.#timers.set(
