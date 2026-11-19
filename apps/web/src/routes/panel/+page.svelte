@@ -1857,6 +1857,8 @@
 		font-size: 12.5px;
 		color: var(--mu);
 		margin-top: 2px;
+		/* Bajadas cortas en tarjetas angostas: balanceadas, sin una palabra sola abajo. */
+		text-wrap: balance;
 	}
 
 	.sin-dato {
@@ -2304,7 +2306,7 @@
 	.estrellas-prom {
 		font-size: 13px;
 		font-weight: 600;
-		color: #8A5F0E;
+		color: #8a5f0e;
 	}
 	.resena {
 		padding: 10px 0;

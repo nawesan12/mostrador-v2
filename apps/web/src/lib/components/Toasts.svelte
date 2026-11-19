@@ -77,6 +77,7 @@
 		font-size: 13px;
 		line-height: 1.4;
 		color: var(--mu);
+		text-wrap: balance;
 	}
 	.accion {
 		margin-top: 10px;
