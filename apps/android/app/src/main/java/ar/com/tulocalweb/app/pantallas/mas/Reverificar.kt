@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -96,7 +95,7 @@ fun Reverificar(alConfirmar: (String) -> Unit) {
         }
         val m = metodos
         if (m == null) {
-            Box(Modifier.fillMaxWidth().heightIn(min = 120.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = C.texto2) }
+            Box(Modifier.fillMaxWidth().heightIn(min = 120.dp), contentAlignment = Alignment.Center) { Rueda(C.texto2) }
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (conClave) {

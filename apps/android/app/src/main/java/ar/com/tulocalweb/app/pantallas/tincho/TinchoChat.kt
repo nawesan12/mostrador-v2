@@ -387,6 +387,8 @@ private fun BurbujaTincho(
     m: Mensaje, revelando: Pair<String, Int>?, ir: (String) -> Unit, reportar: (Mensaje) -> Unit,
     propuestas: Map<String, EstadoPropuesta>, confirmar: (PropuestaTincho, String) -> Unit, descartar: (String) -> Unit,
 ) {
+    val estado = LocalEstado.current
+    val ctx = LocalContext.current
     val texto = m.respuesta?.texto ?: m.texto
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         if (texto.isNotEmpty()) {
