@@ -42,11 +42,26 @@
 	{#if proximamente(producto)}
 		<span class="tv-precio-monto">Próximamente</span>
 	{:else}
-		<span class="tv-precio-fila"
-			><b class="tv-precio-monto">{t.desde ? 'Desde ' : ''}{precio(t.precio)}</b>{#if anterior}<s
-					class="tv-precio-antes"><span class="tv-oculto">Antes </span>{precio(anterior)}</s
-				>{/if}</span
-		>
+		{#if tam === 'normal' && !linea}
+			<!-- En las tarjetas, «Desde» y el tachado van arriba en su renglón: el monto conserva el
+			     nowrap (no se mete debajo del «+») y queda a la misma altura que el de la tarjeta vecina. -->
+			{#if t.desde || anterior}
+				<span class="tv-precio-sobre"
+					>{#if t.desde}<span class="tv-precio-desde">Desde</span>{/if}{#if anterior}<s
+							class="tv-precio-antes"><span class="tv-oculto">Antes </span>{precio(anterior)}</s
+						>{/if}</span
+				>
+			{/if}
+			<b class="tv-precio-monto">{precio(t.precio)}</b>
+		{:else}
+			<span class="tv-precio-fila"
+				>{#if t.desde}<span class="tv-precio-desde">Desde</span>{/if}<b class="tv-precio-monto"
+					>{precio(t.precio)}</b
+				>{#if anterior}<s class="tv-precio-antes"
+						><span class="tv-oculto">Antes </span>{precio(anterior)}</s
+					>{/if}</span
+			>
+		{/if}
 		{#if ver && ctx.dir === 'mostrador'}
 			{#if enCuotas}<span class="tv-precio-ok">{enCuotas}</span>{/if}
 			{#if transf}<span class="tv-precio-ok">{transf}</span>{/if}

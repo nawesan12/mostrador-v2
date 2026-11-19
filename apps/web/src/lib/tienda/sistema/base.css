@@ -371,6 +371,22 @@
 	color: var(--t-zona-suave);
 	white-space: nowrap;
 }
+.tv-precio-sobre {
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+	font-size: 12.5px;
+	line-height: 1.2;
+}
+.tv-precio-sobre .tv-precio-antes {
+	font-size: 12.5px;
+}
+.tv-precio-desde {
+	font-size: 12.5px;
+	font-weight: 500;
+	color: var(--t-zona-suave);
+	white-space: nowrap;
+}
 .tv-precio-cuotas {
 	font-size: 13px;
 	color: var(--t-zona-suave);
@@ -626,6 +642,11 @@
 	align-items: flex-end;
 	gap: 8px;
 	margin-top: auto;
+}
+/* El precio toma el ancho que deja el botón y nunca pasa por debajo de él. */
+.tv-prod-pie > .tv-precio {
+	flex: 1;
+	min-width: 0;
 }
 /* En el celular la tarjeta de la grilla mide ~165 px: el botón con texto («Elegir», «Agregar») va
    abajo a lo ancho, y el precio con cuotas y transferencia usa todo el ancho en vez de una columna. */
