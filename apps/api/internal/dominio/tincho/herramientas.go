@@ -141,8 +141,44 @@ func (h *herramientas) ejecutar(ctx context.Context, nombre string, entrada json
 		h.s.log().Error("tincho: herramienta", "nombre", nombre, "error", err)
 		return "No pude leer eso ahora.", true
 	}
-	b, _ := json.Marshal(v)
+	b, _ := json.Marshal(sinControl(v))
 	return string(b), false
+}
+
+// sinControl saca los saltos de línea y los caracteres de control de todo texto que vuelve al modelo:
+// los nombres de clientes y productos los escriben terceros (el checkout, una importación) y no
+// pueden armar renglones que parezcan instrucciones. El resto de la defensa está en Sistema y en que
+// toda acción pasa por «Confirmar».
+func sinControl(v any) any {
+	switch x := v.(type) {
+	case string:
+		return limpiarTexto(x)
+	case map[string]any:
+		for k, y := range x {
+			x[k] = sinControl(y)
+		}
+		return x
+	case []map[string]any:
+		for i := range x {
+			x[i] = sinControl(x[i]).(map[string]any)
+		}
+		return x
+	case []any:
+		for i := range x {
+			x[i] = sinControl(x[i])
+		}
+		return x
+	case []string:
+		for i := range x {
+			x[i] = limpiarTexto(x[i])
+		}
+		return x
+	}
+	return v
+}
+
+func limpiarTexto(s string) string {
+	return strings.Join(strings.FieldsFunc(s, func(r rune) bool { return r < 0x20 || r == 0x7f || r == 0x2028 || r == 0x2029 }), " ")
 }
 
 func (h *herramientas) montos() bool { return roles.Puede(h.rol, roles.Finanzas) }
@@ -349,6 +385,7 @@ func (h *herramientas) proponer(p Propuesta) (any, error) {
 		return nil, errHerramienta("Ya hay 3 propuestas en esta respuesta: que la persona confirme esas primero.")
 	}
 	p.ID = idPropuesta()
+	p.Titulo, p.Detalle = limpiarTexto(p.Titulo), limpiarTexto(p.Detalle)
 	h.propuestas = append(h.propuestas, p)
 	return map[string]any{"propuesta": "lista", "titulo": p.Titulo,
 		"importante": "Todavía NO se hizo: la persona ve un botón «Confirmar». No digas que quedó hecho."}, nil
