@@ -64,6 +64,7 @@ import ar.com.tulocalweb.app.app.LocalNavegacion
 import ar.com.tulocalweb.app.nucleo.AtributoProducto
 import ar.com.tulocalweb.app.nucleo.ErrorApi
 import ar.com.tulocalweb.app.nucleo.Formato
+import ar.com.tulocalweb.app.pantallas.mas.CatalogoPlanes
 import ar.com.tulocalweb.app.nucleo.Fotos
 import ar.com.tulocalweb.app.nucleo.TipoProducto
 import ar.com.tulocalweb.app.nucleo.Valor
@@ -269,8 +270,12 @@ fun EditorProducto(id: String?, sku: String? = null) {
         val u = fotoCamara
         if (ok && u != null) alcance.launch { subir(u) }
     }
-    val galeria = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(8)) { uris ->
-        val libres = 8 - fotos.size - subiendo
+    // Las fotos por producto del plan (3, 5, 8 o 10). El servidor las topa igual.
+    var planFotos by remember { mutableStateOf<CatalogoPlanes.Plan?>(null) }
+    val maxFotos = planFotos?.fotos ?: 10
+    LaunchedEffect(Unit) { planFotos = estado.planVigente() }
+    val galeria = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(10)) { uris ->
+        val libres = maxFotos - fotos.size - subiendo
         alcance.launch { uris.take(maxOf(0, libres)).forEach { subir(it) } }
     }
 
@@ -359,7 +364,7 @@ fun EditorProducto(id: String?, sku: String? = null) {
                         }
                     }
                     repeat(subiendo) { Box(Modifier.size(96.dp).clip(RoundedCornerShape(16.dp)).background(C.pista), contentAlignment = Alignment.Center) { Rueda(C.acento) } }
-                    if (fotos.size + subiendo < 8) {
+                    if (fotos.size + subiendo < maxFotos) {
                         BotonFoto("camera", "Sacar foto") {
                             alcance.launch {
                                 if (!estado.alPedirPermiso(Manifest.permission.CAMERA)) {
@@ -375,6 +380,9 @@ fun EditorProducto(id: String?, sku: String? = null) {
                             }
                         }
                         BotonFoto("photo.on.rectangle", "Galería") { estado.abrioOtraApp = true; galeria.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
+                    } else planFotos?.takeIf { it.fotos < 10 }?.let { p ->
+                        Texto(Formato.sinViudas("Tu plan ${p.nombre} permite ${p.fotos} fotos por producto."), Estilo.footnote, C.texto2,
+                            Modifier.width(150.dp))
                     }
                 }
                 Campo("Nombre") { Entrada(nombre, { nombre = it }, ejemploNombre(tipo), estilo = Estilo.body16) }

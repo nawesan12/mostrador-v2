@@ -15,6 +15,8 @@ import ar.com.tulocalweb.app.nucleo.Api
 import ar.com.tulocalweb.app.nucleo.Clerk
 import ar.com.tulocalweb.app.nucleo.DatosSesion
 import ar.com.tulocalweb.app.nucleo.ErrorApi
+import ar.com.tulocalweb.app.nucleo.Fecha
+import ar.com.tulocalweb.app.nucleo.Formato
 import ar.com.tulocalweb.app.nucleo.errorDe
 import ar.com.tulocalweb.app.nucleo.Guardado
 import ar.com.tulocalweb.app.nucleo.Llavero
@@ -34,6 +36,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import ar.com.tulocalweb.app.pantallas.mas.CatalogoPlanes
 import ar.com.tulocalweb.app.pantallas.mas.DatosEditor
 import ar.com.tulocalweb.app.pantallas.mas.EditorTienda
 
@@ -144,6 +147,7 @@ class Estado(api: Api? = null) {
 
     init {
         this.api.alPerderSesion = { alcance.launch { sesionPerdida() } }
+        this.api.alTope = { e -> alcance.launch { avisarTope(e) } }
     }
 
     val tienda: Acceso.Tienda? get() = acceso?.tienda
@@ -412,12 +416,55 @@ class Estado(api: Api? = null) {
     // MARK: Avisos (toasts)
 
     fun avisar(texto: String, ok: Boolean = true, deshacer: (() -> Unit)? = null) {
-        aviso = Aviso(texto, ok, deshacer)
+        // El error genérico de una pantalla no pisa el aviso de tope de plan que ya está a la vista.
+        aviso?.let { if (it.tope && it.texto == texto) return }
+        mostrar(Aviso(texto, ok, deshacer), 4000)
+    }
+
+    /** Un tope de plan (402 tope_plan), desde cualquier pantalla: qué no entra y «Ver mi plan», que abre Plan (la
+     *  app no vende planes: ahí se ve qué incluye cada uno). El plan lo maneja la dueña: al resto sólo se le dice. */
+    fun avisarTope(e: ErrorApi) {
+        val ver: (() -> Unit)? = if (acceso?.rol == "duenio") ({ rutaPendiente = Ruta.destino(Destino.plan) }) else null
+        mostrar(Aviso(e.detalle, ok = false, deshacer = ver, accion = if (ver == null) null else "Ver mi plan", tope = true), 7000)
+    }
+
+    private fun mostrar(a: Aviso, ms: Long) {
+        aviso = a
         avisoTarea?.cancel()
         avisoTarea = alcance.launch {
-            delay(4000)
+            delay(ms)
             aviso = null
         }
+    }
+
+    /** El plan que rige hoy (en la prueba gratis, Crece), de GET /v1/panel/tienda. Se guarda 10 minutos por tienda:
+     *  sirve para avisar un tope antes de cargar algo (el servidor lo topa igual). */
+    suspend fun planVigente(): CatalogoPlanes.Plan? {
+        val id = acceso?.tiendaId ?: return null
+        planGuardado?.let { (t, p, en) -> if (t == id && System.currentTimeMillis() - en < 600_000) return p }
+        val t = api.opcional<TiendaPlan>("/v1/panel/tienda") ?: return null
+        val creada = Fecha.iso(t.creadaEn)?.toEpochMilli() ?: 0L
+        val prueba = System.currentTimeMillis() < creada + CatalogoPlanes.DIAS_DE_PRUEBA * 86_400_000L
+        val p = CatalogoPlanes.de(if (t.plan == "gratis" && prueba) CatalogoPlanes.DESTACADO else t.plan)
+        planGuardado = Triple(id, p, System.currentTimeMillis())
+        return p
+    }
+    private var planGuardado: Triple<String, CatalogoPlanes.Plan, Long>? = null
+
+    /** Lo que hace falta de GET /v1/panel/tienda para saber el plan que rige. */
+    @Serializable
+    private data class TiendaPlan(val plan: String = "gratis", val creadaEn: String = "")
+
+    /** Antes de crear algo con tope (productos, personas): si ya está lleno, avisa con «Ver mi plan» y devuelve false. */
+    suspend fun entraOtro(campo: (CatalogoPlanes.Plan) -> Int, hay: Int, que: String): Boolean {
+        val p = planVigente() ?: return true
+        val tope = campo(p)
+        if (tope <= 0 || hay < tope) return true
+        val sube = CatalogoPlanes.todos.firstOrNull { campo(it) == 0 || campo(it) > tope } ?: p
+        val hasta = if (campo(sube) == 0) "sin tope" else "hasta ${Formato.numero(campo(sube))}"
+        avisarTope(ErrorApi(402, "tope_plan", "", "Tu plan ${p.nombre} llega hasta ${Formato.numero(tope)} $que. Con ${sube.nombre}, $hasta.",
+            plan = sube.id))
+        return false
     }
 
     // MARK: Push

@@ -149,7 +149,11 @@ fun EsqueletoFilas(filas: Int = 4, miniatura: Dp = 48.dp, modifier: Modifier = M
 // MARK: - Toast
 
 /** Toast inferior oscuro (52 de alto, 4 s) con «Deshacer» cuando aplica. */
-data class Aviso(val texto: String, val ok: Boolean = true, val deshacer: (() -> Unit)? = null, val id: String = UUID.randomUUID().toString())
+data class Aviso(val texto: String, val ok: Boolean = true, val deshacer: (() -> Unit)? = null, val id: String = UUID.randomUUID().toString(),
+                 /** El nombre de la acción (por defecto «Deshacer»; un tope de plan dice «Ver mi plan»). */
+                 val accion: String? = null,
+                 /** Es el aviso de un tope de plan (el error genérico de la pantalla no lo pisa). */
+                 val tope: Boolean = false)
 
 @Composable
 fun VistaAviso(aviso: Aviso, cerrar: () -> Unit) {
@@ -162,9 +166,9 @@ fun VistaAviso(aviso: Aviso, cerrar: () -> Unit) {
         Box(Modifier.size(22.dp).clip(CircleShape).background(if (aviso.ok) hex(0x3FA877) else C.error), contentAlignment = Alignment.Center) {
             Icono(if (aviso.ok) "checkmark" else "exclamationmark", 11f, Color.White)
         }
-        Texto(aviso.texto, Estilo.subhead, hex(0xFBF7F2), Modifier.weight(1f).padding(vertical = 8.dp), lineas = 2)
+        Texto(aviso.texto, Estilo.subhead, hex(0xFBF7F2), Modifier.weight(1f).padding(vertical = 8.dp), lineas = if (aviso.tope) 4 else 2)
         aviso.deshacer?.let { d ->
-            Texto("Deshacer", Estilo(15f, Peso.bold), hex(0xF3A57E), Modifier.clickable { d(); cerrar() }.padding(vertical = 12.dp))
+            Texto(aviso.accion ?: "Deshacer", Estilo(15f, Peso.bold), hex(0xF3A57E), Modifier.clickable { d(); cerrar() }.padding(vertical = 12.dp))
         }
     }
 }

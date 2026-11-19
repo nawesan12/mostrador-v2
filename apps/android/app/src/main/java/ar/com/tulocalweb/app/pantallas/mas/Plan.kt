@@ -57,16 +57,31 @@ import kotlin.math.roundToInt
 /** Los planes (apps/web/src/lib/panel/planes.ts): nombre, para quién y qué incluye. Los precios salen de las
  *  cotizaciones de la API. */
 object CatalogoPlanes {
-    data class Plan(val id: String, val nombre: String, val lema: String, val mensual: Int, val incluye: List<String>)
+    data class Plan(val id: String, val nombre: String, val lema: String, val mensual: Int, val productos: Int, val personas: Int,
+                    val fotos: Int, val tincho: Int, val incluye: List<String>)
     val todos = listOf(
-        Plan("gratis", "Gratis", "Para probar y empezar", 0, listOf("Productos ilimitados", "Tincho: 100 respuestas con IA", "1 persona · subdominio")),
-        Plan("emprende", "Emprende", "Para vender todos los días", 19_900, listOf("Dominio propio y factura ARCA", "Todos los medios de pago y envío", "Tincho: 1.000 respuestas con IA", "2 personas")),
-        Plan("pro", "Pro", "Para vender en todos tus canales", 49_900, listOf("Mercado Libre, Instagram y local", "Acciones masivas y estadísticas", "Tincho: 3.000 respuestas con IA", "5 personas con permisos")),
-        Plan("negocio", "Negocio", "Para varias sucursales", 149_900, listOf("Sucursales y cajas ilimitadas", "API, webhooks y mayoristas", "Tincho: 15.000 respuestas con IA", "Personas ilimitadas")),
+        Plan("gratis", "Gratis", "Para probar y empezar", 0, 20, 1, 3, 50,
+            listOf("Hasta 20 productos", "Tu dirección de Tu Local Web", "Cobrás con Mercado Pago y transferencia",
+                "Tincho: 50 respuestas con IA por mes", "1 persona")),
+        Plan("emprende", "Emprende", "Para vender todos los días", 14_900, 150, 2, 5, 500,
+            listOf("Hasta 150 productos", "Dominio propio y factura de ARCA", "Envíos con Correo Argentino",
+                "Cupones, combos y carritos abandonados", "Tincho: 500 respuestas con IA por mes", "2 personas")),
+        Plan("pro", "Crece", "Para vender en todos tus canales", 34_900, 500, 5, 8, 2_000,
+            listOf("Hasta 500 productos", "Venta en el local y cobro con QR", "Mercado Libre con el mismo stock",
+                "Newsletter y estadísticas", "Tincho: 2.000 respuestas con IA por mes", "5 personas con roles y permisos")),
+        Plan("negocio", "Negocio", "Para vender sin topes", 79_900, 0, 0, 10, 8_000,
+            listOf("Productos y personas sin tope", "Venta mayorista y listas de precio", "Todo lo de Crece",
+                "Tincho: 8.000 respuestas con IA por mes")),
     )
+    /** El destacado: el del medio, el que rige durante la prueba gratis. */
+    const val DESTACADO = "pro"
+    const val MESES_PAGOS_DEL_ANIO = 10
+    const val DIAS_DE_PRUEBA = 14
     fun de(id: String): Plan = todos.firstOrNull { it.id == id } ?: todos[0]
-    /** Por mes: el anual es 25 % menos (cobrado una vez por año). */
-    fun porMes(p: Plan, anual: Boolean): Int = if (anual) (p.mensual * 0.75).roundToInt() else p.mensual
+    /** Por mes: el anual se paga como 10 meses y se usa 12. */
+    fun porMes(p: Plan, anual: Boolean): Int = if (anual) (p.mensual * MESES_PAGOS_DEL_ANIO / 12.0).roundToInt() else p.mensual
+    /** Lo que se cobra una vez por año. */
+    fun porAnio(p: Plan): Int = p.mensual * MESES_PAGOS_DEL_ANIO
 }
 
 /** Lo que cuesta pasar a un plan y ciclo (packages/contrato: Cotizacion). */
@@ -84,11 +99,17 @@ data class CotizacionPlan(
 
 @Serializable
 data class DatosPlan(
-    val actual: String = "gratis", val ciclo: String = "mes", val enPrueba: Boolean = false, val diasPrueba: Int = 0, val finPrueba: String? = null,
+    val actual: String = "gratis",
+    /** El plan que rige hoy (en la prueba, Crece). */
+    val vigente: String? = null,
+    /** Lo que quedó fuera del plan después de bajar (oculto o en sólo lectura; no se borró nada). */
+    val fuera: Fuera? = null,
+    val ciclo: String = "mes", val enPrueba: Boolean = false, val diasPrueba: Int = 0, val finPrueba: String? = null,
     val proximoCobro: String? = null, val abono: Abono? = null, val cotizaciones: Map<String, CotizacionPlan>? = null, val beneficio: Beneficio? = null,
     val beneficioUsado: Boolean? = null, val uso: Uso = Uso(), val medio: Medio? = null, val facturas: List<Factura> = emptyList(),
 ) {
-    @Serializable data class Uso(val productos: Int = 0, val personas: Int = 0, val hornero: Int = 0)
+    @Serializable data class Uso(val productos: Int = 0, val personas: Int = 0, val hornero: Int = 0, val packs: Int = 0)
+    @Serializable data class Fuera(val productos: Int = 0, val personas: Int = 0)
     @Serializable data class Medio(val marca: String = "", val ultimos: String = "", val vence: String = "")
     @Serializable data class Factura(val numero: String, val detalle: String = "", val total: Int = 0, val fecha: String? = null)
     @Serializable data class Programado(val plan: String, val ciclo: String = "", val desde: String = "")
@@ -145,10 +166,13 @@ fun PlanCuenta() {
                 }
             }
         }
+        val rige = CatalogoPlanes.de(d.vigente ?: if (d.enPrueba && d.actual == "gratis") CatalogoPlanes.DESTACADO else d.actual)
+        d.fuera?.takeIf { it.productos > 0 || it.personas > 0 }?.let { AvisoFueraDePlan(it, rige.nombre) }
         GrillaIndicadores(listOf(
-            IndicadorIcono("shippingbox.fill", "Productos", "${d.uso.productos}"),
-            IndicadorIcono("person.2.fill", "Personas del equipo", "${d.uso.personas}", tono = T.okFondo to T.okTinta),
-            IndicadorIcono("sparkles", "Respuestas de Tincho este mes", "${d.uso.hornero}", tono = T.avisoFondo to T.avisoTinta),
+            IndicadorIcono("shippingbox.fill", "Productos", deTope(d.uso.productos, rige.productos)),
+            IndicadorIcono("person.2.fill", "Personas del equipo", deTope(d.uso.personas, rige.personas), tono = T.okFondo to T.okTinta),
+            IndicadorIcono("sparkles", "Respuestas de Tincho este mes", deTope(d.uso.hornero, rige.tincho + d.uso.packs * 2_000),
+                tono = T.avisoFondo to T.avisoTinta),
         ))
         d.medio?.let { m ->
             GrupoFilas(listOf("Medio de pago" to "${m.marca} ·· ${m.ultimos}", "Vence" to m.vence), { it.first }) { FilaDato(it.first, it.second) }
@@ -166,6 +190,29 @@ fun PlanCuenta() {
 }
 
 /** El cambio que rige en el próximo cobro, con «Deshacer». */
+/** «12 de 20» (o «12» sin tope). */
+private fun deTope(uso: Int, tope: Int): String =
+    if (tope == 0) Formato.numero(uso) else "${Formato.numero(uso)} de ${Formato.numero(tope)}"
+
+/** Lo que quedó fuera del plan después de bajar: oculto en la tienda o en sólo lectura, nunca borrado. */
+@Composable
+private fun AvisoFueraDePlan(fuera: DatosPlan.Fuera, plan: String) {
+    val partes = listOfNotNull(
+        if (fuera.productos > 0) "${Formato.cantidad(fuera.productos, "producto quedó oculto", "productos quedaron ocultos")} en la tienda" else null,
+        if (fuera.personas > 0) "${Formato.cantidad(fuera.personas, "persona quedó", "personas quedaron")} en sólo lectura" else null,
+    )
+    val forma = RoundedCornerShape(18.dp)
+    Row(Modifier.fillMaxWidth().aparecer(0.04).clip(forma).background(C.crema2).border(1.dp, C.linea2, forma).padding(14.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
+        Icono("exclamationmark.circle", 20f, C.primarioTexto)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Texto("Tenés más de lo que entra en $plan", Estilo.subheadFuerte, C.texto)
+            Texto(Formato.sinViudas(partes.joinToString(" y ") + ". No se borró nada: vuelve todo al subir de plan o al liberar lugar."),
+                Estilo.footnote, C.texto2)
+        }
+    }
+}
+
 @Composable
 private fun AvisoProgramado(programado: DatosPlan.Programado, actual: String, deshacer: () -> Unit) {
     val nuevo = CatalogoPlanes.de(programado.plan).nombre
@@ -277,7 +324,7 @@ private fun TarjetaPlan(plan: CatalogoPlanes.Plan, anual: Boolean, elegido: Bool
                     Texto(Formato.pesos(mes), Estilo.montoMeta, C.texto)
                     Texto("/ mes", Estilo.footnote, C.texto2, Modifier.padding(bottom = 4.dp))
                 }
-                Texto(if (anual) "${Formato.pesos(mes * 12)} por año · ahorrás ${Formato.pesos((plan.mensual - mes) * 12)}" else "IVA incluido · sin permanencia", Estilo.footnote, C.texto3)
+                Texto(if (anual) "${Formato.pesos(CatalogoPlanes.porAnio(plan))} por año · 2 meses de regalo" else "Precio final · sin permanencia", Estilo.footnote, C.texto3)
             }
         }
         Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {

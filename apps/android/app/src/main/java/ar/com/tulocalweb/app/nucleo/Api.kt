@@ -34,11 +34,15 @@ data class ErrorApi(
     val restantes: Int? = null,
     /** Segundos para volver a probar (429). */
     val reintentarEn: Int? = null,
+    /** Tope de plan (402 tope_plan): el plan que lo habilita. */
+    val plan: String? = null,
 ) : Exception(detalle) {
     val sinConexion: Boolean get() = codigo == "sin_conexion"
     val sinSesion: Boolean get() = estado == 401 && codigo == "sin_sesion"
     /** Cambiar adónde llega la plata pide volver a verificarse (hoja Reverificar). */
     val pideVerificarse: Boolean get() = estado == 403 && codigo == "reverificar"
+    /** Lo pedido no entra en el plan (productos, personas, fotos o una función de otro plan). */
+    val esTope: Boolean get() = estado == 402 && codigo == "tope_plan"
 
     companion object {
         val sinRed = ErrorApi(0, "sin_conexion", "Sin conexión", "No hay internet. Revisá la conexión y probá de nuevo.")
@@ -62,9 +66,12 @@ private suspend fun Call.esperar(): Response = suspendCancellableCoroutine { con
 class Api(val base: String, @Volatile var token: String? = null, val http: OkHttpClient = cliente()) {
     /** Se llama cuando la API dice que la sesión ya no vale (401 sin_sesion): la app vuelve al ingreso. */
     var alPerderSesion: (suspend () -> Unit)? = null
+    /** Se llama con un tope de plan (402 tope_plan), en cualquier pantalla: la app lo avisa con «Ver mi plan». */
+    var alTope: (suspend (ErrorApi) -> Unit)? = null
 
     @Serializable
-    private data class Problema(val status: Int? = null, val code: String? = null, val title: String? = null, val detail: String? = null, val restantes: Int? = null)
+    private data class Problema(val status: Int? = null, val code: String? = null, val title: String? = null, val detail: String? = null, val restantes: Int? = null,
+                                val plan: String? = null)
 
     suspend fun pedir(metodo: String, ruta: String, query: List<Pair<String, String>> = emptyList(), cuerpo: ByteArray? = null,
                       encabezados: Map<String, String> = emptyMap()): String {
@@ -86,8 +93,9 @@ class Api(val base: String, @Volatile var token: String? = null, val http: OkHtt
         }
         if (codigo in 200..299) return texto
         val p = runCatching { json.decodeFromString<Problema>(texto) }.getOrElse { Problema() }
-        val e = ErrorApi(codigo, p.code ?: "interno", p.title ?: "Algo salió mal", p.detail ?: "Probá de nuevo en un rato.", p.restantes, reintentar?.toIntOrNull())
+        val e = ErrorApi(codigo, p.code ?: "interno", p.title ?: "Algo salió mal", p.detail ?: "Probá de nuevo en un rato.", p.restantes, reintentar?.toIntOrNull(), p.plan)
         if (e.sinSesion && token != null) alPerderSesion?.invoke()
+        if (e.esTope) alTope?.invoke(e)
         throw e
     }
 
