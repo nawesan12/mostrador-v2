@@ -113,8 +113,9 @@ func TestTopes(t *testing.T) {
 		{ExigirPersonas(g, 2), "personas", "emprende", "1 persona: vos"},
 		{ExigirPersonas(De("emprende"), 3), "personas", "pro", "hasta 5"},
 		{ExigirFotos(g, 4), "fotos", "emprende", "3 fotos por producto"},
-		{ExigirFuncion(g, Dominio), "dominio", "emprende", "El dominio propio está desde el plan Emprende"},
+		{ExigirFuncion(g, Dominio), "dominio", "emprende", "Dominio propio: desde el plan Emprende"},
 		{ExigirFuncion(De("emprende"), MercadoLibre), "mercadolibre", "pro", "desde el plan Crece"},
+		{ExigirFuncion(g, Cupones), "cupones", "emprende", "Cupones, combos y carritos abandonados: desde el plan Emprende. Tu plan es Gratis."},
 		{ExigirFuncion(De("pro"), Mayorista), "mayorista", "negocio", "desde el plan Negocio"},
 	}
 	for _, c := range casos {
@@ -127,6 +128,16 @@ func TestTopes(t *testing.T) {
 		if !errors.As(c.err, &tope) {
 			t.Errorf("no es un *Tope: %v", c.err)
 		}
+	}
+	// Cada función tiene nombre y su texto no conjuga un verbo (concuerda con cualquier sujeto).
+	for _, f := range Minimo(Mayorista).Funciones {
+		d := problema.De(ExigirFuncion(g, f))
+		if nombreFuncion[f] == "" || strings.Contains(d.Detalle, " está ") || d.Titulo != "Es del plan "+Minimo(f).Nombre {
+			t.Errorf("%s: %+v", f, d)
+		}
+	}
+	if d := problema.De(ExigirProductos(g, 21)); d.Titulo != "Llegaste al tope de tu plan" {
+		t.Errorf("título de un tope: %q", d.Titulo)
 	}
 	for _, err := range []error{ExigirProductos(g, 20), ExigirPersonas(g, 1), ExigirFotos(g, 3), ExigirProductos(De("negocio"), 100_000),
 		ExigirFuncion(De("negocio"), Mayorista)} {

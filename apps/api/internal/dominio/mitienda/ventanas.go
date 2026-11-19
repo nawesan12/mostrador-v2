@@ -297,6 +297,28 @@ func (v Ventana) Completa() bool {
 	return true
 }
 
+// EsDeCupon: la ventana entrega o muestra un cupón (contenido cupón, o un premio cuponFijo o
+// cuponUnico en la captación o en alguna porción de la ruleta). Los cupones son desde Emprende.
+func (v Ventana) EsDeCupon() bool {
+	if v.Contenido == "cupon" {
+		return true
+	}
+	esCupon := func(x any) bool {
+		m, _ := x.(map[string]any)
+		t, _ := m["tipo"].(string)
+		return t == "cuponFijo" || t == "cuponUnico"
+	}
+	if esCupon(v.Datos["premio"]) {
+		return true
+	}
+	for _, p := range v.Porciones() {
+		if esCupon(p["premio"]) {
+			return true
+		}
+	}
+	return false
+}
+
 // Porciones de una ruleta (ya validada), para sortear.
 func (v Ventana) Porciones() []map[string]any {
 	datos, _ := normalizar(v.Datos)

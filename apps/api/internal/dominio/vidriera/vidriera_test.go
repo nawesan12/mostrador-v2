@@ -492,7 +492,7 @@ func TestSlugDeDominio(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if _, err := vidriera.SlugDeDominio(ctx, b.App, "lunamates.com.ar"); !errors.Is(err, vidriera.ErrNoExiste) {
+	if _, _, err := vidriera.SlugDeDominio(ctx, b.App, "lunamates.com.ar"); !errors.Is(err, vidriera.ErrNoExiste) {
 		t.Fatalf("sin verificar: %v", err)
 	}
 	if err := b.App.EnTienda(ctx, luna, func(tx pgx.Tx) error {
@@ -502,8 +502,8 @@ func TestSlugDeDominio(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, d := range []string{"lunamates.com.ar", "www.lunamates.com.ar", "LunaMates.com.ar"} {
-		if s, err := vidriera.SlugDeDominio(ctx, b.App, d); err != nil || s != "luna" {
-			t.Fatalf("%s: %q %v", d, s, err)
+		if s, propio, err := vidriera.SlugDeDominio(ctx, b.App, d); err != nil || s != "luna" || !propio {
+			t.Fatalf("%s: %q %v %v", d, s, propio, err)
 		}
 	}
 	// Elegido como principal, la tienda pública lo trae (para redirigir y para el canonical).
@@ -517,8 +517,37 @@ func TestSlugDeDominio(t *testing.T) {
 		t.Fatalf("principal: %v %v", ti.Dominio, err)
 	}
 	for _, d := range []string{"pendiente.com.ar", "otro.com.ar", "", "../x"} {
-		if _, err := vidriera.SlugDeDominio(ctx, b.App, d); !errors.Is(err, vidriera.ErrNoExiste) {
+		if _, _, err := vidriera.SlugDeDominio(ctx, b.App, d); !errors.Is(err, vidriera.ErrNoExiste) {
 			t.Fatalf("%q: %v", d, err)
 		}
+	}
+
+	// Se conectó en la prueba (rige Crece) y la prueba terminó en Gratis: el dominio sigue resolviendo
+	// la tienda (para el 301 a su dirección de Tu Local Web, sin romper links) pero ya no como propio,
+	// ni en el canonical ni en el sitemap. Al subir de plan vuelve solo.
+	admin, err := pgx.Connect(ctx, b.AdminURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer admin.Close(ctx)
+	plan := func(p string) {
+		t.Helper()
+		if _, err := admin.Exec(ctx, `UPDATE tiendas SET plan = $2, creada_en = now() - interval '30 days' WHERE id = $1`, luna, p); err != nil {
+			t.Fatal(err)
+		}
+	}
+	plan("gratis")
+	if s, propio, err := vidriera.SlugDeDominio(ctx, b.App, "lunamates.com.ar"); err != nil || s != "luna" || propio {
+		t.Fatalf("en Gratis: %q %v %v", s, propio, err)
+	}
+	if ti, _ := vidriera.Publica(ctx, b.App, "luna"); ti.Dominio != nil {
+		t.Fatalf("canonical en Gratis: %v", *ti.Dominio)
+	}
+	if es, _ := vidriera.Sitemap(ctx, b.App); len(es) == 0 || es[0].Dominio != nil {
+		t.Fatalf("sitemap en Gratis: %+v", es)
+	}
+	plan("emprende")
+	if _, propio, err := vidriera.SlugDeDominio(ctx, b.App, "lunamates.com.ar"); err != nil || !propio {
+		t.Fatalf("de vuelta en Emprende: %v %v", propio, err)
 	}
 }

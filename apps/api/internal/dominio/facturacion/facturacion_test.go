@@ -215,6 +215,31 @@ func TestFacturacionConARCA(t *testing.T) {
 	if r, _ := listas.Comprobantes(ctx, b.App, sol, ahora); len(r) != 0 {
 		t.Fatalf("otra tienda ve %d comprobantes", len(r))
 	}
+
+	// Baja a Gratis (la prueba ya terminó): lo pendiente de antes pasa a «no facturado» en la próxima
+	// vuelta (no queda trabado ni sale de golpe al volver a subir) y lo nuevo nace así.
+	p2 := vender("Antes de bajar", 4000)
+	if f := comprobante(t, b, luna, "pedido_numero = $1", p2); f.estado != "pendiente" {
+		t.Fatalf("antes de bajar: %+v", f)
+	}
+	admin, err := pgx.Connect(ctx, b.AdminURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer admin.Close(ctx)
+	if _, err := admin.Exec(ctx, `UPDATE tiendas SET plan = 'gratis', creada_en = now() - interval '30 days' WHERE id = $1`, luna); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Drenar(ctx, ahora); err != nil {
+		t.Fatal(err)
+	}
+	if f := comprobante(t, b, luna, "pedido_numero = $1", p2); f.estado != "no_facturado" || !strings.Contains(f.motivo, "Tu plan no incluye") {
+		t.Fatalf("pendiente después de bajar: %+v", f)
+	}
+	p3 := vender("Después de bajar", 4000)
+	if f := comprobante(t, b, luna, "pedido_numero = $1", p3); f.estado != "no_facturado" || !strings.Contains(f.motivo, "Tu plan no incluye") {
+		t.Fatalf("venta en Gratis: %+v", f)
+	}
 }
 
 // Responsable inscripta: la venta online con CUIT sale como factura A a ese CUIT; sin CUIT, B a

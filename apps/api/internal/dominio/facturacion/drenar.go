@@ -97,8 +97,9 @@ func (s *Servicio) ProcesarTienda(ctx context.Context, tienda string, ahora time
 	var pendientes []pendiente
 	sinPlan := false
 	err = s.Pool.EnTienda(ctx, tienda, func(t pgx.Tx) error {
-		// La factura con ARCA es de los planes que la incluyen: después de bajar, lo pendiente espera
-		// (no se pierde) hasta volver a un plan con ARCA.
+		// La factura con ARCA es de los planes que la incluyen: después de bajar, lo pendiente pasa a
+		// «no facturado» (a la vista, se emite a mano después de subir), como sin certificado. Que
+		// esperara la trababa en la cola y salía todo de golpe y fuera de fecha al volver a subir.
 		if err := planes.Exigir(ctx, t, tienda, planes.ARCA); err != nil {
 			if problema.De(err) != nil {
 				sinPlan = true
@@ -136,7 +137,7 @@ func (s *Servicio) ProcesarTienda(ctx context.Context, tienda string, ahora time
 		return filas.Err()
 	})
 	if err == nil && sinPlan {
-		return nil
+		return s.marcarTodos(ctx, tienda, "Tu plan no incluye la factura con ARCA: se factura a mano.")
 	}
 	if errors.Is(err, ErrSinARCA) || (err == nil && cert == nil) {
 		return s.marcarTodos(ctx, tienda, "La tienda todavía no conectó ARCA.")

@@ -322,7 +322,12 @@ func rutasTiempoReal(mux *http.ServeMux, d Dependencias, ip func(*http.Request) 
 			return t, p, err
 		},
 		SlugDeDominio: func(ctx context.Context, dominio string) (string, error) {
-			return vidriera.SlugDeDominio(ctx, d.App, dominio)
+			// Sólo un dominio propio vigente (sin el plan, la tienda vive en su subdominio).
+			slug, propio, err := vidriera.SlugDeDominio(ctx, d.App, dominio)
+			if err == nil && !propio {
+				return "", vidriera.ErrNoExiste
+			}
+			return slug, err
 		},
 	})
 }

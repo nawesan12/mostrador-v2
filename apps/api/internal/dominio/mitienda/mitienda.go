@@ -15,6 +15,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/tiendas"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/planes"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
@@ -280,9 +281,26 @@ func limpiarBloques(l []Bloque) {
 	}
 }
 
-// Publicar copia el borrador a lo que ve la gente.
+// Publicar copia el borrador a lo que ve la gente. Una ventana activa que da cupones necesita un plan
+// con cupones (desde Emprende): si no, 402 tope_plan (el borrador queda guardado).
 func Publicar(ctx context.Context, pool tx, tiendaID string) error {
 	return pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		var borrador struct {
+			Ventanas []Ventana `json:"ventanas"`
+		}
+		var crudo []byte
+		if err := t.QueryRow(ctx, `SELECT diseno_borrador FROM tiendas WHERE id = $1`, tiendaID).Scan(&crudo); err != nil {
+			return err
+		}
+		_ = json.Unmarshal(crudo, &borrador)
+		for _, v := range borrador.Ventanas {
+			if v.Activa && v.EsDeCupon() {
+				if err := planes.Exigir(ctx, t, tiendaID, planes.Cupones); err != nil {
+					return err
+				}
+				break
+			}
+		}
 		// La plantilla del borrador pasa a la tienda y sale de los dos diseños.
 		_, err := t.Exec(ctx, `UPDATE tiendas SET
 				plantilla = coalesce(nullif(diseno_borrador->>'plantilla', ''), plantilla),
@@ -332,6 +350,10 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, sitio
 	}))
 	mux.HandleFunc("POST /v1/panel/mi-tienda/publicar", con(func(w http.ResponseWriter, r *http.Request, id string) {
 		if err := Publicar(r.Context(), pool, id); err != nil {
+			if p := problema.De(err); p != nil {
+				problema.Escribir(w, p)
+				return
+			}
 			problema.Escribir(w, problema.Interno())
 			return
 		}

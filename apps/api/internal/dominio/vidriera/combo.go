@@ -2,6 +2,7 @@ package vidriera
 
 import (
 	"math"
+	"slices"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/mitienda"
 )
@@ -97,6 +98,8 @@ func DescuentoCombos(combos []Combo, lineas []LineaCombo) int64 {
 // sinDescuentoEnCombos: con un plan sin cupones ni combos, los bloques «combo» se ven como una
 // selección de productos, sin descuento (el diseño guardado no cambia).
 func sinDescuentoEnCombos(d *mitienda.Diseno) {
+	// Las ventanas que dan o muestran cupones tampoco salen: el checkout los rechazaría.
+	d.Ventanas = slices.DeleteFunc(slices.Clone(d.Ventanas), func(v mitienda.Ventana) bool { return v.EsDeCupon() })
 	limpiar := func(bs []mitienda.Bloque) {
 		for i := range bs {
 			if bs[i].Tipo != "combo" || bs[i].Datos == nil {

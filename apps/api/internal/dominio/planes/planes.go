@@ -48,18 +48,22 @@ const (
 	Mayorista Funcion = "mayorista"
 )
 
-// Nombre de cada función como la lee una persona («X está en el plan Y»).
+// Nombre de cada función como la lee una persona, sin artículo ni verbo para que concuerde siempre
+// («Cupones, combos y carritos abandonados: desde el plan Emprende»).
 var nombreFuncion = map[Funcion]string{
-	Dominio:      "El dominio propio",
-	ARCA:         "La factura electrónica con ARCA",
-	Correo:       "Correo Argentino",
-	Cupones:      "Los cupones, combos y carritos abandonados",
-	Roles:        "Los roles y permisos del equipo",
-	Local:        "La venta en el local y el cobro con QR",
+	Dominio:      "Dominio propio",
+	ARCA:         "Factura electrónica con ARCA",
+	Correo:       "Envíos con Correo Argentino",
+	Cupones:      "Cupones, combos y carritos abandonados",
+	Roles:        "Roles y permisos del equipo",
+	Local:        "Venta en el local y cobro con QR",
 	MercadoLibre: "Mercado Libre",
-	Newsletter:   "El newsletter y las estadísticas",
-	Mayorista:    "La venta mayorista y las listas de precio",
+	Newsletter:   "Newsletter y estadísticas",
+	Mayorista:    "Venta mayorista y listas de precio",
 }
+
+// NombreFuncion: cómo se lee la función («Mercado Libre», «Dominio propio»).
+func NombreFuncion(f Funcion) string { return nombreFuncion[f] }
 
 // SinTope en un tope numérico.
 const SinTope = 0
@@ -159,6 +163,8 @@ type Tope struct {
 	Detalle    string
 	// SoloLectura: no es algo nuevo sino algo que ya quedó fuera del plan (después de bajar).
 	SoloLectura bool
+	// EsFuncion: lo que falta es una función del plan, no lugar (no se «llega al tope»).
+	EsFuncion bool
 }
 
 func (t *Tope) Error() string { return "planes: tope de " + t.Que + " en " + t.Plan.ID }
@@ -166,8 +172,11 @@ func (t *Tope) Error() string { return "planes: tope de " + t.Que + " en " + t.P
 // Problema: 402 con el código tope_plan, el plan que lo habilita y qué se topó.
 func (t *Tope) Problema() *problema.Problema {
 	titulo := "Llegaste al tope de tu plan"
-	if t.SoloLectura {
+	switch {
+	case t.SoloLectura:
 		titulo = "Quedó fuera de tu plan"
+	case t.EsFuncion:
+		titulo = "Es del plan " + t.Sube.Nombre
 	}
 	return &problema.Problema{Estado: http.StatusPaymentRequired, Codigo: "tope_plan", Titulo: titulo,
 		Detalle: t.Detalle, Plan: t.Sube.ID, Funcion: t.Que}
@@ -195,8 +204,8 @@ func ExigirFuncion(p Plan, f Funcion) error {
 		return nil
 	}
 	m := Minimo(f)
-	return &Tope{Que: string(f), Plan: p, Sube: m,
-		Detalle: fmt.Sprintf("%s está desde el plan %s. Tu plan es %s.", nombreFuncion[f], m.Nombre, p.Nombre)}
+	return &Tope{Que: string(f), Plan: p, Sube: m, EsFuncion: true,
+		Detalle: fmt.Sprintf("%s: desde el plan %s. Tu plan es %s.", nombreFuncion[f], m.Nombre, p.Nombre)}
 }
 
 // ExigirProductos: nil si n productos entran en el plan.
@@ -239,7 +248,7 @@ func ExigirFotos(p Plan, n int) error {
 func productoFuera(p Plan) error {
 	m := minimoQue(func(x Plan) int { return x.Productos }, p.Productos+1)
 	return &Tope{Que: "productos", Plan: p, Sube: m, SoloLectura: true,
-		Detalle: fmt.Sprintf("Este producto quedó fuera de tu plan %s (hasta %s productos): no se ve en la tienda y no se puede editar. Pasá a %s o borrá otro para liberar lugar.",
+		Detalle: fmt.Sprintf("Quedó fuera de %s (hasta %s): no se ve ni se edita. Pasá a %s o borrá otro.",
 			p.Nombre, miles(p.Productos), m.Nombre)}
 }
 
@@ -247,6 +256,6 @@ func productoFuera(p Plan) error {
 func personaFuera(p Plan) error {
 	m := minimoQue(func(x Plan) int { return x.Personas }, p.Personas+1)
 	return &Tope{Que: "personas", Plan: p, Sube: m, SoloLectura: true,
-		Detalle: fmt.Sprintf("Tu lugar en el equipo quedó en sólo lectura: el plan %s es para %d. La dueña puede pasar a %s o liberar un lugar.",
+		Detalle: fmt.Sprintf("Tu lugar quedó en sólo lectura: %s es para %d. La dueña puede pasar a %s.",
 			p.Nombre, p.Personas, m.Nombre)}
 }

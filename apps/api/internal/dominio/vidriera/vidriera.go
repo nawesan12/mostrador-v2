@@ -39,6 +39,10 @@ import (
 var (
 	ErrNoExiste = errors.New("vidriera: no existe")
 	ErrInvalido = errors.New("vidriera: pedido inválido")
+	// ErrSinEnvio: la forma de entrega elegida ya no se ofrece (la tienda bajó de plan o desconectó).
+	ErrSinEnvio = errors.New("vidriera: forma de entrega no disponible")
+	// ErrSinNewsletter: el plan de la tienda no incluye newsletter.
+	ErrSinNewsletter = errors.New("vidriera: sin newsletter")
 	ErrSinStock = errors.New("vidriera: sin stock")
 	// ErrProximamente: un producto del carrito todavía no salió a la venta (§52).
 	ErrProximamente = errors.New("vidriera: todavía no salió")
@@ -157,6 +161,8 @@ type Tienda struct {
 	Mayorista *MinimoMayorista `json:"mayorista"`
 	// HechoCon: el plan Gratis lleva «Hecho con Tu Local Web» en el pie (dominio/planes).
 	HechoCon bool `json:"hechoCon"`
+	// Newsletter: la tienda ofrece suscribirse (el plan lo incluye, desde Crece).
+	Newsletter bool `json:"newsletter"`
 	// sinCupones: el plan no incluye cupones ni combos (el checkout no los aplica).
 	sinCupones bool
 }
@@ -319,7 +325,10 @@ func Publica(ctx context.Context, pool tx, slug string) (Tienda, error) {
 				AND certificado IS NOT NULL AND condicion = 'responsable_inscripto')`, id).Scan(&facturaA); err != nil {
 			return err
 		}
-		out.Cobros["facturaA"] = facturaA
+		// Sin ARCA en el plan no se pide CUIT: la factura no saldría.
+		out.Cobros["facturaA"] = facturaA && plan.Tiene(planes.ARCA)
+		// El newsletter es desde Crece: sin él, la tienda no ofrece suscribirse (lo ya guardado queda).
+		out.Newsletter = plan.Tiene(planes.Newsletter)
 		// El envío gratis sólo si la tienda envía (moto o Correo): con sólo retiro no hay envío que regalar.
 		if out.Envios.Moto || out.Envios.Correo {
 			activa, desde, err := cupones.EnvioGratis(ctx, t, id)
@@ -654,7 +663,8 @@ func ComprarConCorreo(ctx context.Context, pool tx, mp Pagador, correo Correo, s
 	n.Canal, n.Envio = "web", c.Envio
 	if esCorreo(c.Envio) {
 		if !t.Envios.Correo {
-			return Resultado{}, ErrInvalido
+			// La tienda dejó de ofrecerlo (bajó de plan o desconectó) con el checkout abierto.
+			return Resultado{}, ErrSinEnvio
 		}
 		gratis := t.Envios.GratisDesde != nil && subtotal >= *t.Envios.GratisDesde
 		if costoEnvio, entrega, err = envioCorreo(ctx, correo, id, c, unidades, gratis); err != nil {
@@ -764,7 +774,7 @@ func ComprarConCorreo(ctx context.Context, pool tx, mp Pagador, correo Correo, s
 	if c.Pago != "mercadopago" {
 		_ = pool.EnTienda(ctx, id, func(t pgx.Tx) error { return ventas.CarritoRecuperado(ctx, t, c.Email, numero, int64(total)) })
 	}
-	if c.Novedades {
+	if c.Novedades && t.Newsletter {
 		if err := newsletter.Suscribir(ctx, pool, id, c.Email, "checkout"); err != nil {
 			slog.Warn("vidriera: no se sumó al newsletter desde el checkout", "error", err)
 		}

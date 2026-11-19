@@ -6,7 +6,8 @@ import { COOKIE, dbSandbox, leer } from '#lib/server/sandbox/sandbox.ts';
 import { COOKIE_SESION, COOKIE_SESION_VIEJA } from '#lib/server/auth/sesion.ts';
 import { COOKIE_EQUIPO, COOKIE_MIRADA } from '#lib/server/staff/index.ts';
 import { direccionNueva, redireccionTienda } from '#lib/server/tienda/redireccion.ts';
-import { olvidarDominio, slugDeDominio } from '#lib/server/tienda/dominio.ts';
+import { olvidarDominio, tiendaDeDominio } from '#lib/server/tienda/dominio.ts';
+import { SITE } from '#lib/site.ts';
 import { contarVista } from '#lib/server/tienda/vistas.ts';
 import { esDominioPropio, GLOBALES_EN_DOMINIO } from '#lib/tienda/dominio.ts';
 
@@ -95,9 +96,17 @@ export const handle: Handle = async ({ event, resolve }) => {
 	// panel, ni la landing, ni otra tienda.
 	event.locals.dominio = null;
 	if (esDominioPropio(event.url.hostname)) {
-		const slug = await slugDeDominio(event.url.hostname).catch(() => undefined);
-		if (slug === undefined)
+		const delDominio = await tiendaDeDominio(event.url.hostname).catch(() => undefined);
+		if (delDominio === undefined)
 			return secure(new Response('Probá de nuevo en un momento.', { status: 503 }));
+		// El plan ya no incluye dominio propio (Gratis o fin de la prueba): 301 a la dirección de Tu
+		// Local Web con el mismo camino y consulta, así los links compartidos siguen andando.
+		if (delDominio && !delDominio.propio && !GLOBALES_EN_DOMINIO.test(event.url.pathname)) {
+			const destino = new URL(event.url.pathname + event.url.search, SITE);
+			destino.hostname = `${delDominio.slug}.${destino.hostname}`;
+			return secure(new Response(null, { status: 301, headers: { location: destino.href } }));
+		}
+		const slug = delDominio?.slug ?? null;
 		const suya =
 			slug &&
 			(GLOBALES_EN_DOMINIO.test(event.url.pathname) ||

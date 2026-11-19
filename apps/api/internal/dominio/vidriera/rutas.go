@@ -8,8 +8,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5"
+
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/devoluciones"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/newsletter"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/planes"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/ventas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/limite"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
@@ -33,6 +36,10 @@ func Rutas(mux *http.ServeMux, pool tx, mp Pagador, sitio string, dev *devolucio
 			problema.Escribir(w, problema.NoEncontrado("Esta tienda no existe o no está publicada."))
 		case errors.Is(err, ErrInvalido):
 			problema.Escribir(w, problema.Invalido("Revisá los datos del pedido."))
+		case errors.Is(err, ErrSinEnvio):
+			problema.Escribir(w, problema.Conflicto("sin_envio", "Esta forma de entrega ya no está disponible. Elegí otra."))
+		case errors.Is(err, ErrSinNewsletter):
+			problema.Escribir(w, problema.Conflicto("sin_newsletter", "Esta tienda no tiene newsletter por ahora."))
 		case errors.Is(err, ErrCorreo):
 			problema.Escribir(w, problema.Conflicto("sin_cotizacion", "No pudimos cotizar el envío con Correo Argentino. Probá de nuevo o elegí otra forma de entrega."))
 		case errors.Is(err, ErrSinStock):
@@ -49,12 +56,12 @@ func Rutas(mux *http.ServeMux, pool tx, mp Pagador, sitio string, dev *devolucio
 	}
 	// La tienda de un dominio propio: la web la pide al recibir mitienda.com.ar.
 	mux.HandleFunc("GET /v1/publico/dominios/{dominio}", func(w http.ResponseWriter, r *http.Request) {
-		slug, err := SlugDeDominio(r.Context(), pool, r.PathValue("dominio"))
+		slug, propio, err := SlugDeDominio(r.Context(), pool, r.PathValue("dominio"))
 		if err != nil {
 			error404(w, err)
 			return
 		}
-		escribir(w, http.StatusOK, map[string]string{"slug": slug})
+		escribir(w, http.StatusOK, map[string]any{"slug": slug, "propio": propio})
 	})
 	// Una dirección vieja de una tienda (la cambió): la web responde 301 a la vigente.
 	mux.HandleFunc("GET /v1/publico/slugs/{slug}", func(w http.ResponseWriter, r *http.Request) {
@@ -156,6 +163,16 @@ func Rutas(mux *http.ServeMux, pool tx, mp Pagador, sitio string, dev *devolucio
 			return
 		}
 		id, err := tiendaDe(r.Context(), pool, r.PathValue("slug"))
+		if err == nil {
+			// El newsletter es del plan (desde Crece): sin él no se suma a nadie (lo guardado queda).
+			err = pool.EnTienda(r.Context(), id, func(t pgx.Tx) error {
+				e := planes.Exigir(r.Context(), t, id, planes.Newsletter)
+				if problema.De(e) != nil {
+					return ErrSinNewsletter
+				}
+				return e
+			})
+		}
 		if err != nil {
 			error404(w, err)
 			return

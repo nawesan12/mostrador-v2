@@ -200,12 +200,15 @@ func lineasDe(c Compra, porID map[string]ProductoPublico, precios []int64) []Lin
 func EvaluarCupon(ctx context.Context, pool tx, tienda, codigo, email string, lineas []LineaCupon, ahora time.Time) (ResultadoCupon, error) {
 	var c CuponTienda
 	var h Historial
+	sinPlan := false
 	email = strings.ToLower(strings.TrimSpace(email))
 	err := pool.EnTienda(ctx, tienda, func(t pgx.Tx) error {
-		// Con un plan sin cupones (después de bajar), los que había no se aplican.
+		// Con un plan sin cupones (después de bajar), los que había no se aplican. No es culpa de quien
+		// compra: se le dice que el cupón ya no está vigente, no que lo escribió mal.
 		if err := planes.Exigir(ctx, t, tienda, planes.Cupones); err != nil {
 			if problema.De(err) != nil {
-				return pgx.ErrNoRows
+				sinPlan = true
+				return nil
 			}
 			return err
 		}
@@ -234,6 +237,9 @@ func EvaluarCupon(ctx context.Context, pool tx, tienda, codigo, email string, li
 	}
 	if err != nil {
 		return ResultadoCupon{}, err
+	}
+	if sinPlan {
+		return no("Este cupón ya no está vigente en la tienda."), nil
 	}
 	return AplicarCupon(c, lineas, h, ahora, "web"), nil
 }

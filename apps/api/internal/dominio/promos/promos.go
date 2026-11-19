@@ -23,7 +23,9 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cupones"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/mitienda"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/newsletter"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/planes"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/outbox"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
 type tx interface {
@@ -345,6 +347,16 @@ func Participar(ctx context.Context, pool tx, slug, contenido string, p Pedido, 
 		}
 		if !errors.Is(err, pgx.ErrNoRows) {
 			return err
+		}
+		// Los cupones son desde Emprende: sin el plan, la ventana no entrega cupones (la tienda ya no
+		// la muestra; esto frena a quien la tenía abierta o llama directo).
+		if v.EsDeCupon() {
+			if err := planes.Exigir(ctx, x, t.id, planes.Cupones); err != nil {
+				if problema.De(err) != nil {
+					return ErrTerminada
+				}
+				return err
+			}
 		}
 		conf, err := elegir()
 		if err != nil {
