@@ -1189,10 +1189,10 @@
 	background: var(--t-texto);
 	color: var(--t-fondo);
 }
-.tv-valor:disabled {
-	opacity: 0.45;
+/* Sin stock: tachado pero se puede elegir (así aparece «Avisame cuando vuelva»). */
+.tv-valor[aria-disabled='true'] {
+	opacity: 0.6;
 	text-decoration: line-through;
-	cursor: default;
 }
 .tv-valor-punto {
 	width: 14px;
@@ -1220,9 +1220,15 @@
 .tv-muestra[aria-pressed='true'] {
 	border: 2px solid var(--t-texto);
 }
-.tv-muestra:disabled {
-	opacity: 0.35;
-	cursor: default;
+.tv-muestra[aria-disabled='true'] {
+	opacity: 0.45;
+	background-image: linear-gradient(
+		to top right,
+		transparent calc(50% - 1px),
+		var(--t-texto) calc(50% - 1px),
+		var(--t-texto) calc(50% + 1px),
+		transparent calc(50% + 1px)
+	);
 }
 .tv-ficha-quedan {
 	margin: -8px 0 0;

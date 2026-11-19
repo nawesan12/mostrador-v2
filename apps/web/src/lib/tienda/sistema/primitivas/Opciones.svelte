@@ -67,7 +67,7 @@
 						aria-label="{o.nombre} {x.valor}{x.disponible ? '' : ', sin stock'}"
 						title={x.valor}
 						aria-pressed={x.elegido}
-						disabled={!x.disponible && !x.elegido}
+						aria-disabled={!x.disponible && !x.elegido}
 						onclick={() => sel.elegir(o.nombre, x.valor)}
 						>{#if x.color}<span style:background={x.color}></span>{:else}<Foto
 								src={x.foto}
@@ -82,7 +82,7 @@
 						type="button"
 						class="tv-valor"
 						aria-pressed={x.elegido}
-						disabled={!x.disponible && !x.elegido}
+						aria-disabled={!x.disponible && !x.elegido}
 						onclick={() => sel.elegir(o.nombre, x.valor)}
 						>{#if color && x.color}<span class="tv-valor-punto" style:background={x.color}
 							></span>{/if}{x.valor}{#if !x.disponible}<span class="tv-oculto">, sin stock</span

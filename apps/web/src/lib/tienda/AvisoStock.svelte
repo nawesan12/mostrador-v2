@@ -24,8 +24,14 @@
 	} = $props();
 
 	const uid = $props.id();
+	// Con todas las variantes agotadas, el aviso va a nivel producto (sin elegir talle ni color).
+	const todasAgotadas = $derived(
+		sel.conOpciones && producto.variantes.length > 0 && producto.variantes.every((v) => v.stock <= 0)
+	);
 	const toca = $derived(
-		sel.stock === 0 && !sel.proximo && (!sel.conOpciones || !!sel.variante) && !tienda.vitrina
+		!sel.proximo &&
+			!tienda.vitrina &&
+			((sel.stock === 0 && (!sel.conOpciones || !!sel.variante)) || todasAgotadas)
 	);
 	let email = $state('');
 	let whatsapp = $state('');
@@ -34,7 +40,7 @@
 	let error = $state<string | null>(null);
 	/** Lo ya anotado, por producto o variante: cambiar de talle vuelve a mostrar el formulario. */
 	let anotados = $state<Record<string, string>>({});
-	const clave = $derived(`${producto.id}:${sel.variante?.id ?? ''}`);
+	const clave = $derived(`${producto.id}:${todasAgotadas ? '' : (sel.variante?.id ?? '')}`);
 
 	async function avisar(e: SubmitEvent) {
 		e.preventDefault();
@@ -50,7 +56,7 @@
 				headers: { 'content-type': 'application/json' },
 				body: JSON.stringify({
 					productoId: producto.id,
-					varianteId: sel.variante?.id ?? null,
+					varianteId: todasAgotadas ? null : (sel.variante?.id ?? null),
 					email: email.trim(),
 					whatsapp: whatsapp.trim(),
 					consentimiento: true
