@@ -3962,10 +3962,10 @@ export interface components {
             /** @enum {string} */
             fuente: "ia" | "cache" | "tope";
             /**
-             * @description Por qué no respondió la IA (sólo con fuente tope)
+             * @description Por qué no respondió la IA (sólo con fuente tope; ocupado: ya hay preguntas respondiéndose)
              * @enum {string}
              */
-            tope?: "plan" | "dia" | "plataforma";
+            tope?: "plan" | "dia" | "plataforma" | "ocupado";
             /** @description Respuestas con IA del mes y las del plan (con los packs) */
             uso?: {
                 usadas: number;

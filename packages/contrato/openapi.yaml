@@ -4134,7 +4134,7 @@ components:
           type: array
           items: { $ref: '#/components/schemas/PropuestaTincho' }
         fuente: { type: string, enum: [ia, cache, tope] }
-        tope: { type: string, enum: [plan, dia, plataforma], description: 'Por qué no respondió la IA (sólo con fuente tope)' }
+        tope: { type: string, enum: [plan, dia, plataforma, ocupado], description: 'Por qué no respondió la IA (sólo con fuente tope; ocupado: ya hay preguntas respondiéndose)' }
         uso:
           type: object
           required: [usadas, tope]

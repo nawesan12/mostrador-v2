@@ -12,6 +12,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/roles"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/tiendas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/ia"
+	topes "github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/limite"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
@@ -77,6 +78,15 @@ func (s *Servicio) Rutas(mux *http.ServeMux, claveBFF string) {
 			if !ok || d.TiendaID == "" || d.IA != "" {
 				problema.Escribir(w, problema.SinSesion())
 				return
+			}
+			// Un tope por sesión (unos 20 por minuto): un script con una sesión no vacía el cupo de la tienda.
+			if d.SesionHash != "" {
+				if ok, err := topes.Permitido(r.Context(), s.Pool, "tincho:sesion:"+d.SesionHash, 20, time.Minute); err == nil && !ok {
+					w.Header().Set("Retry-After", "60")
+					problema.Escribir(w, &problema.Problema{Estado: http.StatusTooManyRequests, Codigo: "demasiados_intentos",
+						Titulo: "Esperá un momento", Detalle: "Le hiciste muchas preguntas seguidas a Tincho. Probá en un minuto."})
+					return
+				}
 			}
 			// Hasta 4 vueltas con el modelo: más que el WriteTimeout general de la API.
 			_ = http.NewResponseController(w).SetWriteDeadline(time.Now().Add(plazoEscritura))

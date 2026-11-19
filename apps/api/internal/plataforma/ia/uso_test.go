@@ -65,3 +65,34 @@ func TestRegistrarYTopes(t *testing.T) {
 		t.Fatalf("la otra tienda: %+v", c)
 	}
 }
+
+// El cupo se reserva antes de llamar al modelo: dos preguntas a la vez no se pasan del tope, hay un
+// máximo de preguntas en vuelo y liberar devuelve el lugar.
+func TestReservarCupo(t *testing.T) {
+	ctx := context.Background()
+	b := pruebadb.Nueva(t)
+	luna := pruebadb.CrearTienda(t, b.App, "luna")
+	ahora := time.Now()
+	topes := ia.Topes{Mes: 1, Dia: 25}
+	if c, _, err := ia.Reservar(ctx, b.App, luna, topes, ahora); err != nil || c != ia.SinCorte {
+		t.Fatalf("primera: %q %v", c, err)
+	}
+	// La primera todavía no terminó: con tope 1, la segunda ya no entra.
+	if c, _, _ := ia.Reservar(ctx, b.App, luna, topes, ahora); c != ia.CortePlan {
+		t.Fatalf("segunda en paralelo: %q", c)
+	}
+	_ = ia.Liberar(ctx, b.App, luna)
+	topes.Mes = 100
+	for i := 0; i < ia.EnVueloMax; i++ {
+		if c, _, _ := ia.Reservar(ctx, b.App, luna, topes, ahora); c != ia.SinCorte {
+			t.Fatalf("en vuelo %d: %q", i, c)
+		}
+	}
+	if c, _, _ := ia.Reservar(ctx, b.App, luna, topes, ahora); c != ia.CorteOcupado {
+		t.Fatalf("más de %d a la vez: %q", ia.EnVueloMax, c)
+	}
+	_ = ia.Liberar(ctx, b.App, luna)
+	if c, _, _ := ia.Reservar(ctx, b.App, luna, topes, ahora); c != ia.SinCorte {
+		t.Fatalf("después de liberar: %q", c)
+	}
+}

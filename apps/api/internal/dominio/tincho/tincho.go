@@ -112,6 +112,8 @@ func MensajeDeTope(c ia.Corte, tope int) string {
 		return fmt.Sprintf("Ya usaste las %s respuestas con IA de tu plan este mes. Lo de todos los días (ventas, pedidos, stock, clientes) te lo sigo respondiendo; para preguntas abiertas, sumá un pack o cambiá de plan en Plan y facturación.", miles(tope))
 	case ia.CorteDia:
 		return "Por hoy ya usaste las respuestas con IA del día. Mañana sigo; mientras, te respondo lo de todos los días: ventas, pedidos, stock y clientes."
+	case ia.CorteOcupado:
+		return "Estoy terminando de responderte otra pregunta. Probá de nuevo en un momento."
 	case ia.CortePlataforma:
 		return "Las respuestas con IA están en pausa por este mes. Lo de todos los días (ventas, pedidos, stock, clientes) te lo sigo respondiendo con tus datos."
 	}
@@ -165,17 +167,28 @@ func TopesEnTx(ctx context.Context, tx pgx.Tx, tiendaID string, ahora time.Time)
 	if err := tx.QueryRow(ctx, `SELECT coalesce((packs->>$2)::int, 0) FROM tiendas WHERE id = $1`, tiendaID, ia.Mes(ahora)).Scan(&packs); err != nil {
 		return ia.Topes{}, err
 	}
-	mes := TopeDelMes(e.Plan, ahora.Before(e.FinPrueba), packs)
-	return ia.Topes{Mes: mes, Dia: TopeDelDia(mes)}, nil
+	prueba := ahora.Before(e.FinPrueba)
+	mes := TopeDelMes(e.Plan, prueba, packs)
+	dia := TopeDelDia(mes)
+	// En la prueba sin pagar se usa Pro, pero con un tope diario más bajo: la experiencia es la de Pro
+	// y unas decenas de cuentas de prueba no se comen el presupuesto de la plataforma.
+	if e.Plan == "gratis" && prueba {
+		dia = min(dia, TopeDiaPrueba)
+	}
+	return ia.Topes{Mes: mes, Dia: dia}, nil
 }
 
-// revisar aplica los topes. Devuelve la respuesta de tope (si corta) y el uso del mes.
+// TopeDiaPrueba: respuestas con IA por día durante la prueba gratis.
+const TopeDiaPrueba = 30
+
+// revisar aplica los topes y reserva el lugar (hay que liberarlo con s.liberar). Devuelve la
+// respuesta de tope (si corta) y el uso del mes.
 func (s *Servicio) revisar(ctx context.Context, tiendaID string) (*Respuesta, UsoPlan, error) {
 	topes, err := s.Topes(ctx, tiendaID)
 	if err != nil {
 		return nil, UsoPlan{}, err
 	}
-	corte, c, err := ia.Revisar(ctx, s.Pool, tiendaID, topes, s.ahora())
+	corte, c, err := ia.Reservar(ctx, s.Pool, tiendaID, topes, s.ahora())
 	if err != nil {
 		return nil, UsoPlan{}, err
 	}
@@ -185,6 +198,13 @@ func (s *Servicio) revisar(ctx context.Context, tiendaID string) (*Respuesta, Us
 			Tope: string(corte), Uso: &uso}, uso, nil
 	}
 	return nil, uso, nil
+}
+
+// liberar devuelve el lugar que reservó revisar.
+func (s *Servicio) liberar(ctx context.Context, tiendaID string) {
+	if err := ia.Liberar(context.WithoutCancel(ctx), s.Pool, tiendaID); err != nil {
+		s.log().Error("tincho: liberar el cupo en vuelo", "error", err)
+	}
 }
 
 func rutaDe(canal string) string {
@@ -205,6 +225,7 @@ func (s *Servicio) Preguntar(ctx context.Context, q Consulta) (Respuesta, error)
 	if corte != nil {
 		return *corte, nil
 	}
+	defer s.liberar(ctx, q.Tienda)
 	montos := roles.Puede(q.Rol, roles.Finanzas)
 	hist, _ := json.Marshal(ia.Recortar(q.Historial))
 	clave := ia.Clave(q.Tienda, q.Rol, q.Canal, string(hist), ia.Normalizar(q.Pregunta))
@@ -272,6 +293,7 @@ func (s *Servicio) Mejorar(ctx context.Context, tiendaID, tienda, rubro, nombre,
 	if corte != nil {
 		return *corte, nil
 	}
+	defer s.liberar(ctx, tiendaID)
 	if s.Modelo == nil {
 		return Respuesta{}, ErrNoDisponible
 	}

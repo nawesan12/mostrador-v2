@@ -117,8 +117,71 @@ func Decidir(c Consumo, gastado int64, t Topes) Corte {
 	return SinCorte
 }
 
-// Revisar lee el consumo de la tienda y el gasto del mes y dice si se puede llamar al modelo.
-// Dos preguntas a la vez pueden pasarse por una: no vale una transacción abierta durante la llamada.
+// Corte por preguntas en vuelo: la tienda ya tiene las que puede responder a la vez.
+const CorteOcupado Corte = "ocupado"
+
+// EnVueloMax: preguntas a la vez por tienda.
+const EnVueloMax = 2
+
+// ParteDelDia: lo más que una tienda puede gastar en un día, como parte del presupuesto del mes de
+// la plataforma (así una sola, o un puñado de cuentas de prueba, no apagan la IA de todas).
+const ParteDelDia = 0.02
+
+// vidaReserva: una reserva más vieja (el proceso se cayó a la mitad) ya no cuenta.
+const vidaReserva = 2 * time.Minute
+
+// Reservar decide y, si se puede, reserva un lugar antes de llamar al modelo, con la fila de la tienda
+// bloqueada: dos preguntas a la vez ya no se pasan del cupo. Hay que llamar a Liberar al terminar.
+func Reservar(ctx context.Context, b Base, tiendaID string, t Topes, ahora time.Time) (Corte, Consumo, error) {
+	gastado, err := Gastado(ctx, b, ahora)
+	if err != nil {
+		return SinCorte, Consumo{}, err
+	}
+	var c Consumo
+	corte := SinCorte
+	err = b.EnTienda(ctx, tiendaID, func(tx pgx.Tx) error {
+		var enVuelo int
+		if err := tx.QueryRow(ctx, `INSERT INTO ia_en_vuelo (tienda_id) VALUES ($1)
+			ON CONFLICT (tienda_id) DO UPDATE SET cantidad = CASE WHEN ia_en_vuelo.desde < now() - $2::interval THEN 0 ELSE ia_en_vuelo.cantidad END
+			RETURNING cantidad`, tiendaID, vidaReserva.String()).Scan(&enVuelo); err != nil {
+			return err
+		}
+		var err error
+		if c, err = ConsumoEnTx(ctx, tx, tiendaID, ahora); err != nil {
+			return err
+		}
+		var hoy int64
+		if err := tx.QueryRow(ctx, `SELECT coalesce(sum(costo), 0) FROM ia_uso WHERE tienda_id = $1 AND dia = $2::date`,
+			tiendaID, Dia(ahora)).Scan(&hoy); err != nil {
+			return err
+		}
+		conVuelo := Consumo{Mes: c.Mes + enVuelo, Hoy: c.Hoy + enVuelo, SinIA: c.SinIA}
+		corte = Decidir(conVuelo, gastado, t)
+		switch {
+		case corte != SinCorte:
+		case enVuelo >= EnVueloMax:
+			corte = CorteOcupado
+		case t.Presupuesto > 0 && float64(hoy) >= float64(t.Presupuesto)*ParteDelDia:
+			corte = CorteDia
+		default:
+			_, err := tx.Exec(ctx, `UPDATE ia_en_vuelo SET cantidad = cantidad + 1, desde = now() WHERE tienda_id = $1`, tiendaID)
+			return err
+		}
+		return nil
+	})
+	return corte, c, err
+}
+
+// Liberar devuelve el lugar que reservó Reservar (respondió, falló o se cortó).
+func Liberar(ctx context.Context, b Base, tiendaID string) error {
+	return b.EnTienda(ctx, tiendaID, func(tx pgx.Tx) error {
+		_, err := tx.Exec(ctx, `UPDATE ia_en_vuelo SET cantidad = greatest(cantidad - 1, 0) WHERE tienda_id = $1`, tiendaID)
+		return err
+	})
+}
+
+// Revisar lee el consumo de la tienda y el gasto del mes y dice si se puede llamar al modelo, sin
+// reservar (para mostrar el cupo; para llamar al modelo, Reservar).
 func Revisar(ctx context.Context, b Base, tiendaID string, t Topes, ahora time.Time) (Corte, Consumo, error) {
 	var c Consumo
 	if err := b.EnTienda(ctx, tiendaID, func(tx pgx.Tx) error {
