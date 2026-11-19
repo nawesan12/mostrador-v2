@@ -3977,7 +3977,7 @@ export interface components {
             /** @description La clave para confirmarla una sola vez (Idempotency-Key de /panel/hornero/confirmar) */
             id: string;
             /** @enum {string} */
-            herramienta: "cambiar_estado_pedido" | "ajustar_producto" | "crear_cupon" | "crear_link_de_pago";
+            herramienta: "cambiar_estado_pedido" | "ajustar_producto" | "ajustar_precios" | "crear_cupon" | "crear_link_de_pago";
             argumentos: {
                 [key: string]: unknown;
             };

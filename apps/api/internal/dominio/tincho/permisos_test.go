@@ -7,7 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/listas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/roles"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db/pruebadb"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/ia"
 )
 
@@ -79,5 +81,32 @@ func TestSistemaFijo(t *testing.T) {
 		if strings.ContainsAny(s, "{}%") || strings.Contains(s, time.Now().Format("2006")) {
 			t.Fatalf("el system tiene algo variable: %q", s)
 		}
+	}
+}
+
+// «Subí 10 % las gaseosas»: una sola propuesta para todos los de la categoría, con el redondeo de Go.
+func TestPropuestaDeAumentoEnLote(t *testing.T) {
+	ctx := context.Background()
+	b := pruebadb.Nueva(t)
+	luna := pruebadb.CrearTienda(t, b.App, "luna")
+	gas, alm := "Gaseosas", "Almacén"
+	for _, p := range []listas.Editable{{Nombre: "Coca 2,25 L", Precio: 3500, Categoria: &gas},
+		{Nombre: "Sprite 2,25 L", Precio: 3300, Categoria: &gas}, {Nombre: "Yerba", Precio: 4000, Categoria: &alm}} {
+		if _, err := listas.Guardar(ctx, b.App, luna, "", p); err != nil {
+			t.Fatal(err)
+		}
+	}
+	h := &herramientas{s: &Servicio{Pool: b.App}, tienda: luna, rol: roles.Duenia, ahora: time.Now()}
+	if r, esError := h.ejecutar(ctx, "ajustar_precios", json.RawMessage(`{"categoria":"gaseosas","porcentaje":10}`)); esError {
+		t.Fatalf("aumento: %q", r)
+	}
+	p := h.propuestas[0]
+	if p.Herramienta != "ajustar_precios" || len(p.Argumentos["ids"].([]string)) != 2 ||
+		!strings.Contains(p.Titulo, "10 % el precio de 2 productos") || !strings.Contains(p.Detalle, "$ 3.500 → $ 3.850") {
+		t.Fatalf("propuesta: %+v", p)
+	}
+	h.rol = roles.Ventas
+	if _, esError := h.ejecutar(ctx, "ajustar_precios", json.RawMessage(`{"categoria":"gaseosas","porcentaje":10}`)); !esError {
+		t.Fatal("Ventas no cambia precios")
 	}
 }

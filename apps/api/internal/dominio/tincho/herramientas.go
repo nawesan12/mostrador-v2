@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -69,6 +71,12 @@ func Herramientas() []anthropic.ToolParam {
 				"stock":       map[string]any{"type": "integer", "minimum": 0},
 				"sumar_stock": map[string]any{"type": "integer"},
 			}, "id")},
+		{Name: "ajustar_precios", Description: anthropic.String("PROPONE subir o bajar en un porcentaje el precio de varios productos (con sus variantes), redondeado a $ 10: los ids de listar_productos o una categoría. Una sola propuesta para todos. No lo cambia: la persona confirma."),
+			InputSchema: esquema(map[string]any{
+				"ids":        map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "maxItems": 200, "description": "Ids de listar_productos."},
+				"categoria":  map[string]any{"type": "string", "description": "O todos los de esta categoría."},
+				"porcentaje": map[string]any{"type": "number", "minimum": -50, "maximum": 100, "description": "Ej.: 10 sube un 10 %, -5 baja un 5 %."},
+			}, "porcentaje")},
 		{Name: "crear_cupon", Description: anthropic.String("PROPONE un cupón de descuento para toda la tienda. No lo crea: la persona confirma."),
 			InputSchema: esquema(map[string]any{
 				"codigo":      map[string]any{"type": "string", "description": "Mayúsculas, números o guiones, de 3 a 20. Ej.: VERANO15."},
@@ -107,7 +115,7 @@ var permisos = map[string]roles.Permiso{
 	"resumen_del_dia": roles.Panel, "informe_de_ventas": roles.Panel,
 	"listar_pedidos": roles.Pedidos, "ver_pedido": roles.Pedidos, "listar_productos": roles.Pedidos,
 	"listar_clientes": roles.Clientes, "cambiar_estado_pedido": roles.Pedidos, "ajustar_producto": roles.Productos,
-	"crear_cupon": roles.Catalogo, "crear_link_de_pago": roles.Pedidos,
+	"ajustar_precios": roles.Catalogo, "crear_cupon": roles.Catalogo, "crear_link_de_pago": roles.Pedidos,
 }
 
 func (h *herramientas) ejecutar(ctx context.Context, nombre string, entrada json.RawMessage) (string, bool) {
@@ -314,6 +322,8 @@ func (h *herramientas) correr(ctx context.Context, nombre string, a map[string]a
 		return h.proponerEstado(ctx, a)
 	case "ajustar_producto":
 		return h.proponerProducto(ctx, a)
+	case "ajustar_precios":
+		return h.proponerPrecios(ctx, a)
 	case "crear_cupon":
 		return h.proponerCupon(a)
 	case "crear_link_de_pago":
@@ -415,6 +425,75 @@ func (h *herramientas) proponerProducto(ctx context.Context, a map[string]any) (
 	}
 	return h.proponer(Propuesta{Herramienta: "ajustar_producto", Argumentos: args,
 		Titulo: "Ajustar «" + p.Nombre + "»", Detalle: strings.Join(cambios, " · ")})
+}
+
+// proponerPrecios: el aumento (o la baja) en lote, como «Cambiar precio» del panel: una sola
+// propuesta con el resumen («12 productos, +10 %: Coca $ 3.500 → $ 3.850…»).
+func (h *herramientas) proponerPrecios(ctx context.Context, a map[string]any) (any, error) {
+	pct, ok := a["porcentaje"].(float64)
+	if !ok || pct == 0 || pct < -50 || pct > 100 {
+		return nil, errHerramienta("Decime el porcentaje (por ejemplo 10 para subir un 10 %, -5 para bajar un 5 %).")
+	}
+	pct = math.Round(pct*10) / 10
+	pedidos := map[string]bool{}
+	if xs, ok := a["ids"].([]any); ok {
+		for _, x := range xs {
+			if id, ok := x.(string); ok && id != "" && len(pedidos) < 200 {
+				pedidos[id] = true
+			}
+		}
+	}
+	cat := strings.ToLower(txt(a, "categoria", 80))
+	if len(pedidos) == 0 && cat == "" {
+		return nil, errHerramienta("Decime qué productos (los ids de listar_productos) o una categoría.")
+	}
+	regs, err := listas.Productos(ctx, h.s.Pool, h.tienda, h.ahora)
+	if err != nil {
+		return nil, err
+	}
+	type prod struct {
+		id, nombre string
+		precio     int64
+	}
+	var elegidos []prod
+	for _, r := range regs {
+		id, _ := r["id"].(string)
+		c, _ := r["categoria"].(string)
+		if pedidos[id] || (cat != "" && strings.ToLower(strings.TrimSpace(c)) == cat) {
+			n, _ := r["nombre"].(string)
+			p, _ := r["precio"].(int64)
+			if f, ok := r["precio"].(float64); ok {
+				p = int64(f)
+			}
+			elegidos = append(elegidos, prod{id, n, p})
+		}
+	}
+	if len(elegidos) == 0 {
+		return nil, errHerramienta("No encontré esos productos. Buscalos con listar_productos.")
+	}
+	ids := make([]string, len(elegidos))
+	muestra := []string{}
+	for i, p := range elegidos {
+		ids[i] = p.id
+		if i < 3 {
+			nuevo := int64(math.Round(float64(p.precio)*(1+pct/100)/10) * 10)
+			muestra = append(muestra, fmt.Sprintf("%s $ %s → $ %s", p.nombre, miles(int(p.precio)), miles(int(max(0, nuevo)))))
+		}
+	}
+	signo, verbo := "+", "Subir"
+	if pct < 0 {
+		signo, verbo = "−", "Bajar"
+	}
+	cuantos := "1 producto"
+	if len(elegidos) > 1 {
+		cuantos = fmt.Sprintf("%d productos", len(elegidos))
+	}
+	detalle := fmt.Sprintf("%s, %s%s %%: %s", cuantos, signo, strconv.FormatFloat(math.Abs(pct), 'f', -1, 64), strings.Join(muestra, " · "))
+	if len(elegidos) > 3 {
+		detalle += "…"
+	}
+	return h.proponer(Propuesta{Herramienta: "ajustar_precios", Argumentos: map[string]any{"ids": ids, "porcentaje": pct},
+		Titulo: fmt.Sprintf("%s %s %% el precio de %s", verbo, strconv.FormatFloat(math.Abs(pct), 'f', -1, 64), cuantos), Detalle: detalle})
 }
 
 var codigoCupon = regexp.MustCompile(`^[A-Z0-9-]{3,20}$`)

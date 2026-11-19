@@ -4148,7 +4148,7 @@ components:
       required: [id, herramienta, argumentos, titulo]
       properties:
         id: { type: string, description: 'La clave para confirmarla una sola vez (Idempotency-Key de /panel/hornero/confirmar)' }
-        herramienta: { type: string, enum: [cambiar_estado_pedido, ajustar_producto, crear_cupon, crear_link_de_pago] }
+        herramienta: { type: string, enum: [cambiar_estado_pedido, ajustar_producto, ajustar_precios, crear_cupon, crear_link_de_pago] }
         argumentos: { type: object, additionalProperties: true }
         titulo: { type: string }
         detalle: { type: string }

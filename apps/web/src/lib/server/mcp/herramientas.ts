@@ -219,6 +219,33 @@ export const HERRAMIENTAS: Herramienta[] = [
 		}
 	},
 	{
+		name: 'ajustar_precios',
+		title: 'Subir o bajar precios en lote',
+		description:
+			'Sube o baja en un porcentaje el precio de varios productos (y de sus variantes), redondeado a $ 10, como «Cambiar precio» del panel. Usá listar_productos para los ids. Confirmá el porcentaje con la persona antes.',
+		accion: true,
+		panel: 'escribir',
+		inputSchema: {
+			type: 'object',
+			properties: {
+				ids: {
+					type: 'array',
+					items: { type: 'string' },
+					maxItems: 200,
+					description: 'Ids de los productos (de listar_productos).'
+				},
+				porcentaje: {
+					type: 'number',
+					minimum: -50,
+					maximum: 100,
+					description: 'Ej.: 10 sube un 10 %, -5 baja un 5 %.'
+				}
+			},
+			required: ['ids', 'porcentaje'],
+			additionalProperties: false
+		}
+	},
+	{
 		name: 'crear_cupon',
 		title: 'Crear un cupón',
 		description:
@@ -670,6 +697,19 @@ const MANEJADORES: Record<string, Manejador> = {
 			precio: { antes: monto(antes.precio), ahora: monto(g!.precio) },
 			stock: { antes: antes.stock ?? 0, ahora: g!.stock ?? 0 }
 		};
+	},
+
+	async ajustar_precios({ datos }, a) {
+		const ids = Array.isArray(a.ids)
+			? a.ids.filter((x): x is string => typeof x === 'string' && x.length <= 80).slice(0, 200)
+			: [];
+		if (!ids.length) falla('Decime qué productos (los ids de listar_productos).');
+		const pct = typeof a.porcentaje === 'number' ? Math.round(a.porcentaje * 10) / 10 : NaN;
+		if (!Number.isFinite(pct) || pct === 0 || pct < -50 || pct > 100)
+			falla('El porcentaje va de -50 a 100 (y no 0).');
+		// La misma acción de lote que el panel (Go redondea a $ 10 y sube las variantes).
+		const hechos = await datos.accionLista('productos', ids, 'precio', pct);
+		return { productos: hechos, porcentaje: pct };
 	},
 
 	async crear_cupon({ datos }, a) {

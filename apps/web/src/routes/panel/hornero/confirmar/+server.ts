@@ -8,6 +8,7 @@ const Pedido = v.object({
 	herramienta: v.picklist([
 		'cambiar_estado_pedido',
 		'ajustar_producto',
+		'ajustar_precios',
 		'crear_cupon',
 		'crear_link_de_pago'
 	]),
