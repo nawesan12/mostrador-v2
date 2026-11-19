@@ -116,7 +116,7 @@ test('medición: IDs en Integraciones, sin consentimiento no carga nada y con é
 	await page.getByLabel(/Dirección/).fill('Gorriti 4500');
 	await page.getByRole('radio', { name: /Retiro en el local/ }).click();
 	await page.getByRole('radio', { name: /Transferencia/ }).click();
-	await page.getByRole('button', { name: /^Pagar/ }).click();
+	await page.getByRole('button', { name: /^(Pagar|Confirmar pedido)/ }).click();
 	await expect(page.getByRole('heading', { name: '¡Gracias, Lucía!' })).toBeVisible();
 	const numero = (await page
 		.locator('b', { hasText: /^#\d+$/ })

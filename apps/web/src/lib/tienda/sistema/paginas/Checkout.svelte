@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { page } from '$app/state';
+	import { untrack } from 'svelte';
+	import { faltantes } from '../../faltantes.ts';
 	import Icon from '#lib/components/Icon.svelte';
 	import * as I from '#lib/icons.ts';
 	import CampoCupon from '../../CampoCupon.svelte';
@@ -9,10 +12,12 @@
 	import { CuponCheckout, totales } from '../../cupon.svelte.ts';
 	import { disenoDeTienda } from '../migrar.ts';
 	import { cotizar, cpValido } from '../../envio.svelte.ts';
+	import { envia } from '../../envio.ts';
 	import { camposFactura, OPCIONALES } from '../../factura.ts';
 	import type { OpcionEnvio, TiendaPublica } from '../../tipos.ts';
 	import { conTransferencia, precio } from '../formato.ts';
-	import { cuotasPara, ofreceDe, textoCuotas } from '../cobros.ts';
+	import { cuotasPara, ofreceDe, textoCuotas, vende } from '../cobros.ts';
+	import BotonFinalizar from '../marco/BotonFinalizar.svelte';
 	import Tienda from '../marco/Tienda.svelte';
 	import Boton from '../primitivas/Boton.svelte';
 	import Foto from '../primitivas/Foto.svelte';
@@ -38,9 +43,17 @@
 	let cp = $state('');
 	let direccion = $state('');
 	let envio = $state<OpcionEnvio['id'] | null>(null);
-	let pago = $state<'transferencia' | 'mercadopago'>('transferencia');
+	// Arranca en Mercado Pago cuando está (como el handoff, A-celular): el descuento por
+	// transferencia ya se ve en su opción.
+	let pago = $state<'transferencia' | 'mercadopago'>(
+		untrack(() => (tienda.cobros.mercadoPago ? 'mercadopago' : 'transferencia'))
+	);
 	let enviando = $state(false);
 	let faltaEntrega = $state(false);
+	// El aviso cuando el servidor no respondió (el formulario queda como estaba).
+	let falloEnvio = $state<string | null>(null);
+	// Si la tienda manda a algún lado (moto o Correo): si no, ni código postal ni dirección.
+	const enviaTienda = $derived(envia(tienda.envios));
 
 	const opciones = $derived(
 		cpValido(cp)
@@ -50,8 +63,11 @@
 				: []
 	);
 	const elegida = $derived(opciones.find((o) => o.id === envio) ?? null);
+	// Una sola forma de entrega posible (sólo retiro): queda elegida y se muestra como dato.
+	const unica = $derived(!enviaTienda && opciones.length === 1 ? opciones[0] : null);
 	$effect(() => {
-		if (envio && !opciones.some((o) => o.id === envio)) envio = null;
+		if (unica && envio !== unica.id) envio = unica.id;
+		else if (envio && !opciones.some((o) => o.id === envio)) envio = null;
 	});
 	$effect(() => {
 		if (envio) faltaEntrega = false;
@@ -73,7 +89,8 @@
 	);
 
 	const pagos = $derived([
-		...(tienda.cobros.mercadoPago
+		// Con el total en $ 0 (un cupón que lo cubre todo) no hay nada que cobrar con Mercado Pago.
+		...(tienda.cobros.mercadoPago && cuenta.total > 0
 			? [
 					{
 						id: 'mercadopago' as const,
@@ -120,13 +137,38 @@
 	const paso = $derived(!datosOk ? 0 : !entregaOk ? 1 : 2);
 	const PASOS = ['Datos', 'Entrega', 'Pago'];
 
+	// Sin Mercado Pago ni transferencia no hay checkout: se pide por WhatsApp (BotonFinalizar).
+	const sinCobro = $derived(!tienda.vitrina && !vende(tienda));
+	// Lo agotado mientras tanto: se dice arriba del resumen y no se manda (pagar fallaría).
+	const faltan = $derived(faltantes(carrito.lineas, tienda.productos));
+	// Mercado Pago cobra ahí mismo; con transferencia se confirma y después se transfiere (C-cafe).
 	const textoPagar = $derived(
 		tienda.vitrina
 			? 'Es una tienda de ejemplo'
-			: !pagos.length
-				? 'Esta tienda todavía no tiene medios de pago'
-				: `Pagar ${precio(cuenta.total)}`
+			: pago === 'mercadopago'
+				? `Pagar ${precio(cuenta.total)}`
+				: cuenta.total > 0
+					? `Confirmar pedido · ${precio(cuenta.total)}`
+					: 'Confirmar pedido'
 	);
+	// Los datos: el mensaje debajo de cada campo (no el globo del navegador, uno por vez y en su idioma).
+	let tocado = $state(false);
+	const errores = $derived({
+		email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ? '' : 'Poné un email válido.',
+		nombre: nombre.trim().length >= 2 ? '' : 'Poné tu nombre y apellido.',
+		telefono: /^[\d\s+()-]{8,20}$/.test(telefono.trim())
+			? ''
+			: 'Poné un teléfono con característica.',
+		cp:
+			!enviaTienda || envio === 'retiro' || cpValido(cp)
+				? ''
+				: 'Poné los 4 números del código postal.',
+		direccion:
+			!envio || envio === 'retiro' || direccion.trim().length >= 4
+				? ''
+				: 'Poné la calle y el número.'
+	} as Record<string, string>);
+	const error1 = (n: string) => (tocado ? (errores[n] ?? '') : '');
 	const extra = $derived(
 		pago === 'mercadopago' && tienda.cobros.mercadoPago
 			? textoCuotas(ofreceDe(tienda), cuenta.total)
@@ -138,11 +180,25 @@
 <!-- eslint-disable svelte/no-navigation-without-resolve -- las rutas de la tienda se arman con su slug -->
 <Tienda {tienda} pagina="checkout" sinWhatsApp>
 	<div class="tv-ancho tv-pag tv-checkout">
+		{#if page.data.pendienteMP}
+			<!-- Volvió atrás desde Mercado Pago: ese pedido sigue reservado; pagarlo no arma otro. -->
+			<div class="tv-confirma-caja tv-tarjeta tv-checkout-pendiente" role="status">
+				<p><b>Tenés un pedido esperando el pago.</b> Pagalo con Mercado Pago o empezá uno nuevo.</p>
+				<Boton href={page.data.pendienteMP}>Ver mi pedido</Boton>
+			</div>
+		{/if}
 		{#if !lineas.length}
 			<div class="tv-carrito-vacio tv-tarjeta">
 				<Icon icon={I.phHandbag} size={28} />
 				<p class="tv-lead">Tu carrito está vacío.</p>
 				<Boton href="{base}/catalogo">Ver el catálogo</Boton>
+			</div>
+		{:else if sinCobro}
+			<!-- Sin medios de cobro no hay formulario: el pedido va por WhatsApp (o se consulta). -->
+			<div class="tv-carrito-vacio tv-tarjeta">
+				<Icon icon={I.phChatCenteredText} size={28} />
+				<p class="tv-lead">Esta tienda coordina el pago por mensaje.</p>
+				<div class="tv-checkout-wa"><BotonFinalizar /></div>
 			</div>
 		{:else}
 			<ol class="tv-pasos" aria-label="Pasos de la compra">
@@ -159,11 +215,21 @@
 			<form
 				class="tv-checkout-cuerpo"
 				method="POST"
-				use:enhance={({ cancel }) => {
-					if (!envio) {
+				novalidate
+				use:enhance={({ cancel, formElement }) => {
+					falloEnvio = null;
+					tocado = true;
+					const mal = ['email', 'nombre', 'telefono', 'cp', 'direccion'].find((n) => errores[n]);
+					if (mal || !envio || faltan.length) {
 						cancel();
-						faltaEntrega = true;
-						entrega?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+						if (!envio) faltaEntrega = true;
+						const el = mal
+							? formElement.querySelector<HTMLInputElement>(`[name="${mal}"]`)
+							: !envio
+								? entrega
+								: null;
+						el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+						if (el instanceof HTMLInputElement) el.focus({ preventScroll: true });
 						return;
 					}
 					enviando = true;
@@ -172,8 +238,13 @@
 						// Mercado Pago es otro sitio: se navega de verdad.
 						if (result.type === 'redirect' && result.location.startsWith('https://'))
 							return void (location.href = result.location);
+						// El servidor no respondió: el formulario queda como estaba (nada de la página de error).
+						if (result.type === 'error') {
+							falloEnvio = 'No pudimos confirmar el pedido. No se te cobró nada: probá de nuevo.';
+							return;
+						}
 						if (result.type === 'redirect') carrito.vaciar();
-						await update();
+						await update({ reset: false, navigate: false });
 					};
 				}}
 			>
@@ -190,8 +261,9 @@
 											name={n}
 											type={tipo}
 											autocomplete={ac}
-											required
 											maxlength="120"
+											aria-invalid={!!error1('email')}
+											aria-describedby={error1('email') ? 'tv-co-email-e' : undefined}
 											bind:value={email}
 										/>
 									{:else if n === 'nombre'}<input
@@ -199,8 +271,9 @@
 											name={n}
 											type={tipo}
 											autocomplete={ac}
-											required
 											maxlength="80"
+											aria-invalid={!!error1('nombre')}
+											aria-describedby={error1('nombre') ? 'tv-co-nombre-e' : undefined}
 											bind:value={nombre}
 										/>
 									{:else if n === 'telefono'}<input
@@ -208,8 +281,9 @@
 											name={n}
 											type={tipo}
 											autocomplete={ac}
-											required
 											maxlength="20"
+											aria-invalid={!!error1('telefono')}
+											aria-describedby={error1('telefono') ? 'tv-co-telefono-e' : undefined}
 											bind:value={telefono}
 										/>
 									{:else}<input
@@ -220,6 +294,9 @@
 											maxlength="12"
 											inputmode="numeric"
 										/>{/if}
+									{#if error1(n)}<p class="tv-error tv-campo-error" id="tv-co-{n}-e">
+											{error1(n)}
+										</p>{/if}
 								</div>
 							{/each}
 							{#each factura as [n, l, tipo, ac] (n)}
@@ -244,49 +321,80 @@
 
 					<section class="tv-checkout-paso" aria-labelledby="tv-co-entrega" bind:this={entrega}>
 						<h2 class="tv-h3" id="tv-co-entrega">¿Cómo lo recibís?</h2>
-						<div class="tv-campos tv-campos--envio">
-							<div class="tv-campo">
-								<label for="tv-co-cp">Código postal</label>
-								<input
-									id="tv-co-cp"
-									name="cp"
-									bind:value={cp}
-									inputmode="numeric"
-									maxlength="4"
-									autocomplete="postal-code"
-								/>
+						{#if unica}
+							<!-- Una sola forma (sólo retiro): elegida y como dato, con dónde y cuándo una sola vez. -->
+							<div class="tv-radio tv-tarjeta tv-radio--on tv-radio--dato">
+								<input type="hidden" name="envio" value={unica.id} />
+								<span class="tv-radio-txt"
+									><b>{unica.nombre}</b><span class="tv-chico tv-suave">{unica.detalle}</span></span
+								>
+								<b class="tv-radio-precio tv-ok">Gratis</b>
 							</div>
-							<div class="tv-campo">
-								<label for="tv-co-dir">Dirección (calle, número, piso)</label>
-								<input
-									id="tv-co-dir"
-									name="direccion"
-									bind:value={direccion}
-									maxlength="160"
-									autocomplete="street-address"
-									required={envio !== null && envio !== 'retiro'}
-								/>
+						{:else}
+							{#if enviaTienda}
+								<div class="tv-campos tv-campos--envio">
+									<div class="tv-campo">
+										<label for="tv-co-cp">Código postal</label>
+										<input
+											id="tv-co-cp"
+											name="cp"
+											bind:value={cp}
+											inputmode="numeric"
+											maxlength="4"
+											autocomplete="postal-code"
+											aria-invalid={!!error1('cp')}
+											aria-describedby={error1('cp') ? 'tv-co-cp-e' : undefined}
+										/>
+										{#if error1('cp')}<p class="tv-error tv-campo-error" id="tv-co-cp-e">
+												{error1('cp')}
+											</p>{/if}
+									</div>
+								</div>
+							{/if}
+							<div class="tv-radios" role="radiogroup" aria-label="Forma de entrega">
+								{#each opciones as s (s.id)}
+									<label class="tv-radio tv-tarjeta" class:tv-radio--on={envio === s.id}>
+										<input type="radio" name="envio" value={s.id} bind:group={envio} />
+										<span class="tv-radio-txt"
+											><b>{s.nombre}</b><span class="tv-chico tv-suave">{s.detalle}</span></span
+										>
+										<b class="tv-radio-precio" class:tv-ok={!s.precio}
+											>{s.precio ? precio(s.precio) : 'Gratis'}</b
+										>
+									</label>
+								{:else}
+									<p class="tv-suave tv-chico">
+										Poné tu código postal para ver cómo te&nbsp;llega.
+									</p>
+								{/each}
 							</div>
-						</div>
-						<div class="tv-radios" role="radiogroup" aria-label="Forma de entrega">
-							{#each opciones as s (s.id)}
-								<label class="tv-radio tv-tarjeta" class:tv-radio--on={envio === s.id}>
-									<input type="radio" name="envio" value={s.id} bind:group={envio} />
-									<span class="tv-radio-txt"
-										><b>{s.nombre}</b><span class="tv-chico tv-suave">{s.detalle}</span></span
-									>
-									<b class="tv-radio-precio" class:tv-ok={!s.precio}
-										>{s.precio ? precio(s.precio) : 'Gratis'}</b
-									>
-								</label>
+							{#if enviaTienda && envio && envio !== 'retiro'}
+								<div class="tv-campos">
+									<div class="tv-campo">
+										<label for="tv-co-dir">Dirección (calle, número, piso)</label>
+										<input
+											id="tv-co-dir"
+											name="direccion"
+											bind:value={direccion}
+											maxlength="160"
+											autocomplete="street-address"
+											aria-invalid={!!error1('direccion')}
+											aria-describedby={error1('direccion') ? 'tv-co-dir-e' : undefined}
+										/>
+										{#if error1('direccion')}<p class="tv-error tv-campo-error" id="tv-co-dir-e">
+												{error1('direccion')}
+											</p>{/if}
+									</div>
+								</div>
 							{:else}
-								<p class="tv-suave tv-chico">Poné tu código postal para ver cómo te&nbsp;llega.</p>
-							{/each}
-						</div>
+								<input type="hidden" name="direccion" value="" />
+							{/if}
+						{/if}
+						{#if !enviaTienda}<input type="hidden" name="cp" value="" />{/if}
 						{#if faltaEntrega}<p class="tv-error" role="alert">
 								Elegí cómo te llega para seguir.
 							</p>{/if}
-						<EnvioCorreo {tienda} {cp} {envio} {opciones} />
+						{#if !unica}<EnvioCorreo {tienda} {cp} {envio} {opciones} />{/if}
 					</section>
 
 					<section class="tv-checkout-paso" aria-labelledby="tv-co-pago">
@@ -307,7 +415,14 @@
 						</div>
 					</section>
 
-					{#if error}<p class="tv-error tv-error--caja" role="alert">{error}</p>{/if}
+					{#if falloEnvio || error}<p class="tv-error tv-error--caja" role="alert">
+							{falloEnvio ?? error}
+						</p>{/if}
+					{#if faltan.length}<p class="tv-error tv-error--caja" role="alert">
+							Algo de tu carrito se agotó mientras tanto. <a class="tv-link" href="{base}/carrito"
+								>Revisá el carrito</a
+							> para seguir.
+						</p>{/if}
 					<div class="tv-solo-compu">
 						<button
 							class="tv-btn tv-btn--primario tv-btn--bloque tv-checkout-pagar"

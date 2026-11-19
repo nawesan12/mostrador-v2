@@ -64,7 +64,7 @@ test('combo: se agrega junto, el carrito lo descuenta y el pedido lo cobra', asy
 	await page.getByRole('radio', { name: /Retiro en el local/ }).click();
 	await page.getByRole('radio', { name: /Mercado Pago/ }).click();
 	await expect(page.locator('.tv-checkout-resumen .tv-cuentas-total')).toContainText('18.360');
-	await page.getByRole('button', { name: /^Pagar/ }).click();
+	await page.getByRole('button', { name: /^(Pagar|Confirmar pedido)/ }).click();
 	await expect(page.getByRole('heading', { name: '¡Gracias, Lucía!' })).toBeVisible();
 	await expect(page.getByText(/18\.360/).first()).toBeVisible();
 

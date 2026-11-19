@@ -46,7 +46,7 @@ test('tienda: un cupón se valida, descuenta y suma un uso en el panel', async (
 		await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)
 	).toBeLessThanOrEqual(0);
 
-	await page.getByRole('button', { name: /^Pagar/ }).click();
+	await page.getByRole('button', { name: /^(Pagar|Confirmar pedido)/ }).click();
 	await expect(page).toHaveURL(/\/pedido\//);
 
 	// En el panel, FINDE10 sumó un uso (tenía 41).

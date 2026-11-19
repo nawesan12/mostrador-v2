@@ -26,7 +26,7 @@ test('botón de arrepentimiento de la tienda: código de trámite y devolución 
 	await page.getByLabel(/Dirección/).fill('Gorriti 4500');
 	await page.getByRole('radio', { name: /Retiro en el local/ }).click();
 	await page.getByRole('radio', { name: /Transferencia/ }).click();
-	await page.getByRole('button', { name: /^Pagar/ }).click();
+	await page.getByRole('button', { name: /^(Pagar|Confirmar pedido)/ }).click();
 	await expect(page).toHaveURL(/\/pedido\//);
 	const codigo = page.url().split('/pedido/')[1].split('?')[0];
 

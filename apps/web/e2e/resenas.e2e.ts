@@ -31,7 +31,7 @@ test('reseñas: quien compró deja su reseña, el panel la ve con compra y la oc
 	await page.getByLabel(/Dirección/).fill('Gorriti 4500');
 	await page.getByRole('radio', { name: /Retiro en el local/ }).click();
 	await page.getByRole('radio', { name: /Mercado Pago/ }).click();
-	await page.getByRole('button', { name: /^Pagar/ }).click();
+	await page.getByRole('button', { name: /^(Pagar|Confirmar pedido)/ }).click();
 	await expect(page.getByRole('heading', { name: '¡Gracias, Lucía!' })).toBeVisible();
 	const confirmacion = page.url();
 	const numero = (await page

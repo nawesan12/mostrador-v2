@@ -59,7 +59,7 @@ test('venta mayorista: mínimo, precio del producto, carrito y pedido', async ({
 	await page.getByLabel(/Dirección/).fill('Gorriti 4500');
 	await page.getByRole('radio', { name: /Retiro en el local/ }).click();
 	await page.getByRole('radio', { name: /Transferencia/ }).click();
-	await page.getByRole('button', { name: /^Pagar/ }).click();
+	await page.getByRole('button', { name: /^(Pagar|Confirmar pedido)/ }).click();
 	await expect(page.getByRole('heading', { name: /¡Gracias, Almacén!/ })).toBeVisible();
 	// 3 × $ 10.000, retiro sin costo y 15 % por transferencia.
 	await expect(page.getByText(/25\.500/).first()).toBeVisible();

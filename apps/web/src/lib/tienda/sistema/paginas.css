@@ -35,6 +35,26 @@
 	font-size: 14px;
 	color: var(--t-error, #b42318);
 }
+.tv-campo-error {
+	margin: 4px 0 0;
+	font-size: 13px;
+	line-height: 1.35;
+}
+.tv-campo input[aria-invalid='true'] {
+	border-color: var(--t-error, #b42318);
+}
+.tv-radio--dato {
+	cursor: default;
+}
+.tv-checkout-pendiente {
+	margin-bottom: 20px;
+}
+.tv-checkout-pendiente .tv-btn {
+	margin-top: 4px;
+}
+.tv-checkout-wa {
+	width: min(100%, 360px);
+}
 .tv-error--caja {
 	margin: 0;
 	padding: 12px 14px;
