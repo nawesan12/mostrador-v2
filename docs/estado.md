@@ -2,6 +2,20 @@
 
 Última actualización: 6/11/2026. Plan completo: `~/.claude/plans/claude-vamos-con-algo-encapsulated-alpaca.md`.
 
+## 19/11/2026: planes y precios nuevos que se cobran y se cumplen (rama planes-precios, sin desplegar, migración 00096)
+
+- **Precios** (ARS por mes, precio final, 0 % de comisión): Gratis $ 0 · Emprende $ 14.900 · Crece $ 34.900
+  (destacado; el id sigue siendo `pro`) · Negocio $ 79.900. Anual = 10 meses. Prueba de 14 días con Crece.
+- **Topes en el servidor** (`internal/dominio/planes`, 402 `tope_plan` con el plan que lo habilita): productos
+  20/150/500/sin tope, personas 1/2/5/sin tope, fotos por producto 3/5/8/10, espacio de fotos 15/150/600/2.048 MB
+  (lo aplica la web), Tincho 50/500/2.000/8.000. Funciones por ruta en `planes.Rutas` (dominio, ARCA, Correo,
+  cupones/carritos, roles, local y QR, Mercado Libre, newsletter e informes, mayorista).
+- **Bajar no borra**: productos de más quedan ocultos en la tienda y en sólo lectura (se pueden borrar), fotos de
+  más no se muestran, personas de más quedan en sólo lectura, lo de funciones queda guardado y apagado.
+- **Pack de Tincho**: $ 4.900 por Mercado Pago (`pack:<tienda>:<importe>`), se suma al aprobarse.
+- **Débitos con precio viejo**: pasan solos al nuevo en su próximo cobro (`ConciliarCobroAbono`).
+- Apps: no venden planes (guía 3.1.1); el tope se avisa con «Ver mi plan». No hay productos de App Store ni Play.
+
 ## 19/11/2026: comité desplegado (API, web y worker 94876d3f, migraciones 00090–00095; iOS build 2611190155; Android 149)
 
 El cierre del comité (entrada de abajo) ya está en producción.
