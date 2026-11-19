@@ -112,8 +112,11 @@ func (s *Servicio) avisarVenta(ctx context.Context, ev outbox.Evento) error {
 	var canal string
 	var ya bool
 	err := s.Pool.EnTienda(ctx, ev.TiendaID, func(t pgx.Tx) error {
+		// Sólo si quien vinculó el chat sigue administrando la tienda (si no, no le llegan las ventas).
 		return t.QueryRow(ctx, `SELECT v.chat, p.canal, p.total, p.avisos ? 'telegram'
-			FROM pedidos p JOIN telegram_vinculos v ON v.tienda_id = p.tienda_id WHERE p.numero = $1`, d.Numero).
+			FROM pedidos p JOIN telegram_vinculos v ON v.tienda_id = p.tienda_id
+			JOIN auth.membresias m ON m.tienda_id = v.tienda_id AND m.usuario_id = v.usuario_id AND m.rol IN ('duenio', 'admin')
+			WHERE p.numero = $1`, d.Numero).
 			Scan(&chat, &canal, &total, &ya)
 	})
 	if errors.Is(err, pgx.ErrNoRows) || (err == nil && ya) {

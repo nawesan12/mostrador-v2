@@ -61,6 +61,12 @@ func CambiarRol(ctx context.Context, pool tx, tiendaID string, q Quien, id, rol 
 		if err != nil || antes == rol {
 			return err
 		}
+		// Sin administrar ya no puede tener el Telegram de la tienda.
+		if rol != roles.Admin {
+			if _, err := t.Exec(ctx, `DELETE FROM telegram_vinculos WHERE tienda_id = $1 AND usuario_id::text = $2`, tiendaID, id); err != nil {
+				return err
+			}
+		}
 		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "personas.rol", Entidad: "persona", EntidadID: id,
 			Texto: fmt.Sprintf("le cambió el rol a %s de %s a %s", quien, roles.Nombre[antes], roles.Nombre[rol]),
 			Antes: map[string]string{"rol": antes}, Despues: map[string]string{"rol": rol}})
@@ -83,6 +89,10 @@ func Quitar(ctx context.Context, pool tx, tiendaID string, q Quien, id string) e
 			RETURNING coalesce(nullif(u.nombre, ''), u.email), m.rol`, tiendaID, id).Scan(&quien, &rol)
 		if err == nil {
 			if _, err := t.Exec(ctx, `DELETE FROM auth.sesiones WHERE usuario_id::text = $1 AND tienda_id = $2`, id, tiendaID); err != nil {
+				return err
+			}
+			// Su Telegram vinculado deja de recibir las ventas y de preguntarle a Tincho.
+			if _, err := t.Exec(ctx, `DELETE FROM telegram_vinculos WHERE tienda_id = $1 AND usuario_id::text = $2`, tiendaID, id); err != nil {
 				return err
 			}
 			return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "personas.quitar", Entidad: "persona", EntidadID: id,

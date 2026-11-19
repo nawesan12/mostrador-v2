@@ -9,7 +9,6 @@ import (
 	"unicode/utf8"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/cuentas"
-	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/roles"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/tiendas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/ia"
 	topes "github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/limite"
@@ -162,13 +161,13 @@ func (s *Servicio) Rutas(mux *http.ServeMux, claveBFF string) {
 		if !leer(w, r, &b) {
 			return
 		}
-		if s.TiendaDelChat == nil {
+		if s.RolDelChat == nil {
 			problema.Escribir(w, problema.NoEncontrado("Este chat no está vinculado a ninguna tienda."))
 			return
 		}
-		tienda, err := s.TiendaDelChat(r.Context(), b.Chat)
+		tienda, rol, err := s.RolDelChat(r.Context(), b.Chat)
 		if err != nil {
-			problema.Escribir(w, problema.NoEncontrado("Este chat no está vinculado a ninguna tienda."))
+			problema.Escribir(w, problema.NoEncontrado("Este chat ya no tiene acceso a la tienda."))
 			return
 		}
 		// motor: el BFF ya respondió sin IA; sólo se cuenta.
@@ -185,7 +184,8 @@ func (s *Servicio) Rutas(mux *http.ServeMux, claveBFF string) {
 			problema.Escribir(w, problema.Invalido("El mensaje está vacío o es muy largo."))
 			return
 		}
-		q.Tienda, q.Rol, q.Canal = tienda, roles.Duenia, "telegram"
+		// Con el rol de quien vinculó el chat (no siempre la dueña).
+		q.Tienda, q.Rol, q.Canal = tienda, rol, "telegram"
 		res, err := s.Preguntar(r.Context(), q)
 		if err != nil {
 			s.escribirError(w, err)

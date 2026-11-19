@@ -316,3 +316,33 @@ func TestTextoVenta(t *testing.T) {
 		t.Fatal(got)
 	}
 }
+
+// El chat es de quien lo vinculó: si deja de estar en el equipo, pierde el acceso y el vínculo se borra.
+func TestTelegramEsDeUnaPersona(t *testing.T) {
+	a, b := nuevo(t)
+	esquina := a.registrar("lucia@laesquina.com.ar", "La Esquina")
+	leer[telegram.Vinculado](t, a.vincular(a.codigo(esquina.Token), "444"), 200)
+	admin, err := pgx.Connect(context.Background(), b.AdminURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer admin.Close(context.Background())
+	var conPersona bool
+	_ = admin.QueryRow(context.Background(), `SELECT usuario_id IS NOT NULL FROM telegram_vinculos WHERE chat = 444`).Scan(&conPersona)
+	if !conPersona {
+		t.Fatal("el vínculo no guardó quién lo hizo")
+	}
+	leer[telegram.Contexto](t, a.pedir("POST", "/v1/telegram/contexto", `{"chat":444}`, "", true), 200)
+	// Sin membresía (la sacaron del equipo): el chat ya no lee nada y el vínculo se va.
+	if _, err := admin.Exec(context.Background(), `UPDATE auth.membresias SET rol = 'ventas'`); err != nil {
+		t.Fatal(err)
+	}
+	if rec := a.pedir("POST", "/v1/telegram/contexto", `{"chat":444}`, "", true); rec.Code == 200 {
+		t.Fatalf("el chat sin acceso sigue leyendo: %d", rec.Code)
+	}
+	var quedan int
+	_ = admin.QueryRow(context.Background(), `SELECT count(*) FROM telegram_vinculos`).Scan(&quedan)
+	if quedan != 0 {
+		t.Fatal("el vínculo sin acceso no se borró")
+	}
+}

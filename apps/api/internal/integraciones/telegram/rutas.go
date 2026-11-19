@@ -38,6 +38,10 @@ func escribirError(w http.ResponseWriter, err error) {
 		problema.Escribir(w, problema.SinPermiso("Sólo la dueña o quien administra puede vincular Telegram."))
 	case errors.Is(err, ErrInvalido):
 		problema.Escribir(w, problema.Invalido("El pedido no es válido."))
+	case errors.Is(err, ErrDeLaDuenia):
+		problema.Escribir(w, problema.Conflicto("de_la_duenia", "Ya está vinculado el Telegram de la dueña. Si hace falta cambiarlo, que lo desvincule ella."))
+	case errors.Is(err, ErrSinAcceso):
+		problema.Escribir(w, problema.Conflicto("sin_acceso", "Este chat ya no tiene acceso a la tienda."))
 	case errors.Is(err, ErrDemasiados):
 		w.Header().Set("Retry-After", "3600")
 		problema.Escribir(w, &problema.Problema{Estado: http.StatusTooManyRequests, Codigo: "demasiados",
@@ -70,7 +74,7 @@ func (s *Servicio) Rutas(mux *http.ServeMux, claveBFF string) {
 		escribir(w, http.StatusOK, e)
 	}))
 	mux.HandleFunc("POST /v1/panel/telegram/codigo", panel(func(w http.ResponseWriter, r *http.Request, d cuentas.Datos) {
-		c, err := s.Generar(r.Context(), d.TiendaID, d.Rol)
+		c, err := s.Generar(r.Context(), d.TiendaID, d.Rol, d.Usuario.ID)
 		if err != nil {
 			escribirError(w, err)
 			return

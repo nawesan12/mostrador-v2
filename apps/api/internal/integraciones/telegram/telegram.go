@@ -39,6 +39,10 @@ var (
 	ErrSinPermiso  = errors.New("telegram: sin permiso")
 	ErrInvalido    = errors.New("telegram: pedido inválido")
 	ErrDemasiados  = errors.New("telegram: demasiados intentos")
+	// ErrDeLaDuenia: Administración no pisa el Telegram que vinculó la dueña.
+	ErrDeLaDuenia = errors.New("telegram: ya está vinculado el de la dueña")
+	// ErrSinAcceso: quien vinculó el chat ya no está en el equipo (o ya no administra).
+	ErrSinAcceso = errors.New("telegram: el chat ya no tiene acceso a la tienda")
 )
 
 var argentina = time.FixedZone("ART", -3*3600)
@@ -77,17 +81,30 @@ type Codigo struct {
 }
 
 // Generar da un código nuevo para vincular un chat. El anterior (si había) deja de servir.
-func (s *Servicio) Generar(ctx context.Context, tienda, rol string) (Codigo, error) {
+// El código queda a nombre de quien lo pidió: el chat será de esa persona (y pierde el acceso si la
+// sacan del equipo). Administración no puede reemplazar el chat que vinculó la dueña.
+func (s *Servicio) Generar(ctx context.Context, tienda, rol, usuario string) (Codigo, error) {
 	if !esAdmin(rol) {
 		return Codigo{}, ErrSinPermiso
 	}
 	c := Codigo{Codigo: nuevoCodigo()}
 	err := s.Pool.EnTienda(ctx, tienda, func(t pgx.Tx) error {
+		if rol != "duenio" {
+			var deLaDuenia bool
+			if err := t.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM telegram_vinculos v JOIN auth.membresias m
+				ON m.tienda_id = v.tienda_id AND m.usuario_id = v.usuario_id AND m.rol = 'duenio'
+				WHERE v.tienda_id = $1 AND v.usuario_id::text <> $2)`, tienda, usuario).Scan(&deLaDuenia); err != nil {
+				return err
+			}
+			if deLaDuenia {
+				return ErrDeLaDuenia
+			}
+		}
 		if _, err := t.Exec(ctx, `DELETE FROM telegram_codigos WHERE tienda_id = $1`, tienda); err != nil {
 			return err
 		}
-		return t.QueryRow(ctx, `INSERT INTO telegram_codigos (hash, tienda_id, vence_en)
-			VALUES ($1, $2, now() + $3::interval) RETURNING vence_en`, hash(c.Codigo), tienda, Vigencia.String()).Scan(&c.VenceEn)
+		return t.QueryRow(ctx, `INSERT INTO telegram_codigos (hash, tienda_id, vence_en, usuario_id)
+			VALUES ($1, $2, now() + $3::interval, nullif($4, '')::uuid) RETURNING vence_en`, hash(c.Codigo), tienda, Vigencia.String(), usuario).Scan(&c.VenceEn)
 	})
 	return c, err
 }
@@ -151,16 +168,38 @@ func (s *Servicio) Vincular(ctx context.Context, codigo string, chat int64, nomb
 	var v Vinculado
 	vigente := false
 	err = s.Pool.EnTienda(ctx, tienda, func(t pgx.Tx) error {
-		err := t.QueryRow(ctx, `DELETE FROM telegram_codigos WHERE hash = $1 RETURNING vence_en > now()`, hash(codigo)).Scan(&vigente)
+		var usuario *string
+		err := t.QueryRow(ctx, `DELETE FROM telegram_codigos WHERE hash = $1 RETURNING vence_en > now(), usuario_id::text`, hash(codigo)).
+			Scan(&vigente, &usuario)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return ErrCodigo
 		}
 		if err != nil || !vigente {
 			return err
 		}
-		if _, err := t.Exec(ctx, `INSERT INTO telegram_vinculos (tienda_id, chat, nombre) VALUES ($1, $2, $3)
-			ON CONFLICT (tienda_id) DO UPDATE SET chat = EXCLUDED.chat, nombre = EXCLUDED.nombre, vinculado_en = now()`,
-			tienda, chat, nombre); err != nil {
+		u := ""
+		if usuario != nil {
+			u = *usuario
+		}
+		// El de la dueña no lo pisa otra persona (el código se pidió antes de que ella vinculara el suyo).
+		var deLaDuenia bool
+		if err := t.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM telegram_vinculos v JOIN auth.membresias m
+			ON m.tienda_id = v.tienda_id AND m.usuario_id = v.usuario_id AND m.rol = 'duenio'
+			WHERE v.tienda_id = $1 AND v.usuario_id::text <> $2)`, tienda, u).Scan(&deLaDuenia); err != nil {
+			return err
+		}
+		if deLaDuenia {
+			var esElla bool
+			_ = t.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM auth.membresias WHERE tienda_id = $1 AND usuario_id::text = $2 AND rol = 'duenio')`,
+				tienda, u).Scan(&esElla)
+			if !esElla {
+				return ErrDeLaDuenia
+			}
+		}
+		if _, err := t.Exec(ctx, `INSERT INTO telegram_vinculos (tienda_id, chat, nombre, usuario_id) VALUES ($1, $2, $3, nullif($4, '')::uuid)
+			ON CONFLICT (tienda_id) DO UPDATE SET chat = EXCLUDED.chat, nombre = EXCLUDED.nombre, usuario_id = EXCLUDED.usuario_id,
+				vinculado_en = now()`,
+			tienda, chat, nombre, u); err != nil {
 			var pg *pgconn.PgError
 			if errors.As(err, &pg) && pg.Code == "23505" {
 				return ErrChatOcupado
@@ -191,9 +230,51 @@ func (s *Servicio) tiendaDe(ctx context.Context, consulta string, arg any) (stri
 	return *tienda, nil
 }
 
-// TiendaDelChat devuelve la tienda vinculada al chat.
+// TiendaDelChat devuelve la tienda vinculada al chat, sólo si quien lo vinculó sigue en el equipo con
+// un rol que puede (dueña o administración). Si no, el vínculo se borra y da ErrSinAcceso.
 func (s *Servicio) TiendaDelChat(ctx context.Context, chat int64) (string, error) {
-	return s.tiendaDe(ctx, `SELECT app.tienda_de_telegram($1)::text`, chat)
+	tienda, _, err := s.RolDelChat(ctx, chat)
+	return tienda, err
+}
+
+// RolDelChat: la tienda del chat y el rol de quien lo vinculó (con el que responde Tincho).
+func (s *Servicio) RolDelChat(ctx context.Context, chat int64) (string, string, error) {
+	tienda, err := s.tiendaDe(ctx, `SELECT app.tienda_de_telegram($1)::text`, chat)
+	if err != nil {
+		return "", "", err
+	}
+	var rol string
+	sinAcceso := false
+	err = s.Pool.EnTienda(ctx, tienda, func(t pgx.Tx) error {
+		var r *string
+		if err := t.QueryRow(ctx, `SELECT m.rol FROM telegram_vinculos v
+			LEFT JOIN auth.membresias m ON m.tienda_id = v.tienda_id AND m.usuario_id = v.usuario_id
+			WHERE v.tienda_id = $1 AND v.chat = $2`, tienda, chat).Scan(&r); err != nil {
+			return err
+		}
+		if r == nil || !esAdmin(*r) {
+			// Se borra (la transacción tiene que confirmarse: por eso el error va después).
+			sinAcceso = true
+			_, err := t.Exec(ctx, `DELETE FROM telegram_vinculos WHERE tienda_id = $1 AND chat = $2`, tienda, chat)
+			return err
+		}
+		rol = *r
+		return nil
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", "", ErrSinVinculo
+	}
+	if err == nil && sinAcceso {
+		return "", "", ErrSinAcceso
+	}
+	return tienda, rol, err
+}
+
+// QuitarDePersona borra el vínculo de Telegram de esa persona en la tienda (la sacaron del equipo o
+// ya no administra), en la transacción del cambio.
+func QuitarDePersona(ctx context.Context, t pgx.Tx, tienda, usuario string) error {
+	_, err := t.Exec(ctx, `DELETE FROM telegram_vinculos WHERE tienda_id = $1 AND usuario_id::text = $2`, tienda, usuario)
+	return err
 }
 
 // Desvincular saca el chat de la tienda desde el panel. Devuelve el chat que estaba (0 si ninguno),

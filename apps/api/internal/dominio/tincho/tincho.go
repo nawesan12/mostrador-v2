@@ -45,8 +45,9 @@ type Servicio struct {
 	// Presupuesto del mes en micro-dólares (0: sin tope global).
 	Presupuesto int64
 	Ahora       func() time.Time
-	// TiendaDelChat resuelve el chat de Telegram vinculado (integraciones/telegram).
-	TiendaDelChat func(ctx context.Context, chat int64) (string, error)
+	// RolDelChat resuelve el chat de Telegram vinculado (integraciones/telegram): la tienda y el rol de
+	// quien lo vinculó (si ya no está en el equipo, da error y el vínculo se borra).
+	RolDelChat func(ctx context.Context, chat int64) (string, string, error)
 	Log           *slog.Logger
 
 	mu    sync.Mutex

@@ -116,7 +116,7 @@ func correr() error {
 	// Tincho con Claude: sin ANTHROPIC_API_KEY responde sólo el motor del BFF.
 	tg := &telegram.Servicio{Pool: app}
 	tin := &tincho.Servicio{Pool: app, Modelo: pia.Nuevo(cfg.AnthropicClave), Cache: pia.NuevoCache(),
-		Presupuesto: int64(cfg.IAPresupuestoUSD) * 1_000_000, TiendaDelChat: tg.TiendaDelChat, Log: slog.Default()}
+		Presupuesto: int64(cfg.IAPresupuestoUSD) * 1_000_000, RolDelChat: tg.RolDelChat, Log: slog.Default()}
 	if cfg.AnthropicClave == "" {
 		slog.Warn("tincho: sin ANTHROPIC_API_KEY, Tincho responde sólo con el motor")
 	}
