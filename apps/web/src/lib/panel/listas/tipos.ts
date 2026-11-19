@@ -67,6 +67,9 @@ export type ConfigLista<R extends { id: string }> = {
 	ordenes: { k: string; t: string }[];
 	fila: (r: R) => VistaFila;
 	accionFila?: (r: R, ctx: Ctx) => Promise<void>;
+	/** La acción de la fila sólo en la compu: en el celular el nombre necesita ese lugar (y la acción ya
+	 * está en la ficha o en el lote). */
+	accionSoloCompu?: boolean;
 	alternar?: (r: R, on: boolean, ctx: Ctx) => Promise<void>;
 	ajustar?: (r: R, delta: number, ctx: Ctx) => Promise<void>;
 	lote: { t: string; icon: IconData; hacer: (ids: string[], ctx: Ctx) => Promise<void> }[];

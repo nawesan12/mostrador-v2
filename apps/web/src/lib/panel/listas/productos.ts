@@ -156,6 +156,8 @@ export function configProductos(
 			};
 		},
 		accionFila: compartir,
+		// En el celular, «Compartir» está en la ficha y en el lote: el nombre del producto entra entero.
+		accionSoloCompu: true,
 		async alternar(p, on, ctx) {
 			await ctx.accion([p.id], 'publicar', on);
 			ctx.ui.toast({

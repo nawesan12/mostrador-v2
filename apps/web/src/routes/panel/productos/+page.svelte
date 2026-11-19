@@ -12,6 +12,7 @@
 	import { compartirProducto } from '#lib/panel/compartir.ts';
 	import { configProductos, type ProductoFila } from '#lib/panel/listas/productos.ts';
 	import { SITE } from '#lib/site.ts';
+	import { pesos } from '#lib/panel/formato.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 	import { escucharTiempoReal } from '#lib/tiempo-real/panel.svelte.ts';
 	import type { components } from '@mostrador/contrato/esquema';
@@ -68,7 +69,29 @@
 		editor = true;
 	}
 
-	let pct = $state(8);
+	// Arranca en 0 (Aplicar apagado): nada de un +8 % puesto de antemano.
+	let pct = $state(0);
+	const RAPIDOS = [5, 10, 15, -10];
+	// Cómo quedan 3 de los elegidos, con el mismo redondeo que Go (a $ 10).
+	let muestra = $state<{ nombre: string; precio: number }[]>([]);
+	const nuevoPrecio = (p: number) => Math.max(0, Math.round((p * (1 + pct / 100)) / 10) * 10);
+	$effect(() => {
+		if (!cambiandoPrecio) return;
+		pct = 0;
+		muestra = [];
+		const ids = porcentaje.slice(0, 3);
+		void Promise.all(
+			ids.map((id) =>
+				fetch(`/panel/productos/${encodeURIComponent(id)}`)
+					.then((r) => (r.ok ? (r.json() as Promise<Producto>) : null))
+					.catch(() => null)
+			)
+		).then((ps) => {
+			muestra = ps
+				.filter((p): p is Producto => !!p)
+				.map((p) => ({ nombre: p.nombre, precio: p.precio }));
+		});
+	});
 	async function aplicarPrecio(e: SubmitEvent) {
 		e.preventDefault();
 		const ids = porcentaje;
@@ -518,21 +541,118 @@
 			Cambiar precio de {porcentaje.length}
 			{porcentaje.length === 1 ? 'producto' : 'productos'}
 		</div>
-		<div class="m-d">Subí o bajá todo de una. Redondeamos a $ 10.</div>
+		<div class="m-d">Subí o bajá todo de una. Redondeamos a&nbsp;$&nbsp;10.</div>
+		<div class="m-rapidos" role="group" aria-label="Porcentajes rápidos">
+			{#each RAPIDOS as r (r)}
+				<button
+					type="button"
+					class="m-rapido"
+					aria-pressed={pct === r}
+					onclick={() => (pct = r)}>{r > 0 ? '+' : '−'}{Math.abs(r)} %</button
+				>
+			{/each}
+		</div>
 		<div class="m-rango">
 			<input type="range" min="-30" max="50" step="1" bind:value={pct} aria-label="Porcentaje" />
-			<b>{pct > 0 ? '+' : ''}{pct}%</b>
+			<label class="m-num"
+				><input
+					type="number"
+					inputmode="numeric"
+					min="-90"
+					max="200"
+					step="1"
+					bind:value={pct}
+					aria-label="Porcentaje exacto"
+				/>%</label
+			>
 		</div>
+		{#if muestra.length && pct}
+			<ul class="m-muestra" aria-label="Cómo quedan">
+				{#each muestra as m (m.nombre)}
+					<li>
+						<span class="m-mn">{m.nombre}</span><span class="m-mp"
+							><s>{pesos(m.precio)}</s> → <b>{pesos(nuevoPrecio(m.precio))}</b></span
+						>
+					</li>
+				{/each}
+			</ul>
+		{/if}
 		<div class="m-acc">
 			<button type="button" class="btn btn-secondary" onclick={() => (cambiandoPrecio = false)}
 				>Cancelar</button
 			>
-			<button class="btn btn-primary" disabled={!pct}>Aplicar</button>
+			<button class="btn btn-primary" disabled={!pct || pct < -90}>Aplicar</button>
 		</div>
 	</form>
 </Modal>
 
 <style>
+	.m-rapidos {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin-top: 14px;
+	}
+	.m-rapido {
+		min-height: 44px;
+		padding: 0 14px;
+		border-radius: 999px;
+		border: 1.5px solid var(--ln2);
+		background: var(--sf);
+		color: var(--tx);
+		font: inherit;
+		font-size: 14px;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.m-rapido[aria-pressed='true'] {
+		border-color: var(--tx);
+		background: var(--tx);
+		color: var(--sf);
+	}
+	.m-num {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		font-weight: 700;
+	}
+	.m-num input {
+		width: 72px;
+		min-height: 44px;
+		padding: 0 10px;
+		border: 1px solid var(--ln2);
+		border-radius: 12px;
+		background: var(--sf3);
+		color: var(--tx);
+		font: inherit;
+		text-align: right;
+	}
+	.m-muestra {
+		margin: 14px 0 0;
+		padding: 0;
+		list-style: none;
+		display: grid;
+		gap: 8px;
+		font-size: 14px;
+	}
+	.m-muestra li {
+		display: flex;
+		justify-content: space-between;
+		gap: 12px;
+	}
+	.m-mn {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.m-mp {
+		flex: none;
+		font-variant-numeric: tabular-nums;
+	}
+	.m-mp s {
+		color: var(--mu);
+	}
 	.foto {
 		position: relative;
 		overflow: hidden;

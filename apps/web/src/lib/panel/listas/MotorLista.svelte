@@ -555,7 +555,7 @@
 										/>
 									</span>
 								{/if}
-								{#if v.act && config.accionFila}
+								{#if v.act && config.accionFila && (amplio || !config.accionSoloCompu)}
 									<button
 										type="button"
 										class="accion"
