@@ -43,7 +43,7 @@ var (
 	ErrSinEnvio = errors.New("vidriera: forma de entrega no disponible")
 	// ErrSinNewsletter: el plan de la tienda no incluye newsletter.
 	ErrSinNewsletter = errors.New("vidriera: sin newsletter")
-	ErrSinStock = errors.New("vidriera: sin stock")
+	ErrSinStock      = errors.New("vidriera: sin stock")
 	// ErrProximamente: un producto del carrito todavía no salió a la venta (§52).
 	ErrProximamente = errors.New("vidriera: todavía no salió")
 )

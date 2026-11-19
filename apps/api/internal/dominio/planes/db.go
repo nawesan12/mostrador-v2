@@ -3,6 +3,8 @@ package planes
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -59,14 +61,19 @@ func ExigirEditarProducto(ctx context.Context, t pgx.Tx, tiendaID, productoID st
 	return productoFuera(p)
 }
 
-// ProductoFuera: el producto está después de los primeros N (por antigüedad) del plan.
+// ordenDelPlan: qué productos ocupan los lugares del plan. Primero los publicados en la tienda, y
+// entre ellos los más viejos: un borrador nunca le quita el lugar a uno que se vende. Es el mismo
+// orden en el panel (sólo lectura) y en la tienda (ocultos).
+const ordenDelPlan = `ORDER BY (publicado AND coalesce((canales->>'web')::boolean, true)) DESC, creado_en, id`
+
+// ProductoFuera: el producto está después de los primeros N del plan (ordenDelPlan).
 func ProductoFuera(ctx context.Context, t pgx.Tx, tiendaID, productoID string, p Plan) (bool, error) {
 	if p.Productos == SinTope {
 		return false, nil
 	}
 	var fuera bool
 	err := t.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM (SELECT id FROM productos WHERE tienda_id = $1
-			ORDER BY creado_en, id OFFSET $3) f WHERE f.id::text = $2)`, tiendaID, productoID, p.Productos).Scan(&fuera)
+			`+ordenDelPlan+` OFFSET $3) f WHERE f.id::text = $2)`, tiendaID, productoID, p.Productos).Scan(&fuera)
 	return fuera, err
 }
 
@@ -76,7 +83,7 @@ func FueraDelPlan(ctx context.Context, t pgx.Tx, tiendaID string, p Plan) (map[s
 	if p.Productos == SinTope {
 		return out, nil
 	}
-	filas, err := t.Query(ctx, `SELECT id::text FROM productos WHERE tienda_id = $1 ORDER BY creado_en, id OFFSET $2`,
+	filas, err := t.Query(ctx, `SELECT id::text FROM productos WHERE tienda_id = $1 `+ordenDelPlan+` OFFSET $2`,
 		tiendaID, p.Productos)
 	if err != nil {
 		return nil, err
@@ -96,7 +103,7 @@ func FueraDelPlan(ctx context.Context, t pgx.Tx, tiendaID string, p Plan) (map[s
 // en $1 y el tope en el parámetro que se indique (tope 0 o negativo: todos). Ej.:
 // `AND ` + SQLVisibles("$2").
 func SQLVisibles(param string) string {
-	return `(` + param + `::int <= 0 OR id NOT IN (SELECT id FROM productos WHERE tienda_id = $1 ORDER BY creado_en, id OFFSET ` +
+	return `(` + param + `::int <= 0 OR id NOT IN (SELECT id FROM productos WHERE tienda_id = $1 ` + ordenDelPlan + ` OFFSET ` +
 		param + `::int))`
 }
 
@@ -109,12 +116,23 @@ func ExigirPersonaNueva(ctx context.Context, t pgx.Tx, tiendaID string) error {
 	if _, err := t.Exec(ctx, `SELECT 1 FROM tiendas WHERE id = $1 FOR NO KEY UPDATE`, tiendaID); err != nil {
 		return err
 	}
-	var n int
-	if err := t.QueryRow(ctx, `SELECT (SELECT count(*) FROM auth.membresias WHERE tienda_id = $1) +
-			(SELECT count(*) FROM invitaciones WHERE tienda_id = $1)`, tiendaID).Scan(&n); err != nil {
+	// Las invitaciones sin aceptar (vencidas incluidas) reservan su lugar: se pueden reenviar sin
+	// volver a pasar por el tope. Si son ellas las que lo llenan, se dice cómo liberar lugar.
+	var miembros, invitaciones int
+	if err := t.QueryRow(ctx, `SELECT (SELECT count(*) FROM auth.membresias WHERE tienda_id = $1),
+			(SELECT count(*) FROM invitaciones WHERE tienda_id = $1)`, tiendaID).Scan(&miembros, &invitaciones); err != nil {
 		return err
 	}
-	return ExigirPersonas(p, n+1)
+	err = ExigirPersonas(p, miembros+invitaciones+1)
+	var tope *Tope
+	if invitaciones > 0 && errors.As(err, &tope) {
+		cuales := "1 invitación sin aceptar: cancelala"
+		if invitaciones > 1 {
+			cuales = strconv.Itoa(invitaciones) + " invitaciones sin aceptar: cancelá alguna"
+		}
+		tope.Detalle = fmt.Sprintf("Tenés %s para liberar lugar, o pasá a %s.", cuales, tope.Sube.Nombre)
+	}
+	return err
 }
 
 // PersonaFuera: la persona entró después de las que entran en el plan (la dueña siempre entra). Sus

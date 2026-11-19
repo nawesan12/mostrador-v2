@@ -166,6 +166,11 @@ func (s *Servicio) Rutas(mux *http.ServeMux, claveBFF string) {
 			return
 		}
 		tienda, rol, err := s.RolDelChat(r.Context(), b.Chat)
+		if p := problema.De(err); p != nil {
+			// Quedó fuera del equipo del plan: el BFF le contesta el texto del tope.
+			problema.Escribir(w, p)
+			return
+		}
 		if err != nil {
 			problema.Escribir(w, problema.NoEncontrado("Este chat ya no tiene acceso a la tienda."))
 			return

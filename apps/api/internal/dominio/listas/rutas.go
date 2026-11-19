@@ -3,6 +3,8 @@ package listas
 import (
 	"encoding/json"
 	"errors"
+	"github.com/jackc/pgx/v5/pgconn"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -111,6 +113,13 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, fact 
 			return
 		}
 		n, err := 0, error(nil)
+		salteados := 0
+		if r.PathValue("lista") == "productos" && (c.Accion == "publicar" || c.Accion == "pausar") {
+			if c.IDs, salteados, err = SinLosDeFuera(r.Context(), pool, id, c.IDs); err != nil {
+				problema.Escribir(w, problema.Interno())
+				return
+			}
+		}
 		if r.PathValue("lista") == "productos" {
 			switch c.Accion {
 			case "publicar":
@@ -163,7 +172,7 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, fact 
 				return
 			}
 			if err != nil && n == 0 {
-				problema.Escribir(w, problema.Invalido(err.Error()))
+				problema.Escribir(w, invalidoDe(err))
 				return
 			}
 			err = nil
@@ -189,10 +198,10 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, fact 
 		}
 		// Etiquetas de clientes y mensajes llegan con WhatsApp: hasta entonces, 0.
 		if err != nil {
-			problema.Escribir(w, problema.Invalido(err.Error()))
+			problema.Escribir(w, invalidoDe(err))
 			return
 		}
-		escribir(w, map[string]int{"hechos": n})
+		escribir(w, map[string]int{"hechos": n, "salteados": salteados})
 	}))
 	// Los pedidos importados de otra plataforma de un cliente (su ficha).
 	mux.HandleFunc("GET /v1/panel/clientes/{id}/historial", con(func(w http.ResponseWriter, r *http.Request, id string) {
@@ -225,7 +234,7 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, fact 
 		case errors.Is(err, ErrNoExiste):
 			problema.Escribir(w, problema.NoEncontrado("Ese producto no existe."))
 		case err != nil:
-			problema.Escribir(w, problema.Invalido(err.Error()))
+			problema.Escribir(w, invalidoDe(err))
 		default:
 			w.WriteHeader(estado)
 			escribir(w, p)
@@ -257,7 +266,7 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, fact 
 		case errors.Is(err, ErrNoExiste):
 			problema.Escribir(w, problema.NoEncontrado("Ese producto no existe."))
 		case err != nil:
-			problema.Escribir(w, problema.Invalido(err.Error()))
+			problema.Escribir(w, invalidoDe(err))
 		default:
 			w.WriteHeader(http.StatusCreated)
 			escribir(w, p)
@@ -277,4 +286,15 @@ func Rutas(mux *http.ServeMux, pool tx, tienda func(*http.Request) string, fact 
 			escribir(w, p)
 		}
 	}))
+}
+
+// invalidoDe: el error de validación que lee la persona. Un error de Postgres (una restricción de la
+// base, un dato que no entra) nunca llega tal cual al panel: va un texto genérico y el detalle al log.
+func invalidoDe(err error) *problema.Problema {
+	var pg *pgconn.PgError
+	if errors.As(err, &pg) {
+		slog.Warn("listas: la base rechazó el cambio", "codigo", pg.Code, "restriccion", pg.ConstraintName, "error", pg.Message)
+		return problema.Invalido("No pudimos guardarlo: revisá los datos (fotos, textos o variantes).")
+	}
+	return problema.Invalido(err.Error())
 }

@@ -69,6 +69,9 @@ type Progreso struct {
 	Redirecciones int `json:"redirecciones"`
 	Repetidos     int `json:"repetidos"`
 	Recortados    int `json:"recortados"`
+	// topeProductos: la página llegó al tope de productos del plan (no se piden más páginas de
+	// productos; la importación sigue con clientes y pedidos).
+	topeProductos bool
 }
 
 func (p *Progreso) sumar(o Progreso) {

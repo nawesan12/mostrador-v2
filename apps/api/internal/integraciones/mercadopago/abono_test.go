@@ -267,6 +267,23 @@ func TestPackDeTinchoSeCobra(t *testing.T) {
 	if packs() != 1 {
 		t.Fatalf("packs: %d", packs())
 	}
+	// Se acredita en el momento: sin efectivo ni cajero, y sin pendientes.
+	excl, _ := pref["payment_methods"].(map[string]any)["excluded_payment_types"].([]any)
+	if pref["binary_mode"] != true || len(excl) != 2 {
+		t.Fatalf("medios del pack: %v", pref)
+	}
+	// Devuelto (el aviso llega dos veces): se resta una sola vez, del mes en que se sumó.
+	f.pagos["52"]["status"] = "refunded"
+	_ = s.ConciliarPagoAbono(ctx, "52")
+	_ = s.ConciliarPagoAbono(ctx, "52")
+	if packs() != 0 {
+		t.Fatalf("pack devuelto sigue sumando: %d", packs())
+	}
+	// Un pago devuelto que nunca se sumó no resta nada.
+	f.pagos["50"]["status"] = "charged_back"
+	if err := s.ConciliarPagoAbono(ctx, "50"); err != nil || packs() != 0 {
+		t.Fatalf("contracargo de uno sin sumar: %d %v", packs(), err)
+	}
 }
 
 // Un débito de antes de los precios del 19/11 (Crece a $ 49.900): en su próximo cobro pasa solo al
@@ -295,5 +312,41 @@ func TestDebitoViejoPasaAlPrecioNuevo(t *testing.T) {
 	}
 	if f.susc["sus-7"]["transaction_amount"] != float64(34900) {
 		t.Fatalf("el débito sigue con el precio viejo: %v", f.susc["sus-7"])
+	}
+}
+
+// Un débito que cobra menos que el plan no sube solo: una suba va con aviso de 30 días.
+func TestDebitoMasBajoNoSubeSolo(t *testing.T) {
+	ctx := context.Background()
+	b := pruebadb.Nueva(t)
+	luna := pruebadb.CrearTienda(t, b.App, "luna")
+	f := &mpFalso{cuerpos: map[string]map[string]any{}, pagos: map[string]map[string]any{}, susc: map[string]map[string]any{},
+		autoriz: map[string]map[string]any{}, usuario: 777, refreshOK: true}
+	srv := httptest.NewServer(f)
+	defer srv.Close()
+	s := &mercadopago.Servicio{Pool: b.App, Cliente: &mercadopago.Cliente{Base: srv.URL},
+		Config: mercadopago.Config{TokenPlataforma: "APP_USR-plataforma", Sitio: "https://tulocalweb.com.ar"}}
+	_ = b.App.EnTienda(ctx, luna, func(tx pgx.Tx) error {
+		_, err := tx.Exec(ctx, `UPDATE tiendas SET plan = 'pro', plan_ciclo = 'mes', suscripcion_mp = 'sus-8',
+			suscripcion_estado = 'authorized' WHERE id = $1`, luna)
+		return err
+	})
+	f.susc["sus-8"] = map[string]any{"id": "sus-8", "status": "authorized", "external_reference": luna,
+		"reason": "Tu Local Web Crece (mensual)", "auto_recurring": map[string]any{"transaction_amount": 29900}}
+	f.autoriz["80"] = map[string]any{"id": 80, "preapproval_id": "sus-8", "status": "processed", "transaction_amount": 29900,
+		"payment": map[string]any{"id": 1, "status": "approved"}}
+	if err := s.ConciliarCobroAbono(ctx, "80"); err != nil {
+		t.Fatal(err)
+	}
+	if _, cambio := f.susc["sus-8"]["transaction_amount"]; cambio {
+		t.Fatalf("el débito subió solo: %v", f.susc["sus-8"])
+	}
+	// Y uno autorizado con el precio viejo (más alto) baja ya, antes de su primer cobro.
+	f.susc["sus-8"]["auto_recurring"] = map[string]any{"transaction_amount": 49900}
+	if err := s.ConciliarSuscripcion(ctx, "sus-8"); err != nil {
+		t.Fatal(err)
+	}
+	if f.susc["sus-8"]["transaction_amount"] != float64(34900) {
+		t.Fatalf("el débito autorizado sigue alto: %v", f.susc["sus-8"])
 	}
 }

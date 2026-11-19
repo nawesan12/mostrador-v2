@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -169,6 +170,8 @@ func TestTopesDePlan(t *testing.T) {
 		}
 		if err := invitar("caro@sol.com", "admin"); err == nil || !strings.Contains(err.Error(), "personas") {
 			t.Fatalf("emprende invitó a la tercera: %v", err)
+		} else if p := problema.De(err); p == nil || !strings.Contains(p.Detalle, "1 invitación sin aceptar: cancelala") {
+			t.Fatalf("el tope no dice cómo liberar lugar: %+v", p)
 		}
 		tokens["beto"] = entrar("beto@sol.com")
 		plan("pro", false)
@@ -264,6 +267,57 @@ func TestTopesDePlan(t *testing.T) {
 		}
 	})
 
+	t.Run("los borradores no le quitan lugar a lo publicado", func(t *testing.T) {
+		plan("negocio", false)
+		// Negocio guarda las 10 fotos que promete (la base cortaba en 8).
+		if rec := crear(26, 10); rec.Code != http.StatusCreated {
+			t.Fatalf("negocio con 10 fotos: %d %s", rec.Code, rec.Body)
+		}
+		var publicados int
+		_ = admin.QueryRow(ctx, `SELECT count(*) FROM productos WHERE tienda_id = $1 AND publicado
+			AND coalesce((canales->>'web')::boolean, true)`, ana.TiendaID).Scan(&publicados)
+		// Los 10 más viejos pasan a borrador: en Gratis siguen a la vista todos los publicados.
+		if _, err := admin.Exec(ctx, `UPDATE productos SET publicado = false WHERE id IN (SELECT id FROM productos
+			WHERE tienda_id = $1 AND publicado ORDER BY creado_en LIMIT 10)`, ana.TiendaID); err != nil {
+			t.Fatal(err)
+		}
+		plan("gratis", false)
+		if v := visibles(); v != publicados-10 || v > 20 {
+			t.Fatalf("la tienda muestra %d de %d publicados", v, publicados-10)
+		}
+		// Lo que queda fuera son borradores: publicarlos en masa no hace nada (y se avisa).
+		var fuera []string
+		var l struct {
+			Filas []map[string]any `json:"filas"`
+		}
+		_ = json.Unmarshal(pedir("ana", "GET", "/v1/panel/listas/productos?cuantos=200", "").Body.Bytes(), &l)
+		for _, f := range l.Filas {
+			if f["fueraDePlan"] == true {
+				fuera = append(fuera, f["id"].(string))
+			}
+		}
+		if len(fuera) == 0 {
+			t.Fatal("ninguno fuera")
+		}
+		var res struct{ Hechos, Salteados int }
+		_ = json.Unmarshal(pedir("ana", "POST", "/v1/panel/listas/productos/acciones",
+			`{"ids":["`+strings.Join(fuera, `","`)+`"],"accion":"publicar","valor":true}`).Body.Bytes(), &res)
+		if res.Hechos != 0 || res.Salteados != len(fuera) {
+			t.Fatalf("publicar los de fuera: %+v", res)
+		}
+		plan("negocio", false)
+		_, _ = admin.Exec(ctx, `UPDATE productos SET publicado = true WHERE tienda_id = $1`, ana.TiendaID)
+	})
+
+	t.Run("sin Mercado Pago, el pack no se regala fuera de desarrollo", func(t *testing.T) {
+		rec := pedir("ana", "POST", "/v1/panel/cuenta/pack", `{}`)
+		var packs string
+		_ = admin.QueryRow(ctx, `SELECT packs::text FROM tiendas WHERE id = $1`, ana.TiendaID).Scan(&packs)
+		if rec.Code != http.StatusServiceUnavailable || packs != "{}" {
+			t.Fatalf("pack sin cobro: %d %s, packs %s", rec.Code, rec.Body, packs)
+		}
+	})
+
 	t.Run("la pantalla del plan trae el catálogo y lo que quedó fuera", func(t *testing.T) {
 		plan("gratis", false)
 		var v struct {
@@ -280,7 +334,7 @@ func TestTopesDePlan(t *testing.T) {
 		if err := json.Unmarshal(rec.Body.Bytes(), &v); err != nil {
 			t.Fatal(err)
 		}
-		if v.Vigente != "gratis" || len(v.Planes) != 4 || v.Planes[2].Mensual != 34_900 || v.Fuera["productos"] != 5 ||
+		if v.Vigente != "gratis" || len(v.Planes) != 4 || v.Planes[2].Mensual != 34_900 || v.Fuera["productos"] != 6 ||
 			v.Fuera["personas"] != 2 || v.Pack["precio"] != 4_900 {
 			t.Fatalf("plan: %s", rec.Body)
 		}

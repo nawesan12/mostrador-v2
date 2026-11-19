@@ -16,6 +16,8 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/planes"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 	"regexp"
 	"strconv"
 	"strings"
@@ -234,6 +236,9 @@ func (s *Servicio) tiendaDe(ctx context.Context, consulta string, arg any) (stri
 // un rol que puede (dueña o administración). Si no, el vínculo se borra y da ErrSinAcceso.
 func (s *Servicio) TiendaDelChat(ctx context.Context, chat int64) (string, error) {
 	tienda, _, err := s.RolDelChat(ctx, chat)
+	if problema.De(err) != nil {
+		return tienda, nil // quedó en sólo lectura por el plan: el chat sigue siendo de la tienda
+	}
 	return tienda, err
 }
 
@@ -245,12 +250,27 @@ func (s *Servicio) RolDelChat(ctx context.Context, chat int64) (string, string, 
 	}
 	var rol string
 	sinAcceso := false
+	var fuera error
 	err = s.Pool.EnTienda(ctx, tienda, func(t pgx.Tx) error {
 		var r *string
-		if err := t.QueryRow(ctx, `SELECT m.rol FROM telegram_vinculos v
+		var usuario string
+		if err := t.QueryRow(ctx, `SELECT m.rol, v.usuario_id::text FROM telegram_vinculos v
 			LEFT JOIN auth.membresias m ON m.tienda_id = v.tienda_id AND m.usuario_id = v.usuario_id
-			WHERE v.tienda_id = $1 AND v.chat = $2`, tienda, chat).Scan(&r); err != nil {
+			WHERE v.tienda_id = $1 AND v.chat = $2`, tienda, chat).Scan(&r, &usuario); err != nil {
 			return err
+		}
+		// Quien quedó fuera del equipo del plan (después de bajar) no usa Tincho por Telegram, igual
+		// que en el panel: el vínculo queda para cuando la dueña suba de plan o libere un lugar.
+		if r != nil && *r != "duenio" {
+			p, err := planes.Vigente(ctx, t, tienda, time.Now())
+			if err != nil {
+				return err
+			}
+			if f, err := planes.PersonaFuera(ctx, t, tienda, usuario, p); err != nil {
+				return err
+			} else if f {
+				fuera = planes.ErrPersonaFuera(p)
+			}
 		}
 		if r == nil || !esAdmin(*r) {
 			// Se borra (la transacción tiene que confirmarse: por eso el error va después).
@@ -266,6 +286,10 @@ func (s *Servicio) RolDelChat(ctx context.Context, chat int64) (string, string, 
 	}
 	if err == nil && sinAcceso {
 		return "", "", ErrSinAcceso
+	}
+	if err == nil && fuera != nil {
+		// La tienda y el rol igual vuelven: lo que sólo lee (avisos al chat) sigue andando.
+		return tienda, rol, fuera
 	}
 	return tienda, rol, err
 }

@@ -380,3 +380,37 @@ func TestClienteCargadoEnElPanel(t *testing.T) {
 		t.Fatalf("lista: %+v", regs)
 	}
 }
+
+// Importar a un plan con tope: entran los que caben y un solo aviso dice cómo traer el resto (no uno
+// por producto), y la etapa de productos termina ahí.
+func TestImportarCortaEnElTopeDelPlan(t *testing.T) {
+	ctx := context.Background()
+	b := pruebadb.Nueva(t)
+	luna := pruebadb.CrearTienda(t, b.App, "luna")
+	admin, err := pgx.Connect(ctx, b.AdminURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer admin.Close(ctx)
+	if _, err := admin.Exec(ctx, `UPDATE tiendas SET plan = 'gratis', creada_en = now() - interval '30 days' WHERE id = $1`, luna); err != nil {
+		t.Fatal(err)
+	}
+	var pag importacion.Pagina
+	for i := range 25 {
+		pag.Productos = append(pag.Productos, importacion.ProductoViejo{Externo: fmt.Sprint(i),
+			Producto: listas.Editable{Nombre: fmt.Sprintf("Producto %d", i), Precio: 1000, Canales: map[string]bool{"web": true}}})
+	}
+	var n int
+	var errs []importacion.Error
+	err = b.App.EnTienda(ctx, luna, func(tx pgx.Tx) error {
+		p, e, err := importacion.GuardarPagina(ctx, tx, luna, "shopify", "productos", pag)
+		n, errs = p.Productos, e
+		return err
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n != 20 || len(errs) != 1 || !strings.Contains(errs[0].Detalle, "Pasá a Emprende") {
+		t.Fatalf("entraron %d, errores %+v", n, errs)
+	}
+}

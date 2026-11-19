@@ -54,6 +54,7 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/db"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/geoip"
+	pia "github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/ia"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/limite"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/tiemporeal"
@@ -198,11 +199,18 @@ func Nuevo(d Dependencias) http.Handler {
 		if d.Cuentas != nil {
 			geo = d.Cuentas.Geo
 		}
-		ganchos := configuracion.Ganchos{}
+		// El pack de Tincho sin Mercado Pago se suma sin cobrar sólo en desarrollo.
+		ganchos := configuracion.Ganchos{PackSinCobro: d.Desarrollo}
 		if d.MercadoPago != nil {
 			ganchos.Beneficio = d.MercadoPago.AplicarBeneficio
 			if d.MercadoPago.Config.TokenPlataforma != "" {
 				ganchos.ComprarPack = d.MercadoPago.ComprarPack
+			}
+		}
+		if d.Tincho != nil && d.Tincho.Presupuesto > 0 {
+			ganchos.IAPausada = func(ctx context.Context) bool {
+				g, err := pia.Gastado(ctx, d.App, time.Now())
+				return err == nil && g >= d.Tincho.Presupuesto
 			}
 		}
 		if d.Correo != nil && d.CorreoEquipo != "" {

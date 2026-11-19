@@ -16,6 +16,8 @@ import (
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/roles"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/ia"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/limite"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
 func mes(t time.Time) string { return t.In(time.FixedZone("ART", -3*3600)).Format("2006-01") }
@@ -129,13 +131,15 @@ func Plan(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (map[s
 		}
 		var packs map[string]int
 		var negocio Negocio
-		var productos, personas int
+		var productos, miembros, invitaciones int
 		if err := t.QueryRow(ctx, `SELECT packs, negocio,
 				(SELECT count(*) FROM productos WHERE tienda_id = $1),
-				(SELECT count(*) FROM auth.membresias WHERE tienda_id = $1) + (SELECT count(*) FROM invitaciones WHERE tienda_id = $1)
-			FROM tiendas WHERE id = $1`, tiendaID).Scan(&packs, &negocio, &productos, &personas); err != nil {
+				(SELECT count(*) FROM auth.membresias WHERE tienda_id = $1),
+				(SELECT count(*) FROM invitaciones WHERE tienda_id = $1)
+			FROM tiendas WHERE id = $1`, tiendaID).Scan(&packs, &negocio, &productos, &miembros, &invitaciones); err != nil {
 			return err
 		}
+		personas := miembros + invitaciones
 		consumo, err := ia.ConsumoEnTx(ctx, t, tiendaID, ahora)
 		if err != nil {
 			return err
@@ -168,7 +172,7 @@ func Plan(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (map[s
 		}
 		facturas := []map[string]any{}
 		filas, err := t.Query(ctx, `SELECT clave, detalle, importe, creado_en FROM abono_cobros WHERE tienda_id = $1
-			ORDER BY creado_en DESC LIMIT 24`, tiendaID)
+			AND clave NOT LIKE 'devolucion:%' ORDER BY creado_en DESC LIMIT 24`, tiendaID)
 		if err != nil {
 			return err
 		}
@@ -188,16 +192,19 @@ func Plan(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (map[s
 		}
 		// Lo que rige (en la prueba, Crece) y lo que quedó fuera del plan después de bajar.
 		vig := planes.DeEstado(e, ahora)
-		fueraProd, fueraPers := 0, 0
+		// Personas: las del equipo que quedaron en sólo lectura (la misma regla que planes.PersonaFuera)
+		// y, aparte, las invitaciones sin aceptar que ocupan un lugar que ya no hay.
+		fueraProd, fueraPers, fueraInv := 0, 0, 0
 		if vig.Productos != planes.SinTope && productos > vig.Productos {
 			fueraProd = productos - vig.Productos
 		}
-		if vig.Personas != planes.SinTope && personas > vig.Personas {
-			fueraPers = personas - vig.Personas
+		if vig.Personas != planes.SinTope {
+			fueraPers = max(0, miembros-vig.Personas)
+			fueraInv = max(0, personas-vig.Personas) - fueraPers
 		}
 		res = map[string]any{
 			"vigente": vig.ID, "planes": planes.Todos,
-			"fuera":  map[string]int{"productos": fueraProd, "personas": fueraPers},
+			"fuera":  map[string]int{"productos": fueraProd, "personas": fueraPers, "invitaciones": fueraInv},
 			"pack":   map[string]int{"respuestas": planes.PackTincho, "precio": planes.PrecioPackTincho},
 			"actual": e.Plan, "ciclo": e.Ciclo, "enPrueba": enPrueba, "diasPrueba": max(0, int(math.Ceil(e.FinPrueba.Sub(ahora).Hours()/24))),
 			"finPrueba":      e.FinPrueba,
@@ -223,8 +230,14 @@ func Plan(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (map[s
 type Ganchos struct {
 	// Beneficio para quedarse (§57) con el débito de Mercado Pago. nil: sólo queda anotado.
 	Beneficio func(ctx context.Context, tiendaID string, b abono.Beneficio) error
-	// ComprarPack: la URL de Mercado Pago para pagar un pack extra de Tincho. nil: sin cobro (desarrollo).
+	// ComprarPack: la URL de Mercado Pago para pagar un pack extra de Tincho. nil: sin Mercado Pago en
+	// el servidor (en desarrollo se suma sin cobrar; en staging o producción, 503).
 	ComprarPack func(ctx context.Context, tiendaID string) (string, error)
+	// PackSinCobro: sumar el pack sin cobrar cuando no hay Mercado Pago. Sólo en desarrollo.
+	PackSinCobro bool
+	// IAPausada: la IA de la plataforma está pausada este mes (se gastó el presupuesto): un pack no
+	// serviría, no se vende. nil: nunca.
+	IAPausada func(ctx context.Context) bool
 	// Contacto: avisa al equipo que una dueña pidió que le escriban. nil: no se avisa.
 	Contacto func(ctx context.Context, asunto, texto string) error
 }
@@ -244,9 +257,28 @@ func rutasCuenta(mux *http.ServeMux, pool tx, g Ganchos, con func(func(http.Resp
 		escribir(w, v, err)
 	}))
 	// El pack extra de Tincho ($ 4.900, +2.000 respuestas este mes) se paga con Mercado Pago: devuelve
-	// la URL del pago y el pack se suma cuando se aprueba. Sin Mercado Pago en el servidor (desarrollo),
-	// se suma sin cobrar.
+	// la URL del pago y el pack se suma cuando se aprueba. Sin Mercado Pago en el servidor, sólo en
+	// desarrollo se suma sin cobrar; en cualquier otro entorno, 503 (nunca un pack regalado).
 	mux.HandleFunc("POST /v1/panel/cuenta/pack", con(func(w http.ResponseWriter, r *http.Request, id string, _ Quien) {
+		if g.ComprarPack == nil && !g.PackSinCobro {
+			problema.Escribir(w, &problema.Problema{Estado: http.StatusServiceUnavailable, Codigo: "pack_no_disponible",
+				Titulo: "El pago del pack no está disponible", Detalle: "Probá de nuevo en un rato."})
+			return
+		}
+		if g.IAPausada != nil && g.IAPausada(r.Context()) {
+			problema.Escribir(w, problema.Conflicto("ia_pausada",
+				"Las respuestas con IA están en pausa por el resto del mes: el pack no te serviría ahora. Tincho sigue respondiendo lo básico."))
+			return
+		}
+		// Cada pedido arma un cobro en Mercado Pago con el token de la plataforma: con un tope.
+		if c, ok := any(pool).(limite.Consultor); ok {
+			if permitido, err := limite.Permitido(r.Context(), c, "mp:pack:"+id, 10, time.Hour); err == nil && !permitido {
+				w.Header().Set("Retry-After", "3600")
+				problema.Escribir(w, &problema.Problema{Estado: http.StatusTooManyRequests, Codigo: "demasiados_pedidos",
+					Titulo: "Esperá un rato", Detalle: "Pediste el pago del pack varias veces seguidas. Probá de nuevo en un rato."})
+				return
+			}
+		}
 		if g.ComprarPack != nil {
 			u, err := g.ComprarPack(r.Context(), id)
 			escribir(w, map[string]string{"url": u}, err)
@@ -257,7 +289,7 @@ func rutasCuenta(mux *http.ServeMux, pool tx, g Ganchos, con func(func(http.Resp
 				return err
 			}
 			return auditoria.Registrar(r.Context(), t, id, auditoria.Registro{Accion: "plan.pack", Entidad: "tienda", EntidadID: id,
-				Texto: "sumó un pack extra este mes"})
+				Texto: "sumó un pack extra este mes (desarrollo, sin cobrar)"})
 		})
 		escribir(w, map[string]string{"url": ""}, err)
 	}))

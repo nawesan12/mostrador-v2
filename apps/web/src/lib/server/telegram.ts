@@ -246,7 +246,7 @@ async function procesarApi({ chat, texto, nombre, cod, responder }: Entrante) {
 
 /** La IA de Go (sólo con la API real; en la demo no hay). */
 type ConIa = {
-	preguntar: () => Promise<RespuestaTincho | 'no-disponible'>;
+	preguntar: () => Promise<RespuestaTincho | 'no-disponible' | { tope: string }>;
 	contarMotor: () => Promise<void>;
 };
 
@@ -267,5 +267,6 @@ async function responderHornero(
 	}
 	if (!ia) return responder(responderSimulado(texto, d));
 	const r = await ia.preguntar().catch(() => 'no-disponible' as const);
+	if (r !== 'no-disponible' && 'tope' in r) return responder(r.tope);
 	return responder(r === 'no-disponible' ? NO_DISPONIBLE : paraTelegram(r));
 }

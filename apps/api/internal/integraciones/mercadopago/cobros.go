@@ -41,6 +41,8 @@ type preferencia struct {
 	AutoReturn        string            `json:"auto_return,omitempty"`
 	PaymentMethods    map[string]any    `json:"payment_methods,omitempty"`
 	StatementDesc     string            `json:"statement_descriptor,omitempty"`
+	// BinaryMode: el pago se aprueba o se rechaza en el momento (sin «pendiente»).
+	BinaryMode bool `json:"binary_mode,omitempty"`
 	// La seña de un turno vence: después, Mercado Pago ya no deja pagarla.
 	Expires          bool   `json:"expires,omitempty"`
 	ExpirationDateTo string `json:"expiration_date_to,omitempty"`

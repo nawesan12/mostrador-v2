@@ -256,6 +256,10 @@ func (s *Servicio) ComprarPack(ctx context.Context, tiendaID string) (string, er
 		ExternalReference: fmt.Sprintf("pack:%s:%d", tiendaID, planes.PrecioPackTincho),
 		BackURLs:          map[string]string{"success": vuelta + "?pack=ok", "pending": vuelta + "?pack=pendiente", "failure": vuelta + "?pack=error"},
 		StatementDesc:     "TU LOCAL WEB",
+		// Se acredita en el momento: sin efectivo (Rapipago, Pago Fácil) ni cajero, que se acreditan
+		// días después y harían caer el pack en otro mes.
+		PaymentMethods: map[string]any{"excluded_payment_types": []map[string]string{{"id": "ticket"}, {"id": "atm"}}},
+		BinaryMode:     true,
 	}
 	if s.publico() {
 		p.AutoReturn = "approved"
@@ -273,9 +277,13 @@ func (s *Servicio) ComprarPack(ctx context.Context, tiendaID string) (string, er
 }
 
 // conciliarPack: el pago de un pack (referencia pack:<tienda>:<importe>). Aprobado y por el importe,
-// suma el pack al mes una sola vez (el aviso y la vuelta llegan los dos).
+// suma el pack al mes una sola vez (el aviso y la vuelta llegan los dos). Devuelto o contracargado,
+// lo resta del mes en que se sumó, una sola vez.
 func (s *Servicio) conciliarPack(ctx context.Context, pagoID, tiendaID, estado string, pagado, importe int64) error {
-	if estado != "approved" || pagado < importe || importe <= 0 {
+	switch {
+	case estado == "refunded" || estado == "charged_back":
+		return s.devolverPack(ctx, pagoID, tiendaID, estado)
+	case estado != "approved" || pagado < importe || importe < planes.PrecioPackTincho:
 		return nil
 	}
 	return s.Pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
@@ -291,6 +299,40 @@ func (s *Servicio) conciliarPack(ctx context.Context, pagoID, tiendaID, estado s
 		}
 		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "plan.pack", Entidad: "tienda", EntidadID: tiendaID,
 			Texto: "compró un pack extra de Tincho para este mes"})
+	})
+}
+
+// devolverPack: el pago del pack se devolvió o se contracargó. Si el pack se había sumado, se resta
+// del mes en que se sumó (el de su cobro) y queda en Facturas como devolución.
+func (s *Servicio) devolverPack(ctx context.Context, pagoID, tiendaID, estado string) error {
+	return s.Pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		var cuando time.Time
+		var importe int64
+		err := t.QueryRow(ctx, `SELECT creado_en, importe FROM abono_cobros WHERE tienda_id = $1 AND clave = $2`,
+			tiendaID, "pago:"+pagoID).Scan(&cuando, &importe)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil // nunca se sumó
+		}
+		if err != nil {
+			return err
+		}
+		// La marca de la devolución (una sola vez); no es un cobro, Facturas no la lista.
+		tag, err := t.Exec(ctx, `INSERT INTO abono_cobros (tienda_id, clave, detalle, importe) VALUES ($1, $2, $3, 0) ON CONFLICT DO NOTHING`,
+			tiendaID, "devolucion:"+pagoID, fmt.Sprintf("Devolución del pack extra de Tincho ($ %s)", miles(int(importe))))
+		if err != nil || tag.RowsAffected() == 0 {
+			return err
+		}
+		mes := ia.Mes(cuando)
+		if _, err := t.Exec(ctx, `UPDATE tiendas SET packs = packs || jsonb_build_object($2::text, greatest(coalesce((packs->>$2)::int, 0) - 1, 0))
+			WHERE id = $1`, tiendaID, mes); err != nil {
+			return err
+		}
+		motivo := "se devolvió"
+		if estado == "charged_back" {
+			motivo = "tuvo un contracargo"
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "plan.pack_devuelto", Entidad: "tienda", EntidadID: tiendaID,
+			Texto: "el pago de un pack extra de Tincho " + motivo + ": se restó del mes"})
 	})
 }
 
@@ -329,7 +371,24 @@ func (s *Servicio) conciliarSuscripcion(ctx context.Context, id, deTienda string
 	}
 	ahora := s.ahora()
 	var otras []string
+	// alto: el débito autorizado cobra más que el plan (creado con un precio anterior): se corrige ya,
+	// antes de su primer cobro, y no después.
+	alto := false
 	err := s.Pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		defer func() {
+			if p.Status != "authorized" || p.AutoRecurring.TransactionAmount <= 0 {
+				return
+			}
+			var vigente *string
+			if t.QueryRow(ctx, `SELECT suscripcion_mp FROM tiendas WHERE id = $1`, tiendaID).Scan(&vigente) != nil ||
+				vigente == nil || *vigente != p.ID {
+				return
+			}
+			if _, _, esperado, err := abono.Debito(ctx, t, tiendaID); err == nil && esperado > 0 &&
+				esperado < int64(p.AutoRecurring.TransactionAmount) {
+				alto = true
+			}
+		}()
 		var actual, estado, pendiente, cicloPend *string
 		var espera, proximo *time.Time
 		var plan, ciclo string
@@ -405,6 +464,11 @@ func (s *Servicio) conciliarSuscripcion(ctx context.Context, id, deTienda string
 	if err != nil {
 		return "", err
 	}
+	if alto {
+		if err := s.montoDelDebito(ctx, tiendaID); err != nil {
+			s.log().Error("mercadopago: no se pudo bajar el monto del débito", "tienda", tiendaID, "error", err)
+		}
+	}
 	// El anterior queda cancelado para no cobrar dos abonos.
 	for _, o := range otras {
 		if err := s.cambiarSuscripcion(ctx, o, "cancelled"); err != nil {
@@ -443,7 +507,7 @@ func (s *Servicio) ConciliarCobroAbono(ctx context.Context, id string) error {
 		return nil
 	}
 	// vuelve: era el último cobro con el beneficio (§57); el débito vuelve al precio del plan.
-	// desactualizado: el débito cobra otro monto que el del plan (un débito de antes de los precios del
+	// desactualizado: el débito cobra más que el plan (un débito de antes de los precios del
 	// 19/11/2026): desde el próximo cobro, el precio nuevo. Así ninguna suscripción queda con el viejo.
 	var vuelve, desactualizado bool
 	err := s.Pool.EnTienda(ctx, p.ExternalReference, func(t pgx.Tx) error {
@@ -468,8 +532,9 @@ func (s *Servicio) ConciliarCobroAbono(ctx context.Context, id string) error {
 			if err != nil {
 				return err
 			}
+			// Sólo hacia abajo: una suba de precio va con aviso de 30 días (Términos), nunca sola.
 			desactualizado = actual != nil && *actual == p.ID && p.AutoRecurring.TransactionAmount > 0 && esperado > 0 &&
-				int64(p.AutoRecurring.TransactionAmount) != esperado
+				esperado < int64(p.AutoRecurring.TransactionAmount)
 		}
 		if prox := proximoDe(p); prox != nil {
 			_, err := t.Exec(ctx, `UPDATE tiendas SET abono_proximo = $2 WHERE id = $1 AND suscripcion_mp = $3`,

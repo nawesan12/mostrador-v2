@@ -8397,6 +8397,8 @@ export interface operations {
                 content: {
                     "application/json": {
                         hechos: number;
+                        /** @description Productos: los que quedaron fuera del plan y no se publicaron ni pausaron */
+                        salteados?: number;
                     };
                 };
             };

@@ -479,6 +479,32 @@ func Publicar(ctx context.Context, pool tx, tiendaID string, ids []string, on bo
 	return int(n), err
 }
 
+// SinLosDeFuera saca de ids los productos que quedaron fuera del plan (sólo lectura): publicarlos o
+// pausarlos en masa no tiene efecto en la tienda, que igual los oculta. Devuelve cuántos sacó, para
+// que el panel lo diga. Los cambios de precio en masa sí los alcanzan (siguen al día para cuando la
+// tienda vuelva a subir de plan).
+func SinLosDeFuera(ctx context.Context, pool tx, tiendaID string, ids []string) ([]string, int, error) {
+	var fuera map[string]bool
+	err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		p, err := planes.Vigente(ctx, t, tiendaID, time.Now())
+		if err != nil {
+			return err
+		}
+		fuera, err = planes.FueraDelPlan(ctx, t, tiendaID, p)
+		return err
+	})
+	if err != nil || len(fuera) == 0 {
+		return ids, 0, err
+	}
+	quedan := make([]string, 0, len(ids))
+	for _, id := range ids {
+		if !fuera[id] {
+			quedan = append(quedan, id)
+		}
+	}
+	return quedan, len(ids) - len(quedan), nil
+}
+
 // Precio cambia el precio un porcentaje.
 func Precio(ctx context.Context, pool tx, tiendaID string, ids []string, pct float64) (int, error) {
 	if pct <= -90 || pct > 200 {

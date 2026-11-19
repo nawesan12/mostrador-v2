@@ -3,7 +3,9 @@ package listas
 import (
 	"context"
 	"errors"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/planes"
 	"regexp"
+	"slices"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -63,6 +65,17 @@ func Duplicar(ctx context.Context, pool tx, tiendaID, id string, ahora time.Time
 	for _, v := range p.Variantes {
 		e.Variantes = append(e.Variantes, VarianteEditable{Valores: v.Valores, SKU: &vacio, Precio: v.Precio, Stock: &cero,
 			Foto: v.Foto, Activa: &v.Activa})
+	}
+	// La copia lleva las fotos que entran en el plan que rige (el original puede tener más si se cargó
+	// con un plan mayor): duplicar no tiene que fallar por eso.
+	if err := pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		pl, err := planes.Vigente(ctx, t, tiendaID, ahora)
+		if err == nil && pl.Fotos != planes.SinTope && len(e.Fotos) > pl.Fotos {
+			e.Fotos = slices.Clone(e.Fotos[:pl.Fotos])
+		}
+		return err
+	}); err != nil {
+		return Producto{}, err
 	}
 	// La copia no se anota como «creó»: se anota que se duplicó.
 	c, err := Guardar(auditoria.Silenciar(ctx), pool, tiendaID, "", e)

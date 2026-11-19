@@ -861,6 +861,7 @@ paths:
                 required: [hechos]
                 properties:
                   hechos: { type: integer }
+                  salteados: { type: integer, description: 'Productos: los que quedaron fuera del plan y no se publicaron ni pausaron' }
         '400': { $ref: '#/components/responses/Problema', description: 'Facturación: el error de ARCA o de los datos, para mostrar tal cual' }
         '401': { $ref: '#/components/responses/Problema' }
         '409': { $ref: '#/components/responses/Problema' }

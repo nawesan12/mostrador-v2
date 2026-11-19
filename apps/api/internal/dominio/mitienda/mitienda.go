@@ -14,8 +14,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/tiendas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/planes"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/tiendas"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )

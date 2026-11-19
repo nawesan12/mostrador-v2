@@ -6,9 +6,10 @@
 // Reglas:
 //   - Durante la prueba gratis (14 días desde el alta) una tienda en Gratis usa Crece (el del medio).
 //   - Bajar de plan nunca borra nada: lo que supera el tope queda oculto en la tienda y en sólo
-//     lectura en el panel hasta subir de plan o liberar lugar (Productos: los primeros N por
-//     antigüedad siguen visibles; Personas: las últimas en entrar quedan en sólo lectura; Fotos: la
-//     tienda muestra las primeras N de cada producto).
+//     lectura en el panel hasta subir de plan o liberar lugar (Productos: siguen visibles los primeros
+//     N, primero los publicados y entre ellos los más viejos; los cambios de precio en masa sí los
+//     alcanzan, para que estén al día al volver a subir; Personas: las últimas en entrar quedan en
+//     sólo lectura; Fotos: la tienda muestra las primeras N de cada producto).
 //   - Un tope se informa con 402 y el código tope_plan, con el plan que lo habilita.
 package planes
 
@@ -191,6 +192,9 @@ func miles(n int) string {
 	return s
 }
 
+// Miles: 2000 → «2.000» (para textos que arman otros paquetes).
+func Miles(n int) string { return miles(n) }
+
 func hasta(n int) string {
 	if n == SinTope {
 		return "sin tope"
@@ -248,9 +252,13 @@ func ExigirFotos(p Plan, n int) error {
 func productoFuera(p Plan) error {
 	m := minimoQue(func(x Plan) int { return x.Productos }, p.Productos+1)
 	return &Tope{Que: "productos", Plan: p, Sube: m, SoloLectura: true,
-		Detalle: fmt.Sprintf("Quedó fuera de %s (hasta %s): no se ve ni se edita. Pasá a %s o borrá otro.",
+		Detalle: fmt.Sprintf("Este producto quedó fuera de %s (hasta %s): no se ve ni se edita. Pasá a %s o borrá otro.",
 			p.Nombre, miles(p.Productos), m.Nombre)}
 }
+
+// ErrPersonaFuera: el tope de una persona del equipo que quedó fuera del plan (para quien lo aplica
+// fuera del panel, como Telegram).
+func ErrPersonaFuera(p Plan) error { return personaFuera(p) }
 
 // personaFuera: el tope de una persona del equipo que quedó fuera del plan.
 func personaFuera(p Plan) error {

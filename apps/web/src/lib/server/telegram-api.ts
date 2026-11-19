@@ -83,7 +83,7 @@ export class TelegramApi extends ClienteBff {
 	async preguntar(
 		chat: number,
 		pregunta: string
-	): Promise<RespuestaTincho | 'no-disponible' | null> {
+	): Promise<RespuestaTincho | 'no-disponible' | { tope: string } | null> {
 		try {
 			return await this.pedir<RespuestaTincho>('POST', '/v1/telegram/preguntar', {
 				chat,
@@ -91,12 +91,16 @@ export class TelegramApi extends ClienteBff {
 			});
 		} catch (e) {
 			if (es404(e)) return null;
+			// Quien vinculó el chat quedó fuera del equipo del plan: se le dice por qué.
+			if (e instanceof ErrorApi && e.estado === 402) return { tope: e.message };
 			if (e instanceof ErrorApi && e.estado === 503) return 'no-disponible';
 			throw e;
 		}
 	}
 	/** Cuenta una respuesta del motor (sin IA) para Plan y facturación. */
 	async contarMotor(chat: number) {
-		await this.pedir<void>('POST', '/v1/telegram/preguntar', { chat, motor: true });
+		await this.pedir<void>('POST', '/v1/telegram/preguntar', { chat, motor: true }).catch((e) => {
+			if (!(e instanceof ErrorApi && e.estado === 402)) throw e;
+		});
 	}
 }

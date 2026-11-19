@@ -95,7 +95,7 @@ func (s *Servicio) Paso(ctx context.Context, ev outbox.Evento) error {
 			errs = errs[len(errs)-MaxErrores:]
 		}
 		sig, cur := etapa, json.RawMessage(pag.Siguiente)
-		if len(cur) == 0 || string(cur) == "null" {
+		if len(cur) == 0 || string(cur) == "null" || p.topeProductos {
 			cur = nil
 			i := slices.Index(Etapas, etapa)
 			sig = ""
@@ -192,7 +192,13 @@ func GuardarPagina(ctx context.Context, t pgx.Tx, tienda, plataforma, etapa stri
 	var prog Progreso
 	errs := []Error{}
 	origen := "importado:" + plataforma
+	// El tope de productos del plan: el primero que no entra corta la etapa con un solo aviso (no uno
+	// por producto, ni más páginas pedidas al origen).
+	var tope *planes.Tope
 	item := func(externo string, fn func(pgx.Tx) error) error {
+		if tope != nil {
+			return nil
+		}
 		sp, err := t.Begin(ctx)
 		if err != nil {
 			return err
@@ -202,6 +208,14 @@ func GuardarPagina(ctx context.Context, t pgx.Tx, tienda, plataforma, etapa stri
 			// Lo que corta la transacción entera (la conexión, el contexto) no es culpa del ítem.
 			if ctx.Err() != nil || t.Conn().IsClosed() {
 				return err
+			}
+			if x, ok := errors.AsType[*planes.Tope](err); ok && x.Que == "productos" && !x.SoloLectura {
+				tope = x
+				prog.topeProductos = true
+				errs = append(errs, Error{Etapa: etapa, Detalle: fmt.Sprintf(
+					"Tu plan %s llega hasta %s productos: el resto no se importó. Pasá a %s y volvé a importar para traerlos.",
+					x.Plan.Nombre, planes.Miles(x.Plan.Productos), x.Sube.Nombre)})
+				return nil
 			}
 			var d string
 			if v, ok := errors.AsType[validacion](err); ok {
@@ -290,6 +304,9 @@ func guardarProducto(ctx context.Context, t pgx.Tx, tienda, origen string, x Pro
 		e.Fotos, c = e.Fotos[:plan.Fotos], append(c, true)
 	}
 	id, err := listas.GuardarEnTx(ctx, t, tienda, "", e)
+	if x, ok := errors.AsType[*planes.Tope](err); ok && x.Que == "productos" {
+		return x
+	}
 	if p := problema.De(err); p != nil {
 		return validacion(p.Detalle)
 	}
