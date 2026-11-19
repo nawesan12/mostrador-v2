@@ -824,6 +824,29 @@ type Confirmacion struct {
 	Titular     *string `json:"titular"`
 	// Sena: el pedido se reservó o encargó con seña (§52); null si se paga entero.
 	Sena *SenaPublica `json:"sena"`
+	// Lo que se compró (la página del pedido es la que se guarda y se vuelve a abrir).
+	Items      []LineaPublica `json:"items"`
+	Subtotal   int64          `json:"subtotal"`
+	CostoEnvio int64          `json:"costoEnvio"`
+	// Entrega: a dónde va (null con retiro: la dirección y el horario son los de la tienda).
+	Entrega *EntregaPublica `json:"entrega"`
+}
+
+// LineaPublica es una línea del pedido como la ve quien compró.
+type LineaPublica struct {
+	Nombre   string  `json:"nombre"`
+	Foto     *string `json:"foto"`
+	Variante *string `json:"variante"`
+	Cantidad int     `json:"cantidad"`
+	Precio   int64   `json:"precio"`
+}
+
+// EntregaPublica: el domicilio o la sucursal de Correo, sin el teléfono ni el email.
+type EntregaPublica struct {
+	Direccion string `json:"direccion"`
+	CP        string `json:"cp"`
+	Localidad string `json:"localidad,omitempty"`
+	Sucursal  string `json:"sucursal,omitempty"`
 }
 
 // SenaPublica es la seña de un pedido como la ve quien compró.
@@ -846,14 +869,28 @@ func VerPedido(ctx context.Context, pool tx, slug, codigo string) (Confirmacion,
 		var sena *int64
 		var tipo *string
 		var s SenaPublica
+		var items, entrega []byte
 		if err := t.QueryRow(ctx, `SELECT p.numero, p.total, CASE WHEN p.pago = 'mp' THEN 'mercadopago' ELSE 'transferencia' END,
 				split_part(p.comprador->>'nombre', ' ', 1), p.estado_pago, p.estado, p.envio, p.seguimiento,
 				nullif(t.negocio->>'alias', ''), nullif(t.negocio->>'cbu', ''), nullif(t.negocio->>'titular', ''),
-				p.sena, p.sena_tipo, p.sena_pagada_en IS NOT NULL, p.saldado_en IS NOT NULL
+				p.sena, p.sena_tipo, p.sena_pagada_en IS NOT NULL, p.saldado_en IS NOT NULL,
+				p.items, p.subtotal, p.costo_envio, p.entrega
 			FROM pedidos p JOIN tiendas t ON t.id = p.tienda_id WHERE p.codigo_publico = $1`, codigo).
 			Scan(&c.Numero, &c.Total, &c.Pago, &c.Nombre, &c.EstadoPago, &c.Estado, &c.Envio, &c.Seguimiento, &c.Alias, &c.CBU, &c.Titular,
-				&sena, &tipo, &s.Pagada, &s.Saldado); err != nil {
+				&sena, &tipo, &s.Pagada, &s.Saldado, &items, &c.Subtotal, &c.CostoEnvio, &entrega); err != nil {
 			return err
+		}
+		var its []pedidos.Item
+		_ = json.Unmarshal(items, &its)
+		c.Items = make([]LineaPublica, 0, len(its))
+		for _, it := range its {
+			c.Items = append(c.Items, LineaPublica{Nombre: it.Nombre, Foto: it.Foto, Variante: it.Variante, Cantidad: it.Cantidad, Precio: it.Precio})
+		}
+		if len(entrega) > 0 && string(entrega) != "null" {
+			var e pedidos.Entrega
+			if json.Unmarshal(entrega, &e) == nil && (e.Direccion != "" || e.Sucursal != "") {
+				c.Entrega = &EntregaPublica{Direccion: e.Direccion, CP: e.CP, Localidad: e.Localidad, Sucursal: e.SucursalNombre}
+			}
 		}
 		if sena != nil && tipo != nil {
 			s.Tipo, s.Monto, s.Falta = *tipo, *sena, max(0, c.Total-*sena)

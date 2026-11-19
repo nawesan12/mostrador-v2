@@ -1,7 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import * as v from 'valibot';
 import { env } from 'cloudflare:workers';
-import { codigoPedido } from '#lib/server/tienda/pedido.ts';
+import { codigoPedido, cookiePendiente } from '#lib/server/tienda/pedido.ts';
 import { COOKIE, dbSandbox } from '#lib/server/sandbox/sandbox.ts';
 import { avisarVenta } from '#lib/server/telegram.ts';
 import { evaluarCupon } from '#lib/server/tienda/cupon.ts';
@@ -11,7 +11,7 @@ import { proximamente } from '#lib/tienda/lanzamiento.ts';
 import { detalleLineas } from '#lib/tienda/lineas.ts';
 import { combosDe, descuentoCombos } from '#lib/tienda/combos.ts';
 import { disenoDeTienda } from '#lib/tienda/sistema/migrar.ts';
-import type { Actions } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 import { irAfuera } from '#lib/server/afuera.ts';
 import { cuitValido, limpiarCuit } from '#lib/panel/cuit.ts';
 import { cookieMedir } from '#lib/tienda/medicion.ts';
@@ -67,9 +67,21 @@ const Pedido = v.object({
 	)
 });
 
+export const load: PageServerLoad = ({ cookies, params }) => {
+	const p = cookies.get(cookiePendiente(params.tienda));
+	// Sólo el camino del pedido de esta tienda (la cookie la escribe la acción de abajo).
+	return {
+		pendienteMP: p && /^\/t\/[a-z0-9-]+\/pedido\/[A-Za-z0-9-]{4,80}$/.test(p) ? p : null
+	};
+};
+
 export const actions: Actions = {
 	default: async ({ request, params, cookies, platform, getClientAddress, url }) => {
-		const r = await resolverTienda(params.tienda, cookies.get(COOKIE));
+		const r = await resolverTienda(params.tienda, cookies.get(COOKIE)).catch(() => undefined);
+		if (r === undefined)
+			return fail(503, {
+				error: 'No pudimos confirmar el pedido. No se te cobró nada: probá de nuevo.'
+			});
 		if (!r) error(404, 'Esta tienda no existe.');
 		if (r.tienda.vitrina)
 			return fail(409, { error: 'Es una tienda de ejemplo: no se compra de verdad.' });
@@ -108,6 +120,7 @@ export const actions: Actions = {
 			const res = await fetch(
 				`${String(env.API_URL)}/v1/publico/tiendas/${r.tienda.slug}/pedidos`,
 				{
+					signal: AbortSignal.timeout(20_000),
 					method: 'POST',
 					// La IP de quien compra (para el tope por IP de la API): sin esto, todos los pedidos
 					// llegaban desde este servidor y compartían un solo cupo.
@@ -118,7 +131,12 @@ export const actions: Actions = {
 					},
 					body: JSON.stringify({ ...p, novedades: p.novedades === true, medicion })
 				}
-			);
+			).catch(() => null);
+			// Sin respuesta (la API caída o lenta): el formulario queda como estaba y se dice que no se cobró.
+			if (!res || res.status >= 500)
+				return fail(503, {
+					error: 'No pudimos confirmar el pedido. No se te cobró nada: probá de nuevo.'
+				});
 			if (!res.ok) {
 				const e = (await res.json().catch(() => null)) as { detail?: string } | null;
 				return fail(res.status === 409 ? 409 : 400, {
@@ -126,7 +144,17 @@ export const actions: Actions = {
 				});
 			}
 			const g = (await res.json()) as { codigo: string; url?: string };
-			if (g.url) irAfuera(g.url);
+			if (g.url) {
+				// Si vuelve atrás desde Mercado Pago, el checkout ofrece pagar ese mismo pedido.
+				cookies.set(cookiePendiente(r.tienda.slug), `/t/${r.tienda.slug}/pedido/${g.codigo}`, {
+					path: `/t/${r.tienda.slug}`,
+					maxAge: 60 * 60 * 23,
+					httpOnly: true,
+					sameSite: 'lax',
+					secure: url.protocol === 'https:'
+				});
+				irAfuera(g.url);
+			}
 			redirect(303, `/t/${r.tienda.slug}/pedido/${g.codigo}`);
 		}
 		// La demo no tiene cuenta de MiCorreo: Correo Argentino no se ofrece (Go lo cotiza con la API).

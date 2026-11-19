@@ -9975,6 +9975,23 @@ export interface operations {
                         cbu: string | null;
                         titular: string | null;
                         sena?: components["schemas"]["SenaPedido"];
+                        /** @description Lo que se compró */
+                        items?: {
+                            nombre: string;
+                            foto?: string | null;
+                            variante?: string | null;
+                            cantidad: number;
+                            precio: number;
+                        }[];
+                        subtotal?: number;
+                        costoEnvio?: number;
+                        /** @description El domicilio o la sucursal (null con retiro) */
+                        entrega?: {
+                            direccion?: string;
+                            cp?: string;
+                            localidad?: string;
+                            sucursal?: string;
+                        } | null;
                     };
                 };
             };

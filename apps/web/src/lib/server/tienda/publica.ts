@@ -51,7 +51,10 @@ export async function resolverTienda(
 ): Promise<TiendaResuelta | null> {
 	if (!/^[a-z0-9-]{2,60}$/.test(slug)) return null;
 	if (!usaSandbox()) {
-		const r = await fetch(`${String(env.API_URL)}/v1/publico/tiendas/${slug}`);
+		// Con tope: una API lenta no cuelga la página (cae en el error de la tienda, con Reintentar).
+		const r = await fetch(`${String(env.API_URL)}/v1/publico/tiendas/${slug}`, {
+			signal: AbortSignal.timeout(5_000)
+		});
 		// Las vitrinas de las plantillas (tiendas de ejemplo) no están en la API: salen de sus datos.
 		if (r.status === 404) return vitrina(slug);
 		if (!r.ok) throw new Error(`API ${r.status}`);

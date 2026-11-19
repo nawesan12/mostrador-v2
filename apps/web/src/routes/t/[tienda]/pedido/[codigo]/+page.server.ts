@@ -2,7 +2,7 @@ import { env } from 'cloudflare:workers';
 import { error, fail } from '@sveltejs/kit';
 import { COOKIE } from '#lib/server/sandbox/sandbox.ts';
 import { resolverTienda } from '#lib/server/tienda/publica.ts';
-import { codigoPedido } from '#lib/server/tienda/pedido.ts';
+import { codigoPedido, cookiePendiente } from '#lib/server/tienda/pedido.ts';
 import { irAfuera } from '#lib/server/afuera.ts';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -13,10 +13,29 @@ export const load: PageServerLoad = async ({ params, cookies, url, depends }) =>
 	const r = await resolverTienda(params.tienda, cookies.get(COOKIE));
 	// Con la API real, el código es el público del pedido.
 	if (r && !r.datos) {
+		// Con tope: es la página a la que vuelve Mercado Pago. Si la API no responde, un estado mínimo
+		// (el número sale del código) y el tiempo real lo completa.
 		const res = await fetch(
-			`${String(env.API_URL)}/v1/publico/tiendas/${r.tienda.slug}/pedidos/${encodeURIComponent(params.codigo)}`
-		);
-		if (!res.ok) error(404, 'No encontramos ese pedido.');
+			`${String(env.API_URL)}/v1/publico/tiendas/${r.tienda.slug}/pedidos/${encodeURIComponent(params.codigo)}`,
+			{ signal: AbortSignal.timeout(5000) }
+		).catch(() => null);
+		if (res?.status === 404) error(404, 'No encontramos ese pedido.');
+		if (!res?.ok) {
+			const numero = Number(params.codigo.split('-')[0]);
+			if (!Number.isInteger(numero) || numero < 1) error(503, 'No pudimos cargar tu pedido.');
+			return {
+				pedido: {
+					numero,
+					codigo: params.codigo,
+					total: 0,
+					pago: 'mercadopago',
+					nombre: '',
+					alias: null,
+					estado: 'Para preparar',
+					sinDatos: true
+				}
+			};
+		}
 		const c = (await res.json()) as {
 			numero: number;
 			total: number;
@@ -26,6 +45,10 @@ export const load: PageServerLoad = async ({ params, cookies, url, depends }) =>
 			estadoPago?: string;
 			envio: string;
 			seguimiento: string | null;
+			items?: { nombre: string; foto: string | null; variante: string | null; cantidad: number; precio: number }[];
+			subtotal?: number;
+			costoEnvio?: number;
+			entrega?: { direccion: string; cp: string; localidad?: string; sucursal?: string } | null;
 			alias: string | null;
 			cbu: string | null;
 			titular: string | null;
@@ -56,14 +79,19 @@ export const load: PageServerLoad = async ({ params, cookies, url, depends }) =>
 			}).catch(() => null);
 		// Los datos para transferir son los que cargó la tienda (nunca inventados). Sin alias, el CBU/CVU.
 		const tr = c.pago === 'transferencia';
+		const pagado = ['Aprobado', 'Acreditada', 'Cobrado'].includes(c.estadoPago ?? '');
+		// Ya pagó (o se canceló): el checkout deja de ofrecer «Tenés un pedido esperando el pago».
+		if (pagado || c.estado === 'Cancelado')
+			cookies.delete(cookiePendiente(r.tienda.slug), { path: `/t/${r.tienda.slug}` });
 		return {
 			pedido: {
 				...c,
 				codigo: params.codigo,
-				alias: tr ? (c.alias ?? c.cbu) : null,
-				esCbu: tr && !c.alias && !!c.cbu,
+				alias: tr ? c.alias : null,
+				cbu: tr ? c.cbu : null,
+				titular: tr ? c.titular : null,
 				// Los mismos estados de «pagado» que los mails a quien compra (Go, 00034).
-				pagado: ['Aprobado', 'Acreditada', 'Cobrado'].includes(c.estadoPago ?? ''),
+				pagado,
 				// Mercado Pago sin pagar todavía: la página ofrece pagarlo (si no, quedaba sin forma de pagar).
 				porPagar: c.pago === 'mercadopago' && c.estado === 'Sin pagar' && c.estadoPago === 'Pendiente' && !c.sena,
 				rechazado: ['rejected', 'failure', 'null'].includes(
@@ -94,10 +122,18 @@ export const load: PageServerLoad = async ({ params, cookies, url, depends }) =>
 			total,
 			pago,
 			nombre: p.cliente.split(' ')[0],
-			alias: dt?.alias || dt?.cbu || null,
-			esCbu: !!dt && !dt.alias && !!dt.cbu,
+			alias: dt?.alias || null,
+			cbu: dt?.cbu || null,
 			estado: p.estado,
-			titular: r.tienda.cobros.datosTransferencia?.titular ?? null,
+			envio: p.envio,
+			titular: dt?.titular || null,
+			items: p.items.map((i) => ({
+				nombre: i.nombre,
+				foto: i.foto ?? null,
+				variante: i.variante ?? null,
+				cantidad: i.cantidad,
+				precio: i.precio
+			})),
 			pagado: false,
 			sena: p.sena ?? null
 		},
