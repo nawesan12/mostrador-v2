@@ -139,7 +139,8 @@
 	min-width: 0;
 	height: 48px;
 	padding: 0 14px;
-	border: 1px solid var(--t-borde);
+	/* El borde de los campos llega a 3:1 (tokens.ts › bordeCampo): se ve dónde escribir. */
+	border: 1px solid var(--t-borde-campo, var(--t-borde));
 	border-radius: var(--t-r-campo, min(var(--t-r-boton), 12px));
 	background: var(--t-campo, var(--t-superficie));
 	color: var(--t-texto);
@@ -2432,7 +2433,7 @@
 }
 .tv[data-dir='mostrador'] .tv-ficha-envio input,
 .tv[data-dir='mostrador'] .tv-carrito-cp input {
-	border-color: transparent;
+	border-color: var(--t-borde-campo, var(--t-borde));
 	border-radius: 999px;
 	background: var(--t-fondo);
 }
@@ -2461,7 +2462,7 @@
 	border: 1px solid transparent;
 }
 .tv[data-dir='mostrador'] .tv-campo input {
-	border-color: transparent;
+	border-color: var(--t-borde-campo, var(--t-borde));
 	background: var(--t-superficie);
 	box-shadow: var(--t-sombra);
 }

@@ -43,6 +43,19 @@ export function legible(color: string, fondo: string, min = 4.5): string {
 	return hacia;
 }
 
+/** Como `legible`, contra varios fondos a la vez: se lo lleva hacia el texto hasta que se lea en todos. */
+export function legibleSobre(color: string, fondos: string[], min: number): string {
+	const ok = (c: string) => fondos.every((f) => contraste(c, f) >= min);
+	if (ok(color)) return color;
+	const hacia =
+		contraste('#FFFFFF', fondos[0]) > contraste('#111111', fondos[0]) ? '#FFFFFF' : '#111111';
+	for (let p = 0.9; p >= 0; p -= 0.05) {
+		const c = mezclar(color, hacia, p);
+		if (ok(c)) return c;
+	}
+	return hacia;
+}
+
 /** El mejor texto para un fondo entre los candidatos (el primero que llegue a AA, o el de más contraste). */
 export function textoSobre(fondo: string, candidatos: string[], min = 4.5): string {
 	const ok = candidatos.find((c) => contraste(c, fondo) >= min);
@@ -58,6 +71,8 @@ export type Paleta = {
 	texto: string;
 	suave: string;
 	borde: string;
+	/** El borde de los campos: 3:1 contra la superficie y el fondo (WCAG 1.4.11). El decorativo no llegaba. */
+	bordeCampo: string;
 	acento: string;
 	sobreAcento: string;
 	/** El acento como texto sobre el fondo (antetítulos, links): AA. */
@@ -95,6 +110,7 @@ export function paleta(e: EstiloFinal): Paleta {
 		texto: c.texto,
 		suave: legible(c.textoSuave, c.fondo),
 		borde: c.borde,
+		bordeCampo: legibleSobre(c.borde, [c.superficie, c.fondo], 3),
 		acento: c.acento,
 		sobreAcento,
 		acentoTexto: legible(c.acento, c.fondo),
@@ -149,6 +165,7 @@ export function variables(e: EstiloFinal): string {
 		'--t-texto': p.texto,
 		'--t-suave': p.suave,
 		'--t-borde': p.borde,
+		'--t-borde-campo': p.bordeCampo,
 		'--t-acento': p.acento,
 		'--t-sobre-acento': p.sobreAcento,
 		'--t-acento-texto': p.acentoTexto,
