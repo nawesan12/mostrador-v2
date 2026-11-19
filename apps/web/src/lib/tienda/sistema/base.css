@@ -158,6 +158,7 @@
 }
 .tv-chico {
 	font-size: var(--t-chico);
+	text-wrap: pretty;
 }
 .tv-suave {
 	color: var(--t-zona-suave);
@@ -1795,6 +1796,10 @@
 .tv-benef-textos b {
 	font-weight: 600;
 	font-size: 15px;
+}
+.tv-benef-textos b,
+.tv-benef-textos span {
+	text-wrap: pretty;
 }
 .tv-benef-textos span {
 	font-size: 14px;

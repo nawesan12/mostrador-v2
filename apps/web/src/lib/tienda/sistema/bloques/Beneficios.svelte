@@ -22,6 +22,7 @@
 	import type { Bloque } from '../catalogo.ts';
 	import { usarTienda } from '../contexto.ts';
 	import { beneficiosDe } from '../datos.ts';
+	import { sinViuda } from '../formato.ts';
 
 	/**
 	 * Beneficios: envío, cuotas, cambios, retiro. Vacío, salen solos de la configuración de la tienda
@@ -39,7 +40,7 @@
 			<li class="tv-benef-item">
 				<span class="tv-benef-icono"><Icon icon={ICONO[b.icono] ?? I.phStar} size={24} /></span>
 				<span class="tv-benef-textos"
-					><b>{b.titulo}</b>{#if b.texto}<span>{b.texto}</span>{/if}</span
+					><b>{sinViuda(b.titulo)}</b>{#if b.texto}<span>{sinViuda(b.texto)}</span>{/if}</span
 				>
 			</li>
 		{/each}

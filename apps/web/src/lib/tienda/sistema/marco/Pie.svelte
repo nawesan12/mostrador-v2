@@ -2,7 +2,8 @@
 	import PieEstilo from '../../PieEstilo.svelte';
 	import { AltaNewsletter } from '../../newsletter.svelte.ts';
 	import { usarTienda } from '../contexto.ts';
-	import { categoriaHref, productoHref, waHref } from '../datos.ts';
+	import { categoriaHref, horarioDuro, productoHref, waHref } from '../datos.ts';
+	import { sinViuda } from '../formato.ts';
 	import type { Pie } from '../presets.ts';
 	import Boton from '../primitivas/Boton.svelte';
 
@@ -60,7 +61,8 @@
 	const local = $derived(
 		[
 			t.direccion || t.envios.retiroDireccion,
-			t.envios.retiroHorario,
+			// «de 11 a 20» nunca se corta en el medio, ni queda una palabra sola.
+			t.envios.retiroHorario && sinViuda(horarioDuro(t.envios.retiroHorario)),
 			t.ciudad && !(t.direccion || '').includes(t.ciudad) ? t.ciudad : ''
 		].filter(Boolean)
 	);
@@ -76,7 +78,10 @@
 			<a href="/legales/terminos">Términos</a>
 			<a href="/legales/privacidad">Privacidad</a>
 		</nav>
-		{#if medios && v !== 'grande'}<span class="tv-pie-medios">{medios}</span>{/if}
+		<!-- En columnas sin datos del local, los medios ya tienen su columna: no se repiten acá. -->
+		{#if medios && v !== 'grande' && !(v === 'columnas' && !local.length && !wa)}<span
+				class="tv-pie-medios">{medios}</span
+			>{/if}
 		<a class="tv-pie-hecha" href="https://tulocalweb.com.ar" target="_blank" rel="noopener"
 			>Hecha con Tu Local Web</a
 		>
