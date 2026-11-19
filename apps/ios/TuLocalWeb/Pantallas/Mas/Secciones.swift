@@ -955,10 +955,13 @@ struct UsuariosYPermisos: View {
     struct Datos: Decodable { var equipo: [Miembro] }
 
     static let roles = [("admin", "Administración"), ("ventas", "Ventas"), ("local", "Local")]
+    /// Si el plan que rige tiene roles (desde Crece). Sin roles, todos entran con Administración.
+    @State private var conRoles = true
 
     var body: some View {
-        PantallaSeccion(titulo: "Usuarios y permisos", que: "el equipo") {
-            try await estado.api.get("/v1/panel/configuracion") as Datos
+        PantallaSeccion(titulo: "Usuarios y permisos", que: "el equipo") { () async throws -> Datos in
+            if let p = await estado.planVigente() { conRoles = CatalogoPlanes.conRoles(p.id) }
+            return try await estado.api.get("/v1/panel/configuracion") as Datos
         } contenido: { d, actualizar in
             let activos = d.equipo.filter { !$0.pendiente }.count
             GrillaIndicadores(items: [
@@ -981,7 +984,11 @@ struct UsuariosYPermisos: View {
                     } else {
                         Menu {
                             ForEach(UsuariosYPermisos.roles, id: \.0) { r in
-                                Button(r.1) { Task { await cambiar(m, rol: r.0, actualizar) } }
+                                if conRoles || r.0 == "admin" {
+                                    Button(r.1) { Task { await cambiar(m, rol: r.0, actualizar) } }
+                                } else {
+                                    Button("\(r.1) · desde Crece") { estado.avisarTope(CatalogoPlanes.topeRoles) }
+                                }
                             }
                             if m.pendiente {
                                 Button("Reenviar invitación") {
@@ -1005,10 +1012,13 @@ struct UsuariosYPermisos: View {
                 }
                 .padding(.horizontal, 14).padding(.vertical, 12)
             }
-            Button("Invitar a alguien") { invitar = true }
+            // Con el equipo lleno para el plan se avisa antes de abrir la hoja (el servidor lo topa igual).
+            Button("Invitar a alguien") {
+                Task { if await estado.entraOtro(\.personas, hay: d.equipo.count, que: "personas") { invitar = true } }
+            }
                 .buttonStyle(BotonSecundario()).frame(maxWidth: .infinity).padding(.top, 4)
                 .sheet(isPresented: $invitar) {
-                    HojaInvitar { await actualizar() }.hojaTLW([.medium])
+                    HojaInvitar(conRoles: conRoles) { await actualizar() }.hojaTLW([.medium])
                 }
         }
     }
@@ -1027,11 +1037,13 @@ struct UsuariosYPermisos: View {
 }
 
 struct HojaInvitar: View {
+    /// El plan tiene roles (desde Crece). Sin roles, entra con Administración y se dice por qué.
+    var conRoles = true
     var listo: () async -> Void
     @Environment(\.dismiss) private var cerrar
     @Environment(Estado.self) private var estado
     @State private var email = ""
-    @State private var rol = "ventas"
+    @State private var rol = "admin"
     @State private var enviando = false
 
     var body: some View {
@@ -1043,13 +1055,18 @@ struct HojaInvitar: View {
                 .estilo(.body16).padding(14)
                 .background(C.superficie, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(C.linea2, lineWidth: 1))
-            Segmentado(opciones: UsuariosYPermisos.roles.map { ($0.0, $0.1) }, elegido: $rol)
+            if conRoles {
+                Segmentado(opciones: UsuariosYPermisos.roles.map { ($0.0, $0.1) }, elegido: $rol)
+            } else {
+                Text("Entra con Administración. Los roles Ventas y Local están desde Crece.")
+                    .estilo(.footnote).foregroundStyle(C.texto2).fixedSize(horizontal: false, vertical: true)
+            }
             Button(enviando ? "Enviando…" : "Mandar invitación") {
                 Task {
                     enviando = true
                     struct C2: Encodable { var contacto: String; var rol: String }
                     do {
-                        try await estado.api.hacer("POST", "/v1/panel/equipo", C2(contacto: email.trimmingCharacters(in: .whitespaces), rol: rol))
+                        try await estado.api.hacer("POST", "/v1/panel/equipo", C2(contacto: email.trimmingCharacters(in: .whitespaces), rol: conRoles ? rol : "admin"))
                         estado.avisar("Le mandamos la invitación")
                         await listo()
                         cerrar()

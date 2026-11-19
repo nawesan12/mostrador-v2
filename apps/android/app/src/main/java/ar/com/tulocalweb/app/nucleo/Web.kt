@@ -60,8 +60,15 @@ object Web {
     suspend fun subirFoto(datos: ByteArray, token: String?): String = withContext(Dispatchers.IO) {
         val r = Request.Builder().url("$base/panel/fotos").post(datos.toRequestBody("image/jpeg".toMediaType()))
         token?.let { r.header("Authorization", "Bearer $it") }
+        @Serializable data class E(val message: String)
         val texto = try {
-            http.newCall(r.build()).execute().use { if (!it.isSuccessful) throw ErrorApi.desconocido; it.body?.string().orEmpty() }
+            http.newCall(r.build()).execute().use {
+                val cuerpo = it.body?.string().orEmpty()
+                // Lo que dijo la web («Llegaste a los 15 MB de fotos de tu plan…»); 402 es un tope de plan.
+                if (!it.isSuccessful) throw ErrorSubida(runCatching { Api.json.decodeFromString<E>(cuerpo).message }.getOrNull() ?: "Probá de nuevo en un rato.",
+                    tope = it.code == 402)
+                cuerpo
+            }
         } catch (e: java.io.IOException) { throw ErrorApi.sinRed }
         @Serializable data class R(val ruta: String)
         val ruta = runCatching { Api.json.decodeFromString<R>(texto).ruta }.getOrNull() ?: throw ErrorApi.desconocido
@@ -72,7 +79,7 @@ object Web {
     const val maximoArchivo = 20 * 1024 * 1024
 
     /** Lo que dijo la web al rechazar un archivo («El archivo pesa más de 20 MB.»). */
-    class ErrorSubida(val mensaje: String) : Exception(mensaje)
+    class ErrorSubida(val mensaje: String, /** Es un tope del plan (el espacio de fotos, o la persona quedó en sólo lectura). */ val tope: Boolean = false) : Exception(mensaje)
 
     /** Sube un archivo para descargar (el premio «descarga»: PDF, EPUB o ZIP de hasta 20 MB, tal cual) y devuelve su
      *  URL pública (https://tulocalweb.com.ar/f/archivos/…). El tipo lo mira la web por los primeros bytes. Si la web lo

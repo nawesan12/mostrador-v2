@@ -95,7 +95,9 @@ class Api(val base: String, @Volatile var token: String? = null, val http: OkHtt
         val p = runCatching { json.decodeFromString<Problema>(texto) }.getOrElse { Problema() }
         val e = ErrorApi(codigo, p.code ?: "interno", p.title ?: "Algo salió mal", p.detail ?: "Probá de nuevo en un rato.", p.restantes, reintentar?.toIntOrNull(), p.plan)
         if (e.sinSesion && token != null) alPerderSesion?.invoke()
-        if (e.esTope) alTope?.invoke(e)
+        // Un tope se avisa al intentar algo (crear, guardar, invitar), no al leer: una lectura que el plan no incluye (los
+        // informes) la muestra la pantalla a su manera.
+        if (e.esTope && metodo != "GET") alTope?.invoke(e)
         throw e
     }
 

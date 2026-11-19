@@ -143,7 +143,11 @@ final class PantallasTests: XCTestCase {
     static var plan: String { Self.respuestas()["/v1/panel/cuenta/plan"] ?? "{}" }
     func testHojaPlanConResumen() throws {
         let d = try JSONDecoder().decode(PlanCuenta.Datos.self, from: Data(Self.plan.utf8))
-        XCTAssertEqual(d.cotizacion("pro", "mes")?.hoy, 14516)
+        XCTAssertEqual(d.cotizacion("pro", "mes")?.hoy, 9677)
+        // Lo que quedó fuera del plan (después de bajar) llega y la pantalla lo muestra (testPantallaPlanCuenta).
+        XCTAssertEqual(d.vigente, "emprende")
+        XCTAssertEqual(d.fuera?.productos, 3)
+        XCTAssertEqual(d.fuera?.personas, 1)
         XCTAssertEqual(d.cotizacion("gratis", "anio")?.tipo, "gratis") // el gratis se cotiza con el ciclo vigente
         XCTAssertEqual(Formato.diaMes("2026-11-20T00:00:00Z").isEmpty, false)
         // Guía 3.1.1: desde la app no se pasa a un plan pago; sólo a Gratis o quedarse con el actual.

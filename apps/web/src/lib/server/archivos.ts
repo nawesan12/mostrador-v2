@@ -149,9 +149,10 @@ export async function subirFoto(
 		})
 		.from(archivos)
 		.where(sql`${archivos.clave} like 'fotos/%'`);
+	// 402 como todo tope de plan (las apps lo avisan con «Ver mi plan»).
 	if (Number(uso?.duenio ?? 0) + bytes.byteLength > porDuenio)
 		error(
-			413,
+			402,
 			`Llegaste a los ${Math.round(porDuenio / 1024 / 1024).toLocaleString('es-AR')} MB de fotos de tu plan. Borrá fotos que ya no uses o pasá a un plan más grande.`
 		);
 	const total = Number(uso?.total ?? 0) + bytes.byteLength;

@@ -35,6 +35,8 @@ struct TuLocalWebApp: App {
                         estado.bloqueada = true
                     }
                     enSegundoPlano = nil
+                    // El plan pudo cambiar en la web mientras tanto: se vuelve a leer cuando haga falta.
+                    estado.olvidarPlan()
                     if estado.fase == .adentro { Task { await estado.refrescarResumen() } }
                 default:
                     break

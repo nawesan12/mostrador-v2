@@ -263,7 +263,11 @@ class PantallasTest {
     /** El plan con prorrateo (§56): la respuesta de la API se decodifica y la hoja con el resumen se arma. */
     @Test fun hojaPlanConResumen() {
         val d = Api.json.decodeFromString(DatosPlan.serializer(), plan)
-        assertEquals(14516, d.cotizacion("pro", "mes")?.hoy)
+        assertEquals(9677, d.cotizacion("pro", "mes")?.hoy)
+        // Lo que quedó fuera del plan (después de bajar) llega y la pantalla lo muestra (pantallaPlanCuenta).
+        assertEquals("emprende", d.vigente)
+        assertEquals(3, d.fuera?.productos)
+        assertEquals(1, d.fuera?.personas)
         assertEquals("gratis", d.cotizacion("gratis", "anio")?.tipo) // el gratis se cotiza con el ciclo vigente
         assertTrue(ar.com.tulocalweb.app.nucleo.Formato.diaMes("2026-11-20T00:00:00Z").isNotEmpty())
         // El descuento para quedarse (§57): mitad del débito mientras queden cobros.

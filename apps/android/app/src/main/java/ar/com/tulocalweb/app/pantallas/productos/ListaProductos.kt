@@ -83,7 +83,8 @@ fun ListaProductos() {
     fun nuevo() {
         alcanceNuevo.launch {
             val d = carga.valor
-            if (d != null && !estado.entraOtro({ it.productos }, d.total, "productos")) return@launch
+            // Todos los de la tienda (la suma de los estados), no el total con la búsqueda o el filtro puestos.
+            if (d != null && !estado.entraOtro({ it.productos }, d.segmentos.values.sum(), "productos")) return@launch
             nav.productos.add(Destino.nuevoProducto(null))
         }
     }
@@ -154,7 +155,8 @@ fun ListaProductos() {
                             EstadoTira("Publicados", (seg["active"] ?: 0) + (seg["out"] ?: 0), C.ok, "active,out"),
                             EstadoTira("Sin stock", seg["out"] ?: 0, C.errorTinta, "out"),
                             EstadoTira("Pausados", (seg["paused"] ?: 0) + (seg["draft"] ?: 0), C.texto3, "paused,draft"),
-                        ), segmento) { segmento = it }
+                        ) + (if ((seg["fuera"] ?: 0) > 0) listOf(EstadoTira("Fuera del plan", seg["fuera"] ?: 0, C.avisoTinta, "fuera")) else emptyList()),
+                            segmento) { segmento = it }
                     }
                 }
             }
@@ -239,7 +241,8 @@ private fun VacioProductos(busqueda: String, segmento: String?, verTodos: () -> 
 /** La fila de un producto (thumbnail 56). */
 @Composable
 fun FilaProducto(p: ProductoFila) {
-    val pausado = !p.publicado
+    val fuera = p.fueraDePlan == true
+    val pausado = !p.publicado || fuera
     Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp).alpha(if (pausado) 0.75f else 1f), horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically) {
         Miniatura(p.foto, 56.dp, radio = 13.dp)
@@ -256,7 +259,8 @@ fun FilaProducto(p: ProductoFila) {
                 }
             }, Estilo.texto14, C.texto2, numeros = true)
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                if (pausado) EtiquetaCanal("En pausa", C.apagadoFondo, C.neutroTinta)
+                if (fuera) EtiquetaCanal("Oculto · fuera de tu plan", C.avisoFondo, C.bannerTinta)
+                else if (pausado) EtiquetaCanal("En pausa", C.apagadoFondo, C.neutroTinta)
                 else {
                     if ("web" in p.canales || p.canales.isEmpty()) EtiquetaCanal("Web", C.pista, C.neutroTinta)
                     if ("ml" in p.canales) EtiquetaCanal("ML", C.avisoFondo, C.bannerTinta)

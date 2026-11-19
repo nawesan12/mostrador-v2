@@ -161,14 +161,27 @@ fun VistaAviso(aviso: Aviso, cerrar: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().sombra(forma, hex(0x2A140C, 0.4f), 12.dp, y = 10.dp).clip(forma).background(tema(0x2A140C, 0x3A2419).actual)
             .heightIn(min = 52.dp).padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = if (aviso.tope) Alignment.Top else Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(22.dp).clip(CircleShape).background(if (aviso.ok) hex(0x3FA877) else C.error), contentAlignment = Alignment.Center) {
+        Box(Modifier.padding(top = if (aviso.tope) 14.dp else 0.dp).size(22.dp).clip(CircleShape).background(if (aviso.ok) hex(0x3FA877) else C.error),
+            contentAlignment = Alignment.Center) {
             Icono(if (aviso.ok) "checkmark" else "exclamationmark", 11f, Color.White)
         }
-        Texto(aviso.texto, Estilo.subhead, hex(0xFBF7F2), Modifier.weight(1f).padding(vertical = 8.dp), lineas = if (aviso.tope) 4 else 2)
-        aviso.deshacer?.let { d ->
-            Texto(aviso.accion ?: "Deshacer", Estilo(15f, Peso.bold), hex(0xF3A57E), Modifier.clickable { d(); cerrar() }.padding(vertical = 12.dp))
+        val accion: @Composable () -> Unit = {
+            aviso.deshacer?.let { d ->
+                Texto(aviso.accion ?: "Deshacer", Estilo(15f, Peso.bold), hex(0xF3A57E), Modifier.clickable { d(); cerrar() }
+                    .padding(vertical = if (aviso.tope) 8.dp else 12.dp))
+            }
+        }
+        if (aviso.tope) {
+            // Un tope dice qué no entra y a qué plan pasar: el texto entero, con la acción abajo.
+            Column(Modifier.weight(1f).padding(vertical = 12.dp), horizontalAlignment = Alignment.End) {
+                Texto(aviso.texto, Estilo.subhead, hex(0xFBF7F2), Modifier.fillMaxWidth())
+                accion()
+            }
+        } else {
+            Texto(aviso.texto, Estilo.subhead, hex(0xFBF7F2), Modifier.weight(1f).padding(vertical = 8.dp), lineas = 2)
+            accion()
         }
     }
 }

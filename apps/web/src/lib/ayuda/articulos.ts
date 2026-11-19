@@ -321,7 +321,7 @@ export const ARTICULOS: Articulo[] = [
 		slug: 'crear-pedido-a-mano',
 		categoria: 'pedidos',
 		titulo: 'Crear un pedido a mano y cobrarlo con un link',
-		resumen: 'Para lo que te piden por WhatsApp, Instagram o en el mostrador.',
+		resumen: 'Para lo que te piden por WhatsApp o en el mostrador.',
 		cuerpo: [
 			{
 				t: 'p',

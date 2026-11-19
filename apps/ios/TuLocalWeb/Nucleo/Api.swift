@@ -110,7 +110,9 @@ final class Api: @unchecked Sendable {
         if e.sinSesion, token != nil, let alPerderSesion {
             await alPerderSesion()
         }
-        if e.esTope, let alTope {
+        // Un tope se avisa al intentar algo (crear, guardar, invitar), no al leer: una lectura que el
+        // plan no incluye (los informes) la muestra la pantalla a su manera.
+        if e.esTope, metodo != "GET", let alTope {
             await alTope(e)
         }
         throw e

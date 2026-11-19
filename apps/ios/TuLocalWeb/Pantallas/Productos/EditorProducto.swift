@@ -53,6 +53,10 @@ struct EditorProducto: View {
         ("Talle", ["XS", "S", "M", "L", "XL", "XXL"]), ("Color", []), ("Presentación", []),
     ]
 
+    /// Quedó fuera del tope de productos del plan (después de bajar): se ve en sólo lectura, con lo que
+    /// se puede hacer (borrarlo o pasar de plan). El servidor lo frena igual.
+    private var fueraDePlan: Bool { original["fueraDePlan"]?.bool == true }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
@@ -62,6 +66,8 @@ struct EditorProducto: View {
                 } else if eligiendoTipo {
                     elegirTipo
                 } else {
+                    if fueraDePlan { avisoFueraDePlan }
+                    Group {
                     filaTipo
                     seccionFotos
                     campo("Nombre") { TextField(ejemploNombre, text: $nombre) }
@@ -86,6 +92,9 @@ struct EditorProducto: View {
                         TextField("Contá cómo es, de qué está hecho, medidas…", text: $descripcion, axis: .vertical)
                             .lineLimit(3...8)
                     }
+                    }
+                    .disabled(fueraDePlan)
+                    .opacity(fueraDePlan ? 0.6 : 1)
                     if id != nil {
                         Button("Borrar producto") { borrar = true }
                             .buttonStyle(BotonTexto(color: C.errorTinta))
@@ -97,7 +106,7 @@ struct EditorProducto: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .barraAccion {
-            if !eligiendoTipo {
+            if !eligiendoTipo && !fueraDePlan {
                 Button(guardando ? "Guardando…" : (id == nil ? "Cargar producto" : "Guardar cambios")) {
                     Task { await guardar() }
                 }
@@ -497,6 +506,26 @@ struct EditorProducto: View {
         }
     }
 
+    /// La franja de un producto fuera del plan: qué pasa y «Ver mi plan» (la dueña).
+    private var avisoFueraDePlan: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "lock.fill").font(.system(size: 16, weight: .semibold)).foregroundStyle(C.primarioTexto)
+                .frame(width: 22).padding(.top, 2)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Fuera de tu plan\(planFotos.map { " \($0.nombre)" } ?? "")").estilo(.subheadFuerte).foregroundStyle(C.texto)
+                Text(Formato.sinViudas("No se ve en la tienda y no se edita. Pasá de plan o borrá otro para liberar lugar."))
+                    .estilo(.footnote).foregroundStyle(C.texto2).fixedSize(horizontal: false, vertical: true)
+                if estado.acceso?.rol == "duenio" {
+                    Button("Ver mi plan") { estado.rutaPendiente = .destino(.plan) }
+                        .buttonStyle(BotonTexto(color: C.primarioTexto)).padding(.top, 2)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(14)
+        .background(C.avisoFondo, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
     private func subir(_ img: UIImage) async {
         let lado: CGFloat = 1600
         let escala = min(1, lado / max(img.size.width, img.size.height))
@@ -507,6 +536,10 @@ struct EditorProducto: View {
         defer { subiendo -= 1 }
         do {
             fotos.append(try await Web.subirFoto(datos, token: estado.api.token))
+        } catch let e as Web.ErrorSubida where e.tope {
+            estado.avisarTope(ErrorApi(estado: 402, codigo: "tope_plan", titulo: "", detalle: e.mensaje))
+        } catch let e as Web.ErrorSubida {
+            estado.avisar(e.mensaje, ok: false)
         } catch {
             estado.avisar("No pudimos subir la foto", ok: false)
         }
@@ -517,7 +550,7 @@ struct EditorProducto: View {
         defer { guardando = false }
         var o = original
         // Lo que la API da de más (id, slug, publicado, vendidos…) no se manda: sólo lo editable.
-        for k in ["id", "slug", "publicado", "vendidos30d", "estado"] { o.removeValue(forKey: k) }
+        for k in ["id", "slug", "publicado", "vendidos30d", "estado", "fueraDePlan"] { o.removeValue(forKey: k) }
         o["nombre"] = .texto(nombre.trimmingCharacters(in: .whitespaces))
         o["precio"] = .numero(Double(Int(precio.filter(\.isNumber)) ?? 0))
         o["costo"] = .numero(Double(Int(costo.filter(\.isNumber)) ?? 0))

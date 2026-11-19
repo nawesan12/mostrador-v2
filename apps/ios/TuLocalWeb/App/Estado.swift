@@ -355,8 +355,9 @@ final class Estado {
     // MARK: Avisos (toasts)
 
     func avisar(_ texto: String, ok: Bool = true, deshacer: (() -> Void)? = nil) {
-        // El error genérico de una pantalla no pisa el aviso de tope de plan que ya está a la vista.
-        if let a = aviso, a.tope, a.texto == texto { return }
+        // Un error no pisa el aviso de tope de plan que ya está a la vista: el genérico de la pantalla
+        // («No pudimos guardarlo») llega después del tope y diría menos.
+        if let a = aviso, a.tope, !ok { return }
         mostrar(Aviso(texto: texto, ok: ok, deshacer: deshacer), segundos: 4)
     }
 
@@ -369,24 +370,31 @@ final class Estado {
                 segundos: 7)
     }
 
-    /// El plan que rige hoy (en la prueba gratis, Crece), de GET /v1/panel/tienda. Se guarda 10
-    /// minutos por tienda: sirve para avisar un tope antes de cargar algo (el servidor lo topa igual).
-    func planVigente() async -> CatalogoPlanes.Plan? {
+    /// El plan que rige hoy (en la prueba gratis, Crece, con la fecha de fin que da la API), de GET
+    /// /v1/panel/tienda. Se guarda 10 minutos por tienda (fresco: se vuelve a pedir): sirve para avisar
+    /// un tope antes de cargar algo (el servidor lo topa igual).
+    func planVigente(fresco: Bool = false) async -> CatalogoPlanes.Plan? {
         guard let id = acceso?.tiendaId else { return nil }
-        if let c = planGuardado, c.tienda == id, Date().timeIntervalSince(c.en) < 600 { return c.plan }
-        struct T: Decodable { var plan: String; var creadaEn: Date }
+        if !fresco, let c = planGuardado, c.tienda == id, Date().timeIntervalSince(c.en) < 600 { return c.plan }
+        struct T: Decodable { var plan: String; var creadaEn: Date; var finPrueba: Date? }
         guard let t: T = try? await api.get("/v1/panel/tienda") else { return nil }
-        let prueba = Date() < t.creadaEn.addingTimeInterval(TimeInterval(CatalogoPlanes.diasDePrueba) * 86_400)
-        let p = CatalogoPlanes.de(t.plan == "gratis" && prueba ? CatalogoPlanes.destacado : t.plan)
+        let fin = t.finPrueba ?? t.creadaEn.addingTimeInterval(TimeInterval(CatalogoPlanes.diasDePrueba) * 86_400)
+        let p = CatalogoPlanes.de(t.plan == "gratis" && Date() < fin ? CatalogoPlanes.destacado : t.plan)
         planGuardado = (id, p, Date())
         return p
     }
     private var planGuardado: (tienda: String, plan: CatalogoPlanes.Plan, en: Date)?
 
+    /// Olvida el plan guardado (al abrir Plan o al volver la app a primer plano: pudo cambiar en la web).
+    func olvidarPlan() { planGuardado = nil }
+
     /// Antes de crear algo con tope (productos, personas): si ya está lleno, avisa con «Ver mi plan» y
-    /// devuelve false.
+    /// devuelve false. La copia guardada sólo sirve para dejar pasar: para frenar se confirma con el plan
+    /// recién leído (si se acaba de pasar de plan en la web, no se frena de más).
     func entraOtro(_ campo: KeyPath<CatalogoPlanes.Plan, Int>, hay: Int, que: String) async -> Bool {
-        guard let p = await planVigente() else { return true }
+        guard let guardado = await planVigente() else { return true }
+        guard guardado[keyPath: campo] > 0, hay >= guardado[keyPath: campo] else { return true }
+        guard let p = await planVigente(fresco: true) else { return true }
         let tope = p[keyPath: campo]
         guard tope > 0, hay >= tope else { return true }
         let sube = CatalogoPlanes.todos.first { $0[keyPath: campo] == 0 || $0[keyPath: campo] > tope } ?? p

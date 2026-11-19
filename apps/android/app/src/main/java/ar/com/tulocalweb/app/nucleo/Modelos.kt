@@ -321,6 +321,8 @@ data class ProductoFila(
     /** Cuántos pidieron «Avisame cuando vuelva» y esperan (§60). */
     val esperan: Int? = null,
     val variantes: List<Variante> = emptyList(),
+    /** Quedó fuera del tope de productos del plan (después de bajar): oculto en la tienda y en sólo lectura. */
+    val fueraDePlan: Boolean? = null,
 ) {
     @Serializable
     data class Variante(val id: String, val texto: String = "", val sku: String? = null, val precio: Int? = null, val stock: Int = 0, val activa: Boolean = true)

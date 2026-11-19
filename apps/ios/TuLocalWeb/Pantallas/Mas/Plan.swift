@@ -38,7 +38,15 @@ enum CatalogoPlanes {
     static let destacado = "pro"
     static let mesesPagosDelAnio = 10
     static let diasDePrueba = 14
+    /// Lo que se ve en el pie de cada plan (SIN_COMISION en la web).
+    static let sinComision = "0\u{00a0}%\u{00a0}de comisión por venta"
     static func de(_ id: String) -> Plan { todos.first { $0.id == id } ?? todos[0] }
+    /// Roles y permisos (Ventas, Local) están desde Crece: en Gratis y Emprende se invita con Administración.
+    static func conRoles(_ id: String) -> Bool { id == "pro" || id == "negocio" }
+    /// El aviso de un rol que el plan no incluye (el mismo texto que la API).
+    static let topeRoles = ErrorApi(estado: 402, codigo: "tope_plan", titulo: "Es del plan Crece",
+                                    detalle: "Roles y permisos del equipo: desde el plan Crece. En tu plan, el equipo entra con Administración.",
+                                    plan: "pro")
     /// Por mes: el anual se paga como 10 meses y se usa 12.
     static func porMes(_ p: Plan, anual: Bool) -> Int {
         anual ? Int((Double(p.mensual * mesesPagosDelAnio) / 12).rounded()) : p.mensual
@@ -118,8 +126,9 @@ struct PlanCuenta: View {
     }
 
     var body: some View {
-        PantallaSeccion(titulo: "Plan", que: "tu plan") {
-            try await estado.api.get("/v1/panel/cuenta/plan") as Datos
+        PantallaSeccion(titulo: "Plan", que: "tu plan") { () async throws -> Datos in
+            estado.olvidarPlan()
+            return try await estado.api.get("/v1/panel/cuenta/plan") as Datos
         } contenido: { d, actualizar in
             let nombre = CatalogoPlanes.de(d.actual).nombre
             let ciclo = d.actual == "gratis" ? "" : (d.ciclo == "anio" ? " anual" : " mensual")
@@ -412,6 +421,7 @@ private struct TarjetaPlan: View {
                 Text(anual ? "\(Formato.pesos(CatalogoPlanes.porAnio(plan))) por año · 2 meses de regalo"
                      : "Precio final · sin permanencia")
                     .estilo(.footnote).foregroundStyle(C.texto3)
+                Text(CatalogoPlanes.sinComision).estilo(.footnote).foregroundStyle(C.texto3)
             }
         }
     }

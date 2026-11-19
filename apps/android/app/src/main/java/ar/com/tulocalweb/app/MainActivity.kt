@@ -95,6 +95,8 @@ class MainActivity : FragmentActivity() {
         if (estado.conFaceID && estado.fase == Estado.Fase.adentro && d != null && System.currentTimeMillis() - d > 60_000 && !abrioPestana && !estado.abrioOtraApp) estado.bloqueada = true
         enSegundoPlano = null
         estado.abrioOtraApp = false
+        // El plan pudo cambiar en la web mientras tanto: se vuelve a leer cuando haga falta.
+        estado.olvidarPlan()
         if (estado.fase == Estado.Fase.adentro) lifecycleScope.launch { estado.refrescarResumen() }
     }
 

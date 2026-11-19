@@ -508,7 +508,7 @@
     "plan": "pro",
     "ciclo": "mes",
     "tipo": "sube",
-    "hoy": 14516,
+    "hoy": 9677,
     "rige": "2026-11-05T12:00:00Z",
     "hasta": null,
     "cobro": {
@@ -519,11 +519,11 @@
     "lineas": [
      {
       "texto": "Crece por 15 días",
-      "importe": 24145
+      "importe": 16887
      },
      {
       "texto": "Emprende ya pagado por esos días",
-      "importe": -9629
+      "importe": -7210
      }
     ],
     "pago": "diferencia",
@@ -551,9 +551,9 @@
     "hasta": "2026-11-20T00:00:00Z",
     "cobro": {
      "fecha": "2026-11-20T00:00:00Z",
-     "importe": 179100
+     "importe": 149000
     },
-    "porCiclo": 179100,
+    "porCiclo": 149000,
     "lineas": [],
     "pago": "suscripcion",
     "inicio": "2026-11-20T00:00:00Z"
@@ -576,8 +576,8 @@
    }
   },
   "uso": {
-   "productos": 8,
-   "personas": 2,
+   "productos": 153,
+   "personas": 3,
    "hornero": 0,
    "packs": 0,
    "sinIa": 0
@@ -596,7 +596,13 @@
     "fecha": "2026-10-20T13:00:00Z"
    }
   ],
-  "cancelado": null
+  "cancelado": null,
+  "vigente": "emprende",
+  "fuera": {
+   "productos": 3,
+   "personas": 1,
+   "invitaciones": 0
+  }
  },
  "/v1/panel/pedidos": {
   "total": 5,

@@ -44,6 +44,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import ar.com.tulocalweb.app.app.Ruta
+import ar.com.tulocalweb.app.app.Destino
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
@@ -188,7 +194,9 @@ fun EditorProducto(id: String?, sku: String? = null) {
     suspend fun subir(uri: Uri) {
         val datos = Fotos.achicar(ctx, uri, 1600, 85) ?: return
         subiendo += 1
-        try { fotos.add(Web.subirFoto(datos, estado.api.token)) } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Exception) {
+        try { fotos.add(Web.subirFoto(datos, estado.api.token)) } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Web.ErrorSubida) {
+            if (e.tope) estado.avisarTope(ErrorApi(402, "tope_plan", "", e.mensaje)) else estado.avisar(e.mensaje, ok = false)
+        } catch (e: Exception) {
             estado.avisar("No pudimos subir la foto", ok = false)
         } finally { subiendo -= 1 }
     }
@@ -198,7 +206,7 @@ fun EditorProducto(id: String?, sku: String? = null) {
         try {
             val o = original.toMutableMap()
             // Lo que la API da de más (id, slug, publicado, vendidos…) no se manda: sólo lo editable.
-            listOf("id", "slug", "publicado", "vendidos30d", "estado").forEach { o.remove(it) }
+            listOf("id", "slug", "publicado", "vendidos30d", "estado", "fueraDePlan").forEach { o.remove(it) }
             o["nombre"] = Valor.texto(nombre.trim())
             o["precio"] = Valor.numero(num(precio) ?: 0)
             o["costo"] = Valor.numero(num(costo) ?: 0)
@@ -275,10 +283,19 @@ fun EditorProducto(id: String?, sku: String? = null) {
     val maxFotos = planFotos?.fotos ?: 10
     LaunchedEffect(Unit) { planFotos = estado.planVigente() }
     val galeria = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(10)) { uris ->
-        val libres = maxFotos - fotos.size - subiendo
-        alcance.launch { uris.take(maxOf(0, libres)).forEach { subir(it) } }
+        val libres = maxOf(0, maxFotos - fotos.size - subiendo)
+        // El selector de Android deja elegir más de las que entran: se suman las que caben y se dice por qué.
+        if (uris.size > libres) {
+            val plan = planFotos
+            estado.avisar(if (plan != null) "Sumamos ${Formato.cantidad(libres, "foto", "fotos")}: tu plan ${plan.nombre} permite ${plan.fotos} por producto."
+                else "Sumamos ${Formato.cantidad(libres, "foto", "fotos")}: no entran más en este producto.")
+        }
+        alcance.launch { uris.take(libres).forEach { subir(it) } }
     }
 
+    // Quedó fuera del tope de productos del plan (después de bajar): se ve en sólo lectura, con lo que se puede hacer
+    // (borrarlo o pasar de plan). El servidor lo frena igual.
+    val fueraDePlan = original["fueraDePlan"]?.bool == true
     val t = estado.tienda
     val pub = original["publicado"]?.bool != false
     BarraDe(acciones = if (id != null && !cargando && t != null && pub) {
@@ -316,7 +333,7 @@ fun EditorProducto(id: String?, sku: String? = null) {
     }
 
     ConBarraAccion({
-        if (!eligiendoTipo) BotonPrincipal(if (guardando) "Guardando…" else (if (id == null) "Cargar producto" else "Guardar cambios"), { alcance.launch { guardar() } },
+        if (!eligiendoTipo && !fueraDePlan) BotonPrincipal(if (guardando) "Guardando…" else (if (id == null) "Cargar producto" else "Guardar cambios"), { alcance.launch { guardar() } },
             habilitado = valido && !guardando && subiendo == 0)
     }, Modifier.background(C.fondo).imePadding()) { abajo ->
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).margenPantalla().padding(bottom = 32.dp + abajo), verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -345,6 +362,8 @@ fun EditorProducto(id: String?, sku: String? = null) {
                     }
                 }
             } else {
+                if (fueraDePlan) AvisoFueraDePlan(planFotos?.nombre)
+                Column(Modifier.soloLectura(fueraDePlan), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 // Fila del tipo
                 Row(Modifier.fillMaxWidth().tarjeta(radio = 16.dp).padding(horizontal = 14.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(38.dp).clip(RoundedCornerShape(11.dp)).background(C.crema), contentAlignment = Alignment.Center) { Icono(tipo?.simbolo ?: "questionmark", 16f, C.primarioTexto) }
@@ -487,6 +506,7 @@ fun EditorProducto(id: String?, sku: String? = null) {
                     Campo("Categoría", Modifier.weight(1f)) { Entrada(categoria, { categoria = it }, "Opcional", estilo = Estilo.body16) }
                 }
                 Campo("Descripción") { Entrada(descripcion, { descripcion = it }, "Contá cómo es, de qué está hecho, medidas…", estilo = Estilo.body16, lineas = 3, lineasMaximas = 8) }
+                }
                 if (id != null) BotonTexto("Borrar producto", { borrar = true }, color = C.errorTinta)
             }
         }
@@ -543,6 +563,31 @@ fun FlujoChips(valores: List<String>, sacar: (String) -> Unit) {
                 Texto(v, Estilo.footnoteFuerte, C.primarioTinta)
                 Box(Modifier.clickable { sacar(v) }.semantics { contentDescription = "Sacar $v" }) { Icono("xmark", 9f, C.primarioTinta) }
             }
+        }
+    }
+}
+
+/** Sin poder tocar nada (un producto fuera del plan): se ve más tenue y no recibe toques. */
+private fun Modifier.soloLectura(si: Boolean): Modifier = if (!si) this else this
+    .alpha(0.6f)
+    .semantics { disabled() }
+    .pointerInput(Unit) {
+        awaitPointerEventScope {
+            while (true) awaitPointerEvent(PointerEventPass.Initial).changes.forEach { it.consume() }
+        }
+    }
+
+/** La franja de un producto fuera del plan: qué pasa y «Ver mi plan» (la dueña). */
+@Composable
+private fun AvisoFueraDePlan(plan: String?) {
+    val estado = LocalEstado.current
+    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(C.avisoFondo).padding(14.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Box(Modifier.width(22.dp).padding(top = 2.dp)) { Icono("lock.fill", 16f, C.primarioTexto) }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Texto("Fuera de tu plan" + (plan?.let { " $it" } ?: ""), Estilo.subheadFuerte, C.texto)
+            Texto(Formato.sinViudas("No se ve en la tienda y no se edita. Pasá de plan o borrá otro para liberar lugar."), Estilo.footnote, C.texto2)
+            if (estado.acceso?.rol == "duenio") BotonTexto("Ver mi plan", { estado.rutaPendiente = Ruta.destino(Destino.plan) }, color = C.primarioTexto)
         }
     }
 }

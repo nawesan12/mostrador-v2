@@ -18,11 +18,11 @@ import ar.com.tulocalweb.app.app.Destino
 import ar.com.tulocalweb.app.app.LocalEstado
 import ar.com.tulocalweb.app.app.LocalNavegacion
 import ar.com.tulocalweb.app.nucleo.Comparado
+import ar.com.tulocalweb.app.nucleo.ErrorApi
 import ar.com.tulocalweb.app.nucleo.Formato
 import ar.com.tulocalweb.app.nucleo.Marcas
 import ar.com.tulocalweb.app.nucleo.Tablero
 import ar.com.tulocalweb.app.nucleo.Tincho
-import ar.com.tulocalweb.app.nucleo.opcional
 import ar.com.tulocalweb.app.tema.*
 import kotlinx.serialization.Serializable
 import kotlin.math.abs
@@ -38,7 +38,8 @@ private data class Informes(val meses: List<String> = emptyList(), val series: S
                                   val ahorro: Int = 0, val mesAnterior: String = "")
 }
 
-private data class DatosEstadisticas(val tablero: Tablero, val informes: Informes?)
+/** informesSinPlan: los informes por mes son del plan Crece; sin el plan se dice en la pantalla, sin aviso. */
+private data class DatosEstadisticas(val tablero: Tablero, val informes: Informes?, val informesSinPlan: Boolean = false)
 
 private fun variacion(c: Comparado?): String? {
     val v = c?.variacion ?: return null
@@ -58,7 +59,15 @@ fun Estadisticas() {
     PantallaSeccion("Estadísticas", "las estadísticas", {
         // Uno detrás del otro (en iOS `async let` cerraba la app en Release).
         val t: Tablero = estado.api.get("/v1/panel/tablero", listOf("periodo" to periodo))
-        DatosEstadisticas(t, estado.api.opcional("/v1/panel/informes"))
+        try {
+            DatosEstadisticas(t, estado.api.get<Informes>("/v1/panel/informes"))
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: ErrorApi) {
+            DatosEstadisticas(t, null, informesSinPlan = e.esTope)
+        } catch (e: Exception) {
+            DatosEstadisticas(t, null)
+        }
     }) { d, actualizar ->
         var anterior by remember { mutableStateOf(periodo) }
         LaunchedEffect(periodo) { if (periodo != anterior) { anterior = periodo; actualizar() } }
@@ -119,6 +128,12 @@ fun Estadisticas() {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     t.masVendidos.forEach { x -> FilaBarra(x.foto, x.nombre, Formato.cantidad(x.unidades, "unidad", "unidades"), x.unidades.toDouble() / tope) }
                 }
+            }
+        }
+        if (d.informesSinPlan) {
+            TarjetaSeccion("Mes a mes", "calendar") {
+                Texto(Formato.sinViudas("Los informes por mes y el margen están desde el plan Crece."), Estilo.texto14, C.texto2)
+                if (estado.acceso?.rol == "duenio") BotonTonal("Ver mi plan", { nav.abrir(Destino.plan) })
             }
         }
         val i = d.informes

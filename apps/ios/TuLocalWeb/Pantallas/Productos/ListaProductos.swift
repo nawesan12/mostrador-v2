@@ -60,7 +60,9 @@ struct ListaProductos: View {
                         .init(titulo: "Publicados", numero: (seg["active"] ?? 0) + (seg["out"] ?? 0), color: C.ok, filtro: "active,out"),
                         .init(titulo: "Sin stock", numero: seg["out"] ?? 0, color: C.errorTinta, filtro: "out"),
                         .init(titulo: "Pausados", numero: (seg["paused"] ?? 0) + (seg["draft"] ?? 0), color: C.texto3, filtro: "paused,draft"),
-                    ], elegido: segmento) { segmento = $0 }
+                    ] + ((seg["fuera"] ?? 0) > 0
+                        ? [TiraEstados.Estado(titulo: "Fuera del plan", numero: seg["fuera"] ?? 0, color: C.avisoTinta, filtro: "fuera")] : []),
+                        elegido: segmento) { segmento = $0 }
                     .padding(.top, 12)
                 }
                 Buscador(placeholder: "Nombre, SKU o código", texto: $busqueda)
@@ -224,7 +226,8 @@ struct ListaProductos: View {
 
     /// Un producto nuevo: con el tope del plan lleno, se avisa antes de abrir el editor.
     private func nuevo() async {
-        if let d = carga.valor, !(await estado.entraOtro(\.productos, hay: d.total, que: "productos")) { return }
+        // Todos los de la tienda (la suma de los estados), no el total con la búsqueda o el filtro puestos.
+        if let d = carga.valor, !(await estado.entraOtro(\.productos, hay: d.segmentos.values.reduce(0, +), que: "productos")) { return }
         nav.productos.append(.nuevoProducto(nil))
     }
 
@@ -245,7 +248,8 @@ struct ListaProductos: View {
 struct FilaProducto: View {
     var p: ProductoFila
     var body: some View {
-        let pausado = !p.publicado
+        let fuera = p.fueraDePlan == true
+        let pausado = !p.publicado || fuera
         HStack(spacing: 12) {
             Miniatura(foto: p.foto, tam: 56, radio: 13)
             VStack(alignment: .leading, spacing: 3) {
@@ -253,7 +257,9 @@ struct FilaProducto: View {
                 (Text(Formato.pesos(p.precio)).fontWeight(.bold).foregroundColor(C.texto) + Text(" · ") + stock)
                     .estilo(.texto14).monospacedDigit().foregroundStyle(C.texto2)
                 HStack(spacing: 4) {
-                    if pausado {
+                    if fuera {
+                        EtiquetaCanal(texto: "Oculto · fuera de tu plan", fondo: C.avisoFondo, tinta: C.bannerTinta)
+                    } else if pausado {
                         EtiquetaCanal(texto: "En pausa", fondo: C.apagadoFondo, tinta: C.neutroTinta)
                     } else {
                         if p.canales.contains("web") || p.canales.isEmpty {

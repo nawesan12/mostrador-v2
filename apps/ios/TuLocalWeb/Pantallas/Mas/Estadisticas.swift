@@ -29,14 +29,25 @@ struct Estadisticas: View {
         var kpis: Kpis
         var insights: [String]
     }
-    struct Datos { var tablero: Tablero; var informes: Informes? }
+    struct Datos {
+        var tablero: Tablero
+        var informes: Informes?
+        /// Los informes por mes son del plan Crece: sin el plan se dice en la pantalla, sin aviso.
+        var informesSinPlan = false
+    }
 
     var body: some View {
         PantallaSeccion(titulo: "Estadísticas", que: "las estadísticas") { () async throws -> Datos in
             // Sin `async let` en la carga de PantallaSeccion: en Release cerraba la app (ver Compartir).
             let t: Tablero = try await estado.api.get("/v1/panel/tablero", query: [URLQueryItem(name: "periodo", value: periodo)])
-            let i: Informes? = try? await estado.api.get("/v1/panel/informes")
-            return Datos(tablero: t, informes: i)
+            do {
+                let i: Informes = try await estado.api.get("/v1/panel/informes")
+                return Datos(tablero: t, informes: i)
+            } catch let e as ErrorApi where e.esTope {
+                return Datos(tablero: t, informes: nil, informesSinPlan: true)
+            } catch {
+                return Datos(tablero: t, informes: nil)
+            }
         } contenido: { d, actualizar in
             Segmentado(opciones: [("hoy", "Hoy"), ("7d", "7 días"), ("30d", "30 días")], elegido: $periodo)
                 .onChange(of: periodo) { Task { await actualizar() } }
@@ -84,6 +95,15 @@ struct Estadisticas: View {
                                 }
                             }
                         }
+                    }
+                }
+            }
+            if d.informesSinPlan {
+                TarjetaSeccion(titulo: "Mes a mes", simbolo: "calendar") {
+                    Text(Formato.sinViudas("Los informes por mes y el margen están desde el plan Crece."))
+                        .estilo(.texto14).foregroundStyle(C.texto2).fixedSize(horizontal: false, vertical: true)
+                    if estado.acceso?.rol == "duenio" {
+                        NavigationLink(value: Destino.plan) { Text("Ver mi plan") }.buttonStyle(BotonTonal())
                     }
                 }
             }

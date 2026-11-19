@@ -77,7 +77,14 @@ object CatalogoPlanes {
     const val DESTACADO = "pro"
     const val MESES_PAGOS_DEL_ANIO = 10
     const val DIAS_DE_PRUEBA = 14
+    /** Lo que se ve en el pie de cada plan (SIN_COMISION en la web). */
+    const val SIN_COMISION = "0\u00a0%\u00a0de comisión por venta"
     fun de(id: String): Plan = todos.firstOrNull { it.id == id } ?: todos[0]
+    /** Roles y permisos (Ventas, Local) están desde Crece: en Gratis y Emprende se invita con Administración. */
+    fun conRoles(id: String): Boolean = id == "pro" || id == "negocio"
+    /** El aviso de un rol que el plan no incluye (el mismo texto que la API). */
+    val topeRoles = ErrorApi(402, "tope_plan", "Es del plan Crece",
+        "Roles y permisos del equipo: desde el plan Crece. En tu plan, el equipo entra con Administración.", plan = "pro")
     /** Por mes: el anual se paga como 10 meses y se usa 12. */
     fun porMes(p: Plan, anual: Boolean): Int = if (anual) (p.mensual * MESES_PAGOS_DEL_ANIO / 12.0).roundToInt() else p.mensual
     /** Lo que se cobra una vez por año. */
@@ -149,7 +156,10 @@ fun PlanCuenta() {
         return "Sin débito cargado"
     }
 
-    PantallaSeccion("Plan", "tu plan", { estado.api.get<DatosPlan>("/v1/panel/cuenta/plan") }) { d, actualizar ->
+    PantallaSeccion("Plan", "tu plan", {
+        estado.olvidarPlan()
+        estado.api.get<DatosPlan>("/v1/panel/cuenta/plan")
+    }) { d, actualizar ->
         datos = d; actualizarHoja = actualizar
         val nombre = CatalogoPlanes.de(d.actual).nombre
         val ciclo = if (d.actual == "gratis") "" else (if (d.ciclo == "anio") " anual" else " mensual")
@@ -189,7 +199,6 @@ fun PlanCuenta() {
     Hoja(cancelar, { cancelar = false }) { datos?.let { d -> HojaCancelar(d) { actualizarHoja?.invoke() } } }
 }
 
-/** El cambio que rige en el próximo cobro, con «Deshacer». */
 /** «12 de 20» (o «12» sin tope). */
 private fun deTope(uso: Int, tope: Int): String =
     if (tope == 0) Formato.numero(uso) else "${Formato.numero(uso)} de ${Formato.numero(tope)}"
@@ -204,7 +213,7 @@ private fun AvisoFueraDePlan(fuera: DatosPlan.Fuera, plan: String) {
     val forma = RoundedCornerShape(18.dp)
     Row(Modifier.fillMaxWidth().aparecer(0.04).clip(forma).background(C.crema2).border(1.dp, C.linea2, forma).padding(14.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
-        Icono("exclamationmark.circle", 20f, C.primarioTexto)
+        Icono("exclamationmark.circle.fill", 20f, C.primarioTexto)
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Texto("Tenés más de lo que entra en $plan", Estilo.subheadFuerte, C.texto)
             Texto(Formato.sinViudas(partes.joinToString(" y ") + ". No se borró nada: vuelve todo al subir de plan o al liberar lugar."),
@@ -213,6 +222,7 @@ private fun AvisoFueraDePlan(fuera: DatosPlan.Fuera, plan: String) {
     }
 }
 
+/** El cambio que rige en el próximo cobro, con «Deshacer». */
 @Composable
 private fun AvisoProgramado(programado: DatosPlan.Programado, actual: String, deshacer: () -> Unit) {
     val nuevo = CatalogoPlanes.de(programado.plan).nombre
@@ -325,6 +335,7 @@ private fun TarjetaPlan(plan: CatalogoPlanes.Plan, anual: Boolean, elegido: Bool
                     Texto("/ mes", Estilo.footnote, C.texto2, Modifier.padding(bottom = 4.dp))
                 }
                 Texto(if (anual) "${Formato.pesos(CatalogoPlanes.porAnio(plan))} por año · 2 meses de regalo" else "Precio final · sin permanencia", Estilo.footnote, C.texto3)
+                Texto(CatalogoPlanes.SIN_COMISION, Estilo.footnote, C.texto3)
             }
         }
         Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {

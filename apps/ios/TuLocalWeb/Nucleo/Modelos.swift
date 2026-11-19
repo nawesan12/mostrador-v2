@@ -347,6 +347,8 @@ struct ProductoFila: Codable, Identifiable, Equatable {
     /// Cuántos pidieron «Avisame cuando vuelva» y esperan (§60).
     var esperan: Int?
     var variantes: [Variante]
+    /// Quedó fuera del tope de productos del plan (después de bajar): oculto en la tienda y en sólo lectura.
+    var fueraDePlan: Bool?
 }
 
 struct PaginaProductos: Codable {

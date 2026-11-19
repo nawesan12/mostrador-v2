@@ -173,21 +173,26 @@ struct VistaAviso: View {
     var aviso: Aviso
     var cerrar: () -> Void
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(alignment: aviso.tope ? .top : .center, spacing: 10) {
             Image(systemName: aviso.ok ? "checkmark" : "exclamationmark")
                 .font(.system(size: 11, weight: .heavy)).foregroundStyle(.white)
                 .frame(width: 22, height: 22)
                 .background(aviso.ok ? Color(hex: 0x3FA877) : C.error, in: Circle())
-            Text(aviso.texto).estilo(.subhead).foregroundStyle(Color(hex: 0xFBF7F2))
-                .lineLimit(aviso.tope ? 4 : 2)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            if let d = aviso.deshacer {
-                Button(aviso.accion ?? "Deshacer") {
-                    d()
-                    cerrar()
+                .padding(.top, aviso.tope ? 14 : 0)
+            if aviso.tope {
+                // Un tope dice qué no entra y a qué plan pasar: el texto entero, con la acción abajo.
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(aviso.texto).estilo(.subhead).foregroundStyle(Color(hex: 0xFBF7F2))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    accion
                 }
-                .font(Estilo(tamano: 15, peso: .bold, relativo: .subheadline).font)
-                .foregroundStyle(Color(hex: 0xF3A57E))
+                .padding(.vertical, 12)
+            } else {
+                Text(aviso.texto).estilo(.subhead).foregroundStyle(Color(hex: 0xFBF7F2))
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                accion
             }
         }
         .padding(.horizontal, 16)
@@ -195,5 +200,17 @@ struct VistaAviso: View {
         .background(Color.tema(0x2A140C, 0x3A2419), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .shadow(color: Color(hex: 0x2A140C, alfa: 0.4), radius: 12, y: 10)
         .accessibilityElement(children: .contain)
+    }
+
+    @ViewBuilder private var accion: some View {
+        if let d = aviso.deshacer {
+            Button(aviso.accion ?? "Deshacer") {
+                d()
+                cerrar()
+            }
+            .font(Estilo(tamano: 15, peso: .bold, relativo: .subheadline).font)
+            .foregroundStyle(Color(hex: 0xF3A57E))
+            .frame(minHeight: aviso.tope ? 36 : nil)
+        }
     }
 }

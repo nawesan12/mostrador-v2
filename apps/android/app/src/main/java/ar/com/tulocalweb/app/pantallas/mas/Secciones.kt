@@ -684,11 +684,16 @@ fun UsuariosYPermisos() {
     val estado = LocalEstado.current
     var invitar by remember { mutableStateOf(false) }
     var actualizarHoja by remember { mutableStateOf<(suspend () -> Unit)?>(null) }
+    // Si el plan que rige tiene roles (desde Crece). Sin roles, todos entran con Administración.
+    var conRoles by remember { mutableStateOf(true) }
     @Serializable data class Miembro(val id: String, val nombre: String = "", val contacto: String = "", val rol: String = "", val pendiente: Boolean = false, val vos: Boolean = false)
     @Serializable data class Datos(val equipo: List<Miembro> = emptyList())
     @Serializable data class C2(val rol: String)
 
-    PantallaSeccion("Usuarios y permisos", "el equipo", { estado.api.get<Datos>("/v1/panel/configuracion") }) { d, actualizar ->
+    PantallaSeccion("Usuarios y permisos", "el equipo", {
+        estado.planVigente()?.let { conRoles = CatalogoPlanes.conRoles(it.id) }
+        estado.api.get<Datos>("/v1/panel/configuracion")
+    }) { d, actualizar ->
         actualizarHoja = actualizar
         val activos = d.equipo.count { !it.pendiente }
         GrillaIndicadores(listOf(
@@ -708,6 +713,10 @@ fun UsuariosYPermisos() {
                 } else {
                     MenuBoton(buildList {
                         rolesEquipo.forEach { r ->
+                            if (!conRoles && r.first != "admin") {
+                                add(OpcionDeMenu("${r.second} · desde Crece", "") { estado.avisarTope(CatalogoPlanes.topeRoles) })
+                                return@forEach
+                            }
                             add(OpcionDeMenu(r.second, "") {
                                 estado.tarea {
                                     try { estado.api.hacer("PUT", "/v1/panel/equipo/${m.id}", C2(r.first)); actualizar() } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Exception) {
@@ -735,18 +744,23 @@ fun UsuariosYPermisos() {
                 }
             }
         }
-        Box(Modifier.fillMaxWidth().padding(top = 4.dp), contentAlignment = Alignment.Center) { BotonSecundario("Invitar a alguien", { invitar = true }) }
+        // Con el equipo lleno para el plan se avisa antes de abrir la hoja (el servidor lo topa igual).
+        Box(Modifier.fillMaxWidth().padding(top = 4.dp), contentAlignment = Alignment.Center) {
+            BotonSecundario("Invitar a alguien", {
+                estado.tarea { if (estado.entraOtro({ it.personas }, d.equipo.size, "personas")) invitar = true }
+            })
+        }
     }
-    Hoja(invitar, { invitar = false }, listOf(Altura.media)) { HojaInvitar { actualizarHoja?.invoke() } }
+    Hoja(invitar, { invitar = false }, listOf(Altura.media)) { HojaInvitar(conRoles) { actualizarHoja?.invoke() } }
 }
 
 @Composable
-fun HojaInvitar(listo: suspend () -> Unit) {
+fun HojaInvitar(conRoles: Boolean = true, listo: suspend () -> Unit) {
     val estado = LocalEstado.current
     val cerrar = LocalCerrarHoja.current
     val alcance = rememberCoroutineScope()
     var email by remember { mutableStateOf("") }
-    var rol by remember { mutableStateOf("ventas") }
+    var rol by remember { mutableStateOf("admin") }
     var enviando by remember { mutableStateOf(false) }
     @Serializable data class C2(val contacto: String, val rol: String)
     Column(Modifier.fillMaxSize().imePadding().padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -755,12 +769,13 @@ fun HojaInvitar(listo: suspend () -> Unit) {
         val forma = RoundedCornerShape(14.dp)
         Entrada(email, { email = it }, "Email", Modifier.fillMaxWidth().clip(forma).background(C.superficie).border(1.dp, C.linea2, forma).padding(14.dp),
             estilo = Estilo.body16, teclado = KeyboardType.Email)
-        Segmentado(rolesEquipo, rol, { rol = it })
+        if (conRoles) Segmentado(rolesEquipo, rol, { rol = it })
+        else Texto("Entra con Administración. Los roles Ventas y Local están desde Crece.", Estilo.footnote, C.texto2)
         BotonPrincipal(if (enviando) "Enviando…" else "Mandar invitación", {
             alcance.launch {
                 enviando = true
                 try {
-                    estado.api.hacer("POST", "/v1/panel/equipo", C2(email.trim(), rol))
+                    estado.api.hacer("POST", "/v1/panel/equipo", C2(email.trim(), if (conRoles) rol else "admin"))
                     estado.avisar("Le mandamos la invitación")
                     listo()
                     cerrar()
