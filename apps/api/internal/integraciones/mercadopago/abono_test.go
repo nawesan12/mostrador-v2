@@ -268,3 +268,32 @@ func TestPackDeTinchoSeCobra(t *testing.T) {
 		t.Fatalf("packs: %d", packs())
 	}
 }
+
+// Un débito de antes de los precios del 19/11 (Crece a $ 49.900): en su próximo cobro pasa solo al
+// precio nuevo, sin que la dueña haga nada.
+func TestDebitoViejoPasaAlPrecioNuevo(t *testing.T) {
+	ctx := context.Background()
+	b := pruebadb.Nueva(t)
+	luna := pruebadb.CrearTienda(t, b.App, "luna")
+	f := &mpFalso{cuerpos: map[string]map[string]any{}, pagos: map[string]map[string]any{}, susc: map[string]map[string]any{},
+		autoriz: map[string]map[string]any{}, usuario: 777, refreshOK: true}
+	srv := httptest.NewServer(f)
+	defer srv.Close()
+	s := &mercadopago.Servicio{Pool: b.App, Cliente: &mercadopago.Cliente{Base: srv.URL},
+		Config: mercadopago.Config{TokenPlataforma: "APP_USR-plataforma", Sitio: "https://tulocalweb.com.ar"}}
+	_ = b.App.EnTienda(ctx, luna, func(tx pgx.Tx) error {
+		_, err := tx.Exec(ctx, `UPDATE tiendas SET plan = 'pro', plan_ciclo = 'mes', suscripcion_mp = 'sus-7',
+			suscripcion_estado = 'authorized' WHERE id = $1`, luna)
+		return err
+	})
+	f.susc["sus-7"] = map[string]any{"id": "sus-7", "status": "authorized", "external_reference": luna,
+		"reason": "Tu Local Web Pro (mensual)", "auto_recurring": map[string]any{"transaction_amount": 49900}}
+	f.autoriz["70"] = map[string]any{"id": 70, "preapproval_id": "sus-7", "status": "processed", "transaction_amount": 49900,
+		"payment": map[string]any{"id": 1, "status": "approved"}}
+	if err := s.ConciliarCobroAbono(ctx, "70"); err != nil {
+		t.Fatal(err)
+	}
+	if f.susc["sus-7"]["transaction_amount"] != float64(34900) {
+		t.Fatalf("el débito sigue con el precio viejo: %v", f.susc["sus-7"])
+	}
+}

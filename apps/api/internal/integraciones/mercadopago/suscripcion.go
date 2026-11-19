@@ -44,6 +44,9 @@ type preapproval struct {
 	ExternalReference string `json:"external_reference"`
 	Reason            string `json:"reason"`
 	NextPaymentDate   string `json:"next_payment_date"`
+	AutoRecurring     struct {
+		TransactionAmount float64 `json:"transaction_amount"`
+	} `json:"auto_recurring"`
 }
 
 // aFechaMP: las fechas que se mandan a Mercado Pago llevan milisegundos y la zona (-04:00).
@@ -440,7 +443,9 @@ func (s *Servicio) ConciliarCobroAbono(ctx context.Context, id string) error {
 		return nil
 	}
 	// vuelve: era el último cobro con el beneficio (§57); el débito vuelve al precio del plan.
-	var vuelve bool
+	// desactualizado: el débito cobra otro monto que el del plan (un débito de antes de los precios del
+	// 19/11/2026): desde el próximo cobro, el precio nuevo. Así ninguna suscripción queda con el viejo.
+	var vuelve, desactualizado bool
 	err := s.Pool.EnTienda(ctx, p.ExternalReference, func(t pgx.Tx) error {
 		detalle := p.Reason
 		if detalle == "" {
@@ -455,6 +460,16 @@ func (s *Servicio) ConciliarCobroAbono(ctx context.Context, id string) error {
 			if vuelve, err = abono.GastarCobro(ctx, t, p.ExternalReference); err != nil {
 				return err
 			}
+			var actual *string
+			if err := t.QueryRow(ctx, `SELECT suscripcion_mp FROM tiendas WHERE id = $1`, p.ExternalReference).Scan(&actual); err != nil {
+				return err
+			}
+			_, _, esperado, err := abono.Debito(ctx, t, p.ExternalReference)
+			if err != nil {
+				return err
+			}
+			desactualizado = actual != nil && *actual == p.ID && p.AutoRecurring.TransactionAmount > 0 && esperado > 0 &&
+				int64(p.AutoRecurring.TransactionAmount) != esperado
 		}
 		if prox := proximoDe(p); prox != nil {
 			_, err := t.Exec(ctx, `UPDATE tiendas SET abono_proximo = $2 WHERE id = $1 AND suscripcion_mp = $3`,
@@ -463,7 +478,7 @@ func (s *Servicio) ConciliarCobroAbono(ctx context.Context, id string) error {
 		}
 		return nil
 	})
-	if err != nil || !vuelve {
+	if err != nil || !(vuelve || desactualizado) {
 		return err
 	}
 	return s.montoDelDebito(ctx, p.ExternalReference)
