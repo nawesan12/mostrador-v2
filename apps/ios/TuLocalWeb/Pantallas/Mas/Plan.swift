@@ -5,29 +5,46 @@ import SwiftUI
 // deshacer un cambio programado, que no cobran nada; cambiar a un plan pago no se ofrece ni se enlaza.
 // Las cuentas vienen hechas de la API (abono.Cotizar).
 
-/// Los planes (apps/web/src/lib/panel/planes.ts): nombre, para quién y qué incluye. Los precios salen de
-/// las cotizaciones de la API.
+/// Los planes del 19/11/2026 (apps/web/src/lib/panel/planes.ts y dominio/planes de la API): nombre,
+/// para quién, qué incluye y sus topes (0 es sin tope). Los topes los aplica el servidor; la app los
+/// muestra. Precios finales en pesos, sin comisión por venta. El id "pro" es Crece.
 enum CatalogoPlanes {
     struct Plan: Identifiable {
         var id: String
         var nombre: String
         var lema: String
         var mensual: Int
+        var productos: Int
+        var personas: Int
+        var fotos: Int
+        var tincho: Int
         var incluye: [String]
     }
     static let todos: [Plan] = [
-        Plan(id: "gratis", nombre: "Gratis", lema: "Para probar y empezar", mensual: 0,
-             incluye: ["Productos ilimitados", "Tincho: 100 respuestas con IA", "1 persona · subdominio"]),
-        Plan(id: "emprende", nombre: "Emprende", lema: "Para vender todos los días", mensual: 19_900,
-             incluye: ["Dominio propio y factura ARCA", "Todos los medios de pago y envío", "Tincho: 1.000 respuestas con IA", "2 personas"]),
-        Plan(id: "pro", nombre: "Pro", lema: "Para vender en todos tus canales", mensual: 49_900,
-             incluye: ["Mercado Libre, Instagram y local", "Acciones masivas y estadísticas", "Tincho: 3.000 respuestas con IA", "5 personas con permisos"]),
-        Plan(id: "negocio", nombre: "Negocio", lema: "Para varias sucursales", mensual: 149_900,
-             incluye: ["Sucursales y cajas ilimitadas", "API, webhooks y mayoristas", "Tincho: 15.000 respuestas con IA", "Personas ilimitadas"]),
+        Plan(id: "gratis", nombre: "Gratis", lema: "Para probar y empezar", mensual: 0, productos: 20, personas: 1, fotos: 3, tincho: 50,
+             incluye: ["Hasta 20 productos", "Tu dirección de Tu Local Web", "Cobrás con Mercado Pago y transferencia",
+                       "Tincho: 50 respuestas con IA por mes", "1 persona"]),
+        Plan(id: "emprende", nombre: "Emprende", lema: "Para vender todos los días", mensual: 14_900, productos: 150, personas: 2, fotos: 5, tincho: 500,
+             incluye: ["Hasta 150 productos", "Dominio propio y factura de ARCA", "Envíos con Correo Argentino",
+                       "Cupones, combos y carritos abandonados", "Tincho: 500 respuestas con IA por mes", "2 personas"]),
+        Plan(id: "pro", nombre: "Crece", lema: "Para vender en todos tus canales", mensual: 34_900, productos: 500, personas: 5, fotos: 8, tincho: 2_000,
+             incluye: ["Hasta 500 productos", "Venta en el local y cobro con QR", "Mercado Libre con el mismo stock",
+                       "Newsletter y estadísticas", "Tincho: 2.000 respuestas con IA por mes", "5 personas con roles y permisos"]),
+        Plan(id: "negocio", nombre: "Negocio", lema: "Para vender sin topes", mensual: 79_900, productos: 0, personas: 0, fotos: 10, tincho: 8_000,
+             incluye: ["Productos y personas sin tope", "Venta mayorista y listas de precio", "Todo lo de Crece",
+                       "Tincho: 8.000 respuestas con IA por mes"]),
     ]
+    /// El destacado: el del medio, el que rige durante la prueba gratis.
+    static let destacado = "pro"
+    static let mesesPagosDelAnio = 10
+    static let diasDePrueba = 14
     static func de(_ id: String) -> Plan { todos.first { $0.id == id } ?? todos[0] }
-    /// Por mes: el anual es 25 % menos (cobrado una vez por año).
-    static func porMes(_ p: Plan, anual: Bool) -> Int { anual ? Int((Double(p.mensual) * 0.75).rounded()) : p.mensual }
+    /// Por mes: el anual se paga como 10 meses y se usa 12.
+    static func porMes(_ p: Plan, anual: Bool) -> Int {
+        anual ? Int((Double(p.mensual * mesesPagosDelAnio) / 12).rounded()) : p.mensual
+    }
+    /// Lo que se cobra una vez por año.
+    static func porAnio(_ p: Plan) -> Int { p.mensual * mesesPagosDelAnio }
 }
 
 /// Lo que cuesta pasar a un plan y ciclo (packages/contrato: Cotizacion).
@@ -58,7 +75,9 @@ struct PlanCuenta: View {
     @State private var cancelar = false
 
     struct Datos: Decodable {
-        struct Uso: Decodable { var productos: Int; var personas: Int; var hornero: Int }
+        struct Uso: Decodable { var productos: Int; var personas: Int; var hornero: Int; var packs: Int? }
+        /// Lo que quedó fuera del plan después de bajar (oculto o en sólo lectura; no se borró nada).
+        struct Fuera: Decodable { var productos: Int; var personas: Int }
         struct Medio: Decodable { var marca: String; var ultimos: String; var vence: String }
         struct Factura: Decodable, Identifiable {
             var numero: String; var detalle: String; var total: Int; var fecha: String?
@@ -69,6 +88,9 @@ struct PlanCuenta: View {
         /// El descuento para quedarse (§57) que queda en los próximos cobros.
         struct Beneficio: Decodable { var pct: Int; var cobros: Int }
         var actual: String
+        /// El plan que rige hoy (en la prueba, Crece).
+        var vigente: String?
+        var fuera: Fuera?
         var ciclo: String
         var enPrueba: Bool
         var diasPrueba: Int
@@ -126,10 +148,15 @@ struct PlanCuenta: View {
                 .background(C.okFondo.opacity(0.5), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .aparecer(0.05)
             }
+            let rige = CatalogoPlanes.de(d.vigente ?? (d.enPrueba && d.actual == "gratis" ? CatalogoPlanes.destacado : d.actual))
+            if let f = d.fuera, f.productos > 0 || f.personas > 0 {
+                AvisoFueraDePlan(fuera: f, plan: rige.nombre).aparecer(0.04)
+            }
             GrillaIndicadores(items: [
-                IndicadorIcono(simbolo: "shippingbox.fill", titulo: "Productos", valor: "\(d.uso.productos)"),
-                IndicadorIcono(simbolo: "person.2.fill", titulo: "Personas del equipo", valor: "\(d.uso.personas)", tono: (C.okFondo, C.okTinta)),
-                IndicadorIcono(simbolo: "sparkles", titulo: "Respuestas de Tincho este mes", valor: "\(d.uso.hornero)", tono: (C.avisoFondo, C.avisoTinta)),
+                IndicadorIcono(simbolo: "shippingbox.fill", titulo: "Productos", valor: deTope(d.uso.productos, rige.productos)),
+                IndicadorIcono(simbolo: "person.2.fill", titulo: "Personas del equipo", valor: deTope(d.uso.personas, rige.personas), tono: (C.okFondo, C.okTinta)),
+                IndicadorIcono(simbolo: "sparkles", titulo: "Respuestas de Tincho este mes",
+                               valor: deTope(d.uso.hornero, rige.tincho + (d.uso.packs ?? 0) * 2_000), tono: (C.avisoFondo, C.avisoTinta)),
             ])
             if let m = d.medio {
                 GrupoFilas(elementos: [FilaId("Medio de pago", "\(m.marca) ·· \(m.ultimos)"), FilaId("Vence", m.vence)]) {
@@ -159,12 +186,41 @@ struct PlanCuenta: View {
 
     private struct Elegido: Identifiable { var id: String }
 
+    /// «12 de 20» (o «12» sin tope).
+    private func deTope(_ uso: Int, _ tope: Int) -> String {
+        tope == 0 ? Formato.numero(uso) : "\(Formato.numero(uso)) de \(Formato.numero(tope))"
+    }
+
     private func detalleHeroe(_ d: Datos) -> String {
         if d.enPrueba { return "Te quedan \(Formato.cantidad(d.diasPrueba, "día", "días")) de prueba" }
         if let p = d.abono?.programado, p.plan == "gratis" { return "Se da de baja el \(Formato.diaMes(p.desde))" }
         if d.actual == "gratis" { return "Sin cobros" }
         if let c = d.proximoCobro { return "Próximo cobro: \(Formato.diaMes(c))" }
         return "Sin débito cargado"
+    }
+}
+
+/// Lo que quedó fuera del plan después de bajar: oculto en la tienda o en sólo lectura, nunca borrado.
+private struct AvisoFueraDePlan: View {
+    var fuera: PlanCuenta.Datos.Fuera
+    var plan: String
+    var body: some View {
+        let partes = [
+            fuera.productos > 0 ? "\(Formato.cantidad(fuera.productos, "producto quedó oculto", "productos quedaron ocultos")) en la tienda" : "",
+            fuera.personas > 0 ? "\(Formato.cantidad(fuera.personas, "persona quedó", "personas quedaron")) en sólo lectura" : "",
+        ].filter { !$0.isEmpty }
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "exclamationmark.circle.fill").font(.system(size: 20, weight: .semibold)).foregroundStyle(C.primarioTexto)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Tenés más de lo que entra en \(plan)").estilo(.subheadFuerte).foregroundStyle(C.texto)
+                Text(Formato.sinViudas(partes.joined(separator: " y ") + ". No se borró nada: vuelve todo al subir de plan o al liberar lugar."))
+                    .estilo(.footnote).foregroundStyle(C.texto2)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(14)
+        .background(C.crema2, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(C.linea2, lineWidth: 1))
     }
 }
 
@@ -353,8 +409,8 @@ private struct TarjetaPlan: View {
                     Text(Formato.pesos(mes)).estilo(.montoMeta).foregroundStyle(C.texto)
                     Text("/ mes").estilo(.footnote).foregroundStyle(C.texto2)
                 }
-                Text(anual ? "\(Formato.pesos(mes * 12)) por año · ahorrás \(Formato.pesos((plan.mensual - mes) * 12))"
-                     : "IVA incluido · sin permanencia")
+                Text(anual ? "\(Formato.pesos(CatalogoPlanes.porAnio(plan))) por año · 2 meses de regalo"
+                     : "Precio final · sin permanencia")
                     .estilo(.footnote).foregroundStyle(C.texto3)
             }
         }

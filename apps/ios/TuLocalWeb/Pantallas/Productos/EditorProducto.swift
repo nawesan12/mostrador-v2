@@ -24,6 +24,9 @@ struct EditorProducto: View {
     @State private var categoria = ""
     @State private var descripcion = ""
     @State private var fotos: [String] = []
+    /// Las fotos por producto del plan (3, 5, 8 o 10). El servidor las topa igual.
+    @State private var maxFotos = 10
+    @State private var planFotos: CatalogoPlanes.Plan?
     @State private var subiendo = 0
     @State private var conVariantes = false
     @State private var elegidas: [PhotosPickerItem] = []
@@ -411,12 +414,22 @@ struct EditorProducto: View {
                     RoundedRectangle(cornerRadius: 16, style: .continuous).fill(C.pista)
                         .frame(width: 96, height: 96).overlay(ProgressView().tint(C.acento))
                 }
-                if fotos.count + subiendo < 8 {
+                if fotos.count + subiendo < maxFotos {
                     Button { camara = true } label: { botonFoto("camera", "Sacar foto") }.buttonStyle(.plain)
-                    PhotosPicker(selection: $elegidas, maxSelectionCount: 8 - fotos.count - subiendo, matching: .images) {
+                    PhotosPicker(selection: $elegidas, maxSelectionCount: maxFotos - fotos.count - subiendo, matching: .images) {
                         botonFoto("photo.on.rectangle", "Galería")
                     }
+                } else if let p = planFotos, p.fotos < 10 {
+                    Text(Formato.sinViudas("Tu plan \(p.nombre) permite \(p.fotos) fotos por producto."))
+                        .estilo(.footnote).foregroundStyle(C.texto2)
+                        .frame(width: 150, alignment: .leading)
                 }
+            }
+        }
+        .task {
+            if let p = await estado.planVigente() {
+                planFotos = p
+                maxFotos = p.fotos
             }
         }
     }

@@ -10,11 +10,15 @@ struct ErrorApi: Error, Equatable {
     var restantes: Int?
     /// Segundos para volver a probar (429).
     var reintentarEn: Int?
+    /// Tope de plan (402 tope_plan): el plan que lo habilita.
+    var plan: String?
 
     var sinConexion: Bool { codigo == "sin_conexion" }
     var sinSesion: Bool { estado == 401 && codigo == "sin_sesion" }
     /// Cambiar adónde llega la plata pide volver a verificarse (hoja Reverificar).
     var pideVerificarse: Bool { estado == 403 && codigo == "reverificar" }
+    /// Lo pedido no entra en el plan (productos, personas, fotos o una función de otro plan).
+    var esTope: Bool { estado == 402 && codigo == "tope_plan" }
 
     static let sinRed = ErrorApi(estado: 0, codigo: "sin_conexion", titulo: "Sin conexión",
                                  detalle: "No hay internet. Revisá la conexión y probá de nuevo.")
@@ -29,6 +33,9 @@ final class Api: @unchecked Sendable {
     var token: String?
     /// Se llama cuando la API dice que la sesión ya no vale (401 sin_sesion): la app vuelve al ingreso.
     var alPerderSesion: (@MainActor () -> Void)?
+    /// Se llama con un tope de plan (402 tope_plan), en cualquier pantalla: la app lo avisa con
+    /// «Ver mi plan» en el momento.
+    var alTope: (@MainActor (ErrorApi) -> Void)?
     private let http: URLSession
 
     init(base: URL, token: String? = nil, http: URLSession = .shared) {
@@ -70,6 +77,7 @@ final class Api: @unchecked Sendable {
         var title: String?
         var detail: String?
         var restantes: Int?
+        var plan: String?
     }
 
     func pedir(_ metodo: String, _ ruta: String, query: [URLQueryItem] = [], cuerpo: Data? = nil,
@@ -98,9 +106,12 @@ final class Api: @unchecked Sendable {
         let p = (try? JSONDecoder().decode(Problema.self, from: datos)) ?? Problema()
         let e = ErrorApi(estado: h.statusCode, codigo: p.code ?? "interno", titulo: p.title ?? "Algo salió mal",
                          detalle: p.detail ?? "Probá de nuevo en un rato.", restantes: p.restantes,
-                         reintentarEn: h.value(forHTTPHeaderField: "Retry-After").flatMap(Int.init))
+                         reintentarEn: h.value(forHTTPHeaderField: "Retry-After").flatMap(Int.init), plan: p.plan)
         if e.sinSesion, token != nil, let alPerderSesion {
             await alPerderSesion()
+        }
+        if e.esTope, let alTope {
+            await alTope(e)
         }
         throw e
     }

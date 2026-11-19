@@ -41,7 +41,7 @@ struct ListaProductos: View {
                 .margenPantalla()
                 if estado.puede("catalogo") {
                     HStack(spacing: 8) {
-                        Button { nav.productos.append(.nuevoProducto(nil)) } label: {
+                        Button { Task { await nuevo() } } label: {
                             Label("Nuevo producto", systemImage: "plus").estilo(.subheadFuerte).foregroundStyle(.white)
                                 .padding(.horizontal, 16).frame(height: 42)
                                 .background(C.primario, in: Capsule())
@@ -188,7 +188,7 @@ struct ListaProductos: View {
         } else {
             EstadoTincho(tincho: .foto, titulo: "Cargá tu primer producto",
                          texto: "Con una foto y el precio alcanza para empezar a vender.",
-                         accion: "Cargar producto", principal: true) { nav.productos.append(.nuevoProducto(nil)) }
+                         accion: "Cargar producto", principal: true) { Task { await nuevo() } }
         }
     }
 
@@ -220,6 +220,12 @@ struct ListaProductos: View {
         } catch {
             carga = .error(.desconocido)
         }
+    }
+
+    /// Un producto nuevo: con el tope del plan lleno, se avisa antes de abrir el editor.
+    private func nuevo() async {
+        if let d = carga.valor, !(await estado.entraOtro(\.productos, hay: d.total, que: "productos")) { return }
+        nav.productos.append(.nuevoProducto(nil))
     }
 
     private func cargarMas() async {

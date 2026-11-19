@@ -513,12 +513,12 @@
     "hasta": null,
     "cobro": {
      "fecha": "2026-11-20T00:00:00Z",
-     "importe": 49900
+     "importe": 34900
     },
-    "porCiclo": 49900,
+    "porCiclo": 34900,
     "lineas": [
      {
-      "texto": "Pro por 15 días",
+      "texto": "Crece por 15 días",
       "importe": 24145
      },
      {
@@ -567,9 +567,9 @@
     "hasta": null,
     "cobro": {
      "fecha": "2026-11-20T00:00:00Z",
-     "importe": 19900
+     "importe": 14900
     },
-    "porCiclo": 19900,
+    "porCiclo": 14900,
     "lineas": [],
     "pago": "ninguno",
     "inicio": null
@@ -592,7 +592,7 @@
    {
     "numero": "cobro:1",
     "detalle": "Tu Local Web Emprende (mensual)",
-    "total": 19900,
+    "total": 14900,
     "fecha": "2026-10-20T13:00:00Z"
    }
   ],

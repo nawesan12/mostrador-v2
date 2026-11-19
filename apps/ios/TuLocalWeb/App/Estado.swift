@@ -99,6 +99,7 @@ final class Estado {
     init(api: Api? = nil) {
         self.api = api ?? Api(base: Api.urlConfigurada(), token: Llavero.leer("token"))
         self.api.alPerderSesion = { [weak self] in self?.sesionPerdida() }
+        self.api.alTope = { [weak self] e in self?.avisarTope(e) }
     }
 
     var tienda: Acceso.Tienda? { acceso?.tienda }
@@ -354,10 +355,53 @@ final class Estado {
     // MARK: Avisos (toasts)
 
     func avisar(_ texto: String, ok: Bool = true, deshacer: (() -> Void)? = nil) {
-        aviso = Aviso(texto: texto, ok: ok, deshacer: deshacer)
+        // El error genérico de una pantalla no pisa el aviso de tope de plan que ya está a la vista.
+        if let a = aviso, a.tope, a.texto == texto { return }
+        mostrar(Aviso(texto: texto, ok: ok, deshacer: deshacer), segundos: 4)
+    }
+
+    /// Un tope de plan (402 tope_plan), desde cualquier pantalla: qué no entra y «Ver mi plan», que
+    /// abre Plan (la app no vende planes: ahí se ve qué incluye cada uno).
+    func avisarTope(_ e: ErrorApi) {
+        // El plan lo maneja la dueña: al resto del equipo sólo se le dice qué pasó.
+        let ver: (() -> Void)? = acceso?.rol == "duenio" ? { [weak self] in self?.rutaPendiente = .destino(.plan) } : nil
+        mostrar(Aviso(texto: e.detalle, ok: false, deshacer: ver, accion: ver == nil ? nil : "Ver mi plan", tope: true),
+                segundos: 7)
+    }
+
+    /// El plan que rige hoy (en la prueba gratis, Crece), de GET /v1/panel/tienda. Se guarda 10
+    /// minutos por tienda: sirve para avisar un tope antes de cargar algo (el servidor lo topa igual).
+    func planVigente() async -> CatalogoPlanes.Plan? {
+        guard let id = acceso?.tiendaId else { return nil }
+        if let c = planGuardado, c.tienda == id, Date().timeIntervalSince(c.en) < 600 { return c.plan }
+        struct T: Decodable { var plan: String; var creadaEn: Date }
+        guard let t: T = try? await api.get("/v1/panel/tienda") else { return nil }
+        let prueba = Date() < t.creadaEn.addingTimeInterval(TimeInterval(CatalogoPlanes.diasDePrueba) * 86_400)
+        let p = CatalogoPlanes.de(t.plan == "gratis" && prueba ? CatalogoPlanes.destacado : t.plan)
+        planGuardado = (id, p, Date())
+        return p
+    }
+    private var planGuardado: (tienda: String, plan: CatalogoPlanes.Plan, en: Date)?
+
+    /// Antes de crear algo con tope (productos, personas): si ya está lleno, avisa con «Ver mi plan» y
+    /// devuelve false.
+    func entraOtro(_ campo: KeyPath<CatalogoPlanes.Plan, Int>, hay: Int, que: String) async -> Bool {
+        guard let p = await planVigente() else { return true }
+        let tope = p[keyPath: campo]
+        guard tope > 0, hay >= tope else { return true }
+        let sube = CatalogoPlanes.todos.first { $0[keyPath: campo] == 0 || $0[keyPath: campo] > tope } ?? p
+        let hasta = sube[keyPath: campo] == 0 ? "sin tope" : "hasta \(Formato.numero(sube[keyPath: campo]))"
+        avisarTope(ErrorApi(estado: 402, codigo: "tope_plan", titulo: "",
+                            detalle: "Tu plan \(p.nombre) llega hasta \(Formato.numero(tope)) \(que). Con \(sube.nombre), \(hasta).",
+                            plan: sube.id))
+        return false
+    }
+
+    private func mostrar(_ a: Aviso, segundos: Int) {
+        aviso = a
         avisoTarea?.cancel()
         avisoTarea = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(4))
+            try? await Task.sleep(for: .seconds(segundos))
             guard !Task.isCancelled else { return }
             withAnimation(.easeOut(duration: 0.2)) { self?.aviso = nil }
         }

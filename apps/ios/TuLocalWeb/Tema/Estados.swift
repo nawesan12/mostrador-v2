@@ -161,6 +161,10 @@ struct Aviso: Identifiable, Equatable {
     var texto: String
     var ok = true
     var deshacer: (() -> Void)?
+    /// El nombre de la acción (por defecto «Deshacer»; un tope de plan dice «Ver mi plan»).
+    var accion: String?
+    /// Es el aviso de un tope de plan (el error genérico de la pantalla no lo pisa).
+    var tope = false
 
     static func == (a: Aviso, b: Aviso) -> Bool { a.id == b.id }
 }
@@ -175,10 +179,10 @@ struct VistaAviso: View {
                 .frame(width: 22, height: 22)
                 .background(aviso.ok ? Color(hex: 0x3FA877) : C.error, in: Circle())
             Text(aviso.texto).estilo(.subhead).foregroundStyle(Color(hex: 0xFBF7F2))
-                .lineLimit(2)
+                .lineLimit(aviso.tope ? 4 : 2)
                 .frame(maxWidth: .infinity, alignment: .leading)
             if let d = aviso.deshacer {
-                Button("Deshacer") {
+                Button(aviso.accion ?? "Deshacer") {
                     d()
                     cerrar()
                 }
