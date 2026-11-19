@@ -45,7 +45,7 @@
 
 <Seo
 	title="Contacto y ventas · Tu Local Web"
-	description="Hablemos de tu negocio: plan a medida y migración gratis si facturás más de $ 20 millones por mes, tenés sucursales o venís de otra plataforma."
+	description="Hablemos de tu negocio: plan a medida y migración gratis si facturás más de $ 100 millones por mes o venís de otra plataforma."
 	path="/contacto"
 />
 
@@ -56,8 +56,8 @@
 			<Etiqueta texto="Contacto y ventas" />
 			<h1>Hablemos de tu negocio.</h1>
 			<p class="bajada">
-				Si facturás más de $ 20 millones por mes, tenés varias sucursales o venís de otra
-				plataforma, te armamos un plan a medida y te migramos gratis.
+				Si facturás más de $ 100 millones por mes o venís de otra plataforma, te armamos un plan a
+				medida y te migramos&nbsp;gratis.
 			</p>
 			<div class="canales">
 				{#each CANALES as [ico, t, v, d] (t)}

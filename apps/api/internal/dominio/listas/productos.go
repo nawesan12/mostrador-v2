@@ -387,6 +387,9 @@ func Productos(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (
 			}
 			estado := "active"
 			switch {
+			case p.FueraDePlan:
+				// Oculto en la tienda por el plan: no cuenta como publicado ni como pausado.
+				estado = "fuera"
 			case !p.Publicado && p.Foto == nil:
 				estado = "draft"
 			case !p.Publicado:
@@ -437,6 +440,9 @@ var DefProductos = Def{
 		}
 		for _, x := range todos {
 			r["precioMax"] = max(r["precioMax"], numero(x["precio"]))
+			if x["fueraDePlan"] == true {
+				r["fueraDePlan"]++
+			}
 			cs, _ := x["canales"].([]string)
 			for _, c := range cs {
 				if c == "ml" && x["estado"] == "out" {

@@ -1,4 +1,7 @@
+import { env } from 'cloudflare:workers';
+import { usoDeFotos } from '#lib/server/archivos.ts';
 import { datosDe } from '#lib/server/datos/index.ts';
+import { dbSandbox } from '#lib/server/sandbox/sandbox.ts';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, depends, url }) => {
@@ -14,5 +17,9 @@ export const load: PageServerLoad = async ({ locals, depends, url }) => {
 		await datos
 			.volverAbono({ pago: ok(pago), suscripcion: ok(suscripcion) })
 			.catch(() => undefined);
-	return datos.planCuenta();
+	const [plan, tienda] = await Promise.all([datos.planCuenta(), datos.tienda()]);
+	// El espacio de fotos que ya usa la tienda (lo cuenta la web, que guarda las fotos). Si no se
+	// puede leer, la fila no se muestra (nunca un número inventado).
+	const fotosBytes = await usoDeFotos(dbSandbox(env.SANDBOX), tienda.id).catch(() => null);
+	return { ...plan, fotosBytes };
 };

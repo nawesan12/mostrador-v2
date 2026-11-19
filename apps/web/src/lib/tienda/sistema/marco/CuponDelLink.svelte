@@ -35,10 +35,11 @@
 		}
 		if (!/^[A-Z0-9-]{3,20}$/.test(codigo)) return;
 		anotarCupon(ctx.tienda.slug, ctx.base, codigo);
+		// Se valida al pagar (con el carrito): acá no se promete un descuento que quizás ya no vale.
 		ui?.toast({
 			k: 'ok',
-			title: `Cupón ${codigo} aplicado`,
-			desc: 'Se descuenta solo en el carrito al pagar.'
+			title: `Cupón ${codigo} guardado`,
+			desc: 'Lo aplicamos solo al pagar, si sigue vigente.'
 		});
 	});
 </script>

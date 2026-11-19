@@ -59,7 +59,7 @@ export const LEGALES: Legal[] = [
 		corto: 'Términos y condiciones',
 		miga: 'Términos',
 		descripcion: 'Legales de Tu Local Web, claros y sin letra chica.',
-		chips: ['Vigente desde el 1 de octubre de 2026', 'Versión 3.2', '3 min de lectura'],
+		chips: ['Vigente desde el 19 de noviembre de 2026', 'Versión 3.3', '3 min de lectura'],
 		ilustracion: 'portapapeles',
 		indice: [
 			['s1', '1. Quiénes somos'],
@@ -118,7 +118,13 @@ export const LEGALES: Legal[] = [
 				titulo: 'Planes, precios y facturación',
 				cuerpo: [
 					{
-						p: 'Los planes se pagan por mes o por año, en pesos y con IVA incluido, por débito automático. Te enviamos factura electrónica por cada cobro. Si actualizamos un precio, te avisamos por email y en el panel con 30 días de anticipación; podés cambiar de plan o cancelar antes de que se aplique.'
+						p: 'Los planes se pagan por mes o por año, en pesos y con IVA incluido, por débito automático, sin comisión por venta. Pagando por año se cobran 10 meses y el plan dura 12. Te enviamos factura electrónica por cada cobro. Si actualizamos un precio, te avisamos por email y en el panel con 30 días de anticipación; podés cambiar de plan o cancelar antes de que se aplique.'
+					},
+					{
+						p: 'Cada plan tiene sus topes (productos, personas, fotos y respuestas de Tincho). Si pasás a un plan más chico no se borra nada: lo que no entra queda oculto en la tienda o en sólo lectura en el panel hasta que vuelvas a subir o liberes lugar.'
+					},
+					{
+						p: 'El pack extra de Tincho (2.000 respuestas con IA por $ 4.900) es un pago único con Mercado Pago, se suma cuando el pago se aprueba y vale para el mes en curso.'
 					}
 				]
 			},
@@ -129,7 +135,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Prueba gratis y cancelación',
 				cuerpo: [
 					{
-						p: 'Los primeros 14 días son gratis y no pedimos tarjeta. Podés cancelar cuando quieras desde Configuración › Plan. Seguís usando Tu Local Web hasta el final del período que ya pagaste y no se te cobra de nuevo.'
+						p: 'Los primeros 14 días son gratis, con todo lo del plan Crece, y no pedimos tarjeta. Si al terminar no elegiste un plan, seguís en el plan Gratis. Podés cancelar cuando quieras desde Configuración › Plan. Seguís usando Tu Local Web hasta el final del período que ya pagaste y no se te cobra de nuevo.'
 					}
 				]
 			},
@@ -588,7 +594,7 @@ export const LEGALES: Legal[] = [
 		corto: 'Botón de arrepentimiento',
 		miga: 'Arrepentimiento',
 		descripcion: 'Legales de Tu Local Web, claros y sin letra chica.',
-		chips: ['Vigente desde el 1 de octubre de 2026', 'Versión 1.1', '2 min de lectura'],
+		chips: ['Vigente desde el 19 de noviembre de 2026', 'Versión 1.2', '2 min de lectura'],
 		ilustracion: 'portapapeles',
 		indice: [
 			['s1', '1. Qué es'],
@@ -604,7 +610,7 @@ export const LEGALES: Legal[] = [
 				t: 'resumen',
 				items: [
 					'Tenés 10 días corridos desde que contrataste para arrepentirte, sin dar explicaciones.',
-					'No tiene costo y te devolvemos todo lo que pagaste, por el mismo medio de pago.',
+					'No tiene costo y te devolvemos todo lo que pagaste, por el mismo medio de pago. El pack extra de Tincho se devuelve si no usaste ninguna de sus respuestas.',
 					'Te damos un código de trámite en menos de 24 horas.'
 				]
 			},
@@ -1036,7 +1042,7 @@ export const LEGALES: Legal[] = [
 		corto: 'Reembolsos de planes',
 		miga: 'Reembolsos',
 		descripcion: 'Legales de Tu Local Web, claros y sin letra chica.',
-		chips: ['Vigente desde el 1 de octubre de 2026', 'Versión 1.4', '2 min de lectura'],
+		chips: ['Vigente desde el 19 de noviembre de 2026', 'Versión 1.5', '2 min de lectura'],
 		ilustracion: 'portapapeles',
 		indice: [
 			['s1', '1. Prueba gratis'],
@@ -1062,7 +1068,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Prueba gratis',
 				cuerpo: [
 					{
-						p: 'Durante los 14 días de prueba no se cobra nada. Si no elegís un plan, la tienda queda en pausa y conservamos todo por 30 días.'
+						p: 'Durante los 14 días de prueba no se cobra nada. Si no elegís un plan, la tienda sigue publicada en el plan Gratis: lo que no entra en él queda oculto, sin borrarse, hasta que elijas un plan.'
 					}
 				]
 			},
@@ -1073,7 +1079,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Arrepentimiento',
 				cuerpo: [
 					{
-						p: 'Dentro de los 10 días corridos desde que contrataste un plan, te devolvemos el 100 % de lo pagado. Podés pedirlo desde el Botón de arrepentimiento.'
+						p: 'Dentro de los 10 días corridos desde que contrataste un plan, te devolvemos el 100 % de lo pagado. Podés pedirlo desde el Botón de arrepentimiento. El pack extra de Tincho se devuelve dentro de los 10 días si no usaste ninguna de sus respuestas.'
 					}
 				]
 			},
@@ -1095,7 +1101,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Planes anuales',
 				cuerpo: [
 					{
-						p: 'Si cancelás dentro de los primeros 30 días, te devolvemos el total. Después, te reintegramos los meses completos que no usaste, calculados a precio mensual.'
+						p: 'Si cancelás dentro de los primeros 30 días, te devolvemos el total. Después, te devolvemos lo que pagaste menos los meses usados a precio mensual (si esa cuenta da cero o menos, no hay devolución).'
 					}
 				]
 			},

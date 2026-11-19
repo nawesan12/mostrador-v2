@@ -13,7 +13,12 @@ export const LPLANS = PLANES.map(
 			p.lema,
 			p.precio,
 			p.incluye,
-			p.precio ? 'Probar 14 días' : 'Crear tienda gratis',
+			// La prueba de 14 días es siempre con el destacado (Crece): sólo ese botón la promete.
+			!p.precio
+				? 'Crear tienda gratis'
+				: p.id === DESTACADO
+					? 'Probar 14 días'
+					: `Elegir ${p.nombre}`,
 			p.id === DESTACADO
 		] as const
 );

@@ -12,6 +12,8 @@
 	import { diaDeMes, pesos, plural } from '#lib/panel/formato.ts';
 	import { iniciales } from '#lib/panel/listas/clientes.ts';
 	import { MAX_PRODUCTOS, origenDe, parrafos } from '#lib/panel/newsletter.ts';
+	import FranjaPlan, { fueraDelPlan, topeDe } from '#lib/panel/FranjaPlan.svelte';
+	import { avisarTope } from '#lib/panel/tope.ts';
 	import { VIDA_TOAST, getUi } from '#lib/ui.svelte.ts';
 
 	/**
@@ -53,6 +55,8 @@
 	}
 
 	async function mandar() {
+		// El newsletter es desde Crece: se avisa antes de mandar, no al fallar.
+		if (fueraDelPlan('newsletter')) return void avisarTope(ui, topeDe('newsletter'));
 		if (enviando) return;
 		enviando = true;
 		error = null;
@@ -135,6 +139,11 @@
 			>
 		{/if}
 	</div>
+
+	<FranjaPlan
+		funcion="newsletter"
+		texto="Quienes ya se sumaron quedan guardados. Mientras, tu tienda no ofrece sumarse."
+	/>
 
 	{#if demo}
 		<div use:anim={{ t: 'rise', delay: 30 }}>

@@ -173,6 +173,15 @@ export async function subirFoto(
 	return clave;
 }
 
+/** Lo que ocupan las fotos de un dueño (la tienda), en bytes: lo que cuenta para el espacio del plan. */
+export async function usoDeFotos(db: DbSandbox, duenio: string): Promise<number> {
+	const [uso] = await db
+		.select({ bytes: sql<number>`coalesce(sum(${archivos.bytes}), 0)` })
+		.from(archivos)
+		.where(sql`${archivos.clave} like 'fotos/%' and ${archivos.duenio} = ${duenio}`);
+	return Number(uso?.bytes ?? 0);
+}
+
 /**
  * Sube un archivo para descargar (PDF, EPUB o ZIP) tal como llegó, respetando los topes. Devuelve
  * su clave. Los mismos dueños que las fotos; la cuenta de espacio va aparte.

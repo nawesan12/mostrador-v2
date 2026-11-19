@@ -4,6 +4,8 @@
 	import Seo from '#lib/components/Seo.svelte';
 	import * as I from '#lib/icons.ts';
 	import { anim } from '#lib/panel/anim.ts';
+	import FranjaPlan, { fueraDelPlan, topeDe } from '#lib/panel/FranjaPlan.svelte';
+	import { avisarTope } from '#lib/panel/tope.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 
 	/** Dominio (design/PanelCuenta.dc.html, sDom): dónde se ve la tienda y conectar uno propio. */
@@ -11,7 +13,12 @@
 	const ui = getUi();
 	let dominio = $state('');
 	const verificando = $derived(data.dominios.find((d) => d.estado === 'verificando'));
-	const principal = $derived(data.dominios.find((d) => d.principal)?.nombre ?? data.gratis);
+	// Sin el plan (Gratis o fin de la prueba) el dominio propio redirige a la dirección gratis: queda
+	// guardado y vuelve al pasar a Emprende.
+	const sinPlan = $derived(fueraDelPlan('dominio'));
+	const principal = $derived(
+		(!sinPlan && data.dominios.find((d) => d.principal)?.nombre) || data.gratis
+	);
 
 	// Mientras haya uno verificando, se vuelve a mirar cada 20 s (sólo con la pantalla abierta).
 	$effect(() => {
@@ -34,6 +41,7 @@
 	}
 	async function conectar(e: SubmitEvent) {
 		e.preventDefault();
+		if (sinPlan) return void avisarTope(ui, topeDe('dominio'));
 		const d = dominio.trim();
 		if (!(await pedir('/panel/dominio', 'POST', { dominio: d }))) return;
 		dominio = '';
@@ -79,11 +87,18 @@
 	<div use:anim={{ t: 'rise' }}>
 		<h1>Dominio</h1>
 		<div class="c-s">
-			Tu tienda se ve en <b>{principal}</b>{data.dominios.length > 1
+			Tu tienda se ve en <b>{principal}</b>{!sinPlan && data.dominios.length > 1
 				? ' y en tus dominios propios'
 				: ''}
 		</div>
 	</div>
+
+	<FranjaPlan
+		funcion="dominio"
+		texto={data.dominios.length > 1
+			? 'Tu dominio queda guardado: mientras, lleva a tu dirección de Tu Local Web y vuelve solo al pasar de plan.'
+			: undefined}
+	/>
 
 	<div class="lista" use:anim={{ t: 'rise', delay: 50 }}>
 		{#each data.dominios as d (d.nombre)}

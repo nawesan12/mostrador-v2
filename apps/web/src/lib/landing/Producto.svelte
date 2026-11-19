@@ -37,7 +37,7 @@
 			true
 		],
 		['1687422811062-a966b55cb217', 'Martín G.', '¡Llegó perfecto!', I.logosTelegram, false],
-		['1764173039506-c5cc7b8ec14b', 'Norma R.', 'Pedido mayorista', I.logosInstagramIcon, false]
+		['1764173039506-c5cc7b8ec14b', 'Norma R.', 'Pedido mayorista', I.logosTelegram, false]
 	] as const;
 </script>
 
@@ -51,7 +51,7 @@
 			<div class="caja wa" use:anim={'reveal'} use:spot>
 				<div class="sello">
 					<Icon icon={I.logosWhatsappIcon} size={22} /><span class="s-n">WhatsApp y Telegram</span
-					><span class="incl">Incluido</span>
+					><span class="incl">Pronto</span>
 				</div>
 				<h3>Vendé donde ya te escriben</h3>
 				<p>
@@ -106,7 +106,7 @@
 					<div class="sello">
 						<Icon icon={I.phStorefrontFill} size={22} style="color:#F5B796" /><span
 							class="s-n blanco">Punto de venta</span
-						><span class="extra">Sin costo extra</span>
+						><span class="extra">Desde Crece</span>
 					</div>
 					<h3 class="pos-h">El local y la web, con un solo stock</h3>
 					<p class="pos-p">Cobrás con QR, tarjeta o efectivo y la factura sale sola.</p>

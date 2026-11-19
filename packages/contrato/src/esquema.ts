@@ -4174,6 +4174,8 @@ export interface components {
             activa: boolean;
         };
         Producto: components["schemas"]["ProductoEditable"] & {
+            /** @description Quedó fuera del tope de productos del plan (después de bajar): oculto en la tienda y en sólo lectura */
+            fueraDePlan?: boolean;
             id: string;
             publicado: boolean;
             vendidos30d: number;

@@ -10,6 +10,8 @@ export type Toast = {
 	/** Acción útil ("Deshacer", "Ver pedido"…). Al tocarla, se ejecuta y el toast se va. */
 	action?: string;
 	onAction?: () => void | Promise<void>;
+	/** Es el aviso de un tope de plan (lib/panel/tope.ts): manda sobre el error de la pantalla. */
+	tope?: boolean;
 };
 
 /** El título del aviso de tope de plan (lib/panel/tope.ts). */
@@ -31,13 +33,14 @@ export class UiState {
 	#timers = new Map<number, ReturnType<typeof setTimeout>>();
 
 	toast(t: Omit<Toast, 'id'>) {
-		// Un tope de plan ya avisado (con «Pasar a X») no se repite, ni como el error genérico de la
-		// pantalla que hizo el pedido.
-		const repetido = this.toasts.find(
-			(x) =>
-				x.desc === t.desc && x.title === TITULO_TOPE && (t.k === 'err' || t.title === TITULO_TOPE)
-		);
-		if (repetido) return repetido.id;
+		// Un tope de plan se avisa una sola vez, con «Pasar a X», y nunca junto al error genérico de la
+		// pantalla que hizo el pedido (llegue antes o después que el aviso del tope).
+		const delTope = this.toasts.find((x) => x.tope && x.desc === t.desc);
+		if (delTope && (t.tope || t.k === 'err')) return delTope.id;
+		if (t.tope) {
+			const error = this.toasts.find((x) => x.k === 'err' && x.desc === t.desc);
+			if (error) this.dismiss(error.id);
+		}
 		const id = ++this.#seq;
 		this.toasts = [...this.toasts, { id, ...t }].slice(-MAX_TOASTS);
 		this.#timers.set(

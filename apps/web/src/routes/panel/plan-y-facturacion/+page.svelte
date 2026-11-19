@@ -81,6 +81,19 @@
 			document.getElementById('resumen')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 	}
 
+	// En el celular, la barra fija con «Hoy pagás» se esconde mientras el botón del resumen está a la
+	// vista (no dos botones de pago a la vez, uno tapando al otro).
+	let resumenALaVista = $state(false);
+	let botonResumen = $state<HTMLElement>();
+	$effect(() => {
+		if (!botonResumen || typeof IntersectionObserver === 'undefined') return;
+		const o = new IntersectionObserver(([e]) => (resumenALaVista = e.isIntersecting), {
+			rootMargin: '0px 0px -96px 0px'
+		});
+		o.observe(botonResumen);
+		return () => o.disconnect();
+	});
+
 	// ---- El resumen ----
 	const porCiclo = (n: number, c: Ciclo) => `${pesos(n)} ${c === 'anio' ? 'por año' : 'por mes'}`;
 	const NADA_HOY = $derived.by(() => {
@@ -260,11 +273,22 @@
 	// ---- Uso (los topes del plan que rige; 0 es sin tope) ----
 	const tope = $derived(vigente.tincho + data.uso.packs * PACK_TINCHO.respuestas);
 	const sinTope = (n: number) => (n === 0 ? null : n);
+	// [qué, cuánto, tope (null o 0: sin tope), unidad]
 	const USO = $derived([
-		['Productos', data.uso.productos, sinTope(vigente.productos)],
-		['Personas en el equipo', data.uso.personas, sinTope(vigente.personas)],
-		['Respuestas de Tincho con IA', data.uso.hornero, tope],
-		['Respuestas automáticas sin IA', data.uso.sinIa, null]
+		['Productos', data.uso.productos, sinTope(vigente.productos), ''],
+		['Personas en el equipo', data.uso.personas, sinTope(vigente.personas), ''],
+		['Respuestas de Tincho con IA', data.uso.hornero, tope, ''],
+		['Respuestas automáticas sin IA', data.uso.sinIa, null, ''],
+		...(data.fotosBytes === null
+			? []
+			: ([
+					[
+						'Espacio de fotos',
+						Math.ceil(data.fotosBytes / 1024 / 1024),
+						vigente.fotosMB,
+						'\u00a0MB'
+					]
+				] as const))
 	] as const);
 	// Lo que quedó fuera del plan después de bajar (no se borró nada).
 	const fuera = $derived(
@@ -273,7 +297,20 @@
 			personas: 0
 		}
 	);
-	// El pack se paga con Mercado Pago y se suma cuando se aprueba (en la demo, en el momento).
+	// El plan más barato en el que entra todo lo que hoy quedó fuera (productos y personas).
+	const planQueEntra = $derived(
+		PLANES.find(
+			(p) =>
+				(p.productos === 0 || p.productos >= data.uso.productos) &&
+				(p.personas === 0 || p.personas >= data.uso.personas)
+		) ?? null
+	);
+	// El pack se paga con Mercado Pago y se suma cuando se aprueba (en la demo, en el momento). Vale
+	// para el mes en curso: comprado en los últimos días, se avisa que dura hasta fin de mes.
+	const diasAlFinDeMes = (() => {
+		const hoy = new Date();
+		return new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate() - hoy.getDate() + 1;
+	})();
 	let comprandoPack = $state(false);
 	async function pack() {
 		if (comprandoPack) return;
@@ -476,6 +513,14 @@
 						.join(' y ')}. No se borró nada: vuelve todo al subir de plan o al liberar&nbsp;lugar.</span
 				>
 			</div>
+			{#if fuera.productos}
+				<a class="fr-ver" href="{resolve('/panel/productos')}?seg=fuera">Ver cuáles</a>
+			{/if}
+			{#if planQueEntra && planQueEntra.id !== vigente.id}
+				<button type="button" onclick={() => elegir(planQueEntra)}
+					>Pasar a {planQueEntra.nombre}</button
+				>
+			{/if}
 		</div>
 	{/if}
 
@@ -624,7 +669,9 @@
 								cot.tipo === 'ciclo' ||
 								cot.tipo === 'mantener'
 									? 'Desde el próximo cobro'
-									: 'Primer cobro'}, el <b>{fecha(cot.cobro.fecha)}</b>:
+									: cot.hoy > 0
+										? 'Próximo cobro'
+										: 'Primer cobro'}, el <b>{fecha(cot.cobro.fecha)}</b>:
 								<b>{porCiclo(cot.porCiclo, cot.ciclo)}</b>{#if cot.ciclo === 'anio'}
 									<span class="r-eq"
 										>(equivale a {pesos(Math.round(cot.porCiclo / 12))} por mes)</span
@@ -679,6 +726,7 @@
 				{/if}
 
 				<button
+					bind:this={botonResumen}
 					type="button"
 					class="r-btn"
 					class:roja={elegido === 'gratis'}
@@ -730,7 +778,7 @@
 		</aside>
 	</div>
 
-	{#if cot && !sinCambio}
+	{#if cot && !sinCambio && !resumenALaVista}
 		<div class="barra-movil">
 			<span><small>Hoy pagás</small><b>{pesos(cot.hoy)}</b></span>
 			<button
@@ -747,19 +795,26 @@
 			<div class="u-cab">
 				<span>Uso de este mes</span>
 				<button type="button" onclick={pack} disabled={comprandoPack}
-					><Icon icon={I.phSparkleFill} size={13} style="color:#b0441d" />{comprandoPack
+					><Icon icon={I.phSparkleFill} size={13} style="color:var(--ac-tx)" />{comprandoPack
 						? 'Un momento…'
-						: `+${PACK_TINCHO.respuestas.toLocaleString('es-AR')} respuestas · ${pesos(PACK_TINCHO.precio)}`}</button
+						: `Comprar ${PACK_TINCHO.respuestas.toLocaleString('es-AR')} respuestas · ${pesos(PACK_TINCHO.precio)}`}</button
 				>
 			</div>
-			{#each USO as [t, v, max] (t)}
+			{#if diasAlFinDeMes <= 3}
+				<p class="u-nota">
+					El pack vale para este mes: comprado hoy, se usa hasta fin de mes ({diasAlFinDeMes === 1
+						? 'queda 1 día'
+						: `quedan ${diasAlFinDeMes} días`}).
+				</p>
+			{/if}
+			{#each USO as [t, v, max, u] (t)}
 				{@const w = max ? Math.min(100, (v / max) * 100) : v ? 18 : 0}
 				<div>
 					<div class="u-f">
 						<span>{t}</span><span
-							><b>{v.toLocaleString('es-AR')}</b> de {max
-								? max.toLocaleString('es-AR')
-								: 'sin tope'}</span
+							>{#if max}<b>{v.toLocaleString('es-AR')}{u}</b> de {max.toLocaleString(
+									'es-AR'
+								)}{u}{:else}<b>{v.toLocaleString('es-AR')}{u}</b> · sin tope{/if}</span
 						>
 					</div>
 					<div class="u-b">
@@ -829,25 +884,28 @@
 		{/each}
 	</div>
 
-	<div class="frenar" use:anim={{ t: 'rise', delay: 200 }}>
-		<Icon icon={I.phPauseCircle} size={26} style="color:var(--mu)" />
-		<div class="fr-txt">
-			<div class="fr-t">{data.cancelado ? 'Tu plan está cancelado' : '¿Necesitás frenar?'}</div>
-			<div class="fr-d">
-				{data.cancelado
-					? `Seguís con ${actual.nombre} hasta el ${fecha(data.cancelado.hasta)}. Si cambiás de idea, seguís con un toque.`
-					: 'Podés pasar al plan Gratis sin perder lo que ya pagaste. Tus datos quedan guardados.'}
+	<!-- Frenar sólo tiene sentido con algo pago (o ya cancelado): en Gratis o en la prueba, no. -->
+	{#if data.cancelado || (data.actual !== 'gratis' && data.abono.activo)}
+		<div class="frenar" use:anim={{ t: 'rise', delay: 200 }}>
+			<Icon icon={I.phPauseCircle} size={26} style="color:var(--mu)" />
+			<div class="fr-txt">
+				<div class="fr-t">{data.cancelado ? 'Tu plan está cancelado' : '¿Necesitás frenar?'}</div>
+				<div class="fr-d">
+					{data.cancelado
+						? `Seguís con ${actual.nombre} hasta el ${fecha(data.cancelado.hasta)}. Si cambiás de idea, seguís con un toque.`
+						: 'Podés pasar al plan Gratis sin perder lo que ya pagaste. Tus datos quedan guardados.'}
+				</div>
 			</div>
+			{#if data.cancelado}
+				<button type="button" class="fr-a" onclick={reactivar}>Seguir con {actual.nombre}</button>
+			{:else}
+				{#if data.actual !== 'gratis'}<button type="button" class="fr-a" onclick={aGratis}
+						>Pasar a Gratis</button
+					>
+					<button type="button" class="fr-c" onclick={abrirCancelar}>Cancelar plan</button>{/if}
+			{/if}
 		</div>
-		{#if data.cancelado}
-			<button type="button" class="fr-a" onclick={reactivar}>Seguir con {actual.nombre}</button>
-		{:else}
-			{#if data.actual !== 'gratis'}<button type="button" class="fr-a" onclick={aGratis}
-					>Pasar a Gratis</button
-				>
-				<button type="button" class="fr-c" onclick={abrirCancelar}>Cancelar plan</button>{/if}
-		{/if}
-	</div>
+	{/if}
 </div>
 
 <Modal bind:open={cancelando} titulo="Cancelar el plan" ancho={520} padding={24}>
@@ -1105,6 +1163,16 @@
 		color: var(--mu);
 		font-size: 13px;
 	}
+	.fr-ver {
+		min-height: 44px;
+		display: inline-flex;
+		align-items: center;
+		padding: 0 6px;
+		color: var(--ac-tx);
+		font-weight: 600;
+		font-size: 13.5px;
+		text-decoration: none;
+	}
 	.programado button {
 		min-height: 44px;
 		padding: 0 16px;
@@ -1127,7 +1195,8 @@
 		display: flex;
 		flex-direction: column;
 		gap: 14px;
-		scroll-margin-top: 16px;
+		/* La barra de arriba del panel (64 px, sticky) más aire: el título del resumen queda a la vista. */
+		scroll-margin-top: calc(64px + env(safe-area-inset-top) + 16px);
 	}
 	@media (max-width: 1279px) {
 		.resumen {
@@ -1515,11 +1584,18 @@
 	}
 	.u-cab {
 		display: flex;
+		flex-wrap: wrap;
 		justify-content: space-between;
 		align-items: center;
 		gap: 10px;
 		font-size: 16px;
 		font-weight: 600;
+	}
+	.u-nota {
+		margin: -4px 0 0;
+		font-size: 12.5px;
+		color: var(--mu);
+		text-wrap: pretty;
 	}
 	.u-cab button {
 		display: flex;

@@ -29,6 +29,8 @@
 	} from '#lib/panel/formato.ts';
 	import { rutaDe, visible } from '#lib/panel/navegacion.ts';
 	import { getShell } from '#lib/panel/shell.svelte.ts';
+	import { fueraDelPlan } from '#lib/panel/FranjaPlan.svelte';
+	import { planCon, type Funcion } from '#lib/panel/planes.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 
 	/** Resumen del panel (design/Mostrador v4.dc.html, `isDash`), con los datos de la tienda. */
@@ -228,7 +230,8 @@
 				k: 'Punto de venta',
 				bg: 'rgba(227,169,59,.2)',
 				fg: '#8a5f0e',
-				href: rutaDe('Ventas en local')
+				href: rutaDe('Ventas en local'),
+				plan: 'local' as Funcion
 			},
 			{
 				icon: I.phMegaphoneFill,
@@ -239,7 +242,8 @@
 				fg: '#6A4FA0',
 				// Las campañas salen por WhatsApp Business, que todavía no se conecta: el acceso lleva a lo
 				// que sí funciona para traer ventas.
-				href: rutaDe(mide ? 'Marketing' : 'Cupones')
+				href: rutaDe(mide ? 'Marketing' : 'Cupones'),
+				plan: mide ? undefined : ('cupones' as Funcion)
 			},
 			// Sin envíos para hoy, imprimir etiquetas no lleva a nada: en una tienda real ese lugar es para
 			// compartir el link, que es lo que trae los pedidos.
@@ -533,7 +537,12 @@
 			<span class="q-ico" style:background={q.bg} style:color={q.fg}
 				><Icon icon={q.icon} size={20} /></span
 			>
-			<span class="q-txt"><span class="q-t">{q.t}</span><span class="q-k">{q.k}</span></span>
+			<span class="q-txt"
+				><span class="q-t">{q.t}</span><span class="q-k">{q.k}</span
+				>{#if 'plan' in q && q.plan && fueraDelPlan(q.plan)}<span class="q-plan"
+						>{planCon(q.plan).nombre}</span
+					>{/if}</span
+			>
 		</a>
 	{/each}
 </div>
@@ -1332,6 +1341,18 @@
 	}
 	.q-txt {
 		min-width: 0;
+	}
+	/* La función es de otro plan: una etiqueta chica con su nombre (como el chip de plan). */
+	.q-plan {
+		display: inline-block;
+		margin-top: 4px;
+		padding: 2px 8px;
+		border-radius: 999px;
+		background: rgba(210, 88, 47, 0.12);
+		color: var(--ac-tx);
+		font-size: 11.5px;
+		font-weight: 600;
+		line-height: 1.4;
 	}
 	/* Sin «…»: el título en un renglón corto y la bajada hasta en dos. */
 	.q-t,

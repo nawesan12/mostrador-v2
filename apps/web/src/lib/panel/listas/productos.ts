@@ -23,7 +23,7 @@ export type ProductoFila = {
 	publicado: boolean;
 	/** La parte del link público (/t/<tienda>/producto/<slug>). */
 	slug?: string;
-	estado: 'active' | 'out' | 'paused' | 'draft';
+	estado: 'active' | 'out' | 'paused' | 'draft' | 'fuera';
 	lowm: boolean;
 	star: boolean;
 	/** Cuántos pidieron «Avisame cuando vuelva» y todavía esperan (§60). */
@@ -50,12 +50,14 @@ const ESTADO = {
 } as const;
 
 /** El chip de un producto que quedó fuera del plan: oculto en la tienda y en sólo lectura. */
-const FUERA_DE_PLAN = ['Fuera de tu plan', 'rgba(210,88,47,.12)', '#A8401C'] as const;
+const FUERA_DE_PLAN = ['Fuera de tu plan', 'rgba(210,88,47,.12)', 'var(--ac-tx)'] as const;
 
 export function configProductos(
 	nuevo: () => void,
 	pedirPorcentaje: (ids: string[]) => void,
-	compartir: (p: ProductoFila, ctx: Ctx) => Promise<void>
+	compartir: (p: ProductoFila, ctx: Ctx) => Promise<void>,
+	/** El plan que hace entrar a todos (para el aviso de los que quedaron fuera). */
+	subir?: () => { nombre: string; href: string }
 ): ConfigLista<ProductoFila> {
 	return {
 		lista: 'productos',
@@ -66,6 +68,17 @@ export function configProductos(
 			`${l.total.toLocaleString('es-AR')} ${l.total === 1 ? 'producto' : 'productos'} · ${(l.resumen.unidades30 ?? 0).toLocaleString('es-AR')} unidades vendidas en 30 días`,
 		primario: { t: 'Nuevo producto', icon: I.phCameraPlusFill, hacer: nuevo },
 		tip: (l) => {
+			// Lo primero: lo que quedó oculto por el plan (después de bajar), con cómo volver a mostrarlo.
+			const fuera = l.resumen.fueraDePlan ?? 0;
+			const sube = fuera && subir ? subir() : null;
+			if (sube)
+				return {
+					texto: `${fuera} ${fuera === 1 ? 'producto quedó fuera de tu plan y no se ve' : 'productos quedaron fuera de tu plan y no se ven'} en la tienda. No se borró nada.`,
+					boton: `Pasar a ${sube.nombre}`,
+					async hacer() {
+						location.href = sube.href;
+					}
+				};
 			const n = l.resumen.sinStockEnMl ?? 0;
 			if (!n) return null;
 			return {
@@ -109,7 +122,8 @@ export function configProductos(
 			{ k: 'active', t: 'Publicados', c: '#2F8F63' },
 			{ k: 'out', t: 'Sin stock', c: '#B83A2E' },
 			{ k: 'paused', t: 'Pausados', c: '#9C8B7E' },
-			{ k: 'draft', t: 'Borradores', c: '#3E6BFD' }
+			{ k: 'draft', t: 'Borradores', c: '#3E6BFD' },
+			{ k: 'fuera', t: 'Fuera del plan', c: '#B0441D' }
 		],
 		facetas: [
 			{ k: 'categoria', t: 'Categoría' },
@@ -134,7 +148,7 @@ export function configProductos(
 		fila: (p) => {
 			const mx = Math.max(1, ...p.ventas);
 			const e = p.fueraDePlan
-				? FUERA_DE_PLAN
+				? ([...FUERA_DE_PLAN, true] as const)
 				: p.estado in ESTADO
 					? ESTADO[p.estado as keyof typeof ESTADO]
 					: null;
@@ -160,10 +174,13 @@ export function configProductos(
 					: `${p.vendidos30} vendidos en 30 días`,
 				vC: p.esperan ? '#B83A2E' : 'var(--mu)',
 				vI: p.esperan ? I.phBellRingingFill : p.star ? I.phFireFill : undefined,
-				chip: e ? { t: e[0], bg: e[1], fg: e[2] } : undefined,
+				chip: e ? { t: e[0], bg: e[1], fg: e[2], siempre: e.length > 3 } : undefined,
 				v: pesos(p.precio),
 				vs: 'precio',
-				toggle: { on: p.publicado, t: p.publicado ? 'Publicado' : 'Pausado' },
+				// Fuera del plan: oculto en la tienda aunque esté publicado, y no se cambia desde acá.
+				toggle: p.fueraDePlan
+					? { on: false, t: 'Fuera de tu plan', disabled: true }
+					: { on: p.publicado, t: p.publicado ? 'Publicado' : 'Pausado' },
 				act: { t: 'Compartir', icon: I.phShareNetworkBold, bg: 'var(--sf3)', fg: 'var(--tx)' }
 			};
 		},

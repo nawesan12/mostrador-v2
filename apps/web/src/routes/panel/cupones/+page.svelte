@@ -21,6 +21,8 @@
 	} from '#lib/panel/cupones.ts';
 	import { pesos } from '#lib/panel/formato.ts';
 	import { SITE } from '#lib/site.ts';
+	import FranjaPlan, { fueraDelPlan, topeDe } from '#lib/panel/FranjaPlan.svelte';
+	import { avisarTope } from '#lib/panel/tope.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 
 	/** Cupones y promociones (design/PanelCupones.dc.html): cupones, automáticas y relámpago. */
@@ -303,7 +305,10 @@
 			programar: false
 		};
 	}
+	// Los cupones son desde Emprende: sin el plan se avisa al abrir «Nuevo cupón», no al guardarlo.
+	const sinPlan = $derived(fueraDelPlan('cupones'));
 	function abrir() {
+		if (sinPlan) return void avisarTope(ui, topeDe('cupones'));
 		n = nuevoCupon();
 		objetivo = 'first';
 		elegidos.clear();
@@ -453,6 +458,11 @@
 				><Icon icon={I.phPlusBold} size={15} />Nuevo cupón</button
 			>{/if}
 	</div>
+
+	<FranjaPlan
+		funcion="cupones"
+		texto="Los cupones que ya creaste quedan guardados y no se aplican hasta que pases de plan."
+	/>
 
 	<!-- Sin ningún cupón, los números serían todos cero: aparecen con el primero. -->
 	{#if data.cupones.length}

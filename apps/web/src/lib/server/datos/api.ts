@@ -149,11 +149,13 @@ export class DatosApi implements Datos {
 				detail?: string;
 				code?: string;
 				plan?: string;
+				title?: string;
 			} | null;
 			error(res.status, {
 				message: p?.detail ?? 'La API no respondió bien.',
 				code: p?.code,
-				plan: p?.plan
+				plan: p?.plan,
+				...(p?.code === 'tope_plan' && p.title ? { title: p.title } : {})
 			});
 		}
 		if (res.status === 204) return undefined as T;
@@ -1063,11 +1065,13 @@ export class DatosApi implements Datos {
 				detail?: string;
 				code?: string;
 				plan?: string;
+				title?: string;
 			} | null;
 			error(res.status, {
 				message: p?.detail ?? 'La API no respondió bien.',
 				code: p?.code,
-				plan: p?.plan
+				plan: p?.plan,
+				...(p?.code === 'tope_plan' && p.title ? { title: p.title } : {})
 			});
 		}
 		return res;

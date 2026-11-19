@@ -19,6 +19,8 @@
 		textoDemora,
 		type RecordatoriosCarritos
 	} from '#lib/panel/recordatorios.ts';
+	import FranjaPlan, { fueraDelPlan, topeDe } from '#lib/panel/FranjaPlan.svelte';
+	import { avisarTope } from '#lib/panel/tope.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 
 	/** Carritos abandonados (design/PanelVentas.dc.html): lo que quedó, lo recuperado y los recordatorios. */
@@ -42,7 +44,12 @@
 		await invalidateAll();
 		return r;
 	}
+	// Recordar es de los cupones, combos y carritos (desde Emprende): los carritos se siguen viendo, y
+	// recordar o prender los recordatorios avisa el plan antes de pedir nada.
+	const sinPlan = $derived(fueraDelPlan('cupones'));
+	const avisarPlan = () => void avisarTope(ui, topeDe('cupones'));
 	async function todos() {
+		if (sinPlan) return avisarPlan();
 		const r = await post('todos');
 		const { enviados } = (await r.json()) as { enviados: number };
 		ui.toast({
@@ -58,6 +65,7 @@
 		});
 	}
 	async function uno(c: (typeof k.carritos)[number]) {
+		if (sinPlan) return avisarPlan();
 		const r = await post(c.id);
 		if (r.ok)
 			ui.toast({
@@ -141,6 +149,11 @@
 		>
 	</div>
 
+	<FranjaPlan
+		funcion="cupones"
+		texto="Tus recordatorios quedan configurados y apagados: vuelven a salir solos al pasar de plan."
+	/>
+
 	<div class="kpis" use:anim={{ t: 'rise', delay: 60 }}>
 		<div class="oscura">
 			<div class="o-in">
@@ -161,15 +174,20 @@
 		<div class="tarjeta autos">
 			<div class="auto a-cab">
 				<span class="a-t">Recordatorios por mail</span>
-				<Interruptor label="Recordatorios por mail" checked={rec.activo} onchange={prender} />
+				<Interruptor
+					label="Recordatorios por mail"
+					checked={rec.activo && !sinPlan}
+					disabled={sinPlan}
+					onchange={prender}
+				/>
 			</div>
 			{#each rec.pasos as p, i (i)}
 				<div class="auto" class:apagado={!rec.activo}>
 					<span>{ORDEN[i]} · {resumenPaso(p)}</span>
 					<Interruptor
 						label="{ORDEN[i]} recordatorio"
-						checked={p.activo}
-						disabled={!rec.activo}
+						checked={p.activo && !sinPlan}
+						disabled={!rec.activo || sinPlan}
 						onchange={(on: boolean) => paso(i, on)}
 					/>
 				</div>

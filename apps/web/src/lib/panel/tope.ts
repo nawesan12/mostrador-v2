@@ -7,11 +7,18 @@ import { planDe } from './planes.ts';
  * El tope de plan (la API responde 402 con code tope_plan y el plan que lo habilita): se avisa en el
  * momento, con el botón para pasar a ese plan. Los topes los aplica el servidor; esto sólo los cuenta.
  */
-export type ProblemaPlan = { message?: string; code?: string; plan?: string } | null;
+export type ProblemaPlan = {
+	message?: string;
+	code?: string;
+	plan?: string;
+	/** El título de la API: «Llegaste al tope de tu plan», «Es del plan X» o «Quedó fuera de tu plan». */
+	title?: string;
+} | null;
 
 export const esTope = (
 	p: ProblemaPlan
-): p is { message?: string; code: 'tope_plan'; plan?: string } => p?.code === 'tope_plan';
+): p is { message?: string; code: 'tope_plan'; plan?: string; title?: string } =>
+	p?.code === 'tope_plan';
 
 /** El link a Plan y facturación con el plan ya elegido. */
 export const hrefPlan = (plan?: string) =>
@@ -20,12 +27,13 @@ export const hrefPlan = (plan?: string) =>
 		: resolve('/panel/plan-y-facturacion');
 
 /** Si el problema es un tope de plan, lo avisa con «Pasar a X» y devuelve true. */
-export function avisarTope(ui: UiState, p: ProblemaPlan): boolean {
+export function avisarTope(ui: UiState, p: ProblemaPlan, title?: string): boolean {
 	if (!esTope(p)) return false;
 	const sube = p.plan ? planDe(p.plan) : null;
 	ui.toast({
 		k: 'info',
-		title: TITULO_TOPE,
+		tope: true,
+		title: title ?? p.title ?? TITULO_TOPE,
 		desc: p.message ?? 'Pasá a un plan más grande para seguir.',
 		action: sube ? `Pasar a ${sube.nombre}` : 'Ver planes',
 		// eslint-disable-next-line svelte/no-navigation-without-resolve -- hrefPlan ya pasa por resolve

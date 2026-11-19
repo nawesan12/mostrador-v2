@@ -12,7 +12,7 @@
 	import { compartirProducto } from '#lib/panel/compartir.ts';
 	import { configProductos, type ProductoFila } from '#lib/panel/listas/productos.ts';
 	import { PLANES, planDeTienda, tope } from '#lib/panel/planes.ts';
-	import { avisarTope } from '#lib/panel/tope.ts';
+	import { avisarTope, hrefPlan } from '#lib/panel/tope.ts';
 	import { SITE } from '#lib/site.ts';
 	import { pesos } from '#lib/panel/formato.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
@@ -39,9 +39,15 @@
 	let cambiandoPrecio = $state(false);
 	// El tope de productos del plan: si ya está lleno, se avisa antes de abrir el editor (el servidor
 	// lo topa igual al guardar).
-	const plan = $derived(planDeTienda(page.data.tienda as { plan: string; creadaEn: string }));
+	const plan = $derived(
+		planDeTienda(page.data.tienda as { plan: string; creadaEn: string; finPrueba?: string })
+	);
+	// Todos los productos de la tienda, sin la búsqueda ni el segmento de la lista.
+	const cargados = $derived(
+		Object.values(data.lista.segmentos ?? {}).reduce((s, n) => s + n, 0) || data.lista.total
+	);
 	function abrirNuevo() {
-		if (plan.productos && data.lista.total >= plan.productos) {
+		if (plan.productos && cargados >= plan.productos) {
 			const sube = PLANES.find((p) => p.productos === 0 || p.productos > plan.productos)!;
 			avisarTope(ui, {
 				code: 'tope_plan',
@@ -69,7 +75,12 @@
 					action: 'Compartir',
 					onAction: () => compartirProducto(ui, tienda.slug, { ...p, publicado: true })
 				});
-			})
+			}),
+		// Lo que quedó fuera del plan vuelve con el plan más barato en el que entran todos.
+		() => {
+			const sube = PLANES.find((p) => p.productos === 0 || p.productos >= cargados) ?? PLANES[3];
+			return { nombre: sube.nombre, href: hrefPlan(sube.id) };
+		}
 	);
 
 	async function abrir(p: ProductoFila) {

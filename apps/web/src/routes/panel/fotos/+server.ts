@@ -38,7 +38,14 @@ export const POST: RequestHandler = async (event) => {
 	// El espacio para fotos del plan que rige (en la prueba, el de Crece, con la fecha de la API). Un
 	// plan pago tiene reservado lo último del espacio total (archivos.ts › LIMITES.reservaPagos).
 	const plan = planDeTienda(t);
-	const clave = await subirFoto(db, tienda, bytes, sandbox, plan.fotosMB * 1024 * 1024, t.plan !== 'gratis');
+	const clave = await subirFoto(
+		db,
+		tienda,
+		bytes,
+		sandbox,
+		plan.fotosMB * 1024 * 1024,
+		t.plan !== 'gratis'
+	);
 	// La ruta: el navegador le pone su origen (https://tulocalweb.com.ar o, en las pruebas,
 	// localhost; en wrangler dev el origen del pedido es el de producción).
 	return json({ ruta: `/f/${clave}` }, { status: 201 });

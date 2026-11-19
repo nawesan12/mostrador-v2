@@ -178,6 +178,8 @@ export type TiendaPublica = {
 	mayorista?: MinimoMayorista | null;
 	/** El plan Gratis lleva «Hecho con Tu Local Web» en el pie; los pagos, no (sin venir: sí). */
 	hechoCon?: boolean;
+	/** El plan incluye newsletter (desde Crece): si no, la tienda no ofrece sumarse (sin venir: sí). */
+	newsletter?: boolean;
 };
 
 /** Lo que muestra la portada de los turnos: los libres de hoy y el próximo libre de cada uno. */

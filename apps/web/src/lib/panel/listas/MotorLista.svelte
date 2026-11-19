@@ -522,6 +522,7 @@
 									{/if}
 									{#if v.chip}<span
 											class="chip-f"
+											class:siempre={v.chip.siempre}
 											style:background={v.chip.bg}
 											style:color={v.chip.fg}>{v.chip.t}</span
 										>{/if}
@@ -551,6 +552,7 @@
 										<Interruptor
 											label="{v.toggle.t}: {v.t}"
 											checked={v.toggle.on}
+											disabled={v.toggle.disabled}
 											onchange={(on: boolean) => config.alternar?.(r, on, ctx)}
 										/>
 									</span>
@@ -1376,8 +1378,13 @@
 		.lote {
 			bottom: 92px;
 		}
-		.chip-f {
+		.chip-f:not(.siempre) {
 			display: none;
+		}
+		.chip-f.siempre {
+			flex: none;
+			font-size: 11px;
+			padding-inline: 7px;
 		}
 		/* Con acción por fila (compartir, pedir…) el nombre necesita cada píxel: el monto ocupa lo
 		   suyo y la acción es sólo el ícono (el área de toque sigue siendo de 44 px). */

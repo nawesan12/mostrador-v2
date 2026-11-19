@@ -63,8 +63,15 @@
 		borrado: (nombre: string) => void;
 	} = $props();
 	const ui = getUi();
+	// Quedó fuera del tope de productos del plan (después de bajar): se abre en sólo lectura, con lo
+	// que se puede hacer (borrarlo para liberar lugar o pasar de plan). El servidor lo frena igual.
+	const fueraDePlan = $derived(!!producto?.fueraDePlan);
 	// Las fotos por producto del plan (3, 5, 8 o 10): el servidor las topa igual; acá se avisa antes.
 	const plan = $derived(page.data.tienda ? planDeTienda(page.data.tienda) : planDe('negocio'));
+	// El plan más barato en el que entran todos los productos de hoy (el siguiente al que rige).
+	const planConLugar = $derived(
+		planDe(plan.id === 'gratis' ? 'emprende' : plan.id === 'emprende' ? 'pro' : 'negocio')
+	);
 	const maxFotos = $derived(Math.min(MAX_FOTOS, plan.fotos));
 	const planMasFotos = $derived(
 		plan.fotos < MAX_FOTOS
@@ -461,7 +468,20 @@
 		</div>
 	{/snippet}
 
-	<div class="cuerpo">
+	{#if fueraDePlan}
+		<div class="fuera" role="note">
+			<Icon icon={I.phLockSimpleFill} size={20} style="color:var(--ac-tx);flex:none" />
+			<p>
+				<b>Fuera de tu plan {plan.nombre}</b>
+				<span
+					>No se ve en la tienda y no se edita. Pasá de plan o borrá otro para liberar&nbsp;lugar.</span
+				>
+			</p>
+			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- hrefPlan ya pasa por resolve -->
+			<a class="btn btn-primary" href={hrefPlan(planConLugar.id)}>Pasar a {planConLugar.nombre}</a>
+		</div>
+	{/if}
+	<fieldset class="cuerpo" disabled={fueraDePlan}>
 		{#if eligiendoTipo}
 			<div class="tarjeta">
 				<div class="t">¿Qué vas a vender?</div>
@@ -831,7 +851,7 @@
 			</div>
 		{/if}
 		{#if error}<div class="error" role="alert">{error}</div>{/if}
-	</div>
+	</fieldset>
 
 	{#snippet pie()}
 		<div class="pie" class:editando={!!producto}>
@@ -846,7 +866,7 @@
 					title="Borrar"
 					><Icon icon={I.phTrash} size={18} />{#if confirmando}<span>¿Lo borro?</span>{/if}</button
 				>
-				{#if !confirmando}
+				{#if !confirmando && !fueraDePlan}
 					<button
 						type="button"
 						class="icono"
@@ -866,8 +886,10 @@
 					>
 				{/if}
 			{/if}
-			<button type="button" class="cancelar" onclick={() => (open = false)}>Cancelar</button>
-			{#if !eligiendoTipo}<button
+			<button type="button" class="cancelar" onclick={() => (open = false)}
+				>{fueraDePlan ? 'Cerrar' : 'Cancelar'}</button
+			>
+			{#if !eligiendoTipo && !fueraDePlan}<button
 					type="button"
 					class="guardar"
 					onclick={guardar}
@@ -878,6 +900,45 @@
 </Hoja>
 
 <style>
+	/* fieldset sin su marco: sólo para deshabilitar todo de una (fuera del plan). */
+	fieldset.cuerpo {
+		border: 0;
+		margin: 0;
+		padding: 0;
+		min-width: 0;
+	}
+	fieldset.cuerpo:disabled {
+		opacity: 0.6;
+	}
+	.fuera {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		flex-wrap: wrap;
+		margin: 0 0 14px;
+		padding: 14px 16px;
+		border-radius: 18px;
+		background: linear-gradient(135deg, rgba(210, 88, 47, 0.12), rgba(210, 88, 47, 0.04));
+		border: 1px solid rgba(210, 88, 47, 0.25);
+	}
+	.fuera p {
+		flex: 1;
+		min-width: 200px;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		font-size: 14px;
+		text-wrap: pretty;
+	}
+	.fuera span {
+		color: var(--mu);
+		font-size: 13px;
+	}
+	.fuera a {
+		min-height: 44px;
+		white-space: nowrap;
+	}
 	.cab {
 		display: flex;
 		align-items: center;

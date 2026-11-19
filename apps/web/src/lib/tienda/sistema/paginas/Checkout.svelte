@@ -312,10 +312,12 @@
 								</div>
 							{/each}
 						</div>
-						<label class="tv-casilla tv-checkout-nl"
-							><input type="checkbox" name="novedades" /><span>Quiero recibir novedades</span
-							></label
-						>
+						{#if tienda.newsletter !== false}
+							<label class="tv-casilla tv-checkout-nl"
+								><input type="checkbox" name="novedades" /><span>Quiero recibir novedades</span
+								></label
+							>
+						{/if}
 					</section>
 
 					<section class="tv-checkout-paso" aria-labelledby="tv-co-entrega" bind:this={entrega}>

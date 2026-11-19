@@ -109,7 +109,7 @@ export const ARTICULOS: Articulo[] = [
 			},
 			{
 				t: 'nota',
-				x: 'Todos los planes arrancan con 14 días de prueba. No te pedimos tarjeta para empezar.'
+				x: 'Arrancás con 14 días de prueba del plan Crece, con todo incluido. No te pedimos tarjeta para empezar.'
 			}
 		],
 		claves: 'registro onboarding empezar alta cuenta nueva'

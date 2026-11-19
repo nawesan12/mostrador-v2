@@ -25,10 +25,12 @@ export type VistaFila = {
 	vL: string;
 	vC: string;
 	vI?: IconData;
-	chip?: { t: string; bg: string; fg: string };
+	/** siempre: se ve también en el celular (donde los chips de estado se ocultan para ganar lugar). */
+	chip?: { t: string; bg: string; fg: string; siempre?: boolean };
 	v: string;
 	vs: string;
-	toggle?: { on: boolean; t: string };
+	/** disabled: no se puede cambiar (por ejemplo, un producto fuera del plan). */
+	toggle?: { on: boolean; t: string; disabled?: boolean };
 	stepper?: number;
 	act?: { t: string; icon: IconData; bg: string; fg: string };
 };

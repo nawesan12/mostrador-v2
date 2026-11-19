@@ -267,6 +267,6 @@ async function responderHornero(
 	}
 	if (!ia) return responder(responderSimulado(texto, d));
 	const r = await ia.preguntar().catch(() => 'no-disponible' as const);
-	if (r !== 'no-disponible' && 'tope' in r) return responder(r.tope);
+	if (r !== 'no-disponible' && 'tope' in r && typeof r.tope === 'string') return responder(r.tope);
 	return responder(r === 'no-disponible' ? NO_DISPONIBLE : paraTelegram(r));
 }

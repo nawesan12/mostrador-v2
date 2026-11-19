@@ -11,6 +11,8 @@
 	import { horaMin, pesos } from '#lib/panel/formato.ts';
 	import { rutaDe } from '#lib/panel/navegacion.ts';
 	import { vendibles } from '#lib/panel/vendibles.ts';
+	import FranjaPlan, { fueraDelPlan, topeDe } from '#lib/panel/FranjaPlan.svelte';
+	import { avisarTope } from '#lib/panel/tope.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 	import { getTiempoReal } from '#lib/tiempo-real/panel.svelte.ts';
 
@@ -41,7 +43,11 @@
 			.filter((x) => x.p)
 	);
 	const total = $derived(renglones.reduce((s, x) => s + x.p.precio * x.q, 0));
+	// La venta en el local es desde Crece: sin el plan se avisa al sumar el primer producto, antes de
+	// armar el ticket con la clienta adelante (no al cobrar).
+	const sinPlan = $derived(fueraDelPlan('local'));
 	function sumar(clave: string, d: number) {
+		if (sinPlan && d > 0) return void avisarTope(ui, topeDe('local'));
 		const p = productos.find((x) => x.clave === clave);
 		if (!p) return;
 		const q = (ticket.get(clave) ?? 0) + d;
@@ -158,6 +164,8 @@
 		</div>
 		<span class="lector"><Icon icon={I.phBarcode} size={16} />Funciona con lector de códigos</span>
 	</div>
+
+	<FranjaPlan funcion="local" />
 
 	<div class="pos" use:anim={{ t: 'rise', delay: 60 }}>
 		<div class="izq">

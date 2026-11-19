@@ -194,24 +194,6 @@ export const INTEG = [
 		'Turnos y retiros'
 	],
 	[
-		'Make',
-		'gestion',
-		{
-			icon: I.siMake,
-			col: '#6D00CC'
-		},
-		'Automatizaciones'
-	],
-	[
-		'n8n',
-		'gestion',
-		{
-			icon: I.siN8n,
-			col: '#EA4B71'
-		},
-		'Automatizaciones'
-	],
-	[
 		'Claude',
 		'ia',
 		{

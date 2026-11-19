@@ -4382,6 +4382,7 @@ components:
         - type: object
           required: [id, publicado, vendidos30d, slug, fotos, opciones, variantes, tipo, atributos, iva]
           properties:
+            fueraDePlan: { type: boolean, description: 'Quedó fuera del tope de productos del plan (después de bajar): oculto en la tienda y en sólo lectura' }
             id: { type: string }
             publicado: { type: boolean }
             vendidos30d: { type: integer }

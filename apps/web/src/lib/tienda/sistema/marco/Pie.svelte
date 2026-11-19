@@ -118,7 +118,7 @@
 			<div class="tv-pie-cols">
 				<div class="tv-pie-marca">
 					<p class="tv-pie-nombre">{t.nombre}</p>
-					{#if ctx.dir === 'vidriera'}
+					{#if ctx.dir === 'vidriera' && t.newsletter !== false}
 						<p class="tv-pie-texto">Te avisamos cuando hay novedades.</p>
 						{@render newsletter()}
 					{:else}

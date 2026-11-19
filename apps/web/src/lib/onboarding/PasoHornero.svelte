@@ -10,7 +10,6 @@
 	const tonos = Object.entries(TONOS) as [Tono, (typeof TONOS)[Tono]][];
 	const CANALES = [
 		['wa', 'WhatsApp', I.logosWhatsappIcon],
-		['ig', 'Instagram', I.logosInstagramIcon],
 		['ml', 'Preguntas de ML', null],
 		['tg', 'Telegram', I.logosTelegram]
 	] as const;

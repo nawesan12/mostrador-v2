@@ -302,7 +302,6 @@ export const PARA_EMPEZAR = ['ceibo', 'mostaza', 'yerbal'] as const;
 export const SECCIONES = [
 	['dest', I.phStar, 'Destacados'],
 	['cat', I.phSquaresFour, 'Categorías'],
-	['ig', I.phInstagramLogo, 'Feed de Instagram'],
 	['res', I.phChatCenteredText, 'Reseñas']
 ] as const;
 export type Seccion = (typeof SECCIONES)[number][0];

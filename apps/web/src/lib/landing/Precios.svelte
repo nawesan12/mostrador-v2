@@ -30,7 +30,9 @@
 					? fmt(totalAnual(p)) + ' por año · 2 meses de regalo'
 					: p === 0
 						? 'Sin tarjeta'
-						: '14 días gratis'
+						: hi
+							? '14 días gratis'
+							: 'Precio final · sin permanencia'
 			};
 		})
 	);
@@ -75,7 +77,8 @@
 			{/each}
 		</div>
 		<p class="sin-comision" use:anim={'reveal'}>
-			Precios finales en pesos, IVA incluido. {SIN_COMISION} en todos los planes.
+			Precios finales en pesos, IVA incluido. {SIN_COMISION} en todos los planes. Probás Crece 14&nbsp;días
+			gratis, sin&nbsp;tarjeta.
 		</p>
 		<div class="empresa" use:anim={'reveal'}>
 			<Icon icon={I.phBuildingsFill} size={24} style="color:#F5B796" />
@@ -260,6 +263,7 @@
 		gap: 9px;
 		font-size: 14px;
 		line-height: 1.4;
+		text-wrap: pretty;
 	}
 	.pl-f :global(svg) {
 		color: var(--ic);

@@ -244,7 +244,7 @@ export const PERMISOS_IA = [
 		id: 'responder',
 		icon: I.phChatCircleDotsFill,
 		t: 'Responder mensajes',
-		d: 'WhatsApp e Instagram, con tu tono',
+		d: 'Los de WhatsApp, con tu tono',
 		def: false
 	},
 	{

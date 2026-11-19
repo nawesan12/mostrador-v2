@@ -6,6 +6,9 @@
 	import { anim } from '#lib/panel/anim.ts';
 	import { pesos, plural } from '#lib/panel/formato.ts';
 	import { aumentar, type Redondeo } from '#lib/panel/precios.ts';
+	import { resolve } from '$app/paths';
+	import { fueraDelPlan } from '#lib/panel/FranjaPlan.svelte';
+	import { hrefPlan } from '#lib/panel/tope.ts';
 	import { getUi } from '#lib/ui.svelte.ts';
 
 	/** Listas de precio (design/PanelCatalogo.dc.html, sList): las listas y el aumento por inflación. */
@@ -122,12 +125,21 @@
 			</button>
 		{/each}
 		{#if !data.listas.some((l) => l.id === 'mayorista')}
-			<!-- Las listas por tipo de cliente todavía no existen: se dice, no se dibujan de mentira. -->
+			<!-- La lista mayorista es la venta por mayor (Negocio): se configura en Configuración › Mayorista. -->
 			<div class="pronto">
-				<div class="l-t">Listas para mayoristas y revendedoras</div>
-				<div class="l-d">
-					Todavía no están: hoy cada producto tiene un solo precio, el mismo en todos tus canales.
-				</div>
+				<div class="l-t">Precios para mayoristas y revendedoras</div>
+				{#if fueraDelPlan('mayorista')}
+					<div class="l-d">Desde el plan Negocio: un precio por mayor con su mínimo de compra.</div>
+					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- hrefPlan ya pasa por resolve -->
+					<a class="l-a" href={hrefPlan('negocio')}>Pasar a Negocio</a>
+				{:else}
+					<div class="l-d">
+						Prendé la venta mayorista y cargá el precio por mayor de cada producto.
+					</div>
+					<a class="l-a" href={resolve('/panel/configuracion/mayorista')}
+						>Configurar la venta mayorista</a
+					>
+				{/if}
 			</div>
 		{/if}
 	</div>
@@ -236,6 +248,17 @@
 		gap: 4px;
 		align-content: center;
 		text-wrap: pretty;
+	}
+	.l-a {
+		justify-self: start;
+		margin-top: 6px;
+		min-height: 44px;
+		display: inline-flex;
+		align-items: center;
+		color: var(--ac-tx);
+		font-weight: 600;
+		font-size: 13.5px;
+		text-decoration: none;
 	}
 	.lista[aria-pressed='true'] {
 		border-color: #d2582f;
