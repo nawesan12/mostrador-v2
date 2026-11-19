@@ -26,7 +26,12 @@
 	--t-btn-fondo: var(--t-texto);
 	--t-btn-texto: var(--t-fondo);
 	--t-btn-borde: var(--t-texto);
+	/* El pie va siempre abajo: en una página corta (el pedido, el carrito vacío, el 404) no queda
+	   flotando a media pantalla. */
+	display: flex;
+	flex-direction: column;
 	min-height: 100vh;
+	min-height: 100dvh;
 	background: var(--t-fondo);
 	color: var(--t-texto);
 	font-family: var(--t-f-texto);
@@ -91,6 +96,7 @@
 	padding-inline: var(--t-margen);
 }
 .tv-main {
+	flex: 1 0 auto;
 	padding-bottom: var(--t-ritmo);
 }
 .tv-bloques > .tv-b + .tv-b {

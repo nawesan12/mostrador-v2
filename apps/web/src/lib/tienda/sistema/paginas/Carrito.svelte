@@ -236,7 +236,8 @@
 		{/if}
 	</div>
 
-	{#if sugeridos.length && lineas.length}
+	<!-- Con «Sumá también» a la vista, no otro bloque de recomendaciones antes de «Finalizar compra». -->
+	{#if sugeridos.length && lineas.length && !suma.length}
 		<section class="tv-ancho tv-ficha-rel" aria-labelledby="tv-sug">
 			<h2 class="tv-h2" id="tv-sug">Te puede gustar</h2>
 			<Grilla items={sugeridos} columnas={4} fija etiqueta="Te puede gustar">

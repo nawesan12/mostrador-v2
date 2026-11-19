@@ -39,7 +39,7 @@
 				],
 				[
 					'Ganancia estimada',
-					k.ganancia === null ? 'Sin dato' : millones(k.ganancia),
+					k.ganancia === null ? '—' : millones(k.ganancia),
 					k.ganancia === null || k.margen === null
 						? k.gananciaDetalle || 'Cargá el costo de tus productos'
 						: `margen ${k.margen} % en 30 días`,
@@ -262,7 +262,7 @@
 		letter-spacing: -0.045em;
 	}
 	.mv-vacio {
-		padding: 14px 0 4px;
+		padding: 14px 18px 16px;
 		font-size: 13px;
 		color: var(--fa);
 	}

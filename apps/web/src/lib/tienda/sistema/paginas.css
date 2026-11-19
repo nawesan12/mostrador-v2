@@ -35,6 +35,22 @@
 	font-size: 14px;
 	color: var(--t-error, #b42318);
 }
+/* «Sumá también» en lista: nombre, precio y agregar (la descripción sobra antes de pagar). */
+.tv-suma .tv-prod-detalle {
+	display: none;
+}
+.tv-sinres-cats {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 8px;
+}
+.tv-sinres-cats .tv-chip {
+	text-decoration: none;
+	min-height: 36px;
+	display: inline-flex;
+	align-items: center;
+}
 .tv-campo-error {
 	margin: 4px 0 0;
 	font-size: 13px;

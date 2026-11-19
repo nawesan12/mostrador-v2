@@ -49,6 +49,10 @@
 	const lista = $derived(filtrar(tienda, f));
 	const cuenta = $derived(porCategoria(tienda, f));
 	const cats = $derived(tienda.categorias.filter((c) => c.cantidad > 0));
+	// Si hay algo más que la búsqueda (categoría, ofertas, stock, mayorista o precio).
+	const conFiltros = $derived(
+		f.cats.length > 0 || f.ofertas || f.stock || f.mayor || f.min !== null || f.max !== null
+	);
 	const comparador = $derived(funcionesDe(tienda).comparador);
 	const wa = $derived(waHref(tienda, '¡Hola! Estoy buscando algo que no encontré en la tienda.'));
 
@@ -291,13 +295,23 @@
 			<h2 class="tv-h3">
 				{f.q ? `No encontramos productos con «${f.q}»` : 'No hay productos con estos filtros'}
 			</h2>
+			<!-- Sólo se buscó: otra palabra y algunas categorías; con filtros, limpiarlos. -->
 			<p class="tv-suave">
-				Probá con menos filtros o con otra palabra. {wa
-					? 'Si no está, preguntanos: lo buscamos.'
-					: ''}
+				{conFiltros ? 'Probá con menos filtros.' : 'Probá con otra palabra.'}
+				{wa ? 'Si no está, preguntanos: lo buscamos.' : ''}
 			</p>
+			{#if !conFiltros && cats.length}
+				<div class="tv-sinres-cats">
+					{#each cats.slice(0, 4) as c (c.nombre)}<a
+							class="tv-chip"
+							href={hrefFiltros(base, { ...SIN_FILTROS, cats: [c.nombre] })}>{c.nombre}</a
+						>{/each}
+				</div>
+			{/if}
 			<div class="tv-botones">
-				<Boton href={hrefFiltros(base, SIN_FILTROS)}>Ver todos los productos</Boton>
+				<Boton href={hrefFiltros(base, conFiltros ? { ...SIN_FILTROS, q: f.q } : SIN_FILTROS)}
+					>{conFiltros ? 'Limpiar filtros' : 'Ver todos los productos'}</Boton
+				>
 				{#if wa}<Boton href={wa} tipo="secundario" externo>Preguntar por WhatsApp</Boton>{/if}
 			</div>
 		</div>

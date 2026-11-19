@@ -229,8 +229,16 @@
 	.tv[data-dir='vidriera'] .tv-ante {
 		font-size: 11px;
 	}
+	/* Nombres de largo normal («Norte Urbano») entran sin «…»; si no, pasan a dos renglones. */
 	.tv[data-dir='vidriera'] .tv-marca-nombre {
-		font-size: 22px;
+		font-size: 19px;
+		white-space: normal;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
+		line-height: 1.05;
+		text-wrap: balance;
 	}
 	.tv[data-dir='vidriera'] .tv-prod--grilla .tv-mas {
 		display: grid;
