@@ -50,7 +50,7 @@ import {
 	RECORDATORIOS_POR_DEFECTO,
 	type RecordatoriosCarritos
 } from '#lib/panel/recordatorios.ts';
-import { BENEFICIOS } from '#lib/panel/planes.ts';
+import { BENEFICIOS, DIAS_DE_PRUEBA as DIAS_DE_PRUEBA_TOTALES } from '#lib/panel/planes.ts';
 import { error } from '@sveltejs/kit';
 import * as v from 'valibot';
 import { aumentar, proximoLunes, type Redondeo } from '#lib/panel/precios.ts';
@@ -723,7 +723,8 @@ export class DatosSandbox implements Datos {
 			rubro: r.id,
 			plantilla: p?.id ?? r.plantilla,
 			plan: 'gratis',
-			creadaEn: new Date(this.sb.creadoEn).toISOString()
+			creadaEn: new Date(this.sb.creadoEn).toISOString(),
+			finPrueba: new Date(this.sb.creadoEn + DIAS_DE_PRUEBA_TOTALES * 86_400_000).toISOString()
 		};
 		const cambio = (await cambiosDe(this.db, this.sb.id, 'tienda')).get('tienda');
 		return cambio ? { ...base, ...cambio } : base;

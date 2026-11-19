@@ -6481,6 +6481,9 @@ components:
       type: object
       required: [tiendaId, rol, permisos, tiendas]
       properties:
+        soloLectura:
+          type: boolean
+          description: 'La persona quedó fuera del equipo del plan (después de bajar): ve todo y no cambia nada.'
         tiendaId: { type: string }
         rol: { type: string, enum: [duenio, admin, ventas, local] }
         permisos:
@@ -6536,7 +6539,7 @@ components:
       enum: [gratis, emprende, pro, negocio]
     Tienda:
       type: object
-      required: [id, slug, nombre, rubro, plantilla, plan, creadaEn]
+      required: [id, slug, nombre, rubro, plantilla, plan, creadaEn, finPrueba]
       properties:
         id: { type: string, format: uuid }
         slug: { type: string, pattern: '^[a-z0-9]([a-z0-9-]{0,58}[a-z0-9])?$' }
@@ -6545,6 +6548,10 @@ components:
         plantilla: { type: string }
         plan: { $ref: '#/components/schemas/Plan' }
         creadaEn: { type: string, format: date-time }
+        finPrueba:
+          type: string
+          format: date-time
+          description: 'Hasta cuándo rige la prueba gratis (14 días desde el alta, o la extensión del equipo).'
     DisponibilidadDireccion:
       type: object
       description: 'libre y propio (una que la tienda ya usó) se pueden elegir; actual es la que tiene.'

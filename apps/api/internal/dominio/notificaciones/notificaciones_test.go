@@ -282,7 +282,7 @@ func TestGeneracionPorEventoYRol(t *testing.T) {
 		e.evento(t, 108, e.luna, "plan.activado", `{"plan":"pro"}`)
 		e.evento(t, 109, e.luna, "plan.pausado", `{}`)
 		ns := e.de(t, e.luna, "plan:108")
-		if roles(ns) != "duenio" || ns["duenio"].titulo != "Tu plan Pro está activo" {
+		if roles(ns) != "duenio" || ns["duenio"].titulo != "Tu plan Crece está activo" {
 			t.Fatalf("plan: %s %+v", roles(ns), ns)
 		}
 		if roles(e.de(t, e.luna, "plan:109")) != "duenio" {

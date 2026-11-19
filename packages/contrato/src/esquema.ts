@@ -6175,6 +6175,8 @@ export interface components {
             nueva: boolean;
         };
         Acceso: {
+            /** @description La persona quedó fuera del equipo del plan (después de bajar): ve todo y no cambia nada. */
+            soloLectura?: boolean;
             tiendaId: string;
             /** @enum {string} */
             rol: "duenio" | "admin" | "ventas" | "local";
@@ -6241,6 +6243,11 @@ export interface components {
             plan: components["schemas"]["Plan"];
             /** Format: date-time */
             creadaEn: string;
+            /**
+             * Format: date-time
+             * @description Hasta cuándo rige la prueba gratis (14 días desde el alta, o la extensión del equipo).
+             */
+            finPrueba: string;
         };
         /** @description libre y propio (una que la tienda ya usó) se pueden elegir; actual es la que tiene. */
         DisponibilidadDireccion: {

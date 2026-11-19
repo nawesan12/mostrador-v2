@@ -10,6 +10,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/abono"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/planes"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/problema"
 )
 
@@ -42,10 +44,10 @@ func ObtenerResumen(ctx context.Context, pool interface {
 }, tiendaID string, ahora time.Time) (Resumen, error) {
 	var r Resumen
 	r.Notificaciones, r.Canales = []any{}, []string{}
-	var creada time.Time
-	var plan string
+	var e abono.Estado
 	err := pool.EnTienda(ctx, tiendaID, func(tx pgx.Tx) error {
-		if err := tx.QueryRow(ctx, `SELECT plan, creada_en FROM tiendas WHERE id = $1`, tiendaID).Scan(&plan, &creada); err != nil {
+		var err error
+		if e, err = abono.Leer(ctx, tx, tiendaID); err != nil {
 			return err
 		}
 		if err := tx.QueryRow(ctx, `SELECT count(*) FROM pedidos WHERE tienda_id = $1 AND estado = 'Para preparar'`, tiendaID).
@@ -59,10 +61,12 @@ func ObtenerResumen(ctx context.Context, pool interface {
 	if err != nil {
 		return r, err
 	}
-	r.Prueba.Plan, r.Prueba.DiasTotales = "Pro", DiasPrueba
-	r.Prueba.DiasRestantes = max(0, DiasPrueba-int(math.Floor(ahora.Sub(creada).Hours()/24)))
-	if plan != "gratis" {
-		r.Prueba.Plan, r.Prueba.DiasRestantes = plan, 0
+	// El nombre que se lee (Crece, no el id «pro»), y los días que quedan hasta el fin de la prueba
+	// (con la extensión del equipo, si la hubo).
+	r.Prueba.Plan, r.Prueba.DiasTotales = planes.De(planes.DePrueba).Nombre, DiasPrueba
+	r.Prueba.DiasRestantes = max(0, int(math.Ceil(e.FinPrueba.Sub(ahora).Hours()/24)))
+	if e.Plan != "gratis" {
+		r.Prueba.Plan, r.Prueba.DiasRestantes = planes.De(e.Plan).Nombre, 0
 	}
 	return r, nil
 }

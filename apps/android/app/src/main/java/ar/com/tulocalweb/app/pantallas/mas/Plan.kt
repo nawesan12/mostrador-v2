@@ -67,10 +67,10 @@ object CatalogoPlanes {
             listOf("Hasta 150 productos", "Dominio propio y factura de ARCA", "Envíos con Correo Argentino",
                 "Cupones, combos y carritos abandonados", "Tincho: 500 respuestas con IA por mes", "2 personas")),
         Plan("pro", "Crece", "Para vender en todos tus canales", 34_900, 500, 5, 8, 2_000,
-            listOf("Hasta 500 productos", "Venta en el local y cobro con QR", "Mercado Libre con el mismo stock",
+            listOf("Todo lo de Emprende", "Hasta 500 productos", "Venta en el local y cobro con QR", "Mercado Libre con el mismo stock",
                 "Newsletter y estadísticas", "Tincho: 2.000 respuestas con IA por mes", "5 personas con roles y permisos")),
         Plan("negocio", "Negocio", "Para vender sin topes", 79_900, 0, 0, 10, 8_000,
-            listOf("Productos y personas sin tope", "Venta mayorista y listas de precio", "Todo lo de Crece",
+            listOf("Todo lo de Crece", "Productos y personas sin tope", "Venta mayorista y listas de precio",
                 "Tincho: 8.000 respuestas con IA por mes")),
     )
     /** El destacado: el del medio, el que rige durante la prueba gratis. */

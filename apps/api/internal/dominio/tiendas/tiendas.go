@@ -22,6 +22,9 @@ type Tienda struct {
 	Plantilla string    `json:"plantilla"`
 	Plan      string    `json:"plan"`
 	CreadaEn  time.Time `json:"creadaEn"`
+	// FinPrueba: hasta cuándo rige la prueba gratis (14 días desde el alta, o lo que la haya extendido
+	// el equipo). El panel no lo recalcula: lo usa para el plan vigente.
+	FinPrueba time.Time `json:"finPrueba"`
 }
 
 // Crear da de alta una tienda del rubro con la plantilla y el nombre de ejemplo como punto de partida.
@@ -41,8 +44,9 @@ func Crear(ctx context.Context, pool *db.Pool, slug, nombre, rubro string) (stri
 func Obtener(ctx context.Context, pool *db.Pool, tiendaID string) (Tienda, error) {
 	var t Tienda
 	err := pool.EnTienda(ctx, tiendaID, func(tx pgx.Tx) error {
-		return tx.QueryRow(ctx, `SELECT id, slug, nombre, rubro, plantilla, plan, creada_en FROM tiendas WHERE id = $1`, tiendaID).
-			Scan(&t.ID, &t.Slug, &t.Nombre, &t.Rubro, &t.Plantilla, &t.Plan, &t.CreadaEn)
+		return tx.QueryRow(ctx, `SELECT id, slug, nombre, rubro, plantilla, plan, creada_en,
+				coalesce(prueba_hasta, creada_en + interval '14 days') FROM tiendas WHERE id = $1`, tiendaID).
+			Scan(&t.ID, &t.Slug, &t.Nombre, &t.Rubro, &t.Plantilla, &t.Plan, &t.CreadaEn, &t.FinPrueba)
 	})
 	return t, err
 }

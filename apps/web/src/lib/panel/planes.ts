@@ -65,6 +65,7 @@ export const PLANES = [
 			'newsletter'
 		],
 		incluye: [
+			'Todo lo de Emprende',
 			'Hasta 500 productos',
 			'Venta en el local y cobro con QR',
 			'Mercado Libre con el mismo stock',
@@ -95,9 +96,9 @@ export const PLANES = [
 			'mayorista'
 		],
 		incluye: [
+			'Todo lo de Crece',
 			'Productos y personas sin tope',
 			'Venta mayorista y listas de precio',
-			'Todo lo de Crece',
 			'Tincho: 8.000 respuestas con IA por mes'
 		]
 	}
@@ -119,7 +120,7 @@ export type Funcion =
 export const DESTACADO: IdPlan = 'pro';
 
 /** Lo que se ve en el pie de cada plan: sin comisión por venta, en todos. */
-export const SIN_COMISION = '0 % de comisión por venta';
+export const SIN_COMISION = '0\u00a0%\u00a0de comisión por venta';
 
 /** Pagando por año: 10 meses por 12 (dos de regalo). Devuelve lo que sale por mes, redondeado. */
 export const MESES_PAGOS_DEL_ANIO = 10;
@@ -139,9 +140,17 @@ export const planVigente = (actual: string, enPrueba: boolean) =>
 /** Días de la prueba gratis, desde el alta de la tienda (abono.DiasDePrueba en la API). */
 export const DIAS_DE_PRUEBA = 14;
 
-/** El plan que rige para una tienda (su plan y su alta): en la prueba, Crece. */
-export const planDeTienda = (t: { plan: string; creadaEn: string }, ahora = Date.now()) =>
-	planDe(planVigente(t.plan, ahora < new Date(t.creadaEn).getTime() + DIAS_DE_PRUEBA * 86_400_000));
+/** Hasta cuándo rige la prueba: la que manda la API (con la extensión del equipo) o 14 días del alta. */
+export const finDePrueba = (t: { creadaEn: string; finPrueba?: string }) =>
+	t.finPrueba
+		? new Date(t.finPrueba).getTime()
+		: new Date(t.creadaEn).getTime() + DIAS_DE_PRUEBA * 86_400_000;
+
+/** El plan que rige para una tienda (su plan y su prueba): en la prueba, Crece. */
+export const planDeTienda = (
+	t: { plan: string; creadaEn: string; finPrueba?: string },
+	ahora = Date.now()
+) => planDe(planVigente(t.plan, ahora < finDePrueba(t)));
 
 /** El plan más barato que incluye la función. */
 export const planCon = (f: Funcion): Plan =>

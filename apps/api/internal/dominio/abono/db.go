@@ -18,18 +18,19 @@ type tx interface {
 // Leer el estado del abono de una tienda (dentro de su transacción).
 func Leer(ctx context.Context, t pgx.Tx, tiendaID string) (Estado, error) {
 	var e Estado
-	var creada time.Time
 	var estadoMP *string
 	var progPlan, progCiclo *string
 	var progDesde *time.Time
-	err := t.QueryRow(ctx, `SELECT plan, plan_ciclo, creada_en, suscripcion_estado, abono_proximo,
+	// La prueba termina a los 14 días del alta, o cuando la haya extendido el equipo (prueba_hasta): la
+	// misma regla que el panel del equipo (00039).
+	err := t.QueryRow(ctx, `SELECT plan, plan_ciclo, coalesce(prueba_hasta, creada_en + interval '14 days'),
+			suscripcion_estado, abono_proximo,
 			plan_programado, ciclo_programado, programado_desde
 		FROM tiendas WHERE id = $1`, tiendaID).
-		Scan(&e.Plan, &e.Ciclo, &creada, &estadoMP, &e.Proximo, &progPlan, &progCiclo, &progDesde)
+		Scan(&e.Plan, &e.Ciclo, &e.FinPrueba, &estadoMP, &e.Proximo, &progPlan, &progCiclo, &progDesde)
 	if err != nil {
 		return e, err
 	}
-	e.FinPrueba = creada.Add(DiasDePrueba * 24 * time.Hour)
 	e.Activo = estadoMP != nil && *estadoMP == "authorized"
 	if e.Activo && e.Proximo == nil {
 		// Débitos de antes de §56, sin el próximo cobro guardado: el que caería contando desde la prueba

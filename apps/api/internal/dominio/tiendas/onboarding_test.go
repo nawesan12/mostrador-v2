@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/jackc/pgx/v5"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -100,5 +101,28 @@ func TestResumenSinDatosTodavia(t *testing.T) {
 	}
 	if r.Prueba.DiasRestantes != 9 || r.Prueba.DiasTotales != 14 || r.Insignias.Pedidos != 0 || r.Notificaciones == nil {
 		t.Fatalf("%+v", r)
+	}
+	// La prueba es con Crece (el id interno «pro» nunca se muestra).
+	if r.Prueba.Plan != "Crece" {
+		t.Fatalf("plan de la prueba: %q", r.Prueba.Plan)
+	}
+	admin, err := pgx.Connect(ctx, b.AdminURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer admin.Close(ctx)
+	// La extensión del equipo (prueba_hasta) cuenta.
+	if _, err := admin.Exec(ctx, `UPDATE tiendas SET prueba_hasta = now() + interval '30 days' WHERE id = $1`, id); err != nil {
+		t.Fatal(err)
+	}
+	if r, _ = tiendas.ObtenerResumen(ctx, b.App, id, time.Now().Add(20*24*time.Hour)); r.Prueba.DiasRestantes != 10 {
+		t.Fatalf("con la prueba extendida: %+v", r.Prueba)
+	}
+	// Con un plan pago, su nombre.
+	if _, err := admin.Exec(ctx, `UPDATE tiendas SET plan = 'emprende' WHERE id = $1`, id); err != nil {
+		t.Fatal(err)
+	}
+	if r, _ = tiendas.ObtenerResumen(ctx, b.App, id, time.Now()); r.Prueba.Plan != "Emprende" || r.Prueba.DiasRestantes != 0 {
+		t.Fatalf("plan pago: %+v", r.Prueba)
 	}
 }

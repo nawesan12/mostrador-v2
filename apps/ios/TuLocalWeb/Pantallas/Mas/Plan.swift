@@ -28,10 +28,10 @@ enum CatalogoPlanes {
              incluye: ["Hasta 150 productos", "Dominio propio y factura de ARCA", "Envíos con Correo Argentino",
                        "Cupones, combos y carritos abandonados", "Tincho: 500 respuestas con IA por mes", "2 personas"]),
         Plan(id: "pro", nombre: "Crece", lema: "Para vender en todos tus canales", mensual: 34_900, productos: 500, personas: 5, fotos: 8, tincho: 2_000,
-             incluye: ["Hasta 500 productos", "Venta en el local y cobro con QR", "Mercado Libre con el mismo stock",
+             incluye: ["Todo lo de Emprende", "Hasta 500 productos", "Venta en el local y cobro con QR", "Mercado Libre con el mismo stock",
                        "Newsletter y estadísticas", "Tincho: 2.000 respuestas con IA por mes", "5 personas con roles y permisos"]),
         Plan(id: "negocio", nombre: "Negocio", lema: "Para vender sin topes", mensual: 79_900, productos: 0, personas: 0, fotos: 10, tincho: 8_000,
-             incluye: ["Productos y personas sin tope", "Venta mayorista y listas de precio", "Todo lo de Crece",
+             incluye: ["Todo lo de Crece", "Productos y personas sin tope", "Venta mayorista y listas de precio",
                        "Tincho: 8.000 respuestas con IA por mes"]),
     ]
     /// El destacado: el del medio, el que rige durante la prueba gratis.

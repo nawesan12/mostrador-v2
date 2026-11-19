@@ -9,6 +9,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/abono"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/roles"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
@@ -483,19 +484,21 @@ func aceptada(ctx context.Context, t pgx.Tx, ev outbox.Evento) (Hecho, error) {
 	}}, nil
 }
 
-// Nombres de los planes, como los lee una persona.
-var planes = map[string]string{"emprende": "Emprende", "pro": "Pro", "negocio": "Negocio"}
-
 // planActivado: plan.activado, cuando Mercado Pago autoriza la suscripción del abono. A Cuenta.
 func planActivado(_ context.Context, _ pgx.Tx, ev outbox.Evento) (Hecho, error) {
 	var d struct {
 		Plan string `json:"plan"`
 	}
-	if json.Unmarshal(ev.Datos, &d) != nil || planes[d.Plan] == "" {
+	if json.Unmarshal(ev.Datos, &d) != nil {
+		return Hecho{}, nil
+	}
+	// El nombre sale del catálogo (el id «pro» es Crece); el gratis no se «activa».
+	nombre := abono.Nombres[d.Plan]
+	if nombre == "" || d.Plan == "gratis" {
 		return Hecho{}, nil
 	}
 	return Hecho{Clave: fmt.Sprintf("plan:%d", ev.ID), Para: solo(Texto{Tipo: "ok", Grupo: "sistema",
-		Titulo: "Tu plan " + planes[d.Plan] + " está activo", Detalle: "Mercado Pago autorizó el cobro del abono.",
+		Titulo: "Tu plan " + nombre + " está activo", Detalle: "Mercado Pago autorizó el cobro del abono.",
 		Ruta: "/panel/plan-y-facturacion"}, roles.Cuenta)}, nil
 }
 

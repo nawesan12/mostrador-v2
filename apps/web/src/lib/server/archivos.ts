@@ -1,6 +1,6 @@
 /**
- * Fotos de productos en R2, como `storage.ts` de Caja: topes duros porque la cuenta es de pago por
- * uso y el plan es quedar en el gratis. Toda foto que llega (JPG, PNG o WebP, aunque sea una grande
+ * Fotos de productos: en producción, una carpeta en el disco del VPS (plataforma/vps.ts reemplaza al
+ * binding FILES de Cloudflare); en wrangler dev, R2 local. Topes duros: el disco es uno solo. Toda foto que llega (JPG, PNG o WebP, aunque sea una grande
  * de iPhone) se pasa a WebP de 1600 px como máximo, calidad 80, girada según la cámara y sin
  * metadatos, con vips en el VPS: todas quedan iguales y livianas. Sin vips (pruebas locales), se
  * guarda como llegó.
@@ -22,9 +22,21 @@ export const LIMITES = {
 	 * (lib/panel/planes.ts › fotosMB: 15, 150, 600 o 2.048 MB).
 	 */
 	porDuenio: 15 * 1024 * 1024,
-	/** Tu Local Web entero (el disco del VPS; un freno, no un tope de plan). */
-	total: 20 * 1024 * 1024 * 1024
+	/**
+	 * Tu Local Web entero (el disco del VPS; un freno, no un tope de plan). Antes de subirlo, confirmar
+	 * el espacio libre del disco y que /data/archivos entra en la copia diaria.
+	 */
+	total: 20 * 1024 * 1024 * 1024,
+	/**
+	 * Lo último del total queda para las tiendas que pagan: pasado este punto, Gratis y la prueba no
+	 * suben más (así unas cuantas cuentas de prueba llenas no frenan a las que pagan).
+	 */
+	reservaPagos: 0.7,
+	/** Desde acá se avisa en el log del servidor, una vez por proceso, para agrandar a tiempo. */
+	aviso: 0.8
 };
+
+let avisado = false;
 
 /** Archivos para descargar (el premio «descarga» de una captación): PDF, EPUB o ZIP, sin tocar. */
 export const LIMITES_DOCUMENTO = {
@@ -121,7 +133,9 @@ export async function subirFoto(
 	bytes: Uint8Array,
 	sandbox: string | null = null,
 	/** El espacio para fotos del plan de la tienda, en bytes. */
-	porDuenio: number = LIMITES.porDuenio
+	porDuenio: number = LIMITES.porDuenio,
+	/** La tienda paga un plan (usa la reserva del total). */
+	pago = false
 ) {
 	if (!tipoDe(bytes)) error(415, 'Subí una foto en JPG, PNG o WebP.');
 	if (bytes.byteLength > LIMITES.subida) error(413, 'La foto pesa más de 15 MB.');
@@ -140,7 +154,14 @@ export async function subirFoto(
 			413,
 			`Llegaste a los ${Math.round(porDuenio / 1024 / 1024).toLocaleString('es-AR')} MB de fotos de tu plan. Borrá fotos que ya no uses o pasá a un plan más grande.`
 		);
-	if (Number(uso?.total ?? 0) + bytes.byteLength > LIMITES.total)
+	const total = Number(uso?.total ?? 0) + bytes.byteLength;
+	if (total > LIMITES.total * LIMITES.aviso && !avisado) {
+		avisado = true;
+		console.error(
+			`archivos: las fotos ocupan ${Math.round((total / LIMITES.total) * 100)} % del total (${Math.round(total / 1024 / 1024)} MB): agrandar LIMITES.total o el disco`
+		);
+	}
+	if (total > LIMITES.total || (!pago && total > LIMITES.total * LIMITES.reservaPagos))
 		error(507, 'Subir fotos está pausado por un rato. Probá más tarde.');
 	const clave = `fotos/${duenio}/${crypto.randomUUID()}.${EXT[tipo]}`;
 	await env.FILES.put(clave, bytes, {

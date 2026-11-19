@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/planes"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/roles"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/correo"
 )
@@ -232,6 +233,9 @@ type Acceso struct {
 	Rol      string              `json:"rol"`
 	Permisos []roles.Permiso     `json:"permisos"`
 	Tiendas  []TiendaDeLaPersona `json:"tiendas"`
+	// SoloLectura: la persona quedó fuera del equipo del plan (después de bajar): ve todo y no cambia
+	// nada hasta que la dueña suba de plan o libere un lugar (la Guardia de planes lo aplica).
+	SoloLectura bool `json:"soloLectura"`
 }
 
 // AccesoDe arma el acceso de la sesión. Las sesiones de una IA o de alguien del equipo de Tu Local
@@ -240,6 +244,18 @@ func (s *Servicio) AccesoDe(ctx context.Context, d Datos) (Acceso, error) {
 	a := Acceso{TiendaID: d.TiendaID, Rol: d.Rol, Permisos: roles.De(d.Rol), Tiendas: []TiendaDeLaPersona{}}
 	if d.IA != "" || d.Mirada {
 		return a, nil
+	}
+	if d.Rol != roles.Duenia && d.TiendaID != "" {
+		if err := s.Pool.EnTienda(ctx, d.TiendaID, func(t pgx.Tx) error {
+			p, err := planes.Vigente(ctx, t, d.TiendaID, time.Now())
+			if err != nil {
+				return err
+			}
+			a.SoloLectura, err = planes.PersonaFuera(ctx, t, d.TiendaID, d.Usuario.ID, p)
+			return err
+		}); err != nil {
+			return a, err
+		}
 	}
 	filas, err := s.Pool.Query(ctx, `SELECT id::text, nombre, slug, rol, logo FROM app.tiendas_de_usuario($1)`, d.Usuario.ID)
 	if err != nil {
