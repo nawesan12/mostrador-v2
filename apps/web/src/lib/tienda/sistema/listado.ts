@@ -78,8 +78,20 @@ export function hrefFiltros(base: string, f: Filtros): string {
 	return `${base}/catalogo${s ? `?${s}` : ''}`;
 }
 
-/** Sin tildes ni mayúsculas, para buscar «cafe» y encontrar «Café». */
-export const limpio = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+/**
+ * Sin tildes ni mayúsculas, y con los errores de ortografía más comunes del español emparejados
+ * (b/v, z/s, ll/y, la h muda al principio): «yerva» encuentra «Yerba», «cafe» encuentra «Café». Se
+ * aplica igual al texto y a lo buscado, así que no da falsos positivos como una distancia de edición.
+ */
+export const limpio = (s: string) =>
+	s
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.toLowerCase()
+		.replace(/v/g, 'b')
+		.replace(/z/g, 's')
+		.replace(/ll/g, 'y')
+		.replace(/(^|[^a-z])h/g, '$1');
 
 export const enOferta = (p: ProductoPublico) => !!p.anterior && p.anterior > p.precio;
 

@@ -91,3 +91,14 @@ describe('listado del catálogo', () => {
 		});
 	});
 });
+
+describe('la búsqueda perdona la ortografía de siempre', () => {
+	it('b/v, z/s, ll/y y la h muda', async () => {
+		const { limpio } = await import('./listado.ts');
+		expect(limpio('yerva')).toBe(limpio('Yerba'));
+		expect(limpio('cafe')).toBe(limpio('Café'));
+		expect(limpio('zapatilla')).toBe(limpio('sapatiya'));
+		expect(limpio('helado')).toBe(limpio('elado'));
+		expect(limpio('mate')).not.toBe(limpio('mote'));
+	});
+});

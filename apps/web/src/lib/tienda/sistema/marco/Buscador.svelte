@@ -4,6 +4,8 @@
 	import { usarTienda } from '../contexto.ts';
 	import { productoHref } from '../datos.ts';
 	import { cuantos, precio } from '../formato.ts';
+	import { limpio } from '../listado.ts';
+	import { page } from '$app/state';
 
 	/**
 	 * El buscador del encabezado (píldora en Mostrador, radio 10 en Pedido, recto en Vidriera): busca
@@ -12,9 +14,11 @@
 	 */
 	let { id = 'tv-buscar' }: { id?: string } = $props();
 	const ctx = usarTienda();
-	let q = $state('');
+	// En el catálogo arranca con lo buscado (?q=): antes volvía vacío con su placeholder.
+	let q = $state(
+		page.url.pathname.endsWith('/catalogo') ? (page.url.searchParams.get('q') ?? '') : ''
+	);
 	let abierto = $state(false);
-	const limpio = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 	const encontrados = $derived.by(() => {
 		const b = limpio(q.trim());
 		if (b.length < 2) return [];
