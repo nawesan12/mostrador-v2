@@ -49,7 +49,7 @@ const SUBENCARGADOS = [
 	'Mercado Pago: los cobros de las tiendas y el abono de Tu Local Web.',
 	'ARCA: las facturas electrónicas que emitís desde el panel.',
 	'Correo Argentino y Mercado Libre: los envíos y las ventas, si conectás tu cuenta.',
-	'Telegram: el aviso de cada venta, si vinculás tu Telegram.'
+	'Telegram (fuera de la Argentina): el aviso de cada venta y las respuestas de Tincho, con los datos del negocio y de los pedidos que hagan falta, si vinculás tu Telegram.'
 ];
 
 export const LEGALES: Legal[] = [
@@ -223,7 +223,7 @@ export const LEGALES: Legal[] = [
 		corto: 'Política de privacidad',
 		miga: 'Privacidad',
 		descripcion: 'Legales de Tu Local Web, claros y sin letra chica.',
-		chips: ['Vigente desde el 18 de noviembre de 2026', 'Versión 2.8', '3 min de lectura'],
+		chips: ['Vigente desde el 19 de noviembre de 2026', 'Versión 2.9', '3 min de lectura'],
 		ilustracion: 'portapapeles',
 		indice: [
 			['s1', '1. Responsable'],
@@ -331,7 +331,7 @@ export const LEGALES: Legal[] = [
 				titulo: 'Transferencias internacionales',
 				cuerpo: [
 					{
-						p: 'Algunos proveedores alojan datos fuera de la Argentina, principalmente en Brasil (Hostinger) y en Estados Unidos (Cloudflare, Clerk, GitHub, Anthropic y, sólo si aceptás las cookies de marketing, Meta). En esos casos usamos cláusulas contractuales que garantizan un nivel de protección adecuado.'
+						p: 'Algunos proveedores alojan datos fuera de la Argentina, principalmente en Brasil (Hostinger) y en Estados Unidos (Cloudflare, Clerk, GitHub, Anthropic, Google y Apple para las notificaciones de las apps y, sólo si aceptás las cookies de marketing, Meta). Telegram los procesa fuera de la Argentina si vinculás tu Telegram. En esos casos usamos cláusulas contractuales que garantizan un nivel de protección adecuado.'
 					}
 				]
 			},
