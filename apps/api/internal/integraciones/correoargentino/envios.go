@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/pedidos"
 	"math"
 	"regexp"
 	"sort"
@@ -321,6 +322,7 @@ func (s *Servicio) Generar(ctx context.Context, tiendaID string, numero int) (En
 	}
 	var (
 		envio, estado, nombreTienda string
+		canal, pago, estadoPago     string
 		entrega                     *Entrega
 		comprador                   struct {
 			Nombre   string  `json:"nombre"`
@@ -336,9 +338,10 @@ func (s *Servicio) Generar(ctx context.Context, tiendaID string, numero int) (En
 		negocio struct{ Whatsapp string }
 	)
 	err = s.Pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
-		err := t.QueryRow(ctx, `SELECT p.envio, p.estado, p.entrega, p.comprador, p.items, p.total, ti.nombre, ti.negocio
+		err := t.QueryRow(ctx, `SELECT p.envio, p.estado, p.entrega, p.comprador, p.items, p.total, ti.nombre, ti.negocio,
+				p.canal, p.pago, p.estado_pago
 			FROM pedidos p JOIN tiendas ti ON ti.id = p.tienda_id WHERE p.tienda_id = $1 AND p.numero = $2`, tiendaID, numero).
-			Scan(&envio, &estado, &entrega, &comprador, &items, &total, &nombreTienda, &negoc)
+			Scan(&envio, &estado, &entrega, &comprador, &items, &total, &nombreTienda, &negoc, &canal, &pago, &estadoPago)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return ErrNoExiste
 		}
@@ -360,6 +363,11 @@ func (s *Servicio) Generar(ctx context.Context, tiendaID string, numero int) (En
 	}
 	if estado == "Cancelado" {
 		return EnvioPedido{}, ErrInvalido{"El pedido está cancelado."}
+	}
+	// Uno que espera el pago de Mercado Pago puede vencer a las 24 h: la etiqueta quedaba importada en
+	// MiCorreo. Las transferencias pendientes y los del local sí se pueden despachar antes de cobrar.
+	if pedidos.EsperaPago(canal, pago, estadoPago) {
+		return EnvioPedido{}, ErrInvalido{"El pedido todavía espera el pago de Mercado Pago."}
 	}
 	if entrega == nil || (entrega.Tipo != "D" && entrega.Tipo != "S") {
 		return EnvioPedido{}, ErrInvalido{"El pedido no tiene los datos de entrega de Correo Argentino."}

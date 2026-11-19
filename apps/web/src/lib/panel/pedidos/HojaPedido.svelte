@@ -272,7 +272,8 @@
 				{/if}
 			</div>
 
-			{#if pedido.envio === 'correo'}
+			<!-- Esperando el pago de Mercado Pago (puede vencer): todavía no se genera la etiqueta. -->
+			{#if pedido.envio === 'correo' && !esperaPago(pedido)}
 				<div class="tarjeta">
 					<div class="t">Correo Argentino</div>
 					<EnvioCorreo numero={pedido.numero} entrega={pedido.entrega ?? null} />
