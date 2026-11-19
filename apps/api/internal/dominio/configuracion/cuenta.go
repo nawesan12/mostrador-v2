@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/abono"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/planes"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/roles"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/ia"
@@ -43,6 +44,9 @@ func CambiarRol(ctx context.Context, pool tx, tiendaID string, q Quien, id, rol 
 	}
 	return pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
 		if err := esDuenia(ctx, t, tiendaID, id); err != nil {
+			return err
+		}
+		if err := exigirRol(ctx, t, tiendaID, rol); err != nil {
 			return err
 		}
 		var quien, antes string
@@ -182,7 +186,19 @@ func Plan(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (map[s
 		if err := filas.Err(); err != nil {
 			return err
 		}
+		// Lo que rige (en la prueba, Crece) y lo que quedó fuera del plan después de bajar.
+		vig := planes.DeEstado(e, ahora)
+		fueraProd, fueraPers := 0, 0
+		if vig.Productos != planes.SinTope && productos > vig.Productos {
+			fueraProd = productos - vig.Productos
+		}
+		if vig.Personas != planes.SinTope && personas > vig.Personas {
+			fueraPers = personas - vig.Personas
+		}
 		res = map[string]any{
+			"vigente": vig.ID, "planes": planes.Todos,
+			"fuera":  map[string]int{"productos": fueraProd, "personas": fueraPers},
+			"pack":   map[string]int{"respuestas": planes.PackTincho, "precio": planes.PrecioPackTincho},
 			"actual": e.Plan, "ciclo": e.Ciclo, "enPrueba": enPrueba, "diasPrueba": max(0, int(math.Ceil(e.FinPrueba.Sub(ahora).Hours()/24))),
 			"finPrueba":      e.FinPrueba,
 			"proximoCobro":   proximo,
@@ -207,6 +223,8 @@ func Plan(ctx context.Context, pool tx, tiendaID string, ahora time.Time) (map[s
 type Ganchos struct {
 	// Beneficio para quedarse (§57) con el débito de Mercado Pago. nil: sólo queda anotado.
 	Beneficio func(ctx context.Context, tiendaID string, b abono.Beneficio) error
+	// ComprarPack: la URL de Mercado Pago para pagar un pack extra de Tincho. nil: sin cobro (desarrollo).
+	ComprarPack func(ctx context.Context, tiendaID string) (string, error)
 	// Contacto: avisa al equipo que una dueña pidió que le escriban. nil: no se avisa.
 	Contacto func(ctx context.Context, asunto, texto string) error
 }
@@ -225,28 +243,23 @@ func rutasCuenta(mux *http.ServeMux, pool tx, g Ganchos, con func(func(http.Resp
 		v, err := Plan(r.Context(), pool, id, time.Now())
 		escribir(w, v, err)
 	}))
+	// El pack extra de Tincho ($ 4.900, +2.000 respuestas este mes) se paga con Mercado Pago: devuelve
+	// la URL del pago y el pack se suma cuando se aprueba. Sin Mercado Pago en el servidor (desarrollo),
+	// se suma sin cobrar.
 	mux.HandleFunc("POST /v1/panel/cuenta/pack", con(func(w http.ResponseWriter, r *http.Request, id string, _ Quien) {
-		errorDe(w, pool.EnTienda(r.Context(), id, func(t pgx.Tx) error {
+		if g.ComprarPack != nil {
+			u, err := g.ComprarPack(r.Context(), id)
+			escribir(w, map[string]string{"url": u}, err)
+			return
+		}
+		err := pool.EnTienda(r.Context(), id, func(t pgx.Tx) error {
 			if _, err := t.Exec(r.Context(), `UPDATE tiendas SET packs = packs || jsonb_build_object($2::text, coalesce((packs->>$2)::int, 0) + 1) WHERE id = $1`, id, mes(time.Now())); err != nil {
 				return err
 			}
 			return auditoria.Registrar(r.Context(), t, id, auditoria.Registro{Accion: "plan.pack", Entidad: "tienda", EntidadID: id,
 				Texto: "sumó un pack extra este mes"})
-		}))
-	}))
-	mux.HandleFunc("DELETE /v1/panel/cuenta/pack", con(func(w http.ResponseWriter, r *http.Request, id string, _ Quien) {
-		errorDe(w, pool.EnTienda(r.Context(), id, func(t pgx.Tx) error {
-			tag, err := t.Exec(r.Context(), `UPDATE tiendas SET packs = packs || jsonb_build_object($2::text, (packs->>$2)::int - 1)
-				WHERE id = $1 AND coalesce((packs->>$2)::int, 0) > 0`, id, mes(time.Now()))
-			if err == nil && tag.RowsAffected() == 0 {
-				return ErrNoExiste
-			}
-			if err != nil {
-				return err
-			}
-			return auditoria.Registrar(r.Context(), t, id, auditoria.Registro{Accion: "plan.pack_quitar", Entidad: "tienda", EntidadID: id,
-				Texto: "sacó un pack extra de este mes"})
-		}))
+		})
+		escribir(w, map[string]string{"url": ""}, err)
 	}))
 	mux.HandleFunc("POST /v1/panel/cuenta/cancelacion", con(func(w http.ResponseWriter, r *http.Request, id string, q Quien) {
 		var b struct {

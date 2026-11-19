@@ -15,6 +15,9 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/abono"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/dominio/planes"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/auditoria"
+	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/ia"
 	"github.com/nawesan12/mostrador-v2/apps/api/internal/plataforma/outbox"
 )
 
@@ -234,6 +237,67 @@ func (s *Servicio) pagarDiferencia(ctx context.Context, tiendaID string, c abono
 		return "", errors.New("mercadopago: la preferencia no trajo init_point")
 	}
 	return r.InitPoint, nil
+}
+
+// ComprarPack: la preferencia de Checkout Pro (con la cuenta de la plataforma) por un pack extra de
+// Tincho. El pack se suma cuando Mercado Pago avisa que se aprobó (conciliarPagoAbono), en el mes en
+// que se acredita.
+func (s *Servicio) ComprarPack(ctx context.Context, tiendaID string) (string, error) {
+	if s.Config.TokenPlataforma == "" {
+		return "", ErrApagado
+	}
+	vuelta := s.Config.Sitio + "/panel/plan-y-facturacion"
+	p := preferencia{
+		Items: []item{{Title: fmt.Sprintf("Tu Local Web: pack extra de Tincho (+%s respuestas con IA)", miles(planes.PackTincho)),
+			Quantity: 1, UnitPrice: planes.PrecioPackTincho, CurrencyID: "ARS"}},
+		ExternalReference: fmt.Sprintf("pack:%s:%d", tiendaID, planes.PrecioPackTincho),
+		BackURLs:          map[string]string{"success": vuelta + "?pago=ok", "pending": vuelta + "?pago=pendiente", "failure": vuelta + "?pago=error"},
+		StatementDesc:     "TU LOCAL WEB",
+	}
+	if s.publico() {
+		p.AutoReturn = "approved"
+	}
+	var r struct {
+		InitPoint string `json:"init_point"`
+	}
+	if err := s.cliente().JSON(ctx, http.MethodPost, "/checkout/preferences", s.Config.TokenPlataforma, "", p, &r); err != nil {
+		return "", err
+	}
+	if r.InitPoint == "" {
+		return "", errors.New("mercadopago: la preferencia no trajo init_point")
+	}
+	return r.InitPoint, nil
+}
+
+// conciliarPack: el pago de un pack (referencia pack:<tienda>:<importe>). Aprobado y por el importe,
+// suma el pack al mes una sola vez (el aviso y la vuelta llegan los dos).
+func (s *Servicio) conciliarPack(ctx context.Context, pagoID, tiendaID, estado string, pagado, importe int64) error {
+	if estado != "approved" || pagado < importe || importe <= 0 {
+		return nil
+	}
+	return s.Pool.EnTienda(ctx, tiendaID, func(t pgx.Tx) error {
+		tag, err := t.Exec(ctx, `INSERT INTO abono_cobros (tienda_id, clave, detalle, importe) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
+			tiendaID, "pago:"+pagoID, "Pack extra de Tincho (+"+miles(planes.PackTincho)+" respuestas)", importe)
+		if err != nil || tag.RowsAffected() == 0 {
+			return err
+		}
+		mes := ia.Mes(s.ahora())
+		if _, err := t.Exec(ctx, `UPDATE tiendas SET packs = packs || jsonb_build_object($2::text, coalesce((packs->>$2)::int, 0) + 1)
+			WHERE id = $1`, tiendaID, mes); err != nil {
+			return err
+		}
+		return auditoria.Registrar(ctx, t, tiendaID, auditoria.Registro{Accion: "plan.pack", Entidad: "tienda", EntidadID: tiendaID,
+			Texto: "compró un pack extra de Tincho para este mes"})
+	})
+}
+
+// miles: 2000 → «2.000».
+func miles(n int) string {
+	v := strconv.Itoa(n)
+	for i := len(v) - 3; i > 0; i -= 3 {
+		v = v[:i] + "." + v[i:]
+	}
+	return v
 }
 
 var esUUID = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
@@ -467,6 +531,16 @@ func (s *Servicio) conciliarPagoAbono(ctx context.Context, pagoID, deTienda stri
 		return "", err
 	}
 	partes := strings.Split(pago.ExternalReference, ":")
+	if len(partes) == 3 && partes[0] == "pack" && esUUID.MatchString(partes[1]) {
+		if deTienda != "" && deTienda != partes[1] {
+			return "", ErrNoExiste
+		}
+		importe, err := strconv.ParseInt(partes[2], 10, 64)
+		if err != nil {
+			return "", nil
+		}
+		return partes[1], s.conciliarPack(ctx, pagoID, partes[1], pago.Status, int64(pago.TransactionAmount), importe)
+	}
 	if len(partes) != 5 || partes[0] != "abono" || !esUUID.MatchString(partes[1]) {
 		return "", nil // no es una diferencia del abono
 	}

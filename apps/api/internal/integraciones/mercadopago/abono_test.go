@@ -61,7 +61,7 @@ func TestAbonoConProrrateo(t *testing.T) {
 		t.Fatalf("alta: %q %v", u, err)
 	}
 	rec := f.cuerpos["POST /preapproval"]["auto_recurring"].(map[string]any)
-	if _, hay := rec["free_trial"]; hay || rec["transaction_amount"].(float64) != 19900 {
+	if _, hay := rec["free_trial"]; hay || rec["transaction_amount"].(float64) != 14900 {
 		t.Fatalf("débito: %v", rec)
 	}
 	proximo := ahora.AddDate(0, 1, 0)
@@ -105,7 +105,7 @@ func TestAbonoConProrrateo(t *testing.T) {
 	if p, _, _ := leer(); p != "pro" || cobros() != 1 {
 		t.Fatalf("después de pagar la diferencia: %s, %d cobros", p, cobros())
 	}
-	if f.susc["sus-2"]["transaction_amount"].(float64) != 49900 {
+	if f.susc["sus-2"]["transaction_amount"].(float64) != 34900 {
 		t.Fatalf("el débito no subió: %v", f.susc["sus-2"])
 	}
 	// La vuelta de otra tienda no concilia el pago ajeno.
@@ -118,7 +118,7 @@ func TestAbonoConProrrateo(t *testing.T) {
 	if u, err := s.CambiarAbono(ctx, luna, ana, "emprende", "mes"); err != nil || u != "" {
 		t.Fatalf("bajar: %q %v", u, err)
 	}
-	if p, prog, _ := leer(); p != "pro" || prog == nil || *prog != "emprende" || f.susc["sus-2"]["transaction_amount"].(float64) != 19900 {
+	if p, prog, _ := leer(); p != "pro" || prog == nil || *prog != "emprende" || f.susc["sus-2"]["transaction_amount"].(float64) != 14900 {
 		t.Fatalf("baja programada: %s %v %v", p, prog, f.susc["sus-2"])
 	}
 	// Con la baja programada, otro plan no; volver al vigente la deshace.
@@ -128,7 +128,7 @@ func TestAbonoConProrrateo(t *testing.T) {
 	if u, err := s.CambiarAbono(ctx, luna, ana, "pro", "mes"); err != nil || u != "" {
 		t.Fatalf("deshacer: %q %v", u, err)
 	}
-	if _, prog, _ := leer(); prog != nil || f.susc["sus-2"]["transaction_amount"].(float64) != 49900 {
+	if _, prog, _ := leer(); prog != nil || f.susc["sus-2"]["transaction_amount"].(float64) != 34900 {
 		t.Fatalf("no se deshizo: %v", prog)
 	}
 
@@ -157,7 +157,7 @@ func TestAbonoConProrrateo(t *testing.T) {
 	}
 
 	// Cada cobro del débito queda en Facturas, una vez.
-	f.autoriz["77"] = map[string]any{"id": 77, "preapproval_id": "sus-2", "status": "processed", "transaction_amount": 49900,
+	f.autoriz["77"] = map[string]any{"id": 77, "preapproval_id": "sus-2", "status": "processed", "transaction_amount": 34900,
 		"payment": map[string]any{"id": 1, "status": "approved"}}
 	for range 2 {
 		if err := s.ConciliarCobroAbono(ctx, "77"); err != nil {
@@ -187,12 +187,12 @@ func TestBeneficioParaQuedarse(t *testing.T) {
 		return err
 	})
 	f.susc["sus-9"] = map[string]any{"id": "sus-9", "status": "authorized", "external_reference": luna,
-		"reason": "Tu Local Web Pro (mensual)", "transaction_amount": 49900}
+		"reason": "Tu Local Web Crece (mensual)", "transaction_amount": 34900}
 
 	if err := s.AplicarBeneficio(ctx, luna, abono.Ofertas[0]); err != nil {
 		t.Fatal(err)
 	}
-	if f.susc["sus-9"]["transaction_amount"].(float64) != 24950 {
+	if f.susc["sus-9"]["transaction_amount"].(float64) != 17450 {
 		t.Fatalf("el débito no bajó: %v", f.susc["sus-9"])
 	}
 	if err := s.AplicarBeneficio(ctx, luna, abono.Ofertas[4]); err != abono.ErrBeneficioUsado {
@@ -200,16 +200,71 @@ func TestBeneficioParaQuedarse(t *testing.T) {
 	}
 	// Tres cobros con descuento (el mismo aviso repetido cuenta una vez) y el débito vuelve al precio.
 	for i, id := range []string{"1", "1", "2", "3"} {
-		f.autoriz[id] = map[string]any{"id": id, "preapproval_id": "sus-9", "status": "processed", "transaction_amount": 24950,
+		f.autoriz[id] = map[string]any{"id": id, "preapproval_id": "sus-9", "status": "processed", "transaction_amount": 17450,
 			"payment": map[string]any{"id": i, "status": "approved"}}
 		if err := s.ConciliarCobroAbono(ctx, id); err != nil {
 			t.Fatal(err)
 		}
-		if id != "3" && f.susc["sus-9"]["transaction_amount"].(float64) != 24950 {
+		if id != "3" && f.susc["sus-9"]["transaction_amount"].(float64) != 17450 {
 			t.Fatalf("volvió al precio antes del tercer cobro (%s)", id)
 		}
 	}
-	if f.susc["sus-9"]["transaction_amount"].(float64) != 49900 {
+	if f.susc["sus-9"]["transaction_amount"].(float64) != 34900 {
 		t.Fatalf("el débito no volvió al precio: %v", f.susc["sus-9"])
+	}
+}
+
+// El pack extra de Tincho se cobra de verdad: la preferencia por $ 4.900 con la cuenta de la
+// plataforma, y el pack se suma recién con el pago aprobado, una sola vez y sólo para esa tienda.
+func TestPackDeTinchoSeCobra(t *testing.T) {
+	ctx := context.Background()
+	b := pruebadb.Nueva(t)
+	luna := pruebadb.CrearTienda(t, b.App, "luna")
+	sol := pruebadb.CrearTienda(t, b.App, "sol")
+	f := &mpFalso{cuerpos: map[string]map[string]any{}, pagos: map[string]map[string]any{}, susc: map[string]map[string]any{},
+		autoriz: map[string]map[string]any{}, usuario: 777, refreshOK: true}
+	srv := httptest.NewServer(f)
+	defer srv.Close()
+	s := &mercadopago.Servicio{Pool: b.App, Cliente: &mercadopago.Cliente{Base: srv.URL},
+		Config: mercadopago.Config{TokenPlataforma: "APP_USR-plataforma", Sitio: "https://tulocalweb.com.ar"}}
+	packs := func() int {
+		var n int
+		_ = b.App.EnTienda(ctx, luna, func(tx pgx.Tx) error {
+			return tx.QueryRow(ctx, `SELECT coalesce(sum(value::int), 0) FROM tiendas, jsonb_each_text(packs) WHERE id = $1`, luna).Scan(&n)
+		})
+		return n
+	}
+	u, err := s.ComprarPack(ctx, luna)
+	if err != nil || u == "" {
+		t.Fatalf("comprar: %q %v", u, err)
+	}
+	pref := f.cuerpos["POST /checkout/preferences"]
+	item := pref["items"].([]any)[0].(map[string]any)
+	if item["unit_price"].(float64) != 4900 || !strings.HasPrefix(pref["external_reference"].(string), "pack:"+luna+":") {
+		t.Fatalf("preferencia: %v", pref)
+	}
+	if packs() != 0 {
+		t.Fatal("sumó el pack antes de pagar")
+	}
+	// Pendiente o por menos: nada.
+	f.pagos["50"] = map[string]any{"id": 50, "status": "pending", "external_reference": pref["external_reference"], "transaction_amount": 4900}
+	f.pagos["51"] = map[string]any{"id": 51, "status": "approved", "external_reference": pref["external_reference"], "transaction_amount": 4000}
+	_ = s.ConciliarPagoAbono(ctx, "50")
+	_ = s.ConciliarPagoAbono(ctx, "51")
+	if packs() != 0 {
+		t.Fatal("sumó un pack sin el pago completo")
+	}
+	// Otra tienda no puede reclamarlo con su vuelta.
+	f.pagos["52"] = map[string]any{"id": 52, "status": "approved", "external_reference": pref["external_reference"], "transaction_amount": 4900}
+	if err := s.VolverAbono(ctx, sol, "52", ""); err == nil {
+		t.Fatal("otra tienda concilió el pack")
+	}
+	// Aprobado: un pack, aunque lleguen el aviso y la vuelta.
+	if err := s.VolverAbono(ctx, luna, "52", ""); err != nil {
+		t.Fatal(err)
+	}
+	_ = s.ConciliarPagoAbono(ctx, "52")
+	if packs() != 1 {
+		t.Fatalf("packs: %d", packs())
 	}
 }

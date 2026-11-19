@@ -211,7 +211,6 @@ var Rutas = map[string]Permiso{
 	"GET /v1/panel/cuenta/plan":           Cuenta,
 	"PUT /v1/panel/plan":                  Cuenta,
 	"POST /v1/panel/cuenta/pack":          Cuenta,
-	"DELETE /v1/panel/cuenta/pack":        Cuenta,
 	"POST /v1/panel/cuenta/cancelacion":   Cuenta,
 	"DELETE /v1/panel/cuenta/cancelacion": Cuenta,
 	"POST /v1/panel/cuenta/suscripcion":   Cuenta,
