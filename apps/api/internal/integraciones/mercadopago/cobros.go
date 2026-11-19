@@ -498,7 +498,13 @@ func (s *Servicio) aplicar(ctx context.Context, tiendaID, ref string, pagoID int
 				if err := carritoRecuperado(ctx, t, pedido); err != nil {
 					return err
 				}
-			} else if _, err := t.Exec(ctx, `UPDATE pedidos SET estado_pago = 'Devuelto' WHERE numero = $1::int`, pedido); err != nil {
+			} else if _, err := t.Exec(ctx, `UPDATE pedidos SET estado_pago = 'Devuelto' WHERE numero = $1::int
+					AND NOT EXISTS (SELECT 1 FROM mp_cobros c LEFT JOIN links l ON c.tipo = 'link' AND l.codigo = c.objetivo
+						WHERE c.referencia <> $2 AND c.estado IN ('approved', 'processed')
+							AND ((c.tipo IN ('pedido', 'qr') AND c.objetivo = $3) OR l.pedido = $1::int))`,
+				pedido, ref, pedido); err != nil {
+				// Devolver el pago de más (pago.doble, otra preferencia) no deja el pedido «Devuelto»: el
+				// primero sigue cobrado.
 				return err
 			}
 		}

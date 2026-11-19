@@ -187,6 +187,16 @@ func TestPagoTardeYDoble(t *testing.T) {
 	if n := contar(`SELECT count(*) FROM outbox WHERE tipo = 'pago.doble' AND (datos->>'numero')::int = $1`, v.Numero); n != 2 {
 		t.Fatalf("pago de otra preferencia del mismo pedido: %d avisos", n)
 	}
+	// Devolver el pago de más deja el pedido cobrado: el primero sigue en pie.
+	f.mu.Lock()
+	f.pagos["913"] = map[string]any{"id": 913, "status": "refunded", "external_reference": "OTRA1", "transaction_amount": float64(dv.Total)}
+	f.mu.Unlock()
+	if err := s.ConciliarPago(ctx, luna, 913); err != nil {
+		t.Fatal(err)
+	}
+	if dv, _ = pedidos.Obtener(ctx, b.App, luna, v.Numero); dv.EstadoPago != "Aprobado" {
+		t.Fatalf("devolver el pago de más dejó el pedido %s", dv.EstadoPago)
+	}
 }
 
 // Volver de Mercado Pago y tocar Pagar otra vez no arma otro pedido; cambiar el carrito cancela el
