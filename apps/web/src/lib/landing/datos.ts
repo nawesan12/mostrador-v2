@@ -234,37 +234,37 @@ export const CATS = [
 export const CHAT = [
 	{
 		k: 'c',
-		t: 'Hola! ¿Tienen el termo de 1 L en negro?'
+		t: '¿Cómo vengo hoy?'
 	},
 	{
 		k: 'h',
-		t: '¡Hola Lucía! Sí, nos quedan 3 en negro. Te lo dejo acá:'
+		t: 'Llevás $ 186.400 en 9 ventas: 6 online y 3 en el local. Lo que más salió es el termo de 1 L, y te quedan 3:'
 	},
 	{
 		k: 'prod'
 	},
 	{
 		k: 'c',
-		t: '¿Hacen envíos a Córdoba?'
+		t: 'Subí 10 % los mates y los termos'
 	},
 	{
 		k: 'h',
-		t: 'Sí, por Andreani te llega el jueves. El envío sale $ 4.200, o es gratis si sumás la bombilla de acero ($ 1.700).'
+		t: 'Listo: subí 24 productos un 10 %, redondeado a la centena. Ya se ven así en la tienda y en el local.'
 	},
 	{
 		k: 'c',
-		t: 'Dale, sumame la bombilla'
+		t: 'Haceme un link de pago de $ 44.600 para Lucía'
 	},
 	{
 		k: 'h',
-		t: '¡Listo! Son $ 44.600 con envío gratis. Podés pagar acá:'
+		t: 'Acá lo tenés, mandáselo por WhatsApp. Cuando pague, se acredita solo:'
 	},
 	{
 		k: 'pay'
 	},
 	{
 		k: 'sys',
-		t: 'Pago aprobado · Pedido #1049 creado · Factura B emitida'
+		t: 'Lucía pagó $ 44.600 · se acreditó en Mercado Pago'
 	}
 ] as const;
 

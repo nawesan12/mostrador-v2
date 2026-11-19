@@ -5,7 +5,7 @@
 	import * as I from '#lib/icons.ts';
 	import { CHAT } from './datos.ts';
 	import { getLanding } from './estado.svelte.ts';
-	import { cara, unsplash } from './formato.ts';
+	import { unsplash } from './formato.ts';
 
 	/** Sección "Conocé a Tincho": el título, lo que hace en cuatro renglones y el chat demo animado. */
 	const l = getLanding();
@@ -14,8 +14,8 @@
 	const escribiendo = $derived(!!siguiente && ['h', 'prod', 'pay'].includes(siguiente.k));
 
 	const CAPACIDADES = [
-		[I.phChatsCircleFill, 'Responde y cierra ventas'],
-		[I.phShoppingCartSimpleFill, 'Recupera carritos abandonados'],
+		[I.phChatsCircleFill, 'Te dice cómo venís hoy'],
+		[I.phShoppingCartSimpleFill, 'Cambia precios y arma links de pago'],
 		[I.phCameraFill, 'Carga productos con una foto'],
 		[I.phLightbulbFilamentFill, 'Te dice qué hacer hoy']
 	] as const;
@@ -37,7 +37,7 @@
 		<div class="dos">
 			<div class="cab" use:anim={'reveal'}>
 				<div class="sello"><Icon icon={I.phSparkleFill} size={15} />Asistente con IA</div>
-				<h2>Conocé a Tincho. Atiende y vende las 24&nbsp;horas.</h2>
+				<h2>Conocé a Tincho. Tu mano derecha las 24&nbsp;horas.</h2>
 				<p>
 					Te responde en el panel, la app y Telegram con tus precios y tu stock reales. Lo
 					importante te lo&nbsp;consulta.
@@ -51,14 +51,13 @@
 			</div>
 			<div class="chat" use:anim={{ t: 'reveal', delay: 120 }}>
 				<div class="chat-cab">
-					<img src={cara('1531058240690-006c446962d8')} alt="Lucía Fernández" />
+					<img src="/hornero/avatar.webp" alt="Tincho" />
 					<div class="cab-txt">
-						<div class="nom">Lucía Fernández <Icon icon={I.logosWhatsappIcon} size={14} /></div>
-						<div class="sub">Cliente nueva · llegó por Instagram</div>
+						<div class="nom">Tincho</div>
+						<div class="sub">Tu asistente · en el panel, la app y Telegram</div>
 					</div>
 					<span class="atiende"
-						><span class="av"><img src="/hornero/avatar.webp" alt="Tincho" /></span>Tincho
-						atendiendo</span
+						><span class="av"><img src="/hornero/avatar.webp" alt="" /></span>En línea</span
 					>
 				</div>
 				<div class="mensajes" aria-live="polite">
@@ -113,8 +112,7 @@
 					{/if}
 				</div>
 				<div class="chat-pie">
-					<span>Tincho contesta solo. Vos podés intervenir cuando quieras.</span>
-					<span class="tomar">Tomar la conversación</span>
+					<span>Lo importante te lo consulta antes de hacerlo.</span>
 				</div>
 			</div>
 		</div>
@@ -408,17 +406,8 @@
 		font-size: 13px;
 		color: #7a6252;
 	}
-	.tomar {
-		font-size: 13px;
-		font-weight: 600;
-		padding: 8px 14px;
-		border-radius: 999px;
-		background: #2a140c;
-		color: #fff;
-		white-space: nowrap;
-	}
 	/* Celular: la escena se compacta para que las métricas no se salgan, y la cabecera del chat
-	   pasa el "Tincho atendiendo" abajo en vez de estrujar el nombre. */
+	   pasa el "En línea" abajo en vez de estrujar el nombre. */
 	@media (max-width: 640px) {
 		.dos {
 			gap: 32px;

@@ -133,8 +133,7 @@
 			<a href="#hornero" class="hornero" onclick={() => (l.menu = false)} use:entrar={MENU.length}>
 				<img src="/hornero/saludo.webp" alt="" />
 				<span class="h-txt"
-					><span class="t">Conocé a Tincho</span><span class="d"
-						>Atiende y vende por vos las 24 horas</span
+					><span class="t">Conocé a Tincho</span><span class="d">Tu mano derecha las 24 horas</span
 					></span
 				>
 				<Icon icon={I.phArrowRightBold} size={16} style="position:relative" />
