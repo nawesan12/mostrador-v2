@@ -2,6 +2,36 @@
 
 Última actualización: 6/11/2026. Plan completo: `~/.claude/plans/claude-vamos-con-algo-encapsulated-alpaca.md`.
 
+## 19/11/2026: comité desplegado (API, web y worker 94876d3f, migraciones 00090–00095; iOS build 2611190155; Android 149)
+
+El cierre del comité (entrada de abajo) ya está en producción.
+- **Copia previa:** `/var/backups/tulocalweb/antes-comite-202611190455.sql.gz`.
+- **Despliegue:** `scripts/desplegar-vps.sh` desde `~/Trabajo/vimo/.wt/desplegar` en origin/main.
+- **iOS:** compilado en la Mac con `~/Trabajo/vimo/credenciales-apple/testflight-local.sh <apps/ios> tulocalweb` y repartido a todos los grupos (Socios incluido) con `ultima.py`.
+- **Android:**
+  - El espejo se publicó desde la copia limpia (no desde esta carpeta, donde trabajan agentes).
+  - El `.aab` firmado sale del workflow «Android» (workflow_dispatch) de grupovimo/tulocalweb-android; el push sólo compila y prueba.
+  - Se subió con `tiendas/play/subir_aab.py`.
+- **Compilación de Android:** primero falló por `material3` en Reverificar.kt (la app no lo usa: va `Rueda` de tema/Estados.kt) y por `ctx`/`estado` fuera de alcance en TinchoChat.kt. Se arregló en a17c4850.
+
+**Meta (19/11):**
+- Portfolio Grupo Vimo, cuenta publicitaria «Grupo Vimo», un píxel por app y los 4 dominios verificados.
+- CAPI andando sólo en TLW (`/opt/tulocalweb/web.conf`).
+- IDs en `~/Trabajo/vimo/credenciales-meta/LEEME.md`.
+- La coincidencia avanzada sigue apagada hasta sumar Meta y Anthropic a la política de privacidad.
+- AAIP: el agregado de Meta y Anthropic se presentó el 19/11 (`~/Trabajo/vimo/legales/aaip/modificacion-meta-anthropic.md`).
+
+**Pendiente del comité:**
+- CSP del panel con nonce.
+- Regla de contraste en la e2e del panel.
+- Aviso de privacidad versionado a las dueñas.
+- «Aumentar precios» en la barra de Productos.
+- Ranking de 30 días en el worker.
+- Rol de botón en todos los clickable de Android.
+- Ocultar indicadores sin ventas en las apps.
+- Verificación de onboarding al reconectar Mercado Pago.
+- Prueba `promos/TestCaptarRuletaEventosYMetricas`, que falla pasada la medianoche (zona horaria).
+
 ## 19/11/2026: cierre del comité de revisión (rama comite-revision, sin desplegar, migraciones 00090–00095)
 
 - **Plata**: pago que llega con el pedido cancelado → sin factura y aviso `pago.tarde`; segundo pago aprobado
