@@ -151,12 +151,13 @@
 				>
 			</div>
 			<div class="kpi">
-				<span>Sin stock</span><b style:color="#B83A2E">{r.sinStock ?? 0}</b><em
-					>{r.sinStockEnMl ? `${r.sinStockEnMl} publicados en ML` : 'productos agotados'}</em
-				>
+				<span>Sin stock</span><b style:color={r.sinStock ? '#B83A2E' : undefined}
+					>{r.sinStock ?? 0}</b
+				><em>{r.sinStockEnMl ? `${r.sinStockEnMl} publicados en ML` : 'productos agotados'}</em>
 			</div>
 			<div class="kpi">
-				<span>Stock bajo</span><b style:color="#8a5f0e">{r.bajo ?? 0}</b><em>menos que el mínimo</em
+				<span>Stock bajo</span><b style:color={r.bajo ? '#8a5f0e' : undefined}>{r.bajo ?? 0}</b><em
+					>menos que el mínimo</em
 				>
 			</div>
 			<div class="kpi">

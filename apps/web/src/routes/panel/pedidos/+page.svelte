@@ -331,6 +331,9 @@
 		if (f.q) c.push([`«${f.q}»`, { q: '' }]);
 		return c;
 	});
+	// Una cuenta sin ningún pedido (ni filtros ni búsqueda): sólo el título, el vacío y su acción;
+	// los KPI en cero, las vistas, los filtros y «Exportar 0» no guían a nada.
+	const vacia = $derived(!lista.total && !chips.length && !f.q.trim());
 	function limpiar() {
 		q = '';
 		ir({
@@ -396,230 +399,232 @@
 	<div class="cab" use:anim={{ t: 'rise' }}>
 		<div class="c-txt">
 			<h1>Pedidos</h1>
-			<div class="c-s">
-				<span class="nw"><b>{n}</b> {lista.total === 1 ? 'pedido' : 'pedidos'}</span> ·
-				<span class="nw">{pesos(lista.suma)}</span>
-				·
-				<span class="nw">ticket promedio {pesos(lista.total ? lista.suma / lista.total : 0)}</span>
-			</div>
+			{#if !vacia}<div class="c-s">
+					<span class="nw"><b>{n}</b> {lista.total === 1 ? 'pedido' : 'pedidos'}</span> ·
+					<span class="nw">{pesos(lista.suma)}</span>
+					·
+					<span class="nw">ticket promedio {pesos(lista.total ? lista.suma / lista.total : 0)}</span
+					>
+				</div>{/if}
 		</div>
-		<a
-			class="exportar"
-			href="/panel/pedidos/exportar?{escribirFiltros(f)}"
-			download
-			onclick={() =>
-				ui.toast({
-					k: 'ok',
-					title: `Exportando ${n} ${lista.total === 1 ? 'pedido' : 'pedidos'}`,
-					desc: 'Con los filtros aplicados · en CSV para Excel'
-				})}><Icon icon={I.phDownloadSimpleBold} size={14} />Exportar {n}</a
-		>
+		{#if lista.total}<a
+				class="exportar"
+				href="/panel/pedidos/exportar?{escribirFiltros(f)}"
+				download
+				onclick={() =>
+					ui.toast({
+						k: 'ok',
+						title: `Exportando ${n} ${lista.total === 1 ? 'pedido' : 'pedidos'}`,
+						desc: 'Con los filtros aplicados · en CSV para Excel'
+					})}><Icon icon={I.phDownloadSimpleBold} size={14} />Exportar {n}</a
+			>{/if}
 		<a class="nuevo" href="/panel/pedidos/nuevo"
 			><Icon icon={I.phPlusBold} size={14} />Crear pedido</a
 		>
 	</div>
-
-	<div
-		class="vistas"
-		use:anim={{ t: 'rise', delay: 50 }}
-		role="group"
-		aria-label="Vistas"
-		use:deslizable
-	>
-		{#each VISTAS as v (v.id)}
-			{@const ic = {
-				todos: [I.phTrayFill, 'var(--mu)'],
-				hoy: [I.phLightningFill, '#D2582F'],
-				'sin-pagar': [I.phHourglassMediumFill, '#9A6A10'],
-				'esperando-pago': [I.phHourglassMediumFill, '#7E6656'],
-				vip: [I.phCrownSimpleFill, '#C98A12'],
-				mayoristas: [I.phPackageFill, '#6A4FA0'],
-				hornero: [I.phSparkleFill, '#C24E25']
-			}[v.id] as [typeof I.phTrayFill, string]}
-			<button
-				type="button"
-				class="vista"
-				aria-pressed={vista === v.id}
-				onclick={() => {
-					q = v.filtros.q ?? '';
-					ir({
-						q: '',
-						estado: [],
-						canal: [],
-						pago: [],
-						envio: [],
-						fecha: 'todo',
-						minimo: 0,
-						vip: false,
-						hornero: false,
-						mayorista: false,
-						...v.filtros
-					});
-				}}><Icon icon={ic[0]} size={15} style="color:{ic[1]}" />{v.t}</button
-			>
-		{/each}
-	</div>
-
-	<div
-		class="etapas"
-		use:anim={{ t: 'rise', delay: 100 }}
-		role="group"
-		aria-label="Etapas"
-		use:deslizable
-	>
-		{#each ETAPAS as e (e.estado)}
-			{@const on = f.estado.includes(e.estado)}
-			<button
-				type="button"
-				class="etapa"
-				class:on
-				aria-pressed={on}
-				onclick={() => ir({ estado: alternar(f.estado, e.estado) })}
-			>
-				<span class="e-t"><span class="e-p" style:background={e.c}></span>{e.t}</span>
-				<span class="e-n">{(lista.etapas[e.estado] ?? 0).toLocaleString('es-AR')}</span>
-				<span class="e-b" style:background={e.c} style:opacity={on || !f.estado.length ? 1 : 0.25}
-				></span>
-			</button>
-		{/each}
-	</div>
-
-	<div class="filtros" use:anim={{ t: 'rise', delay: 150 }}>
-		<div class="f-fila">
-			<label class="buscar">
-				<Icon icon={I.phMagnifyingGlass} size={16} style="color:var(--mu)" />
-				<input
-					value={q}
-					oninput={(e) => buscar(e.currentTarget.value)}
-					placeholder="Cliente, N.º de pedido, producto o ciudad"
-					aria-label="Buscar pedidos"
-				/>
-				{#if q}<button
-						type="button"
-						class="b-x"
-						aria-label="Borrar búsqueda"
-						onclick={() => buscar('')}><Icon icon={I.phXCircleFill} size={16} /></button
-					>{/if}
-			</label>
-			<div class="fechas" role="group" aria-label="Fecha">
-				{#each FECHAS as [id, t] (id)}
-					<button type="button" aria-pressed={f.fecha === id} onclick={() => ir({ fecha: id })}
-						>{t}</button
-					>
-				{/each}
-			</div>
-			<button
-				type="button"
-				class="pildora"
-				class:on={mas}
-				aria-expanded={mas}
-				onclick={() => (mas = !mas)}
-				><Icon icon={I.phSlidersHorizontalBold} size={15} />Filtros{#if chips.length}<span
-						class="cuenta">{chips.length}</span
-					>{/if}</button
-			>
-			<button type="button" class="pildora" onclick={ciclarOrden} aria-label="Orden: {ordenTxt}"
-				><Icon icon={I.phSortAscendingBold} size={15} />{ordenTxt}</button
-			>
+	{#if !vacia}
+		<div
+			class="vistas"
+			use:anim={{ t: 'rise', delay: 50 }}
+			role="group"
+			aria-label="Vistas"
+			use:deslizable
+		>
+			{#each VISTAS as v (v.id)}
+				{@const ic = {
+					todos: [I.phTrayFill, 'var(--mu)'],
+					hoy: [I.phLightningFill, '#D2582F'],
+					'sin-pagar': [I.phHourglassMediumFill, '#9A6A10'],
+					'esperando-pago': [I.phHourglassMediumFill, '#7E6656'],
+					vip: [I.phCrownSimpleFill, '#C98A12'],
+					mayoristas: [I.phPackageFill, '#6A4FA0'],
+					hornero: [I.phSparkleFill, '#C24E25']
+				}[v.id] as [typeof I.phTrayFill, string]}
+				<button
+					type="button"
+					class="vista"
+					aria-pressed={vista === v.id}
+					onclick={() => {
+						q = v.filtros.q ?? '';
+						ir({
+							q: '',
+							estado: [],
+							canal: [],
+							pago: [],
+							envio: [],
+							fecha: 'todo',
+							minimo: 0,
+							vip: false,
+							hornero: false,
+							mayorista: false,
+							...v.filtros
+						});
+					}}><Icon icon={ic[0]} size={15} style="color:{ic[1]}" />{v.t}</button
+				>
+			{/each}
 		</div>
-		{#if mas}
-			<div class="mas" use:anim={{ t: 'rise' }}>
-				<div>
-					<div class="m-t">Canal</div>
-					<div class="opciones">
-						{#each Object.keys(NOMBRE_CANAL) as k (k)}
-							{@const on = f.canal.includes(k)}
-							<button
-								type="button"
-								class="op"
-								class:on
-								aria-pressed={on}
-								onclick={() => ir({ canal: alternar(f.canal, k) })}
-								><MarcaIcono {k} size={18} radius={5} />{NOMBRE_CANAL[k]}<span class="op-n"
-									>{lista.facetas.canal[k] ?? 0}</span
-								></button
-							>
-						{/each}
-					</div>
-				</div>
-				<div>
-					<div class="m-t">Pago</div>
-					<div class="opciones">
-						{#each Object.keys(NOMBRE_PAGO) as k (k)}
-							{@const on = f.pago.includes(k)}
-							<button
-								type="button"
-								class="op"
-								class:on
-								aria-pressed={on}
-								onclick={() => ir({ pago: alternar(f.pago, k) })}
-								><Icon
-									icon={ICONO_PAGO[k][0]}
-									size={14}
-									style="color:{ICONO_PAGO[k][1]}"
-								/>{NOMBRE_PAGO[k]}<span class="op-n">{lista.facetas.pago[k] ?? 0}</span></button
-							>
-						{/each}
-					</div>
-				</div>
-				<div>
-					<div class="m-t">Envío</div>
-					<div class="opciones">
-						{#each Object.keys(NOMBRE_ENVIO) as k (k)}
-							{@const on = f.envio.includes(k)}
-							<button
-								type="button"
-								class="op"
-								class:on
-								aria-pressed={on}
-								onclick={() => ir({ envio: alternar(f.envio, k) })}
-								><Icon icon={ICONO_ENVIO[k]} size={14} style="color:var(--mu)" />{NOMBRE_ENVIO[
-									k
-								]}<span class="op-n">{lista.facetas.envio[k] ?? 0}</span></button
-							>
-						{/each}
-					</div>
-				</div>
-				<div>
-					<label class="m-t m-rango" for="minimo"
-						>Monto mínimo<b>{minimo ? pesos(minimo) : 'Cualquiera'}</b></label
-					>
+
+		<div
+			class="etapas"
+			use:anim={{ t: 'rise', delay: 100 }}
+			role="group"
+			aria-label="Etapas"
+			use:deslizable
+		>
+			{#each ETAPAS as e (e.estado)}
+				{@const on = f.estado.includes(e.estado)}
+				<button
+					type="button"
+					class="etapa"
+					class:on
+					aria-pressed={on}
+					onclick={() => ir({ estado: alternar(f.estado, e.estado) })}
+				>
+					<span class="e-t"><span class="e-p" style:background={e.c}></span>{e.t}</span>
+					<span class="e-n">{(lista.etapas[e.estado] ?? 0).toLocaleString('es-AR')}</span>
+					<span class="e-b" style:background={e.c} style:opacity={on || !f.estado.length ? 1 : 0.25}
+					></span>
+				</button>
+			{/each}
+		</div>
+
+		<div class="filtros" use:anim={{ t: 'rise', delay: 150 }}>
+			<div class="f-fila">
+				<label class="buscar">
+					<Icon icon={I.phMagnifyingGlass} size={16} style="color:var(--mu)" />
 					<input
-						id="minimo"
-						type="range"
-						min="0"
-						max="200000"
-						step="5000"
-						bind:value={minimo}
-						onchange={() => ir({ minimo })}
+						value={q}
+						oninput={(e) => buscar(e.currentTarget.value)}
+						placeholder="Cliente, N.º de pedido, producto o ciudad"
+						aria-label="Buscar pedidos"
 					/>
-				</div>
-				<div class="banderas">
-					{#each [['vip', 'Solo clientes VIP'], ['hornero', 'Vendidos por Tincho'], ['mayorista', 'Mayoristas']] as const as [k, t] (k)}
-						<div class="bandera">
-							<span>{t}</span>
-							<Interruptor label={t} checked={f[k]} onchange={(v: boolean) => ir({ [k]: v })} />
-						</div>
+					{#if q}<button
+							type="button"
+							class="b-x"
+							aria-label="Borrar búsqueda"
+							onclick={() => buscar('')}><Icon icon={I.phXCircleFill} size={16} /></button
+						>{/if}
+				</label>
+				<div class="fechas" role="group" aria-label="Fecha">
+					{#each FECHAS as [id, t] (id)}
+						<button type="button" aria-pressed={f.fecha === id} onclick={() => ir({ fecha: id })}
+							>{t}</button
+						>
 					{/each}
 				</div>
+				<button
+					type="button"
+					class="pildora"
+					class:on={mas}
+					aria-expanded={mas}
+					onclick={() => (mas = !mas)}
+					><Icon icon={I.phSlidersHorizontalBold} size={15} />Filtros{#if chips.length}<span
+							class="cuenta">{chips.length}</span
+						>{/if}</button
+				>
+				<button type="button" class="pildora" onclick={ciclarOrden} aria-label="Orden: {ordenTxt}"
+					><Icon icon={I.phSortAscendingBold} size={15} />{ordenTxt}</button
+				>
 			</div>
-		{/if}
-		{#if chips.length}
-			<div class="chips">
-				{#each chips as [t, cambio] (t)}
-					<button
-						type="button"
-						class="chip"
-						onclick={() => {
-							if ('q' in cambio) q = '';
-							ir(cambio);
-						}}>{t}<Icon icon={I.phXBold} size={11} /></button
-					>
-				{/each}
-				<button type="button" class="limpiar" onclick={limpiar}>Limpiar todo</button>
-			</div>
-		{/if}
-	</div>
+			{#if mas}
+				<div class="mas" use:anim={{ t: 'rise' }}>
+					<div>
+						<div class="m-t">Canal</div>
+						<div class="opciones">
+							{#each Object.keys(NOMBRE_CANAL) as k (k)}
+								{@const on = f.canal.includes(k)}
+								<button
+									type="button"
+									class="op"
+									class:on
+									aria-pressed={on}
+									onclick={() => ir({ canal: alternar(f.canal, k) })}
+									><MarcaIcono {k} size={18} radius={5} />{NOMBRE_CANAL[k]}<span class="op-n"
+										>{lista.facetas.canal[k] ?? 0}</span
+									></button
+								>
+							{/each}
+						</div>
+					</div>
+					<div>
+						<div class="m-t">Pago</div>
+						<div class="opciones">
+							{#each Object.keys(NOMBRE_PAGO) as k (k)}
+								{@const on = f.pago.includes(k)}
+								<button
+									type="button"
+									class="op"
+									class:on
+									aria-pressed={on}
+									onclick={() => ir({ pago: alternar(f.pago, k) })}
+									><Icon
+										icon={ICONO_PAGO[k][0]}
+										size={14}
+										style="color:{ICONO_PAGO[k][1]}"
+									/>{NOMBRE_PAGO[k]}<span class="op-n">{lista.facetas.pago[k] ?? 0}</span></button
+								>
+							{/each}
+						</div>
+					</div>
+					<div>
+						<div class="m-t">Envío</div>
+						<div class="opciones">
+							{#each Object.keys(NOMBRE_ENVIO) as k (k)}
+								{@const on = f.envio.includes(k)}
+								<button
+									type="button"
+									class="op"
+									class:on
+									aria-pressed={on}
+									onclick={() => ir({ envio: alternar(f.envio, k) })}
+									><Icon icon={ICONO_ENVIO[k]} size={14} style="color:var(--mu)" />{NOMBRE_ENVIO[
+										k
+									]}<span class="op-n">{lista.facetas.envio[k] ?? 0}</span></button
+								>
+							{/each}
+						</div>
+					</div>
+					<div>
+						<label class="m-t m-rango" for="minimo"
+							>Monto mínimo<b>{minimo ? pesos(minimo) : 'Cualquiera'}</b></label
+						>
+						<input
+							id="minimo"
+							type="range"
+							min="0"
+							max="200000"
+							step="5000"
+							bind:value={minimo}
+							onchange={() => ir({ minimo })}
+						/>
+					</div>
+					<div class="banderas">
+						{#each [['vip', 'Solo clientes VIP'], ['hornero', 'Vendidos por Tincho'], ['mayorista', 'Mayoristas']] as const as [k, t] (k)}
+							<div class="bandera">
+								<span>{t}</span>
+								<Interruptor label={t} checked={f[k]} onchange={(v: boolean) => ir({ [k]: v })} />
+							</div>
+						{/each}
+					</div>
+				</div>
+			{/if}
+			{#if chips.length}
+				<div class="chips">
+					{#each chips as [t, cambio] (t)}
+						<button
+							type="button"
+							class="chip"
+							onclick={() => {
+								if ('q' in cambio) q = '';
+								ir(cambio);
+							}}>{t}<Icon icon={I.phXBold} size={11} /></button
+						>
+					{/each}
+					<button type="button" class="limpiar" onclick={limpiar}>Limpiar todo</button>
+				</div>
+			{/if}
+		</div>
+	{/if}
 
 	<div class="lista" use:anim={{ t: 'rise', delay: 200 }}>
 		<div class="l-cab">
@@ -637,13 +642,19 @@
 			bind:this={caja}
 			onscroll={alScrollear}
 			data-lenis-prevent
-			role="list"
+			role={lista.total ? 'list' : undefined}
 			aria-label="Pedidos"
 		>
 			<div style:height="{lista.total * FILA}px" class="alto">
 				{#each visibles as i (i)}
 					{@const p = filas[i]}
-					<div class="fila" style:top="{i * FILA}px" role="listitem">
+					<div
+						class="fila"
+						style:top="{i * FILA}px"
+						role="listitem"
+						aria-setsize={lista.total}
+						aria-posinset={i + 1}
+					>
 						{#if p}
 							{@const e = etapaDePedido(p)}
 							{@const paso = ETAPAS.findIndex((x) => x.estado === p.estado)}
@@ -705,12 +716,17 @@
 														style:background={paso > 0 && j < paso ? e.c : 'var(--sf3)'}
 													></span>{/each}</span
 											>
+											<!-- El apuro va con el estado, en un solo chip: «Para preparar · Despachá hoy». -->
 											<span class="p-e" style:color={e.c}
-												><Icon icon={e.i} size={13} />{textoEstado(p)}</span
+												><Icon icon={e.i} size={13} />{textoEstado(p)}{#if u}<b
+														class="p-urg"
+														style:color={u[2]}>{' '}· {u[0]}</b
+													>{/if}</span
 											>
 										</span>
 									{/if}
-									{#if u}<span class="urg" style:background={u[1]} style:color={u[2]}>{u[0]}</span
+									{#if u && !amplio}<span class="urg" style:background={u[1]} style:color={u[2]}
+											>{u[0]}</span
 										>{/if}
 									<span class="monto" class:oculto={celu}>
 										<span class="m-v">{pesos(p.total)}</span>
@@ -1327,6 +1343,10 @@
 		gap: 5px;
 		margin-top: 5px;
 		font-size: 12px;
+		font-weight: 600;
+		white-space: nowrap;
+	}
+	.p-urg {
 		font-weight: 600;
 		white-space: nowrap;
 	}

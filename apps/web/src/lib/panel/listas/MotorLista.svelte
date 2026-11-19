@@ -436,13 +436,19 @@
 			bind:this={caja}
 			onscroll={alScrollear}
 			data-lenis-prevent
-			role="list"
+			role={lista.total ? 'list' : undefined}
 			aria-label={config.titulo}
 		>
 			<div style:height="{lista.total * FILA}px" class="alto">
 				{#each visibles as i (i)}
 					{@const r = filas[i]}
-					<div class="fila" style:top="{i * FILA}px" role="listitem">
+					<div
+						class="fila"
+						style:top="{i * FILA}px"
+						role="listitem"
+						aria-setsize={lista.total}
+						aria-posinset={i + 1}
+					>
 						{#if r}
 							{@const v = config.fila(r)}
 							{@const sel = seleccion.has(r.id)}
